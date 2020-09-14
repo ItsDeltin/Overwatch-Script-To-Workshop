@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
             CompletionItemKind = completionItemKind;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet) => throw new Exception("Cannot parse internal variables.");
+        public virtual IWorkshopTree Parse(ActionSet actionSet) => throw new Exception("Cannot parse internal variables.");
         public virtual Scope ReturningScope() => CodeType?.ReturningScope();
         public virtual CodeType Type() => CodeType;
 

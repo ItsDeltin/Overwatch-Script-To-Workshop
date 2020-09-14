@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public void InitOperations()
         {
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.Add, ObjectType.Instance, this, (l, r) => new V_CustomString("{0}{1}", l, r))
+                new TypeOperation(TypeOperator.Add, ObjectType.Instance, this, null, (l,r,a) => new V_CustomString("{0}{1}", l.GetVariable(), r.GetVariable()))
             };
         }
 

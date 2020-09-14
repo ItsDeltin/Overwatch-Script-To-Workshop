@@ -48,7 +48,8 @@ namespace Deltin.Deltinteger.Parse
         {
             IWorkshopTree left = Left.Parse(actionSet);
             IWorkshopTree right = Right.Parse(actionSet);
-            return Operation.Resolve(left, right);
+
+            return Operation.Resolve(left, right, actionSet);
         }
     }
 }

@@ -55,7 +55,7 @@ createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 
 array : (INDEX_START expr INDEX_END)+ ;
 
-varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
+varset   : var=expr array? (statement_operation val=expr? | INCREMENT | DECREMENT) ;
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
 hook : var=expr EQUALS value=expr STATEMENT_END;
@@ -86,17 +86,15 @@ statement :
 	| CONTINUE STATEMENT_END? #s_continue
 	| BREAK STATEMENT_END?    #s_break
 	| switch 				  #s_switch
-	| (BLOCK_START documented_statement* BLOCK_END) #s_block
+	|BLOCK_START documented_statement* BLOCK_END #s_block
 	;
 
-block : (BLOCK_START documented_statement* BLOCK_END) | documented_statement | STATEMENT_END  ;
+block :BLOCK_START documented_statement* BLOCK_END | documented_statement | STATEMENT_END  ;
 
-for     : FOR LEFT_PAREN 
-	((define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?)
+for     : FOR LEFT_PAREN(define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?
 	RIGHT_PAREN block;
 
-for_auto : FOR LEFT_PAREN
-	((forVariable=expr (EQUALS start=expr?)? | forDefine=define)? startSep=STATEMENT_END stop=expr? stopSep=STATEMENT_END step=expr?)
+for_auto : FOR LEFT_PAREN(forVariable=expr (EQUALS start=expr?)? | forDefine=define)? startSep=STATEMENT_END stop=expr? stopSep=STATEMENT_END step=expr?
 	RIGHT_PAREN block?;
 
 foreach : FOREACH number? LEFT_PAREN code_type name=PART IN expr? RIGHT_PAREN block ;
@@ -113,7 +111,7 @@ delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 switch  : SWITCH LEFT_PAREN expr? RIGHT_PAREN
 	BLOCK_START switch_element* BLOCK_END;
 
-switch_element:  (DEFAULT TERNARY_ELSE?) | case | documented_statement;
+switch_element:DEFAULT TERNARY_ELSE? | case | documented_statement;
 
 case    : CASE expr? TERNARY_ELSE?;
 
@@ -138,18 +136,20 @@ ruleset :
 	reserved_global?
 	reserved_player?
 	import_file*
-	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define | hook)*
+	(define STATEMENT_END | ow_rule | define_method | define_macro | type_define | enum_define | hook)*
 	EOF;
 
 // Classes/structs
 
 type_define : (STRUCT | CLASS) name=PART (TERNARY_ELSE extends=PART?)?
 	BLOCK_START
-	((define STATEMENT_END) | constructor | define_method | define_macro)*
+	(define STATEMENT_END | constructor | op | define_method | define_macro)*
 	BLOCK_END ;
 
 enum_define : ENUM name=PART BLOCK_START (firstMember=PART enum_element*)? BLOCK_END ;
 enum_element : COMMA PART ;
+
+op : OPERATOR LEFT_PAREN left=code_type? ident=('+'|'-'|'*'|'/') right=code_type EQUALS ret=code_type RIGHT_PAREN TERNARY_ELSE? expr STATEMENT_END? ;
 
 accessor : PRIVATE | PUBLIC | PROTECTED;
 
@@ -157,7 +157,7 @@ constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
 
 setParameters: (define (COMMA define)*)?;
 
-create_object : NEW (type=PART (LEFT_PAREN call_parameters? RIGHT_PAREN)) ;
+create_object : NEW type=PART (LEFT_PAREN call_parameters? RIGHT_PAREN) ;
 
 import_file : IMPORT STRINGLITERAL (AS name=PART?)? STATEMENT_END ;
 
@@ -241,6 +241,7 @@ DEFAULT   : 'default'   ;
 BASE      : 'base'      ;
 IS        : 'is'		;
 INTERFACE : 'interface' ;
+OPERATOR  : 'operator'  ;
 
 INS             : '=>'  ;
 EQUALS          : '='  ;
@@ -265,5 +266,7 @@ BOOL : '&&' | '||';
 NOT : '!';
 INCREMENT : '++' ;
 DECREMENT : '--' ;
+
+ANY_OPERATOR : POW | MULT | DIV | MOD | ADD | MINUS | LESS_THAN | GREATER_THAN | BOOL | NOT | INCREMENT | DECREMENT;
 
 PART : (LOWERCASE | UPPERCASE | '_' | NUMBERS)+ ;

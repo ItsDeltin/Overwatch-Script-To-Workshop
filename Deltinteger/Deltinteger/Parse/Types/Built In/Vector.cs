@@ -55,12 +55,12 @@ namespace Deltin.Deltinteger.Parse
         public void InitOperations()
         {
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.Add, this, this, TypeOperation.Add), // Vector + vector
-                new TypeOperation(TypeOperator.Subtract, this, this, TypeOperation.Subtract), // Vector - vector
-                new TypeOperation(TypeOperator.Multiply, this, this, TypeOperation.Multiply), // Vector * vector
-                new TypeOperation(TypeOperator.Divide, this, this, TypeOperation.Divide), // Vector / vector
-                new TypeOperation(TypeOperator.Multiply, NumberType.Instance, this, TypeOperation.Multiply), // Vector * number
-                new TypeOperation(TypeOperator.Divide, NumberType.Instance, this, TypeOperation.Divide), // Vector / number
+                new TypeOperation(TypeOperator.Add, this, this, null, TypeOperation.Add), // Vector + vector
+                new TypeOperation(TypeOperator.Subtract, this, this, null, TypeOperation.Subtract), // Vector - vector
+                new TypeOperation(TypeOperator.Multiply, this, this, null, TypeOperation.Multiply), // Vector * vector
+                new TypeOperation(TypeOperator.Divide, this, this, null, TypeOperation.Divide), // Vector / vector
+                new TypeOperation(TypeOperator.Multiply, NumberType.Instance, this, null, TypeOperation.Multiply), // Vector * number
+                new TypeOperation(TypeOperator.Divide, NumberType.Instance, this, null, TypeOperation.Divide), // Vector / number
             };
         }
 

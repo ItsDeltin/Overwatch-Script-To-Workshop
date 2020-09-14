@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 using Deltin.Deltinteger.Elements;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -21,9 +22,12 @@ namespace Deltin.Deltinteger.Parse
 
         public void InitOperations()
         {
+
+
+
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.Equal, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.Equal, r)),
-                new TypeOperation(TypeOperator.NotEqual, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.NotEqual, r))
+                new TypeOperation(TypeOperator.Equal, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.Equal, r.GetVariable())),
+                new TypeOperation(TypeOperator.NotEqual, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.NotEqual, r.GetVariable()))
             };
         }
 
@@ -61,16 +65,16 @@ namespace Deltin.Deltinteger.Parse
         public void InitOperations()
         {
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.Add, this, this, TypeOperation.Add), // Number + number
-                new TypeOperation(TypeOperator.Subtract, this, this, TypeOperation.Subtract), // Number - number
-                new TypeOperation(TypeOperator.Multiply, this, this, TypeOperation.Multiply), // Number * number
-                new TypeOperation(TypeOperator.Divide, this, this, TypeOperation.Divide), // Number / number
-                new TypeOperation(TypeOperator.Modulo, this, this, TypeOperation.Modulo), // Number % number
-                new TypeOperation(TypeOperator.Multiply, VectorType.Instance, VectorType.Instance, TypeOperation.Multiply), // Number * vector
-                new TypeOperation(TypeOperator.LessThan, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.LessThan, r)), // Number < number
-                new TypeOperation(TypeOperator.LessThanOrEqual, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.LessThanOrEqual, r)), // Number <= number
-                new TypeOperation(TypeOperator.GreaterThanOrEqual, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.GreaterThanOrEqual, r)), // Number >= number
-                new TypeOperation(TypeOperator.GreaterThan, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.GreaterThan, r)), // Number > number
+                new TypeOperation(TypeOperator.Add, this, this, null, TypeOperation.Add), // Number + number
+                new TypeOperation(TypeOperator.Subtract, this, this, null, TypeOperation.Subtract), // Number - number
+                new TypeOperation(TypeOperator.Multiply, this, this, null, TypeOperation.Multiply), // Number * number
+                new TypeOperation(TypeOperator.Divide, this, this, null, TypeOperation.Divide), // Number / number
+                new TypeOperation(TypeOperator.Modulo, this, this, null, TypeOperation.Modulo), // Number % number
+                new TypeOperation(TypeOperator.Multiply, VectorType.Instance, VectorType.Instance, null, TypeOperation.Multiply), // Number * vector
+                new TypeOperation(TypeOperator.LessThan, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.LessThan, r.GetVariable())), // Number < number
+                new TypeOperation(TypeOperator.LessThanOrEqual, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.LessThanOrEqual, r.GetVariable())), // Number <= number
+                new TypeOperation(TypeOperator.GreaterThanOrEqual, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.GreaterThanOrEqual, r.GetVariable())), // Number >= number
+                new TypeOperation(TypeOperator.GreaterThan, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.GreaterThan, r.GetVariable())), // Number > number
             };
         }
 
@@ -108,8 +112,8 @@ namespace Deltin.Deltinteger.Parse
             Inherit(ObjectType.Instance, null, null);
 
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.And, this, this, (l, r) => Element.Part<V_And>(l, r)),
-                new TypeOperation(TypeOperator.Or, this, this, (l, r) => Element.Part<V_Or>(l, r)),
+                new TypeOperation(TypeOperator.And, this, this, null, (l,r,a) => Element.Part<V_And>(l.GetVariable(), r.GetVariable())),
+                new TypeOperation(TypeOperator.Or, this, this, null, (l,r,a) => Element.Part<V_Or>(l.GetVariable(), r.GetVariable())),
             };
         }
 

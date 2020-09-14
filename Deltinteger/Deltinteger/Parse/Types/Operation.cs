@@ -1,32 +1,55 @@
 using System;
+using System.Reflection.Metadata;
 using Deltin.Deltinteger.Elements;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class TypeOperation
     {
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Add = (l, r) => Element.Part<V_Add>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Subtract = (l, r) => Element.Part<V_Subtract>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Multiply = (l, r) => Element.Part<V_Multiply>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Divide = (l, r) => Element.Part<V_Divide>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Modulo = (l, r) => Element.Part<V_Modulo>(l, r);
+        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Add = (l,r,a) => Element.Part<V_Add>(l.GetVariable(), r.GetVariable());
+        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Subtract = (l,r,a) => Element.Part<V_Subtract>(l.GetVariable(), r.GetVariable());
+        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Multiply = (l,r,a) => Element.Part<V_Multiply>(l.GetVariable(), r.GetVariable());
+        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Divide = (l,r,a) => Element.Part<V_Divide>(l.GetVariable(), r.GetVariable());
+        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Modulo = (l,r,a) => Element.Part<V_Modulo>(l.GetVariable(), r.GetVariable());
 
         public TypeOperator Operator { get; }
         /// <summary>The righthand of the operator. May be null if there is no right operator.</summary>
         public CodeType Right { get; }
         /// <summary>The return type of the operation.</summary>
         public CodeType ReturnType { get; }
-        private readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Resolver;
+        private readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Resolver;
 
-        public TypeOperation(TypeOperator op, CodeType right, CodeType returnType, Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> resolver)
+        private Scope ObjectScope;
+
+        public TypeOperation(TypeOperator op, CodeType right, CodeType returnType, Scope objectScope, Func<IGettable, IGettable, ActionSet, IWorkshopTree> resolver)
         {
             Operator = op;
             Right = right ?? throw new ArgumentNullException(nameof(right));
             ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
             Resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+            ObjectScope = objectScope;
         }
 
-        public IWorkshopTree Resolve(IWorkshopTree left, IWorkshopTree right) => Resolver.Invoke(left, right);
+        public IWorkshopTree Resolve(IWorkshopTree left, IWorkshopTree right, ActionSet actionSet)
+        {
+            var leftVar = new OperatorVar("left");
+            var rightVar = new OperatorVar("right");
+
+
+            var contained = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            var leftTree = contained.IndexAssigner.Add(leftVar, left);
+            var rightTree = contained.IndexAssigner.Add(rightVar, right);
+
+            if(ObjectScope != null)
+            {
+                
+                ObjectScope.AddNativeVariable(leftVar);
+                ObjectScope.AddNativeVariable(rightVar);
+            }
+
+            return Resolver.Invoke(leftTree, rightTree, contained);
+        }
 
         public static TypeOperator TypeOperatorFromString(string str)
         {
@@ -46,6 +69,7 @@ namespace Deltin.Deltinteger.Parse
                 case "!=": return TypeOperator.NotEqual;
                 case "&&": return TypeOperator.And;
                 case "||": return TypeOperator.Or;
+                case "[]": return TypeOperator.ArrOf;
                 default: throw new NotImplementedException();
             }
         }
@@ -81,5 +105,24 @@ namespace Deltin.Deltinteger.Parse
         And,
         ///<summary>a || b</summary>
         Or,
+        ArrOf
+    }
+
+
+    class OperatorVar : InternalVar
+    {
+        public OperatorVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable) : base(name, completionItemKind)
+        {}
+
+        public override IWorkshopTree Parse(ActionSet a) {
+            IGettable got;
+            a.IndexAssigner.TryGet(this, out got);
+            return got.GetVariable();
+        }
+
+        public CompletionItem GetCompletion()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

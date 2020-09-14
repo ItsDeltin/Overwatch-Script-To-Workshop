@@ -174,6 +174,13 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var ruleContext in script.Context.ow_rule())
                 rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
+
+            //Get operators
+            foreach (ScriptFile script in Importer.ScriptFiles)
+            {
+
+            }
+
         }
 
         public string WorkshopCode { get; private set; }

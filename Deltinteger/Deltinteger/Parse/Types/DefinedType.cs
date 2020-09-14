@@ -120,6 +120,32 @@ namespace Deltin.Deltinteger.Parse
                 };
             }
 
+            if(typeContext.op().Length > 0)
+            {
+                Operations = new TypeOperation[typeContext.op().Length];
+                for (int i = 0; i < Operations.Length; i++)
+                {
+                    var op_info = typeContext.op()[i]; 
+                   
+                    string op_string = op_info.ident.Text;
+
+                    TypeOperator op = TypeOperation.TypeOperatorFromString(op_string);
+
+                    var right = GetCodeTypeFromContext(parseInfo, op_info.right);
+                    var ret = GetCodeTypeFromContext(parseInfo, op_info.ret);
+
+                    if(op_info.expr() != null)
+                    {
+                        Operations[i] = new TypeOperation(op, right, ret, operationalScope, (l,r,a) => {
+                            var expression = parseInfo.GetExpression(operationalScope, op_info.expr());
+                            return expression.Parse(a);
+                        });
+                    }
+                    
+                }
+            }
+
+
             // If the extend token exists, add completion that only contains all extendable classes.
             if (typeContext.TERNARY_ELSE() != null)
                 parseInfo.Script.AddCompletionRange(new CompletionRange(
