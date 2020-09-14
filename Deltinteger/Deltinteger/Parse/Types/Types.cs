@@ -15,7 +15,10 @@ namespace Deltin.Deltinteger.Parse
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
+        public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
         protected string Kind = "class";
+        protected TokenType TokenType { get; set; } = TokenType.Type;
+        protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
         public bool CanBeDeleted { get; protected set; } = false;
@@ -23,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
-        public List<TypeOperation> Operations { get; protected set; } = new List<TypeOperation>();
+        public TypeOperation[] Operations { get; protected set; }
 
         public CodeType(string name)
         {
@@ -66,17 +69,14 @@ namespace Deltin.Deltinteger.Parse
             CodeType checkType = this;
             while (checkType != null)
             {
-                if (checkType == type) return true;
+                if (type.Is(checkType)) return true;
                 checkType = checkType.Extends;
             }
 
             return false;
         }
 
-        public void AddOperation(TypeOperation op)
-        {
-            Operations.Add(op);
-        }
+        public virtual bool Is(CodeType type) => this == type;
 
         // Static
         public abstract Scope ReturningScope();
@@ -146,6 +146,7 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.TranslateInfo.Types.CallType(this);
             parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
@@ -157,6 +158,8 @@ namespace Deltin.Deltinteger.Parse
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
             if (typeContext == null) throw new ArgumentNullException(nameof(typeContext));
+
+            if (typeContext.DEFINE() != null) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
 
             CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
             if (type == null) return ObjectType.Instance;
@@ -171,19 +174,24 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var genericContext in typeContext.generics().code_type())
                     generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
                 
-                if (type is Lambda.BlockLambda)
-                    type = new Lambda.BlockLambda(generics.ToArray());
-                else if (type is Lambda.ValueBlockLambda)
+                if (type is Lambda.ValueBlockLambda)
                     type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
+                else if (type is Lambda.BlockLambda)
+                    type = new Lambda.BlockLambda(generics.ToArray());
                 else if (type is Lambda.MacroLambda)
                     type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
             }
 
             type.Call(parseInfo, DocRange.GetRange(typeContext));
 
+            // Array type
             if (typeContext.INDEX_START() != null)
                 for (int i = 0; i < typeContext.INDEX_START().Length; i++)
                     type = new ArrayType(type);
+            
+            // Pipe type
+            if (typeContext.code_type() != null)
+                type = new PipeType(type, GetCodeTypeFromContext(parseInfo, typeContext.code_type()));
             
             return type;
         }
@@ -208,12 +216,12 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(ObjectType.Instance);
             _defaultTypes.Add(NumberType.Instance);
             _defaultTypes.Add(PlayerType.Instance);
-            _defaultTypes.Add(PlayersType.Instance);
             _defaultTypes.Add(BooleanType.Instance);
             _defaultTypes.Add(TeamType.Instance);
             _defaultTypes.Add(VectorType.Instance);
             _defaultTypes.Add(StringType.Instance);
             _defaultTypes.Add(Positionable.Instance);
+            _defaultTypes.Add(Pathfinder.SegmentsStruct.Instance);
             ObjectType.Instance.InitOperations();
             NumberType.Instance.InitOperations();
             VectorType.Instance.InitOperations();

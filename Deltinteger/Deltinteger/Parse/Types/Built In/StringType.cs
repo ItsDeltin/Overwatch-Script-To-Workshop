@@ -1,5 +1,4 @@
 using Deltin.Deltinteger.Elements;
-using System.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -18,8 +17,8 @@ namespace Deltin.Deltinteger.Parse
         public void InitOperations()
         {
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.Add, ObjectType.Instance, this, null, (l,r,a) => new V_CustomString("{0}{1}", l.GetVariable(), r.GetVariable()))
-            }.ToList();
+                new TypeOperation(TypeOperator.Add, ObjectType.Instance, this, (l, r) => new StringElement("{0}{1}", l, r))
+            };
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {

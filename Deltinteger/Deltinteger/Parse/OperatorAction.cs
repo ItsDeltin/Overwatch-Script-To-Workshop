@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
             if (right == null) parseInfo.Script.Diagnostics.Error("Missing right operator.", opRange);
             else Right = parseInfo.GetExpression(scope, right);
 
-            if (Left != null && Right != null)
+            if (Left != null && Right != null && Left.Type() != null && Right.Type() != null)
             {
                 Operation = Left.Type().GetOperation(TypeOperation.TypeOperatorFromString(op), Right.Type());
                             

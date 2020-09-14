@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.CustomMethods
             Element planePos = (Element)parameterValues[2];
             Element planeNormal = (Element)parameterValues[3];
 
-            return linePos + Element.Part<V_Normalize>(lineDirection) * ((Element.Part<V_DotProduct>(planeNormal, planePos) - Element.Part<V_DotProduct>(planeNormal, linePos)) / Element.Part<V_DotProduct>(planeNormal, Element.Part<V_Normalize>(lineDirection)));
+            return linePos + Element.Normalize(lineDirection) * ((Element.DotProduct(planeNormal, planePos) - Element.DotProduct(planeNormal, linePos)) / Element.DotProduct(planeNormal, Element.Normalize(lineDirection)));
         }
     }
 
@@ -42,10 +42,10 @@ namespace Deltin.Deltinteger.CustomMethods
             Element spherePos = (Element)parameterValues[2];
             Element sphereRadius = (Element)parameterValues[3];
 
-            Element distanceToSphere = Element.Part<V_DistanceBetween>(linePos, spherePos);
-            Element checkPos = linePos + Element.Part<V_Normalize>(lineDirection) * distanceToSphere;
+            Element distanceToSphere = Element.DistanceBetween(linePos, spherePos);
+            Element checkPos = linePos + Element.Normalize(lineDirection) * distanceToSphere;
 
-            return Element.Part<V_DistanceBetween>(checkPos, spherePos) < sphereRadius;
+            return Element.DistanceBetween(checkPos, spherePos) < sphereRadius;
         }
     }
 
@@ -63,17 +63,15 @@ namespace Deltin.Deltinteger.CustomMethods
             Element player = (Element)parameterValues[0];
             Element position = (Element)parameterValues[1];
             Element radius = (Element)parameterValues[2];
-            Element eyePos = Element.Part<V_EyePosition>(player);
-            Element range = Element.Part<V_DistanceBetween>(eyePos, position);
-            Element direction = Element.Part<V_FacingDirectionOf>(player);
-            Element raycast = Element.Part<V_RayCastHitPosition>(
+            Element eyePos = Element.EyePosition(player);
+            Element range = Element.DistanceBetween(eyePos, position);
+            Element direction = Element.FacingDirectionOf(player);
+            Element raycast = Element.RaycastPosition(
                 eyePos,
                 eyePos + direction * range,
-                new V_AllPlayers(),
-                new V_Null(),
-                new V_False()
+                Element.Part("All Players")
             );
-            Element distance = Element.Part<V_DistanceBetween>(position, raycast);
+            Element distance = Element.DistanceBetween(position, raycast);
             Element compare = distance <= radius;
             return compare;
         }

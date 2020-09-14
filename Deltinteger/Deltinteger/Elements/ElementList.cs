@@ -1,8 +1,7 @@
 using System;
 using System.Linq;
-using System.Reflection;
+using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
@@ -10,150 +9,127 @@ namespace Deltin.Deltinteger.Elements
 {
     public class ElementList : IMethod
     {
-        public static ElementList[] Elements { get; private set; }
-
-        public static void InitElements()
-        {
-            Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
-
-            Elements = new ElementList[methodList.Length];
-            for (int i = 0; i < Elements.Length; i++)
-                Elements[i] = new ElementList(methodList[i]);
-
-            for (int i = 0; i < Elements.Length; i++)
-                Elements[i].ApplyParameters();
-        }
-        public static ElementList GetElement(string codeName)
-        {
-            return Elements.FirstOrDefault(e => e.Name == codeName);
-        }
-        public static ElementList GetElement<T>() where T: Element
-        {
-            return Elements.FirstOrDefault(e => e.Type == typeof(T));
-        }
-        public static ElementList FromType(Type type)
-        {
-            return Elements.FirstOrDefault(element => element.Type == type);
-        }
-
         public string Name { get; }
-        public string WorkshopName { get; }
-        public Type Type { get; }
-        public bool IsValue { get; } 
-        public bool Hidden { get; }
         public CodeParameter[] Parameters { get; private set; }
-        public ParameterBase[] WorkshopParameters { get; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
-        public UsageDiagnostic[] UsageDiagnostics { get; }
-        public WikiMethod Wiki { get; }
-        public string Documentation => Wiki?.Description;
-        private ValueType ElementValueType { get; }
+        public string Documentation { get; }
+        public CodeType ReturnType { get; private set; }
+        private readonly RestrictedCallType? _restricted;
+        private readonly ElementBaseJson _function;
 
         // IScopeable defaults
         public LanguageServer.Location DefinedAt { get; } = null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public bool WholeContext { get; } = true;
         public bool Static => true;
+        public bool DoesReturnValue => _function is ElementJsonValue;
 
-        public CodeType ReturnType { get; private set; }
-
-        public ElementList(Type type)
+        ElementList(ElementBaseJson function, ITypeSupplier typeSupplier)
         {
-            ElementData data = type.GetCustomAttribute<ElementData>();
-            Name = type.Name.Substring(2); 
-            WorkshopName = data.ElementName;
-            Type = type;
-            IsValue = data.IsValue;
-            ElementValueType = data.ValueType;
-            WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
-            UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
-            Hidden = type.GetCustomAttribute<HideElement>() != null;
+            _function = function;
 
-            Wiki = WorkshopWiki.Wiki.GetWiki()?.GetMethod(WorkshopName);
-        }
-
-        public void ApplyParameters()
-        {
-            // Set the return type to the Vector class if the value returns a vector.
-            if (IsValue) ReturnType = CodeTypeFromValueType(ElementValueType);
+            Name = function.CodeName();
+            Documentation = function.Documentation;
 
             // Get the parameters.
-            Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
-            for (int i = 0; i < Parameters.Length; i++)
+            if (function.Parameters == null) Parameters = new CodeParameter[0];
+            else Parameters = new CodeParameter[function.Parameters.Length];
+            
+            for (int i = 0; i < Parameters.Length; i++) 
             {
-                string name = WorkshopParameters[i].Name.Replace(" ", "");
-                string description = Wiki?.GetWikiParameter(WorkshopParameters[i].Name)?.Description;
+                // Get the name and documentation.
+                string name = function.Parameters[i].Name.Replace(" ", "");
+                string documentation = function.Parameters[i].Documentation;
 
-                if (WorkshopParameters[i] is VarRefParameter)
+                // If 'VariableReferenceIsGlobal' is not null, the parameter is a variable reference.
+                if (function.Parameters[i].VariableReferenceIsGlobal != null)
                 {
+                    // Set the parameter as a variable reference parameter.
                     Parameters[i] = new VariableParameter(
                         name,
-                        description,
-                        ((VarRefParameter)WorkshopParameters[i]).IsGlobal ? VariableType.Global : VariableType.Player,
-                        new VariableResolveOptions() {
-                            CanBeIndexed = false, FullVariable = true
-                        }
+                        documentation,
+                        function.Parameters[i].VariableReferenceIsGlobal.Value ? VariableType.Global : VariableType.Player,
+                        new VariableResolveOptions() { CanBeIndexed = false, FullVariable = true }
                     );
                 }
-                else
+                else // Not a variable reference parameter.
                 {
-                    CodeType codeType = null;
+                    // The type of the parameter.
+                    CodeType type = typeSupplier.Default();
 
-                    // If the parameter is an enum, get the enum CodeType.
-                    if (WorkshopParameters[i] is EnumParameter enumParameter)
-                        codeType = ValueGroupType.GetEnumType(enumParameter.EnumData);
-                    else if (WorkshopParameters[i] is Parameter parameter)
-                        codeType = CodeTypeFromValueType(parameter.ReturnType);
+                    // Get the type from the type value.
+                    if (function.Parameters[i].Type != null)    
+                        type = typeSupplier.FromString(function.Parameters[i].Type);
 
-                    var defaultValue = WorkshopParameters[i].GetDefault();
-
-                    Parameters[i] = new CodeParameter(
-                        name,
-                        description,
-                        codeType,
-                        defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue)
-                    );
+                    // Get the default value.
+                    ExpressionOrWorkshopValue defaultValue = null;
+                    if (function.Parameters[i].HasDefaultValue)
+                        defaultValue = new ExpressionOrWorkshopValue(function.Parameters[i].GetDefaultValue());
+                    
+                    // TODO: Restricted value.
+                    // If the default parameter value is an Element and the Element is restricted,
+                    // if (defaultValue is Element parameterElement && parameterElement.Function.Restricted != null)
+                        // ...then add the restricted call type to the parameter's list of restricted call types.
+                        // Parameters[i].RestrictedCalls.Add((RestrictedCallType)parameterElement.Function.Restricted);
+                    
+                    // Set the parameter.
+                    Parameters[i] = new CodeParameter(name, documentation, type, defaultValue);
                 }
             }
         }
 
-        private static CodeType CodeTypeFromValueType(ValueType valueType)
+        ElementList(ElementJsonValue value, ITypeSupplier typeSupplier) : this((ElementBaseJson)value, typeSupplier)
         {
-            switch (valueType)
-            {
-                case ValueType.Boolean: return BooleanType.Instance;
-                case ValueType.Number: return NumberType.Instance;
-                case ValueType.Player: return PlayerType.Instance;
-                case ValueType.Players: return PlayersType.Instance;
-                case ValueType.Vector: return VectorType.Instance;
-                case ValueType.VectorAndPlayer: return Positionable.Instance;
-                case ValueType.String: return StringType.Instance;
-                case ValueType.Any:
-                default: return ObjectType.Instance;
-            }
-        }
-
-        public Element GetObject()
-        {
-            return (Element)Activator.CreateInstance(Type);
+            ReturnType = typeSupplier.FromString(value.ReturnType);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
-            Element element = GetObject();
-            element.ParameterValues = methodCall.ParameterValues;
+            Element element = Element.Part(_function, methodCall.ParameterValues);
             element.Comment = methodCall.ActionComment;
 
-            if (!IsValue)
+            if (!DoesReturnValue)
             {
                 actionSet.AddAction(element);
+
+                if (((ElementJsonAction)_function).ReturnValue != null)
+                    return Element.Part(((ElementJsonAction)_function).ReturnValue);
                 return null;
             }
             else return element;
         }
 
-        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation);
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+
+        public void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            if (_restricted != null)
+                // If there is a restricted call type, add it.
+                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                    (RestrictedCallType)_restricted,
+                    parseInfo.GetLocation(callRange),
+                    RestrictedCall.Message_Element((RestrictedCallType)_restricted)
+                ));
+        }
+
+        public static IMethod[] GetWorkshopFunctions(ITypeSupplier typeSupplier)
+        {
+            // Initialize the list.
+            List<IMethod> functions = new List<IMethod>();
+
+            // Get the actions.
+            foreach (var action in ElementRoot.Instance.Actions)
+                if (!action.IsHidden)
+                    functions.Add(new ElementList(action, typeSupplier));
+
+            // Get the values.
+            foreach (var value in ElementRoot.Instance.Values)
+                if (!value.IsHidden)
+                    functions.Add(new ElementList(value, typeSupplier));
+            
+            return functions.ToArray();
+        }
     }
 }

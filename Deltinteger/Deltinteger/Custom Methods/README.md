@@ -5,7 +5,7 @@
     {
         protected override MethodResult Get()
         {
-            return new MethodResult(null, new V_Number(Math.PI));
+            return new MethodResult(null, Element.Num(Math.PI));
         }
 
         public override WikiMethod Wiki()
@@ -31,7 +31,7 @@
 	
 `protected override MethodResult Get()`: gets the actions and resulting value.
 
-`new MethodResult(null, new V_Number(Math.PI))`: the first argument (`null`) are the actions. The second argument (`new V_Number(Math.PI)`) is the resulting value.
+`new MethodResult(null, Element.Num(Math.PI))`: the first argument (`null`) are the actions. The second argument (`Element.Num(Math.PI)`) is the resulting value.
 
 `public override WikiMethod Wiki()`: gets documentation data for the vscode extension:
 ![VSCode extension](https://user-images.githubusercontent.com/34138844/62826305-425ed100-bb87-11e9-9052-93ada40984d1.png)

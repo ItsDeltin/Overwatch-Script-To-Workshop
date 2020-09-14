@@ -1,6 +1,7 @@
 using System;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Elements;
+using Newtonsoft.Json;
 
 namespace Deltin.Deltinteger.Models
 {
@@ -13,6 +14,7 @@ namespace Deltin.Deltinteger.Models
         [XmlAttribute]
         public double Z { get; set; }
         [XmlIgnore]
+        [JsonIgnore]
         public double W { get; set; }
 
         public Vertex(double x, double y, double z, double w)
@@ -26,9 +28,9 @@ namespace Deltin.Deltinteger.Models
         public Vertex(double x, double y) : this(x,y,0,0) {}
         public Vertex() : this(0,0,0,0) {}
 
-        public V_Vector ToVector()
+        public Element ToVector()
         {
-            return Element.Part<V_Vector>(new V_Number(X), new V_Number(Y), new V_Number(Z));
+            return Element.Vector(X, Y, Z);
         }
 
         public Vertex Rotate(double pitch, double roll, double yaw)
@@ -136,6 +138,7 @@ namespace Deltin.Deltinteger.Models
             double.IsNaN(Y) ? 0 : Y,
             double.IsNaN(Z) ? 0 : Z);
 
+        [JsonIgnore]
         public double Length =>
             DistanceTo(new Vertex());
 

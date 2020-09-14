@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Elements
         {
             Element feetpos = Element.Part<V_PositionOf>((Element)Parameters[0]);
             Element eyepos = Element.Part<V_EyePosition>((Element)Parameters[0]);
-            return new MethodResult(null, Element.Part<V_YOf>(eyepos) - Element.Part<V_YOf>(feetpos));
+            return new MethodResult(null, Element.YOf(eyepos) - Element.YOf(feetpos));
         }
 
         public override CustomMethodWiki Wiki()

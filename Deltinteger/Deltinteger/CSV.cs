@@ -158,6 +158,9 @@ namespace Deltin.Deltinteger.Csv
         }
 
         protected abstract bool IsEqual(CsvPart other);
+
+        public override abstract string ToString();
+        public abstract string AsOSTWExpression();
     }
 
     public class CsvArray : CsvPart
@@ -180,6 +183,9 @@ namespace Deltin.Deltinteger.Csv
             
             return true;
         }
+
+        public override string ToString() => "Count = " + Values.Length;
+        public override string AsOSTWExpression() => "[" + string.Join(", ", Values.Select(v => v.AsOSTWExpression())) + "]";
     }
 
     public class CsvNumber : CsvPart
@@ -195,6 +201,9 @@ namespace Deltin.Deltinteger.Csv
         {
             return ((CsvNumber)other).Value == Value;
         }
+
+        public override string ToString() => Value.ToString();
+        public override string AsOSTWExpression() => ToString();
     }
 
     public class CsvVector : CsvPart
@@ -210,6 +219,9 @@ namespace Deltin.Deltinteger.Csv
         {
             return ((CsvVector)other).Value.EqualTo(Value);
         }
+
+        public override string ToString() => $"Vector({Value.X}, {Value.Y}, {Value.Z})";
+        public override string AsOSTWExpression() => ToString();
     }
 
     public class CsvBoolean : CsvPart
@@ -225,6 +237,9 @@ namespace Deltin.Deltinteger.Csv
         {
             return ((CsvBoolean)other).Value == Value;
         }
+
+        public override string ToString() => Value.ToString();
+        public override string AsOSTWExpression() => ToString().ToLower();
     }
 
     public class CsvString : CsvPart
@@ -240,6 +255,16 @@ namespace Deltin.Deltinteger.Csv
         {
             return ((CsvString)other).Value == Value;
         }
+
+        public override string ToString() => $"'{Value}'";
+        public override string AsOSTWExpression() => "\"" + Value + "\"";
+    }
+
+    public class CsvNull : CsvPart
+    {
+        override protected bool IsEqual(CsvPart other) => true;
+        public override string ToString() => "Null";
+        public override string AsOSTWExpression() => "null";
     }
 
     public class CsvParseFailedException : Exception

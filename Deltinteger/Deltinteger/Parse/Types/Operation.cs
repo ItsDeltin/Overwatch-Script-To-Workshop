@@ -1,55 +1,26 @@
 using System;
-using System.Reflection.Metadata;
 using Deltin.Deltinteger.Elements;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class TypeOperation
     {
-        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Add = (l,r,a) => Element.Part<V_Add>(l.GetVariable(), r.GetVariable());
-        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Subtract = (l,r,a) => Element.Part<V_Subtract>(l.GetVariable(), r.GetVariable());
-        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Multiply = (l,r,a) => Element.Part<V_Multiply>(l.GetVariable(), r.GetVariable());
-        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Divide = (l,r,a) => Element.Part<V_Divide>(l.GetVariable(), r.GetVariable());
-        public static readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Modulo = (l,r,a) => Element.Part<V_Modulo>(l.GetVariable(), r.GetVariable());
-
         public TypeOperator Operator { get; }
         /// <summary>The righthand of the operator. May be null if there is no right operator.</summary>
         public CodeType Right { get; }
         /// <summary>The return type of the operation.</summary>
         public CodeType ReturnType { get; }
-        private readonly Func<IGettable, IGettable, ActionSet, IWorkshopTree> Resolver;
+        private readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Resolver;
 
-        private Scope ObjectScope;
-
-        public TypeOperation(TypeOperator op, CodeType right, CodeType returnType, Scope objectScope, Func<IGettable, IGettable, ActionSet, IWorkshopTree> resolver)
+        public TypeOperation(TypeOperator op, CodeType right, CodeType returnType = null, Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> resolver = null)
         {
             Operator = op;
             Right = right ?? throw new ArgumentNullException(nameof(right));
-            ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
-            Resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
-            ObjectScope = objectScope;
+            ReturnType = returnType ?? DefaultTypeFromOperator(op);
+            Resolver = resolver ?? DefaultFromOperator(op);
         }
 
-        public IWorkshopTree Resolve(IWorkshopTree left, IWorkshopTree right, ActionSet actionSet)
-        {
-            var leftVar = new OperatorVar("left");
-            var rightVar = new OperatorVar("right");
-
-
-            var contained = actionSet.New(actionSet.IndexAssigner.CreateContained());
-            var leftTree = contained.IndexAssigner.Add(leftVar, left);
-            var rightTree = contained.IndexAssigner.Add(rightVar, right);
-
-            if(ObjectScope != null)
-            {
-                
-                ObjectScope.AddNativeVariable(leftVar);
-                ObjectScope.AddNativeVariable(rightVar);
-            }
-
-            return Resolver.Invoke(leftTree, rightTree, contained);
-        }
+        public IWorkshopTree Resolve(IWorkshopTree left, IWorkshopTree right) => Resolver.Invoke(left, right);
 
         public static TypeOperator TypeOperatorFromString(string str)
         {
@@ -69,8 +40,55 @@ namespace Deltin.Deltinteger.Parse
                 case "!=": return TypeOperator.NotEqual;
                 case "&&": return TypeOperator.And;
                 case "||": return TypeOperator.Or;
-                case "[]": return TypeOperator.ArrOf;
                 default: throw new NotImplementedException();
+            }
+        }
+
+        public static CodeType DefaultTypeFromOperator(TypeOperator op)
+        {
+            switch (op)
+            {
+                case TypeOperator.And:
+                case TypeOperator.Or:
+                case TypeOperator.NotEqual:
+                case TypeOperator.Equal:
+                case TypeOperator.GreaterThan:
+                case TypeOperator.GreaterThanOrEqual:
+                case TypeOperator.LessThan:
+                case TypeOperator.LessThanOrEqual:
+                    return BooleanType.Instance;
+
+                case TypeOperator.Add:
+                case TypeOperator.Divide:
+                case TypeOperator.Modulo:
+                case TypeOperator.Multiply:
+                case TypeOperator.Pow:
+                case TypeOperator.Subtract:
+                    return NumberType.Instance;
+
+                default: throw new NotImplementedException(op.ToString());
+            }
+        }
+
+        public static Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> DefaultFromOperator(TypeOperator op)
+        {
+            switch (op)
+            {
+                case TypeOperator.Add               : return (l, r) => Element.Add     (l, r);
+                case TypeOperator.And               : return (l, r) => Element.And     (l, r);
+                case TypeOperator.Divide            : return (l, r) => Element.Divide  (l, r);
+                case TypeOperator.Modulo            : return (l, r) => Element.Modulo  (l, r);
+                case TypeOperator.Multiply          : return (l, r) => Element.Multiply(l, r);
+                case TypeOperator.Or                : return (l, r) => Element.Or      (l, r);
+                case TypeOperator.Pow               : return (l, r) => Element.Pow     (l, r);
+                case TypeOperator.Subtract          : return (l, r) => Element.Subtract(l, r);
+                case TypeOperator.Equal             : return (l, r) => Element.Compare(l, Elements.Operator.Equal             , r);
+                case TypeOperator.GreaterThan       : return (l, r) => Element.Compare(l, Elements.Operator.GreaterThan       , r);
+                case TypeOperator.GreaterThanOrEqual: return (l, r) => Element.Compare(l, Elements.Operator.GreaterThanOrEqual, r);
+                case TypeOperator.LessThan          : return (l, r) => Element.Compare(l, Elements.Operator.LessThan          , r);
+                case TypeOperator.LessThanOrEqual   : return (l, r) => Element.Compare(l, Elements.Operator.LessThanOrEqual   , r);
+                case TypeOperator.NotEqual          : return (l, r) => Element.Compare(l, Elements.Operator.NotEqual          , r);
+                default: throw new NotImplementedException(op.ToString());
             }
         }
     }
@@ -105,24 +123,5 @@ namespace Deltin.Deltinteger.Parse
         And,
         ///<summary>a || b</summary>
         Or,
-        ArrOf
-    }
-
-
-    class OperatorVar : InternalVar
-    {
-        public OperatorVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable) : base(name, completionItemKind)
-        {}
-
-        public override IWorkshopTree Parse(ActionSet a) {
-            IGettable got;
-            a.IndexAssigner.TryGet(this, out got);
-            return got.GetVariable();
-        }
-
-        public CompletionItem GetCompletion()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

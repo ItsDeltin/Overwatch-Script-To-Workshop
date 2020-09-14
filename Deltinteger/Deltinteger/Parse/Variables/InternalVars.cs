@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsSettable { get; set; } = true;
         public VariableType VariableType { get; set; } = VariableType.Global;
         public bool Static => true;
+        public TokenType? TokenType { get; set; } = null;
 
         public InternalVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
         {
@@ -29,6 +30,12 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = accessLevel;
             CompletionItemKind = completionItemKind;
         }
+        public InternalVar(string name, CodeType type, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
+        {
+            Name = name;
+            CodeType = type;
+            CompletionItemKind = completionItemKind;
+        }
 
         public virtual IWorkshopTree Parse(ActionSet actionSet) => throw new Exception("Cannot parse internal variables.");
         public virtual Scope ReturningScope() => CodeType?.ReturningScope();
@@ -39,6 +46,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddHover(callRange, GetLabel(true));
+            if (TokenType != null) parseInfo.Script.AddToken(callRange, (TokenType)TokenType);
         }
 
         public virtual CompletionItem GetCompletion() => new CompletionItem() {

@@ -20,8 +20,8 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Return To Lobby", "After A Mirror Match", "After A Game", "Never"),
             new SelectValue("Team Balancing", "Off", "After A Mirror Match", "After A Game"),
             new SwitchValue("Swap Teams After Match", true, SwitchType.YesNo),
-            new RangeValue(true, "Max Team 1 Players", 0, 6, 6),
-            new RangeValue(true, "Max Team 2 Players", 0, 6, 6),
+            new RangeValue(true, "Max Team 1 Players", 0, 12, 6),
+            new RangeValue(true, "Max Team 2 Players", 0, 12, 6),
             new RangeValue(true, "Max FFA Players", 0, 12, 0),
             new RangeValue(true, "Max Spectators", 0, 12, 2),
             new SwitchValue("Allow Players Who Are In Queue", false, SwitchType.YesNo),
@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Lobby
                     .AppendLine("{")
                     .Indent()
                     .AppendKeyword("Description").Append(": \"" + Description + "\"").AppendLine()
-                    .Unindent()
+                    .Outdent()
                     .AppendLine("}");
             }
 
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Lobby.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
             
@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Lobby
             // Get the hero settings.
             if (Heroes != null) Heroes.ToWorkshop(builder, allSettings);
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -239,7 +239,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (string map in maps)
                 builder.AppendLine(builder.Translate(map).RemoveStructuralChars());
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
     
@@ -323,7 +323,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 General.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
             if (Team1 != null)
@@ -332,7 +332,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Team1.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
             if (Team2 != null)
@@ -341,11 +341,11 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Team2.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -401,7 +401,7 @@ namespace Deltin.Deltinteger.Lobby
                         builder.AppendLine("{");
                         builder.Indent();
                         WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
-                        builder.Unindent();
+                        builder.Outdent();
                         builder.AppendLine("}");
                     }
                     else WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);

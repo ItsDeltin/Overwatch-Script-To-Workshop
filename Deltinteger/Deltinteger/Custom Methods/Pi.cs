@@ -9,6 +9,6 @@ namespace Deltin.Deltinteger.CustomMethods
     {
         public override CodeParameter[] Parameters() => null;
 
-        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => new V_Number(Math.PI);
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Num(Math.PI);
     }
 }

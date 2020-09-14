@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Decompiler.Json;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -138,32 +140,32 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet)
         {
             // Add the if action.
-            A_If newIf = Element.Part<A_If>(Expression.Parse(actionSet));
+            Element newIf = Element.If(Expression.Parse(actionSet));
             newIf.Comment = Comment;
             actionSet.AddAction(newIf);
 
             // Translate the if block.
-            Block.Translate(actionSet.Indent());
+            Block.Translate(actionSet);
 
             // Add the else-ifs.
             for (int i = 0; i < ElseIfs.Length; i++)
             {
                 // Add the else-if action.
-                actionSet.AddAction(Element.Part<A_ElseIf>(ElseIfs[i].Expression.Parse(actionSet)));
+                actionSet.AddAction(Element.ElseIf(ElseIfs[i].Expression.Parse(actionSet)));
 
                 // Translate the else-if block.
-                ElseIfs[i].Block.Translate(actionSet.Indent());
+                ElseIfs[i].Block.Translate(actionSet);
             }
 
             // If there is an else block, translate it.
             if (ElseBlock != null)
             {
-                actionSet.AddAction(new A_Else());
-                ElseBlock.Translate(actionSet.Indent());
+                actionSet.AddAction(Element.Else());
+                ElseBlock.Translate(actionSet);
             }
 
             // Add the end of the if.
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(Element.End());
         }
     }
 

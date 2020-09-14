@@ -33,6 +33,9 @@ namespace Deltin.Deltinteger.Parse
 
             GetRuleSettings(parseInfo, scope, ruleContext);
 
+            // Store restricted calls
+            CallInfo callInfo = new CallInfo(parseInfo.Script);
+
             // Get the conditions.
             if (ruleContext.rule_if() == null) Conditions = new RuleIfAction[0];
             else
@@ -46,16 +49,19 @@ namespace Deltin.Deltinteger.Parse
                         CompletionRangeKind.Catch
                     ));
 
-                    Conditions[i] = new RuleIfAction(parseInfo, scope, ruleContext.rule_if(i));
+                    Conditions[i] = new RuleIfAction(parseInfo.SetCallInfo(callInfo), scope, ruleContext.rule_if(i));
                     missingBlockRange = DocRange.GetRange(ruleContext.rule_if(i));
                 }
             }
 
             // Get the block.
             if (ruleContext.block() != null)
-                Block = new BlockAction(parseInfo, scope, ruleContext.block());
+                Block = new BlockAction(parseInfo.SetCallInfo(callInfo), scope, ruleContext.block());
             else
                 parseInfo.Script.Diagnostics.Error("Missing block.", missingBlockRange);
+            
+            // Check restricted calls.
+            callInfo.CheckRestrictedCalls(EventType);
             
             // Get the rule order priority.
             if (ruleContext.number() != null)
@@ -76,43 +82,47 @@ namespace Deltin.Deltinteger.Parse
                 missingBlockRange = DocRange.GetRange(exprContext);
 
                 EnumValuePair enumSetting = (ExpressionTree.ResultingExpression(parseInfo.GetExpression(scope, exprContext)) as CallVariableAction)?.Calling as EnumValuePair;
-                EnumData enumData = enumSetting?.Member.Enum;
+                ElementEnum enumData = enumSetting?.Member.Enum;
 
                 if (enumData == null || !ValidRuleEnums.Contains(enumData))
-                    parseInfo.Script.Diagnostics.Error("Expected enum of type " + string.Join(", ", ValidRuleEnums.Select(vre => vre.CodeName)) + ".", DocRange.GetRange(exprContext));
+                    parseInfo.Script.Diagnostics.Error("Expected enum of type " + string.Join(", ", ValidRuleEnums.Select(vre => vre.Name)) + ".", DocRange.GetRange(exprContext));
                 else
                 {
-                    var alreadySet = new Diagnostic("The " + enumData.CodeName + " rule setting was already set.", DocRange.GetRange(exprContext), Diagnostic.Error);
+                    var alreadySet = new Diagnostic("The " + enumData.Name + " rule setting was already set.", DocRange.GetRange(exprContext), Diagnostic.Error);
 
                     // Get the Event option.
-                    if (enumData == EnumData.GetEnum<RuleEvent>())
+                    if (enumData == ElementRoot.Instance.GetEnum("Event"))
                     {
                         if (_setEventType)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        EventType = (RuleEvent)enumSetting.Member.Value;
+                        EventType = (RuleEvent)Enum.Parse(typeof(RuleEvent), enumSetting.Member.Alias);
                         _setEventType = true;
                         eventContext = exprContext;
                     }
                     // Get the Team option.
-                    if (enumData == EnumData.GetEnum<Team>())
+                    if (enumData == ElementRoot.Instance.GetEnum("Team"))
                     {
                         if (_setTeam)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Team = (Team)enumSetting.Member.Value;
+                        Team = (Team)Enum.Parse(typeof(Team), enumSetting.Member.Alias);
                         _setTeam = true;
                         teamContext = exprContext;
                     }
                     // Get the Player option.
-                    if (enumData == EnumData.GetEnum<PlayerSelector>())
+                    if (enumData == ElementRoot.Instance.GetEnum("Player"))
                     {
                         if (_setPlayer)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Player = (PlayerSelector)enumSetting.Member.Value;
+                        Player = (PlayerSelector)Enum.Parse(typeof(PlayerSelector), enumSetting.Member.Alias);
                         _setPlayer = true;
                         playerContext = exprContext;
                     }
                 }
             }
+
+            // Set the event type to player if the event type was not set and player or team was changed.
+            if (!_setEventType && ((_setPlayer && Player != PlayerSelector.All) || (_setTeam && Team != Team.All)))
+                EventType = RuleEvent.OngoingPlayer;
 
             // Syntax error if changing the Team type when the Event type is set to Global.
             if (_setEventType && EventType == RuleEvent.OngoingGlobal)
@@ -124,11 +134,11 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private static readonly EnumData[] ValidRuleEnums = new EnumData[]
+        private static readonly ElementEnum[] ValidRuleEnums = new ElementEnum[]
         {
-            EnumData.GetEnum<RuleEvent>(),
-            EnumData.GetEnum<Team>(),
-            EnumData.GetEnum<PlayerSelector>()
+            ElementRoot.Instance.GetEnum("Event"),
+            ElementRoot.Instance.GetEnum("Team"),
+            ElementRoot.Instance.GetEnum("Player")
         };
     }
 

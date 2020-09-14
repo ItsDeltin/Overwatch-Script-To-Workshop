@@ -80,6 +80,17 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        public void CopyAll(Scope other, Scope getter)
+        {
+            other.IterateElements(getter, true, true, iterate => {
+                if (iterate.Element is IVariable variable) Variables.Add(variable);
+                if (iterate.Element is IMethod method && !HasConflict(method)) Methods.Add(method);
+
+                if (iterate.Container.PrivateCatch) return ScopeIterateAction.StopAfterScope;
+                return ScopeIterateAction.Continue;
+            });
+        }
+
         /// <summary>
         /// Adds a variable to the current scope.
         /// When handling variables added by the user, supply the diagnostics and range to show the syntax error at.
@@ -351,7 +362,7 @@ namespace Deltin.Deltinteger.Parse
             // Just return true if the access level is public.
             if (accessLevel == AccessLevel.Public) return true;
 
-            Scope current = Parent;
+            Scope current = this;
             while (current != null)
             {
                 // If the current scope is the scope being looked for, return true.
@@ -395,25 +406,35 @@ namespace Deltin.Deltinteger.Parse
             return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || getter.AccessorMatches(element));
         }
 
-        public static Scope GetGlobalScope()
+        public static Scope GetGlobalScope(ITypeSupplier typeSupplier)
         {
             Scope globalScope = new Scope();
 
             // Add workshop methods
-            foreach (var workshopMethod in ElementList.Elements)
-                if (!workshopMethod.Hidden)
-                    globalScope.AddMethod(workshopMethod, null, null);
+            var workshopFunctions = ElementList.GetWorkshopFunctions(typeSupplier);
+            foreach (var func in workshopFunctions) globalScope.AddNativeMethod(func);
             
             // Add custom methods
             foreach (var builtInMethod in CustomMethods.CustomMethodData.GetCustomMethods())
                 if (builtInMethod.Global)
-                    globalScope.AddMethod(builtInMethod, null, null);
+                    globalScope.AddNativeMethod(builtInMethod);
 
             return globalScope;
         }
 
-        public bool IsAlreadyInScope(IMethod method) => Methods.Contains(method);
-        public bool IsAlreadyInScope(IScopeable scopeable) => Variables.Contains(scopeable);
+        public bool ScopeContains(IScopeable scopeable, Scope getter)
+        {
+            bool found = false;
+            IterateElements(getter, true, true, iterate => {
+                if (iterate.Element == scopeable)
+                {
+                    found = true;
+                    return ScopeIterateAction.Stop;
+                }
+                return ScopeIterateAction.Continue;
+            });
+            return found;
+        }
     
         public void EndScope(ActionSet actionSet, bool includeParents)
         {

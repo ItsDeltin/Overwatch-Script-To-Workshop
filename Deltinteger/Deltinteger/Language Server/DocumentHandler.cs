@@ -12,7 +12,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
-
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using MediatR;
 
 namespace Deltin.Deltinteger.LanguageServer
@@ -27,13 +27,14 @@ namespace Deltin.Deltinteger.LanguageServer
         public List<TextDocumentItem> Documents { get; } = new List<TextDocumentItem>();
         private DeltintegerLanguageServer _languageServer { get; } 
         private SynchronizationCapability _compatibility;
+        private TaskCompletionSource<Unit> _scriptReady = new TaskCompletionSource<Unit>();
 
         public DocumentHandler(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
         }
 
-        public TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
+        public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
         {
             return new TextDocumentAttributes(uri, "ostw");
         }
@@ -60,17 +61,17 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             if (_sendTextOnSave)
             {
-                var document = TextDocumentFromUri(saveParams.TextDocument.Uri);
+                var document = TextDocumentFromUri(saveParams.TextDocument.Uri.ToUri());
                 document.Text = saveParams.Text;
                 return Parse(document);
             }
-            else return Parse(saveParams.TextDocument.Uri);
+            else return Parse(saveParams.TextDocument.Uri.ToUri());
         }
 
         // Handle close.
         public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
         {
-            Documents.Remove(TextDocumentFromUri(closeParams.TextDocument.Uri));
+            Documents.Remove(TextDocumentFromUri(closeParams.TextDocument.Uri.ToUri()));
             return Unit.Task;
         }
 
@@ -78,13 +79,13 @@ namespace Deltin.Deltinteger.LanguageServer
         public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
         {
             Documents.Add(openParams.TextDocument);
-            return Parse(openParams.TextDocument.Uri);
+            return Parse(openParams.TextDocument.Uri.ToUri());
         }
 
         // Handle change.
         public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
         {
-            var document = TextDocumentFromUri(changeParams.TextDocument.Uri);
+            var document = TextDocumentFromUri(changeParams.TextDocument.Uri.ToUri());
             foreach (var change in changeParams.ContentChanges)
             {
                 int start = PosIndex(document.Text, change.Range.Start);
@@ -145,79 +146,64 @@ namespace Deltin.Deltinteger.LanguageServer
         Task<Unit> Parse(Uri uri) => Parse(TextDocumentFromUri(uri));
         Task<Unit> Parse(TextDocumentItem document)
         {
-            _typeWait.Restart();
-
-            lock (_parseItemLock) _parseItem = document;
-
-            if (!_updateTaskIsRunning)
-            {
-                _updateTaskIsRunning = true;
-                _updateTask = Task.Run(Update);
-            }
-            return Unit.Task;
+            return Task.Run(() => {
+                Update(document);
+                return Unit.Value;
+            });
         }
 
-        private const int TimeToUpdate = 250;
-        private TextDocumentItem _parseItem;
-        private object _parseItemLock = new object();
-        private Stopwatch _typeWait = new Stopwatch();
-        private object _parseLock = new object();
-        private bool _updateTaskIsRunning = false;
-        private Task<Unit> _updateTask = null;
-
-        Unit Update()
+        void Update(TextDocumentItem item)
         {
-            SpinWait.SpinUntil(() => {
-                lock (_parseLock) return _typeWait.ElapsedMilliseconds >= TimeToUpdate;
-            });
+            try
+            {
+                Diagnostics diagnostics = new Diagnostics();
+                ScriptFile root = new ScriptFile(diagnostics, item.Uri.ToUri(), item.Text);
+                DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter) {
+                    OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
+                    OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput
+                });
+                _languageServer.LastParse = deltinScript;
 
-            lock (_parseLock)
-            {   
-                try
+                if (!_scriptReady.Task.IsCompleted)
+                    _scriptReady.SetResult(Unit.Value);
+
+                // Publish the diagnostics.
+                var publishDiagnostics = diagnostics.GetDiagnostics();
+                foreach (var publish in publishDiagnostics)
+                    _languageServer.Server.TextDocument.PublishDiagnostics(publish);
+                
+                if (deltinScript.WorkshopCode != null)
                 {
-                    Diagnostics diagnostics = new Diagnostics();
-                    ScriptFile root;
-                    lock (_parseItemLock) root = new ScriptFile(diagnostics, _parseItem.Uri, _parseItem.Text);
-                    DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter) {
-                        OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
-                        OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput
-                    });
-                    _languageServer.LastParse = deltinScript;
-
-                    // Publish the diagnostics.
-                    var publishDiagnostics = diagnostics.GetDiagnostics();
-                    foreach (var publish in publishDiagnostics)
-                        _languageServer.Server.Document.PublishDiagnostics(publish);
-                    
-                    if (deltinScript.WorkshopCode != null)
-                    {
-                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
-                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, deltinScript.ElementCount.ToString());
-                    }
-                    else
-                    {
-                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, diagnostics.OutputDiagnostics());
-                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
-                    }
+                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
+                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, deltinScript.ElementCount.ToString());
                 }
-                catch (Exception ex)
+                else
                 {
-                    Serilog.Log.Error(ex, "An exception was thrown while parsing.");
-                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
+                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, diagnostics.OutputDiagnostics());
                     _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
                 }
-                finally
-                {
-                    _updateTaskIsRunning = false;
-                    _typeWait.Stop();
-                }
-                return Unit.Value;
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "An exception was thrown while parsing.");
+                _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
+                _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
             }
         }
 
-        public void WaitForNextUpdate()
+        public async Task<DeltinScript> OnScriptAvailability()
         {
-            SpinWait.SpinUntil(() => { lock(_parseLock) return !_updateTaskIsRunning; });
+            await Task.WhenAny(_scriptReady.Task, Task.Delay(10000));
+            return _languageServer.LastParse;
+        }
+    }
+
+    class TypeUpdateQueue
+    {
+        public TextDocumentItem ParseItem { get; }
+        public TypeUpdateQueue(TextDocumentItem parseItem)
+        {
+            ParseItem = parseItem;
         }
     }
 }

@@ -10,16 +10,22 @@ namespace Deltin.Deltinteger.Parse
 {    
     class ValueGroupType : CodeType
     {
-        public EnumData EnumData { get; }
-        private Scope Scope { get; } = new Scope();
+        public ElementEnum EnumData { get; }
+        private Scope Scope { get; }
         private List<EnumValuePair> ValuePairs { get; } = new List<EnumValuePair>();
         private bool Constant { get; }
 
-        public ValueGroupType(EnumData enumData, bool constant) : base(enumData.CodeName)
+        public ValueGroupType(ElementEnum enumData, bool constant) : base(enumData.Name)
         {
+            Scope = new Scope("enum " + Name);
             Constant = constant;
             EnumData = enumData;
-            foreach (EnumMember member in enumData.Members)
+            TokenType = TokenType.Enum;
+
+            if (constant)
+                TokenModifiers.Add(TokenModifier.Readonly);
+
+            foreach (ElementEnumMember member in enumData.Members)
             {
                 EnumValuePair newPair = new EnumValuePair(member, constant, this);
                 ValuePairs.Add(newPair);
@@ -33,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (EnumValuePair pair in ValuePairs)
             {
                 if (Constant) translateInfo.DefaultIndexAssigner.Add(pair, pair.Member);
-                else translateInfo.DefaultIndexAssigner.Add(pair, EnumData.ToElement(pair.Member));
+                else translateInfo.DefaultIndexAssigner.Add(pair, pair.Member.ToElement());
             }
         }
 
@@ -53,30 +59,32 @@ namespace Deltin.Deltinteger.Parse
                 hoverContents.NewSection().Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
 
             parseInfo.Script.AddHover(callRange, hoverContents.ToString());
+            parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
             parseInfo.TranslateInfo.Types.CallType(this);
         }
 
         public static readonly ValueGroupType[] EnumTypes = GetEnumTypes();
         private static ValueGroupType[] GetEnumTypes()
         {
-            var enums = EnumData.GetEnumData();
+            var enums = ElementRoot.Instance.Enumerators;
             ValueGroupType[] types = new ValueGroupType[enums.Length];
             for (int i = 0; i < types.Length; i++) types[i] = new ValueGroupType(enums[i], !enums[i].ConvertableToElement());
             return types;
         }
 
-        public static ValueGroupType GetEnumType(EnumData enumData) => EnumTypes.First(t => t.EnumData == enumData);
-        public static ValueGroupType GetEnumType<T>() => GetEnumType(EnumData.GetEnum<T>());
+        public static ValueGroupType GetEnumType(ElementEnum enumData) => EnumTypes.First(t => t.EnumData == enumData);
+        public static ValueGroupType GetEnumType(string name) => GetEnumType(ElementRoot.Instance.GetEnum(name));
     }
 
     class EnumValuePair : InternalVar
     {
-        public EnumMember Member { get; }
+        public ElementEnumMember Member { get; }
 
-        public EnumValuePair(EnumMember member, bool constant, CodeType type) : base(member.CodeName, constant ? CompletionItemKind.Constant : CompletionItemKind.EnumMember)
+        public EnumValuePair(ElementEnumMember member, bool constant, CodeType type) : base(member.CodeName(), constant ? CompletionItemKind.Constant : CompletionItemKind.EnumMember)
         {
             Member = member;
             CodeType = type;
+            TokenType = Deltin.Deltinteger.Parse.TokenType.EnumMember;
         }
     }
 }

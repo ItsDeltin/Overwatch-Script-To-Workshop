@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Decompiler.Json;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -86,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Remove the variable from the list of classes.
             actionSet.AddAction(classData.ClassIndexes.SetVariable(
-                value: new V_Number(0),
+                value: 0,
                 index: delete
             ));
 

@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Models
             if (getEffectIDs)
             {
                 effects = actionSet.VarCollection.Assign("_modelEffects", actionSet.IsGlobal, true);
-                actionSet.AddAction(effects.SetVariable(new V_EmptyArray()));
+                actionSet.AddAction(effects.SetVariable(Element.EmptyArray()));
             }
 
             for (int i = 0; i < model.Lines.Length; i++)
@@ -57,11 +57,11 @@ namespace Deltin.Deltinteger.Models
 
                 // Get the last created effect and append it to the store array.
                 if (effects != null)
-                    actionSet.AddAction(effects.ModifyVariable(Operation.AppendToArray, new V_LastCreatedEntity()));
+                    actionSet.AddAction(effects.ModifyVariable(Operation.AppendToArray, Element.LastEntity()));
 
                 // Add a wait every 12 effects to prevent high server load.
                 if (i % 10 == 0)
-                    actionSet.AddAction(A_Wait.MinimumWait);
+                    actionSet.AddAction(Element.Wait());
             }
 
             return effects?.GetVariable();
@@ -82,11 +82,11 @@ namespace Deltin.Deltinteger.Models
                 double? constantScale = null;
 
                 // Double constant scale
-                if (scale.ConstantSupported<double>())
-                    constantScale = (double)scale.GetConstant();
+                if (scale.TryGetConstant(out double newScale))
+                    constantScale = newScale;
                 
                 // Null constant rotation
-                else if (scale is V_Null)
+                else if (scale.Function.Name == "Null")
                     constantScale = 1;
 
                 if (constantScale == 1)
@@ -105,15 +105,15 @@ namespace Deltin.Deltinteger.Models
                 Vertex rotationConstant = null;
 
                 // Vector constant rotation
-                if (rotation.ConstantSupported<Vertex>())
-                    rotationConstant = (Vertex)rotation.GetConstant();
+                if (rotation.TryGetConstant(out Vertex newPosition))
+                    rotationConstant = newPosition;
                 
                 // Double constant rotation
-                else if (rotation.ConstantSupported<double>())
-                    rotationConstant = new Vertex(0, (double)rotation.GetConstant(), 0);
+                else if (rotation.TryGetConstant(out double y))
+                    rotationConstant = new Vertex(0, y, 0);
                 
                 // Null constant rotation
-                else if (rotation is V_Null)
+                else if (rotation.Function.Name == "Null")
                     rotationConstant = new Vertex(0, 0, 0);
                 
                 if (rotationConstant != null && rotationConstant.EqualTo(new Vertex(0, 0, 0)))
@@ -136,14 +136,14 @@ namespace Deltin.Deltinteger.Models
                 var pos2Y = vertex2.Y;
                 var pos2Z = vertex2.Z;
 
-                var yaw = Element.Part<V_HorizontalAngleFromDirection>(rotation);
-                var pitch = Element.Part<V_VerticalAngleFromDirection>(rotation);
+                var yaw = Element.Part("Horizontal Angle From Direction", rotation);
+                var pitch = Element.Part("Vertical Angle From Direction", rotation);
 
-                var cosa = Element.Part<V_CosineFromDegrees>(pitch);
-                var sina = Element.Part<V_SineFromDegrees>(pitch);
+                var cosa = Element.Part("Cosine From Degrees", pitch);
+                var sina = Element.Part("Sine From Degrees", pitch);
 
-                var cosb = Element.Part<V_CosineFromDegrees>(yaw);
-                var sinb = Element.Part<V_SineFromDegrees>(yaw);
+                var cosb = Element.Part("Cosine From Degrees", yaw);
+                var sinb = Element.Part("Sine From Degrees", yaw);
 
                 var Axx = cosa * cosb;
                 var Axy = 0 - sina;
@@ -155,7 +155,7 @@ namespace Deltin.Deltinteger.Models
 
                 var Azx = -sinb;
                 
-                pos1 = Element.Part<V_Vector>(
+                pos1 = Element.Vector(
                     Axx * pos1X +
                     Axy * pos1Y +
                     Axz * pos1Z,
@@ -166,7 +166,7 @@ namespace Deltin.Deltinteger.Models
                     pos1Z
                 );
 
-                pos2 = Element.Part<V_Vector>(
+                pos2 = Element.Vector(
                     Axx * pos2X +
                     Axy * pos2Y +
                     Axz * pos2Z,
@@ -189,12 +189,12 @@ namespace Deltin.Deltinteger.Models
                 pos2 = pos2 * scale;
             }
 
-            actionSet.AddAction(Element.Part<A_CreateBeamEffect>(
+            actionSet.AddAction(Element.Part("Create Beam Effect",
                 visibleTo,
-                EnumData.GetEnumValue(BeamType.GrappleBeam),
+                ElementRoot.Instance.GetEnumValue("BeamType", "GrappleBeam"),
                 location + pos1,
                 location + pos2,
-                EnumData.GetEnumValue(Elements.Color.Red),
+                ElementRoot.Instance.GetEnumValue("Color", "Red"),
                 reevaluation
             ));
         }
@@ -212,7 +212,7 @@ namespace Deltin.Deltinteger.Models
             if (getIds)
             {
                 effects = actionSet.VarCollection.Assign("_modelEffects", actionSet.IsGlobal, true);
-                actionSet.AddAction(effects.SetVariable(new V_EmptyArray()));
+                actionSet.AddAction(effects.SetVariable(Element.EmptyArray()));
             }
             
             RenderModel(actionSet, model, visibleTo, location, rotation, scale, effectRev, getIds);
@@ -273,7 +273,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location that the model will be shown."),
             new CodeParameter("rotation", "The rotation of the model."),
             new CodeParameter("scale", "The scale of the model."),
-            new CodeParameter("reevaluation", "Specifies which of this methods' inputs will be continuously reevaluated, the model will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<EffectRev>()),
+            new CodeParameter("reevaluation", "Specifies which of this methods' inputs will be continuously reevaluated, the model will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType("EffectRev")),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the model. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 
@@ -284,7 +284,7 @@ namespace Deltin.Deltinteger.Models
             Element location            = (Element)parameterValues[2];
             Element rotation            = (Element)parameterValues[3];
             Element scale               = (Element)parameterValues[4];
-            EnumMember effectRev     = (EnumMember)parameterValues[5];
+            ElementEnumMember effectRev     = (ElementEnumMember)parameterValues[5];
             bool getIds            = (bool)additionalParameterData[6];
 
             return RenderModel(actionSet, model, visibleTo, location, rotation, scale, effectRev, getIds);
@@ -295,9 +295,9 @@ namespace Deltin.Deltinteger.Models
     {
         public ModelParameter(string parameterName, string description) : base(parameterName, description, ".obj") {}
     
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            string filepath = base.Validate(script, value, valueRange) as string;
+            string filepath = base.Validate(parseInfo, value, valueRange) as string;
             if (filepath == null) return null;
 
             Model newModel;
@@ -307,7 +307,7 @@ namespace Deltin.Deltinteger.Models
             }
             catch (Exception)
             {
-                script.Diagnostics.Error("Failed to load the model.", valueRange);
+                parseInfo.Script.Diagnostics.Error("Failed to load the model.", valueRange);
                 return null;
             }
 
@@ -327,7 +327,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location to display the text."),
             new CodeParameter("rotation", "The rotation of the text."),
             new CodeParameter("scale", "The scale of the text."),
-            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<EffectRev>()),
+            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType("EffectRev")),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the text. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 
@@ -339,7 +339,7 @@ namespace Deltin.Deltinteger.Models
             Element location = (Element)parameterValues[3];
             Element rotation = (Element)parameterValues[4];
             Element scale = (Element)parameterValues[5];
-            EnumMember effectRev = (EnumMember)parameterValues[6];
+            ElementEnumMember effectRev = (ElementEnumMember)parameterValues[6];
             bool getIds = (bool)additionalParameterData[7];
 
             return RenderText(actionSet, text, font, 9, visibleTo, location, rotation, scale, effectRev, getIds, 20);
@@ -350,11 +350,11 @@ namespace Deltin.Deltinteger.Models
     {
         public FontParameter(string name, string documentation) : base(name, documentation) {}
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            string font = base.Validate(script, value, valueRange) as string;
+            string font = base.Validate(parseInfo, value, valueRange) as string;
             if (font == null) return null;
-            return ModelCreator.GetFontFamily(script, valueRange, font);
+            return ModelCreator.GetFontFamily(parseInfo.Script, valueRange, font);
         }
     }
 
@@ -367,7 +367,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location to display the text."),
             new CodeParameter("rotation", "The rotation of the text."),
             new CodeParameter("scale", "The scale of the text."),
-            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<EffectRev>()),
+            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType("EffectRev")),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the text. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 
@@ -378,7 +378,7 @@ namespace Deltin.Deltinteger.Models
             Element location = (Element)parameterValues[2];
             Element rotation = (Element)parameterValues[3];
             Element scale = (Element)parameterValues[4];
-            EnumMember effectRev = (EnumMember)parameterValues[5];
+            ElementEnumMember effectRev = (ElementEnumMember)parameterValues[5];
             bool getIds = (bool)additionalParameterData[6];
 
             return RenderText(actionSet, text, GetFontFamily(null, null, "BigNoodleTooOblique"), 9, visibleTo, location, rotation, scale, effectRev, getIds, 0);
@@ -394,7 +394,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location to display the text."),
             new CodeParameter("rotation", "The rotation of the text."),
             new CodeParameter("scale", "The scale of the text."),
-            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<EffectRev>()),
+            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType("EffectRev")),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the text. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 
@@ -405,7 +405,7 @@ namespace Deltin.Deltinteger.Models
             Element location = (Element)parameterValues[2];
             Element rotation = (Element)parameterValues[3];
             Element scale = (Element)parameterValues[4];
-            EnumMember effectRev = (EnumMember)parameterValues[5];
+            ElementEnumMember effectRev = (ElementEnumMember)parameterValues[5];
             bool getIds = (bool)additionalParameterData[6];
 
             return RenderModel(actionSet, text, visibleTo, location, rotation, scale, effectRev, getIds);
@@ -416,64 +416,14 @@ namespace Deltin.Deltinteger.Models
     {
         public EconomicTextParameter(string name, string documentation) : base(name, documentation) {}
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            string text = base.Validate(script, value, valueRange) as string;
+            string text = base.Validate(parseInfo, value, valueRange) as string;
             if (text == null) return null;
 
-            var lines = Letter.Create(text, false, script, valueRange);
+            var lines = Letter.Create(text, false, parseInfo.Script, valueRange);
             if (lines == null) return null;
             return new Model(lines);
         }
-    }
-
-    class VertexParameter : CodeParameter
-    {
-        public VertexParameter(string name, string documentation) : base(name, documentation) {}
-
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
-        {
-            if (value is NullAction) return new Vertex();
-            else if (value is NumberAction) return new Vertex(((NumberAction)value).Value, 0);
-            else if (value is CallMethodAction && GetVertex((CallMethodAction)value, out Vertex vertex)) return vertex;
-
-            script.Diagnostics.Error("Expected a vector constant, number constant, or null.", valueRange);
-            return null;
-        }
-
-        private static bool GetVertex(CallMethodAction callMethod, out Vertex vertex)
-        {
-            vertex = null;
-
-            if (callMethod.CallingMethod == ElementList.GetElement<V_Vector>())
-            {
-                double x = 0, y = 0, z = 0;
-
-                if (callMethod.ParameterValues[0] != null)
-                {
-                    var num = callMethod.ParameterValues[0] as NumberAction;
-                    if (num == null) return false;
-                    x = num.Value;
-                }
-                if (callMethod.ParameterValues[1] != null)
-                {
-                    var num = callMethod.ParameterValues[1] as NumberAction;
-                    if (num == null) return false;
-                    y = num.Value;
-                }
-                if (callMethod.ParameterValues[2] != null)
-                {
-                    var num = callMethod.ParameterValues[2] as NumberAction;
-                    if (num == null) return false;
-                    z = num.Value;
-                }
-
-                vertex = new Vertex(x, y, z);
-                return true;
-            }
-            return false;
-        }
-
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
     }
 }
