@@ -72,12 +72,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token NameToken { get; }
         public Token Disabled { get; }
         public Token Order { get; }
+        public NumberExpression Order { get; }
         public List<RuleSetting> Settings { get; }
         public List<IfCondition> Conditions { get; }
         public IParseStatement Statement { get; }
         public string Name => Extras.RemoveQuotes(NameToken.GetText());
 
-        public RuleContext(Token ruleToken, Token name, Token disabled, Token order, List<RuleSetting> settings, List<IfCondition> conditions, IParseStatement statement)
+        public RuleContext(Token ruleToken, Token name, Token disabled, NumberExpression order, List<RuleSetting> settings, List<IfCondition> conditions, IParseStatement statement)
         {
             RuleToken = ruleToken;
             NameToken = name;
@@ -316,14 +317,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class NumberExpression : Node, IParseExpression
     {
-        public Token Token { get; }
         public double Value { get; }
 
         public NumberExpression(Token token)
         {
-            Token = token;
-            Value = double.Parse(token.Text);
-            Range = Token.Range;
+            Value = value;
         }
 
         public override string ToString() => Value.ToString();

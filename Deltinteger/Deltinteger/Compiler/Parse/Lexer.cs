@@ -382,10 +382,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             LexScanner scanner = MakeScanner();
 
-            // Capture -
-            if (scanner.At('-'))
-                scanner.Advance();
-
             // Get the number.
             bool foundLeftNumber = false;
             while (scanner.AtNumeric())

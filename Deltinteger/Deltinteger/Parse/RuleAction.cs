@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the rule order priority.
             if (ruleContext.Order != null)
-                Priority = double.Parse(ruleContext.Order.Text);
+                Priority = ruleContext.Order.Value;
             
             ElementCountLens = new ElementCountCodeLens(ruleInfoRange, parseInfo.TranslateInfo.OptimizeOutput);
             parseInfo.Script.AddCodeLensRange(ElementCountLens);

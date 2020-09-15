@@ -342,6 +342,30 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         // Expressions
+        NumberExpression ParseNumber()
+        {
+            StartNode();
+
+            // Negative number.
+            bool negative = ParseOptional(TokenType.Subtract);
+
+            // Get the number.
+            Token numberToken = ParseExpected(TokenType.Number);
+
+            // Parse the value.
+            double value = 0;
+            if (numberToken)
+            {
+                value = double.Parse(numberToken.Text);
+                if (negative) value = -value;
+            }
+
+            // Done.
+            return EndNode(new NumberExpression(value));
+        }
+
+        bool IsNumber() => Is(TokenType.Number) || (Is(TokenType.Subtract) && Is(TokenType.Number, 1));
+
         /// <summary>Parses the current expression. In most cases, 'GetContainExpression' should be called instead.</summary>
         /// <returns>The resulting expression.</returns>
         public IParseExpression GetExpressionWithArray()
@@ -364,20 +388,24 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             switch (Kind)
             {
+                // Negative number or unary operator
+                case TokenType.Subtract:
+                    if (IsNumber()) return ParseNumber();
+                    goto case TokenType.Exclamation;
+
                 // Unary operator
                 case TokenType.Exclamation:
-                case TokenType.Subtract:
                     var op = ParseUnaryOperator();
                     PushOperator(op);
                     var value = GetExpressionWithArray();
                     Operands.Push(value);
                     return value;
                 
+                // Numbers
+                case TokenType.Number: return ParseNumber();
                 // Booleans
                 case TokenType.True: return new BooleanExpression(Consume(), true);
                 case TokenType.False: return new BooleanExpression(Consume(), false);
-                // Numbers
-                case TokenType.Number: return new NumberExpression(Consume());
                 // Strings
                 case TokenType.String: return Node(() => new StringExpression(null, Consume()));
                 // Localized strings
@@ -437,7 +465,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         /// <summary>Contains the operator stack and parses an expression.</summary>
         /// <returns>The resulting expression.</returns>
-        public IParseExpression GetContainExpression(bool stringCheck = false)
+        IParseExpression GetContainExpression(bool stringCheck = false)
         {
             StringCheck.Push(stringCheck);
             TernaryCheck.Push(false);
@@ -482,11 +510,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
-        public List<ParameterValue> ParseParameterValuesIfNotClosing() => Is(TokenType.Parentheses_Close) ? new List<ParameterValue>() : ParseParameterValues();
+        List<ParameterValue> ParseParameterValuesIfNotClosing() => Is(TokenType.Parentheses_Close) ? new List<ParameterValue>() : ParseParameterValues();
 
         /// <summary>Parses the inner parameter values of a function.</summary>
         /// <returns></returns>
-        public List<ParameterValue> ParseParameterValues()
+        List<ParameterValue> ParseParameterValues()
         {
             // Get the parameters.
             List<ParameterValue> values = new List<ParameterValue>();
@@ -667,7 +695,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (GetIncrementalNode(out Return ret)) return EndTokenCapture(ret);
 
             var returnToken = ParseExpected(TokenType.Return);
-            var expression = GetContainExpression();
+            IParseExpression expression = null;
+            // Get the value being returned if the next token is not a semicolon.
+            if (!Is(TokenType.Semicolon)) expression = GetContainExpression();
+            // Parse the semicolon.
             ParseSemicolon();
             return EndTokenCapture(new Return(returnToken, expression));
         }
@@ -886,9 +917,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Get the type arguments.
             if (ParseOptional(TokenType.LessThan))
             {
-                do {
-                    typeArgs.Add(ParseType());
-                }
+                do typeArgs.Add(ParseType());
                 while (ParseOptional(TokenType.Comma));
 
                 ParseExpected(TokenType.GreaterThan);
@@ -1319,7 +1348,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.Colon);
 
             Token name = ParseExpected(TokenType.String);
-            Token order = ParseOptional(TokenType.Number);
+            NumberExpression order = null;
+            if (IsNumber()) order = ParseNumber();
 
             // Get the rule options.
             var settings = new List<RuleSetting>();
