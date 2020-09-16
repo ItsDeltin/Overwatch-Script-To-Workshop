@@ -550,8 +550,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     else if (func.WorkshopParameters[currentParameter] is EnumParameter enumParam)
                     {
                         // Match enum member
-                        foreach (var member in enumParam.EnumData.Members.OrderByDescending(m => m.WorkshopName.Length))
-                            if (Match(Kw(member.WorkshopName), false))
+                        foreach (var member in enumParam.EnumData.Members.OrderByDescending(m => m.DecompileName.Length))
+                            if (Match(Kw(member.DecompileName), false))
                             {
                                 values.Add(new ConstantEnumeratorExpression(member));
                                 break;
@@ -886,9 +886,29 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             if (op.Type == OperatorType.Binary)
             {
                 // Binary
-                var right = _operands.Pop();
-                var left = _operands.Pop();
-                _operands.Push(new BinaryOperatorExpression(left, right, op));
+                if (op.Contain == ContainGroup.Left)
+                {
+                     var right = _operands.Pop();
+                    var left = _operands.Pop();
+                    _operands.Push(new BinaryOperatorExpression(left, right, op));
+                    return;
+                }
+
+                Stack<ITTEExpression> exprs = new Stack<ITTEExpression>();
+                exprs.Push(_operands.Pop());
+                exprs.Push(_operands.Pop());
+
+                while (_operators.Peek() == op)
+                {
+                    _operators.Pop();
+                    exprs.Push(_operands.Pop());
+                }
+
+                ITTEExpression result = exprs.Pop();
+                while (exprs.Count != 0)
+                    result = new BinaryOperatorExpression(result, exprs.Pop(), op);
+                
+                _operands.Push(result);
             }
             else if (op.Type == OperatorType.Unary)
             {

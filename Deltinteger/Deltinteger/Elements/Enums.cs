@@ -119,6 +119,7 @@ namespace Deltin.Deltinteger.Elements
         public EnumData @Enum { get; }
         public string CodeName { get; }
         public string WorkshopName { get; }
+        public string DecompileName { get; }
         public object UnderlyingValue { get; }
         public object Value { get; }
         public bool IsHidden { get; }
@@ -128,6 +129,7 @@ namespace Deltin.Deltinteger.Elements
             @Enum = @enum;
             CodeName = codeName;
             WorkshopName = workshopName;
+            DecompileName = WorkshopName.Replace("(", "").Replace(")", "");
             UnderlyingValue = System.Convert.ChangeType(value, @Enum.UnderlyingType);
             Value = value;
             IsHidden = isHidden;
