@@ -5,6 +5,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Lambda;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
@@ -132,6 +133,8 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets the full name of the type.</summary>
         public virtual string GetName() => Name;
 
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, IParseType typeContext) => GetCodeTypeFromContext(parseInfo, (dynamic)typeContext);
+
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, ParseType typeContext)
         {
             if (typeContext == null) return null;
@@ -164,6 +167,15 @@ namespace Deltin.Deltinteger.Parse
                 type = new ArrayType(type);
 
             return type;
+        }
+
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, LambdaType type)
+        {
+            var parameters = new CodeType[type.Parameters.Count];
+            for (int i = 0; i < parameters.Length; i++)
+                parameters[i] = GetCodeTypeFromContext(parseInfo, type.Parameters[i]);
+            
+            return new PortableLambdaType(LambdaKind.Portable, parameters, type.ReturnType.IsVoid ? null : GetCodeTypeFromContext(parseInfo, type.ReturnType));
         }
 
         static List<CodeType> _defaultTypes;

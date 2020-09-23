@@ -16,11 +16,11 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
 
         public VarBuilderAttribute[] GetAttributes() => new VarBuilderAttribute[0];
-        public ParseType GetCodeType() => _parameter.Type;
+        public IParseType GetCodeType() => _parameter.Type;
         public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, _parameter.Identifier.Range);
         public string GetName() => _parameter.Identifier.Text;
         public DocRange GetNameRange() => _parameter.Identifier.Range;
-        public DocRange GetTypeRange() => _parameter.Type.Range;
+        public DocRange GetTypeRange() => _parameter.Type?.Range;
         public bool CheckName() => _parameter.Identifier;
     }
 }

@@ -19,6 +19,7 @@ namespace Deltin.Deltinteger.Parse
         public VariableType VariableType => VariableType.Global;
         public bool Static => true;
         public TokenType? TokenType { get; set; } = null;
+        public bool RequiresCapture => false;
 
         public InternalVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
         {

@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger
         };
     }
 
-    public class MethodCall
+    public class MethodCall : Deltin.Deltinteger.Parse.FunctionBuilder.ICallHandler
     {
         public IWorkshopTree[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }

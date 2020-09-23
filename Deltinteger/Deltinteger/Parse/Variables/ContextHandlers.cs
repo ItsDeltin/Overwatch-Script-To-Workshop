@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Gets the code type context.
-        public ParseType GetCodeType() => _defineContext.Type;
+        public IParseType GetCodeType() => _defineContext.Type;
 
         // Gets the attributes.
         public VarBuilderAttribute[] GetAttributes()

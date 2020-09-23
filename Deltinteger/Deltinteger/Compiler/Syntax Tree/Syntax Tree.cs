@@ -34,22 +34,27 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public interface IDeclaration
     {
         AttributeTokens Attributes { get; }
-        ParseType Type { get; }
+        IParseType Type { get; }
         Token Identifier { get; }
     }
     public interface IListComma
     {
         Token NextComma { get; set; }
     }
+    public interface IParseType : INodeRange
+    {
+        bool LookaheadValid { get; }
+        bool IsVoid { get; }
+    }
 
-    public class ParseType : Node
+    public class ParseType : Node, IParseType
     {
         public Token Identifier { get; }
-        public List<ParseType> TypeArgs { get; }
+        public List<IParseType> TypeArgs { get; }
         public int ArrayCount { get; }
         public bool IsVoid { get; }
 
-        public ParseType(Token identifier, List<ParseType> typeArgs, int arrayCount)
+        public ParseType(Token identifier, List<IParseType> typeArgs, int arrayCount)
         {
             Identifier = identifier;
             TypeArgs = typeArgs;
@@ -67,7 +72,31 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool IsArray => ArrayCount > 0;
         public bool LookaheadValid => Identifier != null;
         public bool IsDefault => !Identifier || Identifier.TokenType == TokenType.Define;
-        public bool DefinitelyType => LookaheadValid && (IsVoid || Identifier.TokenType == TokenType.Define || ArrayCount > 0 || TypeArgs.Count > 0);
+        public bool DefinitelyType => LookaheadValid && (IsVoid || Identifier.TokenType == TokenType.Define || TypeArgs.Count > 0);
+    }
+
+    public class LambdaType : Node, IParseType
+    {
+        public Token ArrowToken { get; }
+        public List<IParseType> Parameters { get; }
+        public IParseType ReturnType { get; }
+
+        public LambdaType(IParseType singleParameter, IParseType returnType, Token arrowToken)
+        {
+            ArrowToken = arrowToken;
+            Parameters = new List<IParseType> { singleParameter };
+            ReturnType = returnType;
+        }
+
+        public LambdaType(List<IParseType> parameters, IParseType returnType, Token arrowToken)
+        {
+            ArrowToken = arrowToken;
+            Parameters = parameters;
+            ReturnType = returnType;
+        }
+
+        public bool LookaheadValid => ArrowToken && ReturnType.LookaheadValid;
+        public bool IsVoid => false;
     }
 
     public class RuleContext : Node
@@ -150,7 +179,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class FunctionContext : Node, IDeclaration
     {
         public AttributeTokens Attributes { get; }
-        public ParseType Type { get; }
+        public IParseType Type { get; }
         public Token Identifier { get; }
         public List<VariableDeclaration> Parameters { get; }
         public Block Block { get; }
@@ -158,7 +187,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token PlayerVar { get; }
         public Token Subroutine { get; }
 
-        public FunctionContext(AttributeTokens attributes, ParseType type, Token identifier, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
+        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
         {
             Attributes = attributes;
             Type = type;
@@ -174,12 +203,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class MacroFunctionContext : Node, IDeclaration
     {
         public AttributeTokens Attributes { get; }
-        public ParseType Type { get; }
+        public IParseType Type { get; }
         public Token Identifier { get; }
         public List<VariableDeclaration> Parameters { get; }
         public IParseExpression Expression { get; }
 
-        public MacroFunctionContext(AttributeTokens attributes, ParseType type, Token identifier, List<VariableDeclaration> parameters, IParseExpression expression)
+        public MacroFunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<VariableDeclaration> parameters, IParseExpression expression)
         {
             Attributes = attributes;
             Type = type;
@@ -194,13 +223,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public AttributeTokens Attributes { get; }
         public Token LocationToken { get; }
         public List<VariableDeclaration> Parameters { get; }
+        public Token SubroutineName { get; }
         public Block Block { get; }
 
-        public ConstructorContext(AttributeTokens attributes, Token locationToken, List<VariableDeclaration> parameters, Block block)
+        public ConstructorContext(AttributeTokens attributes, Token locationToken, List<VariableDeclaration> parameters, Token subroutineName, Block block)
         {
             Attributes = attributes;
             LocationToken = locationToken;
             Parameters = parameters;
+            SubroutineName = subroutineName;
             Block = block;
         }
     }
@@ -465,10 +496,10 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class TypeCast : Node, IParseExpression
     {
-        public ParseType Type { get; }
+        public IParseType Type { get; }
         public IParseExpression Expression { get; }
 
-        public TypeCast(ParseType type, IParseExpression expression)
+        public TypeCast(IParseType type, IParseExpression expression)
         {
             Type = type;
             Expression = expression;
@@ -493,12 +524,17 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class LambdaParameter
     {
-        public ParseType Type { get; }
+        public IParseType Type { get; }
         public Token Identifier { get; }
 
-        public LambdaParameter(ParseType type, Token identifier)
+        public LambdaParameter(IParseType type, Token identifier)
         {
             Type = type;
+            Identifier = identifier;
+        }
+
+        public LambdaParameter(Token identifier)
+        {
             Identifier = identifier;
         }
     }
@@ -677,12 +713,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class Foreach : Node, IParseStatement
     {
-        public ParseType Type { get; }
+        public IParseType Type { get; }
         public Token Identifier { get; }
         public IParseExpression Expression { get; }
         public IParseStatement Statement { get; }
 
-        public Foreach(ParseType type, Token identifier, IParseExpression expression, IParseStatement statement)
+        public Foreach(IParseType type, Token identifier, IParseExpression expression, IParseStatement statement)
         {
             Type = type;
             Identifier = identifier;
@@ -694,13 +730,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class VariableDeclaration : Node, IParseStatement, IDeclaration
     {
         public AttributeTokens Attributes { get; }
-        public ParseType Type { get; }
+        public IParseType Type { get; }
         public Token Identifier { get; }
         public IParseExpression InitialValue { get; }
         public Token Extended { get; }
         public Token ID { get; }
 
-        public VariableDeclaration(AttributeTokens attributes, ParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id)
+        public VariableDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id)
         {
             Attributes = attributes;
             Type = type;
@@ -714,11 +750,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class MacroVarDeclaration : Node, IDeclaration
     {
         public AttributeTokens Attributes { get; }
-        public ParseType Type { get; }
+        public IParseType Type { get; }
         public Token Identifier { get; }
         public IParseExpression Value { get; }
 
-        public MacroVarDeclaration(AttributeTokens attributes, ParseType type, Token identifier, IParseExpression value)
+        public MacroVarDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression value)
         {
             Attributes = attributes;
             Type = type;

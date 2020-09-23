@@ -956,36 +956,75 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndNode(new Delete(expression));
         }
 
-        ParseType ParseType()
+        IParseType ParseType()
         {
             StartNode();
 
             if (ParseOptional(TokenType.Void, out var @void))
                 return EndNode(new ParseType(@void));
 
-            // Get the type name.
-            var identifier = ParseExpected(TokenType.Identifier, TokenType.Define);
-
-            var typeArgs = new List<ParseType>();
-
-            // Get the type arguments.
-            if (ParseOptional(TokenType.LessThan))
+            // If we parse a parentheses, we can assume this is a lambda type.
+            if (!ParseOptional(TokenType.Parentheses_Open))
             {
-                do typeArgs.Add(ParseType());
-                while (ParseOptional(TokenType.Comma));
+                // No parentheses found.
+                // This is either a normal type or a lambda with a single parameter.
 
-                ParseExpected(TokenType.GreaterThan);
+                // Get the type name.
+                var identifier = ParseExpected(TokenType.Identifier, TokenType.Define);
+
+                // No arrow, parse the type normally.
+                var typeArgs = new List<IParseType>();
+
+                // Get the type arguments.
+                if (ParseOptional(TokenType.LessThan))
+                {
+                    do typeArgs.Add(ParseType());
+                    while (ParseOptional(TokenType.Comma));
+
+                    ParseExpected(TokenType.GreaterThan);
+                }
+
+                // Get the array indices
+                int arrayCount = 0;
+                while (ParseOptional(TokenType.SquareBracket_Open))
+                {
+                    ParseExpected(TokenType.SquareBracket_Close);
+                    arrayCount++;
+                }
+                
+                ParseType result = EndNodeWithoutPopping(new ParseType(identifier, typeArgs, arrayCount));
+
+                // If we parse an arrow, this is a lambda type with a single parameter..
+                if (!ParseOptional(TokenType.Arrow, out Token arrow))
+                {
+                    PopNodeStack();
+                    return result;
+                }
+                // Lambda type
+                else
+                {
+                    // Parse the lambda's return type.
+                    var returnType = ParseType();
+                    return EndNode(new LambdaType(result, returnType, arrow));
+                }
             }
-
-            // Get the array indices
-            int arrayCount = 0;
-            while (ParseOptional(TokenType.SquareBracket_Open))
+            else // This is a lambda with parenthesized parameters.
             {
-                ParseExpected(TokenType.SquareBracket_Close);
-                arrayCount++;
+                // Get the parameter types.
+                var parameterTypes = ParseDelimitedList(TokenType.Parentheses_Close, () => Kind.IsStartOfType(), () => ParseType());
+
+                // End the type list parentheses.
+                ParseExpected(TokenType.Parentheses_Close);
+
+                // Lambda arrow.
+                Token arrow = ParseExpected(TokenType.Arrow);
+
+                // Get the return type.
+                var returnType = ParseType();
+
+                // Done.
+                return EndNode(new LambdaType(parameterTypes, returnType, arrow));
             }
-            
-            return EndNode(new ParseType(identifier, typeArgs, arrayCount));
         }
 
         bool IsDeclaration(bool functionDeclaration) => Lookahead(() => {
@@ -1041,12 +1080,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     return ParseExpected(TokenType.Arrow);
 
                 // Parse the parameters.
-                do
-                {
-                    // Parse the lambda parameter's type and identifier.
-                    ParseType();
-                    ParseExpected(TokenType.Identifier);
-                }
+                do ParseExpected(TokenType.Identifier);
                 // Keep parsing while a comma is matched.
                 while (ParseOptional(TokenType.Comma));
 
@@ -1060,7 +1094,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 // A lambda without an opening parentheses has a single parameter.
                 // Parse the parameter type and identifier.
-                ParseType();
                 ParseExpected(TokenType.Identifier);
                 // This is a lambda if the following token is an arrow.
                 return ParseExpected(TokenType.Arrow);
@@ -1089,12 +1122,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (ParseOptional(TokenType.Parentheses_Open))
             {
                 if (!Is(TokenType.Parentheses_Close))
-                    do
-                    {
-                        var type = ParseType();
-                        var identifier = ParseExpected(TokenType.Identifier);
-                        parameters.Add(new LambdaParameter(type, identifier));
-                    }
+                    do parameters.Add(new LambdaParameter(ParseExpected(TokenType.Identifier)));
                     while (ParseOptional(TokenType.Comma));
 
                 // Close the parentheses.
@@ -1103,9 +1131,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Single parameter
             else
             {
-                var type = ParseType();
-                var identifier = ParseExpected(TokenType.Identifier);
-                parameters.Add(new LambdaParameter(type, identifier));
+                parameters.Add(new LambdaParameter(ParseExpected(TokenType.Identifier)));
             }
 
             // Arrow.
@@ -1237,10 +1263,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // End the parentheses.
             ParseExpected(TokenType.Parentheses_Close);
 
+            Token subroutineName = ParseOptional(TokenType.String);
+
             // Get the constructor's block.
             Block block = ParseBlock();
 
-            return new ConstructorContext(attributes, identifier, parameters, block);
+            return new ConstructorContext(attributes, identifier, parameters, subroutineName, block);
         }
 
         NewExpression ParseNew()

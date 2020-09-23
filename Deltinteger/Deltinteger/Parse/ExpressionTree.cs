@@ -159,6 +159,7 @@ namespace Deltin.Deltinteger.Parse
         public ExpressionTreeParseResult ParseTree(ActionSet actionSet, bool expectingValue)
         {
             IGettable resultingVariable = null; // The resulting variable.
+            IndexReference currentObjectReference = null;
             IWorkshopTree target = null; // The resulting player.
             IWorkshopTree result = null; // The resulting value.
             VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
@@ -169,13 +170,13 @@ namespace Deltin.Deltinteger.Parse
             {
                 bool isLast = i == Tree.Length - 1;
                 IWorkshopTree current = null;
-                if (Tree[i] is CallVariableAction)
+                if (Tree[i] is CallVariableAction callVariableAction)
                 {
-                    var callVariableAction = (CallVariableAction)Tree[i];
-
+                    // Get the reference.
                     var reference = currentAssigner[callVariableAction.Calling];
                     current = reference.GetVariable((Element)target);
 
+                    // Get the index.
                     resultIndex = new Element[callVariableAction.Index.Length];
                     for (int ai = 0; ai < callVariableAction.Index.Length; ai++)
                     {
@@ -184,12 +185,13 @@ namespace Deltin.Deltinteger.Parse
                         current = Element.Part<V_ValueInArray>(current, workshopIndex);
                     }
 
-                    // If this is the last node in the tree, set the resulting variable.
-                    if (isLast) resultingVariable = reference;
+                    // Set the resulting variable.
+                    resultingVariable = reference;
+                    currentObjectReference = reference as IndexReference;
                 }
                 else
                 {
-                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject));
+                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject).New(currentObjectReference));
                     if (newCurrent != null)
                     {
                         current = newCurrent;
@@ -375,7 +377,7 @@ namespace Deltin.Deltinteger.Parse
         public void RetrievedScopeable(IScopeable scopeable)
         {
             foreach (var option in _potentialPaths)
-                if (option.GetScope().ScopeContains(scopeable, _tcParseInfo.Getter))
+                if (option.GetScope().ScopeContains(scopeable))
                 {
                     _chosenPath = option;
                     _chosenPath.Accept();

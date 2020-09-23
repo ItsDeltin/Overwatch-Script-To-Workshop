@@ -103,13 +103,13 @@ namespace Deltin.Deltinteger.Parse
         // IStatement
         public void Translate(ActionSet actionSet)
         {
-            CallingMethod.Parse(actionSet.New(NameRange), GetMethodCall(actionSet));
+            CallingMethod.Parse(actionSet, GetMethodCall(actionSet));
         }
 
         // IExpression
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            return CallingMethod.Parse(actionSet.New(NameRange), GetMethodCall(actionSet));
+            return CallingMethod.Parse(actionSet, GetMethodCall(actionSet));
         }
 
         private MethodCall GetMethodCall(ActionSet actionSet)

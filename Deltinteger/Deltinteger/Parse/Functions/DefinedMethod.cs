@@ -5,6 +5,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.FunctionBuilder;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -32,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedMethod virtualSubroutineAssigned { get; set; }
         public SubroutineInfo subroutineInfo { get; private set; }
-        private readonly bool _subroutineDefaultGlobal;
+        public readonly bool _subroutineDefaultGlobal;
 
         public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, FunctionContext context, CodeType containingType)
             : base(parseInfo, context.Identifier.Text, new Location(parseInfo.Script.Uri, context.Identifier.Range))
@@ -146,7 +147,8 @@ namespace Deltin.Deltinteger.Parse
         override public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-            return MethodBuilder.Call(this, methodCall, actionSet);
+            var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(Attributes.AllOverrideOptions().Append(this).Select(op => new DefinedFunctionHandler((DefinedMethod)op)).ToArray()));
+            return controller.Call();
         }
 
         // Sets up single-instance methods for methods with the 'rule' attribute.
@@ -154,73 +156,9 @@ namespace Deltin.Deltinteger.Parse
         {
             if (subroutineInfo != null || !IsSubroutine) return;
 
-            // Setup the subroutine element.
-            Subroutine subroutine = parseInfo.TranslateInfo.SubroutineCollection.NewSubroutine(Name);
-
-            // Create the rule.
-            TranslateRule subroutineRule = new TranslateRule(parseInfo.TranslateInfo, subroutine, SubroutineName, _subroutineDefaultGlobal);
-
-            // Setup the return handler.
-            ReturnHandler returnHandler = new ReturnHandler(subroutineRule.ActionSet, Name, MultiplePaths || Attributes.Virtual);
-            ActionSet actionSet = subroutineRule.ActionSet.New(returnHandler).New(subroutineRule.ActionSet.IndexAssigner.CreateContained());
-
-            // Get the variables that will be used to store the parameters.
-            IndexReference[] parameterStores = new IndexReference[ParameterVars.Length];
-            for (int i = 0; i < ParameterVars.Length; i++)
-            {
-                // Create the workshop variable the parameter will be stored as.
-                IndexReference indexResult = actionSet.IndexAssigner.AddIndexReference(actionSet.VarCollection, ParameterVars[i], _subroutineDefaultGlobal, Attributes.Recursive);
-                parameterStores[i] = indexResult;
-
-                // Assign virtual variables to the index reference.
-                foreach (Var virtualParameterOption in VirtualVarGroup(i))
-                    actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
-            }
-            
-            // If the subroutine is an object function inside a class, create a variable to store the class object.
-            IndexReference objectStore = null;
-            if (Attributes.ContainingType != null && !Static)
-            {
-                objectStore = actionSet.VarCollection.Assign("_" + Name + "_subroutineStore", true, !Attributes.Recursive);
-
-                // Set the objectStore as an empty array if the subroutine is recursive.
-                if (Attributes.Recursive)
-                {
-                    actionSet.InitialSet().AddAction(objectStore.SetVariable(new V_EmptyArray()));
-                    Attributes.ContainingType.AddObjectVariablesToAssigner(Element.Part<V_LastOf>(objectStore.GetVariable()), actionSet.IndexAssigner);
-                    actionSet = actionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable())).PackThis();
-                }
-                else
-                {
-                    Attributes.ContainingType.AddObjectVariablesToAssigner(objectStore.GetVariable(), actionSet.IndexAssigner);
-                    actionSet = actionSet.New(objectStore.GetVariable()).PackThis();
-                }
-            }
-            
-            // Set the subroutine info.
-            subroutineInfo = new SubroutineInfo(subroutine, returnHandler, parameterStores, objectStore);
-
-            MethodBuilder builder = new MethodBuilder(this, actionSet, returnHandler);
-            builder.BuilderSet = builder.BuilderSet.New(Attributes.Recursive);
-            builder.ParseInner();
-
-            // Apply returns.
-            returnHandler.ApplyReturnSkips();
-
-            // Pop object array and parameters if recursive.
-            if (Attributes.Recursive)
-            {
-                if (objectStore != null) actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
-                RecursiveStack.PopParameterStacks(actionSet, ParameterVars);
-            }
-
-            // Add the subroutine.
-            Rule translatedRule = subroutineRule.GetRule();
-            parseInfo.TranslateInfo.WorkshopRules.Add(translatedRule);
-
-            var codeLens = new ElementCountCodeLens(DefinedAt.range, parseInfo.TranslateInfo.OptimizeOutput);
-            parseInfo.Script.AddCodeLensRange(codeLens);
-            codeLens.RuleParsed(translatedRule);
+            var builder = new SubroutineBuilder(parseInfo.TranslateInfo, new DefinedSubroutineContext(parseInfo, this));
+            builder.SetupSubroutine();
+            subroutineInfo = builder.SubroutineInfo;
         }
 
         public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues, bool recursive)

@@ -14,8 +14,11 @@ namespace Deltin.Deltinteger.Parse
         public CallInfo CurrentCallInfo { get; private set; }
         public IBreakContainer BreakHandler { get; private set; }
         public IContinueContainer ContinueHandler { get; private set; }
-        public ITreeContextPart SourceExpression { get; private set; }
         public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
+
+        // Do not persist.
+        public ITreeContextPart SourceExpression { get; private set; }
+        public Lambda.IVariableTracker LocalVariableTracker { get; private set; }
 
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
@@ -29,7 +32,6 @@ namespace Deltin.Deltinteger.Parse
             CurrentCallInfo = other.CurrentCallInfo;
             BreakHandler = other.BreakHandler;
             ContinueHandler = other.ContinueHandler;
-            // SourceExpression = other.SourceExpression; TODO: Should this be here?
             RestrictedCallHandler = other.RestrictedCallHandler;
         }
         public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo, RestrictedCallHandler = currentCallInfo };
@@ -38,6 +40,7 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetContinueHandler(IContinueContainer handler) => new ParseInfo(this) { ContinueHandler = handler };
         public ParseInfo SetSourceExpression(ITreeContextPart treePart) => new ParseInfo(this) { SourceExpression = treePart };
         public ParseInfo SetRestrictedCallHandler(IRestrictedCallHandler callHandler) => new ParseInfo(this) { RestrictedCallHandler = callHandler };
+        public ParseInfo SetVariableTracker(Lambda.IVariableTracker variableTracker) => new ParseInfo(this) { LocalVariableTracker = variableTracker };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
@@ -228,6 +231,10 @@ namespace Deltin.Deltinteger.Parse
                 // Otherwise, confirm that the source expression is returning the player variable scope.
                 if (referencer.VariableType == VariableType.Player)
                     EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
+                
+                // If there is a local variable tracker and the variable requires capture.
+                if (referencer.RequiresCapture && _parseInfo.LocalVariableTracker != null)
+                    _parseInfo.LocalVariableTracker.LocalVariableAccessed(referencer);
 
                 return new CallVariableAction(referencer, index);
             }

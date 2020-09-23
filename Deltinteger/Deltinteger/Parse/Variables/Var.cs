@@ -28,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static { get; }
         public bool Recursive { get; }
         public Lambda.IBridgeInvocable BridgeInvocable { get; }
+        public bool RequiresCapture { get; }
         private readonly TokenType _tokenType;
         private readonly TokenModifier[] _tokenModifiers;
         private readonly bool _handleRestrictedCalls;
@@ -64,6 +65,7 @@ namespace Deltin.Deltinteger.Parse
             Static = varInfo.Static;
             Recursive = varInfo.Recursive;
             BridgeInvocable = varInfo.BridgeInvocable;
+            RequiresCapture = varInfo.RequiresCapture;
             _tokenType = varInfo.TokenType;
             _tokenModifiers = varInfo.TokenModifiers.ToArray();
             _handleRestrictedCalls = varInfo.HandleRestrictedCalls;
@@ -209,6 +211,7 @@ namespace Deltin.Deltinteger.Parse
         public bool HandleRestrictedCalls;
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
         public Lambda.IBridgeInvocable BridgeInvocable;
+        public bool RequiresCapture;
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Lambda;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
 using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
 using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ParameterInformation;
@@ -162,6 +163,10 @@ namespace Deltin.Deltinteger.Parse
             // Add the diagnostics of the best option.
             bestOption.AddDiagnostics(parseInfo.Script.Diagnostics);
             CheckAccessLevel();
+
+            for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
+                if (bestOption.Option.Parameters[i].Type is PortableLambdaType portableLambda && bestOption.OrderedParameters[i].Value is LambdaAction lambda)
+                    lambda.GetLambdaStatement(portableLambda);
 
             return bestOption;
         }

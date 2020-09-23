@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private List<IVariable> Variables { get; } = new List<IVariable>();
         private List<IMethod> Methods { get; } = new List<IMethod>();
-        private Scope Parent { get; }
+        public Scope Parent { get; }
         public string ErrorName { get; set; } = "current scope";
         public CodeType This { get; set; }
         public bool PrivateCatch { get; set; }
@@ -430,7 +430,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (var builtInMethod in CustomMethods.CustomMethodData.GetCustomMethods())
                 if (builtInMethod.Global)
                     globalScope.AddMethod(builtInMethod, null, null);
-
+            
+            globalScope.AddNativeMethod(new Lambda.WaitAsyncFunction());
             return globalScope;
         }
 
