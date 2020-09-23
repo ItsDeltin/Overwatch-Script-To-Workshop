@@ -230,9 +230,6 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            // Setup single-instance methods.
-            foreach (var method in subroutines) method.SetupSubroutine();
-
             // Parse the rules.
             foreach (var rule in rules)
             {
@@ -296,13 +293,6 @@ namespace Deltin.Deltinteger.Parse
         private TranslateRule GetInitialRule(bool isGlobal)
         {
             return isGlobal ? InitialGlobal : InitialPlayer;
-        }
-
-        // Subroutine methods
-        private List<DefinedMethod> subroutines = new List<DefinedMethod>();
-        public void AddSubroutine(DefinedMethod method)
-        {
-            subroutines.Add(method);
         }
 
         // Applyable blocks

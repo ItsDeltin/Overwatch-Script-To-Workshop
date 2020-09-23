@@ -198,19 +198,10 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     {
         public IFunctionHandler[] VirtualOptions { get; }
         private IFunctionHandler _root => VirtualOptions[0];
-        private readonly bool _isRecursive;
 
         public DefaultGroupDeterminer(IFunctionHandler[] virtualOptions)
         {
             VirtualOptions = virtualOptions;
-
-            // Determine if recursive.
-            foreach (var func in VirtualOptions)
-                if (func.IsRecursive())
-                {
-                    _isRecursive = true;
-                    break;
-                }
         }
 
         public string GroupName() => _root.GetName();
@@ -284,11 +275,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public int ParameterCount() => _method.Parameters.Length;
         public bool MultiplePaths() => _method.MultiplePaths;
         public bool DoesReturnValue() => _method.DoesReturnValue;
-        public SubroutineInfo GetSubroutineInfo()
-        {
-            _method.SetupSubroutine();
-            return _method.subroutineInfo;
-        }
+        public SubroutineInfo GetSubroutineInfo() => _method.GetSubroutineInfo();
         public IIndexReferencer GetParameterVar(int index) => _method.ParameterVars[index];
         public void ParseInner(ActionSet actionSet) => _method.Block.Translate(actionSet);
         public object StackIdentifier() => _method;
@@ -410,7 +397,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             _context = context;
         }
 
-        public SubroutineInfo SetupSubroutine()
+        public void SetupSubroutine()
         {
             // Setup the subroutine element.
             Subroutine subroutine = _deltinScript.SubroutineCollection.NewSubroutine(_context.ElementName());
@@ -450,6 +437,11 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             }
             
             var functionBuilder = new FunctionBuildController(actionSet, null, determiner);
+
+            // Set the subroutine info.
+            SubroutineInfo = new SubroutineInfo(subroutine, functionBuilder, parameterStores, objectStore);
+            _context.SetSubroutineInfo(SubroutineInfo);
+
             functionBuilder.Build();
 
             // Pop object array if recursive.
@@ -462,11 +454,6 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
             // Done.
             _context.Finish(translatedRule);
-
-            // Set the subroutine info.
-            SubroutineInfo = new SubroutineInfo(subroutine, functionBuilder.ReturnHandler, parameterStores, objectStore);
-
-            return SubroutineInfo;
         }
     }
 
@@ -479,6 +466,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         IParameterHandler[] Parameters();
         IGroupDeterminer GetDeterminer();
         CodeType ContainingType();
+        void SetSubroutineInfo(SubroutineInfo subroutineInfo);
         void Finish(Rule rule);
     }
 
@@ -494,12 +482,12 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         }
 
         public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_method.Parameters.Length, new IFunctionHandler[] { new DefinedFunctionHandler(_method) }, _method.Attributes.Recursive);
-
         public string ElementName() => _method.Name;
         public string RuleName() => _method.SubroutineName;
         public string ThisArrayName() => "_" + ElementName() + "_object_stack";
-        public bool VariableGlobalDefault() => _method._subroutineDefaultGlobal;
+        public bool VariableGlobalDefault() => _method.SubroutineDefaultGlobal;
         public CodeType ContainingType() => _method.Attributes.ContainingType;
+        public void SetSubroutineInfo(SubroutineInfo subroutineInfo) => _method.SubroutineInfo = subroutineInfo;
 
         public void Finish(Rule rule)
         {

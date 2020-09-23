@@ -31,9 +31,13 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>If there is only one return statement, this will be the statement being returned.</summary>
         public IExpression SingleReturnValue { get; private set; }
 
-        public DefinedMethod virtualSubroutineAssigned { get; set; }
-        public SubroutineInfo subroutineInfo { get; private set; }
-        public readonly bool _subroutineDefaultGlobal;
+        /// <summary>Determines if local variables in the subroutine are global variables by default.</summary>
+        public bool SubroutineDefaultGlobal { get; }
+
+        // * Private fields *
+        
+        /// <summary>The function's subroutine info.</summary>
+        public SubroutineInfo SubroutineInfo { get; set; }
 
         public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, FunctionContext context, CodeType containingType)
             : base(parseInfo, context.Identifier.Text, new Location(parseInfo.Script.Uri, context.Identifier.Range))
@@ -71,9 +75,8 @@ namespace Deltin.Deltinteger.Parse
                 SetupParameters(context.Parameters, false);
             else
             {
-                _subroutineDefaultGlobal = context.PlayerVar == null;
+                SubroutineDefaultGlobal = context.PlayerVar == null;
                 Attributes.Parallelable = true;
-                parseInfo.TranslateInfo.AddSubroutine(this);
 
                 // Subroutines should not have parameters.
                 SetupParameters(context.Parameters, true);
@@ -152,13 +155,16 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Sets up single-instance methods for methods with the 'rule' attribute.
-        public void SetupSubroutine()
+        public SubroutineInfo GetSubroutineInfo()
         {
-            if (subroutineInfo != null || !IsSubroutine) return;
-
-            var builder = new SubroutineBuilder(parseInfo.TranslateInfo, new DefinedSubroutineContext(parseInfo, this));
-            builder.SetupSubroutine();
-            subroutineInfo = builder.SubroutineInfo;
+            if (!IsSubroutine) return null;
+            if (SubroutineInfo == null)
+            {
+                var builder = new SubroutineBuilder(parseInfo.TranslateInfo, new DefinedSubroutineContext(parseInfo, this));
+                builder.SetupSubroutine();
+                SubroutineInfo = builder.SubroutineInfo;
+            }
+            return SubroutineInfo;
         }
 
         public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues, bool recursive)

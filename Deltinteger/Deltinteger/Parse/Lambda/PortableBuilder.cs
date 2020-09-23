@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         private readonly List<IFunctionHandler> _functionHandlers = new List<IFunctionHandler>();
         private int _parameterCount;
         private int _functionIdentifier = 0;
-        private SubroutineInfo _subroutine = null;
+        private SubroutineInfo _subroutineInfo = null;
 
         public LambdaGroup() {}
         public void Init() {}
@@ -46,13 +46,13 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public IFunctionLookupTable GetLookupTable() => this;
         public SubroutineInfo GetSubroutineInfo()
         {
-            if (_subroutine == null)
+            if (_subroutineInfo == null)
             {
                 var builder = new SubroutineBuilder(DeltinScript, this);
                 builder.SetupSubroutine();
-                _subroutine = builder.SubroutineInfo;
+                _subroutineInfo = builder.SubroutineInfo;
             }
-            return _subroutine;
+            return _subroutineInfo;
         }
         public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_parameterCount, _functionHandlers.ToArray(), true);
         public NewRecursiveStack GetExistingRecursiveStack(List<NewRecursiveStack> stack) => throw new NotImplementedException();
@@ -92,6 +92,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         CodeType ISubroutineContext.ContainingType() => null;
         void ISubroutineContext.Finish(Rule rule) {}
         IGroupDeterminer ISubroutineContext.GetDeterminer() => this;
+        void ISubroutineContext.SetSubroutineInfo(SubroutineInfo subroutineInfo) => _subroutineInfo = subroutineInfo;
     }
 
     interface ILambdaHandler : IFunctionHandler

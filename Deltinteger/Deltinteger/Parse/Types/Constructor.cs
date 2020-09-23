@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
         public CallInfo CallInfo { get; }
 
         private readonly RecursiveCallHandler _recursiveCallHandler;
-        private SubroutineInfo _subroutineInfo;
+        public SubroutineInfo SubroutineInfo { get; set; }
 
         public DefinedConstructor(ParseInfo parseInfo, Scope scope, CodeType type, ConstructorContext context) : base(
             type,
@@ -105,21 +105,26 @@ namespace Deltin.Deltinteger.Parse
 
         public SubroutineInfo GetSubroutineInfo()
         {
-            if (_subroutineInfo == null)
+            if (SubroutineInfo == null)
             {
                 var determiner = new ConstructorDeterminer(this);
                 var builder = new SubroutineBuilder(parseInfo.TranslateInfo, determiner);
-                _subroutineInfo = builder.SetupSubroutine();
+                builder.SetupSubroutine();
             }
-            return _subroutineInfo;
+            return SubroutineInfo;
         }
+    }
+
+    interface ISubroutineSaver : IClassFunctionHandler
+    {
+        void SetSubroutineInfo(SubroutineInfo subroutineInfo);
     }
 
     class ConstructorDeterminer : IGroupDeterminer, IFunctionLookupTable, ISubroutineContext
     {
-        private readonly IClassFunctionHandler _function;
+        private readonly ISubroutineSaver _function;
 
-        public ConstructorDeterminer(IClassFunctionHandler function)
+        public ConstructorDeterminer(ISubroutineSaver function)
         {
             _function = function;
         }
@@ -127,12 +132,12 @@ namespace Deltin.Deltinteger.Parse
 
         // IGroupDeterminer
         public IFunctionLookupTable GetLookupTable() => this;
-        public SubroutineInfo GetSubroutineInfo() => _function.GetSubroutineInfo();
         public string GroupName() => _function.GetName();
         public bool IsObject() => true;
         public bool IsRecursive() => false;
-        public bool IsSubroutine() => _function.IsSubroutine();
         public bool IsVirtual() => false;
+        public bool IsSubroutine() => _function.IsSubroutine();
+        public SubroutineInfo GetSubroutineInfo() => _function.GetSubroutineInfo();
         public bool MultiplePaths() => false;
         public bool ReturnsValue() => false;
         public object GetStackIdentifier() => _function.StackIdentifier();
@@ -150,9 +155,10 @@ namespace Deltin.Deltinteger.Parse
         public CodeType ContainingType() => _function.ContainingType;
         public void Finish(Rule rule) {}
         public IGroupDeterminer GetDeterminer() => this;
+        public void SetSubroutineInfo(SubroutineInfo subroutineInfo) => _function.SetSubroutineInfo(subroutineInfo);
     }
 
-    class DefinedConstructorHandler : IClassFunctionHandler
+    class DefinedConstructorHandler : ISubroutineSaver
     {
         private readonly DefinedConstructor _constructor;
 
@@ -169,6 +175,7 @@ namespace Deltin.Deltinteger.Parse
         public bool MultiplePaths() => false;
         public IIndexReferencer GetParameterVar(int index) => _constructor.ParameterVars[index];
         public int ParameterCount() => _constructor.Parameters.Length;
+        public void SetSubroutineInfo(SubroutineInfo subroutineInfo) => _constructor.SubroutineInfo = subroutineInfo;
 
         public bool IsSubroutine() => _constructor.SubroutineName != null;
         public SubroutineInfo GetSubroutineInfo() => _constructor.GetSubroutineInfo();
