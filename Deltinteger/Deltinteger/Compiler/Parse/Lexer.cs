@@ -390,19 +390,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 foundLeftNumber = true;
             }
 
+            Skip();
+
             // At decimal
             if (scanner.At('.'))
             {
+                scanner.Advance();
+                Skip();
+
                 // Get the decimal.
                 bool decimalFound = false;
-                scanner.Advance();
                 while (scanner.AtNumeric())
                 {
                     scanner.Advance();
                     decimalFound = true;
                 }
 
-                if (!decimalFound)
+                if (!decimalFound && !foundLeftNumber)
                     return false;
             }
             // No decimal and no left number.
