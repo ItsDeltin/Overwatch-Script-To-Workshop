@@ -26,7 +26,7 @@ variables:
   string-double: \"(?:[^"\\]|\\.)*\"
   string-single: \'(?:[^'\\]|\\.)*\'
   encapsulated-block-end: '(?<=})|(?<=;)'
-  attribute-list: (((public|private|protected|virtual|override|abstract|static)\b\s*)*)
+  attribute-list: (((public|private|protected|virtual|override|abstract|static|recursive)\b\s*)*)
   variable-attribute-list: (((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\b\s*)*)
   number: -?[0-9]+(\.[0-9]+)?\b
 
@@ -704,7 +704,7 @@ repository:
       - name: keyword.operator.logical
         match: \!|&&|\|\|
       - name: keyword.operator.arithmetic
-        match: '%|\*|\/|-|\+'
+        match: '%|\*|\/|-|\+|\^'
 
   # Argument list
   argument-list:

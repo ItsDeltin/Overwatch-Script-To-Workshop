@@ -37,6 +37,10 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         ParseType Type { get; }
         Token Identifier { get; }
     }
+    public interface IListComma
+    {
+        Token NextComma { get; set; }
+    }
 
     public class ParseType : Node
     {
@@ -71,7 +75,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token RuleToken { get; }
         public Token NameToken { get; }
         public Token Disabled { get; }
-        public Token Order { get; }
         public NumberExpression Order { get; }
         public List<RuleSetting> Settings { get; }
         public List<IfCondition> Conditions { get; }
@@ -269,17 +272,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => Identifier.Text + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
     }
 
-    public class ParameterValue
+    public class ParameterValue : IListComma
     {
         public Token PickyParameter { get; }
         public IParseExpression Expression { get; }
-        public Token NextComma { get; }
+        public Token NextComma { get; set; }
 
-        public ParameterValue(Token pickyParameter, IParseExpression value, Token comma)
+        public ParameterValue(Token pickyParameter, IParseExpression value)
         {
             PickyParameter = pickyParameter;
             Expression = value;
-            NextComma = comma;
         }
 
         public override string ToString() => Expression.ToString();
@@ -319,7 +321,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public double Value { get; }
 
-        public NumberExpression(Token token)
+        public NumberExpression(double value)
         {
             Value = value;
         }

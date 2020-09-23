@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
-            parseInfo.CurrentCallInfo.Call(_recursiveCallHandler, callRange);
+            parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
         }
 
         protected virtual IRecursiveCallHandler GetRecursiveCallHandler() => null;

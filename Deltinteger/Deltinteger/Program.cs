@@ -215,8 +215,8 @@ namespace Deltin.Deltinteger
                 }
                 catch (Exception ex)
                 {
-                    Log.Write(LogLevel.Normal, "Internal exception.");
-                    Log.Write(LogLevel.Normal, ex.ToString());
+                    Program.Log.Write(LogLevel.Normal, "Internal exception.");
+                    Program.Log.Write(LogLevel.Normal, ex.ToString());
                 }
                 #endif
                 return true;

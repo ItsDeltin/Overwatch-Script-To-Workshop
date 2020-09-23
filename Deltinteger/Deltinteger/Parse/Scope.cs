@@ -434,7 +434,7 @@ namespace Deltin.Deltinteger.Parse
             return globalScope;
         }
 
-        public bool ScopeContains(IScopeable scopeable, Scope getter)
+        public bool ScopeContains(IScopeable scopeable)
         {
             bool found = false;
             IterateElements(true, true, iterate => {

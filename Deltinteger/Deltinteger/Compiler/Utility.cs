@@ -298,7 +298,57 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Null:
                 case TokenType.Number:
                 case TokenType.True:
+                case TokenType.This:
+                case TokenType.Root:
+                case TokenType.String:
                 case TokenType.Parentheses_Open:
+                case TokenType.SquareBracket_Open:
+                // Unary
+                case TokenType.Subtract:
+                case TokenType.Exclamation:
+                    return true;
+                
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsBinaryOperator(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Add:
+                case TokenType.And:
+                case TokenType.Divide:
+                case TokenType.Dot:
+                case TokenType.Equal:
+                case TokenType.GreaterThan:
+                case TokenType.GreaterThanOrEqual:
+                case TokenType.Hat:
+                case TokenType.LessThan:
+                case TokenType.LessThanOrEqual:
+                case TokenType.Modulo:
+                case TokenType.Multiply:
+                case TokenType.NotEqual:
+                case TokenType.Or:
+                case TokenType.QuestionMark:
+                case TokenType.Squiggle:
+                case TokenType.Subtract:
+                    return true;
+                
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsStartOfType(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Parentheses_Open:
+                case TokenType.Identifier:
+                case TokenType.Define:
+                case TokenType.Void:
                     return true;
                 
                 default:
@@ -310,6 +360,9 @@ namespace Deltin.Deltinteger.Compiler
 
         /// <summary>Gets the token's text. If the token is null, "?" is returned.</summary>
         public static string GetText(this Token token) => token ? token.Text : "?";
+
+        /// <summary>Gets the token's range. If the token is null, the fallback is used.</summary>
+        public static DocRange GetRange(this Token token, DocRange fallback) => token ? token.Range : fallback;
     }
 
     public enum TokenType
