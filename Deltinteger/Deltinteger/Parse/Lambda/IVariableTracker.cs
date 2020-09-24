@@ -8,4 +8,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
     {
         void LocalVariableAccessed(IIndexReferencer variable);
     }
+
+    public interface ILambdaApplier
+    {
+        void GetLambdaStatement(PortableLambdaType expecting);
+    }
 }

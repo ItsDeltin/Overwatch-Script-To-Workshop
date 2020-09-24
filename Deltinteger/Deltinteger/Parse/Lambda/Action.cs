@@ -8,31 +8,39 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
-    public class LambdaAction : IExpression, IWorkshopTree, IApplyBlock, IVariableTracker
+    public class LambdaAction : IExpression, IWorkshopTree, IApplyBlock, IVariableTracker, ILambdaApplier
     {
-        /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
-        public PortableLambdaType LambdaType { get; private set; }
         private readonly LambdaExpression _context;
         private readonly Scope _lambdaScope;
         private readonly ParseInfo _parseInfo;
         private readonly CodeType[] _argumentTypes;
 
+        /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
+        public PortableLambdaType LambdaType { get; private set; }
+
         /// <summary>The parameters of the lambda.</summary>
         public Var[] Parameters { get; }
+
         /// <summary>The invocation status of the lambda parameters/</summary>
         public SubLambdaInvoke[] InvokedState { get; }
+
         /// <summary>Determines if the lambda has multiple return statements. LambdaType will be ValueBlockLambda if this is true.</summary>
         public bool MultiplePaths { get; private set; }
 
         /// <summary>The block of the lambda. This will be null if LambdaType is MacroLambda.</summary>
         public IStatement Statement { get; private set; }
+
         /// <summary>The expression of the lambda. This will be null if LambdaType is BlockLambda or ValueBlockLambda.</summary>
         public IExpression Expression { get; private set; }
 
         /// <summary>The captured local variables.</summary>
         public List<IIndexReferencer> CapturedVariables { get; } = new List<IIndexReferencer>();
+
         /// <summary>The lambda's identifier.</summary>
         public int Identifier { get; set; }
+
+        ///<summary> The parent type that the lambda is defined in.</summary>
+        public CodeType This { get; }
 
         public CallInfo CallInfo { get; }
         public IRecursiveCallHandler RecursiveCallHandler { get; }
@@ -44,6 +52,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _parseInfo = parseInfo;
             RecursiveCallHandler = new LambdaRecursionHandler(this);
             CallInfo = new CallInfo(RecursiveCallHandler, parseInfo.Script);
+            This = scope.GetThis();
 
             // Get the lambda parameters.
             Parameters = new Var[context.Parameters.Count];
@@ -122,14 +131,20 @@ namespace Deltin.Deltinteger.Parse.Lambda
             if (LambdaType.IsConstant())
                 return this;
             
-            // Otherwise, return the identifier.
-            // Get the captured variables.
+            // Otherwise, return an array containing data of the lambda.
             var lambdaMeta = new List<IWorkshopTree>();
+
+            // The first element is the lambda's identifier. 
             lambdaMeta.Add(new V_Number(Identifier));
 
+            // The second element is the 'this' if applicable.
+            lambdaMeta.Add(actionSet.This ?? new V_Null());
+
+            // Every proceeding element is a captured local variable.
             foreach (var capture in CapturedVariables)
                 lambdaMeta.Add(actionSet.IndexAssigner[capture].GetVariable());
 
+            // Return the array.
             return Element.CreateArray(lambdaMeta.ToArray());
         }
         public Scope ReturningScope() => LambdaType.GetObjectScope();

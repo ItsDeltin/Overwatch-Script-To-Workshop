@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public bool IsRecursive() => true;
         public bool IsObject() => true;
         public bool IsSubroutine() => true;
-        public bool MultiplePaths() => ReturnsValue();
+        public bool MultiplePaths() => true;
         public bool IsVirtual() => true;
         public bool ReturnsValue() => true;
         public IFunctionLookupTable GetLookupTable() => this;
@@ -69,14 +69,17 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 // The action set for the overload.
                 ActionSet optionSet = builder.ActionSet.New(builder.ActionSet.IndexAssigner.CreateContained());
 
-                // Add the object variables of the selected method.
-                // option.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
-
                 // Go to next case
-                lambdaSwitch.NextCase(new V_Number(option.Identifier));            
+                lambdaSwitch.NextCase(new V_Number(option.Identifier));
+
+                // Add the object variables of the selected method.
+                var callerObject = ((Element)builder.ActionSet.CurrentObject)[1];
+
+                // Add the class objects.
+                option.ContainingType?.AddObjectVariablesToAssigner(callerObject, optionSet.IndexAssigner);
 
                 // then parse the block.
-                builder.Subcall(optionSet, option);
+                builder.Subcall(optionSet.New(callerObject), option);
             }
 
             // Finish the switch.
@@ -95,7 +98,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         void ISubroutineContext.SetSubroutineInfo(SubroutineInfo subroutineInfo) => _subroutineInfo = subroutineInfo;
     }
 
-    interface ILambdaHandler : IFunctionHandler
+    interface ILambdaHandler : IClassFunctionHandler
     {
         int Identifier { get; set; }
     }
@@ -103,6 +106,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     public class LambdaHandler : ILambdaHandler
     {
         public int Identifier { get; set; }
+        public CodeType ContainingType => _lambda.This;
         private readonly LambdaAction _lambda;
 
         public LambdaHandler(LambdaAction lambda)
@@ -133,8 +137,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // Add the contained variables.
             for (int i = 0; i < _lambda.CapturedVariables.Count; i++)
-                actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 1));
-
+                actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 2));
+            
             _lambda.Statement.Translate(actionSet);
         }
     }

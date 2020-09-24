@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public CodeType ReturnType { get; }
         private readonly Scope _scope = new Scope();
 
-        public PortableLambdaType(LambdaKind lambdaType, CodeType[] parameters, CodeType returnType) : base("portable lambda")
+        public PortableLambdaType(LambdaKind lambdaType, CodeType[] parameters, CodeType returnType) : base("lambda")
         {
             LambdaKind = lambdaType;
             Parameters = parameters;
@@ -44,6 +44,33 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
         public override Scope ReturningScope() => null;
+
+        public override string GetName()
+        {
+            string result = string.Empty;
+
+            // Single parameter
+            if (Parameters.Length == 1)
+                result += Parameters[0]?.GetName() ?? "define";
+            else // Zero or more than one parameter.
+            {
+                result += "(";
+                for (int i = 0; i < Parameters.Length; i++)
+                {
+                    result += Parameters[i]?.GetName() ?? "define";
+                    if (i < Parameters.Length - 1) result += ", ";
+                }
+                result += ")";
+            }
+
+            result += " => ";
+
+            // Void
+            if (ReturnType == null) result += "void";
+            else result += ReturnType.GetName();
+
+            return result;
+        }
     }
 
     public enum LambdaKind

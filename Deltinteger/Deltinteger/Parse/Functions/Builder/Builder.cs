@@ -99,6 +99,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 ActionSet.Translate.MethodStack.Add(stack);
             }
 
+            ModifySet(a => a.PackThis());
             SetupReturnHandler(); // Setup the return handler.
             SetParameters(); // Set the parameters.
             stack?.StartRecursiveLoop(); // Start the recursion loop.
@@ -259,8 +260,9 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         CodeType ContainingType { get; }
     }
 
-    public class DefinedFunctionHandler : IClassFunctionHandler
+    public class DefinedFunctionHandler : IClassFunctionHandler, Lambda.ILambdaHandler
     {
+        public int Identifier { get; set; } // For using functions as lambdas.
         private readonly DefinedMethod _method;
 
         public DefinedFunctionHandler(DefinedMethod method)

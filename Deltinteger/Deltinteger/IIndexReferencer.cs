@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger
         VariableType VariableType { get; }
     }
 
-    public abstract class IndexReferencer : IIndexReferencer
+    public class IndexReferencer : IIndexReferencer
     {
         public string Name { get; }
         public VariableType VariableType { get; protected set; }

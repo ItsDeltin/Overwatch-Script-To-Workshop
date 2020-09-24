@@ -184,23 +184,23 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="staticScope">The scope of the macro if there is a static attribute.</param>
         /// <param name="macroContext">The context of the macro.</param>
         /// <returns>A DefinedMacro if the macro has parameters, a MacroVar if there are no parameters.</returns>
-        public IScopeable GetMacro(Scope objectScope, Scope staticScope, MacroFunctionContext macroContext)
+        public DefinedMacro GetMacro(Scope objectScope, Scope staticScope, MacroFunctionContext macroContext)
         {
             // Get the return type.
             CodeType returnType = CodeType.GetCodeTypeFromContext(this, macroContext.Type);
 
-            IScopeable newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType);
+            DefinedMacro newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType);
 
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;
         }
 
-        public IScopeable GetMacro(Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext)
+        public MacroVar GetMacro(Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext)
         {
             // Get the return type.
             CodeType returnType = CodeType.GetCodeTypeFromContext(this, macroContext.Type);
 
-            IScopeable newMacro = new MacroVar(this, objectScope, staticScope, macroContext, returnType);
+            MacroVar newMacro = new MacroVar(this, objectScope, staticScope, macroContext, returnType);
 
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;
@@ -247,6 +247,10 @@ namespace Deltin.Deltinteger.Parse
                 else
                     return new ValueInArrayAction(_parseInfo, (IExpression)variable, index);
             }
+
+            // Function group.
+            if (variable is MethodGroup methodGroup)
+                return new CallMethodGroup(_parseInfo, variableRange, methodGroup);
 
             return (IExpression)variable;
         }

@@ -165,8 +165,8 @@ namespace Deltin.Deltinteger.Parse
             CheckAccessLevel();
 
             for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
-                if (bestOption.Option.Parameters[i].Type is PortableLambdaType portableLambda && bestOption.OrderedParameters[i].Value is LambdaAction lambda)
-                    lambda.GetLambdaStatement(portableLambda);
+                if (bestOption.Option.Parameters[i].Type is PortableLambdaType portableLambda && bestOption.OrderedParameters[i].Value is ILambdaApplier applier)
+                    applier.GetLambdaStatement(portableLambda);
 
             return bestOption;
         }

@@ -18,6 +18,26 @@ namespace Deltin.Deltinteger
         bool DoesReturnValue { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         void Call(ParseInfo parseInfo, DocRange callRange) {}
+
+        public static string GetLabel(IMethod function, bool includeReturnType)
+        {
+            // Get the return type.
+            string result = "";
+            if (includeReturnType)
+                result += (function.DoesReturnValue ? function.ReturnType?.GetName() ?? "define" : "void") + " ";
+            
+            result += function.Name + "(";
+
+            // Get the parameters.
+            for (int i = 0; i < function.Parameters.Length; i++)
+            {
+                result += function.Parameters[i].GetLabel(false);
+                if (i < function.Parameters.Length - 1) result += ", ";
+            }
+            
+            result += ")";
+            return result;
+        }
     }
 
     public interface ISkip
