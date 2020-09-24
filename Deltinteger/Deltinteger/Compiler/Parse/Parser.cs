@@ -241,7 +241,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         void Unexpected(bool root)
         {
-            if (root || Kind.IsSkippable())
+            if ((root || Kind.IsSkippable()) && Kind != TokenType.EOF)
                 AddError(new UnexpectedToken(Consume()));
         }
 
