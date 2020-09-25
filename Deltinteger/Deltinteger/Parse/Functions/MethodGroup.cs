@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
                 _parseInfo.Script.Diagnostics.Error("No overload for '" + _group.Name + "' implements " + expecting.GetName(), _range);
         }
 
-        private static ILambdaHandler GetLambdaHandler(IMethod function)
+        private static IFunctionHandler GetLambdaHandler(IMethod function)
         {
             // If the chosen function is a DefinedMethod, use the DefinedFunctionHandler.
             if (function is DefinedMethod definedMethod)
@@ -108,9 +108,8 @@ namespace Deltin.Deltinteger.Parse
         public override Scope ReturningScope() => null;
     }
 
-    class GenericMethodHandler : IFunctionHandler, ILambdaHandler
+    class GenericMethodHandler : IFunctionHandler
     {
-        public int Identifier { get; set; }
         public CodeType ContainingType => null;
         private readonly IMethod _method;
         private readonly IIndexReferencer[] _parameterSavers;
@@ -144,6 +143,6 @@ namespace Deltin.Deltinteger.Parse
             if (_method.DoesReturnValue)
                 actionSet.ReturnHandler.ReturnValue(result);
         }
-        public object StackIdentifier() => throw new NotImplementedException();
+        public object UniqueIdentifier() => _method;
     }
 }

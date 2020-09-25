@@ -115,7 +115,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    interface ISubroutineSaver : IClassFunctionHandler
+    interface ISubroutineSaver : IFunctionHandler
     {
         void SetSubroutineInfo(SubroutineInfo subroutineInfo);
     }
@@ -140,7 +140,7 @@ namespace Deltin.Deltinteger.Parse
         public SubroutineInfo GetSubroutineInfo() => _function.GetSubroutineInfo();
         public bool MultiplePaths() => false;
         public bool ReturnsValue() => false;
-        public object GetStackIdentifier() => _function.StackIdentifier();
+        public object GetStackIdentifier() => _function.UniqueIdentifier();
         public NewRecursiveStack GetExistingRecursiveStack(List<NewRecursiveStack> stack) => null;
         public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_function.ParameterCount(), new IFunctionHandler[] { _function }, false);
 
@@ -181,6 +181,6 @@ namespace Deltin.Deltinteger.Parse
         public SubroutineInfo GetSubroutineInfo() => _constructor.GetSubroutineInfo();
         public void ParseInner(ActionSet actionSet) => _constructor.Block.Translate(actionSet.PackThis());
 
-        public object StackIdentifier() => _constructor;
+        public object UniqueIdentifier() => _constructor;
     }
 }

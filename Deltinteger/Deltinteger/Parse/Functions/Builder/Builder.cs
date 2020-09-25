@@ -237,11 +237,12 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                     return item;
             return null;
         }
-        public object GetStackIdentifier() => _root.StackIdentifier();
+        public object GetStackIdentifier() => _root.UniqueIdentifier();
     }
 
     public interface IFunctionHandler
     {
+        CodeType ContainingType { get; }
         string GetName();
         bool IsRecursive();
         bool IsObject();
@@ -252,17 +253,11 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         SubroutineInfo GetSubroutineInfo();
         IIndexReferencer GetParameterVar(int index);
         void ParseInner(ActionSet actionSet);
-        object StackIdentifier();
+        object UniqueIdentifier();
     }
 
-    public interface IClassFunctionHandler : IFunctionHandler
+    public class DefinedFunctionHandler : IFunctionHandler
     {
-        CodeType ContainingType { get; }
-    }
-
-    public class DefinedFunctionHandler : IClassFunctionHandler, Lambda.ILambdaHandler
-    {
-        public int Identifier { get; set; } // For using functions as lambdas.
         private readonly DefinedMethod _method;
 
         public DefinedFunctionHandler(DefinedMethod method)
@@ -280,7 +275,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public SubroutineInfo GetSubroutineInfo() => _method.GetSubroutineInfo();
         public IIndexReferencer GetParameterVar(int index) => _method.ParameterVars[index];
         public void ParseInner(ActionSet actionSet) => _method.Block.Translate(actionSet);
-        public object StackIdentifier() => _method;
+        public object UniqueIdentifier() => _method;
 
         public CodeType ContainingType => _method.Attributes.ContainingType;
     }
@@ -630,7 +625,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public VirtualLookupTable(IFunctionHandler[] options)
         {
             _options = options;
-            _allContainingTypes = _options.Select(o => ((IClassFunctionHandler)o).ContainingType).ToArray();
+            _allContainingTypes = _options.Select(o => o.ContainingType).ToArray();
         }
 
         public void Build(FunctionBuildController builder)
@@ -645,7 +640,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             // Create the switch that chooses the overload.
             SwitchBuilder typeSwitch = new SwitchBuilder(builder.ActionSet);
 
-            foreach (IClassFunctionHandler option in _options)
+            foreach (IFunctionHandler option in _options)
             {
                 // The action set for the overload.
                 ActionSet optionSet = builder.ActionSet.New(builder.ActionSet.IndexAssigner.CreateContained());

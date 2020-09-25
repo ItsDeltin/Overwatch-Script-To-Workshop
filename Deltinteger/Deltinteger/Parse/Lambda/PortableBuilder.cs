@@ -9,6 +9,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     {
         public DeltinScript DeltinScript { get; set; }
         private readonly List<IFunctionHandler> _functionHandlers = new List<IFunctionHandler>();
+        private readonly Dictionary<object, int> _identifiers = new Dictionary<object, int>();
         private int _parameterCount;
         private int _functionIdentifier = 0;
         private SubroutineInfo _subroutineInfo = null;
@@ -16,10 +17,13 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public LambdaGroup() {}
         public void Init() {}
 
-        public int Add(ILambdaHandler lambda)
+        public int Add(IFunctionHandler lambda)
         {
+            if (_identifiers.TryGetValue(lambda.UniqueIdentifier(), out int existingIdentifier))
+                return existingIdentifier;
+
             _functionIdentifier++;
-            lambda.Identifier = _functionIdentifier;
+            _identifiers.Add(lambda.UniqueIdentifier(), _functionIdentifier);
 
             // Update the parameter count.
             _parameterCount = Math.Max(_parameterCount, lambda.ParameterCount());
@@ -64,13 +68,13 @@ namespace Deltin.Deltinteger.Parse.Lambda
             // Create the switch that chooses the lambda.
             SwitchBuilder lambdaSwitch = new SwitchBuilder(builder.ActionSet);
 
-            foreach (ILambdaHandler option in _functionHandlers)
+            foreach (IFunctionHandler option in _functionHandlers)
             {
                 // The action set for the overload.
                 ActionSet optionSet = builder.ActionSet.New(builder.ActionSet.IndexAssigner.CreateContained());
 
                 // Go to next case
-                lambdaSwitch.NextCase(new V_Number(option.Identifier));
+                lambdaSwitch.NextCase(new V_Number(_identifiers[option.UniqueIdentifier()]));
 
                 // Add the object variables of the selected method.
                 var callerObject = ((Element)builder.ActionSet.CurrentObject)[1];
@@ -98,14 +102,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         void ISubroutineContext.SetSubroutineInfo(SubroutineInfo subroutineInfo) => _subroutineInfo = subroutineInfo;
     }
 
-    interface ILambdaHandler : IClassFunctionHandler
+    public class LambdaHandler : IFunctionHandler
     {
-        int Identifier { get; set; }
-    }
-
-    public class LambdaHandler : ILambdaHandler
-    {
-        public int Identifier { get; set; }
         public CodeType ContainingType => _lambda.This;
         private readonly LambdaAction _lambda;
 
@@ -125,7 +123,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public bool IsObject() => throw new NotImplementedException();
         public bool IsRecursive() => throw new NotImplementedException();
         public bool MultiplePaths() => throw new NotImplementedException();
-        public object StackIdentifier() => _lambda;
+        public object UniqueIdentifier() => _lambda;
 
         public void ParseInner(ActionSet actionSet)
         {
