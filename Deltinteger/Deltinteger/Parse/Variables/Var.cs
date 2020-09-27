@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Parse the initial value.
-                InitialValue = parseInfo.GetExpression(_operationalScope, _initalValueContext);
+                InitialValue = parseInfo.SetExpectingLambda(CodeType).GetExpression(_operationalScope, _initalValueContext);
                 if (InitialValue?.Type() != null && InitialValue.Type().IsConstant() && !InitialValue.Type().Implements(CodeType))
                     parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", _initalValueContext.Range);
                 

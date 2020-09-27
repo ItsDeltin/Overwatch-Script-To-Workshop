@@ -985,16 +985,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
 
                 // Get the array indices
-                int arrayCount = 0;
-                while (ParseOptional(TokenType.SquareBracket_Open))
-                {
-                    ParseExpected(TokenType.SquareBracket_Close);
-                    arrayCount++;
-                }
+                int arrayCount = ParseTypeArray();
                 
                 ParseType result = EndNodeWithoutPopping(new ParseType(identifier, typeArgs, arrayCount));
 
-                // If we parse an arrow, this is a lambda type with a single parameter..
+                // If we parse an arrow, this is a lambda type with a single parameter.
                 if (!ParseOptional(TokenType.Arrow, out Token arrow))
                 {
                     PopNodeStack();
@@ -1016,15 +1011,50 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // End the type list parentheses.
                 ParseExpected(TokenType.Parentheses_Close);
 
-                // Lambda arrow.
-                Token arrow = ParseExpected(TokenType.Arrow);
+                Token arrow = null;
+                bool isLambda;
 
-                // Get the return type.
-                var returnType = ParseType();
+                // If an arrow is required, parse the expected arrow.
+                if (parameterTypes.Count != 1)
+                {
+                    arrow = ParseExpected(TokenType.Arrow);
+                    isLambda = true;
+                }
+                // Otherwise, parse the optional arrow.
+                else isLambda = ParseOptional(TokenType.Arrow, out arrow);
 
-                // Done.
-                return EndNode(new LambdaType(parameterTypes, returnType, arrow));
+                // Parse lambda type.
+                if (isLambda)
+                {
+                    // Get the return type.
+                    var returnType = ParseType();
+
+                    // Done.
+                    return EndNode(new LambdaType(parameterTypes, returnType, arrow));
+                }
+                else
+                {
+                    IParseType child = parameterTypes[0];
+
+                    // Get the array indices
+                    int arrayCount = ParseTypeArray();
+
+                    // Done.
+                    return EndNode(new GroupType(child, arrayCount));
+                }
             }
+        }
+
+        int ParseTypeArray()
+        {
+            // Get the array indices
+            int arrayCount = 0;
+            while (ParseOptional(TokenType.SquareBracket_Open))
+            {
+                ParseExpected(TokenType.SquareBracket_Close);
+                arrayCount++;
+            }
+            return arrayCount;
         }
 
         bool IsDeclaration(bool functionDeclaration) => Lookahead(() => {
@@ -1080,7 +1110,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     return ParseExpected(TokenType.Arrow);
 
                 // Parse the parameters.
-                do ParseExpected(TokenType.Identifier);
+                do
+                {
+                    ParseType();
+                    ParseOptional(TokenType.Identifier);
+                }
                 // Keep parsing while a comma is matched.
                 while (ParseOptional(TokenType.Comma));
 
@@ -1093,7 +1127,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             else
             {
                 // A lambda without an opening parentheses has a single parameter.
-                // Parse the parameter type and identifier.
                 ParseExpected(TokenType.Identifier);
                 // This is a lambda if the following token is an arrow.
                 return ParseExpected(TokenType.Arrow);
@@ -1116,14 +1149,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StartNode();
 
             // Get the parameters.
-            var parameters = new List<LambdaParameter>();
+            List<LambdaParameter> parameters;
 
             // Parenthesized parameters.
             if (ParseOptional(TokenType.Parentheses_Open))
             {
-                if (!Is(TokenType.Parentheses_Close))
-                    do parameters.Add(new LambdaParameter(ParseExpected(TokenType.Identifier)));
-                    while (ParseOptional(TokenType.Comma));
+                parameters = ParseDelimitedList(TokenType.Parentheses_Close, () => Kind.IsStartOfType(), ParseLambdaParameter);
 
                 // Close the parentheses.
                 ParseExpected(TokenType.Parentheses_Close);
@@ -1131,7 +1162,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Single parameter
             else
             {
-                parameters.Add(new LambdaParameter(ParseExpected(TokenType.Identifier)));
+                parameters = new List<LambdaParameter>();
+                parameters.Add(new LambdaParameter(null, ParseExpected(TokenType.Identifier)));
             }
 
             // Arrow.
@@ -1142,6 +1174,27 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Done.
             return EndNode(new LambdaExpression(parameters, arrow, statement));
+        }
+
+        LambdaParameter ParseLambdaParameter()
+        {
+            StartNode();
+            Token identifier;
+            var type = ParseType();
+            
+            // If the parsed type is *definitely* a type, parse an expected identifier.
+            if (type.DefinitelyType)
+                identifier = ParseExpected(TokenType.Identifier);
+            // Otherwise, parse an optional identifier.
+            else if (!ParseOptional(TokenType.Identifier, out identifier))
+            {
+                // If no identifier is parsed, set the identifier to the type's identifier.
+                identifier = type.GenericToken;
+                // The type is actually the identifier, so set the type to null.
+                type = null;
+            }
+
+            return EndNode(new LambdaParameter(type, identifier));
         }
 
         List<VariableDeclaration> ParseParameters()

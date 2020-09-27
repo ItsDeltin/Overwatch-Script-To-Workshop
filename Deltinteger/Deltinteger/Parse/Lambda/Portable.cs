@@ -29,6 +29,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             var other = type as PortableLambdaType;
             if (other == null || Parameters.Length != other.Parameters.Length) return false;
 
+            // Make sure the parameters match.
             for (int i = 0; i < Parameters.Length; i++)
             {
                 if (Parameters[i] == null)
@@ -67,7 +68,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // Void
             if (ReturnType == null) result += "void";
-            else result += ReturnType.GetName();
+            else result += ReturnType?.GetName() ?? "define";
 
             return result;
         }

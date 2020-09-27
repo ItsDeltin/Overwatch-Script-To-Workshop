@@ -178,6 +178,16 @@ namespace Deltin.Deltinteger.Parse
             return new PortableLambdaType(LambdaKind.Portable, parameters, type.ReturnType.IsVoid ? null : GetCodeTypeFromContext(parseInfo, type.ReturnType));
         }
 
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, GroupType type)
+        {
+            // Get the contained type.
+            var result = GetCodeTypeFromContext(parseInfo, type.Type);
+            // Get the array type.
+            for (int i = 0; i < type.ArrayCount; i++) result = new ArrayType(result);
+            // Done.
+            return result;
+        }
+
         static List<CodeType> _defaultTypes;
         public static List<CodeType> DefaultTypes {
             get {

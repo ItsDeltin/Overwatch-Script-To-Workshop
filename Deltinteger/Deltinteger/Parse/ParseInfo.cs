@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Lambda;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -15,10 +16,11 @@ namespace Deltin.Deltinteger.Parse
         public IBreakContainer BreakHandler { get; private set; }
         public IContinueContainer ContinueHandler { get; private set; }
         public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
+        public ExpectingLambdaInfo ExpectingLambda { get; private set; }
 
         // Do not persist.
         public ITreeContextPart SourceExpression { get; private set; }
-        public Lambda.IVariableTracker LocalVariableTracker { get; private set; }
+        public IVariableTracker LocalVariableTracker { get; private set; }
 
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
@@ -33,6 +35,8 @@ namespace Deltin.Deltinteger.Parse
             BreakHandler = other.BreakHandler;
             ContinueHandler = other.ContinueHandler;
             RestrictedCallHandler = other.RestrictedCallHandler;
+            ExpectingLambda = other.ExpectingLambda;
+            LocalVariableTracker = other.LocalVariableTracker;
         }
         public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo, RestrictedCallHandler = currentCallInfo };
         public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { BreakHandler = loop, ContinueHandler = loop };
@@ -40,7 +44,10 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetContinueHandler(IContinueContainer handler) => new ParseInfo(this) { ContinueHandler = handler };
         public ParseInfo SetSourceExpression(ITreeContextPart treePart) => new ParseInfo(this) { SourceExpression = treePart };
         public ParseInfo SetRestrictedCallHandler(IRestrictedCallHandler callHandler) => new ParseInfo(this) { RestrictedCallHandler = callHandler };
-        public ParseInfo SetVariableTracker(Lambda.IVariableTracker variableTracker) => new ParseInfo(this) { LocalVariableTracker = variableTracker };
+        public ParseInfo SetVariableTracker(IVariableTracker variableTracker) => new ParseInfo(this) { LocalVariableTracker = variableTracker };
+        public ParseInfo SetExpectingLambda(CodeType sourceType) => new ParseInfo(this) { ExpectingLambda = sourceType is PortableLambdaType portable ? new ExpectingLambdaInfo(portable) : null };
+        public ParseInfo SetPotentialLambda() => new ParseInfo(this) { ExpectingLambda = new ExpectingLambdaInfo() };
+        public ParseInfo ClearExpectingLambda() => new ParseInfo(this) { ExpectingLambda = null };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>

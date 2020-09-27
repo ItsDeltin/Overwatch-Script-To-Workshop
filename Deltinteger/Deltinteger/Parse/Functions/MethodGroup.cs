@@ -55,8 +55,15 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             _range = range;
             _group = group;
-            _type = new PortableLambdaType(LambdaKind.Anonymous);
             parseInfo.Script.AddToken(range, TokenType.Function);
+
+            new CheckLambdaContext(
+                parseInfo,
+                this,
+                "Cannot determine lambda in the current context",
+                range,
+                ParameterState.Unknown
+            ).Check();
         }
 
         public void GetLambdaStatement(PortableLambdaType expecting)
@@ -84,6 +91,8 @@ namespace Deltin.Deltinteger.Parse
             else
                 _parseInfo.Script.Diagnostics.Error("No overload for '" + _group.Name + "' implements " + expecting.GetName(), _range);
         }
+
+        public void GetLambdaStatement() => _parseInfo.Script.Diagnostics.Error("Cannot determine lambda in the current context", _range);
 
         private static IFunctionHandler GetLambdaHandler(IMethod function)
         {

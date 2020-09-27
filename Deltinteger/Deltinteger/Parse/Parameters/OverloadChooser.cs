@@ -94,7 +94,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Set expression and expressionRange.
-                parameter.Value = parseInfo.GetExpression(getter, context[i].Expression);
+                parameter.Value = parseInfo.SetPotentialLambda().GetExpression(getter, context[i].Expression);
                 parameter.ExpressionRange = context[i].Expression.Range;
             }
 
