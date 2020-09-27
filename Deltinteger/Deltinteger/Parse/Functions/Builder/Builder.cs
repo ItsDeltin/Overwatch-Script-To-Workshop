@@ -273,7 +273,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public bool MultiplePaths() => _method.MultiplePaths;
         public bool DoesReturnValue() => _method.DoesReturnValue;
         public SubroutineInfo GetSubroutineInfo() => _method.GetSubroutineInfo();
-        public IIndexReferencer GetParameterVar(int index) => _method.ParameterVars[index];
+        public IIndexReferencer GetParameterVar(int index) => index < ParameterCount() ? _method.ParameterVars[index] : null;
         public void ParseInner(ActionSet actionSet) => _method.Block.Translate(actionSet);
         public object UniqueIdentifier() => _method;
 

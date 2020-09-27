@@ -81,9 +81,12 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo.TranslateInfo.VarCollection.Reserve(ID, false, parseInfo.Script.Diagnostics, DefinedAt.range);
             }
 
-            parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
-            parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
+            if (DefinedAt.range != null)
+            {
+                parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
+                parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
+                parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
+            }
 
             if (_initialValueResolve == InitialValueResolve.Instant)
                 GetInitialValue();
