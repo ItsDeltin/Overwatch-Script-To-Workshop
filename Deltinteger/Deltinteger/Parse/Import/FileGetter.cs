@@ -37,5 +37,29 @@ namespace Deltin.Deltinteger.Parse
             ImportedFiles.Add(newImportedFile);
             return newImportedFile;
         }
+
+        public ImportedBlendFile GetBlendFile(Uri uri)
+        {
+            if (TryGetExisting(uri, out ImportedBlendFile script)) return script;
+            return AddFile(new ImportedBlendFile(uri));
+        }
+
+        private bool TryGetExisting<T>(Uri uri, out T script) where T: ImportedFile
+        {
+            foreach (ImportedFile file in ImportedFiles)
+                if (file.Uri == uri)
+                {
+                    script = (T)file;
+                    return true;
+                }
+            script = default(T);
+            return false;
+        }
+
+        private T AddFile<T>(T file) where T: ImportedFile
+        {
+            ImportedFiles.Add(file);
+            return file;
+        }
     }
 }

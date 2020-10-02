@@ -285,7 +285,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }
 
-    public class Import
+    public class Import : Node
     {
         public Token File { get; }
         public Token As { get; }

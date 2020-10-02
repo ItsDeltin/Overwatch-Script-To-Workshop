@@ -1627,6 +1627,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         Import ParseImport()
         {
+            StartNode();
             ParseExpected(TokenType.Import);
             var fileToken = ParseExpected(TokenType.String);
 
@@ -1636,7 +1637,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 asIdentifier = ParseExpected(TokenType.Identifier);
 
             ParseExpected(TokenType.Semicolon);
-            return new Import(fileToken, @as, asIdentifier);
+            return EndNode(new Import(fileToken, @as, asIdentifier));
         }
 
         Hook ParseHook()

@@ -39,6 +39,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the imported files.
             foreach (var importFileContext in scriptFile.Context.Imports)
+            if (importFileContext.File)
             {
                 string directory = GetImportedFile(scriptFile, importer, importFileContext);
                 if (Directory.Exists(directory))
@@ -161,6 +162,11 @@ namespace Deltin.Deltinteger.Parse
 
                             _deltinScript.RulesetScope.AddVariable(jsonVar, script.Diagnostics, importFileContext.Identifier.Range);
                             _deltinScript.DefaultIndexAssigner.Add(jsonVar, new V_Null());                            
+                            break;
+
+                        case ".blend":
+                            var blendFile = _fileGetter.GetBlendFile(importResult.Uri);
+                            blendFile.Update();
                             break;
                     }
 

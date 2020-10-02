@@ -3,13 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Animation;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class ImportedFile
+    public abstract class ImportedFile
     {
         public Uri Uri { get; }
-        public string Content { get; private set; }
         private byte[] Hash { get; set; }
 
         public ImportedFile(Uri uri)
@@ -20,9 +20,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Get the file hash and content.
                 Hash = GetFileHash(stream);
-                stream.Position = 0;
                 GetContent(stream);
-                OnUpdate();
             }
         }
 
@@ -30,15 +28,11 @@ namespace Deltin.Deltinteger.Parse
 
         private byte[] GetFileHash(FileStream stream)
         {
-            HashAlgorithm sha1 = HashAlgorithm.Create("SHA1");
-            return sha1.ComputeHash(stream);
+            using (HashAlgorithm sha1 = HashAlgorithm.Create("SHA1"))
+                return sha1.ComputeHash(stream);
         }
 
-        private void GetContent(FileStream stream)
-        {
-            using (StreamReader reader = new StreamReader(stream))
-                Content = reader.ReadToEnd();
-        }
+        protected abstract void GetContent(FileStream stream);
 
         public bool Update()
         {
@@ -49,20 +43,33 @@ namespace Deltin.Deltinteger.Parse
                 if (!Hash.SequenceEqual(newHash))
                 {
                     Hash = newHash;
-                    stream.Position = 0;
                     GetContent(stream);
-                    OnUpdate();
                     return true;
                 }
                 else
                     return false;
             }
         }
-
-        protected virtual void OnUpdate() {}
     }
 
-    public class ImportedScript : ImportedFile
+    public abstract class TextFile : ImportedFile
+    {
+        public string Content { get; private set; }
+
+        public TextFile(Uri uri) : base(uri) {}
+
+        protected override void GetContent(FileStream stream)
+        {
+            stream.Position = 0;
+            using (StreamReader reader = new StreamReader(stream))
+                Content = reader.ReadToEnd();
+            OnUpdate();
+        }
+
+        protected abstract void OnUpdate();
+    }
+
+    public class ImportedScript : TextFile
     {
         public Document Document { get; }
 
@@ -75,6 +82,20 @@ namespace Deltin.Deltinteger.Parse
         {
             if (Document != null)
                 Document.Update(Content);
+        }
+    }
+
+    public class ImportedBlendFile : ImportedFile
+    {
+        public ImportedBlendFile(Uri uri) : base(uri)
+        {
+            GetContent(null);
+        }
+
+        protected override void GetContent(FileStream stream)
+        {
+            var blendGetter = new GetBlendFile(Uri.LocalPath.TrimStart('/'));
+            blendGetter.Start();
         }
     }
 }
