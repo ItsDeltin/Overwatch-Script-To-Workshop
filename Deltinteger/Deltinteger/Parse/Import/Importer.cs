@@ -39,6 +39,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the imported files.
             foreach (var importFileContext in scriptFile.Context.Imports)
+            if (importFileContext.File)
             {
                 string directory = GetImportedFile(scriptFile, importer, importFileContext);
                 if (Directory.Exists(directory))

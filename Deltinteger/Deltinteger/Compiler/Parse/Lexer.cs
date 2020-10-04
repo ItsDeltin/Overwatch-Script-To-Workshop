@@ -620,7 +620,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Check if we have reached the end of the changed token range.
             // If *all* of these conditions are met, '_lastInsertWasEqual' will be set to true, the block will be skipped and lexing will stop.
             if(!(_lastInsertWasEqual =
-                // First, check if _hasEndToken is false. _lexUntilEnd may be true when adding characters to the end of the file.
+                // First, check if _lexUntilEnd is false. _lexUntilEnd may be true when adding characters to the end of the file.
                 // If it is true, we don't need to worry about stopping early since we are lexing until the end of the file.
                 !_lexUntilEnd &&
                 // Check if the 'Current' index is equal to or greater than _stopAt.
@@ -651,7 +651,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     _tokens.Add(token);
                     _stopAt++; // The ending token was pushed up.
                 }
-                // If Current is the at or pass the index of the _endToken, insert the token to the current position.
+                // If Current is the at or pass the index of the ending token, insert the token to the current position.
                 else if (!_lexUntilEnd && Current >= _stopAt)
                 {
                     _tokens.Insert(Current, token);
