@@ -87,6 +87,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class ImportedBlendFile : ImportedFile
     {
+        public BlendFile BlendFile { get; private set; }
+
         public ImportedBlendFile(Uri uri) : base(uri)
         {
             GetContent(null);
@@ -95,7 +97,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void GetContent(FileStream stream)
         {
             var blendGetter = new GetBlendFile(Uri.LocalPath.TrimStart('/'));
-            blendGetter.Start();
+            BlendFile = blendGetter.Start();
         }
     }
 }

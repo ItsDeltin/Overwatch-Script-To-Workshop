@@ -183,6 +183,14 @@ Object-serve scope. Only object members.
             return createdObjectVariable;
         }
 
+        protected ObjectVariable AddPrivateObjectVariable()
+        {
+            // Create an ObjectVariable
+            ObjectVariable createdObjectVariable = new ObjectVariable(null);
+            ObjectVariables.Add(createdObjectVariable);
+            return createdObjectVariable;
+        }
+
         public override Scope GetObjectScope() => serveObjectScope;
         public override Scope ReturningScope() => staticScope;
 

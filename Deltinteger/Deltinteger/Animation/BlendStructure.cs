@@ -9,7 +9,6 @@ namespace Deltin.Deltinteger.Animation
     public class BlendFile
     {
         /// <summary>The objects in the .blend file.</summary>
-        /// <value></value>
         [JsonProperty("objects")]
         public BlendObject[] Objects { get; set; }
 
@@ -162,12 +161,18 @@ namespace Deltin.Deltinteger.Animation
         /// Any direct child meshes who have vertex groups sharing the same name will have their vertexes linked with the bone.</summary>
         [JsonProperty("name")]
         public string Name { get; set; }
-        /// <summary>The location of the head of the bone.</summary>
+        /// <summary>The location of the head of the bone relative to its parent.</summary>
         [JsonProperty("head")]
         public Vertex Head { get; set; }
-        /// <summary>The location of the tail of the bone.</summary>
+        /// <summary>The location of the tail of the bone relative to its parent.</summary>
         [JsonProperty("tail")]
         public Vertex Tail { get; set; }
+        /// <summary>The location of the head of the bone relative to the armature.</summary>
+        [JsonProperty("head_local")]
+        public Vertex HeadLocal { get; set; }
+        /// <summary>The location of the tail of the bone relative to the armature.</summary>
+        [JsonProperty("tail_local")]
+        public Vertex TailLocal { get; set; }
         /// <summary>The length of the bone.</summary>
         [JsonProperty("length")]
         public double Length { get; set; }
@@ -180,6 +185,9 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>The parent of the Bone. The value is the index of the Armature's bones.</summary>
         [JsonProperty("parent")]
         public int Parent { get; set; }
+        /// <summary>When the bone has a parent, the bone's head is stuck to the parent's tail.</summary>
+        [JsonProperty("use_connect")]
+        public bool IsConnected { get; set; }
     }
 
     /// <summary>Deserializes BlendObjects.</summary>

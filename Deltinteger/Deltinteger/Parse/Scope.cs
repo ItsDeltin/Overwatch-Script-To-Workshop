@@ -498,6 +498,7 @@ namespace Deltin.Deltinteger.Parse
                     globalScope.AddNativeMethod(builtInMethod);
             
             globalScope.AddNativeMethod(new Lambda.WaitAsyncFunction());
+            globalScope.AddNativeMethod(Animation.AnimationTestingFunctions.Rotate);
             return globalScope;
         }
 

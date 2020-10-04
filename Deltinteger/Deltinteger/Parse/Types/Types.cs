@@ -62,6 +62,11 @@ namespace Deltin.Deltinteger.Parse
             Extends = extend;
         }
 
+        protected void Inherit(CodeType extend)
+        {
+            Extends = extend;
+        }
+
         public virtual bool Implements(CodeType type)
         {
             if (type == null) return false;

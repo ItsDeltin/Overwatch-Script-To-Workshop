@@ -31,12 +31,12 @@ namespace Deltin.Deltinteger.Animation
             _process = new Process { StartInfo = info };
         }
 
-        public void Start()
+        public BlendFile Start()
         {
             Init();
             _process.StandardInput.WriteLine(File);
             string json = _process.StandardOutput.ReadToEnd().Split(new string[] { "\r\n" }, System.StringSplitOptions.RemoveEmptyEntries)[0];
-            var blendFile = BlendFile.FromJson(json);
+            return BlendFile.FromJson(json);
         }
 
         void Init()

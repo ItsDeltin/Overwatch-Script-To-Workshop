@@ -159,4 +159,76 @@ namespace Deltin.Deltinteger.Parse
         OnCase,
         Finished
     }
+
+    public class ForRangeBuilder
+    {
+        public ActionSet ActionSet { get; }
+        public string ControlVariableName { get; }
+        public Element Start { get; }
+        public Element End { get; }
+        public Element Step { get; }
+        public bool Extended { get; }
+        public IndexReference Iterator { get; private set; }
+
+        public ForRangeBuilder(ActionSet actionSet, string controlVariable, Element start, Element end, Element step, bool extended = false)
+        {
+            ActionSet = actionSet;
+            ControlVariableName = controlVariable;
+            Start = start;
+            End = end;
+            Step = step;
+            Extended = extended;
+        }
+
+        public ForRangeBuilder(ActionSet actionSet, string controlVariable, Element end, bool extended = false)
+        {
+            ActionSet = actionSet;
+            ControlVariableName = controlVariable;
+            End = end;
+            Start = 0;
+            Step = 1;
+            Extended = extended;
+        }
+
+        public void Init()
+        {
+            Iterator = ActionSet.VarCollection.Assign(ControlVariableName, ActionSet.IsGlobal, Extended);
+            
+            // Extended variable uses a while loop.
+            if (Extended)
+            {
+                ActionSet.AddAction(Iterator.SetVariable(Start));
+                ActionSet.AddAction(Element.Part<A_While>(new V_Compare(
+                    Iterator.Get(),
+                    Operators.LessThan,
+                    End
+                )));
+            }
+            else
+            {
+                // Global
+                if (ActionSet.IsGlobal)
+                    ActionSet.AddAction(Element.Part<A_ForGlobalVariable>(Iterator.WorkshopVariable, Start, End, Step));
+                // Player
+                else
+                    ActionSet.AddAction(Element.Part<A_ForPlayerVariable>(new V_EventPlayer(), Iterator.WorkshopVariable, Start, End, Step));
+            }
+        }
+
+        public void Finish()
+        {
+            if (Extended)
+            {
+                ActionSet.AddAction(Iterator.ModifyVariable(Operation.Add, Step));
+                ActionSet.AddAction(new A_End());
+            }
+            else
+            {
+                ActionSet.AddAction(new A_End());
+            }
+        }
+
+        public Element Value() => Iterator.Get();
+        public static implicit operator Element(ForRangeBuilder range) => range.Value();
+    }
 }

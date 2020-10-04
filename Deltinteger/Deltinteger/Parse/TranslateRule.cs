@@ -229,6 +229,13 @@ namespace Deltin.Deltinteger.Parse
             if (IsGlobal) return Translate.DeltinScript.InitialGlobal.ActionSet;
             else return Translate.DeltinScript.InitialPlayer.ActionSet;
         }
+
+        public Element SaveValue(string saveVariableName, Element value, bool extended = true)
+        {
+            var variable = VarCollection.Assign(saveVariableName, IsGlobal, extended);
+            AddAction(variable.SetVariable(value));
+            return variable.Get();
+        }
     }
 
     public interface IActionList

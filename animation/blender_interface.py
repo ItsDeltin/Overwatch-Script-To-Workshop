@@ -66,9 +66,12 @@ class bone(tree_item):
         super(bone, self).__init__()
         self.name = original.name
         self.head = Vector(original.head)
+        self.head_local = Vector(original.head_local)
         self.tail = Vector(original.tail)
+        self.tail_local = Vector(original.tail_local)
         self.length = original.length
         self.rotation = Vector(original.matrix.to_quaternion())
+        self.use_connect = original.use_connect
 
 class blend_action:
     def __init__(self, name, fcurves):

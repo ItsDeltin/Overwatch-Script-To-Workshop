@@ -8,6 +8,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Json;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Animation;
 using Newtonsoft.Json.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -161,12 +162,18 @@ namespace Deltin.Deltinteger.Parse
                                 script.Diagnostics.Error("JSON Arrays cannot include objects or arrays.", stringRange);
 
                             _deltinScript.RulesetScope.AddVariable(jsonVar, script.Diagnostics, importFileContext.Identifier.Range);
-                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, new V_Null());                            
+                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, new V_Null());
                             break;
 
                         case ".blend":
+                            // Get the blend file then update it.
                             var blendFile = _fileGetter.GetBlendFile(importResult.Uri);
                             blendFile.Update();
+
+                            // Create the blend variable.
+                            InternalVar blendVar = new InternalVar(variableName);
+                            blendVar.CodeType = new RootAnimationType(_deltinScript, blendFile.BlendFile);
+                            _deltinScript.RulesetScope.AddVariable(blendVar, script.Diagnostics, importFileContext.Identifier.Range);
                             break;
                     }
 

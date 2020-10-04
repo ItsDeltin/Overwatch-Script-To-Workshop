@@ -174,6 +174,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
         public static Element operator /(Element a, Element b) => Element.Part<V_Divide>(a, b);
         public static Element operator %(Element a, Element b) => Element.Part<V_Modulo>(a, b);
+        public static Element operator ^(Element a, Element b) => Element.Part<V_RaiseToPower>(a, b);
         public static Element operator <(Element a, Element b) => new V_Compare(a, Operators.LessThan, b);
         public static Element operator >(Element a, Element b) => new V_Compare(a, Operators.GreaterThan, b);
         public static Element operator <=(Element a, Element b) => new V_Compare(a, Operators.LessThanOrEqual, b);

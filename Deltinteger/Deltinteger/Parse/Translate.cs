@@ -320,6 +320,9 @@ namespace Deltin.Deltinteger.Parse
             AllTypes.AddRange(CodeType.DefaultTypes);
             AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
             AllTypes.Add(new Pathfinder.PathResolveClass());
+            AllTypes.Add(new Animation.BaseAnimationInstanceType());
+            AllTypes.Add(new Animation.MeshInstanceType(deltinScript));
+            AllTypes.Add(new Animation.ArmatureInstanceType(deltinScript));
         }
 
         public CodeType GetCodeType(string name) => AllTypes.FirstOrDefault(type => type.Name == name);
