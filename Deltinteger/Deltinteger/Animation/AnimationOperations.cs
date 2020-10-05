@@ -1,3 +1,18 @@
+/*
+This file contains useful math operations related to animation for the workshop output.
+
+- Quaternions are arrays with 4 elements, formatted like [w, x, y, z].
+- If MultiplyQuaternion is ever used more than once, create a subroutine for it in the output. 
+- Rotating a vector with a quaternion:
+
+    variables 'axis', 'angle', 'vector':
+    var quaternion = QuaternionFromAxis(axis, angle);
+    var rotated = AnimationOperations.RotatePoint(actionSet, vector, quaternion);
+
+- Quaternions and matrices will probably not be used in favour of the faster, smaller 'RotatePointRodrique' functions which take advantage of vector notation.
+  Quaternions are still used, but they should be supplied by the blend object rather than created on the fly.
+*/
+
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 
@@ -183,19 +198,47 @@ namespace Deltin.Deltinteger.Animation
         }
 
         public static Element QuaternionFromVector(Element v) => Element.CreateArray(new V_Number(0), Element.Part<V_XOf>(v), Element.Part<V_YOf>(v), Element.Part<V_ZOf>(v));
+
+        /// <summary>Creates a quaternion array from a vector. This is used to multiply existing vectors with quaternions.
+        /// Alternatively, use QuaternionFromAxis to create a true quaternion from a vector and angle.</summary>
+        /// <returns>[0, x, y, z]</returns>
         public static Element VectorFromQuaternion(Element q) => new V_Vector(q[1], q[2], q[3]);
+
+        /// <summary>Inverts a quaternion.</summary>
         public static Element InvertQuaternion(Element q) => Element.CreateArray(q[0], q[1] * -1, q[2] * -1, q[3] * -1);
 
-        public static Element RotatePoint(ActionSet actionSet, Element p, Element q)
+        /// <summary>Rotates a vector with a quaternion.</summary>
+        public static Element RotatePoint(ActionSet actionSet, Element v, Element q)
         {
-            // Element r = QuaternionFromVector(p);
-            // Element q_conj = InvertQuaternion(q);
-            // return VectorFromQuaternion(MultiplyQuaternion(MultiplyQuaternion(q,r), q_conj));
-            p = actionSet.SaveValue("p", p, false);
+            v = actionSet.SaveValue("rotate_p_to_4d", QuaternionFromVector(v), false);
             q = actionSet.SaveValue("q", q, false);
-            Element half = actionSet.SaveValue("half", MultiplyQuaternion(q, actionSet.SaveValue("rotate_p_to_4d", QuaternionFromVector(p), false)), false);
+            Element half = actionSet.SaveValue("half", MultiplyQuaternion(q, v), false);
             Element result = actionSet.SaveValue("rotate_result", MultiplyQuaternion(half, actionSet.SaveValue("rotate_inverse", InvertQuaternion(q), false)), false);
             return VectorFromQuaternion(result);
         }
+
+        /// <summary>Rotates a local vector around an axis and angle.
+        /// Unlike the alternative overload, this will generate a quaternion from the input axis and angle.
+        /// The elements will be stored inside a variable, so storing them beforehand is not required.</summary>
+        public static Element RotatePointRodrique(ActionSet actionSet, Element position, Element axis, Element angle)
+        {
+            Element v = position;
+            Element u = actionSet.SaveValue("a", new V_Vector(
+                Element.Part<V_XOf>(axis) * Element.Part<V_SineFromRadians>(angle / 2), // x
+                Element.Part<V_YOf>(axis) * Element.Part<V_SineFromRadians>(angle / 2), // y
+                Element.Part<V_ZOf>(axis) * Element.Part<V_SineFromRadians>(angle / 2) // z
+            ));
+            // Element s = angle;
+            Element s = actionSet.SaveValue("s", Element.Part<V_CosineFromRadians>(angle / 2), false);
+            return RotatePointRodrique(v, u, s);
+        }
+
+        /// <summary>Rotates a local vector around an axis and angle.</summary>
+        /// <param name="v">The vector that will be rotated. This element is accessed 3 times, so store this into a variable if it is complicated.</param>
+        /// <param name="u">A vector containing the X, Y, and Z values of the quaternion. This element is accessed 3 times, so store this into a variable if it is complicated.</param>
+        /// <param name="s">The W value of the quaternion. This element is accessed only once, so storing it inside a variable is not required.</param>
+        /// <returns>The vector rotated around the point.</returns>
+        public static Element RotatePointRodrique(Element v, Element u, Element s)
+            => v + ((Element.Part<V_CrossProduct>(u, v) * s) + Element.Part<V_CrossProduct>(u, Element.Part<V_CrossProduct>(u, v))) * 2;
     }
 }
