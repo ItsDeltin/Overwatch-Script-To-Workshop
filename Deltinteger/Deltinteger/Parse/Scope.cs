@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // If functions are being iterated, add them to the list.
                 if (iterateMethods)
-                    foreach (var group in _methodGroups)
+                    foreach (var group in current._methodGroups)
                         checkScopeables.AddRange(group.Functions);
 
                 bool stopAfterScope = false;

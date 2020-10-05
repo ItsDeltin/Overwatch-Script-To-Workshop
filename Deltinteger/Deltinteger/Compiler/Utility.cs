@@ -281,6 +281,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Parentheses_Open:
                 case TokenType.CurlyBracket_Close:
                 case TokenType.CurlyBracket_Open:
+                case TokenType.EOF:
                     return false;
                 
                 default:
@@ -309,7 +310,7 @@ namespace Deltin.Deltinteger.Compiler
                     return true;
                 
                 default:
-                    return false;
+                    return tokenType.IsStartOfType(); // Lambdas
             }
         }
 
@@ -353,6 +354,32 @@ namespace Deltin.Deltinteger.Compiler
                 
                 default:
                     return false;
+            }
+        }
+
+        public static bool IsStartOfStatement(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Break:
+                case TokenType.Case:
+                case TokenType.Continue:
+                case TokenType.CurlyBracket_Open:
+                case TokenType.Default:
+                case TokenType.Delete:
+                case TokenType.Else:
+                case TokenType.For:
+                case TokenType.Foreach:
+                case TokenType.If:
+                case TokenType.New:
+                case TokenType.Return:
+                case TokenType.Semicolon:
+                case TokenType.Switch:
+                case TokenType.While:
+                    return true;
+                
+                default:
+                    return tokenType.IsStartOfType() || tokenType.IsStartOfExpression();
             }
         }
 

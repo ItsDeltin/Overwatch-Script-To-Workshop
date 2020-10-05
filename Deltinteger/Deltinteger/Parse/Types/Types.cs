@@ -175,7 +175,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < parameters.Length; i++)
                 parameters[i] = GetCodeTypeFromContext(parseInfo, type.Parameters[i]);
             
-            return new PortableLambdaType(LambdaKind.Portable, parameters, type.ReturnType.IsVoid ? null : GetCodeTypeFromContext(parseInfo, type.ReturnType));
+            return new PortableLambdaType(LambdaKind.Portable, parameters, type.ReturnType.IsVoid ? null : GetCodeTypeFromContext(parseInfo, type.ReturnType), true);
         }
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, GroupType type)

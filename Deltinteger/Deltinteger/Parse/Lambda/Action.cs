@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         private readonly Scope _lambdaScope;
         private readonly ParseInfo _parseInfo;
         private readonly CodeType[] _argumentTypes;
+        private readonly bool _isExplicit;
 
         /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
         public PortableLambdaType LambdaType { get; private set; }
@@ -54,8 +55,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             CallInfo = new CallInfo(RecursiveCallHandler, parseInfo.Script);
             This = scope.GetThis();
 
-            bool isExplicit = context.Parameters.Any(p => p.Type != null);
-            var parameterState = context.Parameters.Count == 0 || isExplicit ? ParameterState.CountAndTypesKnown : ParameterState.CountKnown;
+            _isExplicit = context.Parameters.Any(p => p.Type != null);
+            var parameterState = context.Parameters.Count == 0 || _isExplicit ? ParameterState.CountAndTypesKnown : ParameterState.CountKnown;
 
             // Get the lambda parameters.
             Parameters = new Var[context.Parameters.Count];
@@ -64,7 +65,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             for (int i = 0; i < Parameters.Length; i++)
             {
-                if (isExplicit && context.Parameters[i].Type == null)
+                if (_isExplicit && context.Parameters[i].Type == null)
                     parseInfo.Script.Diagnostics.Error("Inconsistent lambda parameter usage; parameter types must be all explicit or all implicit", context.Parameters[i].Range);
 
                 InvokedState[i] = new SubLambdaInvoke();
@@ -97,6 +98,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).SetVariableTracker(this);
 
+            CodeType returnType = null;
+
             // Get the statements.
             if (_context.Statement is Block block)
             {
@@ -109,24 +112,23 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
                 if (validation.ReturnsValue)
                 {
-                    LambdaType = new PortableLambdaType(LambdaKind.Portable, _argumentTypes, validation.ReturnType);
+                    returnType = validation.ReturnType;
                     MultiplePaths = validation.MultiplePaths;
                 }
-                else
-                    LambdaType = new PortableLambdaType(LambdaKind.Portable, _argumentTypes, null);
             }
             else if (_context.Statement is ExpressionStatement exprStatement)
             {
                 // Get the lambda expression.
                 Expression = parser.GetExpression(_lambdaScope, exprStatement.Expression);
-                LambdaType = new PortableLambdaType(LambdaKind.Portable, _argumentTypes, Expression.Type());
+                returnType = Expression.Type();
             }
             else
             {
                 // Statement
                 Statement = parser.GetStatement(_lambdaScope, _context.Statement);
-                LambdaType = new PortableLambdaType(LambdaKind.Portable, _argumentTypes, null);
             }
+
+            LambdaType = new PortableLambdaType(LambdaKind.Portable, _argumentTypes, returnType, _isExplicit);
 
             // Add so the lambda can be recursive-checked.
             _parseInfo.TranslateInfo.RecursionCheck(CallInfo);
