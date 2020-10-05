@@ -236,6 +236,20 @@ namespace Deltin.Deltinteger.Parse
             AddAction(variable.SetVariable(value));
             return variable.Get();
         }
+
+        public IndexReference AssignAndSave(string name, Element value)
+        {
+            var variable = VarCollection.Assign(name, IsGlobal, false);
+            AddAction(variable.SetVariable(value));
+            return variable;
+        }
+
+        public IndexReference AssignAndSaveExtended(string name, Element value)
+        {
+            var variable = VarCollection.Assign(name, IsGlobal, true);
+            AddAction(variable.SetVariable(value));
+            return variable;
+        }
     }
 
     public interface IActionList

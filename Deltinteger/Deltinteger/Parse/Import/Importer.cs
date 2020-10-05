@@ -174,6 +174,7 @@ namespace Deltin.Deltinteger.Parse
                             InternalVar blendVar = new InternalVar(variableName);
                             blendVar.CodeType = new RootAnimationType(_deltinScript, blendFile.BlendFile);
                             _deltinScript.RulesetScope.AddVariable(blendVar, script.Diagnostics, importFileContext.Identifier.Range);
+                            _deltinScript.DefaultIndexAssigner.Add(blendVar, new V_Null());
                             break;
                     }
 

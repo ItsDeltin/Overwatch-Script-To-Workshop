@@ -233,7 +233,8 @@ Object-serve scope. Only object members.
 
         public void AddToAssigner(Element reference, VarIndexAssigner assigner)
         {
-            assigner.Add(Variable, ArrayStore.CreateChild(reference));
+            if (Variable != null)
+                assigner.Add(Variable, ArrayStore.CreateChild(reference));
         }
 
         public void Init(ActionSet actionSet, Element reference)

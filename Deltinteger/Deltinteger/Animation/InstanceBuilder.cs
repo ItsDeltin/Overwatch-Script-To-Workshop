@@ -9,18 +9,30 @@ namespace Deltin.Deltinteger.Animation
     class AnimationObjectBuilder : IGroupDeterminer, ISubroutineContext, IFunctionLookupTable
     {
         public BlendObject Object { get; }
+        private readonly BlendFile _file;
+        private readonly DeltinScript _deltinScript;
         private SubroutineInfo _subroutineInfo;
 
-        public AnimationObjectBuilder(BlendObject blendObject)
+        public AnimationObjectBuilder(DeltinScript deltinScript, BlendFile file, BlendObject blendObject)
         {
             Object = blendObject;
+            _file = file;
+            _deltinScript = deltinScript;
         }
 
         // IGroupDeterminer
         public NewRecursiveStack GetExistingRecursiveStack(List<NewRecursiveStack> stack) => throw new NotImplementedException();
         public IFunctionLookupTable GetLookupTable() => this;
         public object GetStackIdentifier() => throw new NotImplementedException();
-        public SubroutineInfo GetSubroutineInfo() => throw new NotImplementedException();
+        public SubroutineInfo GetSubroutineInfo()
+        {
+            if (_subroutineInfo == null)
+            {
+                var subroutineBuilder = new SubroutineBuilder(_deltinScript, this);
+                subroutineBuilder.SetupSubroutine();
+            }
+            return _subroutineInfo;
+        }
         public string GroupName() => Object.Name;
         public bool IsObject() => false;
         public bool IsRecursive() => false;
@@ -51,6 +63,8 @@ namespace Deltin.Deltinteger.Animation
             // Armature
             else if (Object is BlendArmature armature)
                 result = GetArmature(builder.ActionSet);
+            
+            builder.ActionSet.ReturnHandler.ReturnValue(result);
         }
 
         IWorkshopTree GetMesh(ActionSet actionSet)
@@ -77,6 +91,14 @@ namespace Deltin.Deltinteger.Animation
             // Create the reference.
             var reference = type.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
 
+            // Get the bone data.
+            var boneStructure = new BoneStructure(_file, armature);
+
+            type.BoneVertexLinks.Set(actionSet, reference.Get(), boneStructure.GetBoneVertexData()); // Set the vertex links.
+            type.BoneDescendants.Set(actionSet, reference.Get(), boneStructure.GetBoneDescendents()); // Set the descendants.
+            type.BoneInitialPositions.Set(actionSet, reference.Get(), boneStructure.GetInitialBonePositions()); // Set the initial bone positions.
+            type.BonePositions.Set(actionSet, reference.Get(), type.BoneInitialPositions.Get(reference.Get())); // Set the current bone positions to the initial positions array.
+            
             return reference.Get();
         }
 

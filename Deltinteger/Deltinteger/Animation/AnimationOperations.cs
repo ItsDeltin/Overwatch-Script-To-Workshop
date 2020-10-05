@@ -197,6 +197,19 @@ namespace Deltin.Deltinteger.Animation
             );
         }
 
+        public static void NormalizeQuaternion(ActionSet actionSet, IndexReference axis, IndexReference angle)
+        {
+            Element w = angle.Get(), x = Element.Part<V_XOf>(axis.Get()), y = Element.Part<V_YOf>(axis.Get()), z = Element.Part<V_ZOf>(axis.Get());
+            var magnitude = actionSet.SaveValue("Normalize Quaternion -> Magnitude", Element.Part<V_SquareRoot>(
+                w^2 +
+                x^2 +
+                y^2 +
+                z^2
+            ), false);
+            actionSet.AddAction(axis.ModifyVariable(Operation.Divide, magnitude));
+            actionSet.AddAction(angle.ModifyVariable(Operation.Divide, magnitude));
+        }
+
         public static Element QuaternionFromVector(Element v) => Element.CreateArray(new V_Number(0), Element.Part<V_XOf>(v), Element.Part<V_YOf>(v), Element.Part<V_ZOf>(v));
 
         /// <summary>Creates a quaternion array from a vector. This is used to multiply existing vectors with quaternions.
@@ -240,5 +253,84 @@ namespace Deltin.Deltinteger.Animation
         /// <returns>The vector rotated around the point.</returns>
         public static Element RotatePointRodrique(Element v, Element u, Element s)
             => v + ((Element.Part<V_CrossProduct>(u, v) * s) + Element.Part<V_CrossProduct>(u, Element.Part<V_CrossProduct>(u, v))) * 2;
+        
+        /// <summary>Gets the dot product of 2 quaternions defined as a vector axis (X, Y, Z) and an angle (W).</summary>
+        public static Element QuaternionDotProduct(Element axis0, Element angle0, Element axis1, Element angle1)
+            => Element.Part<V_DotProduct>(axis0, axis1) + angle0 * angle1;
+        
+        /// <summary>Gets the dot product of 2 quaternions defined as an array [W, X, Y, Z].</summary>
+        public static Element QuaternionDotProduct(Element q0, Element q1)
+        {
+            Element w0 = q0[0], x0 = q0[1], y0 = q0[2], z0 = q0[3],
+                    w1 = q1[0], x1 = q1[1], y1 = q1[2], z1 = q1[3];
+            return w0 * w1 + x0 * x1 + y0 * y1 + z0 * z1;
+        }
+
+        public static SlerpResult Slerp(ActionSet actionSet, Element axis0, Element angle0, Element axis1, Element angle1, Element t)
+        {
+            var dot = actionSet.VarCollection.Assign("slerp_dot_product", actionSet.IsGlobal, false);
+
+            // Save axis0 to variable.
+            var axis0Var = actionSet.AssignAndSave("slerp_axis0", axis0);
+            axis0 = axis0Var.Get();
+
+            // Save axis1 to variable.
+            var axis1Var = actionSet.AssignAndSave("slerp_axis1", axis1);
+            axis1 = axis1Var.Get();
+
+            // Get the dot product of the quaternions.
+            actionSet.AddAction(dot.SetVariable(QuaternionDotProduct(axis0, angle0, axis1, angle1)));
+
+            // If the dot product is negative, slerp won't take
+            // the shorter path. Note that v1 and -v1 are equivalent when
+            // the negation is applied to all four components. Fix by 
+            // reversing one quaternion.
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(dot.Get(), Operators.LessThan, new V_Number(0))));
+            actionSet.AddAction(axis1Var.ModifyVariable(Operation.Multiply, -1)); // Invert the axis.
+            actionSet.AddAction(dot.ModifyVariable(Operation.Multiply, -1)); // Invert the dot.
+            actionSet.AddAction(new A_End()); // End the if.
+
+            // Inputs are too close.
+            const double DOT_THRESHOLD = 0.9995;
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(dot.Get(), Operators.GreaterThan, new V_Number(DOT_THRESHOLD))));
+            
+            var axisResult = actionSet.VarCollection.Assign("slerp_axis_result", actionSet.IsGlobal, false);
+            var angleResult = actionSet.VarCollection.Assign("slerp_angle_result", actionSet.IsGlobal, false);
+
+            actionSet.AddAction(axisResult.SetVariable(axis0 + t * (axis1 - axis0)));
+            actionSet.AddAction(angleResult.SetVariable(angle0 + t * (angle1 - angle0)));
+            NormalizeQuaternion(actionSet, axisResult, angleResult);
+        
+            // Acos is safe
+            actionSet.AddAction(Element.Part<A_Else>());
+
+            var theta_0 = actionSet.AssignAndSave("slerp_theta_0", Element.Part<V_ArccosineInRadians>(dot.Get())); // theta_0 = angle between input vectors
+            var theta = actionSet.AssignAndSave("slerp_theta", theta_0.Get() * t); // theta = angle between v0 and result
+            var sin_theta = actionSet.AssignAndSave("slerp_sin_theta", Element.Part<V_SineFromRadians>(theta.Get()));
+            var sin_theta_0 = actionSet.AssignAndSave("slerp_sin_theta_0", Element.Part<V_SineFromRadians>(theta_0.Get()));
+
+            var s0 = actionSet.AssignAndSave("slerp_s0", Element.Part<V_CosineFromRadians>(theta.Get()) - dot.Get() * sin_theta.Get() / sin_theta_0.Get());
+            var s1 = actionSet.AssignAndSave("slerp_s1", sin_theta.Get() / sin_theta_0.Get());
+
+            axisResult.SetVariable((s0.Get() * axis0) + (s1.Get() * axis1));
+            angleResult.SetVariable((s0.Get() * angle0) + (s1.Get() * angle1));
+
+            // End the if/else.
+            actionSet.AddAction(Element.Part<A_End>());
+
+            return new SlerpResult(axisResult.Get(), angleResult.Get());
+        }
+    }
+
+    public class SlerpResult
+    {
+        public Element Axis { get; }
+        public Element Angle { get; }
+
+        public SlerpResult(Element axis, Element angle)
+        {
+            Axis = axis;
+            Angle = angle;
+        }
     }
 }

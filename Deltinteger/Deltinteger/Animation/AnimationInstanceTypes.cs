@@ -45,18 +45,28 @@ namespace Deltin.Deltinteger.Animation
             if (elementsResolved) return;
             base.ResolveElements();
 
-            Vertices = new ObjectVariable(new InternalVar("Vertices"));
+            Vertices = AddObjectVariable(new InternalVar("Vertices"));
         }
     }
 
     public class ArmatureInstanceType : BaseObjectExtender
     {
+        public ObjectVariable BoneVertexLinks { get; private set; }
+        public ObjectVariable BoneDescendants { get; private set; }
+        public ObjectVariable BoneInitialPositions { get; private set; }
+        public ObjectVariable BonePositions { get; private set; }
+
         public ArmatureInstanceType(DeltinScript deltinScript) : base(deltinScript, "AnimationArmature") {}
 
         public override void ResolveElements()
         {
             if (elementsResolved) return;
             base.ResolveElements();
+
+            BoneVertexLinks = AddPrivateObjectVariable();
+            BoneDescendants = AddPrivateObjectVariable();
+            BoneInitialPositions = AddPrivateObjectVariable();
+            BonePositions = AddPrivateObjectVariable();
         }
     }
 }

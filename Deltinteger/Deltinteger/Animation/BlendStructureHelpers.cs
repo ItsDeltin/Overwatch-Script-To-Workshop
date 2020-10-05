@@ -43,16 +43,19 @@ namespace Deltin.Deltinteger.Animation
     {
         readonly BlendFile _file;
         readonly BlendArmature _armature;
+        readonly List<Element> _pointData = new List<Element>();
+        readonly List<BoneData> _boneData = new List<BoneData>();
 
         public BoneStructure(BlendFile file, BlendArmature armature)
         {
             _file = file;
             _armature = armature;
+            LinkRootBones();
         }
 
         /// <summary>Creates a 3d array where the first dimension is the bone, the second dimension is the child mesh, and the
         /// third dimension is the vertex the bone interacts with.</summary>
-        Element GetBoneVertexData()
+        public Element GetBoneVertexData()
         {
             // Iterate through each bone.
             var boneArray = new Element[_armature.Bones.Length];
@@ -70,6 +73,7 @@ namespace Deltin.Deltinteger.Animation
             return Element.CreateArray(boneArray);
         }
 
+        /// <summary>Called by 'GetBoneVertexData' to get an individual mesh's vertex data.</summary>
         Element GetMeshData(string boneName, BlendObject blendObject)
         {
             if (blendObject is BlendArmature)
@@ -98,47 +102,39 @@ namespace Deltin.Deltinteger.Animation
             return Element.CreateArray(boneInfoArray.ToArray());
         }
 
-        Element GetNameArray()
+        /// <summary>Obtains an array of names from the bones.</summary>
+        public Element GetNameArray()
         {
             var names = new Element[_armature.Bones.Length];
             for (int i = 0; i < names.Length; i++)
                 names[i] = new V_CustomString(_armature.Bones[i].Name);
             return Element.CreateArray(names);
         }
-    }
 
-    class BoneLinker
-    {
-        public List<Element> PointData { get; } = new List<Element>();
-        public List<BoneData> BoneData { get; } = new List<BoneData>();
-        private readonly BlendFile _file;
-        private readonly BlendArmature _armature;
-
-        public BoneLinker(BlendFile file, BlendArmature armature)
+        /// <summary>Populates BoneData and PointData so connected bones don't need to have the same point recalculated twice.</summary>
+        void LinkRootBones()
         {
-            _file = file;
-            _armature = armature;
-
             // We link the bones by choosing the bones without a parent then recursively
             // linking the children.
             // A bone without a parent will have their Parent value set to -1.
-            var rootBones = armature.Bones.Where(bone => bone.Parent == -1).ToArray();
+            var rootBones = _armature.Bones.Where(bone => bone.Parent == -1).ToArray();
             
             foreach (var bone in rootBones)
             {
                 // Create a point for the head and tail of the bone.
-                PointData.Add(bone.HeadLocal.ToVector());
-                PointData.Add(bone.TailLocal.ToVector());
+                _pointData.Add(bone.HeadLocal.ToVector());
+                _pointData.Add(bone.TailLocal.ToVector());
 
                 // Create the bone link data then add it to the BoneData list.
-                BoneData root = new BoneData(bone, PointData.Count - 2, PointData.Count - 1);
-                BoneData.Add(root);
+                BoneData root = new BoneData(bone, _pointData.Count - 2, _pointData.Count - 1);
+                _boneData.Add(root);
 
                 // Link the children recursively.
                 GetChildBoneData(root, bone);
             }
         }
 
+        /// <summary>Recursively called by LinkRootBones to link the descendant bones.</summary>
         void GetChildBoneData(BoneData data, Bone bone)
         {
             // Iterate through each child.
@@ -146,25 +142,69 @@ namespace Deltin.Deltinteger.Animation
             {
                 var child = _armature.Bones[childIndex]; // Get the actual child from the index.
                 var childData = new BoneData(child); // Create the bone link data.
-                BoneData.Add(childData); // Add the newly-created bone line to the BoneData list.
+                _boneData.Add(childData); // Add the newly-created bone line to the BoneData list.
 
                 // If the child is connected, reuse the point at the parent's tail (data.Tail).
                 if (child.IsConnected)
                     childData.Head = data.Tail;
                 else // Otherwise, create a new point.
                 {
-                    PointData.Add(child.Head.ToVector());
-                    childData.Head = PointData.Count - 1;
+                    _pointData.Add(child.Head.ToVector());
+                    childData.Head = _pointData.Count - 1;
                 }
 
                 // Create the tail point.
-                PointData.Add(child.Tail.ToVector());
-                childData.Tail = PointData.Count - 1;
+                _pointData.Add(child.Tail.ToVector());
+                childData.Tail = _pointData.Count - 1;
 
                 // Recursively get this bone's children.
                 GetChildBoneData(childData, child);
             }
         }
+    
+        /// <summary>Creates a 2d array where the first dimension is the bone and the second dimension is an array of indices which is the bone's descendants.</summary>
+        public Element GetBoneDescendents()
+        {
+            var boneDescendentArrays = new Element[_boneData.Count];
+
+            // For each bone, create an array of indices which indicates which points will change then the bone translates.
+            for (int i = 0; i < _boneData.Count; i++)
+            {
+                // The list of bone point indices.
+                var childBonePoints = new List<Element>();
+
+                // Iterate through each bone.
+                foreach (BoneData compare in _boneData)
+                // Make sure the compare bone is a descendant of the current bone.
+                if (_boneData[i] != compare && IsBoneDescendentOf(_boneData[i].Original, compare.Original))
+                {
+                    // If the head is not in the point list, add it.
+                    if (!childBonePoints.Contains(compare.Head)) childBonePoints.Add(compare.Head);
+                    // If the tail is not in the point list, add it.
+                    if (!childBonePoints.Contains(compare.Tail)) childBonePoints.Add(compare.Tail);
+                }
+
+                boneDescendentArrays[i] = Element.CreateArray(childBonePoints.ToArray());
+            }
+
+            // Done.
+            return Element.CreateArray(boneDescendentArrays);
+        }
+
+        /// <summary>Determines if a bone is a descendant of another bone.</summary>
+        /// <returns>May return true if parent == descendant.</returns>
+        bool IsBoneDescendentOf(Bone parent, Bone descendent)
+        {
+            while (true)
+            {
+                if (descendent == parent) return true;
+                if (descendent.Parent == -1) return false;
+                descendent = _armature.Bones[descendent.Parent];
+            }
+        }
+
+        /// <summary>Gets an array of initial bone positions.</summary>
+        public Element GetInitialBonePositions() => Element.CreateArray(_pointData.ToArray());
     }
 
     class BoneData

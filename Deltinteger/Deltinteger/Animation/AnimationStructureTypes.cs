@@ -13,12 +13,16 @@ namespace Deltin.Deltinteger.Animation
             _sceneObjects = new AnimationObjectVariable[blendFile.Objects.Length];
             for (int i = 0; i < _sceneObjects.Length; i++)
             {
-                _sceneObjects[i] = new AnimationObjectVariable(blendFile.Objects[i], new AnimationObjectType(deltinScript, blendFile.Objects[i]));
+                _sceneObjects[i] = new AnimationObjectVariable(blendFile.Objects[i], new AnimationObjectType(deltinScript, blendFile, blendFile.Objects[i]));
                 _scope.AddNativeVariable(_sceneObjects[i]);
             }
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        {
+            foreach (var sceneObject in _sceneObjects)
+                assigner.Add(sceneObject, new Elements.V_Null());
+        }
 
         public override Scope GetObjectScope() => _scope;
         public override bool IsConstant() => true;
@@ -29,13 +33,15 @@ namespace Deltin.Deltinteger.Animation
     class AnimationObjectType : CodeType
     {
         public BlendObject Object { get; }
+        private readonly BlendFile _blendFile;
         private readonly Scope _scope;
 
-        public AnimationObjectType(DeltinScript deltinScript, BlendObject obj) : base("animation " + (obj is BlendArmature ? "armature" : "mesh"))
+        public AnimationObjectType(DeltinScript deltinScript, BlendFile blendFile, BlendObject obj) : base("animation " + (obj is BlendArmature ? "armature" : "mesh"))
         {
             Object = obj;
+            _blendFile = blendFile;
             _scope = new Scope("object " + obj.Name);
-            _scope.AddNativeMethod(new CreateAnimationObjectInstance(deltinScript, Object));
+            _scope.AddNativeMethod(new CreateAnimationObjectInstance(deltinScript, blendFile, Object));
         }
 
         public override Scope GetObjectScope() => _scope;

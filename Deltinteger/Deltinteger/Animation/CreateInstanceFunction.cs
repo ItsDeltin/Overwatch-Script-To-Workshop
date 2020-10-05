@@ -1,3 +1,4 @@
+using Deltin.Deltinteger.Parse.FunctionBuilder;
 using Deltin.Deltinteger.Parse;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
@@ -15,16 +16,19 @@ namespace Deltin.Deltinteger.Animation
         public AccessLevel AccessLevel => AccessLevel.Public;
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public CodeParameter[] Parameters { get; } = new CodeParameter[0];
-        private readonly BlendObject _object;
         private readonly CodeType _type;
+        private readonly AnimationObjectBuilder _determiner;
 
-        public CreateAnimationObjectInstance(DeltinScript deltinScript, BlendObject blendObject)
+        public CreateAnimationObjectInstance(DeltinScript deltinScript, BlendFile blendFile, BlendObject blendObject)
         {
-            _object = blendObject;
+            _determiner = new AnimationObjectBuilder(deltinScript, blendFile, blendObject);
             if (blendObject is BlendMesh)
                 _type = deltinScript.Types.GetInstance<MeshInstanceType>();
             else
                 _type = deltinScript.Types.GetInstance<ArmatureInstanceType>();
+
+            // To make sure WorkshopInit is called on the MeshInstanceType or ArmatureInstanceType.
+            deltinScript.Types.CallType(_type);
         }
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
@@ -32,7 +36,8 @@ namespace Deltin.Deltinteger.Animation
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
-            throw new System.NotImplementedException();
+            var controller = new FunctionBuildController(actionSet, methodCall, _determiner);
+            return controller.Call();
         }
     }
 }
