@@ -8,17 +8,19 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public LambdaKind LambdaKind { get; }
         public CodeType[] Parameters { get; }
         public CodeType ReturnType { get; }
+        public bool ParameterTypesKnown { get; }
         private readonly Scope _scope = new Scope();
 
-        public PortableLambdaType(LambdaKind lambdaType, CodeType[] parameters, CodeType returnType) : base("lambda")
+        public PortableLambdaType(LambdaKind lambdaType, CodeType[] parameters, CodeType returnType, bool parameterTypesKnown) : base("lambda")
         {
             LambdaKind = lambdaType;
             Parameters = parameters;
             ReturnType = returnType;
+            ParameterTypesKnown = parameterTypesKnown;
             _scope.AddNativeMethod(new LambdaInvoke2(this));
         }
 
-        public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], null) {}
+        public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], null, false) {}
 
         public bool DoesReturnValue() => throw new NotImplementedException();
         public override bool IsConstant() => LambdaKind == LambdaKind.ConstantBlock || LambdaKind == LambdaKind.ConstantMacro || LambdaKind == LambdaKind.ConstantValue;
@@ -28,6 +30,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             var other = type as PortableLambdaType;
             if (other == null || Parameters.Length != other.Parameters.Length) return false;
+
+            if (!ParameterTypesKnown) return true;
 
             // Make sure the parameters match.
             for (int i = 0; i < Parameters.Length; i++)

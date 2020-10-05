@@ -598,26 +598,24 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return values;
         }
 
-        // Statements and blocks
-        bool TryParseStatementOrBlock(out IParseStatement statement)
+        List<T> ParseList<T>(TokenType terminator, Func<bool> isElement, Func<T> parseElement)
         {
-            // Parse a block if the current token is a curly bracket.
-            if (Is(TokenType.CurlyBracket_Open))
+            var elements = new List<T>();
+            while (!Is(terminator))
             {
-                statement = ParseBlock();
-                return true;
+                if (isElement())
+                    elements.Add(parseElement());
+                else
+                {
+                    // If the current token cannot be skipped, stop parsing elements.
+                    if (!Kind.IsSkippable())
+                        break;
+                    // Otherwise, consume the current token.
+                    else
+                        Unexpected(false);
+                }
             }
-
-            // If the next token is a block finisher, return false.
-            if (Is(TokenType.CurlyBracket_Close))
-            {
-                statement = null;
-                return false;
-            }
-
-            // Parse the next statement.
-            statement = ParseStatement();
-            return statement is MissingElement == false;
+            return elements;
         }
 
         /// <summary>Parses a block.</summary>
@@ -630,14 +628,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Open block
             ParseExpected(TokenType.CurlyBracket_Open);
 
-            // List of statements in the block.
-            var statements = new List<IParseStatement>();
-            while (TryParseStatementOrBlock(out var statement)) statements.Add(statement);
+            // List of statements in the block
+            var statements = ParseList(TokenType.CurlyBracket_Close, () => Kind.IsStartOfStatement(), () => ParseStatement());
 
             // Close block
             ParseExpected(TokenType.CurlyBracket_Close);
 
-            // Create the block.
+            // Create the block
             var result = new Block(statements);
 
             EndTokenCapture(result);

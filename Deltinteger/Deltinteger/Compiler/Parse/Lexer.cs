@@ -426,7 +426,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Match every character to the end of the line.
             scanner.Advance();
-            while(!scanner.At('\n')) scanner.Advance();
+            while(!scanner.ReachedEnd && !scanner.At('\n')) scanner.Advance();
             
             // Done.
             PushToken(scanner, TokenType.ActionComment);
@@ -442,7 +442,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             scanner.Advance();
 
             // Match every character to the end of the line.
-            while(!scanner.At('\n')) scanner.Advance();
+            while(!scanner.ReachedEnd && !scanner.At('\n')) scanner.Advance();
             
             // Done.
             Accept(scanner);
@@ -595,39 +595,45 @@ namespace Deltin.Deltinteger.Compiler.Parse
     /// inserted into the token list depending on where the update occured.</summary>
     class IncrementalTokenInsert : ITokenPush
     {
-        public int Current { get; private set; }
-        private readonly List<Token> _tokens;
-        private readonly Token _endToken;
-        private bool _lastInsertWasEqual;
-        private int _stopMinimum;
+        public int Current { get; private set; } // Where in the token list the tokens will be inserted to when a token is found.
+        private readonly List<Token> _tokens; // The list of tokens.
+        private bool _lexUntilEnd = true; // Determines if lexing should occur until the end of the file is reached.
+        private int _stopAt; // The index to stop lexing at.
+        private bool _lastInsertWasEqual; // Will be true when we have resynced with the tokens.
 
         public IncrementalTokenInsert(List<Token> list, int startingTokenIndex, int stopMinimum)
         {
             Current = startingTokenIndex;
             _tokens = list;
-            _stopMinimum = stopMinimum;
-            if (_stopMinimum < _tokens.Count)
-                _endToken = _tokens[_stopMinimum];
+            if (stopMinimum < _tokens.Count)
+            {
+                _stopAt = stopMinimum;
+                _lexUntilEnd = false;
+            }
         }
 
         public void PushToken(Token token)
         {
+            // This is used to determine wether _stopAt is correctly being incremented as tokens are inserted.
+            // System.Diagnostics.Debug.Assert(_lexUntilEnd || _tokens.IndexOf(_debugEndToken) == _stopAt);
+
             // Check if we have reached the end of the changed token range.
-            //
-            // First, check if _endToken is not null.
-            //   _endToken may be null when adding characters to the end of the file. In this case, we don't need to worry about stopping early.
-            //
-            // Second, check if the 'Current' index is equal to or greater than the endIndex.
-            //   TODO: Track _endToken index manually rather than polling IndexOf every time.
-            //
-            // Third, make sure Current is less than the count of the _tokens list.
-            //
-            // Now we make sure the token we got is equal to the Current token. If it is, we don't need to lex anymore.
-            // Make sure the type, range, and text are equal. In most scenarios if TokenType is the same then text will be the same, the only exceptions being numbers, strings, and identifiers.
-            //
-            // If *all* of these conditions are met, '_lastInsertWasEqual' will be set to true, the block will be skipped
-            // and lexing will stop.
-            if(!(_lastInsertWasEqual = (_endToken != null && Current >= _tokens.IndexOf(_endToken)) && Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Range.Equals(token.Range) && _tokens[Current].Text == token.Text))
+            // If *all* of these conditions are met, '_lastInsertWasEqual' will be set to true, the block will be skipped and lexing will stop.
+            if(!(_lastInsertWasEqual =
+                // First, check if _lexUntilEnd is false. _lexUntilEnd may be true when adding characters to the end of the file.
+                // If it is true, we don't need to worry about stopping early since we are lexing until the end of the file.
+                !_lexUntilEnd &&
+                // Check if the 'Current' index is equal to or greater than _stopAt.
+                Current >= _stopAt &&
+                // Make sure Current is less than the count of the _tokens list.
+                // This can occur if a token near the end of the file was changed that is not the last token.
+                Current < _tokens.Count &&
+                // Now we make sure the token we got is equal to the Current token. If it is, we don't need to lex anymore.
+                // Make sure the type, range, and text are equal. In most scenarios if TokenType is the same then text will be the same, the only exceptions being numbers, strings, and identifiers.
+                _tokens[Current].TokenType == token.TokenType &&
+                _tokens[Current].Range.Equals(token.Range) &&
+                _tokens[Current].Text == token.Text
+            ))
             {
                 // Specific case where the starting token was not found, insert the current token to the first index.
                 if (Current == -1)
@@ -637,19 +643,27 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // This increment will set Current from -1 to 0,
                     // the next increment will set Current from 0 to 1.
                     Current++;
+                    _stopAt++; // The ending token was pushed up.
                 }
                 // If Current surpassed the token count, add the token to the top of the list.
                 else if (Current == _tokens.Count)
+                {
                     _tokens.Add(token);
-                // If Current is the at or pass the index of the _endToken, insert the token to the current position.
-                else if (_endToken != null && Current >= _tokens.IndexOf(_endToken))
+                    _stopAt++; // The ending token was pushed up.
+                }
+                // If Current is the at or pass the index of the ending token, insert the token to the current position.
+                else if (!_lexUntilEnd && Current >= _stopAt)
+                {
                     _tokens.Insert(Current, token);
+                    _stopAt++; // The ending token was pushed up.
+                }
                 // If none of the previous conditions were satisfied,
                 // replace the current token.
                 else
                 {
                     _tokens.RemoveAt(Current);
                     _tokens.Insert(Current, token);
+                    // The number of tokens is unchanged, so we don't need to change _stopAt.
                 }
             }
             Current++;
@@ -664,10 +678,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
     }
 
+    /// <summary>The affected range of a file when it's contents were changed.</summary>
     class AffectedAreaInfo
     {
+        /// <summary>The starting character where the change occured.</summary>
         public int StartIndex { get; }
+        /// <summary>The index of the exising token stream where the change starts.</summary>
         public int StartingTokenIndex { get; }
+        /// <summary>The index of the exising token stream where the change ends.</summary>
         public int EndingTokenIndex { get; }
 
         public AffectedAreaInfo(int startIndex, int startingTokenIndex, int endingTokenIndex)
