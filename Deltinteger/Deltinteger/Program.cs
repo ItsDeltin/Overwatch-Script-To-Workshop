@@ -36,6 +36,8 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
+            WaitForDebugger();
+
             if (args.ElementAtOrDefault(0) == "--ping") {
                 Console.Write("Hello!");
                 return;
@@ -171,7 +173,8 @@ namespace Deltin.Deltinteger
             try
             {
                 // Parse the workshop code.
-                var workshop = new ConvertTextToElement(Clipboard.GetText()).Get();
+                var tte = new ConvertTextToElement(Clipboard.GetText());
+                var workshop = tte.Get();
 
                 // Decompile the parsed workshop code.
                 var workshopToCode = new WorkshopDecompiler(workshop, new FileLobbySettingsResolver(file, workshop.LobbySettings), new CodeFormattingOptions());
@@ -183,6 +186,10 @@ namespace Deltin.Deltinteger
                     writer.Write(result);
                 
                 Console.Write("Success");
+
+                // Warning if the end of the file was not reached.
+                if (!tte.ReachedEnd)
+                    Console.Write("End of file not reached, stuck at: '" + tte.LocalStream.Substring(0, Math.Min(tte.LocalStream.Length, 50)) + "'");
             }
             catch (Exception ex)
             {

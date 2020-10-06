@@ -981,6 +981,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return true;
             }
 
+            // Disabled
+            bool disabled = Match(Kw("disabled"));
+
             foreach (var mode in ModeSettingCollection.AllModeSettings)
             // Match the mode name.
             if (Match(Kw(mode.ModeName)))
@@ -1029,6 +1032,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     return true;
                 });
                 Match("}"); // End specific mode settings section.
+
+                if (disabled) relatedModeSettings.Settings.Add("Enabled", !disabled);
                 return true;
             }
             return false;
