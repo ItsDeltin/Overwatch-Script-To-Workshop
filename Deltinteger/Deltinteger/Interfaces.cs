@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         void Call(ParseInfo parseInfo, DocRange callRange) {}
 
-        public static string GetLabel(IMethod function, bool includeReturnType)
+        public static string GetLabel(IMethod function, bool includeReturnType = true)
         {
             // Get the return type.
             string result = "";

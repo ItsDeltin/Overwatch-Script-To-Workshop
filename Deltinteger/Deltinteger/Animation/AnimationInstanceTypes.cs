@@ -7,6 +7,8 @@ namespace Deltin.Deltinteger.Animation
     {
         public ObjectVariable Location { get; private set; }
         public ObjectVariable Children { get; private set; }
+        public ObjectVariable ActionNames { get; private set; }
+        public ObjectVariable Actions { get; private set; }
         
         public BaseAnimationInstanceType() : base("AnimationObject")
         {
@@ -18,9 +20,11 @@ namespace Deltin.Deltinteger.Animation
             if (elementsResolved) return;
             base.ResolveElements();
 
-            Location = AddObjectVariable(new InternalVar("Location"));
-            Children = AddObjectVariable(new InternalVar("Children"));
-        } 
+            Location = AddPrivateObjectVariable();
+            Children = AddPrivateObjectVariable();
+            ActionNames = AddPrivateObjectVariable();
+            Actions = AddPrivateObjectVariable();
+        }
     }
 
     public abstract class BaseObjectExtender : ClassType
@@ -32,6 +36,8 @@ namespace Deltin.Deltinteger.Animation
 
         public ObjectVariable Location => ((BaseAnimationInstanceType)Extends).Location;
         public ObjectVariable Children => ((BaseAnimationInstanceType)Extends).Children;
+        public ObjectVariable ActionNames => ((BaseAnimationInstanceType)Extends).ActionNames;
+        public ObjectVariable Actions => ((BaseAnimationInstanceType)Extends).Actions;
     }
 
     public class MeshInstanceType : BaseObjectExtender

@@ -76,6 +76,8 @@ namespace Deltin.Deltinteger.Animation
             // Create the reference.
             var reference = type.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
 
+            SharedSetup(type, actionSet, reference.Get());
+
             // Set the vertex array.
             type.Vertices.Set(actionSet, reference.Get(), BlendStructureHelper.VerticesToElement(mesh.Vertices));
 
@@ -91,6 +93,8 @@ namespace Deltin.Deltinteger.Animation
             // Create the reference.
             var reference = type.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
 
+            SharedSetup(type, actionSet, reference.Get());
+
             // Get the bone data.
             var boneStructure = new BoneStructure(_file, armature);
 
@@ -102,13 +106,10 @@ namespace Deltin.Deltinteger.Animation
             return reference.Get();
         }
 
-        IndexReference CreateInstance<T>(ActionSet actionSet) where T: ClassType
+        void SharedSetup(BaseObjectExtender type, ActionSet actionSet, Element reference)
         {
-            // Get the type.
-            var type = actionSet.Translate.DeltinScript.Types.GetInstance<MeshInstanceType>();
-            // Create the reference.
-            var reference = type.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
-            return reference;
+            type.Actions.Set(actionSet, reference, BlendStructureHelper.GetActions(Object));
+            type.ActionNames.Set(actionSet, reference, BlendStructureHelper.GetActionNames(new AnimationAction[] { Object.AnimationData }));
         }
     }
 }

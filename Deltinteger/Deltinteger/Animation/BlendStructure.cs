@@ -72,11 +72,11 @@ namespace Deltin.Deltinteger.Animation
         [JsonProperty("fcurve_type")]
         public FCurveType FCurveType { get; set; }
         /// <summary>An arbritrary string that determines what this f-curve is interacting with.
-        /// If `FCurveType == FCurveType.Location`, this will be null.
-        /// If `FCurveType == FCurveType.BoneRotation`, this will equal the name of the bone whose rotation is being affected.</summary>
+        /// If FCurveType == Location, this will be null.
+        /// If FCurveType == BoneRotation, this will equal the name of the bone whose rotation is being affected.</summary>
         [JsonProperty("target")]
         public string Target { get; set; }
-        /// <summary>The keyframes of the F-Curve. Typically, there will be 2 keyframes; the start and the end of the f-curve action.</summary>
+        /// <summary>The keyframes of the F-Curve.</summary>
         [JsonProperty("keyframes")]
         public Keyframe[] Keyframes { get; set; }
     }
@@ -96,9 +96,12 @@ namespace Deltin.Deltinteger.Animation
     public class Keyframe
     {
         /// <summary>The frame of this keyframe.</summary>
+        [JsonProperty("start")]
         public int Start { get; set; }
-        /// <summary>The value of the keyframe.</summary>
-        public object Value { get; set; }
+        /// <summary>The value of the keyframe. If the FCurveType == Location, this will be a vector.
+        /// If the FCurveType == BoneRotation, this will be a quaternion.</summary>
+        [JsonProperty("value")]
+        public JObject Value { get; set; }
     }
 
     /// <summary>Contains data about a vertex group.</summary>

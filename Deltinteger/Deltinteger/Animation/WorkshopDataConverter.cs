@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
+using Vertex = Deltin.Deltinteger.Models.Vertex;
 
 namespace Deltin.Deltinteger.Animation
 {
@@ -36,6 +38,72 @@ namespace Deltin.Deltinteger.Animation
             for (int i = 0; i < array.Length; i++)
                 array[i] = vertices[i].Vertex.ToVector();
             return Element.CreateArray(array);
+        }
+
+        public static Element GetActionNames(AnimationAction[] actions) => Element.CreateArray(actions.Select(a => new V_CustomString(a.Name)).ToArray());
+        public static Element GetActions(BlendObject blendObject) => Element.CreateArray(GetFcurveArray(blendObject, blendObject.AnimationData));
+
+        public static Element GetFcurveArray(BlendObject blendObject, AnimationAction action)
+        {
+            var fcurves = new Element[action.FCurves.Length];
+            for (int i = 0; i < fcurves.Length; i ++)
+                fcurves[i] = GetKeyframeData(blendObject, action.FCurves[i]);
+            return Element.CreateArray(fcurves);
+        }
+
+        /// <summary>Gets the keyframe data for an FCurve for the workshop.
+        /// The array structure is [type, target, k0, k1, k2...]. k0, etc. are
+        /// the keyframes structured [start, values...].</summary>
+        public static Element GetKeyframeData(BlendObject blendObject, FCurve curve)
+        {
+            // fcurve: [type, target, k0, k1, k2...]
+            var fcurveData = new List<Element>();
+
+            // Add the type.
+            fcurveData.Add((int)curve.FCurveType);
+
+            // Add the target.
+            switch (curve.FCurveType)
+            {
+                // Default: add empty.
+                default:
+                    fcurveData.Add(new V_False());
+                    break;
+                
+                // For bone rotation, add the index of the bone.
+                case FCurveType.BoneRotation:
+                    fcurveData.Add(Array.FindIndex(((BlendArmature)blendObject).Bones, b => b.Name == curve.Target));
+                    break;
+            }
+
+            // Add keyframes.
+            foreach (var keyframe in curve.Keyframes)
+            {
+                // [start, values...]
+                var keyframeData = new List<Element>();
+
+                // Add the keyframe number.
+                keyframeData.Add(keyframe.Start);
+
+                // Add the value.
+                switch (curve.FCurveType)
+                {
+                    // Location
+                    case FCurveType.Location:
+                        keyframeData.Add(keyframe.Value.ToObject<Vertex>().ToVector());
+                        break;
+                    
+                    // Bone rotation
+                    case FCurveType.BoneRotation:
+                        var vertex = keyframe.Value.ToObject<Vertex>();
+                        keyframeData.Add(vertex.ToVector());
+                        keyframeData.Add(vertex.W);
+                        break;
+                }
+
+                fcurveData.Add(Element.CreateArray(keyframeData.ToArray()));
+            }
+            return Element.CreateArray(fcurveData.ToArray());
         }
     }
 
