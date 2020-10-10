@@ -376,7 +376,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             ParameterValues = new IWorkshopTree[0];
         }
 
-        public CallHandler(IWorkshopTree[] parameterValues)
+        public CallHandler(params IWorkshopTree[] parameterValues)
         {
             ParameterValues = parameterValues;
         }

@@ -7,14 +7,13 @@ namespace Deltin.Deltinteger.Models
 {
     public class Vertex : ICloneable
     {
-        [XmlAttribute]
+        [JsonProperty("x")]
         public double X { get; set; }
-        [XmlAttribute]
+        [JsonProperty("y")]
         public double Y { get; set; }
-        [XmlAttribute]
+        [JsonProperty("z")]
         public double Z { get; set; }
-        [XmlIgnore]
-        [JsonIgnore]
+        [JsonProperty("w")]
         public double W { get; set; }
 
         public Vertex(double x, double y, double z, double w)

@@ -102,6 +102,8 @@ namespace Deltin.Deltinteger.Animation
             type.BoneDescendants.Set(actionSet, reference.Get(), boneStructure.GetBoneDescendents()); // Set the descendants.
             type.BoneInitialPositions.Set(actionSet, reference.Get(), boneStructure.GetInitialBonePositions()); // Set the initial bone positions.
             type.BonePositions.Set(actionSet, reference.Get(), type.BoneInitialPositions.Get(reference.Get())); // Set the current bone positions to the initial positions array.
+            type.BoneLocalPositions.Set(actionSet, reference.Get(), boneStructure.GetLocalArmaturePositions());
+            type.BoneParents.Set(actionSet, reference.Get(), boneStructure.GetParents());
             
             return reference.Get();
         }

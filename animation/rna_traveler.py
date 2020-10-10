@@ -54,32 +54,29 @@ class Rna_traveler:
                 # Get array value.
                 bone_name = self.array_value()
                 # Get the element.
-                if self.current_is('rotation_euler'):
+                if self.current_is('rotation_euler') or self.current_is('rotation_quaternion'):
                     return _bone_euler_rotation_handler(bone_name, self.index)
         
         # Location
         if self.current_is('location'):
             return _location_handler(self.index)
         
-        raise Exception('could not resolve rna "' + self.value + '"')
+        return None
+        # raise Exception('could not resolve rna "' + self.value + '"')
 
 class _bone_euler_rotation_handler:
     def __init__(self, bone_name, index):
         self.bone_name = bone_name
         self.index = index
     
-    def get_value(self, obj): return Vector(obj.pose.bones[self.bone_name].matrix.to_quaternion())
+    def get_value(self, obj): return Vector(obj.pose.bones[self.bone_name].rotation_quaternion)
     def get_target(self, obj): return self.bone_name
-    def get_type(self): return fcurve_type.bone_rotation
-    def do_use(self): self.index == 0
+    def get_type(self): return 1
+    def do_use(self): return self.index == 0
 
 class _location_handler:
     def __init__(self, index): self.index = index
     def get_value(self, obj): return Vector(obj.location)
     def get_target(self, obj): return None
-    def get_type(self): return fcurve_type.location
-    def do_use(self): self.index == 0
-
-class fcurve_type(Enum):
-    location = 0
-    bone_rotation = 1
+    def get_type(self): return 0
+    def do_use(self): return self.index == 0

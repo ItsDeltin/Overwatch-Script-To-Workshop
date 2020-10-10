@@ -254,6 +254,9 @@ namespace Deltin.Deltinteger.Animation
         public static Element RotatePointRodrique(Element v, Element u, Element s)
             => v + ((Element.Part<V_CrossProduct>(u, v) * s) + Element.Part<V_CrossProduct>(u, Element.Part<V_CrossProduct>(u, v))) * 2;
         
+        public static Element RotatePointRodrique2(Element p, Element v, Element w)
+            => p + 2*w*Element.Part<V_CrossProduct>(v, p) + 2*Element.Part<V_CrossProduct>(v, Element.Part<V_CrossProduct>(v, p));
+        
         /// <summary>Gets the dot product of 2 quaternions defined as a vector axis (X, Y, Z) and an angle (W).</summary>
         public static Element QuaternionDotProduct(Element axis0, Element angle0, Element axis1, Element angle1)
             => Element.Part<V_DotProduct>(axis0, axis1) + angle0 * angle1;
@@ -312,8 +315,8 @@ namespace Deltin.Deltinteger.Animation
             var s0 = actionSet.AssignAndSave("slerp_s0", Element.Part<V_CosineFromRadians>(theta.Get()) - dot.Get() * sin_theta.Get() / sin_theta_0.Get());
             var s1 = actionSet.AssignAndSave("slerp_s1", sin_theta.Get() / sin_theta_0.Get());
 
-            axisResult.SetVariable((s0.Get() * axis0) + (s1.Get() * axis1));
-            angleResult.SetVariable((s0.Get() * angle0) + (s1.Get() * angle1));
+            actionSet.AddAction(axisResult.SetVariable((s0.Get() * axis0) + (s1.Get() * axis1)));
+            actionSet.AddAction(angleResult.SetVariable((s0.Get() * angle0) + (s1.Get() * angle1)));
 
             // End the if/else.
             actionSet.AddAction(Element.Part<A_End>());

@@ -86,10 +86,10 @@ namespace Deltin.Deltinteger.Animation
     {
         /// <summary>Changes the location of the mesh or armature. The value of the f-curve's keyframes will be of type Vertex (quaternion).</summary>
         [JsonProperty("location")]
-        Location,
+        Location = 0,
         /// <summary>Changes the rotation of a bone. The value of the f-curve's keyframes will be of type Vertex (quaternion).</summary>
         [JsonProperty("bone_rotation")]
-        BoneRotation
+        BoneRotation = 1
     }
 
     /// <summary>A point in an f-curve.</summary>

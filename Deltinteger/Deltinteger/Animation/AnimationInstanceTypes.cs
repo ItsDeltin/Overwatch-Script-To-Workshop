@@ -29,10 +29,15 @@ namespace Deltin.Deltinteger.Animation
 
     public abstract class BaseObjectExtender : ClassType
     {
+        protected readonly Scope _scope = new Scope();
+
         protected BaseObjectExtender(DeltinScript deltinScript, string name) : base(name)
         {
             Inherit(deltinScript.Types.GetInstance<BaseAnimationInstanceType>());
+            _scope.AddNativeMethod(new PlayAnimationFunction());
         }
+
+        public override Scope GetObjectScope() => _scope;
 
         public ObjectVariable Location => ((BaseAnimationInstanceType)Extends).Location;
         public ObjectVariable Children => ((BaseAnimationInstanceType)Extends).Children;
@@ -59,8 +64,14 @@ namespace Deltin.Deltinteger.Animation
     {
         public ObjectVariable BoneVertexLinks { get; private set; }
         public ObjectVariable BoneDescendants { get; private set; }
+        /// <summary>The initial bone positions relative to the bone's parent.</summary>
         public ObjectVariable BoneInitialPositions { get; private set; }
+        /// <summary>The current bone position relative to the bone's parent.</summary>
         public ObjectVariable BonePositions { get; private set; }
+        /// <summary>The current bone position relative to the bone's armature. If unused, this can be removed after debugging.</summary>
+        public ObjectVariable BoneLocalPositions { get; private set; }
+        /// <summary>The bone's parents.</summary>
+        public ObjectVariable BoneParents { get; private set; }
 
         public ArmatureInstanceType(DeltinScript deltinScript) : base(deltinScript, "AnimationArmature") {}
 
@@ -73,6 +84,8 @@ namespace Deltin.Deltinteger.Animation
             BoneDescendants = AddPrivateObjectVariable();
             BoneInitialPositions = AddPrivateObjectVariable();
             BonePositions = AddPrivateObjectVariable();
+            BoneLocalPositions = AddPrivateObjectVariable();
+            BoneParents = AddPrivateObjectVariable();
         }
     }
 }

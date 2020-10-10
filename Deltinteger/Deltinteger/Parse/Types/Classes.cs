@@ -248,9 +248,6 @@ Object-serve scope. Only object members.
             }
         }
 
-        /// <summary>Creates a direct reference to the ArrayStore.</summary>
-        public IndexReference Spot(Element reference) => ArrayStore.CreateChild(reference);
-
         /// <summary>Gets the value from a reference.</summary>
         public Element Get(Element reference) => Element.Part<V_ValueInArray>(ArrayStore.GetVariable(), reference);
 
@@ -314,6 +311,8 @@ Object-serve scope. Only object members.
             AssignClassID++;
             return AssignClassID;
         }
+
+        public Element IsInstanceOf(Element reference, ClassType type) => new V_Compare(ClassIndexes.Get()[reference], Operators.Equal, new V_Number(type.Identifier));
     }
 
     /// <summary>Links variables with the type of a class with debugger variables discovered from the action stream.</summary>

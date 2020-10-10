@@ -9,7 +9,7 @@ def load(fp):
 
 def debug():
     # load('C:/Users/Deltin/Downloads/hook4.blend')
-    load('C:/Users/Deltin/Documents/Blender/debug.blend')
+    load('C:/Users/Deltin/Documents/Blender/debug_armature.blend')
 
 class tree_item:
     def __init__(self):
@@ -181,6 +181,9 @@ def get_animation_data(obj):
         # Get RNA data.
         value_handler = Rna_traveler(fc.data_path, fc.array_index).scan()
 
+        if value_handler == None:
+            continue
+
         # The array of keyframes. There should usually be just one.
         keyframes = []
 
@@ -198,13 +201,16 @@ def get_animation_data(obj):
             keyframes.append(keyframe(frame, keyframe_value))
         
         # Append the fcurve.
-        fcurves.append(fcurve(keyframes, value_handler.get_type(), value_handler.get_target(obj)))
+        if value_handler.do_use():
+            fcurves.append(fcurve(keyframes, value_handler.get_type(), value_handler.get_target(obj)))
     
     # Return the action.
     return blend_action(action.name, fcurves)
 
 def serialize(obj):
-    return obj.__dict__
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    return None
 
 load(input())
 print(get_project_json())

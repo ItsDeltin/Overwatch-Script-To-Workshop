@@ -42,6 +42,10 @@ namespace Deltin.Deltinteger.Animation
             _blendFile = blendFile;
             _scope = new Scope("object " + obj.Name);
             _scope.AddNativeMethod(new CreateAnimationObjectInstance(deltinScript, blendFile, Object));
+
+            // Armature-specific functions.
+            if (obj is BlendArmature armature)
+                _scope.AddNativeMethod(AnimationRangeIniterFunctions.ArmatureBones(deltinScript, blendFile, armature));
         }
 
         public override Scope GetObjectScope() => _scope;

@@ -228,7 +228,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public Element Value() => Iterator.Get();
-        public static implicit operator Element(ForRangeBuilder range) => range.Value();
+        public Element Value => Iterator.Get();
+        public static implicit operator Element(ForRangeBuilder range) => range.Value;
     }
 }
