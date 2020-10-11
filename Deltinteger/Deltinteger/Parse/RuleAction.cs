@@ -39,11 +39,13 @@ namespace Deltin.Deltinteger.Parse
             Conditions = new IExpression[ruleContext.Conditions.Count];
             for (int i = 0; i < Conditions.Length; i++)
             {
-                parseInfo.Script.AddCompletionRange(new CompletionRange(
-                    scope,
-                    ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range,
-                    CompletionRangeKind.Catch
-                ));
+                // Make sure both left and right parentheses exists.
+                if (ruleContext.Conditions[i].LeftParen && ruleContext.Conditions[i].RightParen)
+                    parseInfo.Script.AddCompletionRange(new CompletionRange(
+                        scope,
+                        ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range,
+                        CompletionRangeKind.Catch
+                    ));
 
                 Conditions[i] = parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression);
             }

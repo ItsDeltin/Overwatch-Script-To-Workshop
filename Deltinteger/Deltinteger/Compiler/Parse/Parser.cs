@@ -604,7 +604,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
             while (!Is(terminator))
             {
                 if (isElement())
+                {
+                    int s = Token;
+
+                    // Parse the element.
                     elements.Add(parseElement());
+
+                    // No tokens were consumed.
+                    if (s == Token)
+                    {
+                        // If the current token cannot be skipped, stop parsing elements.
+                        if (!Kind.IsSkippable())
+                            break;
+                        // Otherwise, consume the current token then continue.
+                        else
+                            Consume();
+                    }
+                }
                 else
                 {
                     // If the current token cannot be skipped, stop parsing elements.
