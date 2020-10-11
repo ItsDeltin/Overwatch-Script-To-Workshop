@@ -133,7 +133,14 @@ namespace Deltin.Deltinteger.Animation
 
             Element descendentIndex = actionSet.AssignAndSave("animation_descendent_index", _armatureType.BoneDescendants.Get(currentReference)[boneLoop.Value][descendentLoop.Value]).Get();
             Element originalPoint = actionSet.AssignAndSave("animation_rodrique_original", _armatureType.BonePositions.Get(currentReference)[descendentIndex]).Get();
-            Element rodriqueResult = actionSet.AssignAndSave("animation_rodrique", AnimationOperations.RotatePointRodrique2(
+            // Element rodriqueResult = actionSet.AssignAndSave("animation_rodrique", AnimationOperations.RotatePointRodrique2(
+            //     // Original point
+            //     originalPoint,
+            //     // Quaternion
+            //     slerp.Axis, slerp.Angle
+            // )).Get();
+            Element rodriqueResult = actionSet.AssignAndSave("animation_rodrique", AnimationOperations.RotatePointRodrique(
+                // actionSet,
                 // Original point
                 originalPoint,
                 // Quaternion

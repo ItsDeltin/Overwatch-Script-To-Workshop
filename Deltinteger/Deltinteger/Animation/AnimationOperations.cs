@@ -13,6 +13,7 @@ This file contains useful math operations related to animation for the workshop 
   Quaternions are still used, but they should be supplied by the blend object rather than created on the fly.
 */
 
+using System;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 
@@ -34,6 +35,34 @@ namespace Deltin.Deltinteger.Animation
             );
         }
 
+        public static (Element axis, Element w) MultiplyQuaternion(Element axis1, Element angle1, Element axis2, Element angle2)
+        {
+            Element w1 = angle1, x1 = Element.Part<V_XOf>(axis1), y1 = Element.Part<V_YOf>(axis1), z1 = Element.Part<V_ZOf>(axis1),
+                    w2 = angle2, x2 = Element.Part<V_XOf>(axis2), y2 = Element.Part<V_YOf>(axis2), z2 = Element.Part<V_ZOf>(axis2);
+            return (
+                new V_Vector(
+                    w1*x2 + x1*w2 + y1*z2 - z1*y2, // x
+                    w1*y2 - x1*z2 + y1*w2 + z1*x2, // y
+                    w1*z2 + x1*y2 - y1*x2 + z1*w2 // z
+                ),
+                (w1*w2 - x1*x2 - y1*y2 - z1*z2) // w
+            );
+        }
+
+        public static (Element axis, Element w) MultiplyQuaternion2(Element axis1, Element angle1, Element axis2, Element angle2)
+        {
+            Element w1 = angle1, x1 = Element.Part<V_XOf>(axis1), y1 = Element.Part<V_YOf>(axis1), z1 = Element.Part<V_ZOf>(axis1),
+                    w2 = angle2, x2 = Element.Part<V_XOf>(axis2), y2 = Element.Part<V_YOf>(axis2), z2 = Element.Part<V_ZOf>(axis2);
+            return (
+                new V_Vector(
+                     x1*w2 + y1*z2 - z1*y2 + w1*x2, // x
+                    -x1*z2 + y1*w2 + z1*x2 + w1*y2, // y
+                     x1*y2 - y1*x2 + z1*w2 + w1*z2 // z
+                ),
+                -x1*x2 - y1*y2 - z1*z2 + w1*w2 // w
+            );
+        }
+
         /// <summary>Converts a vector axis and an angle to a quaternion.</summary>
         public static Element QuaternionFromAxis(Element vectorAxis, Element fAngle) => Element.CreateArray(
             // It is probably a good idea to turn this into a multi-action function and cache the sine of fAngle/2 into a variable.
@@ -42,6 +71,28 @@ namespace Deltin.Deltinteger.Animation
             Element.Part<V_YOf>(vectorAxis) * Element.Part<V_SineFromRadians>(fAngle / 2), // y
             Element.Part<V_ZOf>(vectorAxis) * Element.Part<V_SineFromRadians>(fAngle / 2) // z
         );
+
+        /// <summary>Creates a quaternion from an euler vector. X is yaw, Y is pitch, and Z is roll.</summary>
+        public static Quaternion QuaternionFromEuler(ActionSet actionSet, Element euler)
+        {
+            Element yaw = Element.Part<V_ZOf>(euler),
+                    pitch = Element.Part<V_YOf>(euler),
+                    roll = Element.Part<V_XOf>(euler);
+            Element cy = actionSet.AssignAndSave("cy", Element.Part<V_CosineFromDegrees>(yaw * 0.5)).Get();
+            Element sy = actionSet.AssignAndSave("sy", Element.Part<V_SineFromDegrees>(yaw * 0.5)).Get();
+            Element cp = actionSet.AssignAndSave("cp", Element.Part<V_CosineFromDegrees>(pitch * 0.5)).Get();
+            Element sp = actionSet.AssignAndSave("sp", Element.Part<V_SineFromDegrees>(pitch * 0.5)).Get();
+            Element cr = actionSet.AssignAndSave("cr", Element.Part<V_CosineFromDegrees>(roll * 0.5)).Get();
+            Element sr = actionSet.AssignAndSave("sr", Element.Part<V_SineFromDegrees>(roll * 0.5)).Get();
+
+            Element xyz = actionSet.AssignAndSave("xyz", new V_Vector(
+                sr * cp * cy - cr * sp * sy,
+                cr * sp * cy + sr * cp * sy,
+                cr * cp * sy - sr * sp * cy
+            )).Get();
+            Element w = actionSet.AssignAndSave("w", cr * cp * cy + sr * sp * sy).Get();
+            return new Quaternion(xyz, w);
+        }
 
         /// <summary>Creates a 3x3 matrix from a quaternion.
         /// This will return an array with 9 elements.
@@ -230,6 +281,16 @@ namespace Deltin.Deltinteger.Animation
             return VectorFromQuaternion(result);
         }
 
+        public static Element RotatePoint(ActionSet actionSet, Element p, Element a, Element w)
+        {
+            var rot = MultiplyQuaternion2(a, w, p, 0);
+            var half_a = actionSet.AssignAndSave("half_a", rot.Item1).Get();
+            var half_w = actionSet.AssignAndSave("half_w", rot.Item2).Get();
+            var a_inv = actionSet.AssignAndSave("a_inv", a * -1).Get();
+            var result = MultiplyQuaternion2(half_a, half_w, a_inv, w);
+            return result.Item1;
+        }
+
         /// <summary>Rotates a local vector around an axis and angle.
         /// Unlike the alternative overload, this will generate a quaternion from the input axis and angle.
         /// The elements will be stored inside a variable, so storing them beforehand is not required.</summary>
@@ -269,7 +330,7 @@ namespace Deltin.Deltinteger.Animation
             return w0 * w1 + x0 * x1 + y0 * y1 + z0 * z1;
         }
 
-        public static SlerpResult Slerp(ActionSet actionSet, Element axis0, Element angle0, Element axis1, Element angle1, Element t)
+        public static Quaternion Slerp(ActionSet actionSet, Element axis0, Element angle0, Element axis1, Element angle1, Element t)
         {
             var dot = actionSet.VarCollection.Assign("slerp_dot_product", actionSet.IsGlobal, false);
 
@@ -291,6 +352,7 @@ namespace Deltin.Deltinteger.Animation
             actionSet.AddAction(Element.Part<A_If>(new V_Compare(dot.Get(), Operators.LessThan, new V_Number(0))));
             actionSet.AddAction(axis1Var.ModifyVariable(Operation.Multiply, -1)); // Invert the axis.
             actionSet.AddAction(dot.ModifyVariable(Operation.Multiply, -1)); // Invert the dot.
+            actionSet.AddAction(Element.Part<A_SmallMessage>(new V_AllPlayers(), new V_CustomString("dot < 0"))); // Invert the dot.
             actionSet.AddAction(new A_End()); // End the if.
 
             // Inputs are too close.
@@ -321,16 +383,48 @@ namespace Deltin.Deltinteger.Animation
             // End the if/else.
             actionSet.AddAction(Element.Part<A_End>());
 
-            return new SlerpResult(axisResult.Get(), angleResult.Get());
+            return new Quaternion(axisResult.Get(), angleResult.Get());
+        }
+
+        public static Quaternion Slerp2(ActionSet actionSet, Element axis0, Element angle0, Element axis1, Element angle1, Element t)
+        {
+            var axisResult = actionSet.VarCollection.Assign("axisResult", actionSet.IsGlobal, false);
+            var angleResult = actionSet.VarCollection.Assign("angleResult", actionSet.IsGlobal, false);
+
+            var cosHalfTheta = actionSet.AssignAndSave("cosHalfTheta", QuaternionDotProduct(axis0, angle0, axis1, angle1)).Get();
+
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(Element.Part<V_AbsoluteValue>(cosHalfTheta), Operators.GreaterThanOrEqual, new V_Number(1))));
+            actionSet.AddAction(axisResult.SetVariable(axis0));
+            actionSet.AddAction(angleResult.SetVariable(angle0));
+            actionSet.AddAction(new A_Else());
+            
+            var halfTheta = actionSet.AssignAndSave("halfTheta", Element.Part<V_ArccosineInRadians>(cosHalfTheta)).Get();
+            var sinHalfTheta = actionSet.AssignAndSave("sinHalfTheta", Element.Part<V_SquareRoot>(1 - cosHalfTheta*cosHalfTheta)).Get();
+
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(Element.Part<V_AbsoluteValue>(sinHalfTheta), Operators.LessThan, new V_Number(0.001))));
+            actionSet.AddAction(axisResult.SetVariable(axis0 * 0.5 + axis1 * 0.5));
+            actionSet.AddAction(angleResult.SetVariable(angle0 * 0.5 + angle1 * 0.5));
+            actionSet.AddAction(new A_Else());
+
+            var ratioA = actionSet.AssignAndSave("ratioA", Element.Part<V_SineFromRadians>((1 - t) * halfTheta) / sinHalfTheta).Get();
+            var ratioB = actionSet.AssignAndSave("ratioB", Element.Part<V_SineFromRadians>(t * halfTheta) / sinHalfTheta).Get();
+
+            actionSet.AddAction(axisResult.SetVariable(axis0 * ratioA + axis1 * ratioB));
+            actionSet.AddAction(angleResult.SetVariable(angle0 * ratioA + angle1 * ratioB));
+
+            actionSet.AddAction(new A_End());
+            actionSet.AddAction(new A_End());
+
+            return new Quaternion(axisResult.Get(), angleResult.Get());
         }
     }
 
-    public class SlerpResult
+    public class Quaternion
     {
         public Element Axis { get; }
         public Element Angle { get; }
 
-        public SlerpResult(Element axis, Element angle)
+        public Quaternion(Element axis, Element angle)
         {
             Axis = axis;
             Angle = angle;
