@@ -7,9 +7,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
     {
         public LambdaKind LambdaKind { get; }
         public CodeType[] Parameters { get; }
-        public CodeType ReturnType { get; }
+        public CodeType ReturnType { get; protected set; }
+        public bool ReturnsValue { get; protected set; }
         public bool ParameterTypesKnown { get; }
-        private readonly Scope _scope = new Scope();
+        protected readonly Scope _scope = new Scope();
 
         public PortableLambdaType(LambdaKind lambdaType, CodeType[] parameters, CodeType returnType, bool parameterTypesKnown) : base("lambda")
         {
@@ -22,7 +23,14 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], null, false) {}
 
-        public bool DoesReturnValue() => throw new NotImplementedException();
+        protected PortableLambdaType(string name, LambdaKind lambdaKind, CodeType[] parameters) : base(name)
+        {
+            LambdaKind = lambdaKind;
+            ParameterTypesKnown = true;
+            Parameters = parameters;
+            _scope.AddNativeMethod(new LambdaInvoke2(this));
+        }
+
         public override bool IsConstant() => LambdaKind == LambdaKind.ConstantBlock || LambdaKind == LambdaKind.ConstantMacro || LambdaKind == LambdaKind.ConstantValue;
         public override Scope GetObjectScope() => _scope;
 
@@ -71,7 +79,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             result += " => ";
 
             // Void
-            if (ReturnType == null) result += "void";
+            if (!ReturnsValue) result += "void";
             else result += ReturnType?.GetName() ?? "define";
 
             return result;

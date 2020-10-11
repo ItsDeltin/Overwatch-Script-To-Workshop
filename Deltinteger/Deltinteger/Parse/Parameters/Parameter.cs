@@ -71,10 +71,10 @@ namespace Deltin.Deltinteger.Parse
                 if (expr is Lambda.LambdaAction lambda)
                     // ...then if this parameter is invoked, apply the restricted calls and recursion info.
                     Invoked.OnInvoke(() => {
-                        LambdaInvoke.LambdaInvokeApply(parseInfo, lambda, valueRange);
+                        LambdaInvoke2.LambdaInvokeApply(parseInfo, lambda, valueRange);
                     });
                 // Otherwise, if the expression resolves to an IBridgeInvocable...
-                else if (LambdaInvoke.ParameterInvocableBridge(value, out IBridgeInvocable invocable))
+                else if (LambdaInvoke2.ParameterInvocableBridge(value, out IBridgeInvocable invocable))
                     // ...then this lambda parameter is invoked, invoke the resolved invocable. 
                     Invoked.OnInvoke(() => invocable.WasInvoked());
             });

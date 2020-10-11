@@ -13,14 +13,20 @@ namespace Deltin.Deltinteger.Parse.Lambda
         void LocalVariableAccessed(IIndexReferencer variable);
     }
 
-    public interface ILambdaApplier
+    public interface ILambdaApplier : ILabeled
     {
+        CallInfo CallInfo { get; }
+        IRecursiveCallHandler RecursiveCallHandler { get; }
+        IBridgeInvocable[] InvokedState { get; }
+        bool ResolvedSource { get; }
         void GetLambdaStatement(PortableLambdaType expecting);
         void GetLambdaStatement();
+        IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues);
     }
 
     public interface IBridgeInvocable
     {
+        bool Invoked { get; }
         void WasInvoked();
         void OnInvoke(Action onInvoke);
     }

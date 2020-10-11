@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
-    public class CallMethodGroup : IExpression, ILambdaApplier
+    public class CallMethodGroup : IExpression, ILambdaApplier, IWorkshopTree
     {
         private readonly ParseInfo _parseInfo;
         private readonly DocRange _range;
@@ -49,6 +49,11 @@ namespace Deltin.Deltinteger.Parse
         private PortableLambdaType _type;
         private IMethod _chosenFunction;
         private int _identifier;
+        private IFunctionHandler _functionHandler;
+        public CallInfo CallInfo => (_chosenFunction as IApplyBlock)?.CallInfo;
+        public IRecursiveCallHandler RecursiveCallHandler => CallInfo?.Function;
+        public bool ResolvedSource => _chosenFunction != null;
+        public IBridgeInvocable[] InvokedState { get; private set; }
 
         public CallMethodGroup(ParseInfo parseInfo, DocRange range, MethodGroup group)
         {
@@ -87,7 +92,16 @@ namespace Deltin.Deltinteger.Parse
 
             // If a compatible function was found, get the handler.
             if (found)
-                _identifier = _parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(GetLambdaHandler(_chosenFunction));
+            {
+                _functionHandler = GetLambdaHandler(_chosenFunction);
+                _identifier = _parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(_functionHandler);
+
+                // Get the variable's invoke info from the parameters.
+                InvokedState = new IBridgeInvocable[_functionHandler.ParameterCount()];
+                for (int i = 0; i < _functionHandler.ParameterCount(); i++)
+                    if (_functionHandler.GetParameterVar(i) is Var var)
+                        InvokedState[i] = var.BridgeInvocable;
+            }
             else
                 _parseInfo.Script.Diagnostics.Error("No overload for '" + _group.Name + "' implements " + expecting.GetName(), _range);
         }
@@ -104,10 +118,25 @@ namespace Deltin.Deltinteger.Parse
             return new GenericMethodHandler(function);
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet) => Element.CreateArray(new V_Number(_identifier), actionSet.This ?? new V_Null());
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            if (_type.IsConstant())
+                return this;
+            return Element.CreateArray(new V_Number(_identifier), actionSet.This ?? new V_Null());
+        }
 
+        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
+        {
+            var buildController = new FunctionBuildController(actionSet, new CallHandler(parameterValues), new DefaultGroupDeterminer(new IFunctionHandler[] { _functionHandler }));
+            return buildController.Build();
+        }
+
+        public string GetLabel(bool markdown) => _chosenFunction.GetLabel(markdown);
         public Scope ReturningScope() => null;
         public CodeType Type() => _type;
+        
+        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => throw new NotImplementedException();
+        public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
     }
 
     class MethodGroupType : CodeType

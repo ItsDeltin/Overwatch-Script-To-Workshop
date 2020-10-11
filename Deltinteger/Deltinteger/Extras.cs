@@ -83,6 +83,8 @@ namespace Deltin.Deltinteger
 
         public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
 
+        public static string GetNameOrDefine(this CodeType type) => type.GetName() ?? "define";
+
         public static Uri Definition(string path)
         {
             string enc = "file:///" + path.Replace('\\', '/').Replace(" ","%20").Replace(":", "%3A");

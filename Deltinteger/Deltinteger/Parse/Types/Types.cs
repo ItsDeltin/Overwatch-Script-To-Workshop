@@ -203,8 +203,8 @@ namespace Deltin.Deltinteger.Parse
             // Add custom classes here.
             _defaultTypes.Add(new Models.AssetClass());
             _defaultTypes.Add(new Lambda.BlockLambda());
-            _defaultTypes.Add(new Lambda.ValueBlockLambda());
-            _defaultTypes.Add(new Lambda.MacroLambda());
+            _defaultTypes.Add(new Lambda.ValueBlockLambda(null));
+            _defaultTypes.Add(new Lambda.MacroLambda(null));
             _defaultTypes.Add(VectorType.Instance);
             _defaultTypes.Add(Pathfinder.SegmentsStruct.Instance);
         }

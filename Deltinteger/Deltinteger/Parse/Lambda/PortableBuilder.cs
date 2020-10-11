@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _lambda = lambda;
         }
 
-        public bool DoesReturnValue() => _lambda.LambdaType.DoesReturnValue();
+        public bool DoesReturnValue() => _lambda.LambdaType.ReturnsValue;
         public IIndexReferencer GetParameterVar(int index) => index < _lambda.Parameters.Length ? _lambda.Parameters[index] : null;
         public int ParameterCount() => _lambda.Parameters.Length;
 

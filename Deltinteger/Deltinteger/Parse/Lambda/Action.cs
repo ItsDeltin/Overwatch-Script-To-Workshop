@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public Var[] Parameters { get; }
 
         /// <summary>The invocation status of the lambda parameters/</summary>
-        public SubLambdaInvoke[] InvokedState { get; }
+        public IBridgeInvocable[] InvokedState { get; }
 
         /// <summary>Determines if the lambda has multiple return statements. LambdaType will be ValueBlockLambda if this is true.</summary>
         public bool MultiplePaths { get; private set; }
@@ -45,6 +45,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public CallInfo CallInfo { get; }
         public IRecursiveCallHandler RecursiveCallHandler { get; }
+        public bool ResolvedSource => true;
 
         public LambdaAction(ParseInfo parseInfo, Scope scope, LambdaExpression context)
         {

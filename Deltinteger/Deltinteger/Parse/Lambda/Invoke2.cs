@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public string Documentation => "Invokes the lambda expression.";
         public Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
-        public bool DoesReturnValue => LambdaType.LambdaKind == LambdaKind.ConstantMacro || LambdaType.LambdaKind == LambdaKind.ConstantValue || LambdaType.ReturnType != null;
+        public bool DoesReturnValue => LambdaType.ReturnsValue;
         
         public PortableLambdaType LambdaType { get; }
 
@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             if (LambdaType.IsConstant())
             {
-                LambdaAction lambda = (LambdaAction)actionSet.CurrentObject;
+                ILambdaApplier lambda = (ILambdaApplier)actionSet.CurrentObject;
                 return lambda.Invoke(actionSet, methodCall.ParameterValues);
             }
             return actionSet.DeltinScript.GetComponent<LambdaGroup>().Call(actionSet, methodCall);
@@ -43,8 +43,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
             if (LambdaType.LambdaKind != LambdaKind.Anonymous && LambdaType.LambdaKind != LambdaKind.Portable && parseInfo.SourceExpression != null)
                 parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr => {
                     // Get the lambda that is being invoked.
-                    if (expr is LambdaAction source)
+                    if (expr is ILambdaApplier source)
                     {
+                        if (!source.ResolvedSource) return;
+
                         // Recursion and error check.
                         LambdaInvokeApply(parseInfo, source, callRange);
                         
@@ -66,8 +68,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
 
         /// <summary>Gets the restricted calls and recursion from a lambda invocation.</summary>
-        public static void LambdaInvokeApply(ParseInfo parseInfo, LambdaAction source, DocRange callRange)
+        public static void LambdaInvokeApply(ParseInfo parseInfo, ILambdaApplier source, DocRange callRange)
         {
+            if (!source.ResolvedSource) return;
+
             parseInfo.CurrentCallInfo?.Call(source.RecursiveCallHandler, callRange);
 
             // Add restricted calls.
