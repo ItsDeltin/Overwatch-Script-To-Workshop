@@ -304,7 +304,7 @@ namespace Deltin.Deltinteger.Parse
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
 
-            if (parameterType != null && ((parameterType.IsConstant() && value.Type() == null) || (value.Type() != null && !value.Type().Implements(parameterType))))
+            if (parameterType.CodeTypeParameterInvalid(value.Type()))
             {
                 // The parameter type does not match.
                 string msg = string.Format("Expected a value of type {0}.", Option.Parameters[parameter].Type.GetName());

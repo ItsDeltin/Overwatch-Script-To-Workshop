@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public CodeType ReturnType { get; protected set; }
         public bool ReturnsValue { get; protected set; }
         public bool ParameterTypesKnown { get; }
+        public LambdaInvoke InvokeFunction { get; private set; }
         protected readonly Scope _scope = new Scope();
 
         public PortableLambdaType(LambdaKind lambdaType, CodeType[] parameters, bool returnsValue, CodeType returnType, bool parameterTypesKnown) : base("lambda")
@@ -19,7 +20,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnsValue = returnsValue;
             ReturnType = returnType;
             ParameterTypesKnown = parameterTypesKnown;
-            _scope.AddNativeMethod(new LambdaInvoke(this));
+            AddInvokeFunction();            
         }
 
         public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], false, null, false) {}
@@ -29,7 +30,14 @@ namespace Deltin.Deltinteger.Parse.Lambda
             LambdaKind = lambdaKind;
             ParameterTypesKnown = true;
             Parameters = parameters;
-            _scope.AddNativeMethod(new LambdaInvoke(this));
+            AddInvokeFunction();
+        }
+
+        private void AddInvokeFunction()
+        {
+            InvokeFunction = new LambdaInvoke(this);
+            _scope.AddNativeMethod(InvokeFunction);
+            InvokeInfo = new LambdaInvokeInfo(this);
         }
 
         public override bool IsConstant() => LambdaKind == LambdaKind.ConstantBlock || LambdaKind == LambdaKind.ConstantMacro || LambdaKind == LambdaKind.ConstantValue;

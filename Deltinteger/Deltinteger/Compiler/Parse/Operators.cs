@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         public void Get(Parser parser)
         {
-            var identifier = parser.IdentifierOrFunction();
+            var identifier = parser.GetArrayAndInvokes(parser.Identifier());
             parser.Operands.Push(identifier);
         }
     }

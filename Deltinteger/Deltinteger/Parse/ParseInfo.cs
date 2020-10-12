@@ -21,6 +21,7 @@ namespace Deltin.Deltinteger.Parse
         // Do not persist.
         public ITreeContextPart SourceExpression { get; private set; }
         public IVariableTracker LocalVariableTracker { get; private set; }
+        public ResolveInvokeInfo ResolveInvokeInfo { get; private set; }
 
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
@@ -48,6 +49,7 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetExpectingLambda(CodeType sourceType) => new ParseInfo(this) { ExpectingLambda = sourceType is PortableLambdaType portable ? new ExpectingLambdaInfo(portable) : null };
         public ParseInfo SetPotentialLambda() => new ParseInfo(this) { ExpectingLambda = new ExpectingLambdaInfo() };
         public ParseInfo ClearExpectingLambda() => new ParseInfo(this) { ExpectingLambda = null };
+        public ParseInfo SetInvokeInfo(ResolveInvokeInfo invokeInfo) => new ParseInfo(this) { ResolveInvokeInfo = invokeInfo };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
@@ -165,7 +167,13 @@ namespace Deltin.Deltinteger.Parse
             if (element == null) return new MissingVariable(variableName);
             
             // Additional syntax checking.
-            return new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);
+            var expression = new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);
+
+            // Accept the method group.
+            if (expression is CallMethodGroup methodGroup)
+                methodGroup.Accept();
+
+            return expression;
         }
 
         /// <summary>Gets an IExpression[] from a DeltinScriptParser.ArrayContext.</summary>
@@ -246,8 +254,6 @@ namespace Deltin.Deltinteger.Parse
                 return new CallVariableAction(referencer, index);
             }
 
-            Accept(variable);
-
             // Check value in array.
             if (index != null && index.Length > 0)
             {
@@ -266,11 +272,6 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual void Call(ICallable callable, DocRange range) => callable.Call(_parseInfo, range);
         protected virtual void EventPlayerRestrictedCall(RestrictedCall restrictedCall) => _parseInfo.RestrictedCallHandler.RestrictedCall(restrictedCall);
-        protected virtual void Accept(IVariable variable)
-        {
-            if (variable is CallMethodGroup group)
-                group.Accept();
-        }
         public virtual void Error(string message, DocRange range) => _parseInfo.Script.Diagnostics.Error(message, range);
     }
 }

@@ -291,7 +291,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope GetScope() => _methodCall.ReturningScope();
         public IExpression GetExpression() => _methodCall;
-        public DocRange GetRange() => _methodContext.Identifier.Range;
+        public DocRange GetRange() => _methodContext.Target.Range;
     }
 
     /// <summary>Variables or types in the expression tree.</summary>
@@ -487,7 +487,6 @@ namespace Deltin.Deltinteger.Parse
 
             public PotentialVariableApply(ParseInfo parseInfo) : base(parseInfo) {}
 
-            protected override void Accept(IVariable variable) {}
             protected override void Call(ICallable callable, DocRange range) {}
             protected override void EventPlayerRestrictedCall(RestrictedCall restrictedCall) {}
             public override void Error(string message, DocRange range) => Errors.Add(new Diagnostic(message, range, Diagnostic.Error));

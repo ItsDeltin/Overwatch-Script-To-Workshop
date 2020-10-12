@@ -25,6 +25,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public List<IParserError> Errors { get; } = new List<IParserError>();
         private readonly RootContext _last;
         private readonly IncrementInfo _incrementInfo;
+        private int _previousTokenRange = -1;
 
         private int LookaheadDepth = 0;
 
@@ -79,7 +80,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNode<T>(T node) where T: INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(Lexer.Tokens[TokenRangeStart.Pop()].Range.Start, CurrentOrLast.Range.End);
+            {
+                _previousTokenRange = TokenRangeStart.Pop();
+                node.Range = new DocRange(Lexer.Tokens[_previousTokenRange].Range.Start, CurrentOrLast.Range.End);
+            }
             return node;
         }
 
@@ -90,10 +94,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return node;
         }
 
+        T EndNodeFromPrevious<T>(T node) where T: INodeRange
+        {
+            if (LookaheadDepth == 0)
+                node.Range = new DocRange(Lexer.Tokens[_previousTokenRange].Range.Start, CurrentOrLast.Range.End);
+            return node;
+        }
+
         void PopNodeStack()
         {
             if (LookaheadDepth == 0)
-                TokenRangeStart.Pop();
+                _previousTokenRange = TokenRangeStart.Pop();
         }
 
         T Node<T>(Func<T> func) where T: Node
@@ -382,15 +393,34 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public IParseExpression GetExpressionWithArray()
         {
             IParseExpression expression = GetSubExpression();
+            return GetArrayAndInvokes(expression);
+        }
 
-            // Get the array index.
-            while (ParseOptional(TokenType.SquareBracket_Open))
+        public IParseExpression GetArrayAndInvokes(IParseExpression expression)
+        {
+            while (true)
             {
-                IParseExpression index = GetContainExpression();
-                // End the closing square bracket.
-                ParseExpected(TokenType.SquareBracket_Close);
-                // Update the expression.
-                expression = new ValueInArray(expression, index, Lexer.Tokens[Token - 1]);
+                // Get the array index.
+                if (ParseOptional(TokenType.SquareBracket_Open))
+                {
+                    IParseExpression index = GetContainExpression();
+                    // End the closing square bracket.
+                    ParseExpected(TokenType.SquareBracket_Close);
+                    // Update the expression.
+                    expression = EndNodeFromPrevious(new ValueInArray(expression, index, Lexer.Tokens[Token - 1]));
+                }
+                // Invoke
+                else if (ParseOptional(TokenType.Parentheses_Open))
+                {
+                    // Parse parameters.
+                    var values = ParseParameterValues();
+                    // End the parentheses.
+                    ParseExpected(TokenType.Parentheses_Close);
+                    // Update the expression.
+                    expression = EndNodeFromPrevious(new FunctionExpression(expression, values));
+                }
+                // No more array indices or invocations.
+                else break;
             }
             return expression;
         }
@@ -446,7 +476,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     
                     // Functions and identifiers
                     else if (Is(TokenType.Identifier))
-                        return IdentifierOrFunction();
+                        return Identifier();
                     
                     // Expression group.
                     else if (Is(TokenType.Parentheses_Open))
@@ -493,7 +523,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         /// <summary>Parses an identifier or a function.</summary>
         /// <returns>An 'Identifier' or 'FunctionExpression'.</returns>
-        public IParseExpression IdentifierOrFunction()
+        public IParseExpression Identifier()
         {
             StartNode();
             Token identifier = ParseExpected(TokenType.Identifier);
@@ -507,18 +537,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 indices.Add(new ArrayIndex(expression, left, right));
             }
 
-            // Match parentheses start.
-            if (indices.Count != 0 || ParseOptional(TokenType.Parentheses_Open) == null)
-                return EndNode(MakeIdentifier(identifier, indices));
-            else
-            {
-                // Parse parameters.
-                var values = ParseParameterValues();
-                ParseExpected(TokenType.Parentheses_Close);
-
-                // Return function
-                return EndNode(new FunctionExpression(identifier, values));
-            }
+            return EndNode(MakeIdentifier(identifier, indices));
         }
 
         /// <summary>Parses the inner parameter values of a function.</summary>
@@ -1661,7 +1680,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new Hook(variableExpression, variableValue);
         }
 
-        Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices) => new Identifier(identifier, indices);
+        public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices) => new Identifier(identifier, indices);
         MissingElement MissingElement() => new MissingElement(CurrentOrLast.Range);
         IParseStatement ExpressionStatement(IParseExpression expression, Token actionComment)
         {

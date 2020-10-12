@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Parse
     public class Scope
     {
         private readonly List<IVariable> _variables = new List<IVariable>();
+        private readonly List<IMethod> _functions = new List<IMethod>();
         private readonly List<MethodGroup> _methodGroups = new List<MethodGroup>();
         public Scope Parent { get; }
         public string ErrorName { get; set; } = "current scope";

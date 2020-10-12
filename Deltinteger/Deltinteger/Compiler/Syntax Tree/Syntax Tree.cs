@@ -314,16 +314,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     // Both expressions and statements
     public class FunctionExpression : Node, IParseExpression, IParseStatement
     {
-        public Token Identifier { get; }
+        public IParseExpression Target { get; }
         public List<ParameterValue> Parameters { get; }
 
-        public FunctionExpression(Token identifier, List<ParameterValue> parameters)
+        public FunctionExpression(IParseExpression target, List<ParameterValue> parameters)
         {
-            Identifier = identifier;
+            Target = target;
             Parameters = parameters;
         }
 
-        public override string ToString() => Identifier.Text + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
+        public override string ToString() => Target.ToString() + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
     }
 
     public class ParameterValue : IListComma

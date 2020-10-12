@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
+        public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
         protected string Kind = "class";
         protected TokenType TokenType { get; set; } = TokenType.Type;

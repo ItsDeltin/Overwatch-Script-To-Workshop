@@ -26,7 +26,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public bool MethodIsValid(IMethod method) => method.Name == Name;
-        public bool MethodIsValid() => false;
         public void AddMethod(IMethod method) => Functions.Add(method);
 
         public CompletionItem GetCompletion() => new CompletionItem() {
@@ -43,9 +42,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class CallMethodGroup : IExpression, ILambdaApplier, IWorkshopTree
     {
+        public MethodGroup Group { get; }
         private readonly ParseInfo _parseInfo;
         private readonly DocRange _range;
-        private readonly MethodGroup _group;
         private PortableLambdaType _type;
         private IMethod _chosenFunction;
         private int _identifier;
@@ -59,27 +58,30 @@ namespace Deltin.Deltinteger.Parse
         {
             _parseInfo = parseInfo;
             _range = range;
-            _group = group;
+            Group = group;
         }
 
         public void Accept()
         {
             _parseInfo.Script.AddToken(_range, TokenType.Function);
 
-            new CheckLambdaContext(
-                _parseInfo,
-                this,
-                "Cannot determine lambda in the current context",
-                _range,
-                ParameterState.Unknown
-            ).Check();
+            if (_parseInfo.ResolveInvokeInfo != null)
+                _parseInfo.ResolveInvokeInfo.Resolve(new MethodGroupInvokeInfo());
+            else
+                new CheckLambdaContext(
+                    _parseInfo,
+                    this,
+                    "Cannot determine lambda in the current context",
+                    _range,
+                    ParameterState.Unknown
+                ).Check();
         }
 
         public void GetLambdaStatement(PortableLambdaType expecting)
         {
             bool found = false;
             _type = expecting;
-            foreach (var func in _group.Functions)
+            foreach (var func in Group.Functions)
             {
                 if (func.Parameters.Length == expecting.Parameters.Length)
                 {
@@ -107,7 +109,7 @@ namespace Deltin.Deltinteger.Parse
                         InvokedState[i] = var.BridgeInvocable;
             }
             else
-                _parseInfo.Script.Diagnostics.Error("No overload for '" + _group.Name + "' implements " + expecting.GetName(), _range);
+                _parseInfo.Script.Diagnostics.Error("No overload for '" + Group.Name + "' implements " + expecting.GetName(), _range);
         }
 
         public void GetLambdaStatement() => _parseInfo.Script.Diagnostics.Error("Cannot determine lambda in the current context", _range);
@@ -141,13 +143,6 @@ namespace Deltin.Deltinteger.Parse
         
         public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
-    }
-
-    class MethodGroupType : CodeType
-    {
-        public MethodGroupType() : base("method group") {}
-        public override CompletionItem GetCompletion() => throw new NotImplementedException();
-        public override Scope ReturningScope() => null;
     }
 
     class GenericMethodHandler : IFunctionHandler
