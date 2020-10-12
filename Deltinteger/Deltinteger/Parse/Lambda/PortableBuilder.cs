@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return _subroutineInfo;
         }
         public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_parameterCount, _functionHandlers.ToArray(), true);
-        public NewRecursiveStack GetExistingRecursiveStack(List<NewRecursiveStack> stack) => throw new NotImplementedException();
+        public RecursiveStack GetExistingRecursiveStack(List<RecursiveStack> stack) => throw new NotImplementedException();
         public object GetStackIdentifier() => throw new NotImplementedException();
 
         // IFunctionLookupTable

@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnsValue = returnsValue;
             ReturnType = returnType;
             ParameterTypesKnown = parameterTypesKnown;
-            _scope.AddNativeMethod(new LambdaInvoke2(this));
+            _scope.AddNativeMethod(new LambdaInvoke(this));
         }
 
         public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], false, null, false) {}
@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             LambdaKind = lambdaKind;
             ParameterTypesKnown = true;
             Parameters = parameters;
-            _scope.AddNativeMethod(new LambdaInvoke2(this));
+            _scope.AddNativeMethod(new LambdaInvoke(this));
         }
 
         public override bool IsConstant() => LambdaKind == LambdaKind.ConstantBlock || LambdaKind == LambdaKind.ConstantMacro || LambdaKind == LambdaKind.ConstantValue;

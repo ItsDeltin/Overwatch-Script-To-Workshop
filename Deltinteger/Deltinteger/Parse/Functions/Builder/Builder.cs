@@ -91,10 +91,10 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public IWorkshopTree Build()
         {
             // Setup inline-recursive handler.
-            NewRecursiveStack stack = null;
+            RecursiveStack stack = null;
             if (!Determiner.IsSubroutine() && Determiner.IsRecursive())
             {
-                stack = new NewRecursiveStack(this, Determiner.GetStackIdentifier());
+                stack = new RecursiveStack(this, Determiner.GetStackIdentifier());
                 stack.Init();
                 ActionSet.Translate.MethodStack.Add(stack);
             }
@@ -191,7 +191,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         IFunctionLookupTable GetLookupTable();
         SubroutineInfo GetSubroutineInfo();
         IParameterHandler[] Parameters();
-        NewRecursiveStack GetExistingRecursiveStack(List<NewRecursiveStack> stack);
+        RecursiveStack GetExistingRecursiveStack(List<RecursiveStack> stack);
         object GetStackIdentifier();
     }
 
@@ -230,7 +230,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             return parameters;
         }
 
-        public NewRecursiveStack GetExistingRecursiveStack(List<NewRecursiveStack> stack)
+        public RecursiveStack GetExistingRecursiveStack(List<RecursiveStack> stack)
         {
             foreach (var item in stack)
                 if (item.Identifier == GetStackIdentifier())
@@ -496,7 +496,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public IGroupDeterminer GetDeterminer() => new DefaultGroupDeterminer(new DefinedFunctionHandler[] { new DefinedFunctionHandler(_method) });
     }
 
-    public class NewRecursiveStack
+    public class RecursiveStack
     {
         public object Identifier { get; }
 
@@ -522,7 +522,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         private bool isGlobal => actionSet.IsGlobal;
         private string name => "func";
 
-        public NewRecursiveStack(FunctionBuildController builder, object identifier)
+        public RecursiveStack(FunctionBuildController builder, object identifier)
         {
             Identifier = identifier;
             _builder = builder;

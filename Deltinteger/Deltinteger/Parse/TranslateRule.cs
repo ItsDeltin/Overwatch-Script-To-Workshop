@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
         public ActionSet ActionSet { get; }
         public DeltinScript DeltinScript { get; }
         public bool IsGlobal { get; }
-        public List<NewRecursiveStack> MethodStack { get; } = new List<NewRecursiveStack>();
+        public List<RecursiveStack> MethodStack { get; } = new List<RecursiveStack>();
         
         public List<Condition> Conditions { get; } = new List<Condition>();
 

@@ -5,7 +5,7 @@ using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.Compl
 namespace Deltin.Deltinteger.Parse.Lambda
 {
     /// <summary>Lambda invoke function.</summary>
-    public class LambdaInvoke2 : IMethod
+    public class LambdaInvoke : IMethod
     {
         public string Name => "Invoke";
         public CodeType ReturnType { get; }
@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         
         public PortableLambdaType LambdaType { get; }
 
-        public LambdaInvoke2(PortableLambdaType lambdaType)
+        public LambdaInvoke(PortableLambdaType lambdaType)
         {
             LambdaType = lambdaType;
             ReturnType = lambdaType.ReturnType;

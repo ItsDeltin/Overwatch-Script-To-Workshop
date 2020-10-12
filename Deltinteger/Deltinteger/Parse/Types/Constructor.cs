@@ -141,7 +141,7 @@ namespace Deltin.Deltinteger.Parse
         public bool MultiplePaths() => false;
         public bool ReturnsValue() => false;
         public object GetStackIdentifier() => _function.UniqueIdentifier();
-        public NewRecursiveStack GetExistingRecursiveStack(List<NewRecursiveStack> stack) => null;
+        public RecursiveStack GetExistingRecursiveStack(List<RecursiveStack> stack) => null;
         public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_function.ParameterCount(), new IFunctionHandler[] { _function }, false);
 
         // IFunctionLookupTable
