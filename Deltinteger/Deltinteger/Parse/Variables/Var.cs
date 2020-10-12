@@ -144,7 +144,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             WasCalled = true;
-            if (parseInfo.ResolveInvokeInfo == null) parseInfo.Script.AddToken(callRange, _tokenType, _tokenModifiers);
+            parseInfo.Script.AddToken(callRange, _tokenType, _tokenModifiers);
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.Script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));

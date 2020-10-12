@@ -470,7 +470,7 @@ namespace Deltin.Deltinteger.Parse
                     _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
                 
                 // Accept method group.
-                if (_variable is CallMethodGroup group)
+                if (_expression is CallMethodGroup group)
                     group.Accept();
 
                 // Add diagnostics.

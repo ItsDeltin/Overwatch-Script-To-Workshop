@@ -52,6 +52,9 @@ namespace Deltin.Deltinteger.Parse
             _typeRange = _contextHandler.GetTypeRange();
             GetCodeType();
 
+            if (_varInfo.Type is Lambda.PortableLambdaType)
+                _varInfo.TokenType = TokenType.Function;
+
             // Apply attributes.
             foreach (VarBuilderAttribute attribute in _attributes)
                 attribute.Apply(_varInfo);
