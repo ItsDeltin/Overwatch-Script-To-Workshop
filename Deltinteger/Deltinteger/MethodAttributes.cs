@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger
         {
             Label = function.Name,
             Kind = CompletionItemKind.Method,
-            Detail = (!function.DoesReturnValue ? "void" : (function.ReturnType == null ? "define" : function.ReturnType.GetName())) + " " + function.GetLabel(false),
+            Detail = (!function.DoesReturnValue ? "void" : (function.CodeType == null ? "define" : function.CodeType.GetName())) + " " + function.GetLabel(false),
             Documentation = Extras.GetMarkupContent(function.Documentation)
         };
     }

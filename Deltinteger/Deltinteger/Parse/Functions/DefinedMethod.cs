@@ -67,7 +67,7 @@ namespace Deltin.Deltinteger.Parse
             if (!context.Type.IsVoid)
             {
                 DoesReturnValue = true;
-                ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.Type);
+                CodeType = CodeType.GetCodeTypeFromContext(parseInfo, context.Type);
             }
 
             // Setup the parameters and parse the block.
@@ -134,13 +134,13 @@ namespace Deltin.Deltinteger.Parse
             if (validation.Returns.Length == 1) SingleReturnValue = validation.Returns[0].ReturningValue;
 
             // If the return type is a constant type...
-            if (ReturnType != null && ReturnType.IsConstant())
+            if (CodeType != null && CodeType.IsConstant())
                 // ... iterate through each return statement ...
                 foreach (ReturnAction returnAction in validation.Returns)
                     // ... If the current return statement returns a value and that value does not implement the return type ...
-                    if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(ReturnType)))
+                    if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(CodeType)))
                         // ... then add a syntax error.
-                        parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
+                        parseInfo.Script.Diagnostics.Error("Must return a value of type '" + CodeType.GetName() + "'.", returnAction.ErrorRange);
             
             WasApplied = true;
             foreach (var listener in listeners) listener.Applied();

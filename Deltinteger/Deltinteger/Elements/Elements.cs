@@ -381,7 +381,7 @@ namespace Deltin.Deltinteger.Elements
         public bool WholeContext { get; } = true;
         public bool Static => true;
 
-        public CodeType ReturnType { get; private set; }
+        public CodeType CodeType { get; private set; }
 
         public ElementList(Type type)
         {
@@ -402,7 +402,7 @@ namespace Deltin.Deltinteger.Elements
         public void ApplyParameters()
         {
             // Set the return type to the Vector class if the value returns a vector.
-            if (ElementValueType == ValueType.Vector) ReturnType = VectorType.Instance;
+            if (ElementValueType == ValueType.Vector) CodeType = VectorType.Instance;
 
             // Get the parameters.
             Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
@@ -468,7 +468,7 @@ namespace Deltin.Deltinteger.Elements
             else return element;
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
 

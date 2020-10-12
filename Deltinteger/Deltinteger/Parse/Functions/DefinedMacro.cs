@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = attributeResult.AccessLevel;
             
             SetupScope(Static ? staticScope : objectScope);
-            ReturnType = returnType;
+            CodeType = returnType;
             DoesReturnValue = true;
 
             SetupParameters(context.Parameters, false);

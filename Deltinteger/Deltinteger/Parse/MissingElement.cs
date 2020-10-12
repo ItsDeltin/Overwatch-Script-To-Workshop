@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
+        public CodeType CodeType => null;
 
         public MissingVariable(string name)
         {

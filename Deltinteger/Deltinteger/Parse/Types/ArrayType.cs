@@ -159,7 +159,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override string GetName()
         {
-            string result = ArrayOfType.GetName();
+            string result = ArrayOfType.GetNameOrDefine();
             if (ArrayOfType is PortableLambdaType) result = "(" + result + ")";
             return result + "[]"; 
         }

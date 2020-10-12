@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Parse
 
     class FunctionInvokeResult : IInvokeResult, IBlockListener, IOnBlockApplied
     {
-        public CodeType ReturnType => Function.ReturnType;
+        public CodeType ReturnType => Function.CodeType;
         public IMethod Function { get; }
         public IExpression[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
@@ -188,7 +188,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public LambdaInvoke Function { get; }
         IMethod IInvokeResult.Function => this.Function;
-        public CodeType ReturnType => Function.ReturnType;
+        public CodeType ReturnType => Function.CodeType;
         public IExpression[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
         private readonly IExpression _target;

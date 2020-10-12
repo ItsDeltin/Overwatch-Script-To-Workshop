@@ -216,7 +216,7 @@ namespace Deltin.Deltinteger.Json
         public MethodAttributes Attributes { get; }
         public CodeParameter[] Parameters { get; }
         public string Name => "Get";
-        public CodeType ReturnType => null;
+        public CodeType CodeType => null;
         public bool Static => false;
         public bool WholeContext => true;
         public string Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";

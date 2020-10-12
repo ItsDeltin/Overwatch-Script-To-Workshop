@@ -21,6 +21,7 @@ namespace Deltin.Deltinteger.Parse
         public bool ProtectedCatch { get; set; }
         public bool CompletionCatch { get; set; }
         public bool MethodContainer { get; set; }
+        public bool CatchConflict { get; set; }
 
         public Scope() {}
         private Scope(Scope parent)
@@ -137,22 +138,17 @@ namespace Deltin.Deltinteger.Parse
             if (variable == null) throw new ArgumentNullException(nameof(variable));
             if (_variables.Contains(variable)) throw new Exception("variable reference is already in scope.");
 
-            if (IsVariable(variable.Name))
-            {
-                string message = string.Format("A variable of the name {0} was already defined in this scope.", variable.Name);
-
-                if (diagnostics != null && range != null)
-                    diagnostics.Error(message, range);
-                else
-                    throw new Exception(message);
-            }
+            if (Conflicts(variable))
+                diagnostics.Error(string.Format("A variable of the name {0} was already defined in this scope.", variable.Name), range);
             else
                 _variables.Add(variable);
         }
 
         public void AddNativeVariable(IVariable variable)
         {
-            AddVariable(variable, null, null);
+            if (variable == null) throw new ArgumentNullException(nameof(variable));
+            if (_variables.Contains(variable)) throw new Exception("variable reference is already in scope.");
+            _variables.Add(variable);
         }
 
         /// <summary>Adds a variable to the scope that already belongs to another scope.</summary>
@@ -163,21 +159,25 @@ namespace Deltin.Deltinteger.Parse
                 _variables.Add(variable);
         }
 
-        public bool IsVariable(string name)
-        {
-            return GetVariable(name, null, null, null) != null;
-        }
+        public bool IsVariable(string name) => GetVariable(name, false) != null;
 
-        public IVariable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range)
+        public IVariable GetVariable(string name, bool methodGroupsOnly)
         {
             IVariable element = null;
             Scope current = this;
 
             while (current != null && element == null)
             {
-                element = current._variables.FirstOrDefault(element => element.Name == name);
+                element = current._variables.Where(v => !methodGroupsOnly || v is MethodGroup || v.CodeType is Lambda.PortableLambdaType).FirstOrDefault(element => element.Name == name);
                 current = current.Parent;
             }
+
+            return element;
+        }
+
+        public IVariable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range, bool methodGroupsOnly)
+        {
+            IVariable element = GetVariable(name, methodGroupsOnly);
 
             if (range != null && element == null)
                 diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
@@ -189,6 +189,25 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return element;
+        }
+
+        public bool Conflicts(IScopeable scopeable, bool variables = true, bool functions = true)
+        {
+            bool conflicts = false;
+            IterateElements(variables, functions, action => {
+                // If the element name matches, set conflicts to true then stop iterating.
+                if (scopeable.Name == action.Element.Name)
+                {
+                    if (functions || action.Element is MethodGroup == false)
+                        conflicts = true;
+                    return ScopeIterateAction.Stop;
+                }
+                
+                return action.Container.CatchConflict ? ScopeIterateAction.StopAfterScope : ScopeIterateAction.Continue;
+            }, scope => {
+                return scope.CatchConflict ? ScopeIterateAction.StopAfterScope : ScopeIterateAction.Continue;
+            });
+            return conflicts;
         }
 
         /// <summary>
@@ -269,15 +288,9 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Checks if a method conflicts with another method in the scope.</summary>
         /// <param name="method">The method to check.</param>
         /// <returns>Returns true if the current scope already has the same name and parameters as the input method.</returns>
-        public bool HasConflict(IMethod method)
-        {
-            return GetMethodOverload(method) != null;
-        }
+        public bool HasConflict(IMethod method) => Conflicts(method, functions: false) || GetMethodOverload(method) != null;
 
-        public bool HasConflict(MacroVar macro)
-        {
-            return GetMacroOverload(macro.Name, macro.DefinedAt) != null;
-        }
+        public bool HasConflict(MacroVar macro) => GetMacroOverload(macro.Name, macro.DefinedAt) != null;
 
         /// <summary>Gets a method in the scope that has the same name and parameter types. Can potentially resolve to itself if the method being tested is in the scope.</summary>
         /// <param name="method">The method to get a matching overload.</param>
@@ -454,7 +467,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Add the variables.
                 foreach (var variable in scope._variables)
-                    if (variable is MethodGroup == false)
+                    if (variable is MethodGroup == false && scope.WasScopedAtPosition(variable, pos, getter))
                         completions.Add(variable.GetCompletion());
 
                 return scope.CompletionCatch;

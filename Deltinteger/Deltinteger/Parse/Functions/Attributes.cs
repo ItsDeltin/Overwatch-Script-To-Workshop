@@ -89,8 +89,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Accessors
                 case MethodAttributeType.Public: ResultAppender.SetAccessLevel(AccessLevel.Public); break;
-                case MethodAttributeType.Private: ResultAppender.SetAccessLevel(AccessLevel.Protected); break;
-                case MethodAttributeType.Protected: ResultAppender.SetAccessLevel(AccessLevel.Private); break;
+                case MethodAttributeType.Protected: ResultAppender.SetAccessLevel(AccessLevel.Protected); break;
+                case MethodAttributeType.Private: ResultAppender.SetAccessLevel(AccessLevel.Private); break;
                 
                 // Apply static
                 case MethodAttributeType.Static: ResultAppender.SetStatic(); break;

@@ -71,6 +71,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static => true;
         public bool WholeContext => true;
         public bool CanBeIndexed => false;
+        public CodeType CodeType => null;
 
         public ExpressionOrWorkshopValue ValueExpression { get; private set; }
 

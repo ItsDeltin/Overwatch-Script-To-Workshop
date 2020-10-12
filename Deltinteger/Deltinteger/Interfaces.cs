@@ -13,7 +13,6 @@ namespace Deltin.Deltinteger
 {
     public interface IMethod : IScopeable, IParameterCallable
     {
-        CodeType ReturnType { get; }
         MethodAttributes Attributes { get; }
         bool DoesReturnValue { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
@@ -24,7 +23,7 @@ namespace Deltin.Deltinteger
             // Get the return type.
             string result = "";
             if (includeReturnType)
-                result += (function.DoesReturnValue ? function.ReturnType?.GetName() ?? "define" : "void") + " ";
+                result += (function.DoesReturnValue ? function.CodeType?.GetName() ?? "define" : "void") + " ";
             
             result += function.Name + "(";
 
@@ -52,6 +51,7 @@ namespace Deltin.Deltinteger
 
     public interface IScopeable : INamed, IAccessable
     {
+        CodeType CodeType { get; }
         bool Static { get; }
         bool WholeContext { get; }
         CompletionItem GetCompletion();

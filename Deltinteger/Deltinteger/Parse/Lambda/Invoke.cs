@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     public class LambdaInvoke : IMethod
     {
         public string Name => "Invoke";
-        public CodeType ReturnType { get; }
+        public CodeType CodeType { get; }
         public CodeParameter[] Parameters { get; }
 
         public MethodAttributes Attributes => new MethodAttributes();
@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public LambdaInvoke(PortableLambdaType lambdaType)
         {
             LambdaType = lambdaType;
-            ReturnType = lambdaType.ReturnType;
+            CodeType = lambdaType.ReturnType;
             Parameters = ParametersFromTypes(lambdaType.Parameters);
         }
 
@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue ? ReturnType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue ? CodeType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
 
         /// <summary>Gets the 'Invoke' parameters from an array of CodeTypes.</summary>
         /// <param name="argumentTypes">The array of CodeTypes. The resulting CodeParameter[] will have an equal length to this.</param>

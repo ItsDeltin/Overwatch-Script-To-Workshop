@@ -128,10 +128,11 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void BaseScopes(string scopeName)
         {
-            Scope global = _parseInfo.TranslateInfo.GlobalScope;
+            Scope classContainer = _parseInfo.TranslateInfo.GlobalScope.Child();
+            classContainer.CatchConflict = true;
 
-            staticScope = global.Child(scopeName);
-            operationalScope = global.Child(scopeName);
+            staticScope = classContainer.Child(scopeName);
+            operationalScope = classContainer.Child(scopeName);
             serveObjectScope = new Scope(scopeName);
         }
 

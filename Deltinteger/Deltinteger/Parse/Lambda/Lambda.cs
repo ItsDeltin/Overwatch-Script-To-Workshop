@@ -109,6 +109,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
             // The arrow registration occurs now, parse the statement.
             else if (!ParseInfo.ExpectingLambda.RegisterOccursLater)
                 Applier.GetLambdaStatement(ParseInfo.ExpectingLambda.Type);
+                        
+            // Default
+            else Applier.GetLambdaStatement();
         }
     }
 

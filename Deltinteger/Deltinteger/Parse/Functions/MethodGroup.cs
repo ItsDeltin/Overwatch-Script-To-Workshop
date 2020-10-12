@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static => false; // Doesn't matter.
         public Location DefinedAt => null; // Doesn't matter.
         public AccessLevel AccessLevel => AccessLevel.Public; // Doesn't matter.
+        public CodeType CodeType => null;
         public List<IMethod> Functions { get; } = new List<IMethod>();
 
         public MethodGroup(string name)
@@ -34,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = new MarkupBuilder()
                 .StartCodeLine()
                 .Add(
-                    (Functions[0].DoesReturnValue ? (Functions[0].ReturnType == null ? "define" : Functions[0].ReturnType.GetName()) : "void") + " " +
+                    (Functions[0].DoesReturnValue ? (Functions[0].CodeType == null ? "define" : Functions[0].CodeType.GetName()) : "void") + " " +
                     Functions[0].GetLabel(false) + (Functions.Count == 1 ? "" : " (+" + (Functions.Count - 1) + " overloads)")
                 ).EndCodeLine().ToMarkup()
         };
@@ -112,7 +113,7 @@ namespace Deltin.Deltinteger.Parse
                 _parseInfo.Script.Diagnostics.Error("No overload for '" + Group.Name + "' implements " + expecting.GetName(), _range);
         }
 
-        public void GetLambdaStatement() => _parseInfo.Script.Diagnostics.Error("Cannot determine lambda in the current context", _range);
+        public void GetLambdaStatement() => _parseInfo.Script.Diagnostics.Error("Cannot determine method group in the current context. Did you intend to invoke the method?", _range);
 
         private static IFunctionHandler GetLambdaHandler(IMethod function)
         {

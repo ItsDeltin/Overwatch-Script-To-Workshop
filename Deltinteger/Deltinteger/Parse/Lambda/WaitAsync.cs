@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     {
         public string Name => "WaitAsync";
         public string Documentation => "Asynchronously waits.";
-        public CodeType ReturnType => null;
+        public CodeType CodeType => null;
         public bool Static => true;
         public bool DoesReturnValue => false;
         public bool WholeContext => true;
