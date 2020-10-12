@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger
 
         public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
 
-        public static string GetNameOrDefine(this CodeType type) => type.GetName() ?? "define";
+        public static string GetNameOrDefine(this CodeType type) => type?.GetName() ?? "define";
 
         public static bool CodeTypeParameterInvalid(this CodeType parameterType, CodeType valueType) =>
             parameterType != null && ((parameterType.IsConstant() && valueType == null) || (valueType != null && !valueType.Implements(parameterType)));

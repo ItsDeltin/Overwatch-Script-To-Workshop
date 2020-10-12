@@ -73,7 +73,7 @@ namespace Deltin.Deltinteger.Parse
                 invokeInfo.Getter,
                 invokeInfo.TargetRange,
                 invokeInfo.CallRange,
-                new OverloadError("lambda")
+                new OverloadError("lambda '" + _lambdaType.GetName() + "'")
             );
             // Apply the parameters.
             overloadChooser.Apply(invokeInfo.Context.Parameters);
@@ -198,7 +198,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Function = function;
             ParameterValues = parameterValues;
-            AdditionalParameterData = new object[parameterValues.Length];
+            AdditionalParameterData = new object[parameterValues?.Length ?? 0];
             _target = target;
         }
 

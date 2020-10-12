@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly InternalVar _last;
         private readonly InternalVar _first;
 
-        public ArrayType(CodeType arrayOfType) : base((arrayOfType?.Name ?? "define") + "[]")
+        public ArrayType(CodeType arrayOfType) : base(arrayOfType.GetNameOrDefine() + "[]")
         {
             ArrayOfType = arrayOfType;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
@@ -156,6 +156,13 @@ namespace Deltin.Deltinteger.Parse
         public override Scope GetObjectScope() => _scope;
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
+
+        public override string GetName()
+        {
+            string result = ArrayOfType.GetName();
+            if (ArrayOfType is PortableLambdaType) result = "(" + result + ")";
+            return result + "[]"; 
+        }
     }
 
     class GenericSortFunction
