@@ -246,6 +246,8 @@ namespace Deltin.Deltinteger.Parse
                 return new CallVariableAction(referencer, index);
             }
 
+            Accept(variable);
+
             // Check value in array.
             if (index != null && index.Length > 0)
             {
@@ -264,6 +266,11 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual void Call(ICallable callable, DocRange range) => callable.Call(_parseInfo, range);
         protected virtual void EventPlayerRestrictedCall(RestrictedCall restrictedCall) => _parseInfo.RestrictedCallHandler.RestrictedCall(restrictedCall);
+        protected virtual void Accept(IVariable variable)
+        {
+            if (variable is CallMethodGroup group)
+                group.Accept();
+        }
         public virtual void Error(string message, DocRange range) => _parseInfo.Script.Diagnostics.Error(message, range);
     }
 }

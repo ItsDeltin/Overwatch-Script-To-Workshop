@@ -171,11 +171,28 @@ namespace Deltin.Deltinteger.Parse
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, LambdaType type)
         {
+            // Get the lambda type's parameters.
             var parameters = new CodeType[type.Parameters.Count];
             for (int i = 0; i < parameters.Length; i++)
+            {
                 parameters[i] = GetCodeTypeFromContext(parseInfo, type.Parameters[i]);
+
+                // Constant types are not allowed.
+                if (parameters[i] != null && parameters[i].IsConstant())
+                    parseInfo.Script.Diagnostics.Error("The constant type '" + parameters[i].GetName() + "' cannot be used in method types", type.Parameters[i].Range);
+            }
+
+            // Get the return type.
+            CodeType returnType = null;
+            bool returnsValue = false;
             
-            return new PortableLambdaType(LambdaKind.Portable, parameters, type.ReturnType.IsVoid ? null : GetCodeTypeFromContext(parseInfo, type.ReturnType), true);
+            if (!type.ReturnType.IsVoid)
+            {
+                returnType = GetCodeTypeFromContext(parseInfo, type.ReturnType);
+                returnsValue = true;
+            }
+            
+            return new PortableLambdaType(LambdaKind.Portable, parameters, returnsValue, returnType, true);
         }
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, GroupType type)

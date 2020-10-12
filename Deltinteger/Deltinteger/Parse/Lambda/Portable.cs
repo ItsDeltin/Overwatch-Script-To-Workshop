@@ -12,16 +12,17 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public bool ParameterTypesKnown { get; }
         protected readonly Scope _scope = new Scope();
 
-        public PortableLambdaType(LambdaKind lambdaType, CodeType[] parameters, CodeType returnType, bool parameterTypesKnown) : base("lambda")
+        public PortableLambdaType(LambdaKind lambdaType, CodeType[] parameters, bool returnsValue, CodeType returnType, bool parameterTypesKnown) : base("lambda")
         {
             LambdaKind = lambdaType;
             Parameters = parameters;
+            ReturnsValue = returnsValue;
             ReturnType = returnType;
             ParameterTypesKnown = parameterTypesKnown;
             _scope.AddNativeMethod(new LambdaInvoke2(this));
         }
 
-        public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], null, false) {}
+        public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], false, null, false) {}
 
         protected PortableLambdaType(string name, LambdaKind lambdaKind, CodeType[] parameters) : base(name)
         {

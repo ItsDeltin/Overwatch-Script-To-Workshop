@@ -100,6 +100,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).SetVariableTracker(this);
 
             CodeType returnType = null;
+            bool returnsValue = false;
 
             // Get the statements.
             if (_context.Statement is Block block)
@@ -115,6 +116,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 {
                     returnType = validation.ReturnType;
                     MultiplePaths = validation.MultiplePaths;
+                    returnsValue = true;
                 }
             }
             else if (_context.Statement is ExpressionStatement exprStatement)
@@ -122,6 +124,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 // Get the lambda expression.
                 Expression = parser.GetExpression(_lambdaScope, exprStatement.Expression);
                 returnType = Expression.Type();
+                returnsValue = true;
             }
             else
             {
@@ -129,7 +132,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 Statement = parser.GetStatement(_lambdaScope, _context.Statement);
             }
 
-            LambdaType = new PortableLambdaType(LambdaKind.Portable, _argumentTypes, returnType, _isExplicit);
+            LambdaType = new PortableLambdaType(LambdaKind.Portable, _argumentTypes, returnsValue, returnType, _isExplicit);
 
             // Add so the lambda can be recursive-checked.
             _parseInfo.TranslateInfo.RecursionCheck(CallInfo);

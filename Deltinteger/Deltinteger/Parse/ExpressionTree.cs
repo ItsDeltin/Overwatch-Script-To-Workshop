@@ -468,6 +468,10 @@ namespace Deltin.Deltinteger.Parse
                 // Restricted value type check.
                 if (_parent != null && _variable is IIndexReferencer referencer && RestrictedCall.EventPlayerDefaultCall(referencer, _parent.GetExpression(), _parseInfo))
                     _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
+                
+                // Accept method group.
+                if (_variable is CallMethodGroup group)
+                    group.Accept();
 
                 // Add diagnostics.
                 _parseInfo.Script.Diagnostics.AddDiagnostics(_apply.Errors.ToArray());
@@ -483,6 +487,7 @@ namespace Deltin.Deltinteger.Parse
 
             public PotentialVariableApply(ParseInfo parseInfo) : base(parseInfo) {}
 
+            protected override void Accept(IVariable variable) {}
             protected override void Call(ICallable callable, DocRange range) {}
             protected override void EventPlayerRestrictedCall(RestrictedCall restrictedCall) {}
             public override void Error(string message, DocRange range) => Errors.Add(new Diagnostic(message, range, Diagnostic.Error));

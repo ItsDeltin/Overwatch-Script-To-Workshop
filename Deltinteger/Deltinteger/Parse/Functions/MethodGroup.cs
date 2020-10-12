@@ -60,13 +60,17 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             _range = range;
             _group = group;
-            parseInfo.Script.AddToken(range, TokenType.Function);
+        }
+
+        public void Accept()
+        {
+            _parseInfo.Script.AddToken(_range, TokenType.Function);
 
             new CheckLambdaContext(
-                parseInfo,
+                _parseInfo,
                 this,
                 "Cannot determine lambda in the current context",
-                range,
+                _range,
                 ParameterState.Unknown
             ).Check();
         }
