@@ -25,7 +25,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public List<IParserError> Errors { get; } = new List<IParserError>();
         private readonly RootContext _last;
         private readonly IncrementInfo _incrementInfo;
-        private int _previousTokenRange = -1;
 
         private int LookaheadDepth = 0;
 
@@ -80,10 +79,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNode<T>(T node) where T: INodeRange
         {
             if (LookaheadDepth == 0)
-            {
-                _previousTokenRange = TokenRangeStart.Pop();
-                node.Range = new DocRange(Lexer.Tokens[_previousTokenRange].Range.Start, CurrentOrLast.Range.End);
-            }
+                node.Range = new DocRange(Lexer.Tokens[TokenRangeStart.Pop()].Range.Start, CurrentOrLast.Range.End);
             return node;
         }
 
@@ -94,17 +90,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return node;
         }
 
-        T EndNodeFromPrevious<T>(T node) where T: INodeRange
+        T EndNodeFrom<T>(T node, DocPos start) where T: INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(Lexer.Tokens[_previousTokenRange].Range.Start, CurrentOrLast.Range.End);
+                node.Range = start + CurrentOrLast.Range.End;
             return node;
         }
 
         void PopNodeStack()
         {
             if (LookaheadDepth == 0)
-                _previousTokenRange = TokenRangeStart.Pop();
+                TokenRangeStart.Pop();
         }
 
         T Node<T>(Func<T> func) where T: Node
@@ -407,7 +403,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // End the closing square bracket.
                     ParseExpected(TokenType.SquareBracket_Close);
                     // Update the expression.
-                    expression = EndNodeFromPrevious(new ValueInArray(expression, index, Lexer.Tokens[Token - 1]));
+                    expression = EndNodeFrom(new ValueInArray(expression, index, Lexer.Tokens[Token - 1]), expression.Range.Start);
                 }
                 // Invoke
                 else if (ParseOptional(TokenType.Parentheses_Open))
@@ -417,7 +413,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // End the parentheses.
                     ParseExpected(TokenType.Parentheses_Close);
                     // Update the expression.
-                    expression = EndNodeFromPrevious(new FunctionExpression(expression, values));
+                    expression = EndNodeFrom(new FunctionExpression(expression, values), expression.Range.Start);
                 }
                 // No more array indices or invocations.
                 else break;

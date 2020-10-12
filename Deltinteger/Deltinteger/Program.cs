@@ -36,8 +36,6 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
-            WaitForDebugger();
-
             if (args.ElementAtOrDefault(0) == "--ping") {
                 Console.Write("Hello!");
                 return;
