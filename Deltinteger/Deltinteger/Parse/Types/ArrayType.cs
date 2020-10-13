@@ -21,9 +21,9 @@ namespace Deltin.Deltinteger.Parse
             ArrayOfType = arrayOfType;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
 
-            _length = new InternalVar("Length", CompletionItemKind.Property);
-            _last = new InternalVar("Last", ArrayOfType, CompletionItemKind.Property);
-            _first = new InternalVar("First", ArrayOfType, CompletionItemKind.Property);
+            _length = new InternalVar("Length", CompletionItemKind.Property) { Ambiguous = false };
+            _last = new InternalVar("Last", ArrayOfType, CompletionItemKind.Property) { Ambiguous = false };
+            _first = new InternalVar("First", ArrayOfType, CompletionItemKind.Property) { Ambiguous = false };
 
             Scope.AddNativeVariable(_length);
             Scope.AddNativeVariable(_last);

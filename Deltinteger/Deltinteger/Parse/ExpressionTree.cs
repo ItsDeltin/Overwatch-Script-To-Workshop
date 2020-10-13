@@ -232,6 +232,8 @@ namespace Deltin.Deltinteger.Parse
         public bool UsedAsExpression;
         public ITreeContextPart Parent;
         public bool IsLast;
+
+        public void Error(string message, DocRange range) => ParseInfo.Script.Diagnostics.Error(message, range);
     }
 
     /// <summary>The base interface for any element in an expression tree.</summary>
@@ -293,7 +295,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly DocRange _range;
         private readonly string _name;
         private TreeContextParseInfo _tcParseInfo;
-        private IPotentialPathOption[] _potentialPaths;
+        private List<IPotentialPathOption> _potentialPaths;
         private IPotentialPathOption _chosenPath;
 
         public VariableOrTypePart(DeltinScriptParser.VariableContext variable) {
@@ -309,14 +311,13 @@ namespace Deltin.Deltinteger.Parse
             _potentialPaths = GetPotentialPaths(tcParseInfo, canBeType);
 
             // If there are any paths.
-            if (_potentialPaths.Length > 0)
+            if (_potentialPaths.Count > 0)
             {
                 _chosenPath = _potentialPaths[0];
                 // This is the last expression in the tree, which means RetrievedScopeable will not be called. At this point, nothing can be done about ambiguities.
                 // If ParseInfo implements something like ExpectingCodeType, that can be used to further narrow down the chosen path.
                 if (tcParseInfo.IsLast) {
-                    _chosenPath.Accept();
-                    CallResolvers();
+                    CheckAmbiguitiesAndAccept();
                 }
             }
             else // There are no paths.
@@ -330,27 +331,29 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private IPotentialPathOption[] GetPotentialPaths(TreeContextParseInfo tcParseInfo, bool canBeType)
+        private List<IPotentialPathOption> GetPotentialPaths(TreeContextParseInfo tcParseInfo, bool canBeType)
         {
             List<IPotentialPathOption> potentialPaths = new List<IPotentialPathOption>();
 
             // Get the potential variable.
             if (tcParseInfo.Scope.IsVariable(_variable.PART().GetText()))
             {
-                IVariable variable = tcParseInfo.Scope.GetVariable(_variable.PART().GetText(), null, null, null);
+                IVariable[] variables = tcParseInfo.Scope.GetAllVariables(_variable.PART().GetText());
+                foreach (var variable in variables)
+                {
+                    // Variable handler.
+                    var apply = new PotentialVariableApply(tcParseInfo.ParseInfo);
 
-                // Variable handler.
-                var apply = new PotentialVariableApply(tcParseInfo.ParseInfo);
+                    // Check accessor.
+                    if (!tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel))
+                        apply.Error(string.Format("'{0}' is inaccessable due to its access level.", _name), _range);
 
-                // Check accessor.
-                if (!tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel))
-                    apply.Error(string.Format("'{0}' is inaccessable due to its access level.", _name), _range);
+                    // Get the wrapped expression.
+                    IExpression expression = apply.Apply(variable, tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.array()), _range);
 
-                // Get the wrapped expression.
-                IExpression expression = apply.Apply(variable, tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.array()), _range);
-
-                // Add the potential path.
-                potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, expression, variable, tcParseInfo.ParseInfo, _range));
+                    // Add the potential path.
+                    potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, expression, variable, tcParseInfo.ParseInfo, _range));
+                }
             }
             
             // Get the potential type.
@@ -363,19 +366,18 @@ namespace Deltin.Deltinteger.Parse
                     potentialPaths.Add(new TypeOption(type, tcParseInfo.ParseInfo, _range));
             }
             
-            return potentialPaths.ToArray();
+            return potentialPaths;
         }
 
         public void RetrievedScopeable(IScopeable scopeable)
-        {
-            foreach (var option in _potentialPaths)
-                if (option.GetScope().ScopeContains(scopeable, _tcParseInfo.Getter))
-                {
-                    _chosenPath = option;
-                    _chosenPath.Accept();
-                    CallResolvers();
-                    return;
-                }
+        {            
+            // Narrow down the potential paths.
+            for (int i = _potentialPaths.Count - 1; i >= 0; i--)
+                if (!_potentialPaths[i].GetScope().ScopeContains(scopeable, _tcParseInfo.Getter))
+                    _potentialPaths.RemoveAt(i);
+            
+            // Done
+            CheckAmbiguitiesAndAccept();
         }
 
         public Scope GetScope()
@@ -401,6 +403,25 @@ namespace Deltin.Deltinteger.Parse
         public IExpression GetExpression() => _chosenPath?.GetExpression();
         public DocRange GetRange() => DocRange.GetRange(_variable);
 
+        void CheckAmbiguitiesAndAccept()
+        {
+            CheckAmbiguities();
+            _chosenPath = _potentialPaths[0];
+            _chosenPath.Accept();
+            CallResolvers();
+        }
+
+        void CheckAmbiguities()
+        {
+            for (int i = 0; i < _potentialPaths.Count; i++)
+            for (int a = 0; a < _potentialPaths.Count; a++)
+            if (a != i && _potentialPaths[i].IsAmbiguousTo(_potentialPaths[a]))
+            {
+                _tcParseInfo.Error("'" + _name + "' is ambiguous.", _range);
+                return;
+            }
+        }
+
         private readonly List<Action<IExpression>> _onResolve = new List<Action<IExpression>>();
         public void OnResolve(Action<IExpression> resolved) => _onResolve.Add(resolved);
         void CallResolvers()
@@ -413,6 +434,7 @@ namespace Deltin.Deltinteger.Parse
             Scope GetScope();
             IExpression GetExpression();
             void Accept();
+            bool IsAmbiguousTo(IPotentialPathOption other);
         }
         class TypeOption : IPotentialPathOption
         {
@@ -432,6 +454,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 _type.Call(_parseInfo, _callRange);
             }
+
+            public bool IsAmbiguousTo(IPotentialPathOption other) => other is TypeOption;
         }
         class VariableOption : IPotentialPathOption
         {
@@ -468,6 +492,18 @@ namespace Deltin.Deltinteger.Parse
                 // Notify parent about which element was retrived with it's scope.
                 _parent?.RetrievedScopeable(_variable);
             }
+
+            public bool IsAmbiguousTo(IPotentialPathOption other)
+            {
+                if (other is VariableOption variableOption)
+                {
+                    if (_variable is IAmbiguityCheck check && variableOption._variable is IAmbiguityCheck otherCheck)
+                        return check.CanBeAmbiguous() || otherCheck.CanBeAmbiguous();
+                    else
+                        return true;
+                }
+                return false;
+            }
         }
     
         class PotentialVariableApply : VariableApply
@@ -497,5 +533,10 @@ namespace Deltin.Deltinteger.Parse
             Target = target;
             ResultingVariable = resultingVariable;
         }
+    }
+
+    public interface IAmbiguityCheck
+    {
+        bool CanBeAmbiguous();
     }
 }

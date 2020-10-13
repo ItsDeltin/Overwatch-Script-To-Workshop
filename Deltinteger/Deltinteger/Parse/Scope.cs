@@ -158,6 +158,16 @@ namespace Deltin.Deltinteger.Parse
             return element;
         }
 
+        public IVariable[] GetAllVariables(string name)
+        {
+            List<IVariable> variables = new List<IVariable>();
+            IterateElements(null, true, false, it => {
+                if (it.Element.Name == name) variables.Add((IVariable)it.Element);
+                return ScopeIterateAction.Continue;
+            });
+            return variables.ToArray();
+        }
+
         /// <summary>
         /// Adds a method to the current scope.
         /// When handling methods added by the user, supply the diagnostics and range to show the syntax error at.

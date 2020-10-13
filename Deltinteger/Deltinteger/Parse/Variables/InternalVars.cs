@@ -5,7 +5,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class InternalVar : IIndexReferencer
+    public class InternalVar : IIndexReferencer, IAmbiguityCheck
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public VariableType VariableType { get; set; } = VariableType.Global;
         public bool Static => true;
         public TokenType? TokenType { get; set; } = null;
+        public bool Ambiguous { get; set; }
 
         public InternalVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
         {
@@ -63,5 +64,7 @@ namespace Deltin.Deltinteger.Parse
             if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation);
             else return typeName + " " + Name;
         }
+
+        bool IAmbiguityCheck.CanBeAmbiguous() => Ambiguous;
     }
 }
