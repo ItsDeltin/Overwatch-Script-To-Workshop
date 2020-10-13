@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Parse
     public class PipeType : CodeType
     {
         public CodeType[] IncludedTypes { get; }
-        private readonly Scope _scope = new Scope();
+        private readonly Scope _scope = new Scope() { TagPlayerVariables = true };
 
         public PipeType(params CodeType[] types) : base(GetName(types))
         {

@@ -22,6 +22,7 @@ namespace Deltin.Deltinteger.Parse
         public bool CompletionCatch { get; set; }
         public bool MethodContainer { get; set; }
         public bool CatchConflict { get; set; }
+        public bool TagPlayerVariables { get; set; }
 
         public Scope() {}
         private Scope(Scope parent)
@@ -478,7 +479,16 @@ namespace Deltin.Deltinteger.Parse
                 // Add the variables.
                 foreach (var variable in scope._variables)
                     if (variable is MethodGroup == false && scope.WasScopedAtPosition(variable, pos, getter))
-                        completions.Add(variable.GetCompletion());
+                        if (TagPlayerVariables && variable is IIndexReferencer referencer && referencer.VariableType == VariableType.Player)
+                            completions.Add(new CompletionItem() {
+                                Label = "★ " + variable.Name,
+                                SortText = "!" + variable.Name,
+                                InsertText = variable.Name,
+                                Kind = CompletionItemKind.Variable,
+                                Detail = variable.CodeType.GetName() + " " + variable.Name
+                            });
+                        else
+                            completions.Add(variable.GetCompletion());
 
                 return scope.CompletionCatch;
             });

@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
             }
         };
 
-        public readonly Scope ObjectScope = new Scope("player variables");
+        public readonly Scope ObjectScope = new Scope("player variables") { TagPlayerVariables = true };
 
         public PlayerType() : base("Player")
         {
@@ -105,7 +105,11 @@ namespace Deltin.Deltinteger.Parse
         public override Scope ReturningScope() => null;
         private void AddFunc(FuncMethodBuilder builder) => ObjectScope.AddNativeMethod(new FuncMethod(builder));
         private void AddFunc(string name, CodeType returnType, Func<ActionSet, MethodCall, IWorkshopTree> action, string documentation) => AddFunc(new FuncMethodBuilder() { Name = name, ReturnType = returnType, Action = action, Documentation = documentation });
-        public void OverrideArray(ArrayType array) => AddSharedFunctionsToScope(array.Scope);
+        public void OverrideArray(ArrayType array)
+        {
+            AddSharedFunctionsToScope(array.Scope);
+            array.Scope.TagPlayerVariables = true;
+        }
         public static void AddSharedFunctionsToScope(Scope scope)
         {
             scope.AddNativeMethod(Teleport);

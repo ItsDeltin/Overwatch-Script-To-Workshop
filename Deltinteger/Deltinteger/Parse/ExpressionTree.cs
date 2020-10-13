@@ -405,7 +405,7 @@ namespace Deltin.Deltinteger.Parse
             else name = "'" + string.Join(", ", batchNameGroup) + "'";
 
             // Create the scope.
-            Scope scopeBatch = new Scope(name);
+            Scope scopeBatch = new Scope(name) { TagPlayerVariables = true };
 
             // Add all potential path's scopes to the scope batch.
             foreach (var path in _potentialPaths)
