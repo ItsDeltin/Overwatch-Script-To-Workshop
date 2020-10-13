@@ -82,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
         private double DefaultConstValue { get; }
 
         public ConstNumberParameter(string name, string documentation) : base(name, documentation) {}
-        public ConstNumberParameter(string name, string documentation, double defaultValue) : base(name, documentation, new ExpressionOrWorkshopValue(new NumberElement(defaultValue)))
+        public ConstNumberParameter(string name, string documentation, double defaultValue) : base(name, documentation, new ExpressionOrWorkshopValue(Element.Num(defaultValue)))
         {
             DefaultConstValue = defaultValue;
         }

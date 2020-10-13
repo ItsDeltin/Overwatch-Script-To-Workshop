@@ -433,6 +433,7 @@ namespace Deltin.Deltinteger.Compiler
         // Boolean
         And,
         Or,
+        Pipe,
         // Generic expressions
         String,
         Number,

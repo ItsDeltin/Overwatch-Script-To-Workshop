@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
 namespace Deltin.Deltinteger.Elements
@@ -13,7 +14,7 @@ namespace Deltin.Deltinteger.Elements
         public CodeParameter[] Parameters { get; private set; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public string Documentation { get; }
-        public CodeType ReturnType { get; private set; }
+        public CodeType CodeType { get; private set; }
         private readonly RestrictedCallType? _restricted;
         private readonly ElementBaseJson _function;
 
@@ -80,7 +81,7 @@ namespace Deltin.Deltinteger.Elements
 
         ElementList(ElementJsonValue value, ITypeSupplier typeSupplier) : this((ElementBaseJson)value, typeSupplier)
         {
-            ReturnType = typeSupplier.FromString(value.ReturnType);
+            CodeType = typeSupplier.FromString(value.ReturnType);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
@@ -99,7 +100,7 @@ namespace Deltin.Deltinteger.Elements
             else return element;
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, Documentation);
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
 

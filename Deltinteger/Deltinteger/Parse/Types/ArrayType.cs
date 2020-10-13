@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly InternalVar _last;
         private readonly InternalVar _first;
 
-        public ArrayType(CodeType arrayOfType) : base(arrayOfType.GetNameOrDefine() + "[]")
+        public ArrayType(CodeType arrayOfType) : base(arrayOfType.GetName() + "[]")
         {
             ArrayOfType = arrayOfType;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
@@ -151,16 +151,15 @@ namespace Deltin.Deltinteger.Parse
             assigner.Add(_first, Element.FirstOf(reference));
         }
 
-        public override string GetName() => ArrayOfType.GetName() + "[]";
         // public override bool Implements(CodeType type) => (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType)) || (ArrayOfType is IAdditionalArray additon && additon.AlternateImplements(type));
         public override Scope GetObjectScope() => Scope;
-        public override bool Implements(CodeType type) => type is ArrayType arrayType && (ArrayOfType == null || arrayType.ArrayOfType == null || arrayType.ArrayOfType.Implements(ArrayOfType));
+        public override bool Implements(CodeType type) => type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType);
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
 
         public override string GetName()
         {
-            string result = ArrayOfType.GetNameOrDefine();
+            string result = ArrayOfType.GetName();
             if (ArrayOfType is PortableLambdaType) result = "(" + result + ")";
             return result + "[]"; 
         }

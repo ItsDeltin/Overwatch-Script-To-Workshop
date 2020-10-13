@@ -81,8 +81,8 @@ namespace Deltin.Deltinteger.Parse
             }
 
             Element expArray = Element.CreateArray(expElements.ToArray());
-            Element resolveArray = Element.CreateArray(resolves.Select(i => new NumberElement(i)).ToArray());
-            Element identArray = Element.CreateArray(identifiers.Select(i => new NumberElement(i)).ToArray());
+            Element resolveArray = Element.CreateArray(resolves.Select(i => Element.Num(i)).ToArray());
+            Element identArray = Element.CreateArray(identifiers.Select(i => Element.Num(i)).ToArray());
 
             ClassData classData = ActionSet.Translate.DeltinScript.GetComponent<ClassData>();
             Element classIdentifier = classData.ClassIndexes.Get()[ActionSet.CurrentObject];

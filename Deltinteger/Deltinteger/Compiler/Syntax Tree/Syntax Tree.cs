@@ -122,6 +122,23 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         Token IParseType.GenericToken => Type.GenericToken;
     }
 
+    public class PipeTypeContext : Node, IParseType
+    {
+        public IParseType Left { get; }
+        public IParseType Right { get; }
+
+        public PipeTypeContext(IParseType left, IParseType right)
+        {
+            Left = left;
+            Right = right;
+        }
+
+        public Token GenericToken => throw new NotImplementedException();
+        public bool LookaheadValid => true;
+        public bool IsVoid => false;
+        public bool DefinitelyType => true;
+    }
+
     public class RuleContext : Node
     {
         public Token RuleToken { get; }

@@ -149,10 +149,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
             var lambdaMeta = new List<IWorkshopTree>();
 
             // The first element is the lambda's identifier. 
-            lambdaMeta.Add(new V_Number(Identifier));
+            lambdaMeta.Add(Element.Num(Identifier));
 
             // The second element is the 'this' if applicable.
-            lambdaMeta.Add(actionSet.This ?? new V_Null());
+            lambdaMeta.Add(actionSet.This ?? Element.Null());
 
             // Every proceeding element is a captured local variable.
             foreach (var capture in CapturedVariables)

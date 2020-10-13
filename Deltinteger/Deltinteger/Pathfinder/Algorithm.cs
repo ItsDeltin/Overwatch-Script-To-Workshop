@@ -6,7 +6,7 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public abstract class DijkstraBase
     {
-        private static readonly NumberElement LeastNot0 = new NumberElement(0.0001);
+        private static readonly Element LeastNot0 = Element.Num(0.0001);
 
         protected ActionSet actionSet { get; }
         protected Element pathmapObject { get; }
@@ -196,7 +196,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Element.While(Element.Compare(
                 current.GetVariable(),
                 Operator.GreaterThanOrEqual,
-                new NumberElement(0)
+                Element.Num(0)
             )));
 
             Element nextNode = Nodes[(Element)current.GetVariable()];
@@ -275,12 +275,12 @@ namespace Deltin.Deltinteger.Pathfinder
         );
 
         private static Element LowestUnvisited(Element nodes, Element distances, Element unvisited) => Element.FirstOf(Element.Sort(
-            Element.Filter(unvisited, Element.Compare(distances[Element.ArrayElement()], Operator.NotEqual, new NumberElement(0))),
+            Element.Filter(unvisited, Element.Compare(distances[Element.ArrayElement()], Operator.NotEqual, Element.Num(0))),
             distances[Element.ArrayElement()]
         ));
 
-        protected Element NoAccessableUnvisited() => Element.All(unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.Equal, new NumberElement(0)));
-        protected Element AnyAccessableUnvisited() => Element.Any(unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.NotEqual, new NumberElement(0)));
+        protected Element NoAccessableUnvisited() => Element.All(unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.Equal, Element.Num(0)));
+        protected Element AnyAccessableUnvisited() => Element.Any(unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.NotEqual, Element.Num(0)));
 
         public static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
         public static Element Node1(Element segment) => Element.XOf(segment);
@@ -433,7 +433,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected override void EndLoop()
         {
             actionSet.AddAction(chosenDestination.SetVariable(Element.IndexOfArrayValue(potentialDestinations.GetVariable(), current.GetVariable())));
-            actionSet.AddAction(Element.If(Element.Compare(chosenDestination.GetVariable(), Operator.NotEqual, new NumberElement(-1))));
+            actionSet.AddAction(Element.If(Element.Compare(chosenDestination.GetVariable(), Operator.NotEqual, Element.Num(-1))));
             actionSet.AddAction(Element.Part("Break"));
             actionSet.AddAction(Element.End());
         }
@@ -456,7 +456,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Element.While(Element.Compare(
                 backTracker.GetVariable(),
                 Operator.GreaterThanOrEqual,
-                new NumberElement(0)
+                Element.Num(0)
             )));
 
             Element next = parentArray.Get()[backTracker.Get()] - 1;

@@ -1015,7 +1015,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Get the array indices
                 int arrayCount = ParseTypeArray();
                 
-                ParseType result = EndNodeWithoutPopping(new ParseType(identifier, typeArgs, arrayCount));
+                IParseType result = EndNodeWithoutPopping(new ParseType(identifier, typeArgs, arrayCount));
+
+                // Get pipe
+                while (ParseOptional(TokenType.Pipe))
+                {
+                    IParseType right = ParseType();
+                    result = EndNodeWithoutPopping(new PipeTypeContext(result, right));
+                }
 
                 // If we parse an arrow, this is a lambda type with a single parameter.
                 if (!ParseOptional(TokenType.Arrow, out Token arrow))

@@ -1,6 +1,7 @@
 using System;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -10,36 +11,16 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Right { get; private set; }
         public TypeOperation Operation { get; private set; }
 
-        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_1Context context) {
-            GetParts(parseInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
-        }
-        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_2Context context) {
-            GetParts(parseInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
-        }
-        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_boolContext context) {
-            GetParts(parseInfo, scope, context.left, context.BOOL().GetText(), DocRange.GetRange(context.BOOL()), context.right);
-        }
-        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_compareContext context) {
-            GetParts(parseInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
-        }
-
-        private void GetParts(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ExprContext left, string op, DocRange opRange, DeltinScriptParser.ExprContext right)
+        public OperatorAction(ParseInfo parseInfo, Scope scope, BinaryOperatorExpression context)
         {
-            // Left operator.
-            if (left == null) parseInfo.Script.Diagnostics.Error("Missing left operator.", opRange);
-            else Left = parseInfo.GetExpression(scope, left);
+            Left = parseInfo.GetExpression(scope, context.Left);
+            Right = parseInfo.GetExpression(scope, context.Right);
 
-            // Right operator.
-            if (right == null) parseInfo.Script.Diagnostics.Error("Missing right operator.", opRange);
-            else Right = parseInfo.GetExpression(scope, right);
-
-            if (Left != null && Right != null && Left.Type() != null && Right.Type() != null)
-            {
-                Operation = Left.Type().GetOperation(TypeOperation.TypeOperatorFromString(op), Right.Type());
-                            
-                if (Operation == null)
-                    parseInfo.Script.Diagnostics.Error("Operator '" + op + "' cannot be applied to the types '" + Left.Type().Name + "' and '" + Right.Type().Name + "'.", opRange);
-            }
+            string op = context.Operator.Operator.Operator;
+            Operation = Left.Type().GetOperation(TypeOperation.TypeOperatorFromString(op), Right.Type());
+                        
+            if (Operation == null)
+                parseInfo.Script.Diagnostics.Error("Operator '" + op + "' cannot be applied to the types '" + Left.Type().Name + "' and '" + Right.Type().Name + "'.", context.Operator.Token.Range);
         }
 
         public Scope ReturningScope() => Operation?.ReturnType.GetObjectScope();

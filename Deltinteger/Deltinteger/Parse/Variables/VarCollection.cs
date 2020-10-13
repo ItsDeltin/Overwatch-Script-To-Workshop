@@ -125,7 +125,7 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 int index = NextFreeExtended(isGlobal);
-                IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, new NumberElement(index));
+                IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, Element.Num(index));
                 ExtendedVariableList(isGlobal).Add(new ExtendedVariable(name, reference, index));
                 return reference;
             }
@@ -150,7 +150,7 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 int index = NextFreeExtended(variableIsGlobal);
-                IndexReference reference = new IndexReference(ArrayBuilder, variableIsGlobal ? global : player, new NumberElement(index));
+                IndexReference reference = new IndexReference(ArrayBuilder, variableIsGlobal ? global : player, Element.Num(index));
                 ExtendedVariableList(variableIsGlobal).Add(new ExtendedVariable(var.Name, reference, index));
                 return reference;
             }

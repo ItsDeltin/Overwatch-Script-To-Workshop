@@ -617,7 +617,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter(
                     "speedScalar",
                     "The speed scalar of the player. `1` is the default speed of all heroes except Gengi and Tracer, which is `1.1`. Default value is `1`.",
-                    new ExpressionOrWorkshopValue(new NumberElement(1))
+                    new ExpressionOrWorkshopValue(Element.Num(1))
                 )
             },
             ReturnType = BooleanType.Instance,

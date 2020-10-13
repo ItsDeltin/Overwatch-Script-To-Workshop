@@ -151,15 +151,15 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             switch (executeOption)
             {
                 case CallParallel.NoParallel:
-                    ActionSet.AddAction(Element.Part<A_CallSubroutine>(subroutine));
+                    ActionSet.AddAction(Element.CallSubroutine(subroutine));
                     break;
                 
                 case CallParallel.AlreadyRunning_DoNothing:
-                    ActionSet.AddAction(Element.Part<A_StartRule>(subroutine, EnumData.GetEnumValue(CallParallel.AlreadyRunning_DoNothing)));
+                    ActionSet.AddAction(Element.StartRule(subroutine, false));
                     break;
                 
                 case CallParallel.AlreadyRunning_RestartRule:
-                    ActionSet.AddAction(Element.Part<A_StartRule>(subroutine, EnumData.GetEnumValue(CallParallel.AlreadyRunning_RestartRule)));
+                    ActionSet.AddAction(Element.StartRule(subroutine, true));
                     break;
             }
         }
@@ -271,7 +271,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public bool IsSubroutine() => _method.IsSubroutine;
         public int ParameterCount() => _method.Parameters.Length;
         public bool MultiplePaths() => _method.MultiplePaths;
-        public bool DoesReturnValue() => _method.DoesReturnValue;
+        public bool DoesReturnValue() => _method.CodeType != null;
         public SubroutineInfo GetSubroutineInfo() => _method.GetSubroutineInfo();
         public IIndexReferencer GetParameterVar(int index) => index < ParameterCount() ? _method.ParameterVars[index] : null;
         public void ParseInner(ActionSet actionSet) => _method.Block.Translate(actionSet);
@@ -422,9 +422,9 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 // Set the objectStore as an empty array if the subroutine is recursive.
                 if (determiner.IsRecursive())
                 {
-                    actionSet.InitialSet().AddAction(objectStore.SetVariable(new V_EmptyArray()));
-                    _context.ContainingType()?.AddObjectVariablesToAssigner(Element.Part<V_LastOf>(objectStore.GetVariable()), actionSet.IndexAssigner);
-                    actionSet = actionSet.New(Element.Part<V_LastOf>(objectStore.Get())).PackThis().New(objectStore.CreateChild(Element.Part<V_CountOf>(objectStore.Get()) - 1));
+                    actionSet.InitialSet().AddAction(objectStore.SetVariable(Element.EmptyArray()));
+                    _context.ContainingType()?.AddObjectVariablesToAssigner(Element.LastOf(objectStore.GetVariable()), actionSet.IndexAssigner);
+                    actionSet = actionSet.New(Element.LastOf(objectStore.Get())).PackThis().New(objectStore.CreateChild(Element.CountOf(objectStore.Get()) - 1));
                 }
                 else
                 {
@@ -443,7 +443,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
             // Pop object array if recursive.
             if (determiner.IsRecursive() && determiner.IsObject())
-                actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
+                actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(objectStore.GetVariable()) - 1));
 
             // Add the subroutine.
             Rule translatedRule = subroutineRule.GetRule();
@@ -533,14 +533,14 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             // Create the array used for continuing after a recursive call.
             continueArray = varCollection.Assign("_" + name + "_recursiveContinue", isGlobal, false);
             nextContinue = varCollection.Assign("_" + name + "_nextContinue", isGlobal, true);
-            actionSet.InitialSet().AddAction(continueArray.SetVariable(new V_EmptyArray()));
+            actionSet.InitialSet().AddAction(continueArray.SetVariable(Element.EmptyArray()));
             
             if (_builder.Determiner.IsVirtual())
             {
                 objectStore = varCollection.Assign("_" + name + "_objectStack", isGlobal, false);
                 actionSet.AddAction(objectStore.SetVariable(Element.CreateArray(actionSet.CurrentObject)));
 
-                _builder.ModifySet(actionSet => actionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable())).PackThis());
+                _builder.ModifySet(actionSet => actionSet.New(Element.LastOf(objectStore.GetVariable())).PackThis());
             }
             _builder.ModifySet(actionSet => actionSet.New(true));
         }
@@ -548,7 +548,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public void StartRecursiveLoop()
         {
             // Create the recursive loop.
-            actionSet.AddAction(Element.Part<A_While>(new V_True()));
+            actionSet.AddAction(Element.While(Element.True()));
 
             // Create the continue skip action.
             continueAt = new SkipStartMarker(actionSet);
@@ -560,25 +560,25 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         {
             // Pop the object store array.
             if (_builder.Determiner.IsVirtual())
-                actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
+                actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(objectStore.GetVariable()) - 1));
             
             // Pop the parameters.
             _builder.PopParameters();
 
             // Restart the method from the specified position if there are any elements in the continue array.
-            actionSet.AddAction(Element.Part<A_SkipIf>(new V_Compare(
-                Element.Part<V_CountOf>(continueArray.GetVariable()),
-                Operators.Equal,
-                new V_Number(0)
-            ), new V_Number(3)));
+            actionSet.AddAction(Element.SkipIf(Element.Compare(
+                Element.CountOf(continueArray.GetVariable()),
+                Operator.Equal,
+                Element.Num(0)
+            ), Element.Num(3)));
 
             // Store the next continue and pop the continue array.
-            actionSet.AddAction(nextContinue.SetVariable(Element.Part<V_LastOf>(continueArray.GetVariable())));
-            actionSet.AddAction(continueArray.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(continueArray.GetVariable()) - 1));
+            actionSet.AddAction(nextContinue.SetVariable(Element.LastOf(continueArray.GetVariable())));
+            actionSet.AddAction(continueArray.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(continueArray.GetVariable()) - 1));
 
             // Mark the end of the method.
             actionSet.AddAction(endOfMethod);
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(Element.End());
 
             // Reset nextContinue.
             actionSet.AddAction(nextContinue.SetVariable(0));
@@ -595,7 +595,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             _builder.PushParameters(callHandler);
 
             // Add to the continue skip array.
-            V_Number skipLength = new V_Number();
+            var skipLength = new NumberElement();
             actionSet.AddAction(continueArray.ModifyVariable(
                 Operation.AppendToArray,
                 skipLength
@@ -649,7 +649,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 option.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
 
                 // Go to next case then parse the block.
-                typeSwitch.NextCase(new V_Number(((ClassType)option.ContainingType).Identifier));
+                typeSwitch.NextCase(Element.Num(((ClassType)option.ContainingType).Identifier));
 
                 // Iterate through every type.
                 foreach (CodeType type in builder.ActionSet.Translate.DeltinScript.Types.AllTypes)
@@ -660,7 +660,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                         // ...and 'type' does not have their own function implementation...
                         && AutoImplemented(option.ContainingType, _allContainingTypes, type))
                         // ...then add an additional case for 'type's class identifier.
-                        typeSwitch.NextCase(new V_Number(((ClassType)type).Identifier));
+                        typeSwitch.NextCase(Element.Num(((ClassType)type).Identifier));
                 
                 builder.Subcall(optionSet, option);
             }
@@ -668,7 +668,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             ClassData classData = builder.ActionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // Finish the switch.
-            typeSwitch.Finish(Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), builder.ActionSet.CurrentObject));
+            typeSwitch.Finish(Element.ValueInArray(classData.ClassIndexes.GetVariable(), builder.ActionSet.CurrentObject));
         }
 
         /// <summary>Determines if the specified type does not have their own implementation for the specified virtual function.</summary>

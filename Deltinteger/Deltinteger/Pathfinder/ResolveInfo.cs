@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Pathfinder
             next.Conditions.Add(new Condition(ParentArray.Get(), Operator.NotEqual, Element.Null()));
 
             if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock)
-                next.ActionSet.AddAction(Element.If(Element.Compare(Current.Get(), Operator.NotEqual, new NumberElement(-1))));
+                next.ActionSet.AddAction(Element.If(Element.Compare(Current.Get(), Operator.NotEqual, Element.Num(-1))));
 
             // Get last attribute.
             next.ActionSet.AddAction(CurrentAttribute.SetVariable(NextSegmentAttribute(Element.EventPlayer())));
@@ -148,7 +148,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public Element CurrentPositionWithDestination(Element player = null) => Element.TernaryConditional(
             // Current will be -1 if the player reached the last node.
-            Element.Compare(Current.GetVariable(player), Operator.Equal, new NumberElement(-1)),
+            Element.Compare(Current.GetVariable(player), Operator.Equal, Element.Num(-1)),
             // If so, go to the destination.
             Destination.GetVariable(player),
             // Otherwise, go to the current node.
@@ -227,7 +227,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element isStuck = Element.Compare(
                 nodeDistance - ((defaultSpeed * scalar * timeSinceLastNode) / leniency),
                 Operator.LessThanOrEqual,
-                new NumberElement(0)
+                Element.Num(0)
             );
             return Element.And(IsPathfinding(player), isStuck);
         }
@@ -265,7 +265,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     // Go to the destination once the final node is reached.
                     CurrentPositionWithDestination()
                 ),
-                new NumberElement(1), // Magnitude
+                Element.Num(1), // Magnitude
                 ElementRoot.Instance.GetEnumValueFromWorkshop("Relative", "To World"),
                 ElementRoot.Instance.GetEnumValueFromWorkshop("ThrottleBehavior", "Replace Existing Throttle"),
                 ElementRoot.Instance.GetEnumValueFromWorkshop("ThrottleRev", "Direction And Magnitude")
@@ -283,7 +283,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         CurrentPositionWithDestination()
                     ),
                     Operator.LessThanOrEqual,
-                    new NumberElement(DefaultMoveToNext)
+                    Element.Num(DefaultMoveToNext)
                 );
             // Otherwise, use hook.
             else

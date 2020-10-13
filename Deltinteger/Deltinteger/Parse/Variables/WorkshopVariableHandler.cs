@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
                     Element.Append(
                         Element.Part("Array Slice",
                             baseArray,
-                            new NumberElement(0),
+                            Element.Num(0),
                             index[1]
                         ),
                         value
@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
                     Element.Part("Array Slice",
                         baseArray,
                         index[1] + 1,
-                        new NumberElement(Constants.MAX_ARRAY_LENGTH)
+                        Element.Num(Constants.MAX_ARRAY_LENGTH)
                     )
                 );
 

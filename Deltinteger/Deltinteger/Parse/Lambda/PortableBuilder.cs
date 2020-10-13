@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 ActionSet optionSet = builder.ActionSet.New(builder.ActionSet.IndexAssigner.CreateContained());
 
                 // Go to next case
-                lambdaSwitch.NextCase(new V_Number(_identifiers[option.UniqueIdentifier()]));
+                lambdaSwitch.NextCase(Element.Num(_identifiers[option.UniqueIdentifier()]));
 
                 // Add the object variables of the selected method.
                 var callerObject = ((Element)builder.ActionSet.CurrentObject)[1];

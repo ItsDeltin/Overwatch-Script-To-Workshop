@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Json
                 case JTokenType.String: return new StringElement(value.ToObject<string>());
                 case JTokenType.Boolean: return value.ToObject<bool>() ? Element.True() : Element.False();
                 case JTokenType.Float:
-                case JTokenType.Integer: return new NumberElement(value.ToObject<double>());
+                case JTokenType.Integer: return Element.Num(value.ToObject<double>());
                 default:
                 case JTokenType.Null: return Element.Null();
             }

@@ -16,6 +16,7 @@ namespace Deltin.Deltinteger
         MethodAttributes Attributes { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         void Call(ParseInfo parseInfo, DocRange callRange) {}
+        bool DoesReturnValue => CodeType != null;
 
         public static string GetLabel(IMethod function, bool includeReturnType)
         {
@@ -29,7 +30,7 @@ namespace Deltin.Deltinteger
             // Get the parameters.
             for (int i = 0; i < function.Parameters.Length; i++)
             {
-                result += function.Parameters[i].GetLabel(false);
+                result += function.Parameters[i].GetLabel();
                 if (i < function.Parameters.Length - 1) result += ", ";
             }
             

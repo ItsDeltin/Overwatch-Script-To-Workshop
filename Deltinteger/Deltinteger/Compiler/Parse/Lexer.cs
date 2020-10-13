@@ -226,6 +226,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchSymbol('-', TokenType.Subtract) ||
                     MatchSymbol("&&", TokenType.And) ||
                     MatchSymbol("||", TokenType.Or) ||
+                    MatchSymbol("|", TokenType.Pipe) ||
                     MatchSymbol('@', TokenType.At) ||
                     MatchKeyword("import", TokenType.Import) ||
                     MatchKeyword("for", TokenType.For) ||

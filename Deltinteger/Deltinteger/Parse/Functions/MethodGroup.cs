@@ -129,7 +129,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (_type.IsConstant())
                 return this;
-            return Element.CreateArray(new V_Number(_identifier), actionSet.This ?? new V_Null());
+            return Element.CreateArray(Element.Num(_identifier), actionSet.This ?? Element.Null());
         }
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => _type;
         
-        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => throw new NotImplementedException();
+        public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
     }
 

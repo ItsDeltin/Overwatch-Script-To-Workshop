@@ -376,5 +376,15 @@ namespace Deltin.Deltinteger.Elements
         public static ElementEnumMember Event(RuleEvent eventType) => ElementRoot.Instance.GetEnumValue("Event", eventType.ToString());
         public static ElementEnumMember Team(Team team) => ElementRoot.Instance.GetEnumValue("Team", team.ToString());
         public static ElementEnumMember Player(PlayerSelector player) => ElementRoot.Instance.GetEnumValue("Player", player.ToString());
+
+        public T ToEnum<T>() where T: Enum
+        {
+            var values = System.Enum.GetValues(typeof(T));
+            foreach (var value in values)
+                if (value.ToString() == CodeName())
+                    return (T)value;
+
+            throw new Exception("Failed to get enum value from '" + CodeName() + "' to '" + typeof(T).Name + "'");
+        }
     }
 }
