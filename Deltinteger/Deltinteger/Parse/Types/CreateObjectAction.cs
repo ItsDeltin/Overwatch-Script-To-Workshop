@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -13,23 +15,22 @@ namespace Deltin.Deltinteger.Parse
         private Constructor Constructor { get; }
         private IExpression[] ConstructorValues { get; }
 
-        public CreateObjectAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Create_objectContext context)
+        public CreateObjectAction(ParseInfo parseInfo, Scope scope, NewExpression context)
         {
+            if (context.ClassIdentifier == null) return;
+
             // Get the type. Syntax error if there is no type name.
-            if (context.type == null)
-                parseInfo.Script.Diagnostics.Error("Expected a type name.", DocRange.GetRange(context.NEW()));
-            else
-                CreatingObjectOf = parseInfo.TranslateInfo.Types.GetCodeType(context.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(context.type));
+            CreatingObjectOf = parseInfo.TranslateInfo.Types.GetCodeType(context.ClassIdentifier.Text, parseInfo.Script.Diagnostics, context.ClassIdentifier.Range);
             
             if (CreatingObjectOf != null)
             {
-                DocRange nameRange = DocRange.GetRange(context.type);
+                DocRange nameRange = context.ClassIdentifier.Range;
 
                 // Get the constructor to use.
                 OverloadChooser = new OverloadChooser(
-                    CreatingObjectOf.Constructors, parseInfo, CreatingObjectOf.ReturningScope(), scope, nameRange, DocRange.GetRange(context), new OverloadError("type " + CreatingObjectOf.Name)
+                    CreatingObjectOf.Constructors, parseInfo, CreatingObjectOf.ReturningScope(), scope, nameRange, context.Range, new OverloadError("type " + CreatingObjectOf.Name)
                 );
-                OverloadChooser.Apply(context.call_parameters());
+                OverloadChooser.Apply(context.Parameters);
 
                 Constructor = (Constructor)OverloadChooser.Overload;
                 ConstructorValues = OverloadChooser.Values ?? new IExpression[0];
@@ -37,8 +38,8 @@ namespace Deltin.Deltinteger.Parse
                 if (Constructor != null)
                 {
                     parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(Constructor, new Location(parseInfo.Script.Uri, nameRange));
-                    Constructor.Call(parseInfo, DocRange.GetRange(context.type));
-                    parseInfo.Script.AddHover(DocRange.GetRange(context), Constructor.GetLabel(true));
+                    Constructor.Call(parseInfo, nameRange);
+                    parseInfo.Script.AddHover(context.Range, Constructor.GetLabel(true));
                 }
             }
         }

@@ -320,7 +320,7 @@ Object-serve scope. Only object members.
             if (debugVariable.Value == null) return null;
 
             // Create the variable.
-            DBPVariable variable = new DBPVariable(debugVariable);
+            DBPVariable variable = new DBPVariable(debugVariable, Class.Name);
             variable.namedVariables = Class.ObjectVariables.Count;
             variable.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
 
@@ -330,7 +330,7 @@ Object-serve scope. Only object members.
         public EvaluateResponse GetEvaluation(DebugVariableLinkCollection collection, IDebugVariable debugVariable)
         {
             // Return null if there is no value.
-            if (debugVariable.Value == null) return null;
+            if (debugVariable.Value == null) return EvaluateResponse.Empty;
 
             // Create the evaluation response.
             IDebugVariable.ApplyReference(collection, debugVariable);
@@ -342,6 +342,10 @@ Object-serve scope. Only object members.
 
         public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent)
         {
+            // Use the default resolver if the value is not a number.
+            if (parent.Value is CsvNumber == false)
+                return new DefaultResolver().GetChildren(collection, parent);
+
             // The class reference of the parent variable.
             int reference = (int)((CsvNumber)parent.Value).Value;
 
@@ -352,7 +356,7 @@ Object-serve scope. Only object members.
 
                 // Get the related object variable array.
                 var objectVariableArray = collection.ActionStream.Variables.FirstOrDefault(v => v.Name == ClassData.ObjectVariableTag + i);
-                if (objectVariableArray != null && objectVariableArray.Value is Csv.CsvArray csvArray)
+                if (objectVariableArray != null && objectVariableArray.Value is Csv.CsvArray csvArray && reference < csvArray.Values.Length)
                     value = csvArray.Values[reference];
 
                 variables[i] = new ChildDebugVariable(

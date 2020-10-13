@@ -96,10 +96,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<PrepareRenameHandler>(prepareRenameHandler)                
             ));
             
-            Server.SendNotification(Version, Program.VERSION);
-            
-            Task wait = _debugger.Listen();
-            
+            Server.SendNotification(Version, Program.VERSION);            
             await Server.WaitForExit;
         }
 
@@ -163,27 +160,62 @@ namespace Deltin.Deltinteger.LanguageServer
             // semantic tokens
             options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(async () => 
             {
-                SemanticToken[] tokens = (await DocumentHandler.OnScriptAvailability())?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
+                await DocumentHandler.WaitForParse();
+                SemanticToken[] tokens = LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
                 return tokens ?? new SemanticToken[0];
+            }));
+
+            // debugger start
+            options.OnRequest<object>("debugger.start", args => Task.Run(() => {
+                _debugger.Start();
+                return new object();
+            }));
+
+            // debugger stop
+            options.OnRequest<object>("debugger.stop", args => Task.Run(() => {
+                _debugger.Stop();
+                return new object();
             }));
 
             // debugger scopes
             options.OnRequest<ScopesArgs, DBPScope[]>("debugger.scopes", args => Task<DBPScope[]>.Run(() => {
-                if (_debugger.VariableCollection != null)
-                    return _debugger.VariableCollection.GetScopes(args);
-                return null;
+                try
+                {
+                    if (_debugger.VariableCollection != null)
+                        return _debugger.VariableCollection.GetScopes(args);
+                }
+                catch (Exception ex)
+                {
+                    DebuggerException(ex);
+                }
+                return new DBPScope[0];
             }));
 
             // debugger variables
             options.OnRequest<VariablesArgs, DBPVariable[]>("debugger.variables", args => Task<DBPVariable[]>.Run(() => {
-                if (_debugger.VariableCollection != null)
-                    return _debugger.VariableCollection.GetVariables(args);
-                return null;
+                try
+                {
+                    if (_debugger.VariableCollection != null)
+                        return _debugger.VariableCollection.GetVariables(args);
+                }
+                catch (Exception ex)
+                {
+                    DebuggerException(ex);
+                }
+                return new DBPVariable[0];
             }));
 
             // debugger evaluate
             options.OnRequest<EvaluateArgs, EvaluateResponse>("debugger.evaluate", args => Task<EvaluateResponse>.Run(() => {
-                return _debugger.VariableCollection?.Evaluate(args);
+                try
+                {
+                    return _debugger.VariableCollection?.Evaluate(args);
+                }
+                catch (Exception ex)
+                {
+                    DebuggerException(ex);
+                    return EvaluateResponse.Empty;
+                }
             }));
             
             // Decompile insert
@@ -204,6 +236,11 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             return options;
+        }
+
+        public void DebuggerException(Exception ex)
+        {
+            Server.SendNotification("debugger.error", ex.ToString());
         }
 
         class PathmapDocument

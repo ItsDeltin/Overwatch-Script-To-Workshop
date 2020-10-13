@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (chosen == null) return new Hover();
 
             return new Hover() {
-                Range = chosen.Range.ToLsRange(),
+                Range = chosen.Range,
                 Contents = new MarkedStringsOrMarkupContent(new MarkupContent() {
                     Kind = MarkupKind.Markdown,
                     Value = chosen.Content

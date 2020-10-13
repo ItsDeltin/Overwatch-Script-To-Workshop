@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Lambda;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
@@ -15,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
+        public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
         protected string Kind = "class";
         protected TokenType TokenType { get; set; } = TokenType.Type;
@@ -155,23 +159,25 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets the full name of the type.</summary>
         public virtual string GetName() => Name;
 
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, IParseType typeContext) => GetCodeTypeFromContext(parseInfo, (dynamic)typeContext);
+
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, ParseType typeContext)
         {
-            if (typeContext == null) throw new ArgumentNullException(nameof(typeContext));
+            if (typeContext == null) return null;
 
-            if (typeContext.DEFINE() != null) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
-
-            CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
-            if (type == null) return ObjectType.Instance;
+            if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
+            
+            CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
+            if (type == null) return ObjectType.Instance; // TODO: ???
 
             // Get generics
-            if (typeContext.generics()?.code_type() != null)
+            if (typeContext.HasTypeArgs)
             {
                 // Create a list to store the generics.
                 List<CodeType> generics = new List<CodeType>();
 
                 // Get the generics.
-                foreach (var genericContext in typeContext.generics().code_type())
+                foreach (var genericContext in typeContext.TypeArgs)
                     generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
                 
                 if (type is Lambda.ValueBlockLambda)
@@ -182,18 +188,55 @@ namespace Deltin.Deltinteger.Parse
                     type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
             }
 
-            type.Call(parseInfo, DocRange.GetRange(typeContext));
+            type.Call(parseInfo, typeContext.Identifier.Range);
 
-            // Array type
-            if (typeContext.INDEX_START() != null)
-                for (int i = 0; i < typeContext.INDEX_START().Length; i++)
-                    type = new ArrayType(type);
-            
-            // Pipe type
-            if (typeContext.code_type() != null)
-                type = new PipeType(type, GetCodeTypeFromContext(parseInfo, typeContext.code_type()));
+            for (int i = 0; i < typeContext.ArrayCount; i++)
+                type = new ArrayType(type);
             
             return type;
+        }
+
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, LambdaType type)
+        {
+            // Get the lambda type's parameters.
+            var parameters = new CodeType[type.Parameters.Count];
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                parameters[i] = GetCodeTypeFromContext(parseInfo, type.Parameters[i]);
+
+                // Constant types are not allowed.
+                if (parameters[i] != null && parameters[i].IsConstant())
+                    parseInfo.Script.Diagnostics.Error("The constant type '" + parameters[i].GetName() + "' cannot be used in method types", type.Parameters[i].Range);
+            }
+
+            // Get the return type.
+            CodeType returnType = null;
+            bool returnsValue = false;
+            
+            if (!type.ReturnType.IsVoid)
+            {
+                returnType = GetCodeTypeFromContext(parseInfo, type.ReturnType);
+                returnsValue = true;
+            }
+            
+            return new PortableLambdaType(LambdaKind.Portable, parameters, returnsValue, returnType, true);
+        }
+
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, GroupType type)
+        {
+            // Get the contained type.
+            var result = GetCodeTypeFromContext(parseInfo, type.Type);
+            // Get the array type.
+            for (int i = 0; i < type.ArrayCount; i++) result = new ArrayType(result);
+            // Done.
+            return result;
+        }
+
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, PipeTypeContext type)
+        {
+            var left = GetCodeTypeFromContext(parseInfo, type.Left);
+            var right = GetCodeTypeFromContext(parseInfo, type.Right);
+            return new PipeType(left, right);
         }
 
         static List<CodeType> _defaultTypes;
@@ -210,13 +253,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Add custom classes here.
             _defaultTypes.Add(new Models.AssetClass());
-            _defaultTypes.Add(new Lambda.BlockLambda());
-            _defaultTypes.Add(new Lambda.ValueBlockLambda());
-            _defaultTypes.Add(new Lambda.MacroLambda());
             _defaultTypes.Add(ObjectType.Instance);
             _defaultTypes.Add(NumberType.Instance);
             _defaultTypes.Add(BooleanType.Instance);
             _defaultTypes.Add(TeamType.Instance);
+            _defaultTypes.Add(new Lambda.ValueBlockLambda(null));
+            _defaultTypes.Add(new Lambda.MacroLambda(null));
             _defaultTypes.Add(VectorType.Instance);
             _defaultTypes.Add(StringType.Instance);
             _defaultTypes.Add(Positionable.Instance);

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
-using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using LocationLink = OmniSharp.Extensions.LanguageServer.Protocol.Models.LocationLink;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -12,12 +12,10 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ScriptFile
     {
-        public Uri Uri { get; }
+        public Uri Uri => Document.Uri;
+        public RootContext Context => Document.Syntax;
         public FileDiagnostics Diagnostics { get; }
-
-        private ScriptParseInfo ScriptParseInfo { get; }
-        public DeltinScriptParser.RulesetContext Context { get; }
-        public IToken[] Tokens { get; }
+        public Document Document { get; }
 
         private List<CompletionRange> completionRanges { get; } = new List<CompletionRange>();
         private List<OverloadChooser> overloads { get; } = new List<OverloadChooser>();
@@ -26,23 +24,17 @@ namespace Deltin.Deltinteger.Parse
         private List<CodeLensRange> codeLensRanges { get; } = new List<CodeLensRange>();
         private List<SemanticToken> semanticTokens { get; } = new List<SemanticToken>();
 
-        public ScriptFile(Diagnostics diagnostics, Uri uri, ScriptParseInfo scriptParseInfo)
+        public ScriptFile(Diagnostics diagnostics, Document document)
         {
-            Uri = uri;
+            Document = document;
             Diagnostics = diagnostics.FromUri(Uri);
-            Diagnostics.AddDiagnostics(scriptParseInfo.StructuralDiagnostics.ToArray());
-            ScriptParseInfo = scriptParseInfo;
-            Context = ScriptParseInfo.Context;
-            Tokens = scriptParseInfo.Tokens;
+            Diagnostics.AddDiagnostics(document.GetDiagnostics());
         }
-        public ScriptFile(Diagnostics diagnostics, Uri uri, string content) : this(diagnostics, uri, new ScriptParseInfo(content))
+        public ScriptFile(Diagnostics diagnostics, Uri uri, string content) : this(diagnostics, new Document(uri, content))
         {
         }
 
-        public IToken NextToken(ITerminalNode token)
-        {
-            return Tokens[token.Symbol.TokenIndex + 1];
-        }
+        public Token NextToken(Token token) => Document.Lexer.Tokens[Document.Lexer.Tokens.IndexOf(token) + 1];
 
         public void AddCompletionRange(CompletionRange completionRange)
         {
@@ -63,10 +55,10 @@ namespace Deltin.Deltinteger.Parse
             if (definedAt == null) throw new ArgumentNullException(nameof(definedAt));
 
             callLinks.Add(new LocationLink() {
-                OriginSelectionRange = callRange.ToLsRange(),
+                OriginSelectionRange = callRange,
                 TargetUri = definedAt.uri,
-                TargetRange = definedAt.range.ToLsRange(),
-                TargetSelectionRange = definedAt.range.ToLsRange()
+                TargetRange = definedAt.range,
+                TargetSelectionRange = definedAt.range
             });
         }
         public LocationLink[] GetDefinitionLinks() => callLinks.ToArray();
@@ -125,7 +117,7 @@ namespace Deltin.Deltinteger.Parse
             Range = range;
         }
 
-        public CompletionItem[] GetCompletion(Pos pos, bool immediate)
+        public CompletionItem[] GetCompletion(DocPos pos, bool immediate)
         {
             return Scope?.GetCompletion(pos, immediate, Getter) ?? CompletionItems;
 

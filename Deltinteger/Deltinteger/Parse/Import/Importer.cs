@@ -6,6 +6,8 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Json;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Newtonsoft.Json.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -36,14 +38,12 @@ namespace Deltin.Deltinteger.Parse
             FileImporter importer = new FileImporter(scriptFile.Diagnostics, this);
 
             // Get the imported files.
-            if (scriptFile.Context.import_file() != null)
+            foreach (var importFileContext in scriptFile.Context.Imports)
+            if (importFileContext.File)
             {
-                foreach (var importFileContext in scriptFile.Context.import_file())
-                {
-                    string directory = GetImportedFile(scriptFile, importer, importFileContext);
-                    if (Directory.Exists(directory))
-                        AddImportCompletion(scriptFile, directory, DocRange.GetRange(importFileContext.STRINGLITERAL()));
-                }
+                string directory = GetImportedFile(scriptFile, importer, importFileContext);
+                if (Directory.Exists(directory))
+                    AddImportCompletion(scriptFile, directory, importFileContext.File.Range);
             }
         }
 
@@ -76,25 +76,16 @@ namespace Deltin.Deltinteger.Parse
             script.AddCompletionRange(new CompletionRange(completionItems.ToArray(), range, CompletionRangeKind.ClearRest));
         }
 
-        string GetImportedFile(ScriptFile script, FileImporter importer, DeltinScriptParser.Import_fileContext importFileContext)
+        string GetImportedFile(ScriptFile script, FileImporter importer, Import importFileContext)
         {
             // If the file being imported is being imported as an object, get the variable name.
-            string variableName = null;
-            if (importFileContext.AS() != null)
-            {
-                // Syntax error if there is an 'as' keyword but no variable name.
-                if (importFileContext.name == null)
-                    script.Diagnostics.Error("Expected variable name.", DocRange.GetRange(importFileContext.AS()));
-                // Get the variable name.
-                else
-                    variableName = importFileContext.name.Text;
-            }
+            string variableName = importFileContext.Identifier?.Text;
 
-            DocRange stringRange = DocRange.GetRange(importFileContext.STRINGLITERAL());
+            DocRange stringRange = importFileContext.File.Range;
 
             ImportResult importResult = importer.Import(
                 stringRange,
-                Extras.RemoveQuotes(importFileContext.STRINGLITERAL().GetText()),
+                importFileContext.File.Text.RemoveQuotes(),
                 script.Uri
             );
             if (!importResult.SuccessfulReference) return importResult.Directory;
@@ -113,7 +104,7 @@ namespace Deltin.Deltinteger.Parse
                         case ".del":
                         case ".ostw":
                         case ".workshop":
-                            ScriptFile importedScript = new ScriptFile(_diagnostics, importResult.Uri, _fileGetter.GetScript(importResult.Uri));
+                            ScriptFile importedScript = new ScriptFile(_diagnostics, _fileGetter.GetScript(importResult.Uri));
                             CollectScriptFiles(importedScript);
                             break;
                         
@@ -163,13 +154,13 @@ namespace Deltin.Deltinteger.Parse
                             file.Update();
 
                             JObject jsonData = JObject.Parse(file.Content);
-                            InternalVar jsonVar = new InternalVar(importFileContext.name.Text);
+                            InternalVar jsonVar = new InternalVar(variableName);
                             jsonVar.CodeType = new JsonType(jsonData);
 
                             if (((JsonType)jsonVar.CodeType).ContainsDeepArrays())
                                 script.Diagnostics.Error("JSON Arrays cannot include objects or arrays.", stringRange);
 
-                            _deltinScript.RulesetScope.AddVariable(jsonVar, script.Diagnostics, DocRange.GetRange(importFileContext.name));
+                            _deltinScript.RulesetScope.AddVariable(jsonVar, script.Diagnostics, importFileContext.Identifier.Range);
                             _deltinScript.DefaultIndexAssigner.Add(jsonVar, Element.Null());                            
                             break;
                     }

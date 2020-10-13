@@ -4,13 +4,9 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RootNamespace>Deltin</RootNamespace>
   </PropertyGroup>
-  <PropertyGroup>
-    <Antlr4UseCSharpGenerator>True</Antlr4UseCSharpGenerator>
-  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.16"/>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2"/>
-    <PackageReference Include="Antlr4.Runtime" Version="4.6.6"/>
     <PackageReference Include="TextCopy" Version="1.7.1"/>
     <PackageReference Include="System.Drawing.Common" Version="4.6.0"/>
     <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.17.2"/>
@@ -37,20 +33,6 @@
     <Content Include="Elements.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Antlr4.Runtime" Version="4.6.4"/>
-    <PackageReference Include="Antlr4.CodeGenerator" Version="4.6.5-beta001">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Antlr4 Include="DeltinScript.g4">
-      <Generator>MSBuild:Compile</Generator>
-      <CustomToolNamespace>Deltin.Deltinteger</CustomToolNamespace>
-      <Listener>False</Listener>
-      <Visitor>True</Visitor>
-    </Antlr4>
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Custom Methods/Old/**"/>

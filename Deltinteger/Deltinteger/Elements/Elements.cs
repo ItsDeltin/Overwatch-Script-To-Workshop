@@ -8,6 +8,8 @@ using System.Reflection;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Models;
 using Deltin.Deltinteger.I18n;
+using Deltin.Deltinteger.Compiler;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
@@ -249,7 +251,9 @@ namespace Deltin.Deltinteger.Elements
         public static Element Else() => Part("Else");
         public static Element End() => Part("End");
         public static Element While(IWorkshopTree expression) => Part("While", expression);
-        public static Element Wait() => Part("Wait", new NumberElement(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"));
+        public static Element TimeElapsed() => Part("Total Time Elapsed");
+        public static Element Wait() => Part("Wait", Num(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"));
+        public static Element LoopIfConditionIsTrue() => Part("Loop If Condition Is True");
         public static Element XOf(IWorkshopTree expression) => Part("X Component Of", expression);
         public static Element YOf(IWorkshopTree expression) => Part("Y Component Of", expression);
         public static Element ZOf(IWorkshopTree expression) => Part("Z Component Of", expression);
@@ -266,6 +270,9 @@ namespace Deltin.Deltinteger.Elements
         public static Element LastEntity() => Part("Last Entity");
         public static Element RaycastPosition(IWorkshopTree start, IWorkshopTree end, IWorkshopTree playersToInclude = null, IWorkshopTree playersToExclude = null, IWorkshopTree includePlayerOwnedObjects = null)
             => Part("Ray Cast Hit Position", start ?? throw new ArgumentNullException(nameof(start)), end ?? throw new ArgumentNullException(nameof(end)), playersToInclude ?? Null(), playersToExclude ?? Null(), includePlayerOwnedObjects ?? False());
+        public static Element CallSubroutine(Subroutine subroutine) => Element.Part("Call Subroutine", subroutine);
+        public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyRunning", restartRule ? "Restart Rule" : "Do Nothing"));
+        public static Element SkipIf(Element condition, Element count) => Element.Part("Skip If", condition, count);
 
         public static Element Hud(
             IWorkshopTree players = null,
@@ -309,8 +316,8 @@ namespace Deltin.Deltinteger.Elements
             get => Part("Value In Array", this, i);
             private set {}
         }
-        public static implicit operator Element(double number) => new NumberElement(number);
-        public static implicit operator Element(int number) => new NumberElement(number);
+        public static implicit operator Element(double number) => Num(number);
+        public static implicit operator Element(int number) => Num(number);
         public static implicit operator Element(bool boolean) => Part(boolean.ToString());
 
         // Creates an array from a list of values.

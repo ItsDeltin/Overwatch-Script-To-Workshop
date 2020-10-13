@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger
         {
             Label = function.Name,
             Kind = CompletionItemKind.Method,
-            Detail = (function.ReturnType == null ? "void" : function.ReturnType.GetName()) + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
+            Detail = function.CodeType.GetNameOrVoid() + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
             Documentation = Extras.GetMarkupContent(function.Documentation)
         };
 
@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger
         {
             MarkupBuilder markup = new MarkupBuilder()
                 .StartCodeLine()
-                .Add(function.ReturnType == null ? "void" : function.ReturnType.GetName())
+                .Add(function.CodeType.GetNameOrVoid())
                 .Add(" ")
                 .Add(function.Name + CodeParameter.GetLabels(function.Parameters))
                 .EndCodeLine();
@@ -94,7 +94,7 @@ namespace Deltin.Deltinteger
         }
     }
 
-    public class MethodCall
+    public class MethodCall : Deltin.Deltinteger.Parse.FunctionBuilder.ICallHandler
     {
         public IWorkshopTree[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }

@@ -28,14 +28,19 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
         {
+            await _languageServer.DocumentHandler.WaitForParse();
+
             // If the script has not been parsed yet, return the default completion.
             if (_languageServer.LastParse == null) return new CompletionList();
             List<CompletionItem> items = new List<CompletionItem>();
 
-            // Add the user defined types.
-            foreach (var definedType in _languageServer.LastParse.Types.AllTypes)
+            // Add snippets.
+            Snippet.AddSnippets(items);
+
+            // Add types.
+            foreach (var type in _languageServer.LastParse.Types.AllTypes)
             {
-                var completion = definedType.GetCompletion();
+                var completion = type.GetCompletion();
                 if (completion != null) items.Add(completion);
             }
 
@@ -43,6 +48,7 @@ namespace Deltin.Deltinteger.LanguageServer
             var script = _languageServer.LastParse.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
             if (script == null) return items;
 
+            // Get valid completion ranges.
             var completions = script.GetCompletionRanges();
             List<CompletionRange> inRange = new List<CompletionRange>();
             foreach (var completion in completions)

@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -24,33 +25,30 @@ namespace Deltin.Deltinteger.Parse
         public IExpression[] FormatParameters { get; }
         private IStringParse String;
 
-        // Normal
-        public StringAction(ParseInfo parseInfo, DeltinScriptParser.StringContext stringContext)
-        {
-            Init(parseInfo, stringContext);
-            FormatParameters = new IExpression[0];
-            ParseString();
-        }
-
-        // Formatted
-        public StringAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Formatted_stringContext stringContext)
-        {
-            Init(parseInfo, stringContext.@string());
-            FormatParameters = new IExpression[stringContext.expr().Length];
-            for (int i = 0; i < FormatParameters.Length; i++)
-                FormatParameters[i] = parseInfo.GetExpression(scope, stringContext.expr(i));
-            ParseString();
-        }
-
-        private void Init(ParseInfo parseInfo, DeltinScriptParser.StringContext stringContext)
+        public StringAction(ParseInfo parseInfo, Scope scope, StringExpression stringContext)
         {
             _parseInfo = parseInfo;
-            Value = Extras.RemoveQuotes(stringContext.STRINGLITERAL().GetText());
-            Localized = stringContext.LOCALIZED() != null;
-            _stringRange = DocRange.GetRange(stringContext.STRINGLITERAL());
+            Value = stringContext.Value;
+            Localized = stringContext.Localized;
+            _stringRange = stringContext.Token.Range;
 
+            // Add completion if the string is localized.
             if (Localized)
                 _parseInfo.Script.AddCompletionRange(new CompletionRange(StringCompletion, _stringRange, CompletionRangeKind.ClearRest));
+
+            // Get the format parameters.
+            if (stringContext.Formats == null)
+                // No formats.
+                FormatParameters = new IExpression[0];
+            else
+            {
+                // Has formats.
+                FormatParameters = new IExpression[stringContext.Formats.Count];
+                for (int i = 0; i < FormatParameters.Length; i++)
+                    FormatParameters[i] = parseInfo.GetExpression(scope, stringContext.Formats[i]);
+            }
+
+            ParseString();
         }
 
         private void ParseString()
@@ -75,10 +73,10 @@ namespace Deltin.Deltinteger.Parse
                     }
                     else
                     {
-                        int errorStart = _stringRange.start.character + 1 + ex.StringIndex;
+                        int errorStart = _stringRange.Start.Character + 1 + ex.StringIndex;
                         _parseInfo.Script.Diagnostics.Error(ex.Message, new DocRange(
-                            new Pos(_stringRange.start.line, errorStart),
-                            new Pos(_stringRange.start.line, errorStart + ex.Length)
+                            new DocPos(_stringRange.Start.Line, errorStart),
+                            new DocPos(_stringRange.Start.Line, errorStart + ex.Length)
                         ));
                     }
                 }

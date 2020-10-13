@@ -32,6 +32,10 @@ class DeltinDebugger extends LoggingDebugSession
 			this.sendEvent(new StoppedEvent('activated actions', 1));
 		});
 
+		client.onNotification('debugger.error', msg => {
+			vscode.window.showErrorMessage('OSTW debugger exception: ' + msg);
+		});
+
         // _runtime = new DebuggerRuntime();
     }
 
@@ -50,6 +54,7 @@ class DeltinDebugger extends LoggingDebugSession
 	}
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments) {
+		await client.sendRequest('debugger.start');
         this.sendResponse(response);
 	}
 	
@@ -113,6 +118,11 @@ class DeltinDebugger extends LoggingDebugSession
 
 	protected restartRequest(response: DebugProtocol.RestartResponse, args: DebugProtocol.RestartArguments, request?: DebugProtocol.Request) {
 		response.body = {};
+		this.sendResponse(response);
+	}
+
+	protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request) {
+		await client.sendRequest('debugger.stop');
 		this.sendResponse(response);
 	}
 }

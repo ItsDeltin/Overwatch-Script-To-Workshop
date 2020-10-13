@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -26,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static { get; }
         public bool Recursive { get; }
         public Lambda.IBridgeInvocable BridgeInvocable { get; }
+        public bool RequiresCapture { get; }
         private readonly TokenType _tokenType;
         private readonly TokenModifier[] _tokenModifiers;
         private readonly bool _handleRestrictedCalls;
@@ -37,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines when the initial value should be resolved.</summary>
         private readonly InitialValueResolve _initialValueResolve;
         /// <summary>Stores the context of the initial value.</summary>
-        private readonly DeltinScriptParser.ExprContext _initalValueContext;
+        private readonly IParseExpression _initalValueContext;
 
         /// <summary>The resulting intial value. This will be null if there is no initial value.
         /// If _initialValueResolve is Instant, this will be set when the Var object is created.
@@ -62,6 +65,7 @@ namespace Deltin.Deltinteger.Parse
             Static = varInfo.Static;
             Recursive = varInfo.Recursive;
             BridgeInvocable = varInfo.BridgeInvocable;
+            RequiresCapture = varInfo.RequiresCapture;
             _tokenType = varInfo.TokenType;
             _tokenModifiers = varInfo.TokenModifiers.ToArray();
             _handleRestrictedCalls = varInfo.HandleRestrictedCalls;
@@ -77,12 +81,12 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo.TranslateInfo.VarCollection.Reserve(ID, false, parseInfo.Script.Diagnostics, DefinedAt.range);
             }
 
-            // Add the variable to the scope.
-            _operationalScope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
-
-            parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
-            parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
+            if (DefinedAt.range != null)
+            {
+                parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
+                parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
+                parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
+            }
 
             if (_initialValueResolve == InitialValueResolve.Instant)
                 GetInitialValue();
@@ -108,9 +112,9 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Parse the initial value.
-                InitialValue = parseInfo.GetExpression(_operationalScope, _initalValueContext);
+                InitialValue = parseInfo.SetExpectingLambda(CodeType).GetExpression(_operationalScope, _initalValueContext);
                 if (InitialValue?.Type() != null && InitialValue.Type().IsConstant() && !InitialValue.Type().Implements(CodeType))
-                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(_initalValueContext));
+                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", _initalValueContext.Range);
                 
                 // Check restricted calls.
                 if (_handleRestrictedCalls)
@@ -197,7 +201,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static = false;
         public bool InExtendedCollection = false;
         public int ID = -1;
-        public DeltinScriptParser.ExprContext InitialValueContext = null;
+        public IParseExpression InitialValueContext = null;
         public AccessLevel AccessLevel = AccessLevel.Private;
         public bool IsWorkshopReference = false;
         public VariableType VariableType = VariableType.Dynamic;
@@ -210,6 +214,7 @@ namespace Deltin.Deltinteger.Parse
         public bool HandleRestrictedCalls;
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
         public Lambda.IBridgeInvocable BridgeInvocable;
+        public bool RequiresCapture;
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)
         {

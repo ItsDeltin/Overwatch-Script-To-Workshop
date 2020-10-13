@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Compiler;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 using BaseRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.RenameHandler;
@@ -59,11 +60,11 @@ namespace Deltin.Deltinteger.LanguageServer
                 {
                     edits.Add(new TextEdit() {
                         NewText = request.NewName,
-                        Range = renameRange.ToLsRange()
+                        Range = renameRange
                     });
                 }
 
-                var document = _languageServer.DocumentHandler.TextDocumentFromUri(group.Uri);
+                var document = _languageServer.DocumentHandler.TextDocumentFromUri(group.Uri)?.AsItem();
 
                 // document will be null if the editor doesn't have the document of the group opened.
                 if (document == null)
@@ -119,7 +120,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
 
             return new RangeOrPlaceholderRange(new PlaceholderRange() {
-                Range = link.Range.ToLsRange(),
+                Range = link.Range,
                 Placeholder = link.Name
             });
         }

@@ -1,5 +1,6 @@
 using System;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -19,6 +20,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static => true;
         public TokenType? TokenType { get; set; } = null;
         public bool Ambiguous { get; set; }
+        public bool RequiresCapture => false;
 
         public InternalVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
         {

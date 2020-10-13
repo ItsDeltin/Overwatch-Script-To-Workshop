@@ -2,13 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.IO;
-using Deltin.Deltinteger;
-using Deltin.Deltinteger.Models.Import;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.CustomMethods;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
@@ -24,10 +22,10 @@ namespace Deltin.Deltinteger.Models
         public AssetClass() : base("Asset")
         {
             Description = "Contains functions for displaying assets in the world.";
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<ShowModel>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextWithFont>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextFancy>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateText>(), null, null);
+            StaticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<ShowModel>());
+            StaticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CreateTextWithFont>());
+            StaticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CreateTextFancy>());
+            StaticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CreateText>());
         }
 
         public override Scope ReturningScope() => StaticScope;

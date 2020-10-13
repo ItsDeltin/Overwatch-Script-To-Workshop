@@ -1,5 +1,6 @@
 using System;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
 namespace Deltin.Deltinteger.Parse
@@ -8,7 +9,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public CodeParameter[] Parameters { get; set; }
-        public CodeType ReturnType { get; set; }
+        public CodeType CodeType { get; set; }
         public MethodAttributes Attributes { get; set; } = new MethodAttributes();
         public bool Static { get; set; }
         public bool WholeContext { get; set; } = true;
@@ -36,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = builder.Name ?? throw new ArgumentNullException(nameof(Name));
             Parameters = builder.Parameters ?? new CodeParameter[0];
-            ReturnType = builder.ReturnType;
+            CodeType = builder.ReturnType;
             Documentation = builder.Documentation ?? throw new ArgumentNullException(nameof(Documentation));
             Action = builder.Action ?? throw new ArgumentNullException(nameof(Action));
             OnCall = builder.OnCall;

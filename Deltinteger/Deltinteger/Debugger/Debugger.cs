@@ -14,22 +14,33 @@ namespace Deltin.Deltinteger.Debugger
 {
     class ClipboardListener
     {
-        public bool IsListening { get; private set; } = true;
-        private readonly DeltintegerLanguageServer _languageServer;
         public DebugVariableLinkCollection VariableCollection;
+        private readonly DeltintegerLanguageServer _languageServer;
+        private readonly object _currentLock = new object();
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public ClipboardListener(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
         }
 
-        public async Task Listen()
+        public void Start()
         {
-            string last = null;
-            while (IsListening)
+            lock (_currentLock)
             {
-                await Task.Delay(500);
+                _cancellationTokenSource.Cancel();
+                _cancellationTokenSource = new CancellationTokenSource();
+                Task.Run(async () => await Listen(), _cancellationTokenSource.Token);
+            }
+        }
 
+        async Task Listen()
+        {
+            var token = _cancellationTokenSource.Token;
+
+            string last = null;
+            while (!token.IsCancellationRequested && !token.WaitHandle.WaitOne(500))
+            {
                 string clipboard = Clipboard.GetText(); // Get clipboard.
                 if (clipboard == last || clipboard == null) continue; // Clipboard did not change.
                 last = clipboard;
@@ -62,9 +73,15 @@ namespace Deltin.Deltinteger.Debugger
                 }
                 catch (Exception ex)
                 {
-                    // TODO: Error handling
+                    _languageServer.DebuggerException(ex);
                 }
             }
+        }
+
+        public void Stop()
+        {
+            lock (_currentLock)
+                _cancellationTokenSource.Cancel();
         }
     }
 

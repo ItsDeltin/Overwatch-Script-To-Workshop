@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Debugger.Protocol
 
     public class EvaluateResponse
     {
+        public static readonly EvaluateResponse Empty = new EvaluateResponse();
+
         /// <summary>The result of the evaluate request.</summary>
         public string result;
         /// <summary>The optional type of the evaluate result.</summary>
@@ -44,7 +46,7 @@ namespace Deltin.Deltinteger.Debugger.Protocol
         {
             type = variable.Type;
             result = variable.Value.ToString();
-            variablesReference = collection.References[variable];
+            collection.References.TryGetValue(variable, out variablesReference);
         }
     }
 
@@ -138,11 +140,12 @@ namespace Deltin.Deltinteger.Debugger.Protocol
         public string memoryReference;
 
         public DBPVariable() {}
-        public DBPVariable(IDebugVariable variable)
+        public DBPVariable(IDebugVariable variable, string typeString = null)
         {
             name = variable.Name;
             type = variable.Type;
             value = variable.Value.ToString();
+            if (typeString != null) value += " {" + typeString + "}";
         }
     }
 

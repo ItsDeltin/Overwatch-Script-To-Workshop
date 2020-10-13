@@ -127,9 +127,11 @@ namespace Deltin.Deltinteger.Lobby
 
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings, string modeName)
         {
-            builder.AppendKeywordLine(modeName);
-
+            bool enabled = Settings == null || !Settings.TryGetValue("Enabled", out object value) || (value is bool b && b);
             Settings?.Remove("Enabled");
+
+            if (!enabled) builder.AppendKeyword("disabled").Append(" ");
+            builder.AppendKeywordLine(modeName);
 
             if (EnabledMaps != null || DisabledMaps != null || (Settings != null && Settings.Count > 0))
             {

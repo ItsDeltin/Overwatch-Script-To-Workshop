@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Parse.Functions;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -24,42 +25,42 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext => true;
 
         public IExpression Expression { get; private set; }
-        public CodeType ReturnType { get; private set; }
+        public CodeType CodeType { get; private set; }
 
-        private readonly DeltinScriptParser.ExprContext _expressionToParse;
+        private readonly IParseExpression _expressionToParse;
         private readonly Scope _scope;
         private readonly ParseInfo _parseInfo;
-        private readonly DeltinScriptParser.Define_macroContext _context;
+        private readonly MacroVarDeclaration _context;
         private bool _wasApplied = false;
 
         public CallInfo CallInfo { get; }
         private readonly RecursiveCallHandler _recursiveCallHandler;
 
-        public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext macroContext, CodeType returnType)
+        public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext, CodeType returnType)
         {
             _context = macroContext;
 
-            Name = macroContext.name.Text;
+            Name = macroContext.Identifier.Text;
 
             // Get the attributes.
             FunctionAttributesGetter attributeResult = new MacroAttributesGetter(macroContext, new MacroVarAttribute(this));
             attributeResult.GetAttributes(parseInfo.Script.Diagnostics);
 
+            DocRange nameRange = macroContext.Identifier.Range;
+
             ContainingType = (Static ? staticScope : objectScope).This;
-            DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext.name));
+            DefinedAt = new Location(parseInfo.Script.Uri, nameRange);
             _recursiveCallHandler = new RecursiveCallHandler(this);
             CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
-            ReturnType = returnType;
-            _expressionToParse = macroContext.expr();
+            CodeType = returnType;
+            _expressionToParse = macroContext.Value;
             _scope = Static ? staticScope : objectScope;
             this._parseInfo = parseInfo;
             
-            _scope.AddMacro(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name), !Override);
+            _scope.AddMacro(this, parseInfo.Script.Diagnostics, nameRange, !Override);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
-            parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
+            parseInfo.Script.AddHover(nameRange, GetLabel(true));
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Variable, DefinedAt.range));
-
-            DocRange nameRange = DocRange.GetRange(_context.name);
 
             if (Override)
             {
@@ -101,16 +102,16 @@ namespace Deltin.Deltinteger.Parse
             return AbstractMacroBuilder.Call(actionSet, this);
         }
 
-        public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? _parseInfo.TranslateInfo.PlayerVariableScope;
+        public Scope ReturningScope() => CodeType?.GetObjectScope() ?? _parseInfo.TranslateInfo.PlayerVariableScope;
 
-        public CodeType Type() => ReturnType;
+        public CodeType Type() => CodeType;
 
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.Script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
-            parseInfo.CurrentCallInfo.Call(_recursiveCallHandler, callRange);
+            parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
             OnBlockApply(new MacroVarRestrictedCallHandler(this, parseInfo.RestrictedCallHandler, parseInfo.GetLocation(callRange)));
         }
 
@@ -121,7 +122,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown)
         {
-            string name = (ReturnType?.GetName() ?? "define") + " " + Name;
+            string name = (CodeType?.GetName() ?? "define") + " " + Name;
             if (markdown) return HoverHandler.Sectioned(name, null);
             else return name;
         }
@@ -159,6 +160,7 @@ namespace Deltin.Deltinteger.Parse
         public void SetVirtual() => _macro.Virtual = true;
         public void SetRecursive() => throw new NotImplementedException();
         public void SetSubroutine(string name) => throw new NotImplementedException();
+        public void SetVariableType(bool isGlobal) => throw new NotImplementedException();
     }
 
     /// <summary>When a macro is called, sometimes the macro's expression is not parsed yet so callers do not know if the macro has a restricted value.

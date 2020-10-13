@@ -2,7 +2,7 @@
     "name": "overwatch-script-to-workshop",
     "displayName": "Overwatch Script To Workshop",
     "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-    "version": "2.0.2",
+    "version": "2.1.0",
     "publisher": "Deltin",
     "engines": {
         "vscode": "^1.47.0"
@@ -163,17 +163,17 @@
         "commands": [
             {
                 "command": "ostw.downloadLatestRelease",
-                "title": "Download the latest OSTW release.",
+                "title": "Download the latest OSTW release",
                 "category": "Overwatch Script To Workshop"
             },
             {
                 "command": "ostw.locateServerInstallation",
-                "title": "Locate the server installation.",
+                "title": "Locate the server installation",
                 "category": "Overwatch Script To Workshop"
             },
             {
                 "command": "ostw.virtualDocumentOutput",
-                "title": "Create a panel for workshop code output.",
+                "title": "Create a panel for workshop code output",
                 "category": "Overwatch Script To Workshop"
             },
             {
@@ -183,22 +183,22 @@
             },
             {
                 "command": "ostw.createPathmap",
-                "title": "Create pathmap from CSV clipboard.",
+                "title": "Create pathmap from CSV clipboard",
                 "category": "Overwatch Script To Workshop"
             },
             {
                 "command": "ostw.pathmapEditorCode",
-                "title": "Copy pathmap editor code.",
+                "title": "Copy pathmap editor code",
                 "category": "Overwatch Script To Workshop"
             },
             {
                 "command": "ostw.copyWorkshopCode",
-                "title": "Copy the workshop output to the clipboard.",
+                "title": "Copy the workshop output to the clipboard",
                 "category": "Overwatch Script To Workshop"
             },
             {
                 "command": "ostw.decompile.clipboard",
-                "title": "Decompile workshop code from clipboard to file.",
+                "title": "Decompile from clipboard to file",
                 "category": "Overwatch Script To Workshop"
             }
         ],

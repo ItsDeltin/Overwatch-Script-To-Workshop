@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.CustomMethods
         public bool WholeContext => true;
         public bool Static => true;
         
-        public CodeType ReturnType => null;
+        public CodeType CodeType => null;
 
         public string Documentation { get; }
 
