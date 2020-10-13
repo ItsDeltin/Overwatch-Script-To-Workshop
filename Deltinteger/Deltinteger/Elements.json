@@ -673,7 +673,8 @@
           "documentation": "Variable specified by a single alphabetic letter (A through Z).",
           "var-ref-global": true
         }
-      }
+      },
+      "hidden": true
     },
     {
       "type": "boolean",
@@ -1715,7 +1716,8 @@
           "documentation": "Variable specified by a single alphabetic letter (A through Z).",
           "var-ref-global": false
         }
-      }
+      },
+      "hidden": true
     },
     {
       "type": "player",
