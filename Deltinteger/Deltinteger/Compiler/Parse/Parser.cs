@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public int TokenCount => Lexer.Tokens.Count;
         public bool IsFinished => Token >= Lexer.Tokens.Count;
 
-        public Stack<OperatorInfo> Operators { get; } = new Stack<OperatorInfo>();
+        public Stack<IOperatorInfo> Operators { get; } = new Stack<IOperatorInfo>();
         public Stack<IParseExpression> Operands { get; } = new Stack<IParseExpression>();
         public Stack<TokenCapture> TokenCaptureStack { get; } = new Stack<TokenCapture>();
         public Stack<int> TokenRangeStart { get; } = new Stack<int>();
@@ -267,54 +267,62 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         // Operators
-        void PushOperator(OperatorInfo op)
+        void PushOperator(IOperatorInfo op)
         {
-            while (CompilerOperator.Compare(Operators.Peek().Operator, op.Operator))
+            while (CompilerOperator.Compare(Operators.Peek().Source, op.Source))
                 PopOperator();
             Operators.Push(op);
         }
 
         void PopOperator()
         {
-            var op = Operators.Pop();
-            // Binary
-            if (op.Type == OperatorType.Binary)
+            var iop = Operators.Pop();
+            if (iop is OperatorInfo op)
             {
-                var right = Operands.Pop();
-                var left = Operands.Pop();
-                Operands.Push(new BinaryOperatorExpression(left, right, op));
-            }
-            // Unary
-            else if (op.Type == OperatorType.Unary)
-            {
-                var value = Operands.Pop();
-                Operands.Push(new UnaryOperatorExpression(value, op));
-            }
-            // Extraneous left-hand ternary
-            else if (op.Type == OperatorType.TernaryLeft)
-            {
-                Operands.Pop();
-                AddError(new MissingTernaryHand(op.Token, false));
-            }
-            // Ternary
-            else if (op.Type == OperatorType.TernaryRight)
-            {
-                if (Operators.Peek().Type == OperatorType.TernaryLeft)
+                // Binary
+                if (op.Type == OperatorType.Binary)
                 {
-                    var op2 = Operators.Pop();
-                    var rhs = Operands.Pop();
-                    var middle = Operands.Pop();
-                    var lhs = Operands.Pop();
-                    Operands.Push(new TernaryExpression(lhs, middle, rhs));
+                    var right = Operands.Pop();
+                    var left = Operands.Pop();
+                    Operands.Push(new BinaryOperatorExpression(left, right, op));
                 }
-                // Missing left-hand ?
-                else
+                // Unary
+                else if (op.Type == OperatorType.Unary)
+                {
+                    var value = Operands.Pop();
+                    Operands.Push(new UnaryOperatorExpression(value, op));
+                }
+                // Extraneous left-hand ternary
+                else if (op.Type == OperatorType.TernaryLeft)
                 {
                     Operands.Pop();
-                    AddError(new MissingTernaryHand(op.Token, true));
+                    AddError(new MissingTernaryHand(op.Token, false));
                 }
+                // Ternary
+                else if (op.Type == OperatorType.TernaryRight)
+                {
+                    if (Operators.Peek() is OperatorInfo peek && peek.Type == OperatorType.TernaryLeft)
+                    {
+                        var op2 = Operators.Pop();
+                        var rhs = Operands.Pop();
+                        var middle = Operands.Pop();
+                        var lhs = Operands.Pop();
+                        Operands.Push(new TernaryExpression(lhs, middle, rhs));
+                    }
+                    // Missing left-hand ?
+                    else
+                    {
+                        Operands.Pop();
+                        AddError(new MissingTernaryHand(op.Token, true));
+                    }
+                }
+                else throw new NotImplementedException();
             }
-            else throw new NotImplementedException();
+            else if (iop is TypeCastInfo typeCastOp)
+            {
+                var value = Operands.Pop();
+                Operands.Push(EndNodeFrom(new TypeCast(typeCastOp.CastingTo, value), typeCastOp.StartPosition));
+            }
         }
 
         bool TryParseBinaryOperator(out OperatorInfo operatorInfo)
@@ -1414,9 +1422,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndNode(new ExpressionGroup(expression, left, right));
         }
 
-        TypeCast ParseTypeCast()
+        IParseExpression ParseTypeCast()
         {
-            StartNode();
+            DocPos startPosition = Current.Range.Start;
+
             // Parse the opening angled bracket.
             ParseExpected(TokenType.LessThan);
             
@@ -1426,11 +1435,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Parse the closing angled bracket.
             ParseExpected(TokenType.GreaterThan);
 
-            // Parse the expression.
-            var expression = GetContainExpression();
+            PushOperator(new TypeCastInfo(type, startPosition));
 
-            // Done.
-            return EndNode(new TypeCast(type, expression));
+            var value = GetExpressionWithArray();
+            Operands.Push(value);
+            return value;
         }
 
         StringExpression ParseFormattedString()

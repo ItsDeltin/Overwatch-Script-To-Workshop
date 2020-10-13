@@ -42,6 +42,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public ValueBlockLambda(CodeType returnType, params CodeType[] argumentTypes) : base("ValueLambda", LambdaKind.ConstantValue, argumentTypes)
         {
             ReturnsValue = true;
+            ReturnType = returnType;
         }
     }
 
@@ -50,6 +51,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public MacroLambda(CodeType returnType, params CodeType[] argumentTypes) : base("MacroLambda", LambdaKind.ConstantMacro, argumentTypes)
         {
             ReturnsValue = true;
+            ReturnType = returnType;
         }
     }
 }
