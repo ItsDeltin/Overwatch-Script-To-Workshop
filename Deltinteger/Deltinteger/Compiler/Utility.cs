@@ -307,6 +307,8 @@ namespace Deltin.Deltinteger.Compiler
                 // Unary
                 case TokenType.Subtract:
                 case TokenType.Exclamation:
+                // Type cast
+                case TokenType.LessThan:
                     return true;
                 
                 default:
