@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly InternalVar _last;
         private readonly InternalVar _first;
 
-        public ArrayType(CodeType arrayOfType) : base(arrayOfType.GetName() + "[]")
+        public ArrayType(ITypeSupplier supplier, CodeType arrayOfType) : base(arrayOfType.GetName() + "[]")
         {
             ArrayOfType = arrayOfType;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
@@ -35,6 +35,7 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the specified array with any values that do not match the specified condition removed.",
                 ReturnType = this,
                 ArrayOfType = ArrayOfType,
+                FuncType = BooleanType.Instance,
                 ParameterDocumentation = "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array."
             }.Add("Filtered Array", Scope);
             // Sorted Array
@@ -43,6 +44,7 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.",
                 ReturnType = this,
                 ArrayOfType = ArrayOfType,
+                FuncType = BooleanType.Instance,
                 ParameterDocumentation = "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order."
             }.Add("Sorted Array", Scope);
             // Is True For Any
@@ -51,6 +53,7 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "Whether the specified condition evaluates to true for any value in the specified array.",
                 ReturnType = BooleanType.Instance,
                 ArrayOfType = ArrayOfType,
+                FuncType = BooleanType.Instance,
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
             }.Add("Is True For Any", Scope);
             // Is True For All
@@ -59,6 +62,7 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
                 ReturnType = BooleanType.Instance,
                 ArrayOfType = ArrayOfType,
+                FuncType = BooleanType.Instance,
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
             }.Add("Is True For All", Scope);
             // Mapped
@@ -67,6 +71,7 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
                 ReturnType = ObjectType.Instance,
                 ArrayOfType = ArrayOfType,
+                FuncType = supplier.Any(),
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
             }.Add("Mapped Array", Scope);
             // Contains
@@ -172,13 +177,14 @@ namespace Deltin.Deltinteger.Parse
         public string ParameterDocumentation;
         public CodeType ReturnType;
         public CodeType ArrayOfType;
+        public CodeType FuncType;
 
         public void Add(string function, Scope addToScope)
         {
             // value => ...
             var noIndex = GetFuncMethod();
             noIndex.Parameters = new CodeParameter[] {
-                new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(null, ArrayOfType))
+                new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(FuncType, ArrayOfType))
             };
             noIndex.Action = (actionSet, methodCall) =>
                 Element.Part(function, actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, Element.ArrayElement()));
@@ -186,7 +192,7 @@ namespace Deltin.Deltinteger.Parse
             // (value, index) => ...
             var withIndex = GetFuncMethod();
             withIndex.Parameters = new CodeParameter[] {
-                new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(null, ArrayOfType, null))
+                new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(FuncType, ArrayOfType, NumberType.Instance))
             };
             withIndex.Action = (actionSet, methodCall) =>
                 Element.Part(function, actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, Element.ArrayElement(), Element.ArrayIndex()));

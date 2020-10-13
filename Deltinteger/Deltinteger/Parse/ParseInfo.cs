@@ -99,12 +99,12 @@ namespace Deltin.Deltinteger.Parse
                     if (!expr.IsStatement())
                     {
                         Script.Diagnostics.Error("Expressions can't be used as statements.", statementContext.Range);
-                        return MissingElementAction.MissingElement;
+                        return new MissingElementAction(TranslateInfo);
                     }
                     // When IsStatement is true, expr should be castable to a statement.
                     return (IStatement)expr;
 
-                default: return MissingElementAction.MissingElement;
+                default: return new MissingElementAction(TranslateInfo);
             }
         }
 
@@ -145,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
                 // case DeltinScriptParser.E_isContext @is: return new IsAction(this, scope, @is);
                 case LambdaExpression lambda: return new Lambda.LambdaAction(this, scope, lambda);
                 // Missing
-                case MissingElement missing: return MissingElementAction.MissingElement;
+                case MissingElement missing: return new MissingElementAction(TranslateInfo);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }
@@ -164,7 +164,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the variable.
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange, ResolveInvokeInfo != null);
-            if (element == null) return new MissingVariable(variableName);
+            if (element == null) return new MissingVariable(TranslateInfo, variableName);
             
             // Additional syntax checking.
             var expression = new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);

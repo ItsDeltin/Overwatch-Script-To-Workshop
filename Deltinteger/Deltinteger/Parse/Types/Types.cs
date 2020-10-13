@@ -135,7 +135,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (current.Operations != null)
                     foreach (TypeOperation operation in current.Operations)
-                        if (operation.Operator == op && right.Implements(operation.Right))
+                        if (operation.Operator == op && right != null && right.Implements(operation.Right))
                             return operation;
                 
                 current = current.Extends;
@@ -191,7 +191,7 @@ namespace Deltin.Deltinteger.Parse
             type.Call(parseInfo, typeContext.Identifier.Range);
 
             for (int i = 0; i < typeContext.ArrayCount; i++)
-                type = new ArrayType(type);
+                type = new ArrayType(parseInfo.TranslateInfo.Types, type);
             
             return type;
         }
@@ -227,7 +227,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the contained type.
             var result = GetCodeTypeFromContext(parseInfo, type.Type);
             // Get the array type.
-            for (int i = 0; i < type.ArrayCount; i++) result = new ArrayType(result);
+            for (int i = 0; i < type.ArrayCount; i++) result = new ArrayType(parseInfo.TranslateInfo.Types, result);
             // Done.
             return result;
         }
@@ -257,8 +257,6 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(NumberType.Instance);
             _defaultTypes.Add(BooleanType.Instance);
             _defaultTypes.Add(TeamType.Instance);
-            _defaultTypes.Add(new Lambda.ValueBlockLambda(null));
-            _defaultTypes.Add(new Lambda.MacroLambda(null));
             _defaultTypes.Add(VectorType.Instance);
             _defaultTypes.Add(StringType.Instance);
             _defaultTypes.Add(Positionable.Instance);

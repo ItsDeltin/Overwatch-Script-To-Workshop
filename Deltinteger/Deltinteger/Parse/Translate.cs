@@ -324,11 +324,14 @@ namespace Deltin.Deltinteger.Parse
 
         public void GetDefaults(DeltinScript deltinScript)
         {
+            var dynamicType = new DynamicType(deltinScript);
             AllTypes.Add(_playerType);
             AllTypes.AddRange(CodeType.DefaultTypes);
             AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
             AllTypes.Add(new Pathfinder.PathResolveClass());
-            AllTypes.Add(new DynamicType(deltinScript));
+            AllTypes.Add(dynamicType);
+            AllTypes.Add(new Lambda.ValueBlockLambda(dynamicType));
+            AllTypes.Add(new Lambda.MacroLambda(dynamicType));
 
             _playerType.ResolveElements();
             deltinScript.PlayerVariableScope = _playerType.ObjectScope;
@@ -369,18 +372,18 @@ namespace Deltin.Deltinteger.Parse
 
         public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
 
-        public CodeType Default() => null;
-        public CodeType Any() => null;
-        public CodeType AnyArray() => new ArrayType(null);
-        public CodeType Boolean() => null;
-        public CodeType Number() => null;
-        public CodeType String() => null;
+        public CodeType Default() => Any();
+        public CodeType Any() => GetInstance<DynamicType>();
+        public CodeType AnyArray() => new ArrayType(this, Any());
+        public CodeType Boolean() => GetInstance<BooleanType>();
+        public CodeType Number() => GetInstance<NumberType>();
+        public CodeType String() => GetInstance<StringType>();
         public CodeType Player() => _playerType;
         public CodeType Players() => new PipeType(_playerType, PlayerArray());
-        public CodeType PlayerArray() => new ArrayType(_playerType);
+        public CodeType PlayerArray() => new ArrayType(this, _playerType);
         public CodeType Vector() => VectorType.Instance;
         public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
-        public CodeType Button() => null;
+        public CodeType Button() => Any(); // TODO
     }
 
     public interface IComponent

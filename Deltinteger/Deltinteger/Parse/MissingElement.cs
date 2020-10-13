@@ -6,10 +6,15 @@ namespace Deltin.Deltinteger.Parse
 {
     public class MissingElementAction : IExpression, IStatement
     {
-        public static readonly MissingElementAction MissingElement = new MissingElementAction();
+        private readonly CodeType _type;
+
+        public MissingElementAction(DeltinScript deltinScript)
+        {
+            _type = deltinScript.Types.Any();
+        }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => _type;
         public bool IsStatement() => true;
         public bool ExpressionErrorHandled() => true;
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) {}
@@ -24,15 +29,16 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
-        public CodeType CodeType => null;
+        public CodeType CodeType { get; }
 
-        public MissingVariable(string name)
+        public MissingVariable(DeltinScript deltinScript, string name)
         {
             Name = name;
+            CodeType = deltinScript.Types.Any();
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => CodeType;
         public CompletionItem GetCompletion() => throw new NotImplementedException();
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
     }

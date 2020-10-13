@@ -18,12 +18,10 @@ namespace Deltin.Deltinteger.LanguageServer
     class CompletionHandler : ICompletionHandler
     {
         private DeltintegerLanguageServer _languageServer { get; }
-        private Scope _globalScope { get; }
 
         public CompletionHandler(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
-            _globalScope = Scope.GetGlobalScope(new EmptyTypeSupplier());
         }
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
@@ -82,7 +80,6 @@ namespace Deltin.Deltinteger.LanguageServer
                     }
                 }
             }
-            else items.AddRange(_globalScope.GetCompletion(null, false));
             return items;
         }
 
@@ -112,21 +109,5 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             _capability = capability;
         }
-    }
-
-    class EmptyTypeSupplier : Elements.ITypeSupplier
-    {
-        public CodeType Any() => null;
-        public CodeType AnyArray() => new ArrayType(null);
-        public CodeType Boolean() => null;
-        public CodeType Number() => null;
-        public CodeType String() => null;
-        public CodeType Button() => null;
-        public CodeType Default() => null;
-        public CodeType Player() => null;
-        public CodeType PlayerArray() => null;
-        public CodeType PlayerOrVector() => null;
-        public CodeType Players() => null;
-        public CodeType Vector() => VectorType.Instance;
     }
 }

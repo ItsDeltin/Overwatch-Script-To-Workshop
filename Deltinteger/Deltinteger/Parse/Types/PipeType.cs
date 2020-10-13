@@ -20,12 +20,15 @@ namespace Deltin.Deltinteger.Parse
                 // Get the current type's scope.
                 Scope typeScope = IncludedTypes[i].GetObjectScope();
 
-                // Cope the elements.
-                _scope.CopyAll(typeScope, null);
+                if (typeScope != null)
+                {
+                    // Cope the elements.
+                    _scope.CopyAll(typeScope, null);
 
-                // Append to the scope name.
-                scopeName += "'" + typeScope.ErrorName + "'";
-                if (i < IncludedTypes.Length - 1) scopeName += ", ";
+                    // Append to the scope name.
+                    scopeName += "'" + typeScope.ErrorName + "'";
+                    if (i < IncludedTypes.Length - 1) scopeName += ", ";
+                }
             }
 
             // Set the scope's name.

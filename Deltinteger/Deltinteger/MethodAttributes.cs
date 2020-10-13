@@ -192,7 +192,7 @@ namespace Deltin.Deltinteger
         }
         
         public static bool EventPlayerDefaultCall(IIndexReferencer referencer, IExpression parent, ParseInfo parseInfo)
-            => referencer.VariableType == VariableType.Player && (parent == null || parent.ReturningScope() != parseInfo.TranslateInfo.PlayerVariableScope);
+            => referencer.VariableType == VariableType.Player && (parent == null || parent is RootAction);
     }
 
     public enum RestrictedCallType

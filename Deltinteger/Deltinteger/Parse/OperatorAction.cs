@@ -17,10 +17,10 @@ namespace Deltin.Deltinteger.Parse
             Right = parseInfo.GetExpression(scope, context.Right);
 
             string op = context.Operator.Operator.Operator;
-            Operation = Left.Type().GetOperation(TypeOperation.TypeOperatorFromString(op), Right.Type());
+            Operation = Left.Type().GetOperation(TypeOperation.TypeOperatorFromString(op), Right?.Type());
                         
             if (Operation == null)
-                parseInfo.Script.Diagnostics.Error("Operator '" + op + "' cannot be applied to the types '" + Left.Type().Name + "' and '" + Right.Type().Name + "'.", context.Operator.Token.Range);
+                parseInfo.Script.Diagnostics.Error("Operator '" + op + "' cannot be applied to the types '" + Left.Type().GetNameOrVoid() + "' and '" + Right.Type().GetNameOrVoid() + "'.", context.Operator.Token.Range);
         }
 
         public Scope ReturningScope() => Operation?.ReturnType.GetObjectScope();
