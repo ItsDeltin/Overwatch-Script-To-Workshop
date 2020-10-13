@@ -56,6 +56,9 @@ namespace Deltin.Deltinteger
                 string directory = Path.GetDirectoryName(referenceDirectory);
                 string combined = Path.Combine(directory, file);
                 if (file == "") combined += Path.DirectorySeparatorChar;
+				//On platforms where the root starts with a / (anything other than windows), append one to the start
+				if(!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+					combined = "/" + combined;
                 return Path.GetFullPath(combined);
             }
             catch (Exception)
@@ -73,12 +76,15 @@ namespace Deltin.Deltinteger
 
         public static string FilePath(this Uri uri)
         {
-            return uri.LocalPath.TrimStart('/');
+            return uri.LocalPath.TrimStart('/').TrimStart('\\');
         }
 
         public static Uri Clean(this Uri uri)
         {
-            return new Uri(uri.FilePath());
+			if(!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+            	return new Uri("/" +uri.FilePath());
+			else 
+				return new Uri(uri.FilePath());
         }
 
         public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
@@ -90,8 +96,8 @@ namespace Deltin.Deltinteger
 
         public static Uri Definition(string path)
         {
-            string enc = "file:///" + path.Replace('\\', '/').Replace(" ","%20").Replace(":", "%3A");
-            return new Uri(enc);
+            string enc = "file:///" + path.Replace('\\', '/').Replace(" ","%20").Replace(":", "%3A").TrimStart('/');
+            return new Uri(enc, UriKind.Absolute);
         }
 
         public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent() {
