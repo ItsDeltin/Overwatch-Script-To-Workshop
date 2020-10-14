@@ -126,7 +126,6 @@ namespace Deltin.Deltinteger.Parse
             //     }
             // }
 
-
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var enumContext in script.Context.Enums)
@@ -146,21 +145,6 @@ namespace Deltin.Deltinteger.Parse
                 Types.DefinedTypes.Add(newType);
                 Types.CalledTypes.Add(newType);
             }
-	
-			//Get the type aliases
-            foreach (ScriptFile script in Importer.ScriptFiles)
-			{    
-				ParseInfo parseInfo = new ParseInfo(script, this);
-            	foreach (var typeContext in script.Context.TypeAliases)
-				{
-					var aliasType = Types.GetCodeType(typeContext.NewTypeName.Text);
-					var type = Types.GetCodeType(typeContext.OtherTypeName.Text);
-					if(aliasType != null)
-						parseInfo.Script.Diagnostics.Error("type name already in use.", typeContext.Range);
-					else
-						Types.TypeAliases.Add(typeContext.NewTypeName.Text, type);
-				}
-			}
             
             // Get the declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -331,7 +315,6 @@ namespace Deltin.Deltinteger.Parse
         public List<CodeType> AllTypes { get; } = new List<CodeType>();
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
         public List<CodeType> CalledTypes { get; } = new List<CodeType>();
-		public Dictionary<String, CodeType> TypeAliases {get; } =  new Dictionary<String, CodeType>();
         private readonly PlayerType _playerType;
 
         public ScriptTypes()
@@ -358,11 +341,6 @@ namespace Deltin.Deltinteger.Parse
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
             var type = AllTypes.FirstOrDefault(type => type.Name == name);
-			if(type == null) {
-				CodeType typeAlias;
-				if(TypeAliases.TryGetValue(name, out typeAlias))
-					type = typeAlias;
-			}
 
             if (range != null && type == null)
                 diagnostics.Error(string.Format("The type {0} does not exist.", name), range);

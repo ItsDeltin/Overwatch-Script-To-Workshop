@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<ClassContext> Classes { get; } = new List<ClassContext>();
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
-		public List<TypeAliasContext> TypeAliases {get; } = new List<TypeAliasContext>();
         public List<Hook> Hooks { get; } = new List<Hook>();
         public List<TokenCapture> NodeCaptures { get; set; }
     }
@@ -302,17 +301,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }
-	
-	public class TypeAliasContext : Node
-	{
-		public Token NewTypeName;
-		public Token OtherTypeName;
-
-		public TypeAliasContext(Token newTypeName, Token otherTypeName) {
-			NewTypeName = newTypeName;
-			OtherTypeName = otherTypeName;
-		}
-	}
 
     public class Import
     {
