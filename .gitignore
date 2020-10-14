@@ -13,8 +13,6 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
-animation/python/
-
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
