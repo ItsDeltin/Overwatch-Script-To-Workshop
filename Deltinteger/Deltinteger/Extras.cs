@@ -56,8 +56,6 @@ namespace Deltin.Deltinteger
                 string directory = Path.GetDirectoryName(referenceDirectory);
                 string combined = Path.Combine(directory, file);
                 if (file == "") combined += Path.DirectorySeparatorChar;
-				if(!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-					combined = "/" + combined;
                 return Path.GetFullPath(combined);
             }
             catch (Exception)
@@ -80,10 +78,7 @@ namespace Deltin.Deltinteger
 
         public static Uri Clean(this Uri uri)
         {
-			if(!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-            	return new Uri("/" +uri.FilePath());
-			else 
-				return new Uri(uri.FilePath());
+            return new Uri(uri.FilePath());
         }
 
         public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
