@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Parse
                         // ...and 'type' implements the containing class...
                         && type.Implements(option.Type())
                         // ...and 'type' does not have their own function implementation...
-                        && MethodBuilder.AutoImplemented(option.Type(), options.Select(option => option.Type()).ToArray(), type))
+                        && Deltin.Deltinteger.Parse.FunctionBuilder.VirtualLookupTable.AutoImplemented(option.Type(), options.Select(option => option.Type()).ToArray(), type))
                         // ...then add an additional case for 'type's class identifier.
                     {
                         needsResolve = true;
@@ -81,11 +81,11 @@ namespace Deltin.Deltinteger.Parse
             }
 
             Element expArray = Element.CreateArray(expElements.ToArray());
-            Element resolveArray = Element.CreateArray(resolves.Select(i => new V_Number(i)).ToArray());
-            Element identArray = Element.CreateArray(identifiers.Select(i => new V_Number(i)).ToArray());
+            Element resolveArray = Element.CreateArray(resolves.Select(i => Element.Num(i)).ToArray());
+            Element identArray = Element.CreateArray(identifiers.Select(i => Element.Num(i)).ToArray());
 
             ClassData classData = ActionSet.Translate.DeltinScript.GetComponent<ClassData>();
-            Element classIdentifier = Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), ActionSet.CurrentObject);
+            Element classIdentifier = classData.ClassIndexes.Get()[ActionSet.CurrentObject];
 
             /*
             class A // Class identifier: 5
@@ -118,9 +118,9 @@ namespace Deltin.Deltinteger.Parse
             */
 
             if (needsResolve)
-                return expArray[resolveArray[Element.Part<V_IndexOfArrayValue>(identArray, classIdentifier)]];
+                return expArray[resolveArray[Element.IndexOfArrayValue(identArray, classIdentifier)]];
             else
-                return expArray[Element.Part<V_IndexOfArrayValue>(identArray, classIdentifier)];
+                return expArray[Element.IndexOfArrayValue(identArray, classIdentifier)];
         }
 
         protected abstract IWorkshopTree ParseDefault();

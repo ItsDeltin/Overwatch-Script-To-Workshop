@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Json
                     assigner.Add(p.Var, p.Value.Value);
                 } else
                 {
-                    assigner.Add(p.Var, new V_Null());
+                    assigner.Add(p.Var, Element.Null());
                 }
             }
         }
@@ -61,12 +61,12 @@ namespace Deltin.Deltinteger.Json
         {
             switch (value.Type)
             {
-                case JTokenType.String: return new V_CustomString(value.ToObject<string>());
-                case JTokenType.Boolean: return value.ToObject<bool>() ? (Element)new V_True() : new V_False();
+                case JTokenType.String: return new StringElement(value.ToObject<string>());
+                case JTokenType.Boolean: return value.ToObject<bool>() ? Element.True() : Element.False();
                 case JTokenType.Float:
-                case JTokenType.Integer: return new V_Number(value.ToObject<double>());
+                case JTokenType.Integer: return Element.Num(value.ToObject<double>());
                 default:
-                case JTokenType.Null: return new V_Null();
+                case JTokenType.Null: return Element.Null();
             }
         }
     }
@@ -216,13 +216,12 @@ namespace Deltin.Deltinteger.Json
         public MethodAttributes Attributes { get; }
         public CodeParameter[] Parameters { get; }
         public string Name => "Get";
-        public CodeType ReturnType => null;
+        public CodeType CodeType => null;
         public bool Static => false;
         public bool WholeContext => true;
         public string Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";
         public Deltin.Deltinteger.LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
-        public bool DoesReturnValue => true;
         private JsonType ContainingType { get; }
 
         public GetJsonPropertyFunction(JsonType containingType)
@@ -243,7 +242,7 @@ namespace Deltin.Deltinteger.Json
             Documentation = Documentation
         };
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel("define", Name, Parameters, markdown, Documentation);
+        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => (Element)methodCall.AdditionalParameterData[0];
 

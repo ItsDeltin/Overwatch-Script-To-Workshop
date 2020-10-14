@@ -113,6 +113,14 @@
           "name": "entity.name.type"
         },
         {
+          "match": "\\(",
+          "name": "punctuation.parenthesis.open"
+        },
+        {
+          "match": "\\)",
+          "name": "punctuation.parenthesis.close"
+        },
+        {
           "match": "\\[",
           "name": "punctuation.squarebracket.open"
         },
@@ -131,11 +139,15 @@
         {
           "match": ",",
           "name": "punctuation.separator.comma"
+        },
+        {
+          "match": "=>",
+          "name": "storage.type.function.arrow"
         }
       ]
     },
     "declare-variable": {
-      "begin": "(((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?(?!\\s*\\()",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\\b\\s*)*)(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?(?!\\s*\\()",
       "end": ";",
       "patterns": [
         {
@@ -153,13 +165,13 @@
             }
           ]
         },
-        "9": {
+        "11": {
           "name": "entity.name.variable.field"
         },
-        "10": {
+        "12": {
           "name": "keyword.operator.assignment.ostw"
         },
-        "11": {
+        "13": {
           "name": "keyword.operator.assignment.ostw"
         }
       },
@@ -170,7 +182,7 @@
       }
     },
     "declare-macro-var": {
-      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b\\s*(:)",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive)\\b\\s*)*)(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b\\s*(:)",
       "end": ";",
       "patterns": [
         {
@@ -188,16 +200,16 @@
             }
           ]
         },
-        "9": {
+        "11": {
           "name": "entity.name.variable.property"
         },
-        "10": {
+        "12": {
           "name": "keyword.operator.assignment.ostw"
         }
       }
     },
     "declare-local-variable": {
-      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?",
+      "begin": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?",
       "end": ";",
       "patterns": [
         {
@@ -212,13 +224,13 @@
             }
           ]
         },
-        "6": {
+        "8": {
           "name": "entity.name.variable.local"
         },
-        "7": {
+        "9": {
           "name": "keyword.operator.assignment.ostw"
         },
-        "8": {
+        "10": {
           "name": "keyword.operator.assignment.ostw"
         }
       },
@@ -229,7 +241,7 @@
       }
     },
     "declare-function": {
-      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)?\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive)\\b\\s*)*)(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)?\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "1": {
@@ -242,7 +254,7 @@
             }
           ]
         },
-        "9": {
+        "11": {
           "name": "entity.name.function"
         }
       },
@@ -415,7 +427,7 @@
       ]
     },
     "parameter-declaration": {
-      "match": "(ref\\s+)?(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)",
+      "match": "(ref\\s+)?(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)",
       "captures": {
         "1": {
           "name": "storage.modifier"
@@ -427,7 +439,7 @@
             }
           ]
         },
-        "7": {
+        "9": {
           "name": "variable.parameter"
         }
       }
@@ -452,7 +464,7 @@
       ]
     },
     "set-hook": {
-      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*(.)\\s*([_[:alnum:]]+)\\b\\s*(=)",
+      "begin": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*(.)\\s*([_[:alnum:]]+)\\b\\s*(=)",
       "end": ";",
       "beginCaptures": {
         "1": {
@@ -462,13 +474,13 @@
             }
           ]
         },
-        "6": {
+        "8": {
           "name": "punctuation.accessor"
         },
-        "7": {
+        "9": {
           "name": "support.variable"
         },
-        "8": {
+        "10": {
           "name": "keyword.operator.assignment.ostw"
         }
       },
@@ -484,7 +496,7 @@
       ]
     },
     "rule": {
-      "begin": "\\b(disabled\\b\\s*)?(rule)\\b\\s*(:)\\s*((\\\"(?:[^\"\\\\]|\\\\.)*\\\")|(\\'(?:[^'\\\\]|\\\\.)*\\'))\\s*(-?[0-9]+(\\.[0-9]+)?\\b)?",
+      "begin": "\\s*\\b(disabled\\b\\s*)?(rule)\\b\\s*(:)\\s*((\\\"(?:[^\"\\\\]|\\\\.)*\\\")|(\\'(?:[^'\\\\]|\\\\.)*\\'))\\s*(-?[0-9]+(\\.[0-9]+)?\\b)?",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "1": {
@@ -641,7 +653,7 @@
               ]
             },
             {
-              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b",
+              "match": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b",
               "captures": {
                 "1": {
                   "patterns": [
@@ -650,7 +662,7 @@
                     }
                   ]
                 },
-                "6": {
+                "8": {
                   "name": "entity.name.variable.local"
                 }
               }
@@ -784,7 +796,7 @@
           "include": "#lambda"
         },
         {
-          "match": "(<)\\s*(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*(>)",
+          "match": "(<)\\s*(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*(>)",
           "captures": {
             "1": {
               "name": "punctuation.definition.typeparameters.begin"
@@ -796,7 +808,7 @@
                 }
               ]
             },
-            "7": {
+            "9": {
               "name": "punctuation.definition.typeparameters.end"
             }
           }
@@ -950,7 +962,7 @@
     "lambda": {
       "patterns": [
         {
-          "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b\\s*(=>)",
+          "match": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b\\s*(=>)",
           "captures": {
             "1": {
               "patterns": [
@@ -959,10 +971,10 @@
                 }
               ]
             },
-            "6": {
+            "8": {
               "name": "variable.parameter"
             },
-            "7": {
+            "9": {
               "name": "storage.type.function.arrow"
             }
           }
@@ -988,7 +1000,7 @@
               "include": "#comment"
             },
             {
-              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b",
+              "match": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b",
               "captures": {
                 "1": {
                   "patterns": [
@@ -997,7 +1009,7 @@
                     }
                   ]
                 },
-                "6": {
+                "8": {
                   "name": "variable.parameter"
                 }
               }
@@ -1040,7 +1052,7 @@
         },
         {
           "name": "keyword.operator.arithmetic",
-          "match": "%|\\*|\\/|-|\\+"
+          "match": "%|\\*|\\/|-|\\+|\\^"
         }
       ]
     },

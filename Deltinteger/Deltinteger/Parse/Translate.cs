@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public ScriptTypes Types { get; } = new ScriptTypes();
-        public Scope PlayerVariableScope { get; private set; } = new Scope("player variables");
+        public Scope PlayerVariableScope { get; set; }
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
@@ -39,11 +39,12 @@ namespace Deltin.Deltinteger.Parse
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
-            GlobalScope = Scope.GetGlobalScope();
+            Types.GetDefaults(this);
+
+            GlobalScope = Scope.GetGlobalScope(Types);
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
 
-            Types.GetDefaults(this);
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
             Importer.CollectScriptFiles(translateSettings.Root);            
             
@@ -230,9 +231,6 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            // Setup single-instance methods.
-            foreach (var method in subroutines) method.SetupSubroutine();
-
             // Parse the rules.
             foreach (var rule in rules)
             {
@@ -288,7 +286,7 @@ namespace Deltin.Deltinteger.Parse
                 if (i != WorkshopRules.Count - 1) result.AppendLine();
             }
             
-            WorkshopCode = result.ToString();
+            WorkshopCode = result.GetResult();
         }
 
         public ScriptFile ScriptFromUri(Uri uri) => Importer.ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
@@ -296,13 +294,6 @@ namespace Deltin.Deltinteger.Parse
         private TranslateRule GetInitialRule(bool isGlobal)
         {
             return isGlobal ? InitialGlobal : InitialPlayer;
-        }
-
-        // Subroutine methods
-        private List<DefinedMethod> subroutines = new List<DefinedMethod>();
-        public void AddSubroutine(DefinedMethod method)
-        {
-            subroutines.Add(method);
         }
 
         // Applyable blocks
@@ -319,17 +310,31 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ScriptTypes
+    public class ScriptTypes : ITypeSupplier
     {
         public List<CodeType> AllTypes { get; } = new List<CodeType>();
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
         public List<CodeType> CalledTypes { get; } = new List<CodeType>();
+        private readonly PlayerType _playerType;
+
+        public ScriptTypes()
+        {
+            _playerType = new PlayerType();
+        }
 
         public void GetDefaults(DeltinScript deltinScript)
         {
+            var dynamicType = new DynamicType(deltinScript);
+            AllTypes.Add(_playerType);
             AllTypes.AddRange(CodeType.DefaultTypes);
             AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
             AllTypes.Add(new Pathfinder.PathResolveClass());
+            AllTypes.Add(dynamicType);
+            AllTypes.Add(new Lambda.ValueBlockLambda(dynamicType));
+            AllTypes.Add(new Lambda.MacroLambda(dynamicType));
+
+            _playerType.ResolveElements();
+            deltinScript.PlayerVariableScope = _playerType.ObjectScope;
         }
 
         public CodeType GetCodeType(string name) => AllTypes.FirstOrDefault(type => type.Name == name);
@@ -366,6 +371,19 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
+
+        public CodeType Default() => Any();
+        public CodeType Any() => GetInstance<DynamicType>();
+        public CodeType AnyArray() => new ArrayType(this, Any());
+        public CodeType Boolean() => GetInstance<BooleanType>();
+        public CodeType Number() => GetInstance<NumberType>();
+        public CodeType String() => GetInstance<StringType>();
+        public CodeType Player() => _playerType;
+        public CodeType Players() => new PipeType(_playerType, PlayerArray());
+        public CodeType PlayerArray() => new ArrayType(this, _playerType);
+        public CodeType Vector() => VectorType.Instance;
+        public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
+        public CodeType Button() => Any(); // TODO
     }
 
     public interface IComponent

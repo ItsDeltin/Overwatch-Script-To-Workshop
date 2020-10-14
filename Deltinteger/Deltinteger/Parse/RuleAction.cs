@@ -39,11 +39,13 @@ namespace Deltin.Deltinteger.Parse
             Conditions = new IExpression[ruleContext.Conditions.Count];
             for (int i = 0; i < Conditions.Length; i++)
             {
-                parseInfo.Script.AddCompletionRange(new CompletionRange(
-                    scope,
-                    ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range,
-                    CompletionRangeKind.Catch
-                ));
+                // Make sure both left and right parentheses exists.
+                if (ruleContext.Conditions[i].LeftParen && ruleContext.Conditions[i].RightParen)
+                    parseInfo.Script.AddCompletionRange(new CompletionRange(
+                        scope,
+                        ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range,
+                        CompletionRangeKind.Catch
+                    ));
 
                 Conditions[i] = parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression);
             }
@@ -56,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the rule order priority.
             if (ruleContext.Order != null)
-                Priority = double.Parse(ruleContext.Order.Text);
+                Priority = ruleContext.Order.Value;
             
             ElementCountLens = new ElementCountCodeLens(ruleInfoRange, parseInfo.TranslateInfo.OptimizeOutput);
             parseInfo.Script.AddCodeLensRange(ElementCountLens);
@@ -128,11 +130,13 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private static T GetMember<T>(string groupName, string name, FileDiagnostics diagnostics, DocRange range)
+        private static T GetMember<T>(string groupName, string name, FileDiagnostics diagnostics, DocRange range) where T: Enum
         {
-            foreach (var m in EnumData.GetEnum<T>().Members)
-                if (name == m.CodeName)
-                    return (T)m.Value;
+            var elementEnum = ElementRoot.Instance.GetEnum(groupName);
+
+            foreach (var m in elementEnum.Members)
+                if (name == m.CodeName())
+                    return m.ToEnum<T>();
                 
             diagnostics.Error("Invalid " + groupName + " value.", range);
             return default(T);
@@ -153,14 +157,13 @@ namespace Deltin.Deltinteger.Parse
             ));
         }
 
-        private static readonly CompletionItem[] EventItems = GetItems<RuleEvent>("Event");
-        private static readonly CompletionItem[] TeamItems = GetItems<Team>("Team");
-        private static readonly CompletionItem[] PlayerItems = GetItems<PlayerSelector>("Player");
+        private static readonly CompletionItem[] EventItems = GetItems(ElementRoot.Instance.GetEnum("Event"));
+        private static readonly CompletionItem[] TeamItems = GetItems(ElementRoot.Instance.GetEnum("Team"));
+        private static readonly CompletionItem[] PlayerItems = GetItems(ElementRoot.Instance.GetEnum("Player"));
 
-        private static CompletionItem[] GetItems<T>(string tag) => EnumData.GetEnum<T>()
-            .Members.Select(m => new CompletionItem() {
-                Label = m.CodeName,
-                Detail = m.CodeName,
+        private static CompletionItem[] GetItems(ElementEnum elementEnum) => elementEnum.Members.Select(m => new CompletionItem() {
+                Label = m.CodeName(),
+                Detail = m.CodeName(),
                 //Detail = new MarkupBuilder().StartCodeLine().Add(tag + "." + m.CodeName).ToString(),
                 Kind = CompletionItemKind.Constant
             }).ToArray();

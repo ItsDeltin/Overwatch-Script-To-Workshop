@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public int TokenCount => Lexer.Tokens.Count;
         public bool IsFinished => Token >= Lexer.Tokens.Count;
 
-        public Stack<OperatorInfo> Operators { get; } = new Stack<OperatorInfo>();
+        public Stack<IOperatorInfo> Operators { get; } = new Stack<IOperatorInfo>();
         public Stack<IParseExpression> Operands { get; } = new Stack<IParseExpression>();
         public Stack<TokenCapture> TokenCaptureStack { get; } = new Stack<TokenCapture>();
         public Stack<int> TokenRangeStart { get; } = new Stack<int>();
@@ -83,7 +83,25 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return node;
         }
 
-        void Discard() => TokenRangeStart.Pop();
+        T EndNodeWithoutPopping<T>(T node) where T: INodeRange
+        {
+            if (LookaheadDepth == 0)
+                node.Range = new DocRange(Lexer.Tokens[TokenRangeStart.Peek()].Range.Start, CurrentOrLast.Range.End);
+            return node;
+        }
+
+        T EndNodeFrom<T>(T node, DocPos start) where T: INodeRange
+        {
+            if (LookaheadDepth == 0)
+                node.Range = start + CurrentOrLast.Range.End;
+            return node;
+        }
+
+        void PopNodeStack()
+        {
+            if (LookaheadDepth == 0)
+                TokenRangeStart.Pop();
+        }
 
         T Node<T>(Func<T> func) where T: Node
         {
@@ -230,7 +248,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         void Unexpected(bool root)
         {
-            if (root || Kind.IsSkippable())
+            if ((root || Kind.IsSkippable()) && Kind != TokenType.EOF)
                 AddError(new UnexpectedToken(Consume()));
         }
 
@@ -249,54 +267,62 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         // Operators
-        void PushOperator(OperatorInfo op)
+        void PushOperator(IOperatorInfo op)
         {
-            while (CompilerOperator.Compare(Operators.Peek().Operator, op.Operator))
+            while (CompilerOperator.Compare(Operators.Peek().Source, op.Source))
                 PopOperator();
             Operators.Push(op);
         }
 
         void PopOperator()
         {
-            var op = Operators.Pop();
-            // Binary
-            if (op.Type == OperatorType.Binary)
+            var iop = Operators.Pop();
+            if (iop is OperatorInfo op)
             {
-                var right = Operands.Pop();
-                var left = Operands.Pop();
-                Operands.Push(new BinaryOperatorExpression(left, right, op));
-            }
-            // Unary
-            else if (op.Type == OperatorType.Unary)
-            {
-                var value = Operands.Pop();
-                Operands.Push(new UnaryOperatorExpression(value, op));
-            }
-            // Extraneous left-hand ternary
-            else if (op.Type == OperatorType.TernaryLeft)
-            {
-                Operands.Pop();
-                AddError(new MissingTernaryHand(op.Token, false));
-            }
-            // Ternary
-            else if (op.Type == OperatorType.TernaryRight)
-            {
-                if (Operators.Peek().Type == OperatorType.TernaryLeft)
+                // Binary
+                if (op.Type == OperatorType.Binary)
                 {
-                    var op2 = Operators.Pop();
-                    var rhs = Operands.Pop();
-                    var middle = Operands.Pop();
-                    var lhs = Operands.Pop();
-                    Operands.Push(new TernaryExpression(lhs, middle, rhs));
+                    var right = Operands.Pop();
+                    var left = Operands.Pop();
+                    Operands.Push(new BinaryOperatorExpression(left, right, op));
                 }
-                // Missing left-hand ?
-                else
+                // Unary
+                else if (op.Type == OperatorType.Unary)
+                {
+                    var value = Operands.Pop();
+                    Operands.Push(new UnaryOperatorExpression(value, op));
+                }
+                // Extraneous left-hand ternary
+                else if (op.Type == OperatorType.TernaryLeft)
                 {
                     Operands.Pop();
-                    AddError(new MissingTernaryHand(op.Token, true));
+                    AddError(new MissingTernaryHand(op.Token, false));
                 }
+                // Ternary
+                else if (op.Type == OperatorType.TernaryRight)
+                {
+                    if (Operators.Peek() is OperatorInfo peek && peek.Type == OperatorType.TernaryLeft)
+                    {
+                        var op2 = Operators.Pop();
+                        var rhs = Operands.Pop();
+                        var middle = Operands.Pop();
+                        var lhs = Operands.Pop();
+                        Operands.Push(new TernaryExpression(lhs, middle, rhs));
+                    }
+                    // Missing left-hand ?
+                    else
+                    {
+                        Operands.Pop();
+                        AddError(new MissingTernaryHand(op.Token, true));
+                    }
+                }
+                else throw new NotImplementedException();
             }
-            else throw new NotImplementedException();
+            else if (iop is TypeCastInfo typeCastOp)
+            {
+                var value = Operands.Pop();
+                Operands.Push(EndNodeFrom(new TypeCast(typeCastOp.CastingTo, value), typeCastOp.StartPosition));
+            }
         }
 
         bool TryParseBinaryOperator(out OperatorInfo operatorInfo)
@@ -342,20 +368,63 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         // Expressions
+        NumberExpression ParseNumber()
+        {
+            StartNode();
+
+            // Negative number.
+            bool negative = ParseOptional(TokenType.Subtract);
+
+            // Get the number.
+            Token numberToken = ParseExpected(TokenType.Number);
+
+            // Parse the value.
+            double value = 0;
+            if (numberToken)
+            {
+                value = double.Parse(numberToken.Text);
+                if (negative) value = -value;
+            }
+
+            // Done.
+            return EndNode(new NumberExpression(value));
+        }
+
+        bool IsNumber() => Is(TokenType.Number) || (Is(TokenType.Subtract) && Is(TokenType.Number, 1));
+
         /// <summary>Parses the current expression. In most cases, 'GetContainExpression' should be called instead.</summary>
         /// <returns>The resulting expression.</returns>
         public IParseExpression GetExpressionWithArray()
         {
             IParseExpression expression = GetSubExpression();
+            return GetArrayAndInvokes(expression);
+        }
 
-            // Get the array index.
-            while (ParseOptional(TokenType.SquareBracket_Open))
+        public IParseExpression GetArrayAndInvokes(IParseExpression expression)
+        {
+            while (true)
             {
-                IParseExpression index = GetContainExpression();
-                // End the closing square bracket.
-                ParseExpected(TokenType.SquareBracket_Close);
-                // Update the expression.
-                expression = new ValueInArray(expression, index, Lexer.Tokens[Token - 1]);
+                // Get the array index.
+                if (ParseOptional(TokenType.SquareBracket_Open))
+                {
+                    IParseExpression index = GetContainExpression();
+                    // End the closing square bracket.
+                    ParseExpected(TokenType.SquareBracket_Close);
+                    // Update the expression.
+                    expression = EndNodeFrom(new ValueInArray(expression, index, Lexer.Tokens[Token - 1]), expression.Range.Start);
+                }
+                // Invoke
+                else if (ParseOptional(TokenType.Parentheses_Open))
+                {
+                    // Parse parameters.
+                    var values = ParseParameterValues();
+                    // End the parentheses.
+                    ParseExpected(TokenType.Parentheses_Close);
+                    // Update the expression.
+                    expression = EndNodeFrom(new FunctionExpression(expression, values), expression.Range.Start);
+                }
+                // No more array indices or invocations.
+                else break;
             }
             return expression;
         }
@@ -364,20 +433,24 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             switch (Kind)
             {
+                // Negative number or unary operator
+                case TokenType.Subtract:
+                    if (IsNumber()) return ParseNumber();
+                    goto case TokenType.Exclamation;
+
                 // Unary operator
                 case TokenType.Exclamation:
-                case TokenType.Subtract:
                     var op = ParseUnaryOperator();
                     PushOperator(op);
                     var value = GetExpressionWithArray();
                     Operands.Push(value);
                     return value;
                 
+                // Numbers
+                case TokenType.Number: return ParseNumber();
                 // Booleans
                 case TokenType.True: return new BooleanExpression(Consume(), true);
                 case TokenType.False: return new BooleanExpression(Consume(), false);
-                // Numbers
-                case TokenType.Number: return new NumberExpression(Consume());
                 // Strings
                 case TokenType.String: return Node(() => new StringExpression(null, Consume()));
                 // Localized strings
@@ -407,7 +480,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     
                     // Functions and identifiers
                     else if (Is(TokenType.Identifier))
-                        return IdentifierOrFunction();
+                        return Identifier();
                     
                     // Expression group.
                     else if (Is(TokenType.Parentheses_Open))
@@ -437,7 +510,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         /// <summary>Contains the operator stack and parses an expression.</summary>
         /// <returns>The resulting expression.</returns>
-        public IParseExpression GetContainExpression(bool stringCheck = false)
+        IParseExpression GetContainExpression(bool stringCheck = false)
         {
             StringCheck.Push(stringCheck);
             TernaryCheck.Push(false);
@@ -454,7 +527,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         /// <summary>Parses an identifier or a function.</summary>
         /// <returns>An 'Identifier' or 'FunctionExpression'.</returns>
-        public IParseExpression IdentifierOrFunction()
+        public IParseExpression Identifier()
         {
             StartNode();
             Token identifier = ParseExpected(TokenType.Identifier);
@@ -468,31 +541,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 indices.Add(new ArrayIndex(expression, left, right));
             }
 
-            // Match parentheses start.
-            if (indices.Count != 0 || ParseOptional(TokenType.Parentheses_Open) == null)
-                return EndNode(MakeIdentifier(identifier, indices));
-            else
-            {
-                // Parse parameters.
-                var values = ParseParameterValuesIfNotClosing();
-                ParseExpected(TokenType.Parentheses_Close);
-
-                // Return function
-                return EndNode(new FunctionExpression(identifier, values));
-            }
+            return EndNode(MakeIdentifier(identifier, indices));
         }
-
-        public List<ParameterValue> ParseParameterValuesIfNotClosing() => Is(TokenType.Parentheses_Close) ? new List<ParameterValue>() : ParseParameterValues();
 
         /// <summary>Parses the inner parameter values of a function.</summary>
         /// <returns></returns>
-        public List<ParameterValue> ParseParameterValues()
+        List<ParameterValue> ParseParameterValues()
         {
-            // Get the parameters.
-            List<ParameterValue> values = new List<ParameterValue>();
-            bool getValues = true;
-            while (getValues)
-            {
+            if (Is(TokenType.Parentheses_Close)) return new List<ParameterValue>();
+            return ParseDelimitedList(TokenType.Parentheses_Close, IsStartOfExpression, () => {
                 // Get the picky parameter name.
                 Token pickyName = null;
 
@@ -506,36 +563,98 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Get the expression.
                 var expression = GetContainExpression();
 
-                // If the next token is a comma, loop.
-                getValues = ParseOptional(TokenType.Comma, out Token comma);
-
                 // Add the parameter.
-                values.Add(new ParameterValue(pickyName, expression, comma));
+                return new ParameterValue(pickyName, expression);
+            });
+        }
+
+        List<T> ParseDelimitedList<T>(TokenType terminator, Func<bool> elementDeterminer, Func<T> parseElement) 
+        {
+            var values = new List<T>();
+
+            while (true)
+            {
+                if (elementDeterminer())
+                {
+                    int s = Token;
+
+                    T lastElement = parseElement();
+                    values.Add(lastElement);
+
+                    if (ParseOptional(TokenType.Comma, out Token comma))
+                    {
+                        if (lastElement is IListComma listComma) listComma.NextComma = comma;
+                        continue;
+                    }
+
+                    // Stop parsing list if this is the terminator.
+                    if (Is(terminator))
+                        break;
+                    
+                    // There is a missing comma or terminator.
+                    ParseExpected(TokenType.Comma);
+
+                    // No tokens were consumed.
+                    if (s == Token)
+                    {
+                        // If the current token cannot be skipped, stop parsing elements.
+                        if (!Kind.IsSkippable())
+                            break;
+                        // Otherwise, consume the current token then continue.
+                        else
+                            Consume();
+                    }
+                    continue;
+                }
+
+                if (Is(terminator))
+                    break;
+                
+                // If the current token cannot be skipped, stop parsing elements.
+                if (!Kind.IsSkippable())
+                    break;
+                // Otherwise, consume the current token.
+                else
+                    Unexpected(false);
             }
 
             return values;
         }
 
-        // Statements and blocks
-        bool TryParseStatementOrBlock(out IParseStatement statement)
+        List<T> ParseList<T>(TokenType terminator, Func<bool> isElement, Func<T> parseElement)
         {
-            // Parse a block if the current token is a curly bracket.
-            if (Is(TokenType.CurlyBracket_Open))
+            var elements = new List<T>();
+            while (!Is(terminator))
             {
-                statement = ParseBlock();
-                return true;
-            }
+                if (isElement())
+                {
+                    int s = Token;
 
-            // If the next token is a block finisher, return false.
-            if (Is(TokenType.CurlyBracket_Close))
-            {
-                statement = null;
-                return false;
-            }
+                    // Parse the element.
+                    elements.Add(parseElement());
 
-            // Parse the next statement.
-            statement = ParseStatement();
-            return statement is MissingElement == false;
+                    // No tokens were consumed.
+                    if (s == Token)
+                    {
+                        // If the current token cannot be skipped, stop parsing elements.
+                        if (!Kind.IsSkippable())
+                            break;
+                        // Otherwise, consume the current token then continue.
+                        else
+                            Consume();
+                    }
+                }
+                else
+                {
+                    // If the current token cannot be skipped, stop parsing elements.
+                    if (!Kind.IsSkippable())
+                        break;
+                    // Otherwise, consume the current token.
+                    else
+                        Unexpected(false);
+                }
+            }
+            return elements;
         }
 
         /// <summary>Parses a block.</summary>
@@ -548,14 +667,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Open block
             ParseExpected(TokenType.CurlyBracket_Open);
 
-            // List of statements in the block.
-            var statements = new List<IParseStatement>();
-            while (TryParseStatementOrBlock(out var statement)) statements.Add(statement);
+            // List of statements in the block
+            var statements = ParseList(TokenType.CurlyBracket_Close, () => Kind.IsStartOfStatement(), () => ParseStatement());
 
             // Close block
             ParseExpected(TokenType.CurlyBracket_Close);
 
-            // Create the block.
+            // Create the block
             var result = new Block(statements);
 
             EndTokenCapture(result);
@@ -602,7 +720,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Default if the current token is a semicolon.
             if (ParseOptionalSemicolon(parseSemicolon))
             {
-                Discard();
+                PopNodeStack();
                 return ExpressionStatement(expression, comment);
             }
             
@@ -636,7 +754,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Default
             else
             {
-                Discard();
+                PopNodeStack();
                 result = ExpressionStatement(expression, comment);
                 ParseSemicolon(parseSemicolon);
                 return result;
@@ -667,7 +785,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (GetIncrementalNode(out Return ret)) return EndTokenCapture(ret);
 
             var returnToken = ParseExpected(TokenType.Return);
-            var expression = GetContainExpression();
+            IParseExpression expression = null;
+            // Get the value being returned if the next token is not a semicolon.
+            if (!Is(TokenType.Semicolon)) expression = GetContainExpression();
+            // Parse the semicolon.
             ParseSemicolon();
             return EndTokenCapture(new Return(returnToken, expression));
         }
@@ -871,29 +992,104 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndNode(new Delete(expression));
         }
 
-        ParseType ParseType()
+        IParseType ParseType()
         {
             StartNode();
 
             if (ParseOptional(TokenType.Void, out var @void))
                 return EndNode(new ParseType(@void));
 
-            // Get the type name.
-            var identifier = ParseExpected(TokenType.Identifier, TokenType.Define);
-
-            var typeArgs = new List<ParseType>();
-
-            // Get the type arguments.
-            if (ParseOptional(TokenType.LessThan))
+            // If we parse a parentheses, we can assume this is a lambda type.
+            if (!ParseOptional(TokenType.Parentheses_Open))
             {
-                do {
-                    typeArgs.Add(ParseType());
+                // No parentheses found.
+                // This is either a normal type or a lambda with a single parameter.
+
+                // Get the type name.
+                var identifier = ParseExpected(TokenType.Identifier, TokenType.Define);
+
+                // No arrow, parse the type normally.
+                var typeArgs = new List<IParseType>();
+
+                // Get the type arguments.
+                if (ParseOptional(TokenType.LessThan))
+                {
+                    do typeArgs.Add(ParseType());
+                    while (ParseOptional(TokenType.Comma));
+
+                    ParseExpected(TokenType.GreaterThan);
                 }
-                while (ParseOptional(TokenType.Comma));
 
-                ParseExpected(TokenType.GreaterThan);
+                // Get the array indices
+                int arrayCount = ParseTypeArray();
+                
+                IParseType result = EndNodeWithoutPopping(new ParseType(identifier, typeArgs, arrayCount));
+
+                // Get pipe
+                while (ParseOptional(TokenType.Pipe))
+                {
+                    IParseType right = ParseType();
+                    result = EndNodeWithoutPopping(new PipeTypeContext(result, right));
+                }
+
+                // If we parse an arrow, this is a lambda type with a single parameter.
+                if (!ParseOptional(TokenType.Arrow, out Token arrow))
+                {
+                    PopNodeStack();
+                    return result;
+                }
+                // Lambda type
+                else
+                {
+                    // Parse the lambda's return type.
+                    var returnType = ParseType();
+                    return EndNode(new LambdaType(result, returnType, arrow));
+                }
             }
+            else // This is a lambda with parenthesized parameters.
+            {
+                // Get the parameter types.
+                var parameterTypes = ParseDelimitedList(TokenType.Parentheses_Close, () => Kind.IsStartOfType(), () => ParseType());
 
+                // End the type list parentheses.
+                ParseExpected(TokenType.Parentheses_Close);
+
+                Token arrow = null;
+                bool isLambda;
+
+                // If an arrow is required, parse the expected arrow.
+                if (parameterTypes.Count != 1)
+                {
+                    arrow = ParseExpected(TokenType.Arrow);
+                    isLambda = true;
+                }
+                // Otherwise, parse the optional arrow.
+                else isLambda = ParseOptional(TokenType.Arrow, out arrow);
+
+                // Parse lambda type.
+                if (isLambda)
+                {
+                    // Get the return type.
+                    var returnType = ParseType();
+
+                    // Done.
+                    return EndNode(new LambdaType(parameterTypes, returnType, arrow));
+                }
+                else
+                {
+                    IParseType child = parameterTypes[0];
+
+                    // Get the array indices
+                    int arrayCount = ParseTypeArray();
+
+                    // Done.
+                    return EndNode(new GroupType(child, arrayCount));
+                }
+            }
+        }
+
+        int ParseTypeArray()
+        {
             // Get the array indices
             int arrayCount = 0;
             while (ParseOptional(TokenType.SquareBracket_Open))
@@ -901,14 +1097,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 ParseExpected(TokenType.SquareBracket_Close);
                 arrayCount++;
             }
-            
-            return EndNode(new ParseType(identifier, typeArgs, arrayCount));
+            return arrayCount;
         }
 
         bool IsDeclaration(bool functionDeclaration) => Lookahead(() => {
             ParseAttributes();
             var typeParse = ParseType();
-            return typeParse.LookaheadValid && (typeParse.DefinitelyType || (ParseExpected(TokenType.Identifier) && (
+            return typeParse.LookaheadValid && (ParseExpected(TokenType.Identifier) && (
                 // This is a declaration if the following token is:
                 Is(TokenType.Semicolon) ||   // End declaration statement.
                 Is(TokenType.Equal) ||       // Initial value.
@@ -917,7 +1112,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 Is(TokenType.Colon) ||       // Macro variable value.
                 (functionDeclaration && Is(TokenType.Parentheses_Open)) || // Function parameter start.
                 IsFinished                   // EOF was reached.
-            )));
+            ));
         });
 
         bool IsConstructor() => Lookahead(() => {
@@ -960,9 +1155,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Parse the parameters.
                 do
                 {
-                    // Parse the lambda parameter's type and identifier.
                     ParseType();
-                    ParseExpected(TokenType.Identifier);
+                    ParseOptional(TokenType.Identifier);
                 }
                 // Keep parsing while a comma is matched.
                 while (ParseOptional(TokenType.Comma));
@@ -976,8 +1170,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             else
             {
                 // A lambda without an opening parentheses has a single parameter.
-                // Parse the parameter type and identifier.
-                ParseType();
                 ParseExpected(TokenType.Identifier);
                 // This is a lambda if the following token is an arrow.
                 return ParseExpected(TokenType.Arrow);
@@ -991,26 +1183,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return parsedAny && Is(TokenType.Equal);
         });
 
-        bool IsStartOfParameter() => Is(TokenType.Ref) || Is(TokenType.Define) || Is(TokenType.Identifier);
+        bool IsStartOfParameter() => Is(TokenType.Ref) || Kind.IsStartOfType();
+
+        bool IsStartOfExpression() => Kind.IsStartOfExpression() || Kind.IsBinaryOperator();
 
         LambdaExpression ParseLambda()
         {
             StartNode();
 
             // Get the parameters.
-            var parameters = new List<LambdaParameter>();
+            List<LambdaParameter> parameters;
 
             // Parenthesized parameters.
             if (ParseOptional(TokenType.Parentheses_Open))
             {
-                if (!Is(TokenType.Parentheses_Close))
-                    do
-                    {
-                        var type = ParseType();
-                        var identifier = ParseExpected(TokenType.Identifier);
-                        parameters.Add(new LambdaParameter(type, identifier));
-                    }
-                    while (ParseOptional(TokenType.Comma));
+                parameters = ParseDelimitedList(TokenType.Parentheses_Close, () => Kind.IsStartOfType(), ParseLambdaParameter);
 
                 // Close the parentheses.
                 ParseExpected(TokenType.Parentheses_Close);
@@ -1018,9 +1205,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Single parameter
             else
             {
-                var type = ParseType();
-                var identifier = ParseExpected(TokenType.Identifier);
-                parameters.Add(new LambdaParameter(type, identifier));
+                parameters = new List<LambdaParameter>();
+                parameters.Add(new LambdaParameter(null, ParseExpected(TokenType.Identifier)));
             }
 
             // Arrow.
@@ -1031,6 +1217,27 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Done.
             return EndNode(new LambdaExpression(parameters, arrow, statement));
+        }
+
+        LambdaParameter ParseLambdaParameter()
+        {
+            StartNode();
+            Token identifier;
+            var type = ParseType();
+            
+            // If the parsed type is *definitely* a type, parse an expected identifier.
+            if (type.DefinitelyType)
+                identifier = ParseExpected(TokenType.Identifier);
+            // Otherwise, parse an optional identifier.
+            else if (!ParseOptional(TokenType.Identifier, out identifier))
+            {
+                // If no identifier is parsed, set the identifier to the type's identifier.
+                identifier = type.GenericToken;
+                // The type is actually the identifier, so set the type to null.
+                type = null;
+            }
+
+            return EndNode(new LambdaParameter(type, identifier));
         }
 
         List<VariableDeclaration> ParseParameters()
@@ -1152,10 +1359,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // End the parentheses.
             ParseExpected(TokenType.Parentheses_Close);
 
+            Token subroutineName = ParseOptional(TokenType.String);
+
             // Get the constructor's block.
             Block block = ParseBlock();
 
-            return new ConstructorContext(attributes, identifier, parameters, block);
+            return new ConstructorContext(attributes, identifier, parameters, subroutineName, block);
         }
 
         NewExpression ParseNew()
@@ -1170,7 +1379,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.Parentheses_Open);
 
             // Parse the parameters.
-            List<ParameterValue> parameterValues = ParseParameterValuesIfNotClosing();
+            List<ParameterValue> parameterValues = ParseParameterValues();
 
             // End the parentheses.
             ParseExpected(TokenType.Parentheses_Close);
@@ -1213,9 +1422,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndNode(new ExpressionGroup(expression, left, right));
         }
 
-        TypeCast ParseTypeCast()
+        IParseExpression ParseTypeCast()
         {
-            StartNode();
+            DocPos startPosition = Current.Range.Start;
+
             // Parse the opening angled bracket.
             ParseExpected(TokenType.LessThan);
             
@@ -1225,11 +1435,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Parse the closing angled bracket.
             ParseExpected(TokenType.GreaterThan);
 
-            // Parse the expression.
-            var expression = GetContainExpression();
+            PushOperator(new TypeCastInfo(type, startPosition));
 
-            // Done.
-            return EndNode(new TypeCast(type, expression));
+            var value = GetExpressionWithArray();
+            Operands.Push(value);
+            return value;
         }
 
         StringExpression ParseFormattedString()
@@ -1319,7 +1529,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.Colon);
 
             Token name = ParseExpected(TokenType.String);
-            Token order = ParseOptional(TokenType.Number);
+            NumberExpression order = null;
+            if (IsNumber()) order = ParseNumber();
 
             // Get the rule options.
             var settings = new List<RuleSetting>();
@@ -1481,7 +1692,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new Hook(variableExpression, variableValue);
         }
 
-        Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices) => new Identifier(identifier, indices);
+        public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices) => new Identifier(identifier, indices);
         MissingElement MissingElement() => new MissingElement(CurrentOrLast.Range);
         IParseStatement ExpressionStatement(IParseExpression expression, Token actionComment)
         {

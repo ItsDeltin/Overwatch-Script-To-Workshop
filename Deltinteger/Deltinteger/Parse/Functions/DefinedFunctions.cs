@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
     public abstract class DefinedFunction : IMethod, ICallable, IApplyBlock
     {
         public string Name { get; }
-        public CodeType ReturnType { get; protected set; }
+        public CodeType CodeType { get; protected set; }
         public CodeParameter[] Parameters { get; private set; }
         public AccessLevel AccessLevel { get; protected set; }
         public Location DefinedAt { get; }
@@ -23,7 +23,6 @@ namespace Deltin.Deltinteger.Parse
         protected Scope methodScope { get; private set; }
         protected Scope containingScope { get; private set; }
         public Var[] ParameterVars { get; private set; }
-        public bool DoesReturnValue { get; protected set; }
 
         public CallInfo CallInfo { get; }
 
@@ -46,6 +45,7 @@ namespace Deltin.Deltinteger.Parse
         protected void SetupScope(Scope chosenScope)
         {
             methodScope = chosenScope.Child();
+            methodScope.CatchConflict = true;
             containingScope = chosenScope;
         }
 
@@ -64,12 +64,10 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
-            parseInfo.CurrentCallInfo.Call(_recursiveCallHandler, callRange);
+            parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
         }
-
-        protected virtual IRecursiveCallHandler GetRecursiveCallHandler() => null;
-
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
+        
+        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
 

@@ -39,6 +39,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the imported files.
             foreach (var importFileContext in scriptFile.Context.Imports)
+            if (importFileContext.File)
             {
                 string directory = GetImportedFile(scriptFile, importer, importFileContext);
                 if (Directory.Exists(directory))
@@ -160,7 +161,7 @@ namespace Deltin.Deltinteger.Parse
                                 script.Diagnostics.Error("JSON Arrays cannot include objects or arrays.", stringRange);
 
                             _deltinScript.RulesetScope.AddVariable(jsonVar, script.Diagnostics, importFileContext.Identifier.Range);
-                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, new V_Null());                            
+                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, Element.Null());                            
                             break;
                     }
 

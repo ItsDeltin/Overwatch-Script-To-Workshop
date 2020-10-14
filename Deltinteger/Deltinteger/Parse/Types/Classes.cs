@@ -159,7 +159,7 @@ Object-serve scope. Only object members.
 
             foreach (ObjectVariable objectVariable in ObjectVariables)
                 actionSet.AddAction(objectVariable.ArrayStore.SetVariable(
-                    value: new V_Number(0),
+                    value: 0,
                     index: reference
                 ));
         }
@@ -243,7 +243,7 @@ Object-serve scope. Only object members.
         public IndexReference Spot(Element reference) => ArrayStore.CreateChild(reference);
 
         /// <summary>Gets the value from a reference.</summary>
-        public Element Get(Element reference) => Element.Part<V_ValueInArray>(ArrayStore.GetVariable(), reference);
+        public Element Get(Element reference) => ArrayStore.Get()[reference];
 
         /// <summary>Gets the value from the current context's object reference.</summary>
         public Element Get(ActionSet actionSet) => Get((Element)actionSet.CurrentObject);
@@ -279,10 +279,7 @@ Object-serve scope. Only object members.
         public void GetClassIndex(int classIdentifier, IndexReference classReference, ActionSet actionSet)
         {
             actionSet.AddAction(classReference.SetVariable(
-                Element.Part<V_IndexOfArrayValue>(
-                    ClassIndexes.GetVariable(),
-                    new V_Number(0)
-                )
+                Element.IndexOfArrayValue(ClassIndexes.Get(), 0)
             ));
             actionSet.AddAction(ClassIndexes.SetVariable(
                 classIdentifier,

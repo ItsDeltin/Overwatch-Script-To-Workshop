@@ -281,6 +281,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Parentheses_Open:
                 case TokenType.CurlyBracket_Close:
                 case TokenType.CurlyBracket_Open:
+                case TokenType.EOF:
                     return false;
                 
                 default:
@@ -298,7 +299,44 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Null:
                 case TokenType.Number:
                 case TokenType.True:
+                case TokenType.This:
+                case TokenType.Root:
+                case TokenType.String:
                 case TokenType.Parentheses_Open:
+                case TokenType.SquareBracket_Open:
+                // Unary
+                case TokenType.Subtract:
+                case TokenType.Exclamation:
+                // Type cast
+                case TokenType.LessThan:
+                    return true;
+                
+                default:
+                    return tokenType.IsStartOfType(); // Lambdas
+            }
+        }
+
+        public static bool IsBinaryOperator(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Add:
+                case TokenType.And:
+                case TokenType.Divide:
+                case TokenType.Dot:
+                case TokenType.Equal:
+                case TokenType.GreaterThan:
+                case TokenType.GreaterThanOrEqual:
+                case TokenType.Hat:
+                case TokenType.LessThan:
+                case TokenType.LessThanOrEqual:
+                case TokenType.Modulo:
+                case TokenType.Multiply:
+                case TokenType.NotEqual:
+                case TokenType.Or:
+                case TokenType.QuestionMark:
+                case TokenType.Squiggle:
+                case TokenType.Subtract:
                     return true;
                 
                 default:
@@ -306,10 +344,54 @@ namespace Deltin.Deltinteger.Compiler
             }
         }
 
+        public static bool IsStartOfType(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Parentheses_Open:
+                case TokenType.Identifier:
+                case TokenType.Define:
+                case TokenType.Void:
+                    return true;
+                
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsStartOfStatement(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Break:
+                case TokenType.Case:
+                case TokenType.Continue:
+                case TokenType.CurlyBracket_Open:
+                case TokenType.Default:
+                case TokenType.Delete:
+                case TokenType.Else:
+                case TokenType.For:
+                case TokenType.Foreach:
+                case TokenType.If:
+                case TokenType.New:
+                case TokenType.Return:
+                case TokenType.Semicolon:
+                case TokenType.Switch:
+                case TokenType.While:
+                    return true;
+                
+                default:
+                    return tokenType.IsStartOfType() || tokenType.IsStartOfExpression();
+            }
+        }
+
         public static bool IsAssignmentOperator(this TokenType tokenType) => Assignment_Tokens.Contains(tokenType);
 
         /// <summary>Gets the token's text. If the token is null, "?" is returned.</summary>
         public static string GetText(this Token token) => token ? token.Text : "?";
+
+        /// <summary>Gets the token's range. If the token is null, the fallback is used.</summary>
+        public static DocRange GetRange(this Token token, DocRange fallback) => token ? token.Range : fallback;
     }
 
     public enum TokenType
@@ -353,6 +435,7 @@ namespace Deltin.Deltinteger.Compiler
         // Boolean
         And,
         Or,
+        Pipe,
         // Generic expressions
         String,
         Number,

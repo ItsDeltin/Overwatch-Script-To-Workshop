@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Debugger
         {
             int[] index = new int[value.Index.Length];
             for (int i = 0; i < index.Length; i++)
-                if (value.Index[i] is V_Number number)
+                if (value.Index[i] is NumberElement number)
                     index[i] = (int)number.Value;
                 else
                     return;

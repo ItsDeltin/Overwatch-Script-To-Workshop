@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly ClassContext _typeContext;
         private readonly List<Var> staticVariables = new List<Var>();
 
-        public DefinedType(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.Text)
+        public DefinedType(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
             this._typeContext = typeContext;
             this._parseInfo = parseInfo;
@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", typeContext.Identifier.Range);
             
-            DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, typeContext.Identifier.Range);
+            DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, typeContext.Identifier.GetRange(typeContext.Range));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
         }
 
@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the type being extended.
             // This is an array for future interface support.
-            if (_typeContext.Inheriting.Count > 0)
+            if (_typeContext.Inheriting.Count > 0 && _typeContext.Inheriting[0])
             {
                 var inheritToken = _typeContext.Inheriting[0];
 
@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // If there are no constructors, create a default constructor.
                 Constructors = new Constructor[] {
-                    new Constructor(this, new Location(_parseInfo.Script.Uri, _typeContext.Identifier.Range), AccessLevel.Public)
+                    new Constructor(this, new Location(_parseInfo.Script.Uri, DefinedAt.range), AccessLevel.Public)
                 };
             }
 
@@ -128,10 +128,11 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void BaseScopes(string scopeName)
         {
-            Scope global = _parseInfo.TranslateInfo.GlobalScope;
+            Scope classContainer = _parseInfo.TranslateInfo.GlobalScope.Child();
+            classContainer.CatchConflict = true;
 
-            staticScope = global.Child(scopeName);
-            operationalScope = global.Child(scopeName);
+            staticScope = classContainer.Child(scopeName);
+            operationalScope = classContainer.Child(scopeName);
             serveObjectScope = new Scope(scopeName);
         }
 

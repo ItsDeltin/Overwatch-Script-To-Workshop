@@ -21,8 +21,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         private readonly Stack<TTEOperator> _operators = new Stack<TTEOperator>();
         private readonly Stack<ITTEExpression> _operands = new Stack<ITTEExpression>();
 
-        private readonly ElementList[] _actions;
-        private readonly ElementList[] _values;
+        private readonly ElementJsonAction[] _actions;
+        private readonly ElementJsonValue[] _values;
 
         public List<WorkshopVariable> Variables { get; } = new List<WorkshopVariable>();
         public List<Subroutine> Subroutines { get; } = new List<Subroutine>();
@@ -32,8 +32,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public ConvertTextToElement(string content)
         {
             Content = content;
-            _actions = ElementList.Elements.Where(e => !e.IsValue).OrderByDescending(e => e.WorkshopName.Length).ToArray();
-            _values = ElementList.Elements.Where(e => e.IsValue).OrderByDescending(e => e.WorkshopName.Length).ToArray();
+            _actions = ElementRoot.Instance.Actions.OrderByDescending(e => e.Name.Length).ToArray();
+            _values = ElementRoot.Instance.Values.OrderByDescending(e => e.Name.Length).ToArray();
             _operators.Push(TTEOperator.Sentinel);
         }
 
@@ -526,9 +526,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return false;
         }
 
-        bool Function(ElementList func, out FunctionExpression expr)
+        bool Function(ElementBaseJson func, out FunctionExpression expr)
         {
-            if (!Match(Kw(func.WorkshopName), false))
+            if (!Match(Kw(func.Name), false))
             {
                 expr = null;
                 return false;
@@ -541,31 +541,35 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 int currentParameter = 0;
                 do
                 {
-                    // Normal parameter
-                    if (currentParameter >= func.WorkshopParameters.Length || func.WorkshopParameters[currentParameter] is Parameter)
-                    {
-                        if (ContainExpression(out ITTEExpression value)) values.Add(value);
-                    }
-                    // Enumerator
-                    else if (func.WorkshopParameters[currentParameter] is EnumParameter enumParam)
-                    {
-                        // Match enum member
-                        foreach (var member in enumParam.EnumData.Members.OrderByDescending(m => m.WorkshopName.Length))
-                            if (Match(Kw(member.WorkshopName), false))
-                            {
-                                values.Add(new ConstantEnumeratorExpression(member));
-                                break;
-                            }
-                    }
+                    ElementParameter parameter = null;
+                    if (func.Parameters != null && currentParameter < func.Parameters.Length)
+                        parameter = func.Parameters[currentParameter];
+
                     // Variable reference
-                    else if (func.WorkshopParameters[currentParameter] is VarRefParameter varRefParameter)
+                    if (parameter != null && parameter.IsVariableReference)
                     {
                         // Match the variable parameter.
                         if (!Identifier(out string identifier))
                             throw new Exception("Failed to retrieve identifier of variable parameter.");
                         
-                        AddIfOmitted(identifier, varRefParameter.IsGlobal);
-                        values.Add(new AnonymousVariableExpression(identifier, varRefParameter.IsGlobal));
+                        AddIfOmitted(identifier, parameter.VariableReferenceIsGlobal.Value);
+                        values.Add(new AnonymousVariableExpression(identifier, parameter.VariableReferenceIsGlobal.Value));
+                    }
+                    // Enumerator
+                    else if (parameter?.Type != null && ElementRoot.Instance.TryGetEnum(parameter.Type, out var enumerator))
+                    {
+                        // Match enum member
+                        foreach (var member in enumerator.Members.OrderByDescending(m => m.Name.Length))
+                            if (Match(Kw(member.Name), false))
+                            {
+                                values.Add(new ConstantEnumeratorExpression(member));
+                                break;
+                            }
+                    }
+                    // Normal parameter
+                    else
+                    {
+                        if (ContainExpression(out ITTEExpression value)) values.Add(value);
                     }
 
                     // Increment the current parameter.
@@ -759,17 +763,17 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         {
             if (Match(Kw("All Teams")))
             {
-                expr = new ConstantEnumeratorExpression(EnumData.GetEnumValue(Team.All));
+                expr = new ConstantEnumeratorExpression(ElementEnumMember.Team(Team.All));
                 return true;
             }
             if (Match(Kw("Team 1")))
             {
-                expr = new ConstantEnumeratorExpression(EnumData.GetEnumValue(Team.Team1));
+                expr = new ConstantEnumeratorExpression(ElementEnumMember.Team(Team.Team1));
                 return true;
             }
             if (Match(Kw("Team 2")))
             {
-                expr = new ConstantEnumeratorExpression(EnumData.GetEnumValue(Team.Team2));
+                expr = new ConstantEnumeratorExpression(ElementEnumMember.Team(Team.Team2));
                 return true;
             }
             // TODO: Gamemode, map, button, etc
@@ -981,6 +985,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return true;
             }
 
+            // Disabled
+            bool disabled = Match(Kw("disabled"));
+
             foreach (var mode in ModeSettingCollection.AllModeSettings)
             // Match the mode name.
             if (Match(Kw(mode.ModeName)))
@@ -1029,6 +1036,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     return true;
                 });
                 Match("}"); // End specific mode settings section.
+
+                if (disabled) relatedModeSettings.Settings.Add("Enabled", !disabled);
                 return true;
             }
             return false;
@@ -1109,24 +1118,25 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         void GroupSettings(Dictionary<string, object> collection, LobbySetting[] settings, Func<Boolean> onInterupt = null)
         {
-            var orderedSettings = settings.OrderByDescending(s => s.Name); // Order the settings so longer names are matched first.
+            var orderedSettings = settings.OrderByDescending(s => s.Name.Length); // Order the settings so longer names are matched first.
 
             bool matched = true;
             while (matched)
             {
                 matched = false;
+
+                // Test hook.
+                if (onInterupt != null && onInterupt.Invoke())
+                {
+                    // If the hook handled the match, break.
+                    matched = true;
+                    break;
+                }
+
                 foreach (var lobbySetting in orderedSettings)
                 {
-                    // Test hook.
-                    if (onInterupt != null && onInterupt.Invoke())
-                    {
-                        // If the hook handled the match, break.
-                        matched = true;
-                        break;
-                    }
-
                     // Match the setting name.
-                    else if (MatchLobbySetting(collection, lobbySetting))
+                    if (MatchLobbySetting(collection, lobbySetting))
                     {
                         // Indicate that a setting was matched.
                         matched = true;

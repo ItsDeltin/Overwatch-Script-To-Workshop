@@ -70,12 +70,31 @@ namespace Deltin.Deltinteger
         {
             Label = function.Name,
             Kind = CompletionItemKind.Method,
-            Detail = (!function.DoesReturnValue ? "void" : (function.ReturnType == null ? "define" : function.ReturnType.GetName())) + " " + function.GetLabel(false),
+            Detail = function.CodeType.GetNameOrVoid() + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
             Documentation = Extras.GetMarkupContent(function.Documentation)
         };
+
+        public static MarkupBuilder DefaultLabel(IMethod function)
+        {
+            MarkupBuilder markup = new MarkupBuilder()
+                .StartCodeLine()
+                .Add(function.CodeType.GetNameOrVoid())
+                .Add(" ")
+                .Add(function.Name + CodeParameter.GetLabels(function.Parameters))
+                .EndCodeLine();
+            
+            if (function.Documentation != null)
+            {
+                markup
+                    .NewSection()
+                    .Add(function.Documentation);
+            }
+            
+            return markup;
+        }
     }
 
-    public class MethodCall
+    public class MethodCall : Deltin.Deltinteger.Parse.FunctionBuilder.ICallHandler
     {
         public IWorkshopTree[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
@@ -173,7 +192,7 @@ namespace Deltin.Deltinteger
         }
         
         public static bool EventPlayerDefaultCall(IIndexReferencer referencer, IExpression parent, ParseInfo parseInfo)
-            => referencer.VariableType == VariableType.Player && (parent == null || parent.ReturningScope() != parseInfo.TranslateInfo.PlayerVariableScope);
+            => referencer.VariableType == VariableType.Player && (parent == null || parent is RootAction);
     }
 
     public enum RestrictedCallType

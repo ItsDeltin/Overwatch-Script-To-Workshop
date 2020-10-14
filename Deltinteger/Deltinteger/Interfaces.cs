@@ -13,11 +13,30 @@ namespace Deltin.Deltinteger
 {
     public interface IMethod : IScopeable, IParameterCallable
     {
-        CodeType ReturnType { get; }
         MethodAttributes Attributes { get; }
-        bool DoesReturnValue { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         void Call(ParseInfo parseInfo, DocRange callRange) {}
+        bool DoesReturnValue => CodeType != null;
+
+        public static string GetLabel(IMethod function, bool includeReturnType)
+        {
+            // Get the return type.
+            string result = "";
+            if (includeReturnType)
+                result += (function.DoesReturnValue ? function.CodeType?.GetName() ?? "define" : "void") + " ";
+            
+            result += function.Name + "(";
+
+            // Get the parameters.
+            for (int i = 0; i < function.Parameters.Length; i++)
+            {
+                result += function.Parameters[i].GetLabel();
+                if (i < function.Parameters.Length - 1) result += ", ";
+            }
+            
+            result += ")";
+            return result;
+        }
     }
 
     public interface ISkip
@@ -32,6 +51,7 @@ namespace Deltin.Deltinteger
 
     public interface IScopeable : INamed, IAccessable
     {
+        CodeType CodeType { get; }
         bool Static { get; }
         bool WholeContext { get; }
         CompletionItem GetCompletion();

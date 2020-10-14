@@ -7,26 +7,16 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class CallMethodAction : IExpression, IStatement, IBlockListener, IOnBlockApplied
+    public class CallMethodAction : IExpression, IStatement
     {
-        public IMethod CallingMethod { get; }
-        private OverloadChooser OverloadChooser { get; }
-        public IExpression[] ParameterValues { get; }
-        public CallParallel Parallel { get; }
-
-        private ParseInfo parseInfo { get; }
-        private DocRange NameRange { get; }
-        private bool UsedAsExpression { get; }
-
-        private string Comment;
+        public IExpression[] ParameterValues => Result?.ParameterValues;
+        public IMethod CallingMethod => Result?.Function;
+        public IInvokeResult Result { get; }
+        private readonly ParseInfo _parseInfo;
 
         public CallMethodAction(ParseInfo parseInfo, Scope scope, FunctionExpression methodContext, bool usedAsExpression, Scope getter)
         {
-            this.parseInfo = parseInfo;
-            string methodName = methodContext.Identifier.Text;
-            NameRange = methodContext.Identifier.Range;
-
-            UsedAsExpression = usedAsExpression;
+            _parseInfo = parseInfo;
 
             // TODO
             // if (methodContext.ASYNC() != null)
@@ -35,119 +25,37 @@ namespace Deltin.Deltinteger.Parse
             //     else Parallel = CallParallel.AlreadyRunning_DoNothing;
             // }
 
-            // Get all functions with the same name in the current scope.
-            var options = scope.GetMethodsByName(methodName);
+            // Get the invoke target.
+            var resolveInvoke = new ResolveInvokeInfo();
+            var target = parseInfo.SetInvokeInfo(resolveInvoke).GetExpression(scope, methodContext.Target);
 
-            // If none are found, throw a syntax error.
-            if (options.Length == 0)
-                parseInfo.Script.Diagnostics.Error($"No method by the name of '{methodName}' exists in the current context.", NameRange);
-            else
-            {
-                // Make an OverloadChooser to choose an Overload.
-                OverloadChooser = new OverloadChooser(options, parseInfo, scope, getter, NameRange, methodContext.Range, new OverloadError("method '" + methodName + "'"));
-                // Apply the parameters.
-                OverloadChooser.Apply(methodContext.Parameters);
-            
-                // Get the best function.
-                CallingMethod = (IMethod)OverloadChooser.Overload;
-                ParameterValues = OverloadChooser.Values;
-
-                // CallingMethod may be null if no good functions are found.
-                if (CallingMethod != null)
-                {
-                    CallingMethod.Call(parseInfo, NameRange);
-
-                    // If the function's block needs to be applied, check optional restricted calls when 'Applied()' runs.
-                    if (CallingMethod is IApplyBlock applyBlock)
-                        applyBlock.OnBlockApply(this);
-                    else // Otherwise, the optional restricted calls can be resolved right away.
-                    {
-                        // Get optional parameter's restricted calls.
-                        OverloadChooser.Match?.CheckOptionalsRestrictedCalls(parseInfo, NameRange);
-                    }
-
-                    // Check if the function can be called in parallel.
-                    if (Parallel != CallParallel.NoParallel && !CallingMethod.Attributes.Parallelable)
-                        parseInfo.Script.Diagnostics.Error($"The method '{CallingMethod.Name}' cannot be called in parallel.", NameRange);
-                    
-                    parseInfo.Script.AddHover(methodContext.Range, CallingMethod.GetLabel(true));
-                }
-            }
-        }
-
-        public void Applied()
-        {
-            if (UsedAsExpression && !CallingMethod.DoesReturnValue)
-                parseInfo.Script.Diagnostics.Error("The chosen overload for " + CallingMethod.Name + " does not return a value.", NameRange);
-            
-            // Get optional parameter's restricted calls.
-            OverloadChooser.Match?.CheckOptionalsRestrictedCalls(parseInfo, NameRange);
-            
-            // Check callinfo :)
-            foreach (RestrictedCallType type in ((IApplyBlock)CallingMethod).CallInfo.GetRestrictedCallTypes())
-                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(type, parseInfo.GetLocation(NameRange), RestrictedCall.Message_FunctionCallsRestricted(CallingMethod.Name, type)));
+            // Get the invoke info.
+            IInvokeInfo invokeInfo = resolveInvoke.WasResolved ? resolveInvoke.InvokeInfo : target.Type()?.InvokeInfo;
+            if (invokeInfo != null)
+                Result = invokeInfo.Invoke(new InvokeData(parseInfo, methodContext, target, scope, getter, usedAsExpression));
+            // If the target is not invocable and the target is not a missing element, add error.
+            else if (target is MissingElementAction == false)
+                parseInfo.Script.Diagnostics.Error("Method name expected", methodContext.Target.Range);
         }
 
         public Scope ReturningScope()
         {
-            if (CallingMethod == null) return null;
+            if (Result == null) return null;
 
-            if (CallingMethod.ReturnType == null)
-                return parseInfo.TranslateInfo.PlayerVariableScope;
+            if (Result.ReturnType == null)
+                return _parseInfo.TranslateInfo.PlayerVariableScope;
             else
-                return CallingMethod.ReturnType.GetObjectScope();
+                return Result.ReturnType.GetObjectScope();
         }
 
-        public CodeType Type() => CallingMethod?.ReturnType;
+        public CodeType Type() => Result?.ReturnType;
     
         // IStatement
-        public void Translate(ActionSet actionSet)
-        {
-            CallingMethod.Parse(actionSet.New(NameRange), GetMethodCall(actionSet));
-        }
-
+        public void Translate(ActionSet actionSet) => Result.Parse(actionSet);
         // IExpression
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            return CallingMethod.Parse(actionSet.New(NameRange), GetMethodCall(actionSet));
-        }
+        public IWorkshopTree Parse(ActionSet actionSet) => Result.Parse(actionSet);
 
-        private MethodCall GetMethodCall(ActionSet actionSet)
-        {
-            return new MethodCall(
-                GetParameterValuesAsWorkshop(actionSet),
-                OverloadChooser.AdditionalParameterData
-            )
-            {
-                CallParallel = Parallel,
-                ActionComment = Comment
-            };
-        }
-
-        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
-        {
-            Comment = comment;
-        }
-
-        private IWorkshopTree[] GetParameterValuesAsWorkshop(ActionSet actionSet)
-        {
-            if (ParameterValues == null) return new IWorkshopTree[0];
-
-            IWorkshopTree[] parameterValues = new IWorkshopTree[ParameterValues.Length];
-            for (int i = 0; i < ParameterValues.Length; i++)
-                parameterValues[i] = OverloadChooser.Overload.Parameters[i].Parse(actionSet, ParameterValues[i], OverloadChooser.AdditionalParameterData[i]);
-            return parameterValues;
-        }
-
-        public void OnBlockApply(IOnBlockApplied onBlockApplied)
-        {
-            // If the function being called is an IApplyBlock, bridge onBlockApply to it.
-            if (CallingMethod is IApplyBlock applyBlock)
-                applyBlock.OnBlockApply(onBlockApplied);
-            // Otherwise, instantly apply.
-            else
-                onBlockApplied.Applied();
-        }
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => Result.SetComment(comment);
 
         public bool IsStatement() => true;
     }

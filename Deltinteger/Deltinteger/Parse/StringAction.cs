@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => StringType.Instance;
         public IWorkshopTree Parse(ActionSet actionSet) => String.Parse(actionSet, FormatParameters.Select(fp => fp.Parse(actionSet)).ToArray());
 
         private static readonly object _cacheLock = new object();
@@ -144,7 +144,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < parsed.Length; i++)
                 parsed[i] = Segments[i].Parse(actionSet, parameters);
             
-            return V_CustomString.Join(parsed);
+            return StringElement.Join(parsed);
         }
 
         public static CustomStringGroup ParseCustomString(string value, int parameterCount)
@@ -248,13 +248,13 @@ namespace Deltin.Deltinteger.Parse
             ParameterIndexes = parameterIndexes;
         }
 
-        public V_CustomString Parse(ActionSet actionSet, IWorkshopTree[] parameters)
+        public StringElement Parse(ActionSet actionSet, IWorkshopTree[] parameters)
         {
             IWorkshopTree[] resultingParameters = new IWorkshopTree[ParameterIndexes.Length];
             for (int i = 0; i < resultingParameters.Length; i++)
                 resultingParameters[i] = parameters[ParameterIndexes[i]];
             
-            return new V_CustomString(Text, resultingParameters);
+            return new StringElement(Text, resultingParameters);
         }
     }
 
@@ -391,7 +391,7 @@ namespace Deltin.Deltinteger.Parse
                 ;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters) => new V_String(String, ParameterValues.Select(pv => (Element)pv.Parse(actionSet, parameters)).ToArray());
+        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters) => new StringElement(String, true, ParameterValues.Select(pv => (Element)pv.Parse(actionSet, parameters)).ToArray());
     }
 
     class LocalizedStringOrExpression

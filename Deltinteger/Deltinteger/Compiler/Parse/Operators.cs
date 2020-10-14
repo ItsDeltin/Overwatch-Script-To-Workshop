@@ -2,7 +2,12 @@ using Deltin.Deltinteger.Compiler.Parse;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
-    public class CompilerOperator
+    public interface ICompilerOperator
+    {
+        int Precedence { get; }
+    }
+
+    public class CompilerOperator : ICompilerOperator
     {
         public static CompilerOperator Sentinel { get; } = new CompilerOperator();
         public static CompilerOperator Squiggle { get; } = new CompilerOperator(1, "~", TokenType.Squiggle) { RhsHandler = new DotRhsHandler() };
@@ -62,7 +67,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public override string ToString() => Operator;
 
-        public static bool Compare(CompilerOperator op1, CompilerOperator op2)
+        public static bool Compare(ICompilerOperator op1, ICompilerOperator op2)
         {
             if ((op1 == Ternary || op1 == RhsTernary) && (op2 == Ternary || op2 == RhsTernary))
                 return op1 == RhsTernary && op2 == RhsTernary;
@@ -97,15 +102,27 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         public void Get(Parser parser)
         {
-            var identifier = parser.IdentifierOrFunction();
+            var identifier = parser.GetArrayAndInvokes(parser.Identifier());
             parser.Operands.Push(identifier);
         }
+    }
+
+    public class TypeCastOperator : ICompilerOperator
+    {
+        public static TypeCastOperator Instance { get; } = new TypeCastOperator();
+        public int Precedence => 18;
     }
 }
 
 namespace Deltin.Deltinteger.Compiler.SyntaxTree
 {
-    public class OperatorInfo
+    public interface IOperatorInfo
+    {
+        int Precedence { get; }
+        ICompilerOperator Source { get; }
+    }
+
+    public class OperatorInfo : IOperatorInfo
     {
         public static OperatorInfo Sentinel { get; } = new OperatorInfo(CompilerOperator.Sentinel, null);
 
@@ -113,6 +130,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Token { get; }
         public OperatorType Type => Operator.Type;
         public int Precedence => Operator.Precedence;
+        ICompilerOperator IOperatorInfo.Source => Operator;
 
         public OperatorInfo(CompilerOperator compilerOperator, Token token)
         {
@@ -121,6 +139,20 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
 
         public override string ToString() => Operator.ToString();
+    }
+
+    public class TypeCastInfo : IOperatorInfo
+    {
+        public int Precedence => Source.Precedence;
+        public ICompilerOperator Source => TypeCastOperator.Instance;
+        public IParseType CastingTo { get; }
+        public DocPos StartPosition { get; }
+
+        public TypeCastInfo(IParseType castingTo, DocPos startPosition)
+        {
+            CastingTo = castingTo;
+            StartPosition = startPosition;
+        }
     }
 
     public class BinaryOperatorExpression : Node, IParseExpression

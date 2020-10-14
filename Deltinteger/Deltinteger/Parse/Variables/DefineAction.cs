@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
         public static void Assign(ActionSet actionSet, Var var)
         {
             // Get the initial value.
-            IWorkshopTree initialValue = new V_Number(0);
+            IWorkshopTree initialValue = Element.Num(0);
             if (var.InitialValue != null)
                 initialValue = var.InitialValue.Parse(actionSet);
             

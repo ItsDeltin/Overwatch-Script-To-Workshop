@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Lambda;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
 using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
 using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ParameterInformation;
@@ -93,7 +94,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Set expression and expressionRange.
-                parameter.Value = parseInfo.GetExpression(getter, context[i].Expression);
+                parameter.Value = parseInfo.SetPotentialLambda().GetExpression(getter, context[i].Expression);
                 parameter.ExpressionRange = context[i].Expression.Range;
             }
 
@@ -163,6 +164,10 @@ namespace Deltin.Deltinteger.Parse
             bestOption.AddDiagnostics(parseInfo.Script.Diagnostics);
             CheckAccessLevel();
 
+            for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
+                if (bestOption.Option.Parameters[i].Type is PortableLambdaType portableLambda && bestOption.OrderedParameters[i].Value is ILambdaApplier applier)
+                    applier.GetLambdaStatement(portableLambda);
+
             return bestOption;
         }
 
@@ -230,7 +235,7 @@ namespace Deltin.Deltinteger.Parse
                 for (int p = 0; p < parameters.Length; p++)
                     parameters[p] = new ParameterInformation() {
                         // Get the label to show in the signature.
-                        Label = AllOverloads[i].Parameters[p].GetLabel(false),
+                        Label = AllOverloads[i].Parameters[p].GetLabel(),
                         // Get the documentation.
                         Documentation = Extras.GetMarkupContent(AllOverloads[i].Parameters[p].Documentation)
                     };
@@ -299,10 +304,10 @@ namespace Deltin.Deltinteger.Parse
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
 
-            if (parameterType != null && ((parameterType.IsConstant() && value.Type() == null) || (value.Type() != null && !value.Type().Implements(parameterType))))
+            if (parameterType.CodeTypeParameterInvalid(value.Type()))
             {
                 // The parameter type does not match.
-                string msg = string.Format("Expected a value of type {0}.", Option.Parameters[parameter].Type.GetName());
+                string msg = string.Format("Cannot convert type '{0}' to '{1}'.", value.Type().GetName(), Option.Parameters[parameter].Type.GetName());
                 Error(msg, errorRange);
             }
             else if (value.Type() != null && parameterType == null && value.Type().IsConstant())

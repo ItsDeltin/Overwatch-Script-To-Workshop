@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Parse.FunctionBuilder;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -11,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
         public ActionSet ActionSet { get; }
         public DeltinScript DeltinScript { get; }
         public bool IsGlobal { get; }
-        public List<MethodStack> MethodStack { get; } = new List<MethodStack>();
+        public List<RecursiveStack> MethodStack { get; } = new List<RecursiveStack>();
         
         public List<Condition> Conditions { get; } = new List<Condition>();
 
@@ -70,20 +71,20 @@ namespace Deltin.Deltinteger.Parse
                 var conditionParse = condition.Parse(ActionSet);
 
                 Element value1;
-                EnumMember compareOperator;
+                Operator compareOperator;
                 Element value2;
 
-                if (conditionParse is V_Compare)
+                if (conditionParse is Element asElement && asElement.Function.Name == "Compare")
                 {
-                    value1 = (Element)((Element)conditionParse).ParameterValues[0];
-                    compareOperator = (EnumMember)((Element)conditionParse).ParameterValues[1];
-                    value2 = (Element)((Element)conditionParse).ParameterValues[2];
+                    value1 = (Element)asElement.ParameterValues[0];
+                    compareOperator = ((OperatorElement)asElement.ParameterValues[1]).Operator;
+                    value2 = (Element)asElement.ParameterValues[2];
                 }
                 else
                 {
                     value1 = (Element)conditionParse;
-                    compareOperator = EnumData.GetEnumValue(Operators.Equal);
-                    value2 = new V_True();
+                    compareOperator = Operator.Equal;
+                    value2 = Element.True();
                 }
 
                 Conditions.Add(new Condition(value1, compareOperator, value2));
@@ -135,12 +136,12 @@ namespace Deltin.Deltinteger.Parse
     public class ActionSet
     {
         public TranslateRule Translate { get; private set; }
-        public DocRange GenericErrorRange { get; private set; }
+        public DeltinScript DeltinScript => Translate.DeltinScript;
         public VarIndexAssigner IndexAssigner { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
         public IWorkshopTree CurrentObject { get; private set; }
+        public IndexReference CurrentObjectRelatedIndex { get; private set; }
         public IWorkshopTree This { get; private set; }
-        public int IndentCount { get; private set; }
         public bool IsRecursive { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
@@ -161,7 +162,6 @@ namespace Deltin.Deltinteger.Parse
             ActionList = translate.Actions;
             VarCollection = translate.DeltinScript.VarCollection;
 
-            GenericErrorRange = genericErrorRange;
             IndexAssigner = translate.DeltinScript.DefaultIndexAssigner;
         }
         private ActionSet(ActionSet other)
@@ -171,12 +171,11 @@ namespace Deltin.Deltinteger.Parse
             ActionList = other.ActionList;
             VarCollection = other.VarCollection;
 
-            GenericErrorRange = other.GenericErrorRange;
             IndexAssigner = other.IndexAssigner;
             ReturnHandler = other.ReturnHandler;
             CurrentObject = other.CurrentObject;
+            CurrentObjectRelatedIndex = other.CurrentObjectRelatedIndex;
             This = other.This;
-            IndentCount = other.IndentCount;
             IsRecursive = other.IsRecursive;
         }
         private ActionSet Clone()
@@ -184,61 +183,25 @@ namespace Deltin.Deltinteger.Parse
             return new ActionSet(this);
         }
 
-        public ActionSet New(DocRange range)
-        {
-            var newActionSet = Clone();
-            newActionSet.GenericErrorRange = range ?? throw new ArgumentNullException(nameof(range));
-            return newActionSet;
-        }
-        public ActionSet New(VarIndexAssigner indexAssigner)
-        {
-            var newActionSet = Clone();
-            newActionSet.IndexAssigner = indexAssigner ?? throw new ArgumentNullException(nameof(indexAssigner));
-            return newActionSet;
-        }
-        public ActionSet New(ReturnHandler returnHandler)
-        {
-            var newActionSet = Clone();
-            newActionSet.ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler));
-            return newActionSet;
-        }
-        public ActionSet New(IWorkshopTree currentObject)
-        {
-            var newActionSet = Clone();
-            newActionSet.CurrentObject = currentObject;
-            return newActionSet;
-        }
-        public ActionSet New(bool isRecursive)
-        {
-            var newActionSet = Clone();
-            newActionSet.IsRecursive = isRecursive;
-            return newActionSet;
-        }
-        public ActionSet Indent()
-        {
-            var newActionSet = Clone();
-            newActionSet.IndentCount++;
-            return newActionSet;
-        }
-        public ActionSet PackThis()
-        {            
-            var newActionSet = Clone();
-            newActionSet.This = CurrentObject;
-            return newActionSet;
-        }
+        public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this) {
+            IndexAssigner = indexAssigner ?? throw new ArgumentNullException(nameof(indexAssigner))
+        };
+        public ActionSet New(ReturnHandler returnHandler) => new ActionSet(this) {
+            ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler))
+        };
+        public ActionSet New(IWorkshopTree currentObject) => new ActionSet(this) { CurrentObject = currentObject };
+        public ActionSet New(IndexReference relatedIndex) => new ActionSet(this) { CurrentObjectRelatedIndex = relatedIndex };
+        public ActionSet New(bool isRecursive) => new ActionSet(this) { IsRecursive = isRecursive };
+        public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
 
         public void AddAction(IWorkshopTree action)
         {
-            if (action is Element element) element.Indent = IndentCount;
             ActionList.Add(new ALAction(action));
         }
         public void AddAction(IWorkshopTree[] actions)
         {
             foreach (var action in actions)
-            {
-                if (action is Element element) element.Indent = IndentCount;
                 ActionList.Add(new ALAction(action));
-            }
         }
         public void AddAction(IActionList action)
         {
@@ -348,11 +311,10 @@ namespace Deltin.Deltinteger.Parse
             else skipCount = GetSkipCount(EndMarker);
 
             Element newAction;
-            if (Condition == null) newAction = Element.Part<A_Skip>(skipCount);
-            else newAction = Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), skipCount);
+            if (Condition == null) newAction = Element.Part("Skip", skipCount);
+            else newAction = Element.Part("Skip If", Element.Not(Condition), skipCount);
 
             newAction.Comment = Comment;
-            
             return newAction;
         }
 
@@ -370,7 +332,7 @@ namespace Deltin.Deltinteger.Parse
             EndMarker = endMarker;
         }
 
-        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => StartMarker.NumberOfActionsToMarker(EndMarker).ToString();
+        public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(StartMarker.NumberOfActionsToMarker(EndMarker).ToString());
 
         public bool EqualTo(IWorkshopTree other) => false;
     }

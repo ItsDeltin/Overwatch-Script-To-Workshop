@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     Rule initialNodes = new Rule("Initial Nodes");
                     initialNodes.Actions = ArrayBuilder<Element>.Build(
                         // File name HUD.
-                        Element.Hud(text: new V_CustomString(fileName), sortOrder: 1, textColor: Color.Orange, location: HudLocation.Right),
+                        Element.Hud(text: new StringElement(fileName), sortOrder: 1, textColor: "Orange", location: "Right"),
 
                         // Set nodes, segments, and attributes.
                         WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), null, LoadNodes, false),

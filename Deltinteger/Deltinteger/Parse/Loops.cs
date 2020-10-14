@@ -30,7 +30,11 @@ namespace Deltin.Deltinteger.Parse
         public void AddContinue(ActionSet actionSet, string comment)
         {
             if (RawContinue)
-                actionSet.AddAction(new A_Continue() { Comment = comment });
+            {
+                Element con = Element.Part("Continue");
+                con.Comment = comment;
+                actionSet.AddAction(con);
+            }
             else
             {
                 SkipStartMarker continuer = new SkipStartMarker(actionSet, comment);
@@ -42,7 +46,11 @@ namespace Deltin.Deltinteger.Parse
         public void AddBreak(ActionSet actionSet, string comment)
         {
             if (RawBreak)
-                actionSet.AddAction(new A_Break() { Comment = comment });
+            {
+                Element brk = Element.Part("Break");
+                brk.Comment = comment;
+                actionSet.AddAction(brk);
+            }
             else
             {
                 SkipStartMarker breaker = new SkipStartMarker(actionSet, comment);
@@ -97,16 +105,16 @@ namespace Deltin.Deltinteger.Parse
             if (!actionsAdded)
             {
                 // Create a normal while loop.
-                actionSet.AddAction(Element.Part<A_While>(condition));
+                actionSet.AddAction(Element.While(condition));
                 
                 // Translate the block.
-                Block.Translate(actionSet.Indent());
+                Block.Translate(actionSet);
 
                 // Resolve continues.
                 ResolveContinues(actionSet);
 
                 // Cap the block.
-                actionSet.AddAction(new A_End());
+                actionSet.AddAction(Element.End());
 
                 // Resolve breaks.
                 ResolveBreaks(actionSet);
@@ -114,19 +122,19 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 // The while condition requires actions to get the value.
-                actionSet.ActionList.Insert(actionCountPreCondition, new ALAction(Element.Part<A_While>(new V_True())));
+                actionSet.ActionList.Insert(actionCountPreCondition, new ALAction(Element.While(Element.True())));
 
                 SkipStartMarker whileEndSkip = new SkipStartMarker(actionSet, condition);
-                actionSet.Indent().AddAction(whileEndSkip);
+                actionSet.AddAction(whileEndSkip);
 
                 // Translate the block.
-                Block.Translate(actionSet.Indent());
+                Block.Translate(actionSet);
 
                 // Resolve continues.
                 ResolveContinues(actionSet);
 
                 // Cap the block.
-                actionSet.AddAction(new A_End());
+                actionSet.AddAction(Element.End());
 
                 // Skip to the end when the condition is false.
                 SkipEndMarker whileEnd = new SkipEndMarker();
@@ -277,18 +285,18 @@ namespace Deltin.Deltinteger.Parse
             // Get the condition.
             Element condition;
             if (Condition != null) condition = (Element)Condition.Parse(actionSet); // User-define condition
-            else condition = new V_True(); // No condition, just use true.
-            actionSet.AddAction(Element.Part<A_While>(condition));
+            else condition = Element.True(); // No condition, just use true.
+            actionSet.AddAction(Element.While(condition));
 
-            Block.Translate(actionSet.Indent());
+            Block.Translate(actionSet);
 
             // Resolve continues.
             ResolveContinues(actionSet);
 
             if (Iterator != null)
-                Iterator.Translate(actionSet.Indent());
+                Iterator.Translate(actionSet);
                         
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(Element.End());
 
             // Resolve breaks.
             ResolveBreaks(actionSet);
@@ -306,15 +314,15 @@ namespace Deltin.Deltinteger.Parse
                 VariableElements elements = VariableResolve.ParseElements(actionSet);
                 variable = elements.IndexReference.WorkshopVariable;
                 target = elements.Target;
-                start = (Element)InitialResolveValue?.Parse(actionSet) ?? new V_Number(0);
+                start = (Element)InitialResolveValue?.Parse(actionSet) ?? Element.Num(0);
             }
             // New variable being use in for.
             else
             {
                 actionSet.IndexAssigner.Add(actionSet.VarCollection, DefinedVariable, actionSet.IsGlobal, null);
                 variable = ((IndexReference)actionSet.IndexAssigner[DefinedVariable]).WorkshopVariable;
-                target = new V_EventPlayer();
-                start = (Element)DefinedVariable.InitialValue?.Parse(actionSet) ?? new V_Number(0);
+                target = Element.EventPlayer();
+                start = (Element)DefinedVariable.InitialValue?.Parse(actionSet) ?? Element.Num(0);
             }
 
             Element stop = (Element)Condition.Parse(actionSet);
@@ -322,26 +330,26 @@ namespace Deltin.Deltinteger.Parse
 
             // Global
             if (variable.IsGlobal)
-                actionSet.AddAction(Element.Part<A_ForGlobalVariable>(
+                actionSet.AddAction(Element.Part("For Global Variable",
                     variable,
                     start, stop, step
                 ));
             // Player
             else
-                actionSet.AddAction(Element.Part<A_ForPlayerVariable>(
+                actionSet.AddAction(Element.Part("For Player Variable",
                     target,
                     variable,
                     start, stop, step
                 ));
             
             // Translate the block.
-            Block.Translate(actionSet.Indent());
+            Block.Translate(actionSet);
 
             // Resolve continues.
             ResolveContinues(actionSet);
 
             // Cap the for.
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(Element.End());
 
             // Resolve breaks.
             ResolveBreaks(actionSet);
@@ -379,7 +387,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet.IndexAssigner.Add(ForeachVar, foreachBuilder.IndexValue);
 
             // Translate the block.
-            Block.Translate(actionSet.Indent());
+            Block.Translate(actionSet);
 
             // Resolve continues.
             ResolveContinues(actionSet);
@@ -403,7 +411,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             public VarBuilderAttribute[] GetAttributes() => new VarBuilderAttribute[0];
-            public ParseType GetCodeType() => _foreachContext.Type;
+            public IParseType GetCodeType() => _foreachContext.Type;
             public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
             public string GetName() => _foreachContext.Identifier.Text;
 

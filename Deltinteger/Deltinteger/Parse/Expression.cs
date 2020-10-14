@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
@@ -24,12 +23,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            return new V_Number(Value);
-        }
+        public CodeType Type() => NumberType.Instance;
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.Num(Value);
     }
 
     public class BoolAction : IExpression
@@ -42,25 +37,17 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => BooleanType.Instance;
 
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            if (Value) return new V_True();
-            else return new V_False();
-        }
+        public IWorkshopTree Parse(ActionSet actionSet) => Value ? Element.True() : Element.False();
     }
 
     public class NullAction : IExpression
     {
         public NullAction() {}
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            return new V_Null();
-        }
+        public CodeType Type() => NullType.Instance;
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.Null();
     }
 
     public class ValueInArrayAction : IExpression
@@ -85,13 +72,12 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType;
-
         public IWorkshopTree Parse(ActionSet actionSet)
         {
             IWorkshopTree result = Expression.Parse(actionSet);
 
             foreach(var index in Index)
-                result = Element.Part<V_ValueInArray>(result, index.Parse(actionSet));
+                result = Element.ValueInArray(result, index.Parse(actionSet));
 
             return result;
         }
@@ -139,48 +125,6 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => ConvertingTo;
         public IWorkshopTree Parse(ActionSet actionSet) => Expression.Parse(actionSet);
     }
-    
-    public class OperatorAction : IExpression
-    {
-        public IExpression Left { get; }
-        public IExpression Right { get; }
-        public OperatorInfo Operator { get; }
-
-        public OperatorAction(ParseInfo parseInfo, Scope scope, BinaryOperatorExpression op)
-        {
-            Operator = op.Operator;
-            // Left operator.
-            Left = parseInfo.GetExpression(scope, op.Left);
-            // Right operator.
-            Right = parseInfo.GetExpression(scope, op.Right);
-        }
-
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            var left = Left.Parse(actionSet);
-            var right = Right.Parse(actionSet);
-            switch (Operator.Operator.Operator)
-            {
-                case "^": return Element.Part<V_RaiseToPower>(left,right);
-                case "*": return Element.Part<V_Multiply>(left,right);
-                case "/": return Element.Part<V_Divide>(left,right);
-                case "%": return Element.Part<V_Modulo>(left,right);
-                case "+": return Element.Part<V_Add>(left,right);
-                case "-": return Element.Part<V_Subtract>(left,right);
-                case "<": return new V_Compare(left, Operators.LessThan, right);
-                case "<=": return new V_Compare(left, Operators.LessThanOrEqual, right);
-                case "==": return new V_Compare(left, Operators.Equal, right);
-                case ">=": return new V_Compare(left, Operators.GreaterThanOrEqual, right);
-                case ">": return new V_Compare(left, Operators.GreaterThan, right);
-                case "!=": return new V_Compare(left, Operators.NotEqual, right);
-                case "&&": return Element.Part<V_And>(left,right);
-                case "||": return Element.Part<V_Or>(left,right);
-                default: throw new Exception($"Unrecognized operator {Operator}.");
-            }
-        }
-    }
 
     public class UnaryOperatorAction : IExpression
     {
@@ -202,10 +146,10 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Not
                 case "!":
-                    return Element.Part<V_Not>(Value.Parse(actionSet));
+                    return Element.Not(Value.Parse(actionSet));
                 // Inverse
                 case "-":
-                    return Element.Part<V_Multiply>(Value.Parse(actionSet), new V_Number(-1));
+                    return Element.Multiply(Value.Parse(actionSet), Element.Num(-1));
                 // Unimplemented unary operator.
                 default:
                     throw new NotImplementedException(Operator.Operator.Operator);
@@ -329,10 +273,10 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree expressionResult = expression.Parse(actionSet);
 
             // Get the class identifier of the input expression.
-            IWorkshopTree classIdentifier = Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), expressionResult);
+            IWorkshopTree classIdentifier = classData.ClassIndexes.Get()[expressionResult];
 
             // Check if the expression's class identifier and the type are equal.
-            return new V_Compare(classIdentifier, Operators.Equal, new V_Number(checkingIfType.Identifier));
+            return Element.Compare(classIdentifier, Operator.Equal, new NumberElement(checkingIfType.Identifier));
         }
 
         public Scope ReturningScope() => null;

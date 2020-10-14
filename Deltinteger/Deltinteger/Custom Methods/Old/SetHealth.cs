@@ -18,10 +18,10 @@ namespace Deltin.Deltinteger.Elements
             (
                 player.SetVariable((Element)Parameters[0]),
                 health.SetVariable((Element)Parameters[1]),
-                Element.Part<A_SkipIf>(!(Element.Part<V_Health>(player.GetVariable()) < health.GetVariable()), new V_Number(2)),
+                Element.Part<A_SkipIf>(!(Element.Part<V_Health>(player.GetVariable()) < health.GetVariable()), Element.Num(2)),
                 Element.Part<A_Heal>(player.GetVariable(), new V_Null(), health.GetVariable() - Element.Part<V_Health>(player.GetVariable())),
-                Element.Part<A_Skip>(new V_Number(2)),
-                Element.Part<A_SkipIf>(!(Element.Part<V_Health>(player.GetVariable()) > health.GetVariable()), new V_Number(1)),
+                Element.Part<A_Skip>(Element.Num(2)),
+                Element.Part<A_SkipIf>(!(Element.Part<V_Health>(player.GetVariable()) > health.GetVariable()), Element.Num(1)),
                 Element.Part<A_Damage>(player.GetVariable(), new V_Null(), Element.Part<V_Health>(player.GetVariable()) - health.GetVariable())
             );
 

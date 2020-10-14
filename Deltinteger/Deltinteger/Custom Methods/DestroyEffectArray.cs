@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.CustomMethods
         {
             return new CodeParameter[] {
                 new CodeParameter("effectArray", "The array of effects."),
-                new ConstNumberParameter("destroyPerLoop", "The number of effects to destroy per iteration.")
+                new ConstNumberParameter("destroyPerLoop", "The number of effects to destroy per iteration.", 1)
             };
         }
 
@@ -21,21 +21,14 @@ namespace Deltin.Deltinteger.CustomMethods
             Element effectArray = (Element)parameterValues[0];
             double destroyPerLoop = (double)additionalParameterData[1];
 
-            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, effectArray);
+            actionSet.AddAction(Element.While(Element.Compare(effectArray, Operator.NotEqual, Element.EmptyArray())));
 
             for (int i = 0; i < destroyPerLoop; i++)
-            {
-                if (i == 0)
-                    actionSet.AddAction(
-                        Element.Part<A_DestroyEffect>(foreachBuilder.IndexValue)
-                    );
-                else
-                    actionSet.AddAction(
-                        Element.Part<A_DestroyEffect>(Element.Part<V_ValueInArray>(effectArray, foreachBuilder.Index + i))
-                    );
-            }
+                actionSet.AddAction(
+                    Element.Part("Destroy Effect", Element.FirstOf(effectArray))
+                );
 
-            foreachBuilder.Finish();
+            actionSet.AddAction(Element.End());
 
             return null;
         }

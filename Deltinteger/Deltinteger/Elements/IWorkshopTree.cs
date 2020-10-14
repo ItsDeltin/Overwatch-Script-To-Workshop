@@ -1,10 +1,11 @@
+using System.Text;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger
 {
     public interface IWorkshopTree
     {
-        string ToWorkshop(OutputLanguage language, ToWorkshopContext context);
+        void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context);
         bool EqualTo(IWorkshopTree other);
         int ElementCount() => 1;
     }

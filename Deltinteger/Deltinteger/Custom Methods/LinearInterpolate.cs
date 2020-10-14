@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.CustomMethods
             Element point2 = (Element)parameters[1];
             Element distance = (Element)parameters[2];
 
-            Element fraction = distance / Element.Part<V_DistanceBetween>(point1, point2);
+            Element fraction = distance / Element.DistanceBetween(point1, point2);
             Element p1 = point1 * (1 - fraction);
             Element p2 = point2 * fraction;
 
@@ -127,7 +127,7 @@ namespace Deltin.Deltinteger.CustomMethods
             (
                 point1.SetVariable((Element)Parameters[0]),
                 point2.SetVariable((Element)Parameters[1]),
-                fraction.SetVariable((Element)Parameters[2] / Element.Part<V_DistanceBetween>(point1.GetVariable(), point2.GetVariable()))
+                fraction.SetVariable((Element)Parameters[2] / Element.DistanceBetween(point1.GetVariable(), point2.GetVariable()))
             ) ;
 
             Element p1 = point1.GetVariable() * (1 - fraction.GetVariable());

@@ -125,7 +125,7 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 int index = NextFreeExtended(isGlobal);
-                IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, new V_Number(index));
+                IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, Element.Num(index));
                 ExtendedVariableList(isGlobal).Add(new ExtendedVariable(name, reference, index));
                 return reference;
             }
@@ -150,7 +150,7 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 int index = NextFreeExtended(variableIsGlobal);
-                IndexReference reference = new IndexReference(ArrayBuilder, variableIsGlobal ? global : player, new V_Number(index));
+                IndexReference reference = new IndexReference(ArrayBuilder, variableIsGlobal ? global : player, Element.Num(index));
                 ExtendedVariableList(variableIsGlobal).Add(new ExtendedVariable(var.Name, reference, index));
                 return reference;
             }
@@ -181,13 +181,13 @@ namespace Deltin.Deltinteger.Parse
             builder.AppendKeyword("global"); builder.Append(":"); builder.AppendLine();
             builder.Indent();
             WriteCollection(builder, variableList(true));
-            builder.Unindent();
+            builder.Outdent();
 
             builder.AppendKeyword("player"); builder.Append(":"); builder.AppendLine();
             builder.Indent();
             WriteCollection(builder, variableList(false));
-            builder.Unindent();
-            builder.Unindent();
+            builder.Outdent();
+            builder.Outdent();
             builder.AppendLine("}");
 
             bool anyExtendedGlobal = ExtendedVariableList(true).Any(v => v != null);

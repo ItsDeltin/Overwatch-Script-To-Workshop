@@ -146,7 +146,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private Segment() {}
 
-        public V_Vector AsWorkshopData() => new V_Vector((double)Node1, (double)Node2, 0);
+        public Element AsWorkshopData() => Element.Vector((double)Node1, (double)Node2, 0);
     }
 
     public class MapAttribute
@@ -166,7 +166,7 @@ namespace Deltin.Deltinteger.Pathfinder
         }
         public MapAttribute() {}
 
-        public Element AsWorkshopData() => new V_Vector(Node1, Node2, Attribute);
+        public Element AsWorkshopData() => Element.Vector(Node1, Node2, Attribute);
     }
 
     public interface IPathmapErrorHandler

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -85,7 +86,53 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Return(Scope returningFromScope, ActionSet returningSet)
         {
-            ActionSet.AddAction(Element.Part<A_Abort>());
+            ActionSet.AddAction(Element.Part("Abort"));
+        }
+    }
+
+    public interface IParseReturnHandler
+    {
+        void Validate(DocRange range, IExpression value);
+    }
+
+    public class ParseReturnHandler : IParseReturnHandler
+    {
+        public CodeType ExpectedType { get; }
+        public bool AllowMultiple { get; }
+        public bool MustReturnValue { get; }
+        private readonly ParseInfo _parseInfo;
+        private bool _returnFound;
+        // Errors
+        public string MustReturnValueMessage { get; set; } = "Must return a value.";
+        public string MoreThanOneReturnMessage { get; set; } = "Cannot have more than one return statement if the function's return type is constant.";
+        public string VoidReturnValueMessage { get; set; }
+
+        public ParseReturnHandler(ParseInfo parseInfo)
+        {
+            _parseInfo = parseInfo;
+        }
+
+        public ParseReturnHandler(ParseInfo parseInfo, string objectName) : this(parseInfo)
+        {
+            VoidReturnValueMessage = objectName + " is void, so no value can be returned.";
+        }
+
+        public void Validate(DocRange range, IExpression value)
+        {
+            // Error if a value must be returned.
+            if (MustReturnValue && value == null)
+            {
+                _parseInfo.Script.Diagnostics.Error(MustReturnValueMessage, range);
+                return;
+            }
+
+            // Multiple return statements when not allowed.
+            if (!AllowMultiple && _returnFound)
+            {
+                _parseInfo.Script.Diagnostics.Error(MoreThanOneReturnMessage, range);
+                return;
+            }
+            _returnFound = true;
         }
     }
 }

@@ -52,6 +52,9 @@ namespace Deltin.Deltinteger.Parse
             _typeRange = _contextHandler.GetTypeRange();
             GetCodeType();
 
+            if (_varInfo.Type is Lambda.PortableLambdaType)
+                _varInfo.TokenType = TokenType.Function;
+
             // Apply attributes.
             foreach (VarBuilderAttribute attribute in _attributes)
                 attribute.Apply(_varInfo);
@@ -103,6 +106,8 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual void GetCodeType()
         {
+            if (_contextHandler.GetCodeType() == null) return;
+
             // Get the type.
             CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, _contextHandler.GetCodeType());
             
@@ -139,7 +144,7 @@ namespace Deltin.Deltinteger.Parse
         string GetName();
         DocRange GetNameRange();
         VarBuilderAttribute[] GetAttributes();
-        ParseType GetCodeType();
+        IParseType GetCodeType();
         DocRange GetTypeRange();
         bool CheckName();
     }

@@ -141,7 +141,7 @@ namespace Deltin.Deltinteger.Debugger
             // Others
             else if (expression is FunctionExpression func)
             {
-                switch (func.Function.WorkshopName)
+                switch (func.Function.Name)
                 {
                     // Array
                     case "Array": return new CsvArray(func.Values.Select(v => PartFromExpression(v)).ToArray());
@@ -159,7 +159,7 @@ namespace Deltin.Deltinteger.Debugger
                     ));
                     // Default
                     default:
-                        Error("Unsure of how to handle function '" + func.Function.WorkshopName);
+                        Error("Unsure of how to handle function '" + func.Function.Name);
                         return null;
                 }
             }

@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 All.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
             
@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Lobby
             Skirmish?.ToWorkshop(builder, allSettings, "Skirmish");
             TeamDeathmatch?.ToWorkshop(builder, allSettings, "TeamDeathmatch");
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -127,9 +127,11 @@ namespace Deltin.Deltinteger.Lobby
 
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings, string modeName)
         {
-            builder.AppendKeywordLine(modeName);
-
+            bool enabled = Settings == null || !Settings.TryGetValue("Enabled", out object value) || (value is bool b && b);
             Settings?.Remove("Enabled");
+
+            if (!enabled) builder.AppendKeyword("disabled").Append(" ");
+            builder.AppendKeywordLine(modeName);
 
             if (EnabledMaps != null || DisabledMaps != null || (Settings != null && Settings.Count > 0))
             {
@@ -149,7 +151,7 @@ namespace Deltin.Deltinteger.Lobby
                     Ruleset.WriteList(builder, DisabledMaps);
                 }
 
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
         }
@@ -162,7 +164,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (string map in maps)
                 builder.AppendLine(builder.Translate(map).RemoveStructuralChars());
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
     }
