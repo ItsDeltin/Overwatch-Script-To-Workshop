@@ -261,7 +261,7 @@ Object-serve scope. Only object members.
         public DeltinScript DeltinScript { get; set; }
         public IndexReference ClassIndexes { get; private set; }
         private List<IndexReference> VariableStacks { get; } = new List<IndexReference>();
-        private int AssignClassID = 0;
+        private int AssignClassID = 1;
 
         public void Init()
         {
