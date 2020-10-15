@@ -4,7 +4,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("Midpoint", "The midpoint between 2 vectors.", CustomMethodType.Value)]
+    [CustomMethod("Midpoint", "The midpoint between 2 vectors.", CustomMethodType.Value, typeof(VectorType))]
     class Midpoint : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.CustomMethods
         }
     }
 
-    [CustomMethod("LinearInterpolate", "Gets a point on a line with a fraction.", CustomMethodType.Value)]
+    [CustomMethod("LinearInterpolate", "Gets a point on a line with a fraction.", CustomMethodType.Value, typeof(VectorType))]
     class LinearInterpolate : CustomMethodBase
     {
         public override CodeParameter[] Parameters()
@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.CustomMethods
     }
     */
 
-    [CustomMethod("LinearInterpolateDistance", "Gets a point on a line by distance.", CustomMethodType.Value)]
+    [CustomMethod("LinearInterpolateDistance", "Gets a point on a line by distance.", CustomMethodType.Value, typeof(VectorType))]
     class LinearInterpolateDistance : CustomMethodBase
     {
         public override CodeParameter[] Parameters()

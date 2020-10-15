@@ -262,7 +262,7 @@ namespace Deltin.Deltinteger.Models
         private static PrivateFontCollection LoadedFonts = null;
     }
 
-    [CustomMethod("ShowWireframe", "Create a wireframe of a variable containing a 3D model.", CustomMethodType.MultiAction_Value, false)]
+    [CustomMethod("ShowWireframe", "Create a wireframe of a variable containing a 3D model.", CustomMethodType.MultiAction_Value, typeof(ObjectType), false)]
     class ShowModel : ModelCreator
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -315,7 +315,7 @@ namespace Deltin.Deltinteger.Models
         public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
     }
 
-    [CustomMethod("CreateTextFont", "Creates in-world text using any custom text.", CustomMethodType.MultiAction_Value, false)]
+    [CustomMethod("CreateTextFont", "Creates in-world text using any custom text.", CustomMethodType.MultiAction_Value, typeof(ObjectType), false)]
     class CreateTextWithFont : ModelCreator
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -356,7 +356,7 @@ namespace Deltin.Deltinteger.Models
         }
     }
 
-    [CustomMethod("CreateTextFancy", "Creates in-world text using any custom text. Uses the BigNoodleTooOblique font, Overwatch's main font.", CustomMethodType.MultiAction_Value, false)]
+    [CustomMethod("CreateTextFancy", "Creates in-world text using any custom text. Uses the BigNoodleTooOblique font, Overwatch's main font.", CustomMethodType.MultiAction_Value, typeof(ObjectType), false)]
     class CreateTextFancy : ModelCreator
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -383,7 +383,7 @@ namespace Deltin.Deltinteger.Models
         }
     }
 
-    [CustomMethod("CreateText", "The text to display. This is a string constant.", CustomMethodType.MultiAction_Value, false)]
+    [CustomMethod("CreateText", "The text to display. This is a string constant.", CustomMethodType.MultiAction_Value, typeof(ObjectType), false)]
     class CreateText : ModelCreator
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {

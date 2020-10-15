@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("MinWait", "Waits for 0.016 seconds.", CustomMethodType.Action)]
+    [CustomMethod("MinWait", "Waits for 0.016 seconds.", CustomMethodType.Action, typeof(NullType))]
     class MinWait : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {

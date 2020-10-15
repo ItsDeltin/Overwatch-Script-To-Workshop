@@ -4,7 +4,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("InsertValueInArray", "Inserts a value into an array.", CustomMethodType.Value)]
+    [CustomMethod("InsertValueInArray", "Inserts a value into an array.", CustomMethodType.Value, typeof(ObjectType))]
     class InsertValueInArray : CustomMethodBase
     {
         public override CodeParameter[] Parameters()
