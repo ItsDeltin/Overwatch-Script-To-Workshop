@@ -75,15 +75,21 @@ namespace Deltin.Deltinteger
 
         public static string FilePath(this Uri uri)
         {
-            return uri.LocalPath.TrimStart('/');
+			var path = uri.LocalPath.TrimStart('\\').TrimStart('/');
+			if(!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+            	return "/" + path.Replace('\\', '/');
+			else
+				return path;
         }
 
         public static Uri Clean(this Uri uri)
         {
+			Uri path;
 			if(!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-            	return new Uri("/" +uri.FilePath());
+            	path = new Uri(uri.FilePath());
 			else 
-				return new Uri(uri.FilePath());
+				path = new Uri(uri.FilePath());
+			return path;
         }
 
         public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
