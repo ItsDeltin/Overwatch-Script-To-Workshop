@@ -205,7 +205,16 @@ namespace Deltin.Deltinteger.Parse
         }
         private void WriteCollection(WorkshopBuilder builder, List<WorkshopVariable> collection)
         {
-            foreach (var var in collection) builder.AppendLine(var.ID + ": " + var.Name);
+            foreach (var var in collection) {
+				if(var.Name == "_extendedGlobalCollection")
+					if(extendedGlobalVariables.Count == 0)
+						continue;
+				else if(var.Name == "_extendedPlayerCollection")
+					if(extendedPlayerVariables.Count == 0)
+						continue;
+				else 
+					builder.AppendLine(var.ID + ": " + var.Name);
+			}
         }
     }
 
