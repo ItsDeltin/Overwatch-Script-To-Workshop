@@ -253,7 +253,6 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Number: return "number";
                 case TokenType.True: return "true";
                 case TokenType.False: return "false";
-				case TokenType.Operator: return "operator";
                 case TokenType.Unknown: return "unknown";
                 default: return tokenType.ToString().ToLower();
             }
@@ -282,7 +281,6 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Parentheses_Open:
                 case TokenType.CurlyBracket_Close:
                 case TokenType.CurlyBracket_Open:
-				case TokenType.Operator:
                 case TokenType.EOF:
                     return false;
                 
@@ -469,7 +467,6 @@ namespace Deltin.Deltinteger.Compiler
         This,
         Root,
         As,
-		Operator,
         // Attributes
         Public,
         Private,

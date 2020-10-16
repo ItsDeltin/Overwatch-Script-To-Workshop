@@ -1499,9 +1499,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     context.Imports.Add(ParseImport());
                     break;
                 
-				case TokenType.Operator:
-					//TODO: Operators
-					break;
                 // Others
                 default:
                     // Variable declaration
