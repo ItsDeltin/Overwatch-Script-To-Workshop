@@ -179,14 +179,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class ClassContext : Node
     {
         public Token Identifier { get; }
+        public List<Token> Generics { get; }
         public Token InheritToken { get; }
         public List<Token> Inheriting { get; }
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
         public List<ConstructorContext> Constructors { get; } = new List<ConstructorContext>();
 
-        public ClassContext(Token identifier, Token inheritToken, List<Token> inheriting)
+        public ClassContext(Token identifier, List<Token> generics, Token inheritToken, List<Token> inheriting)
         {
             Identifier = identifier;
+            Generics = generics;
             InheritToken = inheritToken;
             Inheriting = inheriting;
         }

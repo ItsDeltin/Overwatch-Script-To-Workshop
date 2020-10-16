@@ -1559,6 +1559,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.Class);
             var identifier = ParseExpected(TokenType.Identifier);
 
+            // Get the type parameters.
+            var generics = new List<Token>();
+            if (ParseOptional(TokenType.LessThan))
+            {
+                generics = ParseDelimitedList(TokenType.GreaterThan, () => Kind == TokenType.Identifier, () => ParseExpected(TokenType.Identifier));
+                ParseExpected(TokenType.GreaterThan);
+            }
+
             // Get the types being inherited.
             var inheriting = new List<Token>();
             if (ParseOptional(TokenType.Colon, out Token inheritToken))
@@ -1568,7 +1576,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Start the class group.
             ParseExpected(TokenType.CurlyBracket_Open);
 
-            ClassContext context = new ClassContext(identifier, inheritToken, inheriting);
+            ClassContext context = new ClassContext(identifier, generics, inheritToken, inheriting);
 
             // Get the class elements.
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
