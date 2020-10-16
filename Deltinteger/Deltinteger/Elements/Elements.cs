@@ -169,6 +169,9 @@ namespace Deltin.Deltinteger.Elements
             else if (Function.Name == "Down") vertex = new Vertex(0, -1, 0);
             else if (Function.Name == "Forward") vertex = new Vertex(0, 0, 1);
             else if (Function.Name == "Backward") vertex = new Vertex(0, 0, -1);
+			else if (Function.Name == "Subtract" 
+					&& ParameterValues[0] is Element le && le.Function.Name == "Left"  
+					&& ParameterValues[1] is Element re && re.Function.Name == "Left") vertex = new Vertex(0,0,0);
             else
             {   
                 vertex = null;
