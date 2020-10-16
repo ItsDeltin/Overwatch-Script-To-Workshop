@@ -6,6 +6,7 @@ namespace Deltin.Deltinteger.Elements
 {
     public static class OptimizeElements
     {
+		static readonly List<String> vecFunctions = new List<String> {"Vector", "Left", "Right", "Up", "Down", "Velocity Of", "Facing Direction" };
         public static readonly Dictionary<string, Func<Element, Element>> Optimizations = new Dictionary<string, Func<Element, Element>>() {
             {"Absolute Value", element => {
                 if (element.ParameterValues[0] is NumberElement a)
@@ -379,10 +380,10 @@ namespace Deltin.Deltinteger.Elements
 
                 return element;
             }},
-            {"Subtract", element => OptimizeAddOperation(
+            {"Subtract", element =>  OptimizeAddOperation(
                 element,
                 op       : (a, b) => a - b,
-                areEqual : (a, b) => 0,
+                areEqual : (a, b) => vecFunctions.Contains(a.Function.CodeName()) ? Element.Vector(0,0,0) : 0,
                 false
             )},
             {"Tangent From Degrees", element => {
@@ -422,9 +423,15 @@ namespace Deltin.Deltinteger.Elements
                 IWorkshopTree oX = element.ParameterValues[0];
                 IWorkshopTree oY = element.ParameterValues[1];
                 IWorkshopTree oZ = element.ParameterValues[2];
-                if (oX is NumberElement oXNum && oXNum.Value == 0) oX = Element.EmptyArray();
-                if (oY is NumberElement oYNum && oYNum.Value == 0) oY = Element.EmptyArray();
-                if (oZ is NumberElement oZNum && oZNum.Value == 0) oZ = Element.EmptyArray();
+				bool oXIsZero = false;
+				bool oYIsZero = false;
+				bool oZIsZero = false;
+                if (oX is NumberElement oXNum && oXNum.Value == 0){ oX = Element.EmptyArray(); oXIsZero = true;}
+                if (oY is NumberElement oYNum && oYNum.Value == 0){ oY = Element.EmptyArray(); oYIsZero = true;}
+                if (oZ is NumberElement oZNum && oZNum.Value == 0){ oZ = Element.EmptyArray(); oZIsZero = true;}
+				if(oXIsZero && oYIsZero && oZIsZero)
+					return Element.Subtract(Element.Part("Left"), Element.Part("Left"));
+
                 if (oX != element.ParameterValues[0] ||
                     oY != element.ParameterValues[1] ||
                     oZ != element.ParameterValues[2]) return Element.Vector(oX, oY, oZ);
@@ -503,7 +510,9 @@ namespace Deltin.Deltinteger.Elements
                 return a;
 
             if (a.EqualTo(b))
-                return areEqual(a, b);
+				if(a.Function.CodeName() =="Left")
+					return element;
+                else return areEqual(a, b);
             
             if (a.TryGetConstant(out Vertex aVertex) && b.TryGetConstant(out Vertex bVertex))
                 return Element.Vector(
