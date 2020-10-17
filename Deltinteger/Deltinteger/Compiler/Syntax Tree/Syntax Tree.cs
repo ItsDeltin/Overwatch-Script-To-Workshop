@@ -181,11 +181,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Identifier { get; }
         public List<Token> Generics { get; }
         public Token InheritToken { get; }
-        public List<Token> Inheriting { get; }
+        public List<IParseType> Inheriting { get; }
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
         public List<ConstructorContext> Constructors { get; } = new List<ConstructorContext>();
 
-        public ClassContext(Token identifier, List<Token> generics, Token inheritToken, List<Token> inheriting)
+        public ClassContext(Token identifier, List<Token> generics, Token inheritToken, List<IParseType> inheriting)
         {
             Identifier = identifier;
             Generics = generics;
@@ -363,11 +363,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class NewExpression : Node, IParseExpression, IParseStatement
     {
         public Token ClassIdentifier { get; }
+        public List<IParseType> Generics { get; }
         public List<ParameterValue> Parameters { get; }
 
-        public NewExpression(Token classIdentifier, List<ParameterValue> parameters)
+        public NewExpression(Token classIdentifier, List<IParseType> generics, List<ParameterValue> parameters)
         {
             ClassIdentifier = classIdentifier;
+            Generics = generics;
             Parameters = parameters;
         }
 
@@ -428,11 +430,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public Token Token { get; }
         public List<ArrayIndex> Index { get; }
+        public List<IParseType> Generics { get; }
 
-        public Identifier(Token token, List<ArrayIndex> index)
+        public Identifier(Token token, List<ArrayIndex> index, List<IParseType> generics)
         {
             Token = token;
             Index = index;
+            Generics = generics;
         }
 
         public override string ToString() => Token.Text + string.Concat(Index.Select(i => i.ToString()));

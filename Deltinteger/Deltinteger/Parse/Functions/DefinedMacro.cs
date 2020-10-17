@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Expression { get; private set; }
         private readonly MacroFunctionContext _context;
 
-        public DefinedMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, MacroFunctionContext context, CodeType returnType)
+        public DefinedMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, MacroFunctionContext context)
             : base(parseInfo, context.Identifier.Text, new LanguageServer.Location(parseInfo.Script.Uri, context.Identifier.Range))
         {
             _context = context;
@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = attributeResult.AccessLevel;
             
             SetupScope(Static ? staticScope : objectScope);
-            CodeType = returnType;
+            CodeType = TypeFromContext.GetCodeTypeFromContext(parseInfo, methodScope, _context.Type);
             SetupParameters(context.Parameters, false);
 
             if (Attributes.Override)

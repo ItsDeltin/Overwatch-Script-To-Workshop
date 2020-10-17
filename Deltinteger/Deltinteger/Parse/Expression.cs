@@ -118,7 +118,7 @@ namespace Deltin.Deltinteger.Parse
             Expression = parseInfo.GetExpression(scope, typeConvert.Expression);
 
             // Get the type. Syntax error if there is none.
-            ConvertingTo = CodeType.GetCodeTypeFromContext(parseInfo, typeConvert.Type);
+            ConvertingTo = TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, typeConvert.Type);
         }
 
         public Scope ReturningScope() => ConvertingTo?.GetObjectScope();

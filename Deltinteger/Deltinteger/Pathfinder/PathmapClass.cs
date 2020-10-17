@@ -9,7 +9,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class PathmapClass : ClassType
+    public class PathmapClass : ClassInitializer
     {
         private DeltinScript DeltinScript { get; }
         public IndexReference Nodes { get; private set; }
@@ -30,50 +30,52 @@ namespace Deltin.Deltinteger.Pathfinder
             DeltinScript = deltinScript;
             this.Constructors = new Constructor[] {
                 new PathmapClassConstructor(this),
-                new Constructor(this, null, AccessLevel.Public) {
+                new Constructor(WorkingInstance, null, AccessLevel.Public) {
                     Documentation = "Creates an empty pathmap."
                 }
             };
-            Description = new MarkupBuilder()
+            Documentation = new MarkupBuilder()
                 .Add("A pathmap can be used for pathfinding.").NewLine()
                 .Add("Pathmaps are imported from ").Code(".pathmap").Add(" files. These files are generated from an ingame editor. Run the ").Code("Copy Pathmap Editor Code").Add(" command by opening the command palette with ").Code("ctrl+shift+p")
                 .Add(". Paste the rules into Overwatch and select the map the pathmap will be created for.")
                 .ToString();
         }
 
+        public override bool BuiltInTypeMatches(Type type) => false;
+
         public override void ResolveElements()
         {
-            if (elementsResolved) return;
+            if (_elementsResolved) return;
             base.ResolveElements();
 
-            serveObjectScope.AddNativeMethod(Pathfind);
-            serveObjectScope.AddNativeMethod(PathfindAll);
-            serveObjectScope.AddNativeMethod(GetPath);
-            serveObjectScope.AddNativeMethod(PathfindEither);
-            serveObjectScope.AddNativeMethod(GetResolve(DeltinScript));
-            serveObjectScope.AddNativeMethod(GetResolveTo(DeltinScript));
-            serveObjectScope.AddNativeMethod(AddNode);
-            serveObjectScope.AddNativeMethod(DeleteNode);
-            serveObjectScope.AddNativeMethod(AddSegment);
-            serveObjectScope.AddNativeMethod(DeleteSegment);
-            serveObjectScope.AddNativeMethod(AddAttribute);
-            serveObjectScope.AddNativeMethod(DeleteAttribute);
-            serveObjectScope.AddNativeMethod(DeleteAllAttributes);
-            serveObjectScope.AddNativeMethod(DeleteAllAttributesConnectedToNode);
-            serveObjectScope.AddNativeMethod(SegmentFromNodes);
+            ServeObjectScope.AddNativeMethod(Pathfind);
+            ServeObjectScope.AddNativeMethod(PathfindAll);
+            ServeObjectScope.AddNativeMethod(GetPath);
+            ServeObjectScope.AddNativeMethod(PathfindEither);
+            ServeObjectScope.AddNativeMethod(GetResolve(DeltinScript));
+            ServeObjectScope.AddNativeMethod(GetResolveTo(DeltinScript));
+            ServeObjectScope.AddNativeMethod(AddNode);
+            ServeObjectScope.AddNativeMethod(DeleteNode);
+            ServeObjectScope.AddNativeMethod(AddSegment);
+            ServeObjectScope.AddNativeMethod(DeleteSegment);
+            ServeObjectScope.AddNativeMethod(AddAttribute);
+            ServeObjectScope.AddNativeMethod(DeleteAttribute);
+            ServeObjectScope.AddNativeMethod(DeleteAllAttributes);
+            ServeObjectScope.AddNativeMethod(DeleteAllAttributesConnectedToNode);
+            ServeObjectScope.AddNativeMethod(SegmentFromNodes);
 
-            staticScope.AddNativeMethod(StopPathfind);
-            staticScope.AddNativeMethod(CurrentSegmentAttribute);
-            staticScope.AddNativeMethod(IsPathfinding);
-            staticScope.AddNativeMethod(IsPathfindStuck);
-            staticScope.AddNativeMethod(FixPathfind);
-            staticScope.AddNativeMethod(NextPosition);
-            staticScope.AddNativeMethod(CurrentNode);
-            staticScope.AddNativeMethod(ThrottleToNextNode);
-            staticScope.AddNativeMethod(Recalibrate);
-            staticScope.AddNativeMethod(IsPathfindingToNode);
-            staticScope.AddNativeMethod(IsPathfindingToSegment);
-            staticScope.AddNativeMethod(IsPathfindingToAttribute);
+            StaticScope.AddNativeMethod(StopPathfind);
+            StaticScope.AddNativeMethod(CurrentSegmentAttribute);
+            StaticScope.AddNativeMethod(IsPathfinding);
+            StaticScope.AddNativeMethod(IsPathfindStuck);
+            StaticScope.AddNativeMethod(FixPathfind);
+            StaticScope.AddNativeMethod(NextPosition);
+            StaticScope.AddNativeMethod(CurrentNode);
+            StaticScope.AddNativeMethod(ThrottleToNextNode);
+            StaticScope.AddNativeMethod(Recalibrate);
+            StaticScope.AddNativeMethod(IsPathfindingToNode);
+            StaticScope.AddNativeMethod(IsPathfindingToSegment);
+            StaticScope.AddNativeMethod(IsPathfindingToAttribute);
 
             // Hooks
 
@@ -115,11 +117,11 @@ namespace Deltin.Deltinteger.Pathfinder
 }")
                 .EndCodeLine());
 
-            staticScope.AddNativeVariable(OnPathStartHook);
-            staticScope.AddNativeVariable(OnNodeReachedHook);
-            staticScope.AddNativeVariable(OnPathCompleted);
-            staticScope.AddNativeVariable(IsNodeReachedDeterminer);
-            staticScope.AddNativeVariable(ApplicableNodeDeterminer);
+            StaticScope.AddNativeVariable(OnPathStartHook);
+            StaticScope.AddNativeVariable(OnNodeReachedHook);
+            StaticScope.AddNativeVariable(OnPathCompleted);
+            StaticScope.AddNativeVariable(IsNodeReachedDeterminer);
+            StaticScope.AddNativeVariable(ApplicableNodeDeterminer);
 
             NodesVar = new InternalVar("Nodes") {
                 Documentation = "The nodes of the pathmap.",
@@ -133,9 +135,9 @@ namespace Deltin.Deltinteger.Pathfinder
                 Documentation = "The attributes of the pathmap. The X of a value in the array is the first node that the attribute is related to. The Y is the second node the attribute is related to. The Z is the attribute's actual value.",
                 CodeType = new ArrayType(DeltinScript.Types, VectorType.Instance)
             };
-            serveObjectScope.AddNativeVariable(NodesVar);
-            serveObjectScope.AddNativeVariable(SegmentsVar);
-            serveObjectScope.AddNativeVariable(AttributesVar);
+            ServeObjectScope.AddNativeVariable(NodesVar);
+            ServeObjectScope.AddNativeVariable(SegmentsVar);
+            ServeObjectScope.AddNativeVariable(AttributesVar);
         }
 
         private static MarkupBuilder AddHookInfo(MarkupBuilder markupBuilder) => markupBuilder.NewLine().Add("This is a hook variable, meaning it can only be set at the rule-level.");
@@ -339,7 +341,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "Resolve",
             Documentation = "Resolves all potential paths to the specified destination. This can be used to precalculate the path to a position, or to reuse the calculated path to a position.",
-            ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
+            ReturnType = deltinScript.Types.GetInstanceFromInitializer<PathResolveClass>(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve."),
                 new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(Element.Null())),
@@ -362,7 +364,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private static FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "ResolveTo",
             Documentation = "Resolves the path to the specified destination. This can be used to precalculate the path to a position, or to reuse the calculated path to a position.",
-            ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
+            ReturnType = deltinScript.Types.GetInstanceFromInitializer<PathResolveClass>(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve."),
                 new CodeParameter("resolveTo", "Resolving will stop once this position is reached."),
@@ -741,7 +743,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
     class PathmapClassConstructor : Constructor
     {
-        public PathmapClassConstructor(PathmapClass pathMapClass) : base(pathMapClass, null, AccessLevel.Public)
+        public PathmapClassConstructor(PathmapClass pathMapClass) : base(pathMapClass.WorkingInstance, null, AccessLevel.Public)
         {
             Parameters = new CodeParameter[] {
                 new PathmapFileParameter("pathmapFile", "File path of the pathmap to use. Must be a `.pathmap` file.")

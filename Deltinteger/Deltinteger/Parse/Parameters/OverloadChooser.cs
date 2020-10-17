@@ -307,7 +307,7 @@ namespace Deltin.Deltinteger.Parse
             if (parameterType.CodeTypeParameterInvalid(value.Type()))
             {
                 // The parameter type does not match.
-                string msg = string.Format("Cannot convert type '{0}' to '{1}'.", value.Type().GetName(), Option.Parameters[parameter].Type.GetName());
+                string msg = string.Format("Cannot convert type '{0}' to '{1}'.", value.Type().GetNameOrVoid(), Option.Parameters[parameter].Type.GetNameOrVoid());
                 Error(msg, errorRange);
             }
             else if (value.Type() != null && parameterType == null && value.Type().IsConstant())

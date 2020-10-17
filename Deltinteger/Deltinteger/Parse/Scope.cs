@@ -12,8 +12,8 @@ namespace Deltin.Deltinteger.Parse
     public class Scope
     {
         private readonly List<IVariable> _variables = new List<IVariable>();
-        private readonly List<IMethod> _functions = new List<IMethod>();
         private readonly List<MethodGroup> _methodGroups = new List<MethodGroup>();
+        public List<ICodeTypeInitializer> Types { get; } = new List<ICodeTypeInitializer>();
         public Scope Parent { get; }
         public string ErrorName { get; set; } = "current scope";
         public CodeType This { get; set; }
@@ -96,7 +96,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private void IterateParents(Func<Scope, bool> iterate)
+        public void IterateParents(Func<Scope, bool> iterate)
         {
             Scope current = this;
             while (current != null)
@@ -397,6 +397,8 @@ namespace Deltin.Deltinteger.Parse
             return @this;
         }
 
+        public void AddType(ICodeTypeInitializer initializer) => Types.Add(initializer);
+
         public bool AccessorMatches(IScopeable element)
         {
             if (element.AccessLevel == AccessLevel.Public) return true;
@@ -478,17 +480,27 @@ namespace Deltin.Deltinteger.Parse
 
                 // Add the variables.
                 foreach (var variable in scope._variables)
+                    // Make sure the variable is not a method group and it is scoped at the current position.
                     if (variable is MethodGroup == false && scope.WasScopedAtPosition(variable, pos, getter))
+                        // If TagPlayerVariables is true and the variable is a player variable, use a new completion item that highlights the variable.
                         if (TagPlayerVariables && variable is IIndexReferencer referencer && referencer.VariableType == VariableType.Player)
                             completions.Add(new CompletionItem() {
                                 Label = "★ " + variable.Name,
-                                SortText = "!" + variable.Name,
-                                InsertText = variable.Name,
+                                SortText = "!" + variable.Name, // Prepend '!' to the variable name so it shows up at the top of the completion list.
+                                InsertText = variable.Name, // Override InsertText so that the star is not inserted with the variable name.
                                 Kind = CompletionItemKind.Variable,
                                 Detail = variable.CodeType.GetName() + " " + variable.Name
                             });
                         else
                             completions.Add(variable.GetCompletion());
+
+                // Add the types.
+                foreach (var type in scope.Types)
+                {
+                    var completion = type.GetCompletion();
+                    if (completion != null)
+                        completions.Add(completion);
+                }
 
                 return scope.CompletionCatch;
             });

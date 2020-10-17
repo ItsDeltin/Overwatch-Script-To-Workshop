@@ -541,7 +541,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 indices.Add(new ArrayIndex(expression, left, right));
             }
 
-            return EndNode(MakeIdentifier(identifier, indices));
+            // Parse generics
+            var generics = new List<IParseType>();
+            if (indices.Count == 0 && IsGenerics())
+                generics = ParseGenerics();
+
+            return EndNode(MakeIdentifier(identifier, indices, generics));
         }
 
         /// <summary>Parses the inner parameter values of a function.</summary>
@@ -1187,6 +1192,26 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         bool IsStartOfExpression() => Kind.IsStartOfExpression() || Kind.IsBinaryOperator();
 
+        bool IsGenerics() => Lookahead(() => {
+            if (Kind != TokenType.LessThan) return false;
+
+            int genericLevel = 0;
+            while (Kind.IsPartOfType())
+            {
+                if (Kind == TokenType.LessThan)
+                    genericLevel++;
+                else if (Kind == TokenType.GreaterThan)
+                {
+                    genericLevel--;
+                    if (genericLevel == 0) return true;
+                }
+                if (genericLevel < 0) return false;
+                Consume();
+            }
+
+            return false;
+        });
+
         LambdaExpression ParseLambda()
         {
             StartNode();
@@ -1374,6 +1399,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Parse the class identifier.
             var identifier = ParseExpected(TokenType.Identifier);
+
+            var generics = new List<IParseType>();
+            // Parse the generics.
+            if (ParseOptional(TokenType.LessThan))
+                generics = ParseGenerics();
             
             // Start the parentheses.
             ParseExpected(TokenType.Parentheses_Open);
@@ -1384,7 +1414,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // End the parentheses.
             ParseExpected(TokenType.Parentheses_Close);
 
-            return EndNode(new NewExpression(identifier, parameterValues));
+            return EndNode(new NewExpression(identifier, generics, parameterValues));
         }
 
         CreateArray ParseCreateArray()
@@ -1460,6 +1490,19 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             ParseExpected(TokenType.GreaterThan);
             return EndNode(new StringExpression(localized, str, formats));
+        }
+
+        List<IParseType> ParseGenerics()
+        {
+            var generics = new List<IParseType>();
+
+            if (ParseOptional(TokenType.LessThan))
+            {
+                generics = ParseDelimitedList(TokenType.GreaterThan, () => ParseType().LookaheadValid, ParseType);
+                ParseExpected(TokenType.GreaterThan);
+            }
+
+            return generics;
         }
 
         /// <summary>Parses the root of a file.</summary>
@@ -1568,9 +1611,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             // Get the types being inherited.
-            var inheriting = new List<Token>();
+            var inheriting = new List<IParseType>();
             if (ParseOptional(TokenType.Colon, out Token inheritToken))
-                do inheriting.Add(ParseExpected(TokenType.Identifier));
+                do inheriting.Add(ParseType());
                 while (ParseOptional(TokenType.Comma));
 
             // Start the class group.
@@ -1700,7 +1743,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new Hook(variableExpression, variableValue);
         }
 
-        public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices) => new Identifier(identifier, indices);
+        public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
         MissingElement MissingElement() => new MissingElement(CurrentOrLast.Range);
         IParseStatement ExpressionStatement(IParseExpression expression, Token actionComment)
         {

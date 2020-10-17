@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         private FileGetter FileGetter { get; }
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
-        public ScriptTypes Types { get; } = new ScriptTypes();
+        public ScriptTypes Types { get; }
         public Scope PlayerVariableScope { get; set; }
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
@@ -39,11 +39,11 @@ namespace Deltin.Deltinteger.Parse
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
-            Types.GetDefaults(this);
-
+            Types = new ScriptTypes(this);
             GlobalScope = Scope.GetGlobalScope(Types);
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
+            Types.AddTypesToScope(GlobalScope);
 
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
             Importer.CollectScriptFiles(translateSettings.Root);            
@@ -130,20 +130,20 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var enumContext in script.Context.Enums)
             {
-                var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
+                var newEnum = new GenericCodeTypeInitializer(new DefinedEnum(new ParseInfo(script, this), enumContext));
+                RulesetScope.AddType(newEnum);
                 Types.AllTypes.Add(newEnum); 
                 Types.DefinedTypes.Add(newEnum);
-                Types.CalledTypes.Add(newEnum);
             }
 
             // Get the types
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var typeContext in script.Context.Classes)
             {
-                var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
+                var newType = new DefinedClassInitializer(new ParseInfo(script, this), GlobalScope, typeContext);
+                RulesetScope.AddType(newType);
                 Types.AllTypes.Add(newType);
                 Types.DefinedTypes.Add(newType);
-                Types.CalledTypes.Add(newType);
             }
             
             // Get the declarations
@@ -176,7 +176,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
+            foreach (var resolve in _resolveElements) resolve.ResolveElements();
             foreach (var apply in _applyBlocks) apply.SetupParameters();
             foreach (var apply in _applyBlocks) apply.SetupBlock();
             foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion();
@@ -207,7 +207,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopRules = new List<Rule>();
 
             // Init called types.
-            foreach (var type in Types.CalledTypes.Distinct()) type.WorkshopInit(this);
+            foreach (var workshopInit in _workshopInit) workshopInit.WorkshopInit(this);
 
              // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
@@ -273,7 +273,7 @@ namespace Deltin.Deltinteger.Parse
             result.AppendLine();
 
             // Print class identifiers.
-            Types.PrintClassIdentifiers(result);
+            // Types.PrintClassIdentifiers(result);
 
             // Get the subroutines.
             SubroutineCollection.ToWorkshop(result);
@@ -308,55 +308,53 @@ namespace Deltin.Deltinteger.Parse
         {
             _recursionCheck.Add(callInfo ?? throw new ArgumentNullException(nameof(callInfo)));
         }
+
+        // Element resolve
+        private readonly List<IResolveElements> _resolveElements = new List<IResolveElements>();
+        public void AddResolve(IResolveElements resolveElement)
+        {
+            if (!_resolveElements.Contains(resolveElement))
+                _resolveElements.Add(resolveElement);
+        }
+
+        // Workshop init
+        private readonly List<IWorkshopInit> _workshopInit = new List<IWorkshopInit>();
+        public void AddWorkshopInit(IWorkshopInit workshopInit)
+        {
+            if (!_workshopInit.Contains(workshopInit))
+                _workshopInit.Add(workshopInit);
+        }
     }
 
     public class ScriptTypes : ITypeSupplier
     {
-        public List<CodeType> AllTypes { get; } = new List<CodeType>();
-        public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
-        public List<CodeType> CalledTypes { get; } = new List<CodeType>();
+        private readonly DeltinScript _deltinScript;
+        public List<ICodeTypeInitializer> AllTypes { get; } = new List<ICodeTypeInitializer>();
+        public List<ICodeTypeInitializer> DefinedTypes { get; } = new List<ICodeTypeInitializer>();
         private readonly PlayerType _playerType;
 
-        public ScriptTypes()
+        public ScriptTypes(DeltinScript deltinScript)
         {
+            _deltinScript = deltinScript;
             _playerType = new PlayerType();
-        }
 
-        public void GetDefaults(DeltinScript deltinScript)
-        {
-            var dynamicType = new DynamicType(deltinScript);
-            AllTypes.Add(_playerType);
-            AllTypes.AddRange(CodeType.DefaultTypes);
-            AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
+            var dynamicType = new DynamicType(_deltinScript);
+            AllTypes.Add(new GenericCodeTypeInitializer(_playerType));
+            AllTypes.AddRange(CodeType.DefaultTypes.Select(t => new GenericCodeTypeInitializer(t)));
+            AllTypes.Add(new Pathfinder.PathmapClass(_deltinScript));
             AllTypes.Add(new Pathfinder.PathResolveClass());
-            AllTypes.Add(dynamicType);
-            AllTypes.Add(new Lambda.ValueBlockLambda(dynamicType));
-            AllTypes.Add(new Lambda.MacroLambda(dynamicType));
+            AllTypes.Add(new GenericCodeTypeInitializer(dynamicType));
+            AllTypes.Add(new GenericCodeTypeInitializer(new Lambda.ValueBlockLambda(dynamicType)));
+            AllTypes.Add(new GenericCodeTypeInitializer(new Lambda.MacroLambda(dynamicType)));
 
             _playerType.ResolveElements();
-            deltinScript.PlayerVariableScope = _playerType.ObjectScope;
+            _deltinScript.PlayerVariableScope = _playerType.ObjectScope;
         }
 
-        public CodeType GetCodeType(string name) => AllTypes.FirstOrDefault(type => type.Name == name);
-        public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
+        public void AddTypesToScope(Scope scope)
         {
-            var type = AllTypes.FirstOrDefault(type => type.Name == name);
-
-            if (range != null && type == null)
-                diagnostics.Error(string.Format("The type {0} does not exist.", name), range);
-            
-            return type;
-        }
-        public bool IsCodeType(string name)
-        {
-            return GetCodeType(name, null, null) != null;
-        }
-        public T GetCodeType<T>() where T: CodeType => (T)AllTypes.FirstOrDefault(type => type.GetType() == typeof(T));
-
-        public void CallType(CodeType type)
-        {
-            if (!CalledTypes.Contains(type))
-                CalledTypes.Add(type);
+            foreach (var type in AllTypes)
+                scope.AddType(type);
         }
 
         public void PrintClassIdentifiers(WorkshopBuilder builder)
@@ -370,7 +368,9 @@ namespace Deltin.Deltinteger.Parse
             builder.AppendLine();
         }
 
-        public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
+        public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.BuiltInTypeMatches(typeof(T))).GetInstance();
+        public CodeType GetInstanceFromInitializer<T>() where T: ICodeTypeInitializer => AllTypes.First(type => type.GetType() == typeof(T)).GetInstance();
+        public T GetInitializer<T>() where T: ICodeTypeInitializer => (T)AllTypes.First(type => type.GetType() == typeof(T));
 
         public CodeType Default() => Any();
         public CodeType Any() => GetInstance<DynamicType>();

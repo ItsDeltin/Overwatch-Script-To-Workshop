@@ -54,8 +54,8 @@ namespace Deltin.Deltinteger.Pathfinder
             }
 
             // Get the PathResolve instance and the Pathmap instance.
-            PathResolveInstance = DeltinScript.Types.GetInstance<PathResolveClass>();
-            PathmapInstance = DeltinScript.Types.GetInstance<PathmapClass>();
+            PathResolveInstance = DeltinScript.Types.GetInitializer<PathResolveClass>();
+            PathmapInstance = DeltinScript.Types.GetInitializer<PathmapClass>();
 
             // Get the resolve subroutine.
             GetResolveRoutine();

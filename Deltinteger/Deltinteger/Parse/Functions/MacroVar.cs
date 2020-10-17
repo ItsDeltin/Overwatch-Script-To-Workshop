@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
         public CallInfo CallInfo { get; }
         private readonly RecursiveCallHandler _recursiveCallHandler;
 
-        public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext, CodeType returnType)
+        public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext)
         {
             _context = macroContext;
 
@@ -52,10 +52,10 @@ namespace Deltin.Deltinteger.Parse
             DefinedAt = new Location(parseInfo.Script.Uri, nameRange);
             _recursiveCallHandler = new RecursiveCallHandler(this);
             CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
-            CodeType = returnType;
             _expressionToParse = macroContext.Value;
             _scope = Static ? staticScope : objectScope;
-            this._parseInfo = parseInfo;
+            _parseInfo = parseInfo;
+            CodeType = TypeFromContext.GetCodeTypeFromContext(parseInfo, _scope, macroContext.Type);
             
             _scope.AddMacro(this, parseInfo.Script.Diagnostics, nameRange, !Override);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);

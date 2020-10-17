@@ -36,6 +36,8 @@ namespace Deltin.Deltinteger.Parse
 
         public Token NextToken(Token token) => Document.Lexer.Tokens[Document.Lexer.Tokens.IndexOf(token) + 1];
 
+        public Location GetLocation(DocRange range) => new Location(Uri, range);
+
         public void AddCompletionRange(CompletionRange completionRange)
         {
             completionRanges.Add(completionRange);

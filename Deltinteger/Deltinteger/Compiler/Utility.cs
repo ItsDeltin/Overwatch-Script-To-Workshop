@@ -359,6 +359,25 @@ namespace Deltin.Deltinteger.Compiler
             }
         }
 
+        public static bool IsPartOfType(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Parentheses_Open:
+                case TokenType.Parentheses_Close:
+                case TokenType.SquareBracket_Open:
+                case TokenType.SquareBracket_Close:
+                case TokenType.GreaterThan:
+                case TokenType.LessThan:
+                case TokenType.Define:
+                case TokenType.Identifier:
+                    return true;
+                
+                default:
+                    return false;
+            }
+        }
+
         public static bool IsStartOfStatement(this TokenType tokenType)
         {
             switch (tokenType)

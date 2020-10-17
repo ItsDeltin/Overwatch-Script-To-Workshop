@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the type.
             if (!context.Type.IsVoid)
-                CodeType = CodeType.GetCodeTypeFromContext(parseInfo, context.Type);
+                CodeType = TypeFromContext.GetCodeTypeFromContext(parseInfo, methodScope, context.Type);
 
             // Setup the parameters and parse the block.
             if (!IsSubroutine)

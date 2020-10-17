@@ -15,7 +15,6 @@ namespace Deltin.Deltinteger.Parse
         private Scope Scope { get; }
         private DeltinScript _translateInfo { get; }
 
-
         public DefinedEnum(ParseInfo parseInfo, EnumContext enumContext) : base(enumContext.Identifier.Text)
         {
             CanBeExtended = false;
@@ -23,8 +22,9 @@ namespace Deltin.Deltinteger.Parse
             Kind = "enum";
 
             // Check if a type with the same name already exists.
-            if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
-                parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", enumContext.Identifier.Range);
+            // todo
+            // if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
+            //     parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", enumContext.Identifier.Range);
             
             _translateInfo = parseInfo.TranslateInfo;
             Scope = new Scope("enum " + Name);

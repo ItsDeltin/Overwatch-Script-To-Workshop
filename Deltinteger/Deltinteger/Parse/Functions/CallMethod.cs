@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public IMethod CallingMethod => Result?.Function;
         public IInvokeResult Result { get; }
         private readonly ParseInfo _parseInfo;
+        private CodeType _returnType;
 
         public CallMethodAction(ParseInfo parseInfo, Scope scope, FunctionExpression methodContext, bool usedAsExpression, Scope getter)
         {
@@ -32,7 +33,12 @@ namespace Deltin.Deltinteger.Parse
             // Get the invoke info.
             IInvokeInfo invokeInfo = resolveInvoke.WasResolved ? resolveInvoke.InvokeInfo : target.Type()?.InvokeInfo;
             if (invokeInfo != null)
+            {
                 Result = invokeInfo.Invoke(new InvokeData(parseInfo, methodContext, target, scope, getter, usedAsExpression));
+
+                // Generics
+                Result.ReturnType?.GetRealType(parseInfo, realType => _returnType = realType);
+            }
             // If the target is not invocable and the target is not a missing element, add error.
             else if (target is MissingElementAction == false)
                 parseInfo.Script.Diagnostics.Error("Method name expected", methodContext.Target.Range);
@@ -41,11 +47,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope()
         {
             if (Result == null) return null;
-
-            if (Result.ReturnType == null)
-                return _parseInfo.TranslateInfo.PlayerVariableScope;
-            else
-                return Result.ReturnType.GetObjectScope();
+            return _returnType.GetObjectScope();
         }
 
         public CodeType Type() => Result?.ReturnType;

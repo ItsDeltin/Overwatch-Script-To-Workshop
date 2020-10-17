@@ -109,7 +109,7 @@ namespace Deltin.Deltinteger.Parse
             if (_contextHandler.GetCodeType() == null) return;
 
             // Get the type.
-            CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, _contextHandler.GetCodeType());
+            CodeType type = TypeFromContext.GetCodeTypeFromContext(_parseInfo, OperationalScope(), _contextHandler.GetCodeType());
             
             if (type != null && type.IsConstant())
                 _varInfo.IsWorkshopReference = true;

@@ -374,17 +374,20 @@ namespace Deltin.Deltinteger.Parse
             // Currently, OSTW does not support nested types, so make sure there is no parent.
             if (_canBeType)
             {
-                CodeType type = tcParseInfo.ParseInfo.TranslateInfo.Types.GetCodeType(_name);
+                // TODO
+                // var types = tcParseInfo.Scope.TypesFromName(_name);
                 // If the type exists, add it to potentialPaths.
-                if (type != null)
-                    potentialPaths.Add(new TypeOption(type, tcParseInfo.ParseInfo, _range));
+                // if (type != null)
+                //     potentialPaths.Add(new TypeOption(type, tcParseInfo.ParseInfo, _range));
             }
             
             return potentialPaths;
         }
 
         public void RetrievedScopeable(IScopeable scopeable)
-        {            
+        {
+            if (scopeable == null) return;
+
             // Narrow down the potential paths.
             for (int i = _potentialPaths.Count - 1; i >= 0; i--)
                 if (!_potentialPaths[i].GetScope().ScopeContains(scopeable))

@@ -12,9 +12,10 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class CodeType : IExpression, ICallable
+    public abstract class CodeType : IExpression, ICallable, IWorkshopInit
     {
         public string Name { get; }
+        public CodeType[] Generics { get; protected set; }
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
@@ -83,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual bool Is(CodeType type) => this == type;
 
         // Static
-        public abstract Scope ReturningScope();
+        public virtual Scope ReturningScope() => null;
         // Object
         public virtual Scope GetObjectScope() => null;
 
@@ -108,6 +109,8 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="actionSet">The actionset to use.</param>
         /// <param name="reference">The reference of the object.</param>
         public virtual void BaseSetup(ActionSet actionSet, Element reference) => throw new NotImplementedException();
+
+        public virtual void ResolveElements() {}
 
         /// <summary>Assigns workshop elements so the class can function. Implementers should check if `wasCalled` is true.</summary>
         public virtual void WorkshopInit(DeltinScript translateInfo) {}
@@ -148,7 +151,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            parseInfo.TranslateInfo.Types.CallType(this);
+            parseInfo.TranslateInfo.AddWorkshopInit(this);
             parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
@@ -159,85 +162,9 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets the full name of the type.</summary>
         public virtual string GetName() => Name;
 
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, IParseType typeContext) => GetCodeTypeFromContext(parseInfo, (dynamic)typeContext);
+        public virtual void AddLink(Location location) {}
 
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, ParseType typeContext)
-        {
-            if (typeContext == null) return null;
-
-            if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
-            
-            CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
-            if (type == null) return ObjectType.Instance; // TODO: ???
-
-            // Get generics
-            if (typeContext.HasTypeArgs)
-            {
-                // Create a list to store the generics.
-                List<CodeType> generics = new List<CodeType>();
-
-                // Get the generics.
-                foreach (var genericContext in typeContext.TypeArgs)
-                    generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
-                
-                if (type is Lambda.ValueBlockLambda)
-                    type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
-                else if (type is Lambda.BlockLambda)
-                    type = new Lambda.BlockLambda(generics.ToArray());
-                else if (type is Lambda.MacroLambda)
-                    type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
-            }
-
-            type.Call(parseInfo, typeContext.Identifier.Range);
-
-            for (int i = 0; i < typeContext.ArrayCount; i++)
-                type = new ArrayType(parseInfo.TranslateInfo.Types, type);
-            
-            return type;
-        }
-
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, LambdaType type)
-        {
-            // Get the lambda type's parameters.
-            var parameters = new CodeType[type.Parameters.Count];
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                parameters[i] = GetCodeTypeFromContext(parseInfo, type.Parameters[i]);
-
-                // Constant types are not allowed.
-                if (parameters[i] != null && parameters[i].IsConstant())
-                    parseInfo.Script.Diagnostics.Error("The constant type '" + parameters[i].GetName() + "' cannot be used in method types", type.Parameters[i].Range);
-            }
-
-            // Get the return type.
-            CodeType returnType = null;
-            bool returnsValue = false;
-            
-            if (!type.ReturnType.IsVoid)
-            {
-                returnType = GetCodeTypeFromContext(parseInfo, type.ReturnType);
-                returnsValue = true;
-            }
-            
-            return new PortableLambdaType(LambdaKind.Portable, parameters, returnsValue, returnType, true);
-        }
-
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, GroupType type)
-        {
-            // Get the contained type.
-            var result = GetCodeTypeFromContext(parseInfo, type.Type);
-            // Get the array type.
-            for (int i = 0; i < type.ArrayCount; i++) result = new ArrayType(parseInfo.TranslateInfo.Types, result);
-            // Done.
-            return result;
-        }
-
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, PipeTypeContext type)
-        {
-            var left = GetCodeTypeFromContext(parseInfo, type.Left);
-            var right = GetCodeTypeFromContext(parseInfo, type.Right);
-            return new PipeType(left, right);
-        }
+        public virtual void GetRealType(ParseInfo parseInfo, Action<CodeType> callback) => callback(this);
 
         static List<CodeType> _defaultTypes;
         public static List<CodeType> DefaultTypes {

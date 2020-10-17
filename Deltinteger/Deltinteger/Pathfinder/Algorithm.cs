@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Pathfinder
             GetClosestNode = (actionSet, nodes, position) => ClosestNodeToPosition(nodes, position, resolveInfo.PotentiallyNullNodes);
 
             // Get the pathmap class instance.
-            PathmapClass pathmapClass = actionSet.Translate.DeltinScript.Types.GetCodeType<PathmapClass>();
+            PathmapClass pathmapClass = actionSet.Translate.DeltinScript.Types.GetInitializer<PathmapClass>();
 
             Nodes = pathmapClass.Nodes.Get()[pathmapObject];
             Segments = pathmapClass.Segments.Get()[pathmapObject];
@@ -514,7 +514,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected override void Assign()
         {
             // Get the PathResolveClass instance.
-            PathResolveClass = actionSet.Translate.DeltinScript.Types.GetInstance<PathResolveClass>();
+            PathResolveClass = actionSet.Translate.DeltinScript.Types.GetInitializer<PathResolveClass>();
             PathResolveClass.WorkshopInit(actionSet.Translate.DeltinScript);
 
             // Create a new PathResolve class instance.

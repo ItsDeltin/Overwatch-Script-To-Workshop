@@ -161,7 +161,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void GetCodeType()
         {
             var context = _contextHandler.GetCodeType();
-            CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, context);
+            CodeType type = TypeFromContext.GetCodeTypeFromContext(_parseInfo, OperationalScope(), context);
             
             if (type != null && type.IsConstant())
                 _diagnostics.Error($"Constant types cannot be used in subroutine parameters.", context.Range);

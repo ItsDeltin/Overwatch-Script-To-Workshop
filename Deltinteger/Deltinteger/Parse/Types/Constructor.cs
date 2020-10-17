@@ -61,8 +61,7 @@ namespace Deltin.Deltinteger.Parse
 
             ConstructorScope = scope.Child();
 
-            if (Type is DefinedType)
-                ((DefinedType)Type).AddLink(DefinedAt);
+            Type.AddLink(DefinedAt);
             
             parseInfo.TranslateInfo.ApplyBlock(this);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
@@ -94,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
-            ((DefinedType)Type).AddLink(parseInfo.GetLocation(callRange));
+            Type.AddLink(parseInfo.GetLocation(callRange));
         }
 
         private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();

@@ -1,9 +1,10 @@
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
+using System;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class PathResolveClass : ClassType
+    public class PathResolveClass : ClassInitializer
     {
         /// <summary>An array of numbers where each value is that index's parent index. Following the path will lead to the source. Subtract value by -1 since 0 is used for unset.</summary>
         public ObjectVariable ParentArray { get; private set; }
@@ -18,7 +19,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override void ResolveElements()
         {
-            if (elementsResolved) return;
+            if (_elementsResolved) return;
             base.ResolveElements();
 
             // Set ParentArray
@@ -30,9 +31,11 @@ namespace Deltin.Deltinteger.Pathfinder
             // Set Destination
             Destination = AddObjectVariable(new InternalVar("Destination"));
 
-            serveObjectScope.AddNativeMethod(PathfindFunction);
-            serveObjectScope.AddNativeMethod(Next);
+            ServeObjectScope.AddNativeMethod(PathfindFunction);
+            ServeObjectScope.AddNativeMethod(Next);
         }
+
+        public override bool BuiltInTypeMatches(Type type) => false;
 
         private FuncMethod PathfindFunction => new FuncMethodBuilder() {
             Name = "Pathfind",

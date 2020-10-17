@@ -105,4 +105,14 @@ namespace Deltin.Deltinteger
     {
         void Applied();
     }
+
+    public interface IResolveElements
+    {
+        void ResolveElements();
+    }
+
+    public interface IWorkshopInit
+    {
+        void WorkshopInit(DeltinScript deltinScript);
+    }
 }

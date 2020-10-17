@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ActionSet = actionSet;
             ResolveInfo = resolveInfo;
             Target = target;
-            PathmapInstance = actionSet.Translate.DeltinScript.Types.GetInstance<PathmapClass>();
+            PathmapInstance = actionSet.Translate.DeltinScript.Types.GetInitializer<PathmapClass>();
 
             // Lookahead status
             IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);

@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
 
             parseInfo.Script.AddHover(callRange, hoverContents.ToString());
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
-            parseInfo.TranslateInfo.Types.CallType(this);
+            parseInfo.TranslateInfo.AddWorkshopInit(this);
         }
 
         public static readonly ValueGroupType[] EnumTypes = GetEnumTypes();

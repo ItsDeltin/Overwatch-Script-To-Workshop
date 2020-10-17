@@ -201,10 +201,7 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>A DefinedMacro if the macro has parameters, a MacroVar if there are no parameters.</returns>
         public DefinedMacro GetMacro(Scope objectScope, Scope staticScope, MacroFunctionContext macroContext)
         {
-            // Get the return type.
-            CodeType returnType = CodeType.GetCodeTypeFromContext(this, macroContext.Type);
-
-            DefinedMacro newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType);
+            DefinedMacro newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext);
 
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;
@@ -212,10 +209,7 @@ namespace Deltin.Deltinteger.Parse
 
         public MacroVar GetMacro(Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext)
         {
-            // Get the return type.
-            CodeType returnType = CodeType.GetCodeTypeFromContext(this, macroContext.Type);
-
-            MacroVar newMacro = new MacroVar(this, objectScope, staticScope, macroContext, returnType);
+            MacroVar newMacro = new MacroVar(this, objectScope, staticScope, macroContext);
 
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;
