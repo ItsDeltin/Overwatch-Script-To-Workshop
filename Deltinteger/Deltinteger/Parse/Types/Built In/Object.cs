@@ -66,8 +66,10 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.Multiply, this, this), // Number * number
                 new TypeOperation(TypeOperator.Divide, this, this), // Number / number
                 new TypeOperation(TypeOperator.Modulo, this, this), // Number % number
-                new TypeOperation(TypeOperator.Multiply, VectorType.Instance, VectorType.Instance), // Number * vector
-                new TypeOperation(TypeOperator.LessThan, this, BooleanType.Instance), // Number < number
+				new TypeOperation(TypeOperator.Pow, this, this),
+                new TypeOperation(TypeOperator.Multiply, this, VectorType.Instance), // Number * vector
+                new TypeOperation(TypeOperator.Multiply, VectorType.Instance, this), // Vector * number
+				new TypeOperation(TypeOperator.LessThan, this, BooleanType.Instance), // Number < number
                 new TypeOperation(TypeOperator.LessThanOrEqual, this, BooleanType.Instance), // Number <= number
                 new TypeOperation(TypeOperator.GreaterThanOrEqual, this, BooleanType.Instance), // Number >= number
                 new TypeOperation(TypeOperator.GreaterThan, this, BooleanType.Instance), // Number > number
