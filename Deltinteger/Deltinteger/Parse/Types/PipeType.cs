@@ -55,6 +55,16 @@ namespace Deltin.Deltinteger.Parse
             foreach (CodeType included in IncludedTypes)
                 included.AddObjectVariablesToAssigner(reference, assigner);
         }
+
+		public override TypeOperation GetOperation(TypeOperator op, CodeType right) {
+			foreach(CodeType type in IncludedTypes) {
+				var result = type.GetOperation(op, right);
+				if(result != null)
+					return result;
+			}
+			return null;
+		}
+
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
         public override Scope ReturningScope() => throw new NotImplementedException();
         private static string GetName(CodeType[] types) => string.Join(" | ", types?.Select(t => t.GetName()));

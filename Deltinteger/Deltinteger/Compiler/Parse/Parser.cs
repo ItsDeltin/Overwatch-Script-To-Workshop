@@ -1561,10 +1561,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
 			ParseExpected(TokenType.Type);
 			Token nameToken = ParseExpected(TokenType.Identifier);
 			ParseExpected(TokenType.Equal);
-			Token parseTypeToken = ParseExpected(TokenType.Identifier);
+			var parseType = ParseType();
 			ParseExpected(TokenType.Semicolon);
 
-			return EndTokenCapture(new TypeAliasContext(nameToken, parseTypeToken));
+			return EndTokenCapture(new TypeAliasContext(nameToken, parseType));
 
 		}
 

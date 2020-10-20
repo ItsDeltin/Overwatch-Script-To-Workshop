@@ -306,11 +306,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 	public class TypeAliasContext : Node
 	{
 		public Token NewTypeName;
-		public Token OtherTypeName;
+		public IParseType OtherType;
 
-		public TypeAliasContext(Token newTypeName, Token otherTypeName) {
+		public TypeAliasContext(Token newTypeName, IParseType otherType) {
 			NewTypeName = newTypeName;
-			OtherTypeName = otherTypeName;
+			OtherType = otherType;
 		}
 	}
 

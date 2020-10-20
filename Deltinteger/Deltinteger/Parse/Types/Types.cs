@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="op">The operation's operator type.</param>
         /// <param name="right">The right object's type.</param>
         /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>
-        public TypeOperation GetOperation(TypeOperator op, CodeType right)
+        public virtual TypeOperation GetOperation(TypeOperator op, CodeType right)
         {
             CodeType current = this;
             while (current != null)
