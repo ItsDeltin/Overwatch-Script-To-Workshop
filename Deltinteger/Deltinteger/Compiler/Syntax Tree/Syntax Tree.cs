@@ -562,6 +562,20 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
+    public class AsyncContext : Node, IParseExpression
+    {
+        public Token AsyncToken { get; }
+        public Token IgnoreIfRunning { get; }
+        public IParseExpression Expression { get; }
+
+        public AsyncContext(Token asyncToken, Token ignoreIfRunning, IParseExpression expression)
+        {
+            AsyncToken = asyncToken;
+            IgnoreIfRunning = ignoreIfRunning;
+            Expression = expression;
+        }
+    }
+
     // Statements
     public class ExpressionStatement : Node, IParseStatement
     {

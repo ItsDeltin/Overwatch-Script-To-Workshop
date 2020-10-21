@@ -263,6 +263,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("ref", TokenType.Ref) ||
                     MatchKeyword("this", TokenType.This) ||
                     MatchKeyword("root", TokenType.Root) ||
+                    MatchKeyword("async", TokenType.Async) ||
                     MatchKeyword("as", TokenType.As) ||
                     MatchIdentifier() ||
                     MatchString();

@@ -465,6 +465,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.New: return ParseNew();
                 // Array
                 case TokenType.SquareBracket_Open: return ParseCreateArray();
+                // Async
+                case TokenType.Async: return ParseAsync();
                 // Type cast
                 case TokenType.LessThan:
                     // Make sure this is actually a type cast and not an operator.
@@ -1453,6 +1455,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             ParseExpected(TokenType.GreaterThan);
             return EndNode(new StringExpression(localized, str, formats));
+        }
+
+        AsyncContext ParseAsync()
+        {
+            StartNode();
+            var asyncToken = ParseExpected(TokenType.Async);
+            var ignoreIfRunning = ParseOptional(TokenType.Exclamation);
+            var expression = GetContainExpression();
+            return EndNode(new AsyncContext(asyncToken, ignoreIfRunning, expression));
         }
 
         /// <summary>Parses the root of a file.</summary>

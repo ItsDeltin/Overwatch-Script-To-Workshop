@@ -137,7 +137,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             // We use a new actionSet rather than _actionSet in case the caller needs special adjustments.
             if (function.IsSubroutine())
             {
-                ExecuteSubroutine(function);
+                ExecuteSubroutine(function, CallHandler.ParallelMode);
                 // Bridge the returned value.
                 if (Determiner.ReturnsValue()) ReturnHandler.ReturnValue(function.GetSubroutineInfo().ReturnHandler.GetReturnedValue());
             }
@@ -365,11 +365,13 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     public interface ICallHandler
     {
         IWorkshopTree[] ParameterValues { get; }
+        CallParallel ParallelMode { get; }
     }
 
     public class CallHandler : ICallHandler
     {
         public IWorkshopTree[] ParameterValues { get; set; }
+        public CallParallel ParallelMode { get; set; }
 
         public CallHandler()
         {
@@ -379,6 +381,12 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public CallHandler(IWorkshopTree[] parameterValues)
         {
             ParameterValues = parameterValues;
+        }
+
+        public CallHandler(IWorkshopTree[] parameterValues, CallParallel parallelMode)
+        {
+            ParameterValues = parameterValues;
+            ParallelMode = parallelMode;
         }
     }
 
