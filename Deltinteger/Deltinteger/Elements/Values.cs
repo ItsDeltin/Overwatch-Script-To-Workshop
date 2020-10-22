@@ -1909,7 +1909,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsJumping : Element {}
 
     [ElementData("Event Direction", ValueType.Vector)]
-    [Restricted(RestrictedCallType.Knockback)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_EventDirection : Element {}
 
     [ElementData("Button", ValueType.Button)]
