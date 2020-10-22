@@ -27,7 +27,8 @@ namespace Deltin.Deltinteger.Lobby
             new SwitchValue("Allow Players Who Are In Queue", false, SwitchType.YesNo),
             new SwitchValue("Use Experimental Update If Available", false, SwitchType.YesNo),
             new SwitchValue("Match Voice Chat", false, SwitchType.EnabledDisabled),
-            new SwitchValue("Pause Game On Player Disconnect", false, SwitchType.YesNo)
+            new SwitchValue("Pause Game On Player Disconnect", false, SwitchType.YesNo),
+            new SelectValue("Data Center Preference", "Best Available", "USA - Central", "Brazil", "Singapore", "USA - West", "Australia 3")
         };
 
         public WorkshopValuePair Lobby { get; set; }
