@@ -174,6 +174,14 @@ namespace Deltin.Deltinteger.Parse
             Condition = parseInfo.GetExpression(scope, ternaryContext.Condition);
             Consequent = parseInfo.GetExpression(scope, ternaryContext.Consequent);
             Alternative = parseInfo.GetExpression(scope, ternaryContext.Alternative);
+            if(Consequent.Type() is ValueGroupType cType)
+            {
+                parseInfo.Script.Diagnostics.Error($"Workshop Enum {cType.Name} cannot be used in a ternary.", ternaryContext.Consequent.Range);
+            }
+            if(Alternative.Type() is ValueGroupType aType)
+            {
+                parseInfo.Script.Diagnostics.Error($"Workshop Enum {aType.Name} cannot be used in a ternary.", ternaryContext.Alternative.Range);
+            }
         }
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
