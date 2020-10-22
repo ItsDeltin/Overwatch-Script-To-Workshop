@@ -13,8 +13,43 @@ namespace Deltin.Deltinteger.CustomMethods
     [AttributeUsage(AttributeTargets.Class)]
     public class CustomMethod : Attribute
     {
-        public CustomMethod(string methodName, string description, CustomMethodType methodType, bool global = true)
+		
+        public CustomMethod(string methodName, string description, CustomMethodType methodType, Type returnType, bool global = true)
         {
+			switch(returnType.Name) {
+				case nameof(NumberType):
+					ReturnType = NumberType.Instance;
+					break;
+				case nameof(StringType):
+					ReturnType = StringType.Instance;
+					break;
+				case nameof(VectorType):
+					ReturnType = VectorType.Instance;
+					break;
+				case nameof(BooleanType):
+					ReturnType = BooleanType.Instance;
+					break;
+				case nameof(Positionable):
+					ReturnType = Positionable.Instance;
+					break;
+				case nameof(TeamType):
+					ReturnType = TeamType.Instance;
+					break;
+				case nameof(ObjectType):
+					ReturnType = ObjectType.Instance;
+					break;
+				case nameof(Pathfinder.SegmentsStruct):
+					ReturnType = Pathfinder.SegmentsStruct.Instance;
+					break;
+				case nameof(NullType):
+				case null:
+					ReturnType = NullType.Instance;
+					break;
+				default:
+					throw new InvalidCastException();
+					break;
+
+			}
             MethodName = methodName;
             Description = description;
             MethodType = methodType;
@@ -25,6 +60,7 @@ namespace Deltin.Deltinteger.CustomMethods
         public string Description { get; }
         public CustomMethodType MethodType { get; }
         public bool Global { get; }
+		public CodeType ReturnType {get;}
     }
 
     public enum CustomMethodType
@@ -49,7 +85,8 @@ namespace Deltin.Deltinteger.CustomMethods
         public bool WholeContext => true;
         public bool Static => true;
         
-        public CodeType CodeType => null;
+        public CodeType CodeType => codeType;
+		private CodeType codeType;
 
         public string Documentation { get; }
 
@@ -62,6 +99,7 @@ namespace Deltin.Deltinteger.CustomMethods
             CustomMethodType = data.MethodType;
             Documentation = data.Description;
             Global = data.Global;
+			codeType = data.ReturnType;
 
             var obj = GetObject();
             Parameters = obj.Parameters() ?? new CodeParameter[0];

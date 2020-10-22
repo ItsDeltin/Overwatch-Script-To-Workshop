@@ -5,7 +5,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("DestroyEffectArray", "Destroys an array of effects.", CustomMethodType.Action)]
+    [CustomMethod("DestroyEffectArray", "Destroys an array of effects.", CustomMethodType.Action, typeof(NullType))]
     class DestroyEffectArray : CustomMethodBase
     {
         public override CodeParameter[] Parameters()

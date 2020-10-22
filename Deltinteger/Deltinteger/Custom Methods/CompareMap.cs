@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("CompareMap", "Compares the current map to a map value. Map variants are considered as well.", CustomMethodType.Value)]
+    [CustomMethod("CompareMap", "Compares the current map to a map value. Map variants are considered as well.", CustomMethodType.Value, typeof(BooleanType))]
     class CompareCurrentMap : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {

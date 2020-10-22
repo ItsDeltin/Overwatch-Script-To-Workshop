@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("ClassMemoryRemaining", "Gets the remaining number of classes that can be created.", CustomMethodType.Value)]
+    [CustomMethod("ClassMemoryRemaining", "Gets the remaining number of classes that can be created.", CustomMethodType.Value, typeof(NumberType))]
     public class ClassMemoryRemaining : CustomMethodBase
     {
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.CustomMethods
         public override CodeParameter[] Parameters() => null;
     }
 
-    [CustomMethod("ClassMemoryUsed", "Gets the number of classes that were created.", CustomMethodType.Value)]
+    [CustomMethod("ClassMemoryUsed", "Gets the number of classes that were created.", CustomMethodType.Value, typeof(NumberType))]
     public class ClassMemoryUsed : CustomMethodBase
     {
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.CustomMethods
         } 
     }
 
-    [CustomMethod("ClassMemory", "Gets the percentage of class memory taken.", CustomMethodType.Value)]
+    [CustomMethod("ClassMemory", "Gets the percentage of class memory taken.", CustomMethodType.Value, typeof(NumberType))]
     public class ClassMemory : CustomMethodBase
     {
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)

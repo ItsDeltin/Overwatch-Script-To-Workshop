@@ -4,7 +4,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("RemoveFromArrayAtIndex", "Removes a value from an array by its index.", CustomMethodType.Value)]
+    [CustomMethod("RemoveFromArrayAtIndex", "Removes a value from an array by its index.", CustomMethodType.Value, typeof(ObjectType))]
     class RemoveFromArrayAtIndex : CustomMethodBase
     {
         public override CodeParameter[] Parameters()

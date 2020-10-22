@@ -4,7 +4,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("Destination", "Calculates a destination given a starting point, distance and direction", CustomMethodType.Value)]
+    [CustomMethod("Destination", "Calculates a destination given a starting point, distance and direction", CustomMethodType.Value, typeof(VectorType))]
     class Destination : CustomMethodBase
     {
         public override CodeParameter[] Parameters()

@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("DestroyDummyBot", "Destroys a dummy bot.", CustomMethodType.Action)]
+    [CustomMethod("DestroyDummyBot", "Destroys a dummy bot.", CustomMethodType.Action, typeof(NullType))]
     public class DestroyDummyBot : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {

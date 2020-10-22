@@ -4,7 +4,7 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("LinePlaneIntersection", "Gets the point where a line intersects with an infinite plane.", CustomMethodType.Value)]
+    [CustomMethod("LinePlaneIntersection", "Gets the point where a line intersects with an infinite plane.", CustomMethodType.Value, typeof(VectorType))]
     class LinePlaneIntersection : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.CustomMethods
         }
     }
 
-    [CustomMethod("DoesLineIntersectSphere", "Determines if a point intersects with a sphere.", CustomMethodType.Value)]
+    [CustomMethod("DoesLineIntersectSphere", "Determines if a point intersects with a sphere.", CustomMethodType.Value, typeof(BooleanType))]
     class LineSphereIntersection : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.CustomMethods
         }
     }
 
-    [CustomMethod("SphereHitboxRaycast", "Whether the given player is looking directly at a sphere with collision.", CustomMethodType.Value)]
+    [CustomMethod("SphereHitboxRaycast", "Whether the given player is looking directly at a sphere with collision.", CustomMethodType.Value, typeof(BooleanType))]
     class SphereHitboxRaycastPlayer : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
