@@ -6,6 +6,8 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
 using Deltin.Deltinteger.Debugger;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -38,12 +40,13 @@ namespace Deltin.Deltinteger.Parse
             OptimizeOutput = translateSettings.OptimizeOutput;
 
             GlobalScope = Scope.GetGlobalScope();
+            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope);
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
 
             Types.GetDefaults(this);
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(translateSettings.Root);            
+            Importer.CollectScriptFiles(translateSettings.Root);
             
             Translate();
             if (!Diagnostics.ContainsErrors())
@@ -109,23 +112,23 @@ namespace Deltin.Deltinteger.Parse
         void Translate()
         {
             // Get the reserved variables and IDs
-            foreach (ScriptFile script in Importer.ScriptFiles)
-            {
-                if (script.Context.reserved_global()?.reserved_list() != null)
-                {
-                    foreach (var name in script.Context.reserved_global().reserved_list().PART()) VarCollection.Reserve(name.GetText(), true);
-                    foreach (var id in script.Context.reserved_global().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), true, null, null);
-                }
-                if (script.Context.reserved_player()?.reserved_list() != null)
-                {
-                    foreach (var name in script.Context.reserved_player().reserved_list().PART()) VarCollection.Reserve(name.GetText(), false);
-                    foreach (var id in script.Context.reserved_player().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), false, null, null);
-                }
-            }
+            // foreach (ScriptFile script in Importer.ScriptFiles)
+            // {
+            //     if (script.Context.reserved_global()?.reserved_list() != null)
+            //     {
+            //         foreach (var name in script.Context.reserved_global().reserved_list().PART()) VarCollection.Reserve(name.GetText(), true);
+            //         foreach (var id in script.Context.reserved_global().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), true, null, null);
+            //     }
+            //     if (script.Context.reserved_player()?.reserved_list() != null)
+            //     {
+            //         foreach (var name in script.Context.reserved_player().reserved_list().PART()) VarCollection.Reserve(name.GetText(), false);
+            //         foreach (var id in script.Context.reserved_player().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), false, null, null);
+            //     }
+            // }
 
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var enumContext in script.Context.enum_define())
+            foreach (var enumContext in script.Context.Enums)
             {
                 var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
                 Types.AllTypes.Add(newEnum); 
@@ -135,7 +138,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the types
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var typeContext in script.Context.type_define())
+            foreach (var typeContext in script.Context.Classes)
             {
                 var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
                 Types.AllTypes.Add(newType);
@@ -143,30 +146,34 @@ namespace Deltin.Deltinteger.Parse
                 Types.CalledTypes.Add(newType);
             }
             
-            // Get the methods and macros
+            // Get the declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 ParseInfo parseInfo = new ParseInfo(script, this);
 
-                // Get the methods.
-                foreach (var methodContext in script.Context.define_method())
-                    new DefinedMethod(parseInfo, RulesetScope, RulesetScope, methodContext, null);
-                
-                // Get the macros.
-                foreach (var macroContext in script.Context.define_macro())
-                    parseInfo.GetMacro(RulesetScope, RulesetScope, macroContext);
-            }
+                // Get the functions.
+                foreach (var declaration in script.Context.Declarations)
+                {
+                    // Function
+                    if (declaration is FunctionContext function)
+                        new DefinedMethod(parseInfo, RulesetScope, RulesetScope, function, null);
+                    // Macro function
+                    else if (declaration is MacroFunctionContext macroFunction)
+                        parseInfo.GetMacro(RulesetScope, RulesetScope, macroFunction);
+                    // Macro var
+                    else if (declaration is MacroVarDeclaration macroVar)
+                        parseInfo.GetMacro(RulesetScope, RulesetScope, macroVar);
+                    // Variables
+                    else if (declaration is VariableDeclaration variable)
+                    {
+                        Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable));
+                        rulesetVariables.Add(newVar);
 
-            // Get the defined variables.
-            foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var varContext in script.Context.define())
-            {
-                Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), varContext));
-                rulesetVariables.Add(newVar);
-
-                // Add the variable to the player variables scope if it is a player variable.
-                if (newVar.VariableType == VariableType.Player)
-                    PlayerVariableScope.CopyVariable(newVar);
+                        // Add the variable to the player variables scope if it is a player variable.
+                        if (newVar.VariableType == VariableType.Player)
+                            PlayerVariableScope.CopyVariable(newVar);
+                    }
+                }
             }
 
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
@@ -176,12 +183,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Get hooks
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var hookContext in script.Context.hook())
+            foreach (var hookContext in script.Context.Hooks)
                 HookVar.GetHook(new ParseInfo(script, this), RulesetScope, hookContext);
 
             // Get the rules
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var ruleContext in script.Context.ow_rule())
+            foreach (var ruleContext in script.Context.Rules)
                 rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
         }
 
@@ -223,9 +230,6 @@ namespace Deltin.Deltinteger.Parse
                     }
                 }
             }
-
-            // Setup single-instance methods.
-            foreach (var method in subroutines) method.SetupSubroutine();
 
             // Parse the rules.
             foreach (var rule in rules)
@@ -290,13 +294,6 @@ namespace Deltin.Deltinteger.Parse
         private TranslateRule GetInitialRule(bool isGlobal)
         {
             return isGlobal ? InitialGlobal : InitialPlayer;
-        }
-
-        // Subroutine methods
-        private List<DefinedMethod> subroutines = new List<DefinedMethod>();
-        public void AddSubroutine(DefinedMethod method)
-        {
-            subroutines.Add(method);
         }
 
         // Applyable blocks

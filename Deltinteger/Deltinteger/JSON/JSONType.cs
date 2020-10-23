@@ -7,6 +7,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.CustomMethods;
+using Deltin.Deltinteger.Compiler;
 using Newtonsoft.Json.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -215,7 +216,7 @@ namespace Deltin.Deltinteger.Json
         public MethodAttributes Attributes { get; }
         public CodeParameter[] Parameters { get; }
         public string Name => "Get";
-        public CodeType ReturnType => null;
+        public CodeType CodeType => null;
         public bool Static => false;
         public bool WholeContext => true;
         public string Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";

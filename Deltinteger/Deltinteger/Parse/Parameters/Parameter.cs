@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Lambda;
 
@@ -100,20 +101,20 @@ namespace Deltin.Deltinteger.Parse
                 RestrictedCalls.Add(restrictedCall.CallType);
         }
 
-        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context, bool subroutineParameter)
+        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, List<VariableDeclaration> context, bool subroutineParameter)
         {
             if (context == null) return new ParameterParseResult(new CodeParameter[0], new Var[0]);
 
-            var parameters = new CodeParameter[context.define().Length];
+            var parameters = new CodeParameter[context.Count];
             var vars = new Var[parameters.Length];
-            for (int i = 0; i < context.define().Length; i++)
+            for (int i = 0; i < parameters.Length; i++)
             {
                 Var newVar;
 
-                CodeParameter parameter = new CodeParameter(context.define(i).name.Text);
+                CodeParameter parameter = new CodeParameter(context[i].Identifier.GetText());
 
                 // Set up the context handler.
-                IVarContextHandler contextHandler = new DefineContextHandler(parseInfo.SetRestrictedCallHandler(parameter), context.define(i));
+                IVarContextHandler contextHandler = new DefineContextHandler(parseInfo.SetRestrictedCallHandler(parameter), context[i]);
 
                 // Normal parameter
                 if (!subroutineParameter)

@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -13,11 +14,10 @@ namespace Deltin.Deltinteger.Parse
         private readonly PathInfo[] pathInfo;
         private SwitchBuilder switchBuilder;
 
-        public SwitchAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.SwitchContext switchContext)
+        public SwitchAction(ParseInfo parseInfo, Scope scope, Switch switchContext)
         {
             // Get the expression.
-            if (switchContext.expr() == null) parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(switchContext.RIGHT_PAREN()));
-            else Expression = parseInfo.GetExpression(scope, switchContext.expr());
+            Expression = parseInfo.GetExpression(scope, switchContext.Expression);
 
             paths = GetSections(ResolveElements(parseInfo.SetBreakHandler(this), scope, switchContext));
             pathInfo = new PathInfo[paths.Length];
@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
                 pathInfo[i] = new PathInfo(paths[i].Block, paths[i].ErrorRange, paths[i].IsDefault);
         }
 
-        private SwitchElement[] ResolveElements(ParseInfo parseInfo, Scope scope, DeltinScriptParser.SwitchContext switchContext)
+        private SwitchElement[] ResolveElements(ParseInfo parseInfo, Scope scope, Switch switchContext)
         {
             List<SwitchElement> elements = new List<SwitchElement>();
             bool inSection = false;
@@ -34,31 +34,33 @@ namespace Deltin.Deltinteger.Parse
             bool gotDefault = false;
 
             // Resolve paths.
-            foreach (var switchElement in switchContext.switch_element())
+            foreach (var statement in switchContext.Statements)
             {
+                var switchCase = statement as SwitchCase;
+
                 // Syntax error if there is a statement before a case.
-                if (switchElement.documented_statement() != null && !inSection && !caseError)
+                if (switchCase == null && !inSection && !caseError)
                 {
-                    parseInfo.Script.Diagnostics.Error("Expected case or default.", DocRange.GetRange(switchElement));
+                    parseInfo.Script.Diagnostics.Error("Expected case or default.", statement.Range);
                     caseError = true;
                 }
 
                 // Don't throw the syntax error multiple times in one switch.
-                if (switchElement.DEFAULT() != null || switchElement.@case() != null) inSection = true;
+                if (switchCase != null) inSection = true;
 
                 // Default case.
-                if (switchElement.DEFAULT() != null)
+                if (switchCase != null && switchCase.IsDefault)
                 {
-                    if (gotDefault) parseInfo.Script.Diagnostics.Error("Switch cannot have multiple defaults.", DocRange.GetRange(switchElement));
+                    if (gotDefault) parseInfo.Script.Diagnostics.Error("Switch cannot have multiple defaults.", switchCase.Range);
                     gotDefault = true;
                 }
 
                 // Get the statement
-                if (switchElement.documented_statement() != null) elements.Add(new SwitchElement(parseInfo.GetStatement(scope, switchElement.documented_statement())));
+                if (switchCase == null) elements.Add(new SwitchElement(parseInfo.GetStatement(scope, statement)));
                 // Get the case
-                else if (switchElement.@case() != null) elements.Add(new SwitchElement(DocRange.GetRange(switchElement.@case().CASE()), parseInfo.GetExpression(scope, switchElement.@case().expr())));
+                else if (!switchCase.IsDefault) elements.Add(new SwitchElement(switchCase.Token.Range, parseInfo.GetExpression(scope, switchCase.Value)));
                 // Get default
-                else if (switchElement.DEFAULT() != null) elements.Add(new SwitchElement(DocRange.GetRange(switchElement.DEFAULT())));
+                else elements.Add(new SwitchElement(switchCase.Token.Range));
             }
 
             return elements.ToArray();

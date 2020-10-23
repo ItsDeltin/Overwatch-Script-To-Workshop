@@ -9,24 +9,26 @@ $schema: https://raw.githubusercontent.com/Septh/tmlanguage/master/tmLanguage.sc
 variables:
   part: '([_[:alnum:]]+)'
   groupless-part: '[_[:alnum:]]+'
-  # (?<set-type> - Names the entire type group, which is used for recursion later.
-  #   {{part}}\b\s* - The name of the type. \b is used for the end of the word, \s* is for any number of spaces that may proceed the type name.
-  #   - type arguments
-  #   (\s* - Start of type arguments group. Start with any amount of whitespace.
-  #     ,?\s* - This group can be repeated, check for a comma.
-  #     \g<set-type>
-  #     \s*
-  #   )?\s*
-  #   - end type arguments
-  #   (\[\s*\])* - Array markers '[]'
-  # )
-  type: '(?<set-type>{{part}}\b\s*(<\s*(\s*,?\s*\g<set-type>\s*)*>)?\s*(\[\s*\])*)' # 5 groups
+  # After matching with the type variable, 'type-matcher' must be used to color the elements. 
+  #
+  #     '(?<set-type>' Names the entire type group, which is used for recursion later. Recursion can be used using the '\g<set-type>' regex.
+  #      ^          '(' The start of the group that contains the OR that either matches an identifier and the type args or a parentesized type.
+  #      |           ^'\(\s*\g<set-type>\)' Matches a parenthesized type recursively.
+  #      |           |^                 '|{{part}}\b\s*' Matches the type's identifier.
+  #      |           ||                  ^            '(<\s*(\s*,?\s*\g<set-type>\s*)*>)?' Matches the type args recursviely.
+  #      |           ||                  |             ^                                ')' Ends the group that chooses either an identifier or parenthesized type.
+  #      |           ||                  |             |                                 ^  '(\[\s*\])*' Matches zero or infinite '[]'.
+  #      |           ||                  |             |                                 |   ^        '(\s*=>\s*\g<set-type>)?' Matches a function type, ex 'define => void'.
+  #      |           ||                  |             |                                 |   |         ^                     ')' ends the group that contains the type matcher.
+  #      |           ||                  |             |                                 |   |         |                      ^
+  #      |           ||                  |             |                                 |   |         |                      |
+  type: '(?<set-type>(\(\s*\g<set-type>\)|{{part}}\b\s*(<\s*(\s*,?\s*\g<set-type>\s*)*>)?)\s*(\[\s*\])*(\s*=>\s*\g<set-type>)?)' # 7 groups
   # define a =
   declare-variable-start: '{{type}}\s*{{part}}(\s*\!)?(\s*=)?'
   string-double: \"(?:[^"\\]|\\.)*\"
   string-single: \'(?:[^'\\]|\\.)*\'
   encapsulated-block-end: '(?<=})|(?<=;)'
-  attribute-list: (((public|private|protected|virtual|override|abstract|static)\b\s*)*)
+  attribute-list: (((public|private|protected|virtual|override|abstract|static|recursive)\b\s*)*)
   variable-attribute-list: (((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\b\s*)*)
   number: -?[0-9]+(\.[0-9]+)?\b
 
@@ -102,6 +104,11 @@ repository:
       # other types
       - match: '{{part}}'
         name: entity.name.type
+      # Group
+      - match: '\('
+        name: punctuation.parenthesis.open
+      - match: '\)'
+        name: punctuation.parenthesis.close
       # Array
       - match: '\['
         name: punctuation.squarebracket.open
@@ -115,6 +122,9 @@ repository:
       # Generics seperator
       - match: ','
         name: punctuation.separator.comma
+      # Lambda
+      - match: '=>'
+        name: storage.type.function.arrow
   
   # Variable definition syntax
   declare-variable:
@@ -128,11 +138,11 @@ repository:
       4: # Apply highlighting to the type match
         patterns:
           - include: '#type-matcher'
-      9: # The variable name
+      11: # The variable name
         name: entity.name.variable.field
-      10: # Extended collection '!' marker
+      12: # Extended collection '!' marker
         name: '{{assignment}}'
-      11: # The equals for an initial value.
+      13: # The equals for an initial value.
         name: '{{assignment}}'
     endCaptures:
       0:
@@ -150,9 +160,9 @@ repository:
       4: # Apply highlighting to the type match
         patterns:
           - include: '#type-matcher'
-      9: # The variable name
+      11: # The variable name
         name: entity.name.variable.property
-      10: # Macro colon
+      12: # Macro colon
         name: '{{assignment}}'
   
   # Variables defined in rules and functions
@@ -165,11 +175,11 @@ repository:
       1: # Apply highlighting to type match
         patterns:
           - include: '#type-matcher'
-      6: # The variable name
+      8: # The variable name
         name: entity.name.variable.local
-      7: # Extended collection '!' marker
+      9: # Extended collection '!' marker
         name: '{{assignment}}'
-      8: # The equals for an initial value.
+      10: # The equals for an initial value.
         name: '{{assignment}}'
     endCaptures:
       0:
@@ -185,7 +195,7 @@ repository:
       4:
         patterns:
           - include: '#type-matcher'
-      9:
+      11:
         name: entity.name.function
     patterns:
       - include: '#comment'
@@ -289,7 +299,7 @@ repository:
       2:
         patterns:
           - include: '#type-matcher'
-      7:
+      9:
         name: variable.parameter
   
   macro-value:
@@ -312,11 +322,11 @@ repository:
       1: # {{type}}
         patterns:
           - include: '#type-matcher'
-      6: # (.)
+      8: # (.)
         name: punctuation.accessor
-      7: # Hook name
+      9: # Hook name
         name: support.variable
-      8: # =
+      10: # =
         name: '{{assignment}}'
     endCaptures:
       0:
@@ -326,7 +336,7 @@ repository:
 
   # Rules
   rule:
-    begin: '\b(disabled\b\s*)?(rule)\b\s*(:)\s*(({{string-double}})|({{string-single}}))\s*({{number}})?' # rule: "string"
+    begin: '\s*\b(disabled\b\s*)?(rule)\b\s*(:)\s*(({{string-double}})|({{string-single}}))\s*({{number}})?' # rule: "string"
     end: '{{encapsulated-block-end}}'
     beginCaptures:
       1: # Disabled keyword
@@ -426,7 +436,7 @@ repository:
               1:
                 patterns:
                   - include: '#type-matcher'
-              6:
+              8:
                 name: entity.name.variable.local
       # If, else if, and switch.
       - include: '#if-statement'
@@ -544,7 +554,7 @@ repository:
           2:
             patterns:
             - include: '#type-matcher'
-          7:
+          9:
             name: punctuation.definition.typeparameters.end
       - include: '#expression-operators' # Must be below lambda
       # null
@@ -655,9 +665,9 @@ repository:
           1:
             patterns:
               - include: '#type-matcher'
-          6:
+          8:
             name: variable.parameter
-          7:
+          9:
             name: storage.type.function.arrow
       # With parenthesis: () =>
       - begin: \(
@@ -678,7 +688,7 @@ repository:
               1:
                 patterns:
                   - include: '#type-matcher'
-              6:
+              8:
                 name: variable.parameter
           # Match parameter seperator
           - match: ','
@@ -704,7 +714,7 @@ repository:
       - name: keyword.operator.logical
         match: \!|&&|\|\|
       - name: keyword.operator.arithmetic
-        match: '%|\*|\/|-|\+'
+        match: '%|\*|\/|-|\+|\^'
 
   # Argument list
   argument-list:

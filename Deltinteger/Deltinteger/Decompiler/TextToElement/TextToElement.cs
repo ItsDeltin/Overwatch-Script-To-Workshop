@@ -1001,6 +1001,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return true;
             }
 
+            // Disabled
+            bool disabled = Match(Kw("disabled"));
+
             foreach (var mode in ModeSettingCollection.AllModeSettings)
             // Match the mode name.
             if (Match(Kw(mode.ModeName)))
@@ -1049,6 +1052,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     return true;
                 });
                 Match("}"); // End specific mode settings section.
+
+                if (disabled) relatedModeSettings.Settings.Add("Enabled", !disabled);
                 return true;
             }
             return false;
@@ -1129,24 +1134,25 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         void GroupSettings(Dictionary<string, object> collection, LobbySetting[] settings, Func<Boolean> onInterupt = null)
         {
-            var orderedSettings = settings.OrderByDescending(s => s.Name); // Order the settings so longer names are matched first.
+            var orderedSettings = settings.OrderByDescending(s => s.Name.Length); // Order the settings so longer names are matched first.
 
             bool matched = true;
             while (matched)
             {
                 matched = false;
+
+                // Test hook.
+                if (onInterupt != null && onInterupt.Invoke())
+                {
+                    // If the hook handled the match, break.
+                    matched = true;
+                    break;
+                }
+
                 foreach (var lobbySetting in orderedSettings)
                 {
-                    // Test hook.
-                    if (onInterupt != null && onInterupt.Invoke())
-                    {
-                        // If the hook handled the match, break.
-                        matched = true;
-                        break;
-                    }
-
                     // Match the setting name.
-                    else if (MatchLobbySetting(collection, lobbySetting))
+                    if (MatchLobbySetting(collection, lobbySetting))
                     {
                         // Indicate that a setting was matched.
                         matched = true;

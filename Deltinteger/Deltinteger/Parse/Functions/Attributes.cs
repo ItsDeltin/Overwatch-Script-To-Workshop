@@ -1,12 +1,14 @@
 using System;
 using System.Linq;
-using Deltin.Deltinteger.LanguageServer;
+using System.Collections.Generic;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
     abstract class FunctionAttributesGetter
     {
-        public MethodAttributeContext[] ObtainedAttributes { get; private set; } // Attribute context.
+        public List<MethodAttributeContext> ObtainedAttributes { get; } = new List<MethodAttributeContext>(); // Attribute context.
         public IFunctionAppendResult ResultAppender { get; protected set; }
 
         protected FunctionAttributesGetter(IFunctionAppendResult resultAppender)
@@ -24,32 +26,42 @@ namespace Deltin.Deltinteger.Parse
             var context = GetAttributeContext();
             if (context == null) return;
 
-            // Initialize the ObtainedAttributes array.
-            int numberOfAttributes = context.Length;
-            ObtainedAttributes = new MethodAttributeContext[numberOfAttributes];
+            CheckAttribute(diagnostics, context.GlobalVar, MethodAttributeType.GlobalVar);
+            CheckAttribute(diagnostics, context.Override, MethodAttributeType.Override);
+            CheckAttribute(diagnostics, context.PlayerVar, MethodAttributeType.PlayerVar);
+            CheckAttribute(diagnostics, context.Private, MethodAttributeType.Private);
+            CheckAttribute(diagnostics, context.Protected, MethodAttributeType.Protected);
+            CheckAttribute(diagnostics, context.Public, MethodAttributeType.Public);
+            CheckAttribute(diagnostics, context.Recursive, MethodAttributeType.Recursive);
+            CheckAttribute(diagnostics, context.Ref, MethodAttributeType.Ref);
+            CheckAttribute(diagnostics, context.Static, MethodAttributeType.Static);
+            CheckAttribute(diagnostics, context.Virtual, MethodAttributeType.Virtual);
+        }
 
-            // Loop through all attributes.
-            for (int i = 0; i < numberOfAttributes; i++)
-            {
-                var newAttribute = new MethodAttributeContext(context[i]);
-                ObtainedAttributes[i] = newAttribute;
+        void CheckAttribute(FileDiagnostics diagnostics, Token attribute, MethodAttributeType type)
+        {
+            if (attribute == null) return;
 
-                // If the attribute already exists, syntax error.
-                bool wasCopy = false;
-                for (int c = i - 1; c >= 0; c--)
-                    if (ObtainedAttributes[c].Type == newAttribute.Type)
-                    {
-                        newAttribute.Copy(diagnostics);
-                        wasCopy = true;
-                        break;
-                    }
-                
-                // Additonal syntax errors. Only throw if the attribute is not a copy.
-                if (!wasCopy)
+            var newAttribute = new MethodAttributeContext(attribute, type);
+
+            // If the attribute already exists, syntax error.
+            bool wasCopy = false;
+            for (int c = 0; c < ObtainedAttributes.Count; c++)
+                if (ObtainedAttributes[c].Type == newAttribute.Type)
                 {
-                    ValidateAttribute(diagnostics, newAttribute);
-                    ApplyAttribute(newAttribute);
+                    newAttribute.Copy(diagnostics);
+                    wasCopy = true;
+                    break;
                 }
+            
+            // Add the attribute.
+            ObtainedAttributes.Add(newAttribute);
+            
+            // Additonal syntax errors. Only throw if the attribute is not a copy.
+            if (!wasCopy)
+            {
+                ValidateAttribute(diagnostics, newAttribute);
+                ApplyAttribute(newAttribute);
             }
         }
 
@@ -75,8 +87,10 @@ namespace Deltin.Deltinteger.Parse
             // Apply the attribute.
             switch (newAttribute.Type)
             {
-                // Apply accessor
-                case MethodAttributeType.Accessor: ResultAppender.SetAccessLevel(newAttribute.AttributeContext.accessor().GetAccessLevel()); break;
+                // Accessors
+                case MethodAttributeType.Public: ResultAppender.SetAccessLevel(AccessLevel.Public); break;
+                case MethodAttributeType.Protected: ResultAppender.SetAccessLevel(AccessLevel.Protected); break;
+                case MethodAttributeType.Private: ResultAppender.SetAccessLevel(AccessLevel.Private); break;
                 
                 // Apply static
                 case MethodAttributeType.Static: ResultAppender.SetStatic(); break;
@@ -89,32 +103,29 @@ namespace Deltin.Deltinteger.Parse
                 
                 // Apply Recursive
                 case MethodAttributeType.Recursive: ResultAppender.SetRecursive(); break;
+
+                // Apply Variables
+
+                default: throw new NotImplementedException();
             }
         }
 
         // Implementers
         protected abstract string GetSubroutineName();
-        protected abstract DeltinScriptParser.Method_attributesContext[] GetAttributeContext();
+        protected abstract AttributeTokens GetAttributeContext();
         protected virtual MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[0];
     }
 
     class MethodAttributeContext
     {
+        public Token Token { get; }
+        public DocRange Range => Token.Range;
         public MethodAttributeType Type { get; }
-        public DocRange Range { get; }
-        public DeltinScriptParser.Method_attributesContext AttributeContext { get; }
 
-        public MethodAttributeContext(DeltinScriptParser.Method_attributesContext attributeContext)
+        public MethodAttributeContext(Token token, MethodAttributeType type)
         {
-            AttributeContext = attributeContext; 
-            Range = DocRange.GetRange(attributeContext);
-
-            if (attributeContext.accessor() != null) Type = MethodAttributeType.Accessor;
-            else if (attributeContext.STATIC() != null) Type = MethodAttributeType.Static;
-            else if (attributeContext.VIRTUAL() != null) Type = MethodAttributeType.Virtual;
-            else if (attributeContext.OVERRIDE() != null) Type = MethodAttributeType.Override;
-            else if (attributeContext.RECURSIVE() != null) Type = MethodAttributeType.Recursive;
-            else throw new NotImplementedException();
+            Token = token;
+            Type = type;
         }
 
         public void Copy(FileDiagnostics diagnostics)
@@ -125,7 +136,12 @@ namespace Deltin.Deltinteger.Parse
 
     enum MethodAttributeType
     {
-        Accessor,
+        GlobalVar,
+        PlayerVar,
+        Ref,
+        Public,
+        Private,
+        Protected,
         Static,
         Override,
         Virtual,
@@ -143,6 +159,7 @@ namespace Deltin.Deltinteger.Parse
         void SetSubroutine(string name);
         bool IsVirtual();
         bool IsStatic();
+        void SetVariableType(bool isGlobal);
     }
 
     class MethodAttributeAppender : IFunctionAppendResult
@@ -166,34 +183,36 @@ namespace Deltin.Deltinteger.Parse
         public void SetStatic() => Static = true;
         public void SetVirtual() => _attributes.Virtual = true;
         public void SetSubroutine(string name) => SubroutineName = name;
+        public void SetVariableType(bool isGlobal) => throw new NotImplementedException();
     }
     
     // Attribute handler for defined methods
     class MethodAttributesGetter : FunctionAttributesGetter
     {
-        private DeltinScriptParser.Define_methodContext Context { get; }
+        private FunctionContext Context { get; }
 
-        public MethodAttributesGetter(DeltinScriptParser.Define_methodContext context, IFunctionAppendResult result) : base(result)
+        public MethodAttributesGetter(FunctionContext context, IFunctionAppendResult result) : base(result)
         {
             Context = context;
         }
 
-        protected override DeltinScriptParser.Method_attributesContext[] GetAttributeContext() => Context.method_attributes();
-        protected override string GetSubroutineName() => Context.STRINGLITERAL() == null ? null : Extras.RemoveQuotes(Context.STRINGLITERAL().GetText());
+        protected override AttributeTokens GetAttributeContext() => Context.Attributes;
+        protected override string GetSubroutineName() => Context.Subroutine?.Text.RemoveQuotes();
+        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref };
     }
 
     // Attribute handler for defined macros
     class MacroAttributesGetter : FunctionAttributesGetter
     {
-        private DeltinScriptParser.Define_macroContext Context { get; }
+        private IDeclaration Declaration { get; }
 
-        public MacroAttributesGetter(DeltinScriptParser.Define_macroContext context, IFunctionAppendResult result) : base(result)
+        public MacroAttributesGetter(IDeclaration context, IFunctionAppendResult result) : base(result)
         {
-            Context = context;
+            Declaration = context;
         }
 
-        protected override DeltinScriptParser.Method_attributesContext[] GetAttributeContext() => Context.method_attributes();
+        protected override AttributeTokens GetAttributeContext() => Declaration.Attributes;
         protected override string GetSubroutineName() => null;
-        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.Recursive };
+        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.Recursive, MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref };
     }
 }

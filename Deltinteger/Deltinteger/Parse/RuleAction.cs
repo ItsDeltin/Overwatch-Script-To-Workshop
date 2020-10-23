@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -10,26 +14,21 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public bool Disabled { get; }
-        public RuleIfAction[] Conditions { get; }
-        public BlockAction Block { get; }
+        public IExpression[] Conditions { get; }
+        public IStatement Block { get; }
         
         public RuleEvent EventType { get; private set; }
         public Team Team { get; private set; }
         public PlayerSelector Player { get; private set; }
         public ElementCountCodeLens ElementCountLens { get; }
-        private bool _setEventType;
-        private bool _setTeam;
-        private bool _setPlayer;
 
         public double Priority;
-        private DocRange missingBlockRange;
 
-        public RuleAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
+        public RuleAction(ParseInfo parseInfo, Scope scope, RuleContext ruleContext)
         {
-            Name = Extras.RemoveQuotes(ruleContext.STRINGLITERAL().GetText());
-            Disabled = ruleContext.DISABLED() != null;
-            DocRange ruleInfoRange = DocRange.GetRange(ruleContext.RULE_WORD());
-            missingBlockRange = ruleInfoRange;
+            Name = ruleContext.Name;
+            Disabled = ruleContext.Disabled != null;
+            DocRange ruleInfoRange = ruleContext.RuleToken.Range;
 
             GetRuleSettings(parseInfo, scope, ruleContext);
 
@@ -37,124 +36,135 @@ namespace Deltin.Deltinteger.Parse
             CallInfo callInfo = new CallInfo(parseInfo.Script);
 
             // Get the conditions.
-            if (ruleContext.rule_if() == null) Conditions = new RuleIfAction[0];
-            else
+            Conditions = new IExpression[ruleContext.Conditions.Count];
+            for (int i = 0; i < Conditions.Length; i++)
             {
-                Conditions = new RuleIfAction[ruleContext.rule_if().Length];
-                for (int i = 0; i < Conditions.Length; i++)
-                {
+                // Make sure both left and right parentheses exists.
+                if (ruleContext.Conditions[i].LeftParen && ruleContext.Conditions[i].RightParen)
                     parseInfo.Script.AddCompletionRange(new CompletionRange(
                         scope,
-                        DocRange.GetRange(ruleContext.rule_if(i).LEFT_PAREN(), ruleContext.rule_if(i).RIGHT_PAREN()),
+                        ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range,
                         CompletionRangeKind.Catch
                     ));
 
-                    Conditions[i] = new RuleIfAction(parseInfo.SetCallInfo(callInfo), scope, ruleContext.rule_if(i));
-                    missingBlockRange = DocRange.GetRange(ruleContext.rule_if(i));
-                }
+                Conditions[i] = parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression);
             }
 
             // Get the block.
-            if (ruleContext.block() != null)
-                Block = new BlockAction(parseInfo.SetCallInfo(callInfo), scope, ruleContext.block());
-            else
-                parseInfo.Script.Diagnostics.Error("Missing block.", missingBlockRange);
+            Block = parseInfo.SetCallInfo(callInfo).GetStatement(scope, ruleContext.Statement);
             
             // Check restricted calls.
             callInfo.CheckRestrictedCalls(EventType);
             
             // Get the rule order priority.
-            if (ruleContext.number() != null)
-                Priority = double.Parse(ruleContext.number().GetText());
+            if (ruleContext.Order != null)
+                Priority = ruleContext.Order.Value;
             
             ElementCountLens = new ElementCountCodeLens(ruleInfoRange, parseInfo.TranslateInfo.OptimizeOutput);
             parseInfo.Script.AddCodeLensRange(ElementCountLens);
         }
 
-        private void GetRuleSettings(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
+        private void GetRuleSettings(ParseInfo parseInfo, Scope scope, RuleContext ruleContext)
         {
-            DeltinScriptParser.ExprContext eventContext = null;
-            DeltinScriptParser.ExprContext teamContext = null;
-            DeltinScriptParser.ExprContext playerContext = null;
+            RuleSetting teamContext = null, playerContext = null;
+            bool setEventType = false, setTeam = false, setPlayer = false;
 
-            foreach (var exprContext in ruleContext.expr())
+            foreach (var setting in ruleContext.Settings)
             {
-                missingBlockRange = DocRange.GetRange(exprContext);
-
-                EnumValuePair enumSetting = (ExpressionTree.ResultingExpression(parseInfo.GetExpression(scope, exprContext)) as CallVariableAction)?.Calling as EnumValuePair;
-                EnumData enumData = enumSetting?.Member.Enum;
-
-                if (enumData == null || !ValidRuleEnums.Contains(enumData))
-                    parseInfo.Script.Diagnostics.Error("Expected enum of type " + string.Join(", ", ValidRuleEnums.Select(vre => vre.CodeName)) + ".", DocRange.GetRange(exprContext));
-                else
+                // Add completion.
+                switch (setting.Setting.Text)
                 {
-                    var alreadySet = new Diagnostic("The " + enumData.CodeName + " rule setting was already set.", DocRange.GetRange(exprContext), Diagnostic.Error);
+                    case "Event": AddCompletion(parseInfo, setting.Dot, setting.Value, EventItems); break;
+                    case "Team": AddCompletion(parseInfo, setting.Dot, setting.Value, TeamItems); break;
+                    case "Player": AddCompletion(parseInfo, setting.Dot, setting.Value, PlayerItems); break;
+                }
 
-                    // Get the Event option.
-                    if (enumData == EnumData.GetEnum<RuleEvent>())
+                // Get the value.
+                if (setting.Value != null)
+                {
+                    var alreadySet = new Diagnostic("The " + setting.Setting.Text + " rule setting was already set.", setting.Range, Diagnostic.Error);
+                    string name = setting.Value.Text;
+                    DocRange range = setting.Value.Range;
+
+                    switch(setting.Setting.Text)
                     {
-                        if (_setEventType)
-                            parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        EventType = (RuleEvent)enumSetting.Member.Value;
-                        _setEventType = true;
-                        eventContext = exprContext;
-                    }
-                    // Get the Team option.
-                    if (enumData == EnumData.GetEnum<Team>())
-                    {
-                        if (_setTeam)
-                            parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Team = (Team)enumSetting.Member.Value;
-                        _setTeam = true;
-                        teamContext = exprContext;
-                    }
-                    // Get the Player option.
-                    if (enumData == EnumData.GetEnum<PlayerSelector>())
-                    {
-                        if (_setPlayer)
-                            parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Player = (PlayerSelector)enumSetting.Member.Value;
-                        _setPlayer = true;
-                        playerContext = exprContext;
+                        case "Event":
+                            if (setEventType) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
+                            EventType = GetMember<RuleEvent>("Event", name, parseInfo.Script.Diagnostics, range);
+                            setEventType = true;
+                            break;
+                        
+                        case "Team":
+                            if (setTeam) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
+                            Team = GetMember<Team>("Team", name, parseInfo.Script.Diagnostics, range);
+                            setTeam = true;
+                            teamContext = setting;
+                            break;
+                        
+                        case "Player":
+                            if (setPlayer) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
+                            Player = GetMember<PlayerSelector>("Player", name, parseInfo.Script.Diagnostics, range);
+                            setPlayer = true;
+                            playerContext = setting;
+                            break;
+                        
+                        default:
+                            parseInfo.Script.Diagnostics.Error("Expected an enumerator of type 'Event', 'Team', or 'Player'.", setting.Setting.Range);
+                            break;
                     }
                 }
             }
 
             // Set the event type to player if the event type was not set and player or team was changed.
-            if (!_setEventType && ((_setPlayer && Player != PlayerSelector.All) || (_setTeam && Team != Team.All)))
+            if (!setEventType && ((setPlayer && Player != PlayerSelector.All) || (setTeam && Team != Team.All)))
                 EventType = RuleEvent.OngoingPlayer;
 
-            // Syntax error if changing the Team type when the Event type is set to Global.
-            if (_setEventType && EventType == RuleEvent.OngoingGlobal)
+            if (setEventType && EventType == RuleEvent.OngoingGlobal)
             {
+                // Syntax error if the event type is global and the team type is not default.
                 if (Team != Team.All)
-                    parseInfo.Script.Diagnostics.Error("Can't change rule Team type with an event type of Ongoing Global.", DocRange.GetRange(teamContext));
+                    parseInfo.Script.Diagnostics.Error("Can't change rule Team type with an event type of Ongoing Global.", teamContext.Range);
+                // Syntax error if the event type is global and the player type is not default.
                 if (Player != PlayerSelector.All)
-                    parseInfo.Script.Diagnostics.Error("Can't change rule Player type with an event type of Ongoing Global.", DocRange.GetRange(playerContext));
+                    parseInfo.Script.Diagnostics.Error("Can't change rule Player type with an event type of Ongoing Global.", playerContext.Range);
             }
         }
 
-        private static readonly EnumData[] ValidRuleEnums = new EnumData[]
+        private static T GetMember<T>(string groupName, string name, FileDiagnostics diagnostics, DocRange range)
         {
-            EnumData.GetEnum<RuleEvent>(),
-            EnumData.GetEnum<Team>(),
-            EnumData.GetEnum<PlayerSelector>()
-        };
-    }
-
-    public class RuleIfAction
-    {
-        public IExpression Expression { get; }
-
-        public RuleIfAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Rule_ifContext ifContext)
-        {
-            // Syntax error if there is no expression.
-            if (ifContext.expr() == null)
-                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ifContext.RIGHT_PAREN()));
-            
-            // Get the expression.
-            else
-                Expression = parseInfo.GetExpression(scope, ifContext.expr());
+            foreach (var m in EnumData.GetEnum<T>().Members)
+                if (name == m.CodeName)
+                    return (T)m.Value;
+                
+            diagnostics.Error("Invalid " + groupName + " value.", range);
+            return default(T);
         }
+
+        /// <summary>Adds the completion for a rule setting.</summary>
+        private static void AddCompletion(ParseInfo parseInfo, Token dot, Token value, CompletionItem[] items)
+        {
+            // Do nothing if there is no dot.
+            if (dot == null || parseInfo.Script.IsTokenLast(dot)) return;
+
+            // Add the completion.
+            parseInfo.Script.AddCompletionRange(new CompletionRange(
+                items,
+                // Use the start of the next token if the value token is null.
+                dot.Range.End + (value != null ? value.Range.End : parseInfo.Script.NextToken(dot).Range.Start),
+                CompletionRangeKind.ClearRest
+            ));
+        }
+
+        private static readonly CompletionItem[] EventItems = GetItems<RuleEvent>("Event");
+        private static readonly CompletionItem[] TeamItems = GetItems<Team>("Team");
+        private static readonly CompletionItem[] PlayerItems = GetItems<PlayerSelector>("Player");
+
+        private static CompletionItem[] GetItems<T>(string tag) => EnumData.GetEnum<T>()
+            .Members.Select(m => new CompletionItem() {
+                Label = m.CodeName,
+                Detail = m.CodeName,
+                //Detail = new MarkupBuilder().StartCodeLine().Add(tag + "." + m.CodeName).ToString(),
+                Kind = CompletionItemKind.Constant
+            }).ToArray();
     }
 }

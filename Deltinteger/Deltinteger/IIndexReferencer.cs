@@ -1,6 +1,7 @@
 using System;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -9,10 +10,11 @@ namespace Deltin.Deltinteger
     public interface IIndexReferencer : IVariable, IExpression, ICallable, ILabeled
     {
         bool Settable();
+        bool RequiresCapture { get; }
         VariableType VariableType { get; }
     }
 
-    public abstract class IndexReferencer : IIndexReferencer
+    public class IndexReferencer : IIndexReferencer
     {
         public string Name { get; }
         public VariableType VariableType { get; protected set; }
@@ -22,6 +24,7 @@ namespace Deltin.Deltinteger
         public AccessLevel AccessLevel { get; protected set; } = AccessLevel.Public;
         public CodeType CodeType { get; protected set; }
         public MarkupBuilder Documentation { get; set; }
+        public bool RequiresCapture => false;
 
         public IndexReferencer(string name)
         {

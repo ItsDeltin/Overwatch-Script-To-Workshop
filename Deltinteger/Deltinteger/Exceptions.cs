@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
-using Antlr4.Runtime;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 

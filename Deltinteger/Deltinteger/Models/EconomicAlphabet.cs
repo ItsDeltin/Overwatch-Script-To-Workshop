@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using Deltin.Deltinteger.Models.Import;
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Models
 {

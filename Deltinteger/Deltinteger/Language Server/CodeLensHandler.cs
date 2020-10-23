@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public async Task<CodeLensContainer> Handle(CodeLensParams request, CancellationToken cancellationToken)
         {
             await _languageServer.DocumentHandler.WaitForParse();
-            var codeLenses = _languageServer.LastParse.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetCodeLensRanges();
+            var codeLenses = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetCodeLensRanges();
             if (codeLenses == null) return new CodeLensContainer();
 
             List<CodeLens> finalLenses = new List<CodeLens>();
@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.LanguageServer
                             Name = lens.Command,
                             Arguments = lens.GetArguments()
                         },
-                        Range = lens.Range.ToLsRange()
+                        Range = lens.Range
                     });
             
             return finalLenses;

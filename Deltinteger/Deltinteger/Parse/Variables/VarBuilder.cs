@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -50,6 +52,9 @@ namespace Deltin.Deltinteger.Parse
             _typeRange = _contextHandler.GetTypeRange();
             GetCodeType();
 
+            if (_varInfo.Type is Lambda.PortableLambdaType)
+                _varInfo.TokenType = TokenType.Function;
+
             // Apply attributes.
             foreach (VarBuilderAttribute attribute in _attributes)
                 attribute.Apply(_varInfo);
@@ -77,7 +82,18 @@ namespace Deltin.Deltinteger.Parse
             TypeCheck();
             _varInfo.Recursive = IsRecursive();
 
-            return new Var(_varInfo);
+            // Set the scope.
+            var scope = OperationalScope();
+            _varInfo.OperationalScope = scope;
+
+            // Get the resulting variable.
+            var result = new Var(_varInfo);
+
+            // Add the variable to the operational scope.
+            if (_contextHandler.CheckName()) scope.AddVariable(result, _diagnostics, _nameRange);
+            else scope.CopyVariable(result);
+
+            return result;
         }
 
         protected void RejectAttributes(params AttributeType[] types)
@@ -90,6 +106,8 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual void GetCodeType()
         {
+            if (_contextHandler.GetCodeType() == null) return;
+
             // Get the type.
             CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, _contextHandler.GetCodeType());
             
@@ -102,6 +120,7 @@ namespace Deltin.Deltinteger.Parse
         protected virtual void MissingAttribute(AttributeType[] attributeTypes) {}
         protected abstract void CheckAttributes();
         protected abstract void Apply();
+        protected abstract Scope OperationalScope();
 
         protected virtual void TypeCheck()
         {
@@ -125,8 +144,9 @@ namespace Deltin.Deltinteger.Parse
         string GetName();
         DocRange GetNameRange();
         VarBuilderAttribute[] GetAttributes();
-        DeltinScriptParser.Code_typeContext GetCodeType();
+        IParseType GetCodeType();
         DocRange GetTypeRange();
+        bool CheckName();
     }
 
     public class VarBuilderAttribute
@@ -225,9 +245,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public int ID { get; }
 
-        public IDAttribute(DeltinScriptParser.NumberContext context) : base(AttributeType.ID, DocRange.GetRange(context))
+        public IDAttribute(Token numberToken) : base(AttributeType.ID, numberToken.Range)
         {
-            ID = int.Parse(context.GetText());
+            ID = int.Parse(numberToken.Text);
         }
 
         public override void Apply(VarInfo varInfo)
@@ -238,9 +258,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class InitialValueAttribute : VarBuilderAttribute
     {
-        public DeltinScriptParser.ExprContext ExprContext { get; }
+        public IParseExpression ExprContext { get; }
 
-        public InitialValueAttribute(DeltinScriptParser.ExprContext exprContext) : base(AttributeType.Initial, DocRange.GetRange(exprContext))
+        public InitialValueAttribute(IParseExpression exprContext) : base(AttributeType.Initial, exprContext.Range)
         {
             ExprContext = exprContext;
         }

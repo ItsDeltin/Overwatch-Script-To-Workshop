@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.FunctionBuilder;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class DefinedMethod : DefinedFunction
     {
         /// <summary>The context of the function.</summary>
-        public DeltinScriptParser.Define_methodContext Context { get; }
+        public FunctionContext Context { get; }
 
         // Attributes
         /// <summary>Determines if the function is a subroutine.</summary>
@@ -28,18 +31,22 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>If there is only one return statement, this will be the statement being returned.</summary>
         public IExpression SingleReturnValue { get; private set; }
 
-        public DefinedMethod virtualSubroutineAssigned { get; set; }
-        public SubroutineInfo subroutineInfo { get; private set; }
-        private readonly bool _subroutineDefaultGlobal;
+        /// <summary>Determines if local variables in the subroutine are global variables by default.</summary>
+        public bool SubroutineDefaultGlobal { get; }
 
-        public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
-            : base(parseInfo, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
+        // * Private fields *
+        
+        /// <summary>The function's subroutine info.</summary>
+        public SubroutineInfo SubroutineInfo { get; set; }
+
+        public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, FunctionContext context, CodeType containingType)
+            : base(parseInfo, context.Identifier.Text, new Location(parseInfo.Script.Uri, context.Identifier.Range))
         {
             this.Context = context;
 
             Attributes.ContainingType = containingType;
 
-            DocRange nameRange = DocRange.GetRange(context.name);
+            DocRange nameRange = context.Identifier.Range;
 
             // Get the attributes.
             MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
@@ -57,29 +64,29 @@ namespace Deltin.Deltinteger.Parse
             methodScope.MethodContainer = true;
 
             // Get the type.
-            if (context.VOID() == null)
+            if (!context.Type.IsVoid)
             {
                 DoesReturnValue = true;
-                ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
+                CodeType = CodeType.GetCodeTypeFromContext(parseInfo, context.Type);
             }
 
             // Setup the parameters and parse the block.
             if (!IsSubroutine)
-                SetupParameters(context.setParameters(), false);
+                SetupParameters(context.Parameters, false);
             else
             {
-                _subroutineDefaultGlobal = context.PLAYER() == null;
+                SubroutineDefaultGlobal = context.PlayerVar == null;
                 Attributes.Parallelable = true;
-                parseInfo.TranslateInfo.AddSubroutine(this);
 
                 // Subroutines should not have parameters.
-                SetupParameters(context.setParameters(), true);
+                SetupParameters(context.Parameters, true);
             }
 
             // Override attribute.
             if (Attributes.Override)
             {
                 IMethod overriding = objectScope.GetMethodOverload(this);
+                Attributes.Overriding = overriding;
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", nameRange);
@@ -102,14 +109,11 @@ namespace Deltin.Deltinteger.Parse
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
 
-            // Syntax error if the block is missing.
-            if (context.block() == null) parseInfo.Script.Diagnostics.Error("Expected block.", nameRange);
-
             // Add to the scope. Check for conflicts if the method is not overriding.
             containingScope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
 
             // Add the hover info.
-            parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+            parseInfo.Script.AddHover(nameRange, GetLabel(true));
 
             if (Attributes.IsOverrideable)
                 parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
@@ -120,138 +124,51 @@ namespace Deltin.Deltinteger.Parse
         // Sets up the method's block.
         public override void SetupBlock()
         {
-            if (Context.block() != null)
-            {
-                Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope.Child(), Context.block());
+            Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope.Child(), Context.Block);
 
-                // Validate returns.
-                BlockTreeScan validation = new BlockTreeScan(DoesReturnValue, parseInfo, this);
-                validation.ValidateReturns();
-                MultiplePaths = validation.MultiplePaths;
+            // Validate returns.
+            BlockTreeScan validation = new BlockTreeScan(DoesReturnValue, parseInfo, this);
+            validation.ValidateReturns();
+            MultiplePaths = validation.MultiplePaths;
 
-                // If there is only one return statement, set SingleReturnValue.
-                if (validation.Returns.Length == 1) SingleReturnValue = validation.Returns[0].ReturningValue;
+            // If there is only one return statement, set SingleReturnValue.
+            if (validation.Returns.Length == 1) SingleReturnValue = validation.Returns[0].ReturningValue;
 
-                // If the return type is a constant type...
-                if (ReturnType != null && ReturnType.IsConstant())
-                    // ... iterate through each return statement ...
-                    foreach (ReturnAction returnAction in validation.Returns)
-                        // ... If the current return statement returns a value and that value does not implement the return type ...
-                        if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(ReturnType)))
-                            // ... then add a syntax error.
-                            parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
-            }
+            // If the return type is a constant type...
+            if (CodeType != null && CodeType.IsConstant())
+                // ... iterate through each return statement ...
+                foreach (ReturnAction returnAction in validation.Returns)
+                    // ... If the current return statement returns a value and that value does not implement the return type ...
+                    if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(CodeType)))
+                        // ... then add a syntax error.
+                        parseInfo.Script.Diagnostics.Error("Must return a value of type '" + CodeType.GetName() + "'.", returnAction.ErrorRange);
+            
             WasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }
 
         // Parses the method.
-        override public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
+        public override IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-            return MethodBuilder.Call(this, methodCall, actionSet);
+            var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(GetOverrideFunctionHandlers()));
+            return controller.Call();
         }
 
         // Sets up single-instance methods for methods with the 'rule' attribute.
-        public void SetupSubroutine()
+        public SubroutineInfo GetSubroutineInfo()
         {
-            if (subroutineInfo != null || !IsSubroutine) return;
-
-            // Setup the subroutine element.
-            Subroutine subroutine = parseInfo.TranslateInfo.SubroutineCollection.NewSubroutine(Name);
-
-            // Create the rule.
-            TranslateRule subroutineRule = new TranslateRule(parseInfo.TranslateInfo, subroutine, SubroutineName, _subroutineDefaultGlobal);
-
-            // Setup the return handler.
-            ReturnHandler returnHandler = new ReturnHandler(subroutineRule.ActionSet, Name, MultiplePaths || Attributes.Virtual);
-            ActionSet actionSet = subroutineRule.ActionSet.New(returnHandler).New(subroutineRule.ActionSet.IndexAssigner.CreateContained());
-
-            // Get the variables that will be used to store the parameters.
-            IndexReference[] parameterStores = new IndexReference[ParameterVars.Length];
-            for (int i = 0; i < ParameterVars.Length; i++)
+            if (!IsSubroutine) return null;
+            if (SubroutineInfo == null)
             {
-                // Create the workshop variable the parameter will be stored as.
-                IndexReference indexResult = actionSet.IndexAssigner.AddIndexReference(actionSet.VarCollection, ParameterVars[i], _subroutineDefaultGlobal, Attributes.Recursive);
-                parameterStores[i] = indexResult;
-
-                // Assign virtual variables to the index reference.
-                foreach (Var virtualParameterOption in VirtualVarGroup(i))
-                    actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
+                var builder = new SubroutineBuilder(parseInfo.TranslateInfo, new DefinedSubroutineContext(parseInfo, this, GetOverrideFunctionHandlers()));
+                builder.SetupSubroutine();
+                SubroutineInfo = builder.SubroutineInfo;
             }
-            
-            // If the subroutine is an object function inside a class, create a variable to store the class object.
-            IndexReference objectStore = null;
-            if (Attributes.ContainingType != null && !Static)
-            {
-                objectStore = actionSet.VarCollection.Assign("_" + Name + "_subroutineStore", true, !Attributes.Recursive);
-
-                // Set the objectStore as an empty array if the subroutine is recursive.
-                if (Attributes.Recursive)
-                {
-                    actionSet.InitialSet().AddAction(objectStore.SetVariable(new V_EmptyArray()));
-                    Attributes.ContainingType.AddObjectVariablesToAssigner(Element.Part<V_LastOf>(objectStore.GetVariable()), actionSet.IndexAssigner);
-                    actionSet = actionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable())).PackThis();
-                }
-                else
-                {
-                    Attributes.ContainingType.AddObjectVariablesToAssigner(objectStore.GetVariable(), actionSet.IndexAssigner);
-                    actionSet = actionSet.New(objectStore.GetVariable()).PackThis();
-                }
-            }
-            
-            // Set the subroutine info.
-            subroutineInfo = new SubroutineInfo(subroutine, returnHandler, parameterStores, objectStore);
-
-            MethodBuilder builder = new MethodBuilder(this, actionSet, returnHandler);
-            builder.BuilderSet = builder.BuilderSet.New(Attributes.Recursive);
-            builder.ParseInner();
-
-            // Apply returns.
-            returnHandler.ApplyReturnSkips();
-
-            // Pop object array and parameters if recursive.
-            if (Attributes.Recursive)
-            {
-                if (objectStore != null) actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
-                RecursiveStack.PopParameterStacks(actionSet, ParameterVars);
-            }
-
-            // Add the subroutine.
-            Rule translatedRule = subroutineRule.GetRule();
-            parseInfo.TranslateInfo.WorkshopRules.Add(translatedRule);
-
-            var codeLens = new ElementCountCodeLens(DefinedAt.range, parseInfo.TranslateInfo.OptimizeOutput);
-            parseInfo.Script.AddCodeLensRange(codeLens);
-            codeLens.RuleParsed(translatedRule);
+            return SubroutineInfo;
         }
-
-        public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues, bool recursive)
-        {
-            for (int i = 0; i < ParameterVars.Length; i++)
-            {
-                IGettable indexResult = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
-
-                if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
-                    actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
-
-                foreach (Var virtualParameterOption in VirtualVarGroup(i))
-                    actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
-            }
-        }
-
-        // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.
-        public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues, bool recursive = false)
-        {
-            for (int i = 0; i < parameterVars.Length; i++)
-            {
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
-
-                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference && parameterValues?[i] != null)
-                    actionSet.AddAction(
-                        ((IndexReference)actionSet.IndexAssigner[parameterVars[i]]).SetVariable((Element)parameterValues[i])
-                    );
-            }
-        }
+        
+        private DefinedFunctionHandler[] GetOverrideFunctionHandlers()
+            => Attributes.AllOverrideOptions().Select(op => new DefinedFunctionHandler((DefinedMethod)op, false)).Prepend(new DefinedFunctionHandler(this, true)).ToArray();
     }
 }

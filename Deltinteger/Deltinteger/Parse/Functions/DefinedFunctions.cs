@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.WorkshopWiki;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Parse
 {
     public abstract class DefinedFunction : IMethod, ICallable, IApplyBlock
     {
         public string Name { get; }
-        public CodeType ReturnType { get; protected set; }
+        public CodeType CodeType { get; protected set; }
         public CodeParameter[] Parameters { get; private set; }
         public AccessLevel AccessLevel { get; protected set; }
         public Location DefinedAt { get; }
@@ -47,6 +46,7 @@ namespace Deltin.Deltinteger.Parse
         protected void SetupScope(Scope chosenScope)
         {
             methodScope = chosenScope.Child();
+            methodScope.CatchConflict = true;
             containingScope = chosenScope;
         }
 
@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual void SetupParameters() {}
         public abstract void SetupBlock();
 
-        protected void SetupParameters(DeltinScriptParser.SetParametersContext context, bool subroutineParameter)
+        protected void SetupParameters(List<VariableDeclaration> context, bool subroutineParameter)
         {
             var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context, subroutineParameter);
             Parameters = parameterInfo.Parameters;
@@ -65,12 +65,12 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
-            parseInfo.CurrentCallInfo.Call(_recursiveCallHandler, callRange);
+            parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
         }
 
         protected virtual IRecursiveCallHandler GetRecursiveCallHandler() => null;
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, null);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
 

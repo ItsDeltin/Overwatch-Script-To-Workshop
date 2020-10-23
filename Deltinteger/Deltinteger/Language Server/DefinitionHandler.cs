@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Compiler;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using IDefinitionHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.IDefinitionHandler;
 using DefinitionCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.DefinitionCapability;

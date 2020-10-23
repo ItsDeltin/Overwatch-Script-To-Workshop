@@ -7,6 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.Parse;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -24,7 +27,7 @@ namespace Deltin.Deltinteger.LanguageServer
         private static readonly bool _sendTextOnSave = true;
 
         // Object
-        public List<TextDocumentItem> Documents { get; } = new List<TextDocumentItem>();
+        public List<Document> Documents { get; } = new List<Document>();
         private DeltintegerLanguageServer _languageServer { get; } 
         private SynchronizationCapability _compatibility;
         private TaskCompletionSource<Unit> _scriptReady = new TaskCompletionSource<Unit>();
@@ -63,7 +66,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (_sendTextOnSave)
             {
                 var document = TextDocumentFromUri(saveParams.TextDocument.Uri.ToUri());
-                document.Text = saveParams.Text;
+                document.UpdateIfChanged(saveParams.Text);
                 return Parse(document);
             }
             else return Parse(saveParams.TextDocument.Uri.ToUri());
@@ -79,7 +82,7 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle open.
         public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
         {
-            Documents.Add(openParams.TextDocument);
+            Documents.Add(new Document(openParams.TextDocument));
             return Parse(openParams.TextDocument.Uri.ToUri());
         }
 
@@ -89,17 +92,16 @@ namespace Deltin.Deltinteger.LanguageServer
             var document = TextDocumentFromUri(changeParams.TextDocument.Uri.ToUri());
             foreach (var change in changeParams.ContentChanges)
             {
-                int start = PosIndex(document.Text, change.Range.Start);
-                int length = PosIndex(document.Text, change.Range.End) - start;
+                int start = PosIndex(document.Content, change.Range.Start);
+                int length = PosIndex(document.Content, change.Range.End) - start;
 
-                StringBuilder rep = new StringBuilder(document.Text);
+                StringBuilder rep = new StringBuilder(document.Content);
                 rep.Remove(start, length);
                 rep.Insert(start, change.Text);
 
-                document.Text = rep.ToString();
-                document.Version = changeParams.TextDocument.Version;
+                document.Update(rep.ToString(), change, changeParams.TextDocument.Version);
             }
-            return Parse(document);
+            return Parse(document.Uri);
         }
 
         // Get client compatibility
@@ -108,7 +110,7 @@ namespace Deltin.Deltinteger.LanguageServer
             _compatibility = compatibility;
         }
 
-        public TextDocumentItem TextDocumentFromUri(Uri uri)
+        public Document TextDocumentFromUri(Uri uri)
         {
             for (int i = 0; i < Documents.Count; i++)
                 // TODO-URI: Should use Uri.Compare? 
@@ -145,14 +147,14 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         Task<Unit> Parse(Uri uri) => Parse(TextDocumentFromUri(uri));
-        Task<Unit> Parse(TextDocumentItem document)
+        Task<Unit> Parse(Document document)
         {
             _currentDocument = document;
             _wait.Set();
             return null;
         }
 
-        private TextDocumentItem _currentDocument;
+        private Document _currentDocument;
         private ManualResetEventSlim _wait = new ManualResetEventSlim(false);
         private ManualResetEventSlim _parseDone = new ManualResetEventSlim(false);
         private readonly CancellationTokenSource _stopUpdateListener = new CancellationTokenSource();
@@ -180,12 +182,12 @@ namespace Deltin.Deltinteger.LanguageServer
             }, stopToken);
         }
 
-        void Update(TextDocumentItem item)
+        void Update(Document item)
         {
             try
             {
                 Diagnostics diagnostics = new Diagnostics();
-                ScriptFile root = new ScriptFile(diagnostics, item.Uri.ToUri(), item.Text);
+                ScriptFile root = new ScriptFile(diagnostics, item);
                 DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter) {
                     OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
                     OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput

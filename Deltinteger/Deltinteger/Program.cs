@@ -70,7 +70,6 @@ namespace Deltin.Deltinteger
         public static void Script(string parseFile)
         {
             string text = File.ReadAllText(parseFile);
-
             Diagnostics diagnostics = new Diagnostics();
             ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
             DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root));
@@ -172,7 +171,8 @@ namespace Deltin.Deltinteger
             try
             {
                 // Parse the workshop code.
-                var workshop = new ConvertTextToElement(Clipboard.GetText()).Get();
+                var tte = new ConvertTextToElement(Clipboard.GetText());
+                var workshop = tte.Get();
 
                 // Decompile the parsed workshop code.
                 var workshopToCode = new WorkshopDecompiler(workshop, new FileLobbySettingsResolver(file, workshop.LobbySettings), new CodeFormattingOptions());
@@ -184,6 +184,10 @@ namespace Deltin.Deltinteger
                     writer.Write(result);
                 
                 Console.Write("Success");
+
+                // Warning if the end of the file was not reached.
+                if (!tte.ReachedEnd)
+                    Console.Write("End of file not reached, stuck at: '" + tte.LocalStream.Substring(0, Math.Min(tte.LocalStream.Length, 50)) + "'");
             }
             catch (Exception ex)
             {

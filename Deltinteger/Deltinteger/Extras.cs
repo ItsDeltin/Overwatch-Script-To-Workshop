@@ -69,34 +69,7 @@ namespace Deltin.Deltinteger
             return string.Join("\n", lines);
         }
 
-        public static string RemoveQuotes(string str)
-        {
-            return str.Substring(1, str.Length - 2);
-        }
-
-        public static AccessLevel GetAccessLevel(this DeltinScriptParser.AccessorContext accessorContext)
-        {
-            if (accessorContext == null) return AccessLevel.Private;
-            else if (accessorContext.PUBLIC() != null) return AccessLevel.Public;
-            else if (accessorContext.PRIVATE() != null) return AccessLevel.Private;
-            else if (accessorContext.PROTECTED() != null) return AccessLevel.Protected;
-            else throw new NotImplementedException();
-        }
-
-        public static string SerializeToXML<T>(object o)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
-            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-            ns.Add("","");
-
-            string result;
-            using (StringWriter stringWriter = new StringWriter())
-            {
-                serializer.Serialize(stringWriter, o, ns);
-                result = stringWriter.ToString();
-            }
-            return result;
-        }
+        public static string RemoveQuotes(this string str) => str.Length >= 2 && str[0] == '"' && str[str.Length - 1] == '"' ? str.Substring(1, str.Length - 2) : str;
 
         public static string FilePath(this Uri uri)
         {
@@ -109,6 +82,11 @@ namespace Deltin.Deltinteger
         }
 
         public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
+
+        public static string GetNameOrDefine(this CodeType type) => type?.GetName() ?? "define";
+
+        public static bool CodeTypeParameterInvalid(this CodeType parameterType, CodeType valueType) =>
+            parameterType != null && ((parameterType.IsConstant() && valueType == null) || (valueType != null && !valueType.Implements(parameterType)));
 
         public static Uri Definition(string path)
         {
@@ -175,6 +153,7 @@ namespace Deltin.Deltinteger
     {
         StringBuilder result = new StringBuilder();
         StringBuilder noMarkup = new StringBuilder();
+        bool inCodeLine = false;
 
         public MarkupBuilder() {}
 
@@ -192,17 +171,27 @@ namespace Deltin.Deltinteger
         }
         public MarkupBuilder NewLine()
         {
-            result.Append("\n\r");
-            noMarkup.Append("\n\r");
+            if (inCodeLine)
+            {
+                result.Append("\n");
+                noMarkup.Append("\n");
+            }
+            else
+            {
+                result.Append("\n\r");
+                noMarkup.Append("\n\r");
+            }
             return this;
         }
         public MarkupBuilder StartCodeLine()
         {
+            inCodeLine = true;
             result.Append("```ostw\n");
             return this;
         }
         public MarkupBuilder EndCodeLine()
         {
+            inCodeLine = false;
             result.Append("\n\r```");
             return this;
         }
@@ -215,5 +204,9 @@ namespace Deltin.Deltinteger
 
         public override string ToString() => result.ToString();
         public string ToString(bool markup) => markup ? result.ToString() : noMarkup.ToString();
+        public MarkupContent ToMarkup() => new MarkupContent() {
+            Kind = MarkupKind.Markdown,
+            Value = ToString()
+        };
     }
 }
