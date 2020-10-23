@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNode<T>(T node) where T: INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(Lexer.Tokens[TokenRangeStart.Pop()].Range.Start, CurrentOrLast.Range.End);
+                node.Range = new DocRange(TokenAtOrEnd(TokenRangeStart.Pop()).Range.Start, CurrentOrLast.Range.End);
             return node;
         }
 

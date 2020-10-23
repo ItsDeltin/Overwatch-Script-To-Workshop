@@ -119,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
                         range = ExprContextTree[i + 1].GetRange();
                     }
                     // Expression path has a trailing '.'
-                    else if (_trailingSeperator != null)
+                    else if (_trailingSeperator != null && !script.IsTokenLast(_trailingSeperator))
                     {
                         range = new DocRange(
                             _trailingSeperator.Range.End,
