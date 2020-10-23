@@ -69,6 +69,18 @@
       "default": false,
       "type": "boolean"
     },
+    "Data Center Preference": {
+      "default": "Best Available",
+      "type": "string",
+      "enum": [
+        "Best Available",
+        "USA - Central",
+        "Brazil",
+        "Singapore",
+        "USA - West",
+        "Australia 3"
+      ]
+    },
     "Enemy Health Bars": {
       "default": true,
       "type": "boolean"
@@ -1265,11 +1277,11 @@
       "type": "number",
       "maximum": 500.0
     },
-    "Storm Arrow": {
+    "Storm Arrows": {
       "default": true,
       "type": "boolean"
     },
-    "Storm Arrow Cooldown Time": {
+    "Storm Arrows Cooldown Time": {
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
@@ -3333,11 +3345,11 @@
             "Sonic Arrow Cooldown Time": {
               "$ref": "#/definitions/Sonic Arrow Cooldown Time"
             },
-            "Storm Arrow": {
-              "$ref": "#/definitions/Storm Arrow"
+            "Storm Arrows": {
+              "$ref": "#/definitions/Storm Arrows"
             },
-            "Storm Arrow Cooldown Time": {
-              "$ref": "#/definitions/Storm Arrow Cooldown Time"
+            "Storm Arrows Cooldown Time": {
+              "$ref": "#/definitions/Storm Arrows Cooldown Time"
             },
             "Storm Arrows Quantity": {
               "$ref": "#/definitions/Storm Arrows Quantity"
@@ -5235,6 +5247,9 @@
         },
         "Pause Game On Player Disconnect": {
           "$ref": "#/definitions/Pause Game On Player Disconnect"
+        },
+        "Data Center Preference": {
+          "$ref": "#/definitions/Data Center Preference"
         }
       },
       "additionalProperties": false
@@ -5978,6 +5993,11 @@
     "Description": {
       "description": "The description of the custom game.",
       "type": "string"
+    },
+    "Workshop": {
+      "properties": {},
+      "type": "object",
+      "additionalProperties": true
     }
   },
   "type": "object",
