@@ -160,7 +160,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => Function.Parse(actionSet, new MethodCall(((IInvokeResult)this).GetParameterValuesAsWorkshop(actionSet), AdditionalParameterData) {
-            ParallelMode = _asyncInfo.ParallelMode,
+            ParallelMode = _asyncInfo?.ParallelMode ?? CallParallel.NoParallel,
             ActionComment = _comment
         });
 

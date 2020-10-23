@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                         ActionSet.AddAction(subroutineInfo.ObjectStore.ModifyVariable(Operation.AppendToArray, Element.CreateArray(ActionSet.CurrentObject)));
                 }
                 
-                ExecuteSubroutine(subroutineInfo.Subroutine);
+                ExecuteSubroutine(subroutineInfo.Subroutine, CallHandler.ParallelMode);
                 return subroutineInfo.ReturnHandler.GetReturnedValue();
             }
             // Inline function
@@ -137,7 +137,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             // We use a new actionSet rather than _actionSet in case the caller needs special adjustments.
             if (function.IsSubroutine())
             {
-                ExecuteSubroutine(function, CallHandler.ParallelMode);
+                ExecuteSubroutine(function, CallHandler?.ParallelMode ?? CallParallel.NoParallel);
                 // Bridge the returned value.
                 if (Determiner.ReturnsValue()) ReturnHandler.ReturnValue(function.GetSubroutineInfo().ReturnHandler.GetReturnedValue());
             }
@@ -155,11 +155,11 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                     break;
                 
                 case CallParallel.AlreadyRunning_DoNothing:
-                    ActionSet.AddAction(Element.Part<A_StartRule>(subroutine, EnumData.GetEnumValue(CallParallel.AlreadyRunning_DoNothing)));
+                    ActionSet.AddAction(Element.Part<A_StartRule>(subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.DoNothing)));
                     break;
                 
                 case CallParallel.AlreadyRunning_RestartRule:
-                    ActionSet.AddAction(Element.Part<A_StartRule>(subroutine, EnumData.GetEnumValue(CallParallel.AlreadyRunning_RestartRule)));
+                    ActionSet.AddAction(Element.Part<A_StartRule>(subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.RestartRule)));
                     break;
             }
         }
@@ -199,10 +199,12 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     {
         public IFunctionHandler[] VirtualOptions { get; }
         private IFunctionHandler _root => VirtualOptions[0];
+        private readonly bool _inner;
 
-        public DefaultGroupDeterminer(IFunctionHandler[] virtualOptions)
+        public DefaultGroupDeterminer(IFunctionHandler[] virtualOptions, bool inner = false)
         {
             VirtualOptions = virtualOptions;
+            _inner = inner;
         }
 
         public string GroupName() => _root.GetName();
@@ -212,7 +214,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public bool IsVirtual() => VirtualOptions.Length > 1;
         public bool ReturnsValue() => _root.DoesReturnValue();
         public bool MultiplePaths() => _root.DoesReturnValue() && (_root.IsSubroutine() || _root.MultiplePaths() || IsVirtual());
-        public IFunctionLookupTable GetLookupTable() => new VirtualLookupTable(VirtualOptions);
+        public IFunctionLookupTable GetLookupTable() => new VirtualLookupTable(VirtualOptions, _inner);
         public SubroutineInfo GetSubroutineInfo() => _root.GetSubroutineInfo();
 
         public IParameterHandler[] Parameters()
@@ -253,16 +255,19 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         SubroutineInfo GetSubroutineInfo();
         IIndexReferencer GetParameterVar(int index);
         void ParseInner(ActionSet actionSet);
+        void Subcall(FunctionBuildController builder, ActionSet actionSet) => builder.Subcall(builder.ActionSet, this);
         object UniqueIdentifier();
     }
 
     public class DefinedFunctionHandler : IFunctionHandler
     {
         private readonly DefinedMethod _method;
+        private readonly bool _primarySubroutineFunction;
 
-        public DefinedFunctionHandler(DefinedMethod method)
+        public DefinedFunctionHandler(DefinedMethod method, bool primarySubroutineFunction)
         {
             _method = method;
+            _primarySubroutineFunction = primarySubroutineFunction;
         }
 
         public string GetName() => _method.Name;
@@ -276,6 +281,13 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public IIndexReferencer GetParameterVar(int index) => index < ParameterCount() ? _method.ParameterVars[index] : null;
         public void ParseInner(ActionSet actionSet) => _method.Block.Translate(actionSet);
         public object UniqueIdentifier() => _method;
+        public void Subcall(FunctionBuildController builder, ActionSet actionSet)
+        {
+            if (_primarySubroutineFunction)
+                ParseInner(actionSet);
+            else
+                builder.Subcall(actionSet, this);
+        }
 
         public CodeType ContainingType => _method.Attributes.ContainingType;
     }
@@ -287,6 +299,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         void Push(ActionSet actionSet, IWorkshopTree value);
         void Pop(ActionSet actionSet);
         IndexReference GetSubroutineStack(ActionSet actionSet, bool defaultGlobal);
+        void Apply(ActionSet actionSet, IGettable gettable);
     }
 
     public class DefinedParameterHandler : IParameterHandler
@@ -323,6 +336,12 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             return indexResult;
         }
 
+        public void Apply(ActionSet actionSet, IGettable gettable)
+        {
+            for (int i = 0; i < _variables.Length; i++)
+                actionSet.IndexAssigner.Add(_variables[i], gettable);
+        }
+
         private void CopyToAll(ActionSet actionSet, IGettable gettable)
         {
             for (int i = 1; i < _variables.Length; i++)
@@ -342,9 +361,9 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             if (pop != null) actionSet.AddAction(pop);
         }
 
-        public static IParameterHandler[] GetDefinedParameters(int parameterCount, IFunctionHandler[] handlers, bool isRecursive)
+        public static DefinedParameterHandler[] GetDefinedParameters(int parameterCount, IFunctionHandler[] handlers, bool isRecursive)
         {
-            var parameters = new IParameterHandler[parameterCount];
+            var parameters = new DefinedParameterHandler[parameterCount];
             for (int i = 0; i < parameters.Length; i++)
             {
                 // Get all vars in each function.
@@ -412,14 +431,12 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
             // Setup the return handler.
             ActionSet actionSet = subroutineRule.ActionSet.New(subroutineRule.ActionSet.IndexAssigner.CreateContained());
-
-            // Get the variables that will be used to store the parameters.
-            IndexReference[] parameterStores = new IndexReference[_context.Parameters().Length];
-            for (int i = 0; i < parameterStores.Length; i++)
-                parameterStores[i] = _context.Parameters()[i].GetSubroutineStack(actionSet, _context.VariableGlobalDefault());
             
             // Create the function builder.
             var determiner = _context.GetDeterminer();
+
+            // Get the variables that will be used to store the parameters.
+            IndexReference[] parameterStores = _context.GetParameterStacks(actionSet);
             
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             IndexReference objectStore = null;
@@ -473,20 +490,30 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         CodeType ContainingType();
         void SetSubroutineInfo(SubroutineInfo subroutineInfo);
         void Finish(Rule rule);
+        IndexReference[] GetParameterStacks(ActionSet actionSet) => DefaultGetParameterStacks(actionSet);
+        public IndexReference[] DefaultGetParameterStacks(ActionSet actionSet)
+        {
+            IndexReference[] parameterStores = new IndexReference[Parameters().Length];
+            for (int i = 0; i < parameterStores.Length; i++)
+                parameterStores[i] = Parameters()[i].GetSubroutineStack(actionSet, VariableGlobalDefault());
+            return parameterStores;
+        }
     }
 
     public class DefinedSubroutineContext : ISubroutineContext
     {
         private readonly ParseInfo _parseInfo;
         private readonly DefinedMethod _method;
+        private readonly IFunctionHandler[] _virtualOptions;
 
-        public DefinedSubroutineContext(ParseInfo parseInfo, DefinedMethod method)
+        public DefinedSubroutineContext(ParseInfo parseInfo, DefinedMethod method, IFunctionHandler[] virtualOptions)
         {
             _parseInfo = parseInfo;
             _method = method;
+            _virtualOptions = virtualOptions;
         }
 
-        public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_method.Parameters.Length, new IFunctionHandler[] { new DefinedFunctionHandler(_method) }, _method.Attributes.Recursive);
+        public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_method.Parameters.Length, _virtualOptions, _method.Attributes.Recursive);
         public string ElementName() => _method.Name;
         public string RuleName() => _method.SubroutineName;
         public string ThisArrayName() => "_" + ElementName() + "_object_stack";
@@ -501,7 +528,36 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             codeLens.RuleParsed(rule);
         }
 
-        public IGroupDeterminer GetDeterminer() => new DefaultGroupDeterminer(new DefinedFunctionHandler[] { new DefinedFunctionHandler(_method) });
+        public IndexReference[] GetParameterStacks(ActionSet actionSet)
+        {
+            // If any of the parent overriden functions are a subroutine,
+            // inherit the variables used to store the parameters.
+            // Start from the current parent then work up.
+            var current = _method.Attributes.Overriding;
+            while (current != null) // When current equals null, there are no more parent functions.
+            {
+                // If the current function is a subroutine
+                if (((DefinedMethod)current).IsSubroutine)
+                {
+                    // Get the parameter stack.
+                    var parameters = ((DefinedMethod)current).GetSubroutineInfo().ParameterStores;
+                    
+                    // Iterate through each parameter handler and apply the stack. 
+                    for (int i = 0; i < Parameters().Length; i++)
+                        Parameters()[i].Apply(actionSet, parameters[i]);
+                    
+                    // Return the parameter stacks.
+                    return parameters;
+                }
+                // Set current to the function that the current function is overriding.
+                current = _method.Attributes.Overriding;
+            }
+
+            // If no subroutine is found, get the default parameter stacks.
+            return ((ISubroutineContext)this).DefaultGetParameterStacks(actionSet);
+        }
+
+        public IGroupDeterminer GetDeterminer() => new DefaultGroupDeterminer(_virtualOptions, true);
     }
 
     public class RecursiveStack
@@ -629,11 +685,13 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     {
         private readonly IFunctionHandler[] _options;
         private readonly CodeType[] _allContainingTypes;
+        private readonly bool _inner;
 
-        public VirtualLookupTable(IFunctionHandler[] options)
+        public VirtualLookupTable(IFunctionHandler[] options, bool inner)
         {
             _options = options;
             _allContainingTypes = _options.Select(o => o.ContainingType).ToArray();
+            _inner = inner;
         }
 
         public void Build(FunctionBuildController builder)
@@ -641,7 +699,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             // Only parse the first option if there is only one.
             if (_options.Length == 1)
             {
-                _options[0].ParseInner(builder.ActionSet);
+                _options[0].Subcall(builder, builder.ActionSet);
                 return;
             }
 
@@ -670,7 +728,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                         // ...then add an additional case for 'type's class identifier.
                         typeSwitch.NextCase(new V_Number(((ClassType)type).Identifier));
                 
-                builder.Subcall(optionSet, option);
+                option.Subcall(builder, optionSet);
             }
 
             ClassData classData = builder.ActionSet.Translate.DeltinScript.GetComponent<ClassData>();

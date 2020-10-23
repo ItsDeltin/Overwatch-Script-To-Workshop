@@ -119,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // If the chosen function is a DefinedMethod, use the DefinedFunctionHandler.
             if (function is DefinedMethod definedMethod)
-                return new DefinedFunctionHandler(definedMethod);
+                return new DefinedFunctionHandler(definedMethod, false);
             
             // Otherwise, use the generic function handler.
             return new GenericMethodHandler(function);
