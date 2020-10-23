@@ -40,12 +40,13 @@ namespace Deltin.Deltinteger.Parse
             OptimizeOutput = translateSettings.OptimizeOutput;
 
             GlobalScope = Scope.GetGlobalScope();
+            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope);
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
 
             Types.GetDefaults(this);
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(translateSettings.Root);            
+            Importer.CollectScriptFiles(translateSettings.Root);
             
             Translate();
             if (!Diagnostics.ContainsErrors())

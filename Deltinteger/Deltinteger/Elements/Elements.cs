@@ -30,7 +30,8 @@ namespace Deltin.Deltinteger.Elements
         Map,
         Gamemode,
         Button,
-        String
+        String,
+        Color
     }
 
     public abstract class Element : IWorkshopTree
