@@ -255,11 +255,24 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ternaryContext.TERNARY()));
             else
                 Consequent = parseInfo.GetExpression(scope, ternaryContext.consequent);
-            
+
+
+                 
+
             if (ternaryContext.alternative == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ternaryContext.TERNARY_ELSE()));
             else
                 Alternative = parseInfo.GetExpression(scope, ternaryContext.alternative);
+
+            if (Consequent != null && Alternative != null)
+            {
+                if(Consequent.Type() is ValueGroupType || Alternative.Type() is ValueGroupType)
+                {
+                    var type = (Consequent.Type() is ValueGroupType) ? Consequent.Type() : Alternative.Type();
+                    var range = (Consequent.Type() is ValueGroupType) ? DocRange.GetRange(ternaryContext.consequent) : DocRange.GetRange(ternaryContext.alternative);
+                    parseInfo.Script.Diagnostics.Error($"Cannot use Workshop Enum {type.Name} in a ternary expression.", range);
+                }
+            }
         }
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
