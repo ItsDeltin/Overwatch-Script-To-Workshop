@@ -56,6 +56,10 @@
                     ".overwatch"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "json",
+                "extensions": [".lobby"]
             }
         ],
         "grammars": [
@@ -214,7 +218,7 @@
         ],
         "jsonValidation": [
             {
-                "fileMatch": "customGameSettings.json",
+                "fileMatch": ["customGameSettings.json", "*.lobby.json", "*.lobby"],
                 "url": "./LobbySettingValidation.json"
             }
         ],
