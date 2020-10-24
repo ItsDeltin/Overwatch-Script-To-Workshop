@@ -459,7 +459,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
             scanner.Advance();
 
             // Match every character to the end of the line.
-            while(!scanner.ReachedEnd && !scanner.At('*') && !scanner.At('/')) scanner.Advance();
+            while(!scanner.ReachedEnd)
+            {
+                if (scanner.At('*') && scanner.At('/', 1))
+                {
+                    scanner.Advance();
+                    scanner.Advance();
+                    break;
+                }
+                scanner.Advance();
+            }
             
             // Done.
             Accept(scanner);
