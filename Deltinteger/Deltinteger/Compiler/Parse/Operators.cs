@@ -14,27 +14,29 @@ namespace Deltin.Deltinteger.Compiler.Parse
         // Compare
         public static CompilerOperator Ternary { get; } = new CompilerOperator(2, "?", TokenType.QuestionMark, OperatorType.TernaryLeft);
         public static CompilerOperator RhsTernary { get; } = new CompilerOperator(3, ":", TokenType.Colon, OperatorType.TernaryRight);
+
+        public static CompilerOperator Or { get; } = new CompilerOperator(4, "||", TokenType.Or);
+        public static CompilerOperator And { get; } = new CompilerOperator(5, "&&", TokenType.And);
+
         public static CompilerOperator Equal { get; } = new CompilerOperator(6, "==", TokenType.EqualEqual);
-        public static CompilerOperator NotEqual { get; } = new CompilerOperator(7, "!=", TokenType.NotEqual);
-        public static CompilerOperator GreaterThan { get; } = new CompilerOperator(8, ">", TokenType.GreaterThan);
-        public static CompilerOperator LessThan { get; } = new CompilerOperator(9, "<", TokenType.LessThan);
-        public static CompilerOperator GreaterThanOrEqual { get; } = new CompilerOperator(10, ">=", TokenType.GreaterThanOrEqual);
-        public static CompilerOperator LessThanOrEqual { get; } = new CompilerOperator(11, "<=", TokenType.LessThanOrEqual);
+        public static CompilerOperator NotEqual { get; } = new CompilerOperator(6, "!=", TokenType.NotEqual);
+        public static CompilerOperator GreaterThan { get; } = new CompilerOperator(7, ">", TokenType.GreaterThan);
+        public static CompilerOperator LessThan { get; } = new CompilerOperator(7, "<", TokenType.LessThan);
+        public static CompilerOperator GreaterThanOrEqual { get; } = new CompilerOperator(7, ">=", TokenType.GreaterThanOrEqual);
+        public static CompilerOperator LessThanOrEqual { get; } = new CompilerOperator(7, "<=", TokenType.LessThanOrEqual);
         // Boolean
-        public static CompilerOperator And { get; } = new CompilerOperator(4, "&&", TokenType.And);
-        public static CompilerOperator Or { get; } = new CompilerOperator(5, "||", TokenType.Or);
         // Math
-        public static CompilerOperator Subtract { get; } = new CompilerOperator(12, "-", TokenType.Subtract);
-        public static CompilerOperator Add { get; } = new CompilerOperator(12, "+", TokenType.Add);
-        public static CompilerOperator Modulo { get; } = new CompilerOperator(13, "%", TokenType.Modulo);
-        public static CompilerOperator Divide { get; } = new CompilerOperator(13, "/", TokenType.Divide);
-        public static CompilerOperator Multiply { get; } = new CompilerOperator(13, "*", TokenType.Multiply);
-        public static CompilerOperator Power { get; } = new CompilerOperator(17, "^", TokenType.Hat);
+        public static CompilerOperator Subtract { get; } = new CompilerOperator(8, "-", TokenType.Subtract);
+        public static CompilerOperator Add { get; } = new CompilerOperator(8, "+", TokenType.Add);
+        public static CompilerOperator Modulo { get; } = new CompilerOperator(9, "%", TokenType.Modulo);
+        public static CompilerOperator Divide { get; } = new CompilerOperator(9, "/", TokenType.Divide);
+        public static CompilerOperator Multiply { get; } = new CompilerOperator(9, "*", TokenType.Multiply);
+        public static CompilerOperator Power { get; } = new CompilerOperator(10, "^", TokenType.Hat);
         // Unary
-        public static CompilerOperator Not { get; } = new CompilerOperator(18, "!", TokenType.Exclamation, OperatorType.Unary);
-        public static CompilerOperator Inv { get; } = new CompilerOperator(18, "-", TokenType.Subtract, OperatorType.Unary);
+        public static CompilerOperator Not { get; } = new CompilerOperator(11, "!", TokenType.Exclamation, OperatorType.Unary);
+        public static CompilerOperator Inv { get; } = new CompilerOperator(11, "-", TokenType.Subtract, OperatorType.Unary);
         // Dot
-        public static CompilerOperator Dot { get; } = new CompilerOperator(19, ".", TokenType.Dot) { RhsHandler = new DotRhsHandler() };
+        public static CompilerOperator Dot { get; } = new CompilerOperator(12, ".", TokenType.Dot) { RhsHandler = new DotRhsHandler() };
 
         // Lists
         public static CompilerOperator[] BinaryOperators { get; } = new CompilerOperator[] {
@@ -95,7 +97,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         public void Get(Parser parser)
         {
-            parser.Operands.Push(parser.GetExpressionWithArray());
+            parser.GetExpressionWithArray();
         }
     }
 
