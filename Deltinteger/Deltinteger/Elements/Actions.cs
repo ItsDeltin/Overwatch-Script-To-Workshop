@@ -1071,6 +1071,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Progress Bar Color", ValueType.Color, typeof(V_ColorValue))]
     [Parameter("Text Color", ValueType.Color, typeof(V_ColorValue))]
     [EnumParameter("Reevaluation", typeof(ProgressBarEvaluation))]
+    [EnumParameter("Nonteam Spectators", typeof(Spectators))]
     public class A_CreateProgressBarHudText : Element {}
 
     [ElementData("Destroy Progress Bar HUD Text")]
