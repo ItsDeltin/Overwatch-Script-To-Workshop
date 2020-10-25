@@ -104,6 +104,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             SetParameters(); // Set the parameters.
             stack?.StartRecursiveLoop(); // Start the recursion loop.
             ParseContents(); // Parse the lookup table.
+            ReturnHandler.ApplyReturnSkips(); // Returns will skip to this point, right before the recursive loop ends.
             stack?.EndRecursiveLoop(); // End the recursive loop.
 
             if (stack != null) ActionSet.Translate.MethodStack.Remove(stack); // Remove recursion info from the stack.
