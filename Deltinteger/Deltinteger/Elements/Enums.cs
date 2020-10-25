@@ -611,9 +611,13 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum IconRev
     {
+        [EnumOverride(null, "Visible To, Position, and Color")]
+        VisibleToPositionAndColor,
         VisibleToAndPosition,
         Position,
+        PositionAndColor,
         VisibleTo,
+        VisibleToAndColor,
         None
     }
 
@@ -725,10 +729,19 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum InworldTextRev
     {
+        [EnumOverride(null, "Visible To, Position, String, and Color")]
+        VisibleToPositionStringAndColor,
+        [EnumOverride(null, "Visible To, String, and Color")]
+        VisibleToStringAndColor,
+        [EnumOverride(null, "Visible To, Position, and Color")]
+        VisibleToPositionAndColor,
         [EnumOverride(null, "Visible To Position and String")]
         VisibleToPositionAndString,
         [EnumOverride(null, "Visible To and String")]
         VisibleToAndString,
+        [EnumOverride(null, "Visible To and Color")]
+        VisibleToAndColor,
+        Color,
         String,
         VisibleToAndPosition,
         VisibleTo,
