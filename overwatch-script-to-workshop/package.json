@@ -59,7 +59,9 @@
             },
             {
                 "id": "json",
-                "extensions": [".lobby"]
+                "extensions": [
+                    ".lobby"
+                ]
             }
         ],
         "grammars": [
@@ -218,7 +220,11 @@
         ],
         "jsonValidation": [
             {
-                "fileMatch": ["customGameSettings.json", "*.lobby.json", "*.lobby"],
+                "fileMatch": [
+                    "customGameSettings.json",
+                    "*.lobby.json",
+                    "*.lobby"
+                ],
                 "url": "./LobbySettingValidation.json"
             }
         ],
