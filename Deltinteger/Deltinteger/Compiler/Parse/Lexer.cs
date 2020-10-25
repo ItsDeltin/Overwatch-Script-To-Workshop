@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             controller.Match();
             Content = newContent;
-            return new IncrementInfo(affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex, Tokens.Count - lastTokenCount);
+            return new IncrementInfo(affectedArea.StartingTokenIndex, Math.Max(tokenInsert.Current, affectedArea.EndingTokenIndex), Tokens.Count - lastTokenCount);
         }
 
         AffectedAreaInfo GetAffectedArea(UpdateRange updateRange)
