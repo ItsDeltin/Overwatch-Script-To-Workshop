@@ -25,10 +25,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public static CompilerOperator Or { get; } = new CompilerOperator(5, "||", TokenType.Or);
         // Math
         public static CompilerOperator Subtract { get; } = new CompilerOperator(12, "-", TokenType.Subtract);
-        public static CompilerOperator Add { get; } = new CompilerOperator(13, "+", TokenType.Add);
-        public static CompilerOperator Modulo { get; } = new CompilerOperator(14, "%", TokenType.Modulo);
-        public static CompilerOperator Divide { get; } = new CompilerOperator(15, "/", TokenType.Divide);
-        public static CompilerOperator Multiply { get; } = new CompilerOperator(16, "*", TokenType.Multiply);
+        public static CompilerOperator Add { get; } = new CompilerOperator(12, "+", TokenType.Add);
+        public static CompilerOperator Modulo { get; } = new CompilerOperator(13, "%", TokenType.Modulo);
+        public static CompilerOperator Divide { get; } = new CompilerOperator(13, "/", TokenType.Divide);
+        public static CompilerOperator Multiply { get; } = new CompilerOperator(13, "*", TokenType.Multiply);
         public static CompilerOperator Power { get; } = new CompilerOperator(17, "^", TokenType.Hat);
         // Unary
         public static CompilerOperator Not { get; } = new CompilerOperator(18, "!", TokenType.Exclamation, OperatorType.Unary);
@@ -73,7 +73,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 return op1 == RhsTernary && op2 == RhsTernary;
             
             if (op1 == Sentinel || op2 == Sentinel) return false;
-            return op1.Precedence > op2.Precedence;
+            
+            return op1.Precedence >= op2.Precedence;
         }
     }
 
