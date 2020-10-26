@@ -394,7 +394,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             Localized = localized;
             Token = token;
-            Value = Extras.RemoveQuotes(token.Text);
+            Value = token.Text.StartsWith("\"") ? Extras.RemoveQuotes(token.Text) : token.Text.Trim('\'');
         }
 
         public StringExpression(Token localized, Token token, List<IParseExpression> formats) : this(localized, token)

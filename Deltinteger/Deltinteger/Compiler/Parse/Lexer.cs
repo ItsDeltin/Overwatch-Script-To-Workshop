@@ -362,15 +362,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             char lookingFor = single ? '\'' : '\"';
 
-            bool escaped = false;
+            //escaped will be 0 whenever it's not escaped
+            int escaped = 0;
             // Look for end of string.
             do
             {
                 scanner.Advance();
-                if (scanner.At('\\') && !escaped) escaped = true;
-                else if (escaped) escaped = false;
+                if (scanner.At('\\') && escaped == 0) escaped = 2;
+                else if (escaped > 0) escaped -= 1;
             }
-            while (!scanner.ReachedEnd && (escaped || !scanner.At(lookingFor)));
+            while (!scanner.ReachedEnd && ((escaped > 0) || !scanner.At(lookingFor)));
             scanner.Advance();
 
             PushToken(scanner, TokenType.String);
