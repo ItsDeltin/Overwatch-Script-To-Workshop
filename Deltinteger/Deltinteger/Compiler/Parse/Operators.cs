@@ -14,9 +14,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
         // Compare
         public static CompilerOperator Ternary { get; } = new CompilerOperator(2, "?", TokenType.QuestionMark, OperatorType.TernaryLeft);
         public static CompilerOperator RhsTernary { get; } = new CompilerOperator(3, ":", TokenType.Colon, OperatorType.TernaryRight);
-        
-        public static CompilerOperator And { get; } = new CompilerOperator(4, "&&", TokenType.And);
-        public static CompilerOperator Or { get; } = new CompilerOperator(5, "||", TokenType.Or);
+
+        public static CompilerOperator Or { get; } = new CompilerOperator(4, "||", TokenType.Or);
+        public static CompilerOperator And { get; } = new CompilerOperator(5, "&&", TokenType.And);
 
         public static CompilerOperator Equal { get; } = new CompilerOperator(6, "==", TokenType.EqualEqual);
         public static CompilerOperator NotEqual { get; } = new CompilerOperator(6, "!=", TokenType.NotEqual);
