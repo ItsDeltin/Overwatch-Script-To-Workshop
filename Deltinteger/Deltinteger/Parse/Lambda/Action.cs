@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         private readonly ParseInfo _parseInfo;
         private readonly CodeType[] _argumentTypes;
         private readonly bool _isExplicit;
+        private readonly bool _contextualParameterTypesKnown;
 
         /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
         public PortableLambdaType LambdaType { get; private set; }
@@ -52,6 +53,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _context = context;
             _lambdaScope = scope.Child();
             _parseInfo = parseInfo;
+            _contextualParameterTypesKnown = _parseInfo.ExpectingLambda != null && _parseInfo.ExpectingLambda.Type.ParameterTypesKnown;
             RecursiveCallHandler = new LambdaRecursionHandler(this);
             CallInfo = new CallInfo(RecursiveCallHandler, parseInfo.Script);
             This = scope.GetThis();
@@ -70,7 +72,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                     parseInfo.Script.Diagnostics.Error("Inconsistent lambda parameter usage; parameter types must be all explicit or all implicit", context.Parameters[i].Range);
 
                 InvokedState[i] = new SubLambdaInvoke();
-                Parameters[i] = new ParameterVariable(_lambdaScope, new LambdaContextHandler(parseInfo, context.Parameters[i]), InvokedState[i]);
+                Parameters[i] = new LambdaVariable(i, _parseInfo.ExpectingLambda?.Type, _lambdaScope, new LambdaContextHandler(parseInfo, context.Parameters[i]), InvokedState[i]);
                 _argumentTypes[i] = Parameters[i].CodeType;
             }
 
@@ -88,16 +90,18 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public void GetLambdaStatement(PortableLambdaType expecting)
         {
-            GetLambdaStatement();
+            _getLambdaStatement(expecting);
 
             // Check if the current lambda implements the expected type.
             if (!LambdaType.Implements(expecting))
                 _parseInfo.Script.Diagnostics.Error("Expected lambda of type '" + expecting.GetName() + "'", _context.Arrow.Range);
         }
 
-        public void GetLambdaStatement()
+        public void GetLambdaStatement() => _getLambdaStatement(null);
+
+        private void _getLambdaStatement(PortableLambdaType expectingType)
         {
-            ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).SetVariableTracker(this);
+            ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).AddVariableTracker(this).SetExpectingLambda(expectingType?.ReturnType);
 
             CodeType returnType = null;
             bool returnsValue = false;
@@ -130,9 +134,15 @@ namespace Deltin.Deltinteger.Parse.Lambda
             {
                 // Statement
                 Statement = parser.GetStatement(_lambdaScope, _context.Statement);
+                if (Statement is IExpression expr)
+                {
+                    Expression = expr;
+                    returnType = expr.Type();
+                    returnsValue = true;
+                }
             }
 
-            LambdaType = new PortableLambdaType(LambdaKind.Portable, _argumentTypes, returnsValue, returnType, _isExplicit);
+            LambdaType = new PortableLambdaType(expectingType?.LambdaKind ?? LambdaKind.Anonymous, _argumentTypes, returnsValue, returnType, _isExplicit);
 
             // Add so the lambda can be recursive-checked.
             _parseInfo.TranslateInfo.RecursionCheck(CallInfo);
@@ -208,7 +218,13 @@ namespace Deltin.Deltinteger.Parse.Lambda
         private IWorkshopTree OutputContantBlock(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             ReturnHandler returnHandler = new ReturnHandler(actionSet, "lambda", MultiplePaths);
-            Statement.Translate(AssignContainedParameters(actionSet, parameterValues).New(returnHandler));
+            actionSet = AssignContainedParameters(actionSet, parameterValues).New(returnHandler);
+
+            if (Expression != null)
+                returnHandler.ReturnValue(Expression.Parse(actionSet));
+            else
+                Statement.Translate(actionSet);
+            
             returnHandler.ApplyReturnSkips();
             
             return returnHandler.GetReturnedValue();

@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnsValue = returnsValue;
             ReturnType = returnType;
             ParameterTypesKnown = parameterTypesKnown;
-            AddInvokeFunction();            
+            AddInvokeFunction();
         }
 
         public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], false, null, false) {}
@@ -48,20 +48,21 @@ namespace Deltin.Deltinteger.Parse.Lambda
             var other = type as PortableLambdaType;
             if (other == null || Parameters.Length != other.Parameters.Length) return false;
 
-            if (!ParameterTypesKnown) return true;
-
-            // Make sure the parameters match.
-            for (int i = 0; i < Parameters.Length; i++)
-            {
-                if (Parameters[i] == null)
+            if (ParameterTypesKnown)
+                // Make sure the parameters match.
+                for (int i = 0; i < Parameters.Length; i++)
                 {
-                    if (other.Parameters[i] != null && other.Parameters[i].IsConstant())
+                    if (Parameters[i] == null)
+                    {
+                        if (other.Parameters[i] != null && other.Parameters[i].IsConstant())
+                            return false;
+                    }
+                    else if (!Parameters[i].Implements(other.Parameters[i]))
                         return false;
                 }
-                else if (!Parameters[i].Implements(other.Parameters[i]))
-                    return false;
-            }
-            return true;
+
+            // Make sure the return type matches.
+            return other.ReturnsValue == ReturnsValue && (((ReturnType == null) == (other.ReturnType == null)) || (ReturnType != null && ReturnType.Implements(other.ReturnType)));
         }
 
         public override CompletionItem GetCompletion() => throw new NotImplementedException();

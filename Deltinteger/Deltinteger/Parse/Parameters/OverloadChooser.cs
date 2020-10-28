@@ -94,7 +94,8 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Set expression and expressionRange.
-                parameter.Value = parseInfo.SetPotentialLambda().GetExpression(getter, context[i].Expression);
+                parameter.LambdaInfo = new ExpectingLambdaInfo();
+                parameter.Value = parseInfo.SetLambdaInfo(parameter.LambdaInfo).GetExpression(getter, context[i].Expression);
                 parameter.ExpressionRange = context[i].Expression.Range;
             }
 
@@ -164,9 +165,17 @@ namespace Deltin.Deltinteger.Parse
             bestOption.AddDiagnostics(parseInfo.Script.Diagnostics);
             CheckAccessLevel();
 
+            // Apply the lambdas and method group parameters.
+            // Iterate through each parameter.
             for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
-                if (bestOption.Option.Parameters[i].Type is PortableLambdaType portableLambda && bestOption.OrderedParameters[i].Value is ILambdaApplier applier)
-                    applier.GetLambdaStatement(portableLambda);
+            {
+                // If the CodeParameter type is a lambda type, get the lambda statement with it.
+                if (bestOption.Option.Parameters[i].Type is PortableLambdaType portableLambda)
+                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers(portableLambda);
+                // Otherwise, get the lambda statement with the default.
+                else
+                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers();
+            }
 
             return bestOption;
         }
@@ -271,6 +280,10 @@ namespace Deltin.Deltinteger.Parse
         public bool Picky { get; set; }
         /// <summary>If `Prefilled` is true, this parameter was filled by a default value.</summary>
         public bool Prefilled { get; set; }
+        /// <summary>When the parameter expressions are parsed, the parameter types are unknown. Lambda and method groups will behave
+        /// differently depending on the parameter type, so some components will not be parsed until the parameter type is known.
+        /// Use this to apply the lambda/method group data when the overload is chosen.</summary>
+        public ExpectingLambdaInfo LambdaInfo { get; set; }
 
         public PickyParameter(bool prefilled)
         {

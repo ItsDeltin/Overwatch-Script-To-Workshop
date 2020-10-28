@@ -137,7 +137,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
             for (int i = 0; i < _lambda.CapturedVariables.Count; i++)
                 actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 2));
             
-            _lambda.Statement?.Translate(actionSet);
+            if (_lambda.Expression != null)
+                actionSet.ReturnHandler.ReturnValue(_lambda.Expression.Parse(actionSet));
+            else
+                _lambda.Statement.Translate(actionSet);
         }
     }
 }

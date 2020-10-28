@@ -23,14 +23,22 @@ namespace Deltin.Deltinteger.Parse
 
             // Setup
             for (int i = 0; i < ExprContextTree.Length; i++)
+            {
+                ParseInfo partInfo = parseInfo;
+                // If this is not the first expression, clear tail data and set the source expression.
+                if (i != 0) partInfo = partInfo.ClearTail().SetSourceExpression(ExprContextTree[i - 1]);
+                // If this is not the last expression, clear head data.
+                if (i != ExprContextTree.Length - 1) partInfo = partInfo.ClearHead();
+
                 ExprContextTree[i].Setup(new TreeContextParseInfo() {
-                    ParseInfo = i == 0 ? parseInfo : parseInfo.SetSourceExpression(ExprContextTree[i - 1]),
+                    ParseInfo = partInfo,
                     Getter = scope,
                     Scope = i == 0 ? scope : ExprContextTree[i - 1].GetScope() ?? new Scope(),
                     Parent = i == 0 ? null : ExprContextTree[i - 1],
                     UsedAsExpression = usedAsValue || i < ExprContextTree.Length - 1,
                     IsLast = i == ExprContextTree.Length - 1
                 });
+            }
 
             // Get expressions
             Tree = new IExpression[ExprContextTree.Length];
