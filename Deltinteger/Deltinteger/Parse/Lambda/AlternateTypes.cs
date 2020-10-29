@@ -25,10 +25,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 return Name;
             // Return type and parameters
             else if (ReturnsValue)
-                return Name + string.Join(", ", Parameters.Select(p => p.GetNameOrDefine()).Prepend(ReturnType.GetNameOrDefine()));
+                return Name + "<" + string.Join(", ", Parameters.Select(p => p.GetNameOrDefine()).Prepend(ReturnType.GetNameOrDefine())) + ">";
             // Parameters
             else
-                return Name + string.Join(", ", Parameters.Select(p => p.GetNameOrDefine()));
+                return Name + "<" + string.Join(", ", Parameters.Select(p => p.GetNameOrDefine())) + ">";
         }
     }
 

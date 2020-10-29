@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
         public ITreeContextPart SourceExpression { get; private set; }
 
         // Tail
-        public IVariableTracker LocalVariableTracker { get; private set; }
+        public IVariableTracker[] LocalVariableTracker { get; private set; }
 
         // Head
         public ResolveInvokeInfo ResolveInvokeInfo { get; private set; }
@@ -43,6 +43,8 @@ namespace Deltin.Deltinteger.Parse
             RestrictedCallHandler = other.RestrictedCallHandler;
             ExpectingLambda = other.ExpectingLambda;
             LocalVariableTracker = other.LocalVariableTracker;
+            ResolveInvokeInfo = other.ResolveInvokeInfo;
+            AsyncInfo = other.AsyncInfo;
         }
         public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo, RestrictedCallHandler = currentCallInfo };
         public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { BreakHandler = loop, ContinueHandler = loop };
@@ -50,10 +52,20 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetContinueHandler(IContinueContainer handler) => new ParseInfo(this) { ContinueHandler = handler };
         public ParseInfo SetSourceExpression(ITreeContextPart treePart) => new ParseInfo(this) { SourceExpression = treePart };
         public ParseInfo SetRestrictedCallHandler(IRestrictedCallHandler callHandler) => new ParseInfo(this) { RestrictedCallHandler = callHandler };
-        public ParseInfo SetVariableTracker(IVariableTracker variableTracker) => new ParseInfo(this) { LocalVariableTracker = variableTracker };
+        public ParseInfo AddVariableTracker(IVariableTracker variableTracker)
+        {
+            if (LocalVariableTracker == null) return new ParseInfo(this) { LocalVariableTracker = new IVariableTracker[] { variableTracker } };
+            // Create a new variable tracker array with +1 length.
+            var variableTrackerArray = new IVariableTracker[LocalVariableTracker.Length + 1];
+            // Copy the current variable trackers.
+            LocalVariableTracker.CopyTo(variableTrackerArray, 0);
+            // Set the tracker.
+            variableTrackerArray[LocalVariableTracker.Length] = variableTracker;
+
+            return new ParseInfo(this) { LocalVariableTracker = variableTrackerArray };
+        }
         public ParseInfo SetExpectingLambda(CodeType sourceType) => new ParseInfo(this) { ExpectingLambda = sourceType is PortableLambdaType portable ? new ExpectingLambdaInfo(portable) : null };
-        public ParseInfo SetPotentialLambda() => new ParseInfo(this) { ExpectingLambda = new ExpectingLambdaInfo() };
-        public ParseInfo ClearExpectingLambda() => new ParseInfo(this) { ExpectingLambda = null };
+        public ParseInfo SetLambdaInfo(ExpectingLambdaInfo lambdaInfo) => new ParseInfo(this) { ExpectingLambda = lambdaInfo };
         public ParseInfo SetInvokeInfo(ResolveInvokeInfo invokeInfo) => new ParseInfo(this) { ResolveInvokeInfo = invokeInfo };
         public ParseInfo SetAsyncInfo(AsyncInfo asyncInfo) => new ParseInfo(this) { AsyncInfo = asyncInfo };
 
@@ -225,7 +237,23 @@ namespace Deltin.Deltinteger.Parse
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;
         }
-    
+
+        public void LocalVariableAccessed(IIndexReferencer referencer)
+        {
+            if (LocalVariableTracker != null)
+                foreach (var tracker in LocalVariableTracker)
+                    tracker.LocalVariableAccessed(referencer);
+        }
+
+        public ParseInfo ClearTail() => new ParseInfo(this) {
+            LocalVariableTracker = null
+        };
+
+        public ParseInfo ClearHead() => new ParseInfo(this) {
+            ResolveInvokeInfo = null,
+            AsyncInfo = null
+        };
+
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
     }
 
@@ -253,8 +281,8 @@ namespace Deltin.Deltinteger.Parse
                     EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
                 
                 // If there is a local variable tracker and the variable requires capture.
-                if (referencer.RequiresCapture && _parseInfo.LocalVariableTracker != null)
-                    _parseInfo.LocalVariableTracker.LocalVariableAccessed(referencer);
+                if (referencer.RequiresCapture)
+                    _parseInfo.LocalVariableAccessed(referencer);
 
                 return new CallVariableAction(referencer, index);
             }

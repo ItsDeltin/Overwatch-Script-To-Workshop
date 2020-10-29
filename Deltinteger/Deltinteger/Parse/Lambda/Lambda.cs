@@ -64,6 +64,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     {
         public PortableLambdaType Type { get; }
         public bool RegisterOccursLater { get; }
+        private readonly List<ILambdaApplier> _apply = new List<ILambdaApplier>();
 
         public ExpectingLambdaInfo()
         {
@@ -74,6 +75,26 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             RegisterOccursLater = false;
             Type = type;
+        }
+
+        public void Apply(ILambdaApplier applier)
+        {
+            if (!RegisterOccursLater)
+                // The arrow registration occurs now, parse the statement.
+                applier.GetLambdaStatement(Type);
+            else
+                // Otherwise, add it to the _apply list so we can apply it later.
+                _apply.Add(applier);
+        }
+
+        public void FinishAppliers(PortableLambdaType type)
+        {
+            foreach (var apply in _apply) apply.GetLambdaStatement(type);
+        }
+
+        public void FinishAppliers()
+        {
+            foreach (var apply in _apply) apply.GetLambdaStatement();
         }
     }
 
@@ -105,13 +126,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 else
                     ParseInfo.Script.Diagnostics.Error(ErrorMessage, Range);
             }
-            
-            // The arrow registration occurs now, parse the statement.
-            else if (!ParseInfo.ExpectingLambda.RegisterOccursLater)
-                Applier.GetLambdaStatement(ParseInfo.ExpectingLambda.Type);
-                        
-            // Default
-            else Applier.GetLambdaStatement();
+            else
+                ParseInfo.ExpectingLambda.Apply(Applier);
         }
     }
 

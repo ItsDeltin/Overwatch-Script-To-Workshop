@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
 
         override public void SetupBlock()
         {
-            Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(methodScope, _context.Expression);
+            Expression = parseInfo.SetCallInfo(CallInfo).SetExpectingLambda(CodeType).GetExpression(methodScope, _context.Expression);
             WasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }

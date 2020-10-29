@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     public class LambdaInvoke : IMethod
     {
         public string Name => "Invoke";
-        public CodeType CodeType { get; }
+        public CodeType CodeType => LambdaType.ReturnType;
         public CodeParameter[] Parameters { get; }
 
         public MethodAttributes Attributes => new MethodAttributes();
@@ -24,7 +24,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public LambdaInvoke(PortableLambdaType lambdaType)
         {
             LambdaType = lambdaType;
-            CodeType = lambdaType.ReturnType;
             Parameters = ParametersFromTypes(lambdaType.Parameters);
         }
 
