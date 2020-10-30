@@ -39,12 +39,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the imported files.
             foreach (var importFileContext in scriptFile.Context.Imports)
-            if (importFileContext.File)
-            {
-                string directory = GetImportedFile(scriptFile, importer, importFileContext);
-                if (Directory.Exists(directory))
-                    AddImportCompletion(scriptFile, directory, importFileContext.File.Range);
-            }
+                if (importFileContext.File)
+                {
+                    string directory = GetImportedFile(scriptFile, importer, importFileContext);
+                    if (Directory.Exists(directory))
+                        AddImportCompletion(scriptFile, directory, importFileContext.File.Range);
+                }
         }
 
         public static void AddImportCompletion(ScriptFile script, string directory, DocRange range)
@@ -53,26 +53,29 @@ namespace Deltin.Deltinteger.Parse
             var directories = Directory.GetDirectories(directory);
             var files = Directory.GetFiles(directory);
 
-            completionItems.Add(new CompletionItem() {
+            completionItems.Add(new CompletionItem()
+            {
                 Label = "../",
                 Detail = Directory.GetParent(directory).FullName,
                 Kind = CompletionItemKind.Folder
             });
 
             foreach (var dir in directories)
-                completionItems.Add(new CompletionItem() {
+                completionItems.Add(new CompletionItem()
+                {
                     Label = Path.GetFileName(dir),
                     Detail = dir,
                     Kind = CompletionItemKind.Folder
                 });
-            
+
             foreach (var file in files)
-                completionItems.Add(new CompletionItem() {
+                completionItems.Add(new CompletionItem()
+                {
                     Label = Path.GetFileName(file),
                     Detail = file,
                     Kind = CompletionItemKind.File
                 });
-            
+
             script.AddCompletionRange(new CompletionRange(completionItems.ToArray(), range, CompletionRangeKind.ClearRest));
         }
 
@@ -107,7 +110,7 @@ namespace Deltin.Deltinteger.Parse
                             ScriptFile importedScript = new ScriptFile(_diagnostics, _fileGetter.GetScript(importResult.Uri));
                             CollectScriptFiles(importedScript);
                             break;
-                        
+
                         // Get lobby settings.
                         case ".json":
                         case ".lobby":
@@ -139,7 +142,8 @@ namespace Deltin.Deltinteger.Parse
                             else
                             {
                                 // Otherwise, merge current lobby settings.
-                                lobbySettings.Merge(MergedLobbySettings, new JsonMergeSettings {
+                                lobbySettings.Merge(MergedLobbySettings, new JsonMergeSettings
+                                {
                                     MergeArrayHandling = MergeArrayHandling.Union,
                                     MergeNullValueHandling = MergeNullValueHandling.Ignore
                                 });
@@ -162,7 +166,7 @@ namespace Deltin.Deltinteger.Parse
                                 script.Diagnostics.Error("JSON Arrays cannot include objects or arrays.", stringRange);
 
                             _deltinScript.RulesetScope.AddVariable(jsonVar, script.Diagnostics, importFileContext.Identifier.Range);
-                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, new V_Null());                            
+                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, new V_Null());
                             break;
                     }
 
@@ -201,7 +205,7 @@ namespace Deltin.Deltinteger.Parse
         public ImportResult(FileImporter fileImporter, DocRange importRange, string relativePath, Uri referencingFile)
         {
             string resultingPath = Extras.CombinePathWithDotNotation(referencingFile.FilePath(), relativePath);
-            
+
             // Syntax error if the filename has invalid characters.
             if (resultingPath == null)
             {

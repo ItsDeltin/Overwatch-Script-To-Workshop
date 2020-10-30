@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Elements
         protected bool AlwaysShowParentheses = false;
 
         public override string ToString() => Name.ToString() + (ParameterValues.Length == 0 ? "" : "(" + string.Join(", ", ParameterValues.Select(v => v.ToString())) + ")");
-        
+
         public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             // Get the parameters
@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger.Elements
 
             for (int i = 0; i < ParameterData.Length || i < ParameterValues.Length; i++)
                 parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? ParameterData[i].GetDefault());
-            
+
             ParameterValues = parameters.ToArray();
         }
 
@@ -181,7 +181,7 @@ namespace Deltin.Deltinteger.Elements
         public Element this[Element i]
         {
             get { return Element.Part<V_ValueInArray>(this, i); }
-            private set {}
+            private set { }
         }
         public static implicit operator Element(double number) => new V_Number(number);
         public static implicit operator Element(int number) => new V_Number(number);
@@ -209,7 +209,7 @@ namespace Deltin.Deltinteger.Elements
                 if (ParameterValues[i] != null && (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType())))
                     return false;
             }
-            
+
             return OverrideEquals(b);
         }
 
@@ -219,10 +219,10 @@ namespace Deltin.Deltinteger.Elements
         {
             AddMissingParameters();
             int count = 1;
-            
+
             foreach (var parameter in ParameterValues)
                 count += parameter.ElementCount();
-            
+
             return count;
         }
 
@@ -243,18 +243,18 @@ namespace Deltin.Deltinteger.Elements
             // If a and b are numbers, operate them.
             if (aAsNumber != null && bAsNumber != null)
                 return op(aAsNumber.Value, bAsNumber.Value);
-            
+
             // If a is 0, return b.
             if (aAsNumber != null && aAsNumber.Value == 0 && returnBIf0)
                 return b;
-            
+
             // If b is 0, return a.
             if (bAsNumber != null && bAsNumber.Value == 0)
                 return a;
 
             if (a.EqualTo(b))
                 return areEqual(a, b);
-            
+
             if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
             {
                 var aVertex = (Vertex)a.GetConstant();
@@ -266,7 +266,7 @@ namespace Deltin.Deltinteger.Elements
                     op(aVertex.Z, bVertex.Z)
                 );
             }
-            
+
             return this;
         }
 
@@ -326,7 +326,7 @@ namespace Deltin.Deltinteger.Elements
 
             if (a.EqualTo(b))
                 return areEqual(a, b);
-            
+
             return this;
         }
     }
@@ -350,7 +350,7 @@ namespace Deltin.Deltinteger.Elements
         {
             return Elements.FirstOrDefault(e => e.Name == codeName);
         }
-        public static ElementList GetElement<T>() where T: Element
+        public static ElementList GetElement<T>() where T : Element
         {
             return Elements.FirstOrDefault(e => e.Type == typeof(T));
         }
@@ -362,7 +362,7 @@ namespace Deltin.Deltinteger.Elements
         public string Name { get; }
         public string WorkshopName { get; }
         public Type Type { get; }
-        public bool IsValue { get; } 
+        public bool IsValue { get; }
         public bool Hidden { get; }
         public CodeParameter[] Parameters { get; private set; }
         public ParameterBase[] WorkshopParameters { get; }
@@ -384,7 +384,7 @@ namespace Deltin.Deltinteger.Elements
         public ElementList(Type type)
         {
             ElementData data = type.GetCustomAttribute<ElementData>();
-            Name = type.Name.Substring(2); 
+            Name = type.Name.Substring(2);
             WorkshopName = data.ElementName;
             Type = type;
             IsValue = data.IsValue;
@@ -415,8 +415,10 @@ namespace Deltin.Deltinteger.Elements
                         name,
                         description,
                         ((VarRefParameter)WorkshopParameters[i]).IsGlobal ? VariableType.Global : VariableType.Player,
-                        new VariableResolveOptions() {
-                            CanBeIndexed = false, FullVariable = true
+                        new VariableResolveOptions()
+                        {
+                            CanBeIndexed = false,
+                            FullVariable = true
                         }
                     );
                 }

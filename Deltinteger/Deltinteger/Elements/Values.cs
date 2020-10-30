@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Elements
 
             if (ParameterValues[0] is V_Number a)
                 return Math.Abs(a.Value);
-            
+
             return this;
         }
     }
@@ -49,8 +49,8 @@ namespace Deltin.Deltinteger.Elements
         override public Element Optimize()
         {
             return OptimizeAddOperation(
-                op       : (a, b) => a + b,
-                areEqual : (a, b) => a * 2,
+                op: (a, b) => a + b,
+                areEqual: (a, b) => a * 2,
                 true
             );
         }
@@ -58,43 +58,43 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("All Dead Players", ValueType.Player)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_AllDeadPlayers : Element {}
+    public class V_AllDeadPlayers : Element { }
 
     [ElementData("All Heroes", ValueType.Hero)]
-    public class V_AllHeroes : Element {}
+    public class V_AllHeroes : Element { }
 
     [ElementData("All Living Players", ValueType.Player)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_AllLivingPlayers : Element {}
+    public class V_AllLivingPlayers : Element { }
 
     [ElementData("All Players", ValueType.Player)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_AllPlayers : Element {}
+    public class V_AllPlayers : Element { }
 
     [ElementData("All Players Not On Objective", ValueType.Player)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_AllPlayersNotOnObjective : Element {}
+    public class V_AllPlayersNotOnObjective : Element { }
 
     [ElementData("All Players On Objective", ValueType.Player)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_AllPlayersOnObjective : Element {}
+    public class V_AllPlayersOnObjective : Element { }
 
     [ElementData("All Tank Heroes", ValueType.Hero)]
-    public class V_AllTankHeroes : Element {}
+    public class V_AllTankHeroes : Element { }
 
     [ElementData("All Damage Heroes", ValueType.Hero)]
-    public class V_AllDamageHeroes : Element {}
+    public class V_AllDamageHeroes : Element { }
 
     [ElementData("All Support Heroes", ValueType.Hero)]
-    public class V_AllSupportHeroes : Element {}
+    public class V_AllSupportHeroes : Element { }
 
     [ElementData("Allowed Heroes", ValueType.Hero)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_AllowedHeroes : Element {}
+    public class V_AllowedHeroes : Element { }
 
     [ElementData("Altitude Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_AltitudeOf : Element {}
+    public class V_AltitudeOf : Element { }
 
     [ElementData("And", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Append To Array", ValueType.Any)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Append : Element {}
+    public class V_Append : Element { }
 
     [ElementData("Arccosine In Degrees", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
@@ -275,17 +275,17 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Array Contains", ValueType.Boolean)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_ArrayContains : Element {}
+    public class V_ArrayContains : Element { }
 
     [ElementData("Array Slice", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
     [Parameter("Start Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Count", ValueType.Number, typeof(V_Number))]
-    public class V_ArraySlice : Element {}
+    public class V_ArraySlice : Element { }
 
     [ElementData("Attacker", ValueType.Player)]
     [Restricted(RestrictedCallType.Attacker)]
-    public class V_Attacker : Element {}
+    public class V_Attacker : Element { }
 
     [ElementData("Backward", ValueType.Vector)]
     public class V_Backward : Element
@@ -300,18 +300,18 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Closest Player To", ValueType.Player)]
     [Parameter("Center", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_ClosestPlayerTo : Element {}
+    public class V_ClosestPlayerTo : Element { }
 
     [ElementData("Compare", ValueType.Boolean)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [EnumParameter("", typeof(Operators))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [HideElement]
-    public class V_Compare : Element 
+    public class V_Compare : Element
     {
-        public V_Compare() : base() {}
+        public V_Compare() : base() { }
 
-        public V_Compare(IWorkshopTree left, Operators op, IWorkshopTree right) : base(left, EnumData.GetEnumValue(op), right) {}
+        public V_Compare(IWorkshopTree left, Operators op, IWorkshopTree right) : base(left, EnumData.GetEnumValue(op), right) { }
 
         public override Element Optimize()
         {
@@ -370,14 +370,14 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Control Mode Scoring Percentage", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_ControlModeScoringPercentage : Element {}
+    public class V_ControlModeScoringPercentage : Element { }
 
     [ElementData("Control Mode Scoring Team", ValueType.Team)]
-    public class V_ControlModeScoringTeam : Element {}
+    public class V_ControlModeScoringTeam : Element { }
 
     [ElementData("Count Of", ValueType.Number)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_CountOf : Element {}
+    public class V_CountOf : Element { }
 
     [ElementData("Cosine From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
@@ -434,10 +434,10 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [ElementData("Current Map", ValueType.Map)]
-    public class V_CurrentMap : Element {}
+    public class V_CurrentMap : Element { }
 
     [ElementData("Current Array Element", ValueType.Any)]
-    public class V_ArrayElement : Element {}
+    public class V_ArrayElement : Element { }
 
     [ElementData("Direction From Angles", ValueType.Vector)]
     [Parameter("Horizontal Angle", ValueType.Number, typeof(V_Number))]
@@ -524,7 +524,7 @@ namespace Deltin.Deltinteger.Elements
         override public Element Optimize()
         {
             return OptimizeMultiplyOperation(
-                op      : (a, b) => a / b,
+                op: (a, b) => a / b,
                 areEqual: (a, b) => 1,
                 false
             );
@@ -566,39 +566,39 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [ElementData("Empty Array", ValueType.Any)]
-    public class V_EmptyArray : Element {}
+    public class V_EmptyArray : Element { }
 
     [ElementData("Entity Exists", ValueType.Boolean)]
     [Parameter("Entity", ValueType.Player, null)]
-    public class V_EntityExists : Element {}
+    public class V_EntityExists : Element { }
 
     [ElementData("Event Damage", ValueType.Number)]
     [Restricted(RestrictedCallType.Attacker)]
-    public class V_EventDamage : Element {}
+    public class V_EventDamage : Element { }
 
     [ElementData("Event Healing", ValueType.Number)]
     [Restricted(RestrictedCallType.Healer)]
-    public class V_EventHealing : Element {}
+    public class V_EventHealing : Element { }
 
     [ElementData("Event Player", ValueType.Player)]
     [Restricted(RestrictedCallType.EventPlayer)]
-    public class V_EventPlayer : Element {}
+    public class V_EventPlayer : Element { }
 
     [ElementData("Event Was Critical Hit", ValueType.Boolean)]
     [Restricted(RestrictedCallType.Attacker)]
-    public class V_EventWasCriticalHit : Element {}
+    public class V_EventWasCriticalHit : Element { }
 
     [ElementData("Event Was Health Pack", ValueType.Boolean)]
     [Restricted(RestrictedCallType.Healer)]
-    public class V_EventWasHealthPack : Element {}
+    public class V_EventWasHealthPack : Element { }
 
     [ElementData("Eye Position", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_EyePosition : Element {}
+    public class V_EyePosition : Element { }
 
     [ElementData("Facing Direction Of", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_FacingDirectionOf : Element {}
+    public class V_FacingDirectionOf : Element { }
 
     [ElementData("False", ValueType.Boolean)]
     public class V_False : Element
@@ -612,20 +612,20 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Farthest Player From", ValueType.Player)]
     [Parameter("Center", ValueType.Vector, typeof(V_Vector))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_FarthestPlayerFrom : Element {}
+    public class V_FarthestPlayerFrom : Element { }
 
     [ElementData("Filtered Array", ValueType.Any)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
-    public class V_FilteredArray : Element {}
+    public class V_FilteredArray : Element { }
 
     [ElementData("First Of", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_FirstOf : Element {}
+    public class V_FirstOf : Element { }
 
     [ElementData("Flag Position", ValueType.Vector)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_FlagPosition : Element {}
+    public class V_FlagPosition : Element { }
 
     [ElementData("Forward", ValueType.Vector)]
     public class V_Forward : Element
@@ -640,48 +640,48 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Game Mode", ValueType.Gamemode)]
     [EnumParameter("Gamemode", typeof(GameMode))]
     [HideElement]
-    public class V_GameModeVar : Element {}
+    public class V_GameModeVar : Element { }
 
     [ElementData("Current Game Mode", ValueType.Gamemode)]
-    public class V_CurrentGameMode : Element {}
+    public class V_CurrentGameMode : Element { }
 
     [ElementData("Global Variable", ValueType.Any)]
     [VarRefParameter("Variable", true)]
-    public class V_GlobalVariable : Element {}
+    public class V_GlobalVariable : Element { }
 
     [ElementData("Has Spawned", ValueType.Boolean)]
     [Parameter("Entity", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_HasSpawned : Element {}
+    public class V_HasSpawned : Element { }
 
     [ElementData("Has Status", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Status", typeof(Status))]
-    public class V_HasStatus : Element {}
+    public class V_HasStatus : Element { }
 
     [ElementData("Healee", ValueType.Player)]
     [Restricted(RestrictedCallType.Healer)]
-    public class V_Healee : Element {}
+    public class V_Healee : Element { }
 
     [ElementData("Healer", ValueType.Player)]
     [Restricted(RestrictedCallType.Healer)]
-    public class V_Healer : Element {}
+    public class V_Healer : Element { }
 
     [ElementData("Health", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_Health : Element {}
+    public class V_Health : Element { }
 
     [ElementData("Hero", ValueType.Hero)]
     [EnumParameter("Hero", typeof(Hero))]
     [HideElement]
-    public class V_HeroValue : Element {}
+    public class V_HeroValue : Element { }
 
     [ElementData("Hero Icon String", ValueType.Any)]
     [Parameter("Value", ValueType.Hero, typeof(V_HeroValue))]
-    public class V_HeroIconString : Element {}
+    public class V_HeroIconString : Element { }
 
     [ElementData("Hero Of", ValueType.Hero)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_HeroOf : Element {}
+    public class V_HeroOf : Element { }
 
     [ElementData("Horizontal Angle From Direction", ValueType.Number)]
     [Parameter("Direction", ValueType.Vector, typeof(V_Vector))]
@@ -712,131 +712,131 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Horizontal Angle Towards", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Position", ValueType.Vector, typeof(V_Vector))]
-    public class V_HorizontalAngleTowards : Element {}
+    public class V_HorizontalAngleTowards : Element { }
 
     [ElementData("Horizontal Facing Angle Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_HorizontalFacingAngleOf : Element {}
+    public class V_HorizontalFacingAngleOf : Element { }
 
     [ElementData("Horizontal Speed Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_HorizontalSpeedOf : Element {}
+    public class V_HorizontalSpeedOf : Element { }
 
     [ElementData("Host Player", ValueType.Player)]
-    public class V_HostPlayer : Element {}
+    public class V_HostPlayer : Element { }
 
     [ElementData("Index Of Array Value", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_IndexOfArrayValue : Element {}
+    public class V_IndexOfArrayValue : Element { }
 
     [ElementData("Is Alive", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsAlive : Element {}
+    public class V_IsAlive : Element { }
 
     [ElementData("Is Assembling Heroes", ValueType.Boolean)]
-    public class V_IsAssemblingHeroes : Element {}
+    public class V_IsAssemblingHeroes : Element { }
 
     [ElementData("Is Between Rounds", ValueType.Boolean)]
-    public class V_IsBetweenRounds : Element {}
+    public class V_IsBetweenRounds : Element { }
 
     [ElementData("Is Button Held", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
-    public class V_IsButtonHeld : Element {}
+    public class V_IsButtonHeld : Element { }
 
     [ElementData("Is Communicating", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Type", typeof(Communication))]
-    public class V_IsCommunicating : Element {}
+    public class V_IsCommunicating : Element { }
 
     [ElementData("Is Communicating Any", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsCommunicatingAny : Element {}
+    public class V_IsCommunicatingAny : Element { }
 
     [ElementData("Is Communicating Any Emote", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsCommunicatingAnyEmote : Element {}
+    public class V_IsCommunicatingAnyEmote : Element { }
 
     [ElementData("Is Communicating Any Voice Line", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsCommunicatingAnyVoiceLine : Element {}
+    public class V_IsCommunicatingAnyVoiceLine : Element { }
 
     [ElementData("Is Communicating Any Spray", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsCommunicatingAnySpray : Element {}
+    public class V_IsCommunicatingAnySpray : Element { }
 
     [ElementData("Is Control Mode Point Locked", ValueType.Boolean)]
-    public class V_IsControlModePointLocked : Element {}
+    public class V_IsControlModePointLocked : Element { }
 
     [ElementData("Is Crouching", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsCrouching : Element {}
+    public class V_IsCrouching : Element { }
 
     [ElementData("Is CTF Mode In Sudden Death", ValueType.Boolean)]
-    public class V_IsInSuddenDeath : Element {}
+    public class V_IsInSuddenDeath : Element { }
 
     [ElementData("Is Dead", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsDead : Element {}
+    public class V_IsDead : Element { }
 
     [ElementData("Is Dummy Bot", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsDummyBot : Element {}
+    public class V_IsDummyBot : Element { }
 
     [ElementData("Is Firing Primary", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsFiringPrimary : Element {}
+    public class V_IsFiringPrimary : Element { }
 
     [ElementData("Is Firing Secondary", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsFiringSecondary : Element {}
+    public class V_IsFiringSecondary : Element { }
 
     [ElementData("Is Flag At Base", ValueType.Boolean)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_IsFlagAtBase : Element {}
+    public class V_IsFlagAtBase : Element { }
 
     [ElementData("Is Game In Progress", ValueType.Boolean)]
-    public class V_IsGameInProgress : Element {}
+    public class V_IsGameInProgress : Element { }
 
     [ElementData("Is Hero Being Played", ValueType.Boolean)]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_IsHeroBeingPlayed : Element {}
+    public class V_IsHeroBeingPlayed : Element { }
 
     [ElementData("Is In Air", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsInAir : Element {}
+    public class V_IsInAir : Element { }
 
     [ElementData("Is In Line Of Sight", ValueType.Boolean)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [EnumParameter("Barriers", typeof(BarrierLOS))]
-    public class V_IsInLineOfSight : Element {}
+    public class V_IsInLineOfSight : Element { }
 
     [ElementData("Is In Setup", ValueType.Boolean)]
-    public class V_IsInSetup : Element {}
+    public class V_IsInSetup : Element { }
 
     [ElementData("Is In Spawn Room", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsInSpawnRoom : Element {}
+    public class V_IsInSpawnRoom : Element { }
 
     [ElementData("Is In View Angle", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Location", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("View Angle", ValueType.Number, typeof(V_Number))]
-    public class V_IsInViewAngle : Element {}
+    public class V_IsInViewAngle : Element { }
 
     [ElementData("Is Match Complete", ValueType.Boolean)]
-    public class V_IsMatchComplete : Element {}
+    public class V_IsMatchComplete : Element { }
 
     [ElementData("Is Moving", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsMoving : Element {}
+    public class V_IsMoving : Element { }
 
     [ElementData("Is Objective Complete", ValueType.Boolean)]
     [Parameter("Number", ValueType.Number, typeof(V_Number))]
-    public class V_IsObjectiveComplete : Element {}
+    public class V_IsObjectiveComplete : Element { }
 
     [ElementData("Is On Ground", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -844,74 +844,74 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Is On Objective", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsOnObjective : Element {}
+    public class V_IsOnObjective : Element { }
 
     [ElementData("Is On Wall", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsOnWall : Element {}
+    public class V_IsOnWall : Element { }
 
     [ElementData("Is Portrait On Fire", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsPortraitOnFire : Element {}
+    public class V_IsPortraitOnFire : Element { }
 
     [ElementData("Is Standing", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsStanding : Element {}
+    public class V_IsStanding : Element { }
 
     [ElementData("Is Team On Defense", ValueType.Boolean)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_IsTeamOnDefense : Element {}
+    public class V_IsTeamOnDefense : Element { }
 
     [ElementData("Is Team On Offense", ValueType.Boolean)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_IsTeamOnOffense : Element {}
+    public class V_IsTeamOnOffense : Element { }
 
     [ElementData("Is True For All", ValueType.Boolean)]
     [Parameter("Array", ValueType.Any, null)]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
-    public class V_IsTrueForAll : Element {}
+    public class V_IsTrueForAll : Element { }
 
     [ElementData("Is True For Any", ValueType.Boolean)]
     [Parameter("Array", ValueType.Any, null)]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
-    public class V_IsTrueForAny : Element {}
+    public class V_IsTrueForAny : Element { }
 
     [ElementData("Is Using Ability 1", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsUsingAbility1 : Element {}
+    public class V_IsUsingAbility1 : Element { }
 
     [ElementData("Is Using Ability 2", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsUsingAbility2 : Element {}
+    public class V_IsUsingAbility2 : Element { }
 
     [ElementData("Is Using Ultimate", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsUsingUltimate : Element {}
+    public class V_IsUsingUltimate : Element { }
 
     [ElementData("Is Waiting For Players", ValueType.Boolean)]
-    public class V_IsWaitingForPlayers : Element {}
+    public class V_IsWaitingForPlayers : Element { }
 
     [ElementData("Last Created Entity", ValueType.Player)]
-    public class V_LastCreatedEntity : Element {}
+    public class V_LastCreatedEntity : Element { }
 
     [ElementData("Last Damage Modification ID", ValueType.Number)]
-    public class V_LastDamageModificationID : Element {}
+    public class V_LastDamageModificationID : Element { }
 
     [ElementData("Last Damage Over Time ID", ValueType.Number)]
-    public class V_LastDamageOverTime : Element {}
+    public class V_LastDamageOverTime : Element { }
 
     [ElementData("Last Heal Over Time ID", ValueType.Number)]
-    public class V_LastHealOverTime : Element {}
+    public class V_LastHealOverTime : Element { }
 
     [ElementData("Last Healing Modification ID", ValueType.Number)]
-    public class V_LastHealingModificationID : Element {}
+    public class V_LastHealingModificationID : Element { }
 
     [ElementData("Last Of", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_LastOf : Element {}
+    public class V_LastOf : Element { }
 
     [ElementData("Last Text ID", ValueType.Number)]
-    public class V_LastTextID : Element {}
+    public class V_LastTextID : Element { }
 
     [ElementData("Left", ValueType.Vector)]
     public class V_Left : Element
@@ -927,18 +927,18 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("World Vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Relative Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Transformation", typeof(Transformation))]
-    public class V_LocalVectorOf : Element {}
+    public class V_LocalVectorOf : Element { }
 
     [ElementData("Map", ValueType.Map)]
     [EnumParameter("Map", typeof(Map))]
     [HideElement]
-    public class V_MapVar : Element {}
+    public class V_MapVar : Element { }
 
     [ElementData("Match Round", ValueType.Number)]
-    public class V_MatchRound : Element {}
+    public class V_MatchRound : Element { }
 
     [ElementData("Match Time", ValueType.Number)]
-    public class V_MatchTime : Element {}
+    public class V_MatchTime : Element { }
 
     [ElementData("Max", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
@@ -961,7 +961,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Max Health", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_MaxHealth : Element {}
+    public class V_MaxHealth : Element { }
 
     [ElementData("Min", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
@@ -1006,7 +1006,7 @@ namespace Deltin.Deltinteger.Elements
             if (b != null && b.Value == 0) return 0;
 
             if (((Element)ParameterValues[0]).EqualTo(ParameterValues[1])) return 0;
-            
+
             return this;
         }
     }
@@ -1020,7 +1020,7 @@ namespace Deltin.Deltinteger.Elements
         override public Element Optimize()
         {
             return OptimizeMultiplyOperation(
-                op      : (a, b) => a * b,
+                op: (a, b) => a * b,
                 areEqual: (a, b) => Element.Part<V_RaiseToPower>(a, new V_Number(2)),
                 true
             );
@@ -1029,7 +1029,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Nearest Walkable Position", ValueType.Vector)]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_NearestWalkablePosition : Element {}
+    public class V_NearestWalkablePosition : Element { }
 
     [ElementData("Normalize", ValueType.Number)]
     [Parameter("Vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -1054,7 +1054,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Normalized Health", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_NormalizedHealth : Element {}
+    public class V_NormalizedHealth : Element { }
 
     [ElementData("Not", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
@@ -1099,7 +1099,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [ElementData("Null", ValueType.Any)]
-    public class V_Null : Element {}
+    public class V_Null : Element { }
 
     [ElementData("Number", ValueType.Number)]
     public class V_Number : Element
@@ -1114,7 +1114,7 @@ namespace Deltin.Deltinteger.Elements
         {
             this.Value = value;
         }
-        public V_Number() : this(0) {}
+        public V_Number() : this(0) { }
 
         public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
@@ -1136,47 +1136,47 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Number Of Dead Players", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_NumberOfDeadPlayers : Element {}
+    public class V_NumberOfDeadPlayers : Element { }
 
     [ElementData("Number Of Deaths", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_NumberOfDeaths : Element {}
+    public class V_NumberOfDeaths : Element { }
 
     [ElementData("Number Of Eliminations", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_NumberOfEliminations : Element {}
+    public class V_NumberOfEliminations : Element { }
 
     [ElementData("Number Of Final Blows", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_NumberOfFinalBlows : Element {}
+    public class V_NumberOfFinalBlows : Element { }
 
     [ElementData("Number Of Heroes", ValueType.Number)]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_NumberOfHeroes : Element {}
+    public class V_NumberOfHeroes : Element { }
 
     [ElementData("Number Of Living Players", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_NumberOfLivingPlayers : Element {}
+    public class V_NumberOfLivingPlayers : Element { }
 
     [ElementData("Number Of Players", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_NumberOfPlayers : Element {}
+    public class V_NumberOfPlayers : Element { }
 
     [ElementData("Number Of Players On Objective", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_NumberOfPlayersOnObjective : Element {}
+    public class V_NumberOfPlayersOnObjective : Element { }
 
     [ElementData("Objective Index", ValueType.Number)]
-    public class V_ObjectiveIndex : Element {}
+    public class V_ObjectiveIndex : Element { }
 
     [ElementData("Objective Position", ValueType.Number)]
     [Parameter("Number", ValueType.Number, typeof(V_Number))]
-    public class V_ObjectivePosition : Element {}
+    public class V_ObjectivePosition : Element { }
 
     [ElementData("Opposite Team Of", ValueType.Team)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_OppositeTeamOf : Element {}
+    public class V_OppositeTeamOf : Element { }
 
     [ElementData("Or", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
@@ -1196,7 +1196,7 @@ namespace Deltin.Deltinteger.Elements
 
             // If either condition is already true, return true. This may or may not work due to short-circuiting.
             if (a is V_True || b is V_True) return true;
-            
+
             if (a.EqualTo(b)) return a;
 
             if (a is V_Not)
@@ -1212,54 +1212,54 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [ElementData("Payload Position", ValueType.Vector)]
-    public class V_PayloadPosition : Element {}
+    public class V_PayloadPosition : Element { }
 
     [ElementData("Payload Progress Percentage", ValueType.Number)]
-    public class V_PayloadProgressPercentage : Element {}
+    public class V_PayloadProgressPercentage : Element { }
 
     [ElementData("Player Carrying Flag", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_PlayerCarryingFlag : Element {}
+    public class V_PlayerCarryingFlag : Element { }
 
     [ElementData("Player Closest To Reticle", ValueType.Player)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_PlayerClosestToReticle : Element {}
+    public class V_PlayerClosestToReticle : Element { }
 
     [ElementData("Player Variable", ValueType.Any)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [VarRefParameter("Variable", false)]
-    public class V_PlayerVariable : Element {}
+    public class V_PlayerVariable : Element { }
 
     [ElementData("Players In Slot", ValueType.Player)]
     [Parameter("Slot", ValueType.Number, typeof(V_Number))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_PlayersInSlot : Element {}
+    public class V_PlayersInSlot : Element { }
 
     [ElementData("Players In View Angle", ValueType.Player)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     [Parameter("View Angle", ValueType.Number, typeof(V_Number))]
-    public class V_PlayersInViewAngle : Element {}
+    public class V_PlayersInViewAngle : Element { }
 
     [ElementData("Players On Hero", ValueType.Player)]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_PlayersOnHero : Element {}
+    public class V_PlayersOnHero : Element { }
 
     [ElementData("Players Within Radius", ValueType.Player)]
     [Parameter("Center", ValueType.Vector, typeof(V_Vector))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     [EnumParameter("LOS Check", typeof(RadiusLOS))]
-    public class V_PlayersWithinRadius : Element {}
+    public class V_PlayersWithinRadius : Element { }
 
     [ElementData("Point Capture Percentage", ValueType.Number)]
-    public class V_PointCapturePercentage : Element {}
+    public class V_PointCapturePercentage : Element { }
 
     [ElementData("Position Of", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_PositionOf : Element {}  
+    public class V_PositionOf : Element { }
 
     [ElementData("Raise To Power", ValueType.Number)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -1283,7 +1283,7 @@ namespace Deltin.Deltinteger.Elements
             {
                 if (a.Value == 0) return 0;
                 if (a.Value == 1) return 1;
-                
+
                 // ! Workshop Bug: Pow on values less than 0 always equals 0.
                 if (a.Value < 0) return 0;
             }
@@ -1293,7 +1293,7 @@ namespace Deltin.Deltinteger.Elements
                 if (b.Value == 0) return 1;
                 if (b.Value == 1) return a;
             }
-            
+
             return this;
         }
     }
@@ -1301,20 +1301,20 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Random Integer", ValueType.Number)]
     [Parameter("Min", ValueType.Number, typeof(V_Number))]
     [Parameter("Max", ValueType.Number, typeof(V_Number))]
-    public class V_RandomInteger : Element {}
+    public class V_RandomInteger : Element { }
 
     [ElementData("Random Real", ValueType.Number)]
     [Parameter("Min", ValueType.Number, typeof(V_Number))]
     [Parameter("Max", ValueType.Number, typeof(V_Number))]
-    public class V_RandomReal : Element {}
+    public class V_RandomReal : Element { }
 
     [ElementData("Random Value In Array", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_RandomValueInArray : Element {}
+    public class V_RandomValueInArray : Element { }
 
     [ElementData("Randomized Array", ValueType.Number)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_RandomizedArray : Element {}
+    public class V_RandomizedArray : Element { }
 
     [ElementData("Ray Cast Hit Normal", ValueType.Vector)]
     [Parameter("Start POS", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -1322,7 +1322,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Players To Include", ValueType.Player, typeof(V_Null))]
     [Parameter("Players To Exclude", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Include Player Owned Objects", ValueType.Boolean, typeof(V_True))]
-    public class V_RayCastHitNormal : Element {}
+    public class V_RayCastHitNormal : Element { }
 
     [ElementData("Ray Cast Hit Player", ValueType.Player)]
     [Parameter("Start POS", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -1330,7 +1330,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Players To Include", ValueType.Player, typeof(V_Null))]
     [Parameter("Players To Exclude", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Include Player Owned Objects", ValueType.Boolean, typeof(V_True))]
-    public class V_RayCastHitPlayer : Element {}
+    public class V_RayCastHitPlayer : Element { }
 
     [ElementData("Ray Cast Hit Position", ValueType.Vector)]
     [Parameter("Start POS", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -1338,12 +1338,12 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Players To Include", ValueType.Player, typeof(V_Null))]
     [Parameter("Players To Exclude", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Include Player Owned Objects", ValueType.Boolean, typeof(V_True))]
-    public class V_RayCastHitPosition : Element {}
+    public class V_RayCastHitPosition : Element { }
 
     [ElementData("Remove From Array", ValueType.Any)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_RemoveFromArray : Element {}
+    public class V_RemoveFromArray : Element { }
 
     [ElementData("Right", ValueType.Vector)]
     public class V_Right : Element
@@ -1380,16 +1380,16 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Score Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_ScoreOf : Element {}
+    public class V_ScoreOf : Element { }
 
     [ElementData("Server Load", ValueType.Number)]
-    public class V_ServerLoad : Element {}
+    public class V_ServerLoad : Element { }
 
     [ElementData("Server Load Average", ValueType.Number)]
-    public class V_ServerLoadAverage : Element {}
+    public class V_ServerLoadAverage : Element { }
 
     [ElementData("Server Load Peak", ValueType.Number)]
-    public class V_ServerLoadPeak : Element {}
+    public class V_ServerLoadPeak : Element { }
 
     [ElementData("Sine From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
@@ -1423,21 +1423,21 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Slot Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_SlotOf : Element {}
+    public class V_SlotOf : Element { }
 
     [ElementData("Sorted Array", ValueType.Number)]
     [Parameter("Array", ValueType.Any, null)]
     [Parameter("Value Rank", ValueType.Number, typeof(V_ArrayElement))]
-    public class V_SortedArray : Element {}
+    public class V_SortedArray : Element { }
 
     [ElementData("Speed Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_SpeedOf : Element {}
+    public class V_SpeedOf : Element { }
 
     [ElementData("Speed Of In Direction", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_SpeedOfInDirection : Element {}
+    public class V_SpeedOfInDirection : Element { }
 
     [ElementData("Square Root", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
@@ -1464,7 +1464,7 @@ namespace Deltin.Deltinteger.Elements
         {
             Text = text;
         }
-        public V_String() : this(null) {}
+        public V_String() : this(null) { }
 
         public string Text { get; }
 
@@ -1543,7 +1543,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Icon String", ValueType.Any)]
     [EnumParameter("Icon", typeof(Icon))]
-    public class V_IconString : Element {}
+    public class V_IconString : Element { }
 
     [ElementData("Subtract", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -1554,8 +1554,8 @@ namespace Deltin.Deltinteger.Elements
         override public Element Optimize()
         {
             return OptimizeAddOperation(
-                op       : (a, b) => a - b,
-                areEqual : (a, b) => 0,
+                op: (a, b) => a - b,
+                areEqual: (a, b) => 0,
                 false
             );
         }
@@ -1594,22 +1594,22 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Team", ValueType.Team)]
     [EnumParameter("Team", typeof(Team))]
     [HideElement]
-    public class V_TeamVar : Element {}
+    public class V_TeamVar : Element { }
 
     [ElementData("Team Of", ValueType.Team)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_TeamOf : Element {}
+    public class V_TeamOf : Element { }
 
     [ElementData("Team Score", ValueType.Team)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_TeamScore : Element {}
+    public class V_TeamScore : Element { }
 
     [ElementData("Throttle Of", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_ThrottleOf : Element {}
+    public class V_ThrottleOf : Element { }
 
     [ElementData("Total Time Elapsed", ValueType.Number)]
-    public class V_TotalTimeElapsed : Element {}
+    public class V_TotalTimeElapsed : Element { }
 
     [ElementData("True", ValueType.Boolean)]
     public class V_True : Element
@@ -1622,7 +1622,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Ultimate Charge Percent", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_UltimateChargePercent : Element {}
+    public class V_UltimateChargePercent : Element { }
 
     [ElementData("Up", ValueType.Vector)]
     public class V_Up : Element
@@ -1647,10 +1647,10 @@ namespace Deltin.Deltinteger.Elements
             Element index = (Element)ParameterValues[1];
 
             if (index is V_Number num)
-            if (num.Value == 0) // Needs to be in a seperate if or else the compiler will complain.
-            {
-                return Element.Part<V_FirstOf>(array);
-            }
+                if (num.Value == 0) // Needs to be in a seperate if or else the compiler will complain.
+                {
+                    return Element.Part<V_FirstOf>(array);
+                }
 
             return this;
         }
@@ -1685,7 +1685,7 @@ namespace Deltin.Deltinteger.Elements
             {
                 if (ParameterValues[i] is Element == false)
                     return false;
-                
+
                 if (!((Element)ParameterValues[i]).ConstantSupported<double>())
                     return false;
             }
@@ -1698,15 +1698,15 @@ namespace Deltin.Deltinteger.Elements
             double x = 0;
             if (ParameterValues.Length > 0)
                 x = (double)((Element)ParameterValues[0]).GetConstant();
-            
+
             double y = 0;
             if (ParameterValues.Length > 1)
                 y = (double)((Element)ParameterValues[1]).GetConstant();
-            
+
             double z = 0;
             if (ParameterValues.Length > 2)
                 z = (double)((Element)ParameterValues[2]).GetConstant();
-            
+
             return new Vertex(x, y, z);
         }
 
@@ -1718,12 +1718,12 @@ namespace Deltin.Deltinteger.Elements
             {
                 double x = xNum.Value, y = yNum.Value, z = zNum.Value;
 
-                if (x == 0  && y == 1  && z == 0 ) return new V_Up();
-                if (x == 0  && y == -1 && z == 0 ) return new V_Down();
-                if (x == -1 && y == 0  && z == 0 ) return new V_Right();
-                if (x == 1  && y == 0  && z == 0 ) return new V_Left();
-                if (x == 0  && y == 0  && z == 1 ) return new V_Forward();
-                if (x == 0  && y == 0  && z == -1) return new V_Backward();
+                if (x == 0 && y == 1 && z == 0) return new V_Up();
+                if (x == 0 && y == -1 && z == 0) return new V_Down();
+                if (x == -1 && y == 0 && z == 0) return new V_Right();
+                if (x == 1 && y == 0 && z == 0) return new V_Left();
+                if (x == 0 && y == 0 && z == 1) return new V_Forward();
+                if (x == 0 && y == 0 && z == -1) return new V_Backward();
             }
 
             Element oX = X;
@@ -1770,7 +1770,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Velocity Of", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_VelocityOf : Element {}
+    public class V_VelocityOf : Element { }
 
     [ElementData("Vertical Angle From Direction", ValueType.Vector)]
     [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -1797,25 +1797,25 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Vertical Angle Towards", ValueType.Number)]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_VerticalAngleTowards : Element {}
+    public class V_VerticalAngleTowards : Element { }
 
     [ElementData("Vertical Facing Angle Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_VerticalFacingAngleOf : Element {}
+    public class V_VerticalFacingAngleOf : Element { }
 
     [ElementData("Vertical Speed Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_VerticalSpeedOf : Element {}
+    public class V_VerticalSpeedOf : Element { }
 
     [ElementData("Victim", ValueType.Player)]
     [Restricted(RestrictedCallType.Attacker)]
-    public class V_Victim : Element {}
+    public class V_Victim : Element { }
 
     [ElementData("World Vector Of", ValueType.Vector)]
     [Parameter("Local vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Relative Player", ValueType.Player, typeof(V_Vector))]
     [EnumParameter("Local Vector", typeof(LocalVector))]
-    public class V_WorldVectorOf : Element {}
+    public class V_WorldVectorOf : Element { }
 
     [ElementData("X Component Of", ValueType.Number)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -1905,90 +1905,90 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Is Meleeing", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsMeleeing : Element {}
+    public class V_IsMeleeing : Element { }
 
     [ElementData("Is Jumping", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsJumping : Element {}
+    public class V_IsJumping : Element { }
 
     [ElementData("Event Direction", ValueType.Vector)]
     [Restricted(RestrictedCallType.Attacker)]
-    public class V_EventDirection : Element {}
+    public class V_EventDirection : Element { }
 
     [ElementData("Button", ValueType.Button)]
     [EnumParameter("Button", typeof(Button))]
     [HideElement]
-    public class V_ButtonValue : Element {}
+    public class V_ButtonValue : Element { }
 
     [ElementData("Event Ability", ValueType.Button)]
     [Restricted(RestrictedCallType.Ability)]
-    public class V_EventAbility : Element {}
+    public class V_EventAbility : Element { }
 
     [ElementData("Ability Cooldown", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
-    public class V_AbilityCooldown : Element {}
+    public class V_AbilityCooldown : Element { }
 
     [ElementData("Ability Icon String", ValueType.String)]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
-    public class V_AbilityIconString : Element {}
+    public class V_AbilityIconString : Element { }
 
     [ElementData("Is In Alternate Form", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsInAlternateForm : Element {}
+    public class V_IsInAlternateForm : Element { }
 
     [ElementData("Is Duplicating", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsDuplicating : Element {}
+    public class V_IsDuplicating : Element { }
 
     [ElementData("Hero Being Duplicated", ValueType.Hero)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_HeroBeingDuplicated : Element {}
+    public class V_HeroBeingDuplicated : Element { }
 
     [ElementData("Ammo", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Clip", ValueType.Number, typeof(V_Number))]
-    public class V_Ammo : Element {}
+    public class V_Ammo : Element { }
 
     [ElementData("Max Ammo", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Clip", ValueType.Number, typeof(V_Number))]
-    public class V_MaxAmmo : Element {}
+    public class V_MaxAmmo : Element { }
 
     [ElementData("Weapon", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_Weapon : Element {}
+    public class V_Weapon : Element { }
 
     [ElementData("Is Reloading", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsReloading : Element {}
+    public class V_IsReloading : Element { }
 
     [ElementData("Event Was Environment", ValueType.Boolean)]
     [Restricted(RestrictedCallType.Attacker)]
-    public class V_EventWasEnvironment : Element {}
+    public class V_EventWasEnvironment : Element { }
 
     [ElementData("Current Array Index", ValueType.Number)]
-    public class V_CurrentArrayIndex : Element {}
+    public class V_CurrentArrayIndex : Element { }
 
     [ElementData("Input Binding String", ValueType.String)]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
-    public class V_InputBindingString : Element {}
+    public class V_InputBindingString : Element { }
 
     [ElementData("Ability Charge", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
-    public class V_AbilityCharge : Element {}
+    public class V_AbilityCharge : Element { }
 
     [ElementData("Ability Resource", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
-    public class V_AbilityResource : Element {}
+    public class V_AbilityResource : Element { }
 
     [ElementData("Mapped Array", ValueType.Number)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Mapping Expression", ValueType.Any, typeof(V_ArrayElement))]
-    public class V_MappedArray : Element {}
+    public class V_MappedArray : Element { }
 
     [ElementData("Workshop Setting Integer", ValueType.Number)]
     [Parameter("Category", ValueType.String, null)]
@@ -1997,7 +1997,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Min", ValueType.Number, null)]
     [Parameter("Max", ValueType.Number, null)]
     [Parameter("SortOrder", ValueType.Number, null)]
-    public class V_WorkshopSettingInteger : Element {}
+    public class V_WorkshopSettingInteger : Element { }
 
     [ElementData("Workshop Setting Real", ValueType.Number)]
     [Parameter("Category", ValueType.String, null)]
@@ -2006,14 +2006,14 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Min", ValueType.Number, null)]
     [Parameter("Max", ValueType.Number, null)]
     [Parameter("SortOrder", ValueType.Number, null)]
-    public class V_WorkshopSettingReal : Element {}
+    public class V_WorkshopSettingReal : Element { }
 
     [ElementData("Workshop Setting Toggle", ValueType.Boolean)]
     [Parameter("Category", ValueType.String, null)]
     [Parameter("Name", ValueType.String, null)]
     [Parameter("Default", ValueType.Boolean, null)]
     [Parameter("SortOrder", ValueType.Number, null)]
-    public class V_WorkshopSettingToggle : Element {}
+    public class V_WorkshopSettingToggle : Element { }
 
     [ElementData("Workshop Setting Combo", ValueType.Boolean)]
     [Parameter("Category", ValueType.String, null)]
@@ -2022,87 +2022,87 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Options", ValueType.Any, null)]
     [Parameter("SortOrder", ValueType.Number, null)]
     [HideElement]
-    public class V_WorkshopSettingCombo : Element {}
-    
+    public class V_WorkshopSettingCombo : Element { }
+
     [ElementData("Workshop Setting Hero", ValueType.Boolean)]
     [Parameter("Category", ValueType.String, null)]
     [Parameter("Name", ValueType.String, null)]
     [EnumParameter("Default", typeof(Hero))]
     [Parameter("SortOrder", ValueType.Number, null)]
     [HideElement]
-    public class V_WorkshopSettingHero : Element {}
+    public class V_WorkshopSettingHero : Element { }
 
     [ElementData("Last Created Health Pool", ValueType.Any)]
-    public class V_LastCreatedHealthPool : Element {}
+    public class V_LastCreatedHealthPool : Element { }
 
     [ElementData("Health Of Type", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Health Type", typeof(HealthType))]
-    public class V_HealthOfType : Element {}
+    public class V_HealthOfType : Element { }
 
     [ElementData("Max Health Of Type", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Health Type", typeof(HealthType))]
-    public class V_MaxHealthOfType : Element {}
+    public class V_MaxHealthOfType : Element { }
 
     [ElementData("Color", ValueType.Color)]
     [EnumParameter("Color", typeof(Color))]
     [HideElement]
-    public class V_ColorValue : Element {}
+    public class V_ColorValue : Element { }
 
     [ElementData("Custom Color", ValueType.Color)]
     [Parameter("Red", ValueType.Number, typeof(V_Number))]
     [Parameter("Green", ValueType.Number, typeof(V_Number))]
     [Parameter("Blue", ValueType.Number, typeof(V_Number))]
     [Parameter("Alpha", ValueType.Number, typeof(V_Number))]
-    public class V_CustomColor : Element {}
+    public class V_CustomColor : Element { }
 
     [ElementData("Evaluate Once", ValueType.Any)]
     [Parameter("Input Value", ValueType.Any, null)]
-    public class V_EvaluateOnce : Element {}
+    public class V_EvaluateOnce : Element { }
 
     [ElementData("Update Every Frame", ValueType.Any)]
     [Parameter("Input Value", ValueType.Any, null)]
-    public class V_UpdateEveryFrame : Element {}
+    public class V_UpdateEveryFrame : Element { }
 
     [ElementData("Magnitude Of", ValueType.Vector)]
     [Parameter("Value", ValueType.Vector, null)]
-    public class V_MagnitudeOf : Element {}
+    public class V_MagnitudeOf : Element { }
 
     [ElementData("Number Of Slots", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_NumberOfSlots : Element {}
+    public class V_NumberOfSlots : Element { }
 
     [ElementData("Spawn Points", ValueType.Any)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_SpawnPoints : Element {}
+    public class V_SpawnPoints : Element { }
 
     [ElementData("String Contains", ValueType.Boolean)]
     [Parameter("String", ValueType.String, null)]
     [Parameter("Value", ValueType.String, null)]
-    public class V_StringContains : Element {}
+    public class V_StringContains : Element { }
 
     [ElementData("String Length", ValueType.Number)]
     [Parameter("String", ValueType.String, null)]
-    public class V_StringLength : Element {}
+    public class V_StringLength : Element { }
 
     [ElementData("String Slice", ValueType.Number)]
     [Parameter("String", ValueType.String, null)]
     [Parameter("Start Character Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Character Count", ValueType.Number, typeof(V_Number))]
-    public class V_StringSlice : Element {}
+    public class V_StringSlice : Element { }
 
     [ElementData("Last Assist ID", ValueType.Any)]
-    public class V_LastAssistID : Element {}
+    public class V_LastAssistID : Element { }
 
     [ElementData("Player Stat", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Stat", typeof(PlayerStat))]
-    public class V_PlayerStat : Element {}
+    public class V_PlayerStat : Element { }
 
     [ElementData("Player Hero Stat", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [EnumParameter("Stat", typeof(PlayerStat))]
-    public class V_PlayerHeroStat : Element {}
+    public class V_PlayerHeroStat : Element { }
 }

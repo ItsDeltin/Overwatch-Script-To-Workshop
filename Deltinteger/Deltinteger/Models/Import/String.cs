@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Models.Import
                 {
                     if (gp.PathTypes[i] == (byte)PathPointType.Start)
                         lastStart = i;
-                    
+
                     int vec1 = -1, vec2 = -1;
 
                     if (gp.PathTypes[i] == (byte)PathPointType.Start

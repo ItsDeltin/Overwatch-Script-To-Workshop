@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public override string ToString() => (IsGlobal ? "Global." : "Player.") + Name;
         public void Decompile(DecompileRule decompiler) => decompiler.Append(decompiler.Decompiler.GetVariableName(Name, IsGlobal));
     }
-    
+
     public class PlayerVariableExpression : ITTEExpression, ITTEVariable
     {
         public string Name { get; }

@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Lobby
                     if (setting.TitleResolver == null) return new string[] { title };
                     return setting.TitleResolver.KeywordInfo();
                 }
-            
+
             return new string[] { title };
         }
     }
@@ -57,11 +57,11 @@ namespace Deltin.Deltinteger.Lobby
                 // (Name) Cooldown Time
                 case AbilityNameType.CooldownTime:
                     return SegmentTranslate(builder, CooldownTime);
-                
+
                 // (Name) Recharge Rate
                 case AbilityNameType.RechargeRate:
                     return SegmentTranslate(builder, RechargeRate);
-                
+
                 // (Name) Maximum Time
                 case AbilityNameType.MaximumTime:
                     return SegmentTranslate(builder, MaximumTime);
@@ -69,24 +69,24 @@ namespace Deltin.Deltinteger.Lobby
                 // Ultimate Ability (Name)
                 case AbilityNameType.UltimateSwitchSetting:
                     return SegmentTranslate(builder, UltimateAbility);
-                
+
                 // Ultimate Generation (Name)
                 case AbilityNameType.UltimateGeneration:
                     return SegmentTranslate(builder, UltimateGeneration);
-                
+
                 // Ultimate Generation - Passive (Name)
                 case AbilityNameType.UltimateGenerationPassive:
                     return SegmentTranslate(builder, UltimateGenerationPassive);
-                
+
                 // Ultimate Generation - Combat (Name)
                 case AbilityNameType.UltimateGenerationCombat:
                     return SegmentTranslate(builder, UltimateGenerationCombat);
-                
+
                 default: throw new NotImplementedException();
             }
         }
 
-        private string SegmentTranslate(WorkshopBuilder builder, string segmentTitle) 
+        private string SegmentTranslate(WorkshopBuilder builder, string segmentTitle)
         {
             if (LanguageInfo.IsKeyword(Title)) return builder.Translate(Title).RemoveStructuralChars();
             return builder.Translate(segmentTitle).Replace("%1$s", builder.Translate(AbilityName)).RemoveStructuralChars();

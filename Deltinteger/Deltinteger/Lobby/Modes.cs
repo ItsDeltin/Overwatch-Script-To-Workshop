@@ -13,27 +13,27 @@ namespace Deltin.Deltinteger.Lobby
     public class ModesRoot
     {
         public WorkshopValuePair All { get; set; }
-        
+
         public ModeSettings Assault { get; set; }
-        
+
         public ModeSettings Control { get; set; }
-        
+
         public ModeSettings Escort { get; set; }
-        
+
         public ModeSettings Hybrid { get; set; }
-        
+
         [JsonProperty("Capture The Flag")]
         public ModeSettings CaptureTheFlag { get; set; }
-        
+
         public ModeSettings Deathmatch { get; set; }
-        
+
         public ModeSettings Elimination { get; set; }
-        
+
         [JsonProperty("Team Deathmatch")]
         public ModeSettings TeamDeathmatch { get; set; }
-        
+
         public ModeSettings Skirmish { get; set; }
-        
+
         [JsonProperty("Practice Range")]
         public ModeSettings PracticeRange { get; set; }
 
@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.Unindent();
                 builder.AppendLine("}");
             }
-            
+
             Assault?.ToWorkshop(builder, allSettings, "Assault");
             CaptureTheFlag?.ToWorkshop(builder, allSettings, "CaptureTheFlag");
             Control?.ToWorkshop(builder, allSettings, "Control");
@@ -70,43 +70,53 @@ namespace Deltin.Deltinteger.Lobby
 
         public ModeSettings SettingsFromModeCollection(ModeSettingCollection collection)
         {
-            if (collection.ModeName == "Assault") {
+            if (collection.ModeName == "Assault")
+            {
                 if (Assault == null) Assault = new ModeSettings();
                 return Assault;
             }
-            if (collection.ModeName == "Capture The Flag") {
+            if (collection.ModeName == "Capture The Flag")
+            {
                 if (CaptureTheFlag == null) CaptureTheFlag = new ModeSettings();
                 return CaptureTheFlag;
             }
-            if (collection.ModeName == "Control") {
+            if (collection.ModeName == "Control")
+            {
                 if (Control == null) Control = new ModeSettings();
                 return Control;
             }
-            if (collection.ModeName == "Deathmatch") {
+            if (collection.ModeName == "Deathmatch")
+            {
                 if (Deathmatch == null) Deathmatch = new ModeSettings();
                 return Deathmatch;
             }
-            if (collection.ModeName == "Elimination") {
+            if (collection.ModeName == "Elimination")
+            {
                 if (Elimination == null) Elimination = new ModeSettings();
                 return Elimination;
             }
-            if (collection.ModeName == "Escort") {
+            if (collection.ModeName == "Escort")
+            {
                 if (Escort == null) Escort = new ModeSettings();
                 return Escort;
             }
-            if (collection.ModeName == "Hybrid") {
+            if (collection.ModeName == "Hybrid")
+            {
                 if (Hybrid == null) Hybrid = new ModeSettings();
                 return Hybrid;
             }
-            if (collection.ModeName == "Practice Range") {
+            if (collection.ModeName == "Practice Range")
+            {
                 if (PracticeRange == null) PracticeRange = new ModeSettings();
                 return PracticeRange;
             }
-            if (collection.ModeName == "Skirmish") {
+            if (collection.ModeName == "Skirmish")
+            {
                 if (Skirmish == null) Skirmish = new ModeSettings();
                 return Skirmish;
             }
-            if (collection.ModeName == "Team Deathmatch") {
+            if (collection.ModeName == "Team Deathmatch")
+            {
                 if (TeamDeathmatch == null) TeamDeathmatch = new ModeSettings();
                 return TeamDeathmatch;
             }
@@ -168,7 +178,7 @@ namespace Deltin.Deltinteger.Lobby
             builder.AppendLine("}");
         }
     }
-    
+
     public class ModeSettingCollection : LobbySettingCollection<ModeSettingCollection>
     {
         private static LobbySetting[] DefaultModeSettings = new LobbySetting[]
@@ -246,10 +256,12 @@ namespace Deltin.Deltinteger.Lobby
             if (modeMaps.Length == 0) return schema;
 
             // Create the map schema.
-            RootSchema maps = new RootSchema {
+            RootSchema maps = new RootSchema
+            {
                 Type = SchemaObjectType.Array,
                 UniqueItems = true,
-                Items = new RootSchema() {
+                Items = new RootSchema()
+                {
                     Type = SchemaObjectType.String,
                     Enum = modeMaps
                 }
@@ -260,7 +272,7 @@ namespace Deltin.Deltinteger.Lobby
             // Add the map schema reference to the current schema. 
             schema.Properties.Add("Enabled Maps", GetMapReference("An array of enabled maps for the '" + ModeName + "' mode."));
             schema.Properties.Add("Disabled Maps", GetMapReference("An array of disabled maps for the '" + ModeName + "' mode."));
-            
+
             return schema;
         }
 
@@ -292,7 +304,7 @@ namespace Deltin.Deltinteger.Lobby
                 new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500)
             };
         }
-    
+
         public static void Validate(SettingValidation validation, JObject modes)
         {
             foreach (var modeCollection in AllModeSettings)

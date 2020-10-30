@@ -88,12 +88,12 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         {
             while (!ReachedEnd && WHITESPACE.Contains(Current))
                 Advance();
-            
+
             if (Match("//"))
             {
                 while (!ReachedEnd && !Is('\n'))
                     Advance();
-                
+
                 SkipWhitespace();
             }
         }
@@ -113,7 +113,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             for (int i = 0; i < str.Length; i++)
                 if ((caseSensitive && !Is(i, str[i])) || !IsInsensitive(i, str[i]))
                     return false;
-            
+
             if (!noSymbols && IsSymbol(str.Length)) return false;
 
             Advance(str.Length);
@@ -260,7 +260,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
             if (Match(Kw("global") + ":")) MatchVariableList(true);
             if (Match(Kw("player") + ":")) MatchVariableList(false);
-            
+
             Match("}");
             return true;
         }
@@ -296,7 +296,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Match(":");
                 Identifier(out string name);
                 Subroutines.Add(new Subroutine(index, name));
-            } 
+            }
 
             Match("}");
             return true;
@@ -372,12 +372,12 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
                 // Get the team.
                 var team = Team.All;
-                if (Match(Kw("All") + ";")) {}
+                if (Match(Kw("All") + ";")) { }
                 else if (Match(Kw("Team 1") + ";"))
                     team = Team.Team1;
                 else if (Match(Kw("Team 2") + ";"))
                     team = Team.Team2;
-                
+
                 // Get the player type.
                 var player = PlayerSelector.All;
                 foreach (var playerNameInfo in EventInfo.PlayerTypeNames)
@@ -490,7 +490,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 // Make sure the expression is a variable.
                 if (expr is ITTEVariable == false)
                     throw new Exception("Expression is not a variable.");
-                                
+
                 string op = null;
                 string[] operators = new string[] { "=", "+=", "-=", "/=", "*=", "%=", "^=" };
                 foreach (string it in operators)
@@ -499,7 +499,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                         op = it;
                         break;
                     }
-                
+
                 Expression(out ITTEExpression value);
                 action = new SetVariableAction((ITTEVariable)expr, op, value, index);
             }
@@ -532,7 +532,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     if (Function(value, out expr))
                         return true;
                 }
-            
+
             // Nope
             expr = null;
             return false;
@@ -575,7 +575,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                         // Match the variable parameter.
                         if (!Identifier(out string identifier))
                             throw new Exception("Failed to retrieve identifier of variable parameter.");
-                        
+
                         AddIfOmitted(identifier, varRefParameter.IsGlobal);
                         values.Add(new AnonymousVariableExpression(identifier, varRefParameter.IsGlobal));
                     }
@@ -603,15 +603,15 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Match(")");
             }
             // Number
-            else if (Number(out expr)) {}
+            else if (Number(out expr)) { }
             // String
-            else if (WorkshopString(out expr)) {}
+            else if (WorkshopString(out expr)) { }
             // Enum value
-            else if (EnumeratorValue(out expr)) {}
+            else if (EnumeratorValue(out expr)) { }
             // Variable
-            else if (GlobalVariable(out expr)) {}
+            else if (GlobalVariable(out expr)) { }
             // Legacy
-            else if (LegacyExpression(out expr)) {}
+            else if (LegacyExpression(out expr)) { }
             // Function
             else if (Function(false, out FunctionExpression value))
             {
@@ -626,20 +626,20 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             // No matches
             else
             {
-                return false;    
+                return false;
             }
 
             // Array index
             while (VariableIndex(out ITTEExpression index))
                 expr = new IndexerExpression(expr, index);
-            
+
             // Player variable
             if (MatchPlayerVariable(expr, out ITTEExpression playerVariable))
                 expr = playerVariable;
 
             // Push the expression
             _operands.Push(expr);
-            
+
             // Binary operator
             while (MatchOperator(out TTEOperator op))
             {
@@ -648,7 +648,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             }
             while (_operators.Peek().Precedence > 0)
                 PopOperator();
-            
+
             // If this is the root, return the top operand.
             if (root) expr = _operands.Pop();
 
@@ -806,7 +806,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Position = c;
                 return false;
             }
-            
+
             AddIfOmitted(name, true);
             expr = new GlobalVariableExpression(name);
             return true;
@@ -828,7 +828,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 while (VariableIndex(out ITTEExpression index))
                     playerVariable = new IndexerExpression(playerVariable, index);
             }
-            
+
             return matched;
         }
 
@@ -845,7 +845,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Match("]");
             return true;
         }
-    
+
         // Operators
         bool MatchOperator(out TTEOperator op)
         {
@@ -900,7 +900,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 // Binary
                 if (op.Contain == ContainGroup.Left)
                 {
-                     var right = _operands.Pop();
+                    var right = _operands.Pop();
                     var left = _operands.Pop();
                     _operands.Push(new BinaryOperatorExpression(left, right, op));
                     return;
@@ -919,7 +919,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 ITTEExpression result = exprs.Pop();
                 while (exprs.Count != 0)
                     result = new BinaryOperatorExpression(result, exprs.Pop(), op);
-                
+
                 _operands.Push(result);
             }
             else if (op.Type == OperatorType.Unary)
@@ -938,7 +938,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 _operands.Push(new TernaryExpression(lhs, middle, rhs));
             }
         }
-    
+
         // Settings
         bool MatchSettings()
         {
@@ -979,7 +979,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Match("{"); // Start modes section.
 
                 // Match the mode settings.
-                while (LobbyModes(ruleset));
+                while (LobbyModes(ruleset)) ;
 
                 Match("}"); // End modes section.
             }
@@ -991,7 +991,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Match("{"); // Start heroes section.
 
                 // Match the hero settings.
-                while (HeroSettingsGroup(ruleset));
+                while (HeroSettingsGroup(ruleset)) ;
 
                 Match("}"); // End heroes section.
             }
@@ -1003,7 +1003,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Match("{"); // Start workshop section.
 
                 // Match settings.
-                while(!Match("}"))
+                while (!Match("}"))
                 {
                     string identifier = CustomSettingName();
                     Match(":");
@@ -1029,7 +1029,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     // Match hero names.
                     else if (MatchHeroNames(out var hero))
                         value = hero.HeroName;
-                    
+
                     // Add the custom setting.
                     ruleset.Workshop.Add(identifier, value);
                 }
@@ -1056,57 +1056,58 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             bool disabled = Match(Kw("disabled"));
 
             foreach (var mode in ModeSettingCollection.AllModeSettings)
-            // Match the mode name.
-            if (Match(Kw(mode.ModeName)))
-            {
-                ModeSettings relatedModeSettings = ruleset.Modes.SettingsFromModeCollection(mode); // Get the related mode settings from the matched mode.
-                Match("{"); // Start specific mode settings section.
-                // Match the value pairs.
-                GroupSettings(relatedModeSettings.Settings, mode.ToArray(), () => {
-                    bool matchingEnabledMaps; // Determines if the map group is matching enabled or disabled maps.
-                    // Match enabled maps
-                    if (Match(Kw("enabled maps"))) matchingEnabledMaps = true;
-                    // Match disabled maps
-                    else if (Match(Kw("disabled maps"))) matchingEnabledMaps = false;
-                    // End
-                    else return false;
-
-                    Match("{"); // Start map section.
-
-                    List<string> maps = new List<string>(); // Matched maps.
-
-                    // Match map names.
-                    bool matched = true;
-                    while (matched)
+                // Match the mode name.
+                if (Match(Kw(mode.ModeName)))
+                {
+                    ModeSettings relatedModeSettings = ruleset.Modes.SettingsFromModeCollection(mode); // Get the related mode settings from the matched mode.
+                    Match("{"); // Start specific mode settings section.
+                                // Match the value pairs.
+                    GroupSettings(relatedModeSettings.Settings, mode.ToArray(), () =>
                     {
-                        matched = false;
-                        // Only match maps related to the current mode.
-                        foreach (var map in LobbyMap.AllMaps.Where(m => m.GameModes.Any(mapMode => mapMode.ToLower() == mode.ModeName.ToLower())).OrderByDescending(map => map.GetWorkshopName().Length))
-                            // Match the map.
-                            if (Match(Kw(map.GetWorkshopName()), false))
-                            {
-                                // Add the map.
-                                maps.Add(map.Name);
+                        bool matchingEnabledMaps; // Determines if the map group is matching enabled or disabled maps.
+                                                  // Match enabled maps
+                        if (Match(Kw("enabled maps"))) matchingEnabledMaps = true;
+                        // Match disabled maps
+                        else if (Match(Kw("disabled maps"))) matchingEnabledMaps = false;
+                        // End
+                        else return false;
 
-                                // Indicate that a map was matched in this iteration.
-                                matched = true;
-                                break;
-                            }
-                    }
+                        Match("{"); // Start map section.
 
-                    Match("}"); // End map section.
+                        List<string> maps = new List<string>(); // Matched maps.
 
-                    // Add the maps to the mode's settings.
-                    if (matchingEnabledMaps) relatedModeSettings.EnabledMaps = maps.ToArray();
-                    else relatedModeSettings.DisabledMaps = maps.ToArray();
+                        // Match map names.
+                        bool matched = true;
+                        while (matched)
+                        {
+                            matched = false;
+                            // Only match maps related to the current mode.
+                            foreach (var map in LobbyMap.AllMaps.Where(m => m.GameModes.Any(mapMode => mapMode.ToLower() == mode.ModeName.ToLower())).OrderByDescending(map => map.GetWorkshopName().Length))
+                                // Match the map.
+                                if (Match(Kw(map.GetWorkshopName()), false))
+                                {
+                                    // Add the map.
+                                    maps.Add(map.Name);
 
+                                    // Indicate that a map was matched in this iteration.
+                                    matched = true;
+                                    break;
+                                }
+                        }
+
+                        Match("}"); // End map section.
+
+                        // Add the maps to the mode's settings.
+                        if (matchingEnabledMaps) relatedModeSettings.EnabledMaps = maps.ToArray();
+                        else relatedModeSettings.DisabledMaps = maps.ToArray();
+
+                        return true;
+                    });
+                    Match("}"); // End specific mode settings section.
+
+                    if (disabled) relatedModeSettings.Settings.Add("Enabled", !disabled);
                     return true;
-                });
-                Match("}"); // End specific mode settings section.
-
-                if (disabled) relatedModeSettings.Settings.Add("Enabled", !disabled);
-                return true;
-            }
+                }
             return false;
         }
 
@@ -1125,7 +1126,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Match("{"); // Start hero settings section.
 
             // Match general settings.
-            GroupSettings(list.Settings, HeroSettingCollection.AllHeroSettings.First(hero => hero.HeroName == "General").ToArray(), () => {
+            GroupSettings(list.Settings, HeroSettingCollection.AllHeroSettings.First(hero => hero.HeroName == "General").ToArray(), () =>
+            {
                 // Match hero names.
                 if (MatchHeroNames(out var hero))
                 {
@@ -1136,11 +1138,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
                     // Match settings.
                     GroupSettings(heroSettings, hero.ToArray());
-                    
+
                     Match("}"); // End specific hero settings section.
                     return true;
                 }
-                
+
                 bool enabledHeroes; // Determines if the hero group is matching enabled or disabled heroes.
                 // Enabled heroes
                 if (Match(Kw("enabled heroes"))) enabledHeroes = true;

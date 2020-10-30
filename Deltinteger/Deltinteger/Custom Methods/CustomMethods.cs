@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.CustomMethods
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool WholeContext => true;
         public bool Static => true;
-        
+
         public CodeType CodeType => null;
 
         public string Documentation { get; }
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.CustomMethods
             }
             return _customMethodData;
         }
-        public static CustomMethodData GetCustomMethod<T>() where T: CustomMethodBase
+        public static CustomMethodData GetCustomMethod<T>() where T : CustomMethodBase
         {
             foreach (CustomMethodData customMethod in GetCustomMethods())
                 if (customMethod.Type == typeof(T))

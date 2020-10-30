@@ -274,7 +274,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 function.Values[4].Decompile(decompiler);
                 decompiler.Append(")");
                 bool withBlock = StartBlock(decompiler);
-                
+
                 new ActionGroupIterator(decompiler).On("End", endFunc => {
                     Cap(decompiler);
                     decompiler.Advance();
@@ -303,7 +303,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                     function.Default(decompiler, true);
                 }
             }},
-            
+
             {"Break", (decompiler, function) => {
                 decompiler.Append("break");
                 decompiler.EndAction();

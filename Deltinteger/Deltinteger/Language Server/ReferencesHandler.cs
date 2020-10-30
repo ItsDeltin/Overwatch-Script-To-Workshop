@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.LanguageServer
                         use = pair.Key;
                         declaredAt = link.Location;
                     }
-            
+
             if (use == null) return new LocationContainer();
 
             return allSymbolLinks[use]
@@ -49,7 +49,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public ReferenceRegistrationOptions GetRegistrationOptions()
         {
-            return new ReferenceRegistrationOptions() {
+            return new ReferenceRegistrationOptions()
+            {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector
             };
         }

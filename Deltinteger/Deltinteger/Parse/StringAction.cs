@@ -13,7 +13,8 @@ namespace Deltin.Deltinteger.Parse
 {
     public class StringAction : IExpression
     {
-        private static readonly CompletionItem[] StringCompletion = Constants.Strings.Select(str => new CompletionItem() {
+        private static readonly CompletionItem[] StringCompletion = Constants.Strings.Select(str => new CompletionItem()
+        {
             Label = str,
             Kind = CompletionItemKind.Text
         }).ToArray();
@@ -62,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
                         String = CustomStringGroup.ParseCustomString(Value, FormatParameters.Length);
                     else
                         String = LocalizedString.ParseLocalizedString(Value, 0, Value, FormatParameters.Length);
-                    
+
                     lock (_cacheLock) _cache.Add(String);
                 }
                 catch (StringParseFailedException ex)
@@ -94,7 +95,7 @@ namespace Deltin.Deltinteger.Parse
         private static IStringParse GetCachedString(string str, bool localized)
         {
             lock (_cacheLock)
-                foreach(var cachedString in _cache)
+                foreach (var cachedString in _cache)
                     if (cachedString.Original == str && ((localized && cachedString is LocalizedString) || (!localized && cachedString is CustomStringGroup)))
                         return cachedString;
             return null;
@@ -113,8 +114,8 @@ namespace Deltin.Deltinteger.Parse
     {
         public DeltinScript DeltinScript { get; set; }
         public List<IStringParse> Strings { get; } = new List<IStringParse>();
-        
-        public void Init() {}
+
+        public void Init() { }
 
         public void Dispose()
         {
@@ -143,7 +144,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree[] parsed = new IWorkshopTree[Segments.Length];
             for (int i = 0; i < parsed.Length; i++)
                 parsed[i] = Segments[i].Parse(actionSet, parameters);
-            
+
             return V_CustomString.Join(parsed);
         }
 
@@ -162,7 +163,7 @@ namespace Deltin.Deltinteger.Parse
                 };
                 return customStringGroup;
             }
-            
+
             // The Overwatch workshop only supports 3 formats in a string.
             // The following code will split the string into multiple sections so it can support more.
             // Split the string after every 3 unique formats, for example:
@@ -207,18 +208,18 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < stringGroups.Count; i++)
             {
                 // start is either the start of the string or the end of the last section.
-                int start = i == 0                      ? 0            : stringGroups[i - 1].EndIndex;
+                int start = i == 0 ? 0 : stringGroups[i - 1].EndIndex;
                 // end is the index of last format in the section unless this is the last section, then it will be the end of the string.
-                int end   = i == stringGroups.Count - 1 ? value.Length : stringGroups[i]    .EndIndex;
+                int end = i == stringGroups.Count - 1 ? value.Length : stringGroups[i].EndIndex;
 
                 string groupString = value.Substring(start, end - start);
-                
+
                 // Returns an array of all unique formats in the current section.
                 var formatGroups = stringGroups[i].Formats
                     .GroupBy(g => g.Parameter)
                     .Select(g => g.First())
                     .ToArray();
-                
+
                 // groupParameters is {0}, {1}, and {2}. Length should be between 1 and 3.
                 int[] groupParameters = new int[formatGroups.Length];
                 for (int g = 0; g < formatGroups.Length; g++)
@@ -253,7 +254,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree[] resultingParameters = new IWorkshopTree[ParameterIndexes.Length];
             for (int i = 0; i < resultingParameters.Length; i++)
                 resultingParameters[i] = parameters[ParameterIndexes[i]];
-            
+
             return new V_CustomString(Text, resultingParameters);
         }
     }
@@ -261,7 +262,7 @@ namespace Deltin.Deltinteger.Parse
     class FormatParameter
     {
         public Match Match { get; }
-        public int Parameter { get; } 
+        public int Parameter { get; }
 
         public FormatParameter(Match match)
         {
@@ -303,10 +304,10 @@ namespace Deltin.Deltinteger.Parse
         public static LocalizedString ParseLocalizedString(string original, int charOffset, string value, int parameterCount, int depth = 0)
         {
             value = value.ToLower();
-            
+
             //if (depth == 0)
-                //foreach(string multiword in multiwordStrings)
-                    //value = value.Replace(multiword.Replace('_', ' '), multiword);
+            //foreach(string multiword in multiwordStrings)
+            //value = value.Replace(multiword.Replace('_', ' '), multiword);
 
             // Loop through every string to search for.
             for (int i = 0; i < searchOrder.Length; i++)
@@ -333,7 +334,7 @@ namespace Deltin.Deltinteger.Parse
                     List<LocalizedStringOrExpression> formatParameters = new List<LocalizedStringOrExpression>(); // The parameters that were successfully parsed.
 
                     // Iterate through the parameters.
-                    for (int g = 1; g < match.Groups.Count; g+=3)
+                    for (int g = 1; g < match.Groups.Count; g += 3)
                     {
                         Capture capture = match.Groups[g].Captures[0];
                         string currentParameterValue = capture.Value;
@@ -366,7 +367,7 @@ namespace Deltin.Deltinteger.Parse
 
                     if (!valid)
                         continue;
-                    
+
                     return str;
                 }
             }

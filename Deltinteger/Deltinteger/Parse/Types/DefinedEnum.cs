@@ -25,10 +25,10 @@ namespace Deltin.Deltinteger.Parse
             // Check if a type with the same name already exists.
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", enumContext.Identifier.Range);
-            
+
             _translateInfo = parseInfo.TranslateInfo;
             Scope = new Scope("enum " + Name);
-            
+
             // Set location and symbol link.
             DefinedAt = new Location(parseInfo.Script.Uri, enumContext.Identifier.Range);
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
                     var expression = enumContext.Values[i].Value != null
                         ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.Values[i].Value))
                         : new ExpressionOrWorkshopValue(new V_Number(i));
-                    
+
                     var newMember = new DefinedEnumMember(parseInfo, this, enumContext.Values[i].Identifier.Text, new Location(parseInfo.Script.Uri, enumContext.Values[i].Identifier.Range), expression);
                     Scope.AddVariable(newMember, parseInfo.Script.Diagnostics, newMember.DefinedAt.range);
                 }
@@ -55,7 +55,8 @@ namespace Deltin.Deltinteger.Parse
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new LanguageServer.Location(parseInfo.Script.Uri, callRange));
         }
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Enum
         };
@@ -93,7 +94,8 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet) => ValueExpression.Parse(actionSet);
 
-        public CompletionItem GetCompletion() => new CompletionItem() {
+        public CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.EnumMember
         };

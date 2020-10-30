@@ -4,7 +4,7 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Elements
 {
-    
+
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public abstract class ParameterBase : Attribute
     {
@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Elements
         public ValueType ReturnType { get; }
         public Type DefaultType { get; }
 
-        public Parameter(string name, ValueType returnType, Type defaultType) : base (name)
+        public Parameter(string name, ValueType returnType, Type defaultType) : base(name)
         {
             ReturnType = returnType;
             DefaultType = defaultType;
@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Elements
         public Type EnumType { get; }
         public EnumData EnumData { get; }
 
-        public EnumParameter(string name, Type enumType) : base (name)
+        public EnumParameter(string name, Type enumType) : base(name)
         {
             EnumType = enumType;
             EnumData = EnumData.GetEnum(enumType);
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    class VarRefParameter : ParameterBase 
+    class VarRefParameter : ParameterBase
     {
         public bool IsGlobal { get; }
 

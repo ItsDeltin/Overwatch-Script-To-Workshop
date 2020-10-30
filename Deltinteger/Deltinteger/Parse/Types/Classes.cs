@@ -67,7 +67,7 @@ Object-serve scope. Only object members.
             {
                 ((ClassType)Extends).ResolveElements();
 
-                staticScope      = ((ClassType)Extends).staticScope.Child(scopeName);
+                staticScope = ((ClassType)Extends).staticScope.Child(scopeName);
                 operationalScope = ((ClassType)Extends).operationalScope.Child(scopeName);
                 serveObjectScope = ((ClassType)Extends).serveObjectScope.Child(scopeName);
             }
@@ -186,7 +186,8 @@ Object-serve scope. Only object members.
         public override Scope GetObjectScope() => serveObjectScope;
         public override Scope ReturningScope() => staticScope;
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Class
         };
@@ -198,7 +199,7 @@ Object-serve scope. Only object members.
         public Constructor Constructor { get; }
         public IWorkshopTree[] ConstructorValues { get; }
         public object[] AdditionalParameterData { get; }
-        
+
         public NewClassInfo(IndexReference objectReference, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             ObjectReference = objectReference;
@@ -296,7 +297,7 @@ Object-serve scope. Only object members.
             if (index > VariableStacks.Count) throw new Exception("Variable stack skipped");
             if (index == VariableStacks.Count)
                 VariableStacks.Add(collection.Assign(ObjectVariableTag + index, true, false));
-            
+
             return VariableStacks[index];
         }
 
@@ -339,7 +340,7 @@ Object-serve scope. Only object members.
             IDebugVariable.ApplyReference(collection, debugVariable);
             EvaluateResponse response = new EvaluateResponse(collection, debugVariable);
             response.namedVariables = Class.ObjectVariables.Count;
-            
+
             return response;
         }
 

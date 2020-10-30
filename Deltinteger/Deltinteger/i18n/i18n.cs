@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.I18n
             {
                 if (CurrentLanguage != language)
                     throw new Exception($"The '{language.ToString()}' language is not loaded.");
-                
+
                 string translation = Language.Methods.FirstOrDefault(m => m.EnglishName == methodName)?.Translation;
                 if (translation != null) return translation;
                 throw new Exception($"Could not find '{methodName}' in the language file.");
@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.I18n
 
     public class I18nLanguage
     {
-        public I18nLanguage() {}
+        public I18nLanguage() { }
 
         [XmlArrayItem("method")]
         public List<I18nMethod> Methods { get; } = new List<I18nMethod>();
@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.I18n
 
     public class I18nMethod
     {
-        public I18nMethod() {}
+        public I18nMethod() { }
         public I18nMethod(string englishName, string translation)
         {
             EnglishName = englishName;

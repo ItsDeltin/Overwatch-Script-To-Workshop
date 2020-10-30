@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class RuleReturnHandler : ReturnHandler
     {
-        public RuleReturnHandler(ActionSet actionSet) : base(actionSet, null, false) {}
+        public RuleReturnHandler(ActionSet actionSet) : base(actionSet, null, false) { }
 
         public override void ApplyReturnSkips() => throw new Exception("Can't apply return skips in a rule.");
         public override IWorkshopTree GetReturnedValue() => throw new Exception("Can't get the returned value of a rule.");

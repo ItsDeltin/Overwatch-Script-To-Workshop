@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.CustomMethods
             Element destination = (Element)parameterValues[1];
             Element rate = (Element)parameterValues[2];
             IWorkshopTree reevaluation = parameterValues[3];
-            
+
             if (variable.IsGlobal)
                 actionSet.AddAction(Element.Part<A_ChaseGlobalVariableAtRate>(
                     variable,
@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.CustomMethods
             Element destination = (Element)parameterValues[1];
             Element duration = (Element)parameterValues[2];
             IWorkshopTree reevaluation = parameterValues[3];
-            
+
             if (variable.IsGlobal)
                 actionSet.AddAction(Element.Part<A_ChaseGlobalVariableOverTime>(
                     variable,

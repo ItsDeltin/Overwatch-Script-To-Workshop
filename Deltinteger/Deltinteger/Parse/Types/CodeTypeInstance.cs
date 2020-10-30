@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public CodeType Source { get; }
         public CodeTypeInstance[] Generics { get; }
-        
+
         public CodeTypeInstance(CodeType source, params CodeTypeInstance[] generics)
         {
             Source = source;

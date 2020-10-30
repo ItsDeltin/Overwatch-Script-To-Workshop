@@ -91,22 +91,23 @@ namespace Deltin.Deltinteger.Parse
         {
             switch (statementContext)
             {
-                case VariableDeclaration declare: {
-                    var newVar = new ScopedVariable(scope, new DefineContextHandler(this, declare));
-                    return new DefineAction(newVar);
-                }
+                case VariableDeclaration declare:
+                    {
+                        var newVar = new ScopedVariable(scope, new DefineContextHandler(this, declare));
+                        return new DefineAction(newVar);
+                    }
                 case Assignment assignment: return new SetVariableAction(this, scope, assignment);
-                case Increment increment  : return new IncrementAction(this, scope, increment);
-                case If @if            : return new IfAction(this, scope, @if);
-                case While @while      : return new WhileAction(this, scope, @while);
-                case For @for          : return new ForAction(this, scope, @for);
-                case Foreach @foreach  : return new ForeachAction(this, scope, @foreach);
-                case Return @return    : return new ReturnAction(this, scope, @return);
-                case Delete delete     : return new DeleteAction(this, scope, delete);
+                case Increment increment: return new IncrementAction(this, scope, increment);
+                case If @if: return new IfAction(this, scope, @if);
+                case While @while: return new WhileAction(this, scope, @while);
+                case For @for: return new ForAction(this, scope, @for);
+                case Foreach @foreach: return new ForeachAction(this, scope, @foreach);
+                case Return @return: return new ReturnAction(this, scope, @return);
+                case Delete delete: return new DeleteAction(this, scope, delete);
                 case Continue @continue: return new ContinueAction(this, @continue.Range);
-                case Break @break      : return new BreakAction(this, @break.Range);
-                case Switch @switch    : return new SwitchAction(this, scope, @switch);
-                case Block @block      : return new BlockAction(this, scope, @block);
+                case Break @break: return new BreakAction(this, @break.Range);
+                case Switch @switch: return new SwitchAction(this, scope, @switch);
+                case Block @block: return new BlockAction(this, scope, @block);
                 case FunctionExpression func: return new CallMethodAction(this, scope, func, false, scope);
                 // Expression statements (functions, new)
                 case ExpressionStatement exprStatement:
@@ -182,7 +183,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the variable.
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange, ResolveInvokeInfo != null);
             if (element == null) return new MissingVariable(variableName);
-            
+
             // Additional syntax checking.
             var expression = new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);
 
@@ -245,11 +246,13 @@ namespace Deltin.Deltinteger.Parse
                     tracker.LocalVariableAccessed(referencer);
         }
 
-        public ParseInfo ClearTail() => new ParseInfo(this) {
+        public ParseInfo ClearTail() => new ParseInfo(this)
+        {
             LocalVariableTracker = null
         };
 
-        public ParseInfo ClearHead() => new ParseInfo(this) {
+        public ParseInfo ClearHead() => new ParseInfo(this)
+        {
             ResolveInvokeInfo = null,
             AsyncInfo = null
         };
@@ -270,7 +273,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Callable
             if (variable is ICallable callable) Call(callable, variableRange);
-            
+
             // IIndexReferencers are wrapped by CallVariableActions.
             if (variable is IIndexReferencer referencer)
             {
@@ -279,7 +282,7 @@ namespace Deltin.Deltinteger.Parse
                 // Otherwise, confirm that the source expression is returning the player variable scope.
                 if (referencer.VariableType == VariableType.Player)
                     EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
-                
+
                 // If there is a local variable tracker and the variable requires capture.
                 if (referencer.RequiresCapture)
                     _parseInfo.LocalVariableAccessed(referencer);

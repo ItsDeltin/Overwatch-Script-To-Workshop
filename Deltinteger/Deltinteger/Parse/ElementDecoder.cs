@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
                     ConstantIndex?.Add((int)num.Value);
                 else // Remove constant index list.
                     ConstantIndex = null;
-                
+
                 // Add to index list.
                 Index.Add((Element)element.ParameterValues[1]);
             }

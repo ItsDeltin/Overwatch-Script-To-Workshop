@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Lobby
                     value = enumerator;
                     return true;
                 }
-            
+
             // The value was not found.
             value = null;
             return false;

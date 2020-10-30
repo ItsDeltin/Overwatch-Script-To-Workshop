@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.Unindent();
                 builder.AppendLine("}");
             }
-            
+
             // Get the mode settings.
             if (Modes != null) Modes.ToWorkshop(builder, allSettings);
 
@@ -130,15 +130,17 @@ namespace Deltin.Deltinteger.Lobby
             heroesRoot.AdditionalProperties = false;
 
             // Add 'Description' property.
-            root.Properties.Add("Description", new RootSchema("The description of the custom game.") {
+            root.Properties.Add("Description", new RootSchema("The description of the custom game.")
+            {
                 Type = SchemaObjectType.String
             });
 
             // Add 'Workshop' property.
             root.Properties.Add("Workshop", GetCustomSettingsSchema(generate));
-            
+
             // Get the result.
-            string result = JsonConvert.SerializeObject(root, new JsonSerializerSettings() {
+            string result = JsonConvert.SerializeObject(root, new JsonSerializerSettings()
+            {
                 DefaultValueHandling = DefaultValueHandling.Ignore,
                 Formatting = Formatting.Indented
             });
@@ -165,10 +167,12 @@ namespace Deltin.Deltinteger.Lobby
             }
 
             // Create the map schema.
-            RootSchema heroes = new RootSchema {
+            RootSchema heroes = new RootSchema
+            {
                 Type = SchemaObjectType.Array,
                 UniqueItems = true,
-                Items = new RootSchema() {
+                Items = new RootSchema()
+                {
                     Type = SchemaObjectType.String,
                     Enum = heroNames.ToArray()
                 }
@@ -200,7 +204,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (var mode in ModeSettingCollection.AllModeSettings) schema.Properties.Add(mode.ModeName, mode.GetSchema(generate));
             return schema;
         }
-    
+
         private static RootSchema GetCustomSettingsSchema(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema().InitProperties();
@@ -244,7 +248,7 @@ namespace Deltin.Deltinteger.Lobby
             // Get hero keywords.
             foreach (var heroCollection in HeroSettingCollection.AllHeroSettings)
                 keywords.AddRange(heroCollection.GetKeywords());
-            
+
             // Get mode keywords.
             foreach (var modeCollection in ModeSettingCollection.AllModeSettings)
             {
@@ -266,7 +270,7 @@ namespace Deltin.Deltinteger.Lobby
             builder.Unindent();
             builder.AppendLine("}");
         }
-    
+
         public static bool Validate(JObject jobject, FileDiagnostics diagnostics, DocRange range)
         {
             SettingValidation validation = new SettingValidation();
@@ -275,19 +279,19 @@ namespace Deltin.Deltinteger.Lobby
             foreach (JProperty setting in jobject.Properties())
                 if (!new string[] { "Lobby", "Modes", "Heroes", "Description", "Workshop" }.Contains(setting.Name))
                     validation.InvalidSetting(setting.Name);
-            
+
             // Check lobby settings.
             if (jobject.TryGetValue("Lobby", out JToken lobbySettings))
                 ValidateSetting(validation, LobbySettings, lobbySettings);
-            
+
             // Check modes.
             if (jobject.TryGetValue("Modes", out JToken modes))
                 ModeSettingCollection.Validate(validation, (JObject)modes);
-            
+
             // Check heroes.
             if (jobject.TryGetValue("Heroes", out JToken heroes))
                 HeroesRoot.Validate(validation, (JObject)heroes);
-            
+
             // Check description.
             if (jobject.TryGetValue("Description", out JToken description) && description.Type != JTokenType.String)
                 validation.IncorrectType("Description", "string");
@@ -521,8 +525,8 @@ namespace Deltin.Deltinteger.Lobby
     public class SettingValidation
     {
         private readonly List<string> _errors = new List<string>();
-        
-        public SettingValidation() {}
+
+        public SettingValidation() { }
 
         public void Error(string error)
         {

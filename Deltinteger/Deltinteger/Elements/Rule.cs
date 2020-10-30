@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Elements
                 .AppendLine("{")
                 .Indent()
                 .AppendLine(EnumData.GetEnumValue(RuleEvent).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";");
-            
+
             // Add attributes.
             switch (RuleType)
             {
@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Elements
                     builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Team attribute
                     builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Player attribute
                     break;
-                
+
                 case RuleType.Subroutine:
                     builder.AppendLine(Subroutine.ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Attribute name
                     break;
@@ -88,7 +88,7 @@ namespace Deltin.Deltinteger.Elements
 
                 foreach (var condition in Conditions)
                     builder.AppendLine(condition.ToWorkshop(builder.OutputLanguage, optimize) + ";");
-                
+
                 builder.Unindent()
                     .AppendLine("}");
             }
@@ -107,14 +107,14 @@ namespace Deltin.Deltinteger.Elements
                         builder.AppendLine(action.Optimize().ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Action));
                     else
                         builder.AppendLine(action.ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Action));
-                
+
                 builder.Unindent()
                     .AppendLine("}");
             }
             builder.Unindent()
                 .AppendLine("}");
         }
-    
+
         public int ElementCount(bool optimized)
         {
             int count = 1;
@@ -131,7 +131,7 @@ namespace Deltin.Deltinteger.Elements
                     else
                         count += action.ElementCount();
                 }
-            
+
             return count;
         }
     }

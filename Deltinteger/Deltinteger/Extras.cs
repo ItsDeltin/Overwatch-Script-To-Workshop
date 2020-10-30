@@ -26,21 +26,21 @@ namespace Deltin.Deltinteger
 
         public static string AddSpacesToSentence(string text, bool preserveAcronyms)
         {
-                if (string.IsNullOrWhiteSpace(text))
-                    return string.Empty;
-                
-                StringBuilder newText = new StringBuilder(text.Length * 2);
-                newText.Append(text[0]);
-                for (int i = 1; i < text.Length; i++)
-                {
-                    if (char.IsUpper(text[i]))
-                        if ((text[i - 1] != ' ' && !char.IsUpper(text[i - 1])) ||
-                            (preserveAcronyms && char.IsUpper(text[i - 1]) && 
-                            i < text.Length - 1 && !char.IsUpper(text[i + 1])))
-                            newText.Append(' ');
-                    newText.Append(text[i]);
-                }
-                return newText.ToString();
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            StringBuilder newText = new StringBuilder(text.Length * 2);
+            newText.Append(text[0]);
+            for (int i = 1; i < text.Length; i++)
+            {
+                if (char.IsUpper(text[i]))
+                    if ((text[i - 1] != ' ' && !char.IsUpper(text[i - 1])) ||
+                        (preserveAcronyms && char.IsUpper(text[i - 1]) &&
+                        i < text.Length - 1 && !char.IsUpper(text[i + 1])))
+                        newText.Append(' ');
+                newText.Append(text[i]);
+            }
+            return newText.ToString();
         }
 
         public static string CombinePathWithDotNotation(string referenceDirectory, string file)
@@ -56,8 +56,8 @@ namespace Deltin.Deltinteger
                 string directory = Path.GetDirectoryName(referenceDirectory);
                 string combined = Path.Combine(directory, file);
                 if (file == "") combined += Path.DirectorySeparatorChar;
-				if(!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-					combined = "/" + combined;
+                if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+                    combined = "/" + combined;
                 return Path.GetFullPath(combined);
             }
             catch (Exception)
@@ -80,10 +80,10 @@ namespace Deltin.Deltinteger
 
         public static Uri Clean(this Uri uri)
         {
-			if(!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-            	return new Uri("/" +uri.FilePath());
-			else 
-				return new Uri(uri.FilePath());
+            if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+                return new Uri("/" + uri.FilePath());
+            else
+                return new Uri(uri.FilePath());
         }
 
         public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
@@ -95,11 +95,12 @@ namespace Deltin.Deltinteger
 
         public static Uri Definition(string path)
         {
-            string enc = "file:///" + path.Replace('\\', '/').Replace(" ","%20").Replace(":", "%3A");
+            string enc = "file:///" + path.Replace('\\', '/').Replace(" ", "%20").Replace(":", "%3A");
             return new Uri(enc);
         }
 
-        public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent() {
+        public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent()
+        {
             Kind = MarkupKind.Markdown,
             Value = text
         });
@@ -131,17 +132,17 @@ namespace Deltin.Deltinteger
         {
             this.values = values;
         }
-        
+
         public static implicit operator ArrayBuilder<T>(T value)
         {
             return new ArrayBuilder<T>(new T[] { value });
         }
-        
+
         public static implicit operator ArrayBuilder<T>(T[] value)
         {
             return new ArrayBuilder<T>(value);
         }
-        
+
         public static T[] Build(params ArrayBuilder<T>[] values)
         {
             List<T> valueList = new List<T>();
@@ -149,7 +150,7 @@ namespace Deltin.Deltinteger
             foreach (var val in values)
                 if (val?.values != null)
                     valueList.AddRange(val.values);
-            
+
             return valueList.ToArray();
         }
     }
@@ -160,7 +161,7 @@ namespace Deltin.Deltinteger
         StringBuilder noMarkup = new StringBuilder();
         bool inCodeLine = false;
 
-        public MarkupBuilder() {}
+        public MarkupBuilder() { }
 
         public MarkupBuilder Add(string line)
         {
@@ -209,7 +210,8 @@ namespace Deltin.Deltinteger
 
         public override string ToString() => result.ToString();
         public string ToString(bool markup) => markup ? result.ToString() : noMarkup.ToString();
-        public MarkupContent ToMarkup() => new MarkupContent() {
+        public MarkupContent ToMarkup() => new MarkupContent()
+        {
             Kind = MarkupKind.Markdown,
             Value = ToString()
         };

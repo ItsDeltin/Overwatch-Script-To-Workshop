@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.CustomMethods
                 Element.Part<A_ForcePlayerHero>(player, originalHero.GetVariable()),
                 Element.Part<A_StopForcingHero>(player)
             ));
-            
+
             return isAI.GetVariable();
         }
 

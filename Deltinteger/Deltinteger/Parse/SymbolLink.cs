@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Parse
 
         private Dictionary<ICallable, SymbolLinkCollection> callRanges { get; } = new Dictionary<ICallable, SymbolLinkCollection>();
 
-        public void Init() {}
+        public void Init() { }
 
         public void AddSymbolLink(ICallable callable, Location calledFrom, bool isDeclarer = false)
         {
@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Dictionary<ICallable, SymbolLinkCollection> GetSymbolLinks() => callRanges;
-        
+
         public SymbolLinkCollection GetSymbolLinks(ICallable callable) => callRanges[callable];
     }
 

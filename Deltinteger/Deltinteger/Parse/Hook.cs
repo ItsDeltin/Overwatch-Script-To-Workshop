@@ -48,7 +48,8 @@ namespace Deltin.Deltinteger.Parse
             IExpression valueExpression = parseInfo.GetExpression(scope, context.Value);
 
             // Resolve the variable.
-            VariableResolve resolvedVariable = new VariableResolve(new VariableResolveOptions() {
+            VariableResolve resolvedVariable = new VariableResolve(new VariableResolveOptions()
+            {
                 // Not indexable
                 CanBeIndexed = false,
                 // Hook variables are not settable.

@@ -36,7 +36,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public DefinitionRegistrationOptions GetRegistrationOptions()
         {
-            return new DefinitionRegistrationOptions() {
+            return new DefinitionRegistrationOptions()
+            {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector
             };
         }

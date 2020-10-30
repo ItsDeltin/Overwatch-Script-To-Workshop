@@ -56,7 +56,8 @@ namespace Deltin.Deltinteger.Parse
             if (callRange == null) throw new ArgumentNullException(nameof(callRange));
             if (definedAt == null) throw new ArgumentNullException(nameof(definedAt));
 
-            callLinks.Add(new LocationLink() {
+            callLinks.Add(new LocationLink()
+            {
                 OriginSelectionRange = callRange,
                 TargetUri = definedAt.uri,
                 TargetRange = definedAt.range,

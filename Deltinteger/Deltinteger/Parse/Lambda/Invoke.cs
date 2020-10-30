@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool DoesReturnValue => LambdaType.ReturnsValue;
-        
+
         public PortableLambdaType LambdaType { get; }
 
         public LambdaInvoke(PortableLambdaType lambdaType)
@@ -40,7 +40,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             if (LambdaType.LambdaKind != LambdaKind.Anonymous && LambdaType.LambdaKind != LambdaKind.Portable && parseInfo.SourceExpression != null)
-                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr => {
+                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr =>
+                {
                     // Get the lambda that is being invoked.
                     if (expr is ILambdaApplier source)
                     {
@@ -48,7 +49,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
                         // Recursion and error check.
                         LambdaInvokeApply(parseInfo, source, callRange);
-                        
+
                         // Parameter invocation states.
                         for (int i = 0; i < source.InvokedState.Length; i++)
                             if (source.InvokedState[i].Invoked)

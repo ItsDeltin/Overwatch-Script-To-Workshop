@@ -96,7 +96,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
         }
-        
+
         // Makes sure each path returns a value.
         private void CheckPath(PathInfo path)
         {
@@ -110,7 +110,7 @@ namespace Deltin.Deltinteger.Parse
                         blockReturns = true;
                         break;
                     }
-                    
+
                     if (action.Statements[i] is IBlockContainer)
                     {
                         // If any of the paths in the block container has WillRun set to true,

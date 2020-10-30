@@ -66,11 +66,13 @@ namespace Deltin.Deltinteger.Parse
         public virtual object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             // If the type of the parameter is a lambda, then resolve the expression.
-            if (Type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr => {
+            if (Type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr =>
+            {
                 // If the expression is a lambda...
                 if (expr is Lambda.LambdaAction lambda)
                     // ...then if this parameter is invoked, apply the restricted calls and recursion info.
-                    Invoked.OnInvoke(() => {
+                    Invoked.OnInvoke(() =>
+                    {
                         LambdaInvoke.LambdaInvokeApply(parseInfo, lambda, valueRange);
                     });
                 // Otherwise, if the expression resolves to an IBridgeInvocable...
@@ -186,7 +188,7 @@ namespace Deltin.Deltinteger.Parse
         {
             WorkshopValue = workshopValue;
         }
-        public ExpressionOrWorkshopValue() {}
+        public ExpressionOrWorkshopValue() { }
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {

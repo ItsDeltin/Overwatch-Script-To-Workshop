@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger
         MethodAttributes Attributes { get; }
         bool DoesReturnValue { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
-        void Call(ParseInfo parseInfo, DocRange callRange) {}
+        void Call(ParseInfo parseInfo, DocRange callRange) { }
 
         public static string GetLabel(IMethod function, bool includeReturnType)
         {
@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger
             string result = "";
             if (includeReturnType)
                 result += (function.DoesReturnValue ? function.CodeType?.GetName() ?? "define" : "void") + " ";
-            
+
             result += function.Name + "(";
 
             // Get the parameters.
@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger
                 result += function.Parameters[i].GetLabel(false);
                 if (i < function.Parameters.Length - 1) result += ", ";
             }
-            
+
             result += ")";
             return result;
         }
@@ -92,7 +92,7 @@ namespace Deltin.Deltinteger
     public interface IApplyBlock : IBlockListener, ILabeled
     {
         void SetupParameters();
-        void SetupBlock();        
+        void SetupBlock();
         CallInfo CallInfo { get; }
     }
 
