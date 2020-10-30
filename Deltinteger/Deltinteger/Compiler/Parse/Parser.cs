@@ -1445,8 +1445,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.GreaterThan);
 
             PushOperator(new TypeCastInfo(type, startPosition));
-
-            GetExpressionWithArray();
         }
 
         StringExpression ParseFormattedString()
