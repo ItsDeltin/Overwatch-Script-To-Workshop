@@ -24,14 +24,17 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<LocationOrLocationLinks> Handle(DefinitionParams definitionParams, CancellationToken token)
         {
-            var links = _languageServer.LastParse?.ScriptFromUri(definitionParams.TextDocument.Uri.ToUri())?.GetDefinitionLinks();
-            if (links == null) return new LocationOrLocationLinks();
+            return await Task.Run(() =>
+            {
+                var links = _languageServer.LastParse?.ScriptFromUri(definitionParams.TextDocument.Uri.ToUri())?.GetDefinitionLinks();
+                if (links == null) return new LocationOrLocationLinks();
 
-            links = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();
-            LocationOrLocationLink[] items = new LocationOrLocationLink[links.Length];
-            for (int i = 0; i < items.Length; i++) items[i] = new LocationOrLocationLink(links[i]);
+                links = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();
+                LocationOrLocationLink[] items = new LocationOrLocationLink[links.Length];
+                for (int i = 0; i < items.Length; i++) items[i] = new LocationOrLocationLink(links[i]);
 
-            return new LocationOrLocationLinks(items);
+                return new LocationOrLocationLinks(items);
+            });
         }
 
         public DefinitionRegistrationOptions GetRegistrationOptions()
