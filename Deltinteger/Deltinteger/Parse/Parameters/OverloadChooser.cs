@@ -317,16 +317,19 @@ namespace Deltin.Deltinteger.Parse
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
 
-            if (parameterType.CodeTypeParameterInvalid(value.Type()))
+            if (parameterType is PortableLambdaType && value is PortableLambdaType portableType && portableType.LambdaKind == LambdaKind.Anonymous)
             {
-                // The parameter type does not match.
-                string msg = string.Format("Expected a value of type {0}.", Option.Parameters[parameter].Type.GetName());
-                Error(msg, errorRange);
-            }
-            else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
-            {
-                string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
-                Error(msg, errorRange);
+                if (parameterType.CodeTypeParameterInvalid(value.Type()))
+                {
+                    // The parameter type does not match.
+                    string msg = string.Format("Expected a value of type {0}.", Option.Parameters[parameter].Type.GetName());
+                    Error(msg, errorRange);
+                }
+                else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
+                {
+                    string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
+                    Error(msg, errorRange);
+                }
             }
         }
 

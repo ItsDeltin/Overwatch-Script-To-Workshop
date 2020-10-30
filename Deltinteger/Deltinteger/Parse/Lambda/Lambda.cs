@@ -21,6 +21,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
         bool ResolvedSource { get; }
         void GetLambdaStatement(PortableLambdaType expecting);
         void GetLambdaStatement();
+    }
+
+    public interface ILambdaInvocable 
+    {
         IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues);
     }
 

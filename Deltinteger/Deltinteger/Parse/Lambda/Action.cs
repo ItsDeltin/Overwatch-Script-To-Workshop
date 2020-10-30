@@ -146,14 +146,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // Add so the lambda can be recursive-checked.
             _parseInfo.TranslateInfo.RecursionCheck(CallInfo);
-            Identifier = _parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(new LambdaHandler(this));
+
+            if (!LambdaType.IsConstant())
+                Identifier = _parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(new LambdaHandler(this));
         }
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
             // If the lambda type is constant, return the lambda itself.
             if (LambdaType.IsConstant())
-                return this;
+                return new LambdaActionWorkshopInstance(actionSet, this);
             
             // Otherwise, return an array containing data of the lambda.
             var lambdaMeta = new List<IWorkshopTree>();
@@ -177,18 +179,20 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public string ToWorkshop(OutputLanguage outputLanguage, ToWorkshopContext context) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
 
-        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
+        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => Invoke(null, actionSet, parameterValues);
+
+        public IWorkshopTree Invoke(VarIndexAssigner lambaAssigner, ActionSet actionSet, params IWorkshopTree[] parameterValues)
         {
             switch (LambdaType.LambdaKind)
             {
                 // Constant macro
                 case LambdaKind.ConstantMacro:
-                    return OutputConstantMacro(actionSet, parameterValues);
+                    return OutputConstantMacro(lambaAssigner, actionSet, parameterValues);
                 
                 // Constant block
                 case LambdaKind.ConstantBlock:
                 case LambdaKind.ConstantValue:
-                    return OutputContantBlock(actionSet, parameterValues);
+                    return OutputContantBlock(lambaAssigner, actionSet, parameterValues);
                 
                 // Portable
                 case LambdaKind.Portable:
@@ -202,9 +206,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
 
         /// <summary>Assigns the parameter values to the action set for the constant lambdas.</summary>
-        private ActionSet AssignContainedParameters(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        private ActionSet AssignContainedParameters(VarIndexAssigner lambaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             var newSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            actionSet.IndexAssigner.CopyAll(lambaAssigner);
 
             for (int i = 0; i < parameterValues.Length; i++)
                 newSet.IndexAssigner.Add(Parameters[i], parameterValues[i]);
@@ -212,13 +217,13 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return newSet;
         }
         /// <summary>Outputs a constant macro lambda.</summary>
-        private IWorkshopTree OutputConstantMacro(ActionSet actionSet, IWorkshopTree[] parameterValues) => Expression.Parse(AssignContainedParameters(actionSet, parameterValues));
+        private IWorkshopTree OutputConstantMacro(VarIndexAssigner lambaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues) => Expression.Parse(AssignContainedParameters(lambaAssigner, actionSet, parameterValues));
 
         /// <summary>Outputs a constant block.</summary>
-        private IWorkshopTree OutputContantBlock(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        private IWorkshopTree OutputContantBlock(VarIndexAssigner lambdaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             ReturnHandler returnHandler = new ReturnHandler(actionSet, "lambda", MultiplePaths);
-            actionSet = AssignContainedParameters(actionSet, parameterValues).New(returnHandler);
+            actionSet = AssignContainedParameters(lambdaAssigner, actionSet, parameterValues).New(returnHandler);
 
             if (Expression != null)
                 returnHandler.ReturnValue(Expression.Parse(actionSet));

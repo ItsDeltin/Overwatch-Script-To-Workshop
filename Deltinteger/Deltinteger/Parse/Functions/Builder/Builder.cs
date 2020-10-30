@@ -316,7 +316,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
         public void Set(ActionSet actionSet, IWorkshopTree value)
         {
-            IGettable indexResult = actionSet.IndexAssigner.Add(actionSet.VarCollection, (Var)_variables[0], actionSet.IsGlobal, value, _recursive);
+            IGettable indexResult = actionSet.IndexAssigner.Add(actionSet.VarCollection, _variables[0], actionSet.IsGlobal, value, _recursive);
             CopyToAll(actionSet, indexResult);
 
             if (indexResult is IndexReference indexReference && value != null)

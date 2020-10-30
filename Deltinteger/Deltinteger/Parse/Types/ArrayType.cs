@@ -138,7 +138,7 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        private static IWorkshopTree GenericSort<T>(ActionSet actionSet, MethodCall methodCall) where T: Element, new() => Element.Part<T>(actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
+        private static IWorkshopTree GenericSort<T>(ActionSet actionSet, MethodCall methodCall) where T: Element, new() => Element.Part<T>(actionSet.CurrentObject, ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
 
         private void Func(FuncMethodBuilder builder)
         {
@@ -181,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
                 new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(null, ArrayOfType))
             };
             noIndex.Action = (actionSet, methodCall) =>
-                Element.Part<T>(actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
+                Element.Part<T>(actionSet.CurrentObject, ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
 
             // (value, index) => ...
             var withIndex = GetFuncMethod();
@@ -189,7 +189,7 @@ namespace Deltin.Deltinteger.Parse
                 new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(null, ArrayOfType, null))
             };
             withIndex.Action = (actionSet, methodCall) =>
-                Element.Part<T>(actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement(), new V_CurrentArrayIndex()));
+                Element.Part<T>(actionSet.CurrentObject, ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement(), new V_CurrentArrayIndex()));
             
             addToScope.AddNativeMethod(new FuncMethod(noIndex));
             addToScope.AddNativeMethod(new FuncMethod(withIndex));

@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             if (LambdaType.IsConstant())
             {
-                ILambdaApplier lambda = (ILambdaApplier)actionSet.CurrentObject;
+                ILambdaInvocable lambda = (ILambdaInvocable)actionSet.CurrentObject;
                 return lambda.Invoke(actionSet, methodCall.ParameterValues);
             }
             return actionSet.DeltinScript.GetComponent<LambdaGroup>().Call(actionSet, methodCall);

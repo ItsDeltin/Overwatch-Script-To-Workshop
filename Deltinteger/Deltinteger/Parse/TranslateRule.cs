@@ -195,6 +195,7 @@ namespace Deltin.Deltinteger.Parse
         public ActionSet New(IndexReference relatedIndex) => new ActionSet(this) { CurrentObjectRelatedIndex = relatedIndex };
         public ActionSet New(bool isRecursive) => new ActionSet(this) { IsRecursive = isRecursive };
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
+        public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
         public ActionSet Indent()
         {
             var newActionSet = Clone();

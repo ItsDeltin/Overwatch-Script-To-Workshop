@@ -91,6 +91,12 @@ namespace Deltin.Deltinteger
             AdditionalParameterData = additionalParameterData;
         }
 
+        public MethodCall(IWorkshopTree[] parameterValues)
+        {
+            ParameterValues = parameterValues;
+            AdditionalParameterData = new object[parameterValues.Length];
+        }
+
         /// <summary>Gets a parameter as an element.</summary>
         public Element Get(int i) => (Element)ParameterValues[i];
     }

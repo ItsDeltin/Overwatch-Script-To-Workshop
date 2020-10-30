@@ -64,10 +64,7 @@ namespace Deltin.Deltinteger.Elements
         public int Indent { get; set; }
         protected bool AlwaysShowParentheses = false;
 
-        public override string ToString()
-        {
-            return ElementList.GetLabel(false);
-        }
+        public override string ToString() => Name.ToString() + (ParameterValues.Length == 0 ? "" : "(" + string.Join(", ", ParameterValues.Select(v => v.ToString())) + ")");
         
         public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {

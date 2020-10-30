@@ -25,6 +25,8 @@ namespace Deltin.Deltinteger.Elements
             return Name == bAsMeta.Name && ID == bAsMeta.ID;
         }
 
+        public override string ToString() => Name;
+
         public static string WorkshopNameFromCodeName(string name, string[] takenNames)
         {
             StringBuilder valid = new StringBuilder();
