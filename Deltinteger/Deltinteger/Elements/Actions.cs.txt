@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Allow Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Button", typeof(Button))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class A_AllowButton : Element {}
 
     [ElementData("Apply Impulse")]
@@ -101,12 +101,12 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Beam Type", typeof(BeamType))]
     [Parameter("Start Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("End Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
-    [EnumParameter("Color", typeof(Color))]
+    [Parameter("Color", ValueType.Color, typeof(V_ColorValue))]
     [EnumParameter("Reevaluation", typeof(EffectRev))]
     public class A_CreateBeamEffect : Element {}
 
     [ElementData("Create Dummy Bot")]
-    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     #warning settable default number
     [Parameter("Slot", ValueType.Number, typeof(V_Number))]
@@ -117,7 +117,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Create Effect")]
     [Parameter("Visible To", ValueType.Players, typeof(V_AllPlayers))]
     [EnumParameter("Type", typeof(Effect))]
-    [EnumParameter("Color", typeof(Color))]
+    [Parameter("Color", ValueType.Color, typeof(V_ColorValue))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(EffectRev))]
@@ -130,9 +130,9 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Text", ValueType.String, typeof(V_Null))]
     [EnumParameter("Location", typeof(HudLocation))]
     [Parameter("Sort Order", ValueType.Number, typeof(V_Number))]
-    [EnumParameter("Header Color", typeof(Color))]
-    [EnumParameter("Subheader Color", typeof(Color))]
-    [EnumParameter("Text Color", typeof(Color))]
+    [Parameter("Header Color", ValueType.Color, typeof(V_ColorValue))]
+    [Parameter("Subheader Color", ValueType.Color, typeof(V_ColorValue))]
+    [Parameter("Text Color", ValueType.Color, typeof(V_ColorValue))]
     [EnumParameter("Reevaluation", typeof(HudTextRev))]
     [EnumParameter("Spectators", typeof(Spectators))]
     public class A_CreateHudText : Element {}
@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [EnumParameter("Icon", typeof(Icon))]
     [EnumParameter("Reevaluation", typeof(IconRev))]
-    [EnumParameter("Icon Color", typeof(Color))]
+    [Parameter("Icon Color", ValueType.Color, typeof(V_ColorValue))]
     [Parameter("Show When Offscreen", ValueType.Boolean, typeof(V_True))]
     public class A_CreateIcon : Element {}
 
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Scale", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Clipping", typeof(Clipping))]
     [EnumParameter("Reevaluation", typeof(InworldTextRev))]
-    [EnumParameter("Text Color", typeof(Color))]
+    [Parameter("Text Color", ValueType.Color, typeof(V_ColorValue))]
     [EnumParameter("Spectators", typeof(Spectators))]
     public class A_CreateInWorldText : Element {}
 
@@ -242,8 +242,8 @@ namespace Deltin.Deltinteger.Elements
     public class A_DisableInspectorRecording : Element {}
 
     [ElementData("Disallow Button")]
-    [Parameter("Player", ValueType.Players, typeof(V_EventPlayer))]
-    [EnumParameter("Button", typeof(Button))]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class A_DisallowButton : Element {}
 
     [ElementData("Enable Built-In Game Mode Announcer")]
@@ -387,19 +387,19 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Play Effect")]
     [Parameter("Visible To", ValueType.Players, typeof(V_AllPlayers))]
     [EnumParameter("Type", typeof(PlayEffect))]
-    [EnumParameter("Color", typeof(Color))]
+    [Parameter("Color", ValueType.Color, typeof(V_ColorValue))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
     public class A_PlayEffect : Element {}
 
     [ElementData("Preload Hero")]
-    [Parameter("Player", ValueType.Players, typeof(V_EventPlayer))]
-    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     public class A_PreloadHero : Element {}
 
     [ElementData("Press Button")]
-    [Parameter("Player", ValueType.Players, typeof(V_EventPlayer))]
-    [EnumParameter("Button", typeof(Button))]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class A_PressButton : Element {}
 
     [ElementData("Reset Player Hero Availability")]
@@ -641,8 +641,8 @@ namespace Deltin.Deltinteger.Elements
     public class A_StartFacing : Element {}
 
     [ElementData("Start Forcing Player To Be Hero")]
-    [Parameter("Player", ValueType.Players, typeof(V_EventPlayer))]
-    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     public class A_ForcePlayerHero : Element {}
 
     [ElementData("Start Forcing Spawn Room")]
@@ -679,8 +679,8 @@ namespace Deltin.Deltinteger.Elements
     public class A_StartHealOverTime : Element {}
 
     [ElementData("Start Holding Button")]
-    [Parameter("Player", ValueType.Players, typeof(V_EventPlayer))]
-    [EnumParameter("Button", typeof(Button))]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class A_StartHoldingButton : Element {}
 
     [ElementData("Start Throttle In Direction")]
@@ -758,8 +758,8 @@ namespace Deltin.Deltinteger.Elements
     public class A_StopHealOverTime : Element {}
 
     [ElementData("Stop Holding Button")]
-    [Parameter("Player", ValueType.Players, typeof(V_EventPlayer))]
-    [EnumParameter("Button", typeof(Button))]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class A_StopHoldingButton : Element {}
 
     [ElementData("Stop Throttle In Direction")]
@@ -948,7 +948,8 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Viewed Players", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Viewing Players", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Visible", ValueType.Boolean, typeof(V_True))]
-    [EnumParameter("Color", typeof(Color))]
+    [Parameter("Color", ValueType.Color, typeof(V_ColorValue))]
+    [EnumParameter("OutlineType", typeof(OutlineType))]
     public class A_StartForcingPlayerOutlines : Element {}
 
     [ElementData("Stop Forcing Player Outlines")]
@@ -1023,4 +1024,80 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Amount", ValueType.Number, typeof(V_Number))]
     public class A_SetPlayerHealth : Element {}
+
+    [ElementData("Log To Inspector")]
+    [Parameter("Text", ValueType.String, typeof(V_CustomString))]
+    public class A_LogToInspector : Element {}
+
+    [ElementData("Wait Until")]
+    [Parameter("Continue Condition", ValueType.Boolean, null)]
+    [Parameter("Timeout", ValueType.Number, null)]
+    public class A_WaitUntil : Element {}
+
+    [ElementData("Set Knockback Dealt")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Knockback Dealt Percent", ValueType.Number, null)]
+    public class A_SetKnockbackDealt : Element {}
+
+    [ElementData("Set Knockback Received")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Knockback Received Percent", ValueType.Number, null)]
+    public class A_SetKnockbackReceived : Element {}
+
+    [ElementData("Set Environment Credit Player")]
+    [Parameter("Target", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Environment Credit Player", ValueType.Player, null)]
+    public class A_SetEnvironmentCreditPlayer : Element {}
+
+    [ElementData("Start Assist")]
+    [Parameter("Assisters", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Targets", ValueType.Player, typeof(V_AllPlayers))]
+    [EnumParameter("Reevaluation", typeof(Assist))]
+    public class A_StartAssist : Element {}
+
+    [ElementData("Stop Assist")]
+    [Parameter("Assist ID", ValueType.Any, null)]
+    public class A_StopAssist : Element {}
+
+    [ElementData("Stop All Assist")]
+    public class A_StopAllAssist : Element {}
+
+    [ElementData("Create Progress Bar HUD Text")]
+    [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Parameter("Text", ValueType.String, typeof(V_CustomString))]
+    [EnumParameter("Location", typeof(HudLocation))]
+    [Parameter("Sort Order", ValueType.Number, typeof(V_Number))]
+    [Parameter("Progress Bar Color", ValueType.Color, typeof(V_ColorValue))]
+    [Parameter("Text Color", ValueType.Color, typeof(V_ColorValue))]
+    [EnumParameter("Reevaluation", typeof(ProgressBarEvaluation))]
+    [EnumParameter("Nonteam Spectators", typeof(Spectators))]
+    public class A_CreateProgressBarHudText : Element {}
+
+    [ElementData("Destroy Progress Bar HUD Text")]
+    [Parameter("Text ID", ValueType.Any, null)]
+    public class A_DestroyProgressBarHudText : Element {}
+
+    [ElementData("Destroy All Progress Bar HUD Text")]
+    public class A_DestroyAllProgressBarHudText : Element {}
+
+    [ElementData("Create Progress Bar In-World Text")]
+    [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Parameter("Text", ValueType.String, typeof(V_CustomString))]
+    [Parameter("Position", ValueType.Vector, typeof(V_Vector))]
+    [Parameter("Scale", ValueType.Number, typeof(V_Number))]
+    [EnumParameter("Clipping", typeof(Clipping))]
+    [Parameter("Progress Bar Color", ValueType.Color, typeof(V_ColorValue))]
+    [Parameter("Text Color", ValueType.Color, typeof(V_ColorValue))]
+    [EnumParameter("Reevaluation", typeof(ProgressBarEvaluation))]
+    [EnumParameter("Nonteam Spectators", typeof(Spectators))]
+    public class A_CreateProgressBarInWorldText : Element {}
+
+    [ElementData("Destroy Progress Bar In-World Text")]
+    [Parameter("Text ID", ValueType.Any, null)]
+    public class A_DestroyProgressBarInWorldText : Element {}
+
+    [ElementData("Destroy All Progress Bar In-World Text")]
+    public class A_DestroyAllProgressBarInWorldText : Element {}
 }

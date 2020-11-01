@@ -12,6 +12,9 @@ namespace Deltin.Deltinteger
         bool Settable();
         bool RequiresCapture { get; }
         VariableType VariableType { get; }
+        bool InExtendedCollection => false;
+        int ID => -1;
+        bool Recursive => false;
     }
 
     public class IndexReferencer : IIndexReferencer

@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
             this.parent = parent;
         }
 
-        public IGettable Add(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree referenceValue, bool recursive = false)
+        public IGettable Add(VarCollection varCollection, IIndexReferencer var, bool isGlobal, IWorkshopTree referenceValue, bool recursive = false)
         {
             if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
             if (var == null)           throw new ArgumentNullException(nameof(var          ));
@@ -117,6 +117,21 @@ namespace Deltin.Deltinteger.Parse
             }
             gettable = null;
             return false;
+        }
+
+        public VarIndexAssigner CopyAll(VarIndexAssigner other)
+        {
+            var current = other;
+            while (current != null)
+            {
+                // Copy references
+                foreach (var reference in current.references)
+                    if (!references.ContainsKey(reference.Key))
+                        references.Add(reference.Key, reference.Value);
+                current = current.parent;
+            }
+
+            return this;
         }
     }
 }

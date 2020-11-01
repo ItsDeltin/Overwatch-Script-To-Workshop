@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
             RulesetScope.PrivateCatch = true;
 
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(translateSettings.Root);            
+            Importer.CollectScriptFiles(translateSettings.Root);
             
             Translate();
             if (!Diagnostics.ContainsErrors())

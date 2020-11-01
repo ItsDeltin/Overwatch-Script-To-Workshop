@@ -41,9 +41,13 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Check if the function can be called in parallel.
-                // TODO
-                // if (Parallel != CallParallel.NoParallel && !CallingMethod.Attributes.Parallelable)
-                //     parseInfo.Script.Diagnostics.Error($"The method '{CallingMethod.Name}' cannot be called in parallel.", _targetRange);
+                if (parseInfo.AsyncInfo != null)
+                {
+                    if (!callingMethod.Attributes.Parallelable)
+                        parseInfo.AsyncInfo.Reject($"The method '{callingMethod.Name}' cannot be called in parallel");
+                    else
+                        parseInfo.AsyncInfo.Accept();
+                }
                 
                 parseInfo.Script.AddHover(invokeInfo.Context.Range, callingMethod.GetLabel(true));
             }
@@ -140,6 +144,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly ParseInfo _parseInfo;
         private readonly DocRange _targetRange;
         private readonly bool _usedAsExpression;
+        private readonly AsyncInfo _asyncInfo;
         private string _comment;
 
         public FunctionInvokeResult(ParseInfo parseInfo, DocRange targetRange, bool usedAsExpression, IMethod function, IExpression[] parameterValues, object[] additionalParameterData, OverloadMatch match)
@@ -151,10 +156,11 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             _targetRange = targetRange;
             _usedAsExpression = usedAsExpression;
+            _asyncInfo = parseInfo.AsyncInfo;
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => Function.Parse(actionSet, new MethodCall(((IInvokeResult)this).GetParameterValuesAsWorkshop(actionSet), AdditionalParameterData) {
-            // CallParallel = Parallel, // TODO
+            ParallelMode = _asyncInfo?.ParallelMode ?? CallParallel.NoParallel,
             ActionComment = _comment
         });
 

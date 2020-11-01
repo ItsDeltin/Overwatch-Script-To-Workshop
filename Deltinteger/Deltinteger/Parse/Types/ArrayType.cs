@@ -187,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
                 new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(FuncType, ArrayOfType))
             };
             noIndex.Action = (actionSet, methodCall) =>
-                Element.Part(function, actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, Element.ArrayElement()));
+                Element.Part(function, actionSet.CurrentObject, ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, Element.ArrayElement()));
 
             // (value, index) => ...
             var withIndex = GetFuncMethod();
@@ -195,7 +195,7 @@ namespace Deltin.Deltinteger.Parse
                 new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(FuncType, ArrayOfType, NumberType.Instance))
             };
             withIndex.Action = (actionSet, methodCall) =>
-                Element.Part(function, actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, Element.ArrayElement(), Element.ArrayIndex()));
+                Element.Part(function, actionSet.CurrentObject, ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, Element.ArrayElement(), Element.ArrayIndex()));
             
             addToScope.AddNativeMethod(new FuncMethod(noIndex));
             addToScope.AddNativeMethod(new FuncMethod(withIndex));

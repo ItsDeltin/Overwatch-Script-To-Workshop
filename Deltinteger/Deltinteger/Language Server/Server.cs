@@ -16,6 +16,8 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -235,6 +237,35 @@ namespace Deltin.Deltinteger.LanguageServer
                 }
             }));
 
+            // Decompile file
+            options.OnRequest<DecompileFileArgs, object>("decompile.file", args => Task.Run<object>(() => {
+                try
+                {
+                    // Parse the workshop code.
+                    var tte = new ConvertTextToElement(Clipboard.GetText());
+                    var workshop = tte.Get();
+
+                    // Decompile the parsed workshop code.
+                    var workshopToCode = new WorkshopDecompiler(workshop, new FileLobbySettingsResolver(args.File, workshop.LobbySettings), new CodeFormattingOptions());
+                    string result = workshopToCode.Decompile();
+
+                    // Create the file.
+                    using (var writer = File.CreateText(args.File))
+                        // Write the code to the file.
+                        writer.Write(result);
+                    
+                    // Warning if the end of the file was not reached.
+                    if (!tte.ReachedEnd)
+                        return new {success = false, msg = "End of file not reached, stuck at: '" + tte.LocalStream.Substring(0, Math.Min(tte.LocalStream.Length, 50)) + "'" };
+                    else
+                        return new {success = true};
+                }
+                catch (Exception ex)
+                {
+                    return new {success = false, msg = ex.ToString()};
+                }
+            }));
+
             return options;
         }
 
@@ -249,6 +280,12 @@ namespace Deltin.Deltinteger.LanguageServer
             public string File;
 
             public PathmapDocument() {}
+        }
+
+        class DecompileFileArgs
+        {
+            [JsonProperty("file")]
+            public string File { get; set; }
         }
 
         public static readonly DocumentSelector DocumentSelector = new DocumentSelector(

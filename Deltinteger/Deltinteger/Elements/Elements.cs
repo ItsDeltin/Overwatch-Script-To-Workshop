@@ -15,27 +15,6 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Elements
 {
-    public enum ValueType
-    {
-        Any,
-        VectorAndPlayer,
-        Number,
-        Boolean,
-        Hero,
-        Vector,
-        Player,
-        Players,
-        Team,
-        Map,
-        Gamemode,
-        Button,
-        String,
-        Effect,
-        Text,
-        Icon,
-        WorldText
-    }
-
     public class Element : IWorkshopTree
     {
         public static Element Part(string name, params IWorkshopTree[] parameterValues)
@@ -53,6 +32,8 @@ namespace Deltin.Deltinteger.Elements
             Function = function;
             ParameterValues = parameterValues;
         }
+
+        public override string ToString() => Function.Name.ToString() + (ParameterValues.Length == 0 ? "" : "(" + string.Join(", ", ParameterValues.Select(v => v.ToString())) + ")");
 
         public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
