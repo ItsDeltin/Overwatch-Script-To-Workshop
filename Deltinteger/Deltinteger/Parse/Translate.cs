@@ -8,6 +8,7 @@ using Deltin.Deltinteger.I18n;
 using Deltin.Deltinteger.Debugger;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Parse.Import;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -108,6 +109,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         private List<RuleAction> rules { get; } = new List<RuleAction>();
+        private List<DefinedModule> modules { get; } = new List<DefinedModule>();
 
         void Translate()
         {
@@ -176,6 +178,12 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
+            foreach(ScriptFile script in Importer.ScriptFiles)
+            foreach(var modContext in script.Context.Modules)
+            {
+                    modules.Add(new DefinedModule(new ParseInfo(script, this), GlobalScope.Child(modContext.Name), modContext));
+            }
+
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
             foreach (var apply in _applyBlocks) apply.SetupParameters();
             foreach (var apply in _applyBlocks) apply.SetupBlock();
@@ -191,6 +199,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var ruleContext in script.Context.Rules)
                 rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
         }
+
 
         public string WorkshopCode { get; private set; }
         public int ElementCount { get; private set; }

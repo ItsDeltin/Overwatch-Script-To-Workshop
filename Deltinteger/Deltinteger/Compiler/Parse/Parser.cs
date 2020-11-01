@@ -1473,7 +1473,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         /// <summary>Parses a single import, rule, variable, class, etc.</summary>
         /// <returns>Determines wether an element was parsed.</returns>
-        void ParseScriptRootElement(RootContext context)
+        void ParseScriptRootElement(RootContext context, bool isModule = false)
         {
             // Return false if the EOF was reached.
             switch (Kind)
@@ -1498,6 +1498,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Import:
                     context.Imports.Add(ParseImport());
                     break;
+                case TokenType.Module:
+                    context.Modules.Add(ParseModule());
+                    break;
                 
                 // Others
                 default:
@@ -1509,9 +1512,35 @@ namespace Deltin.Deltinteger.Compiler.Parse
                         context.Hooks.Add(ParseHook());
                     // Unknown
                     else
-                        Unexpected(true);
+                        Unexpected(!isModule);
                     break;
             }
+        }
+
+        RootContext ParseModule()
+        {
+            var attributes = ParseAttributes();
+
+            ParseExpected(TokenType.Module);
+            var name = ParseExpected(TokenType.Identifier)?.Text;
+            var context = new RootContext();
+            context.Name = name;
+            ParseExpected(TokenType.CurlyBracket_Open);
+            // Get the module elements.
+            while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
+            {
+                int s = Token;
+
+                ParseScriptRootElement(context);
+
+                // No tokens were consumed, break to prevent an infinite loop.
+                if (s == Token) break;
+            }
+            ParseExpected(TokenType.CurlyBracket_Close);
+            context.NodeCaptures = NodeCaptures;
+
+            return context;
+
         }
 
         /// <summary>Parses a rule.</summary>

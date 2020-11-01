@@ -264,6 +264,7 @@ namespace Deltin.Deltinteger.Compiler
             {
                 case TokenType.Rule:
                 case TokenType.Class:
+                case TokenType.Module:
                 case TokenType.Enum:
                 case TokenType.Public:
                 case TokenType.Protected:
@@ -467,6 +468,7 @@ namespace Deltin.Deltinteger.Compiler
         This,
         Root,
         As,
+        Module,
         // Attributes
         Public,
         Private,

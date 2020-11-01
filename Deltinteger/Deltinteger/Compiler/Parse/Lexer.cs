@@ -247,6 +247,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("case", TokenType.Case) ||
                     MatchKeyword("default", TokenType.Default) ||
                     MatchKeyword("class", TokenType.Class) ||
+                    MatchKeyword("module", TokenType.Module) ||
                     MatchKeyword("enum", TokenType.Enum) ||
                     MatchKeyword("new", TokenType.New) ||
                     MatchKeyword("delete", TokenType.Delete) ||
