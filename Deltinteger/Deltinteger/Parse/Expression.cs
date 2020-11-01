@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public interface IExpression
     {
-        Scope ReturningScope();
+        Scope ReturningScope() => Type()?.GetObjectScope();
         CodeType Type();
         IWorkshopTree Parse(ActionSet actionSet);
         bool IsStatement() => false;
@@ -100,16 +100,19 @@ namespace Deltin.Deltinteger.Parse
     public class CreateArrayAction : IExpression
     {
         public IExpression[] Values { get; }
+        private readonly CodeType _type;
 
         public CreateArrayAction(ParseInfo parseInfo, Scope scope, CreateArray createArrayContext)
         {
             Values = new IExpression[createArrayContext.Values.Count];
             for (int i = 0; i < Values.Length; i++)
                 Values[i] = parseInfo.GetExpression(scope, createArrayContext.Values[i]);
+            
+            // Todo: replace null with default type (when merged with the explicit branch)
+            _type = new ArrayType(Values.Length == 0 ? null : Values[0].Type());
         }
 
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => _type;
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
