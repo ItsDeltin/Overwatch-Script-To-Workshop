@@ -128,9 +128,9 @@ namespace Deltin.Deltinteger.Parse
             // Resolve the expression.
             ConstantExpressionResolver.Resolve(value, expr => {
                 // If the resulting expression is an EnumValuePair and the EnumValuePair's enum is Hero,
-                if (expr is CallVariableAction call && call.Calling is EnumValuePair pair && pair.Member.Enum.Type == typeof(Hero))
+                if (expr is CallVariableAction call && call.Calling is EnumValuePair pair && pair.Member.Enum.Name == "Hero")
                     // Resolve the value.
-                    promise.Resolve((Hero)pair.Member.Value);
+                    promise.Resolve(pair.Member.Name);
                 // Otherwise, add an error.
                 else if (valueRange != null)
                     parseInfo.Script.Diagnostics.Error("Expected hero constant", valueRange);
@@ -144,8 +144,8 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstHeroValueResolver
     {
-        public Hero Hero { get; private set; }
-        public void Resolve(Hero hero) => Hero = hero;
+        public string Hero { get; private set; }
+        public void Resolve(string hero) => Hero = hero;
     }
 
     class FileParameter : CodeParameter

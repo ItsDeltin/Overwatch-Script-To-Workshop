@@ -17,12 +17,11 @@ namespace Deltin.Deltinteger.GlobalFunctions
                 new ConstHeroParameter("default", "The default value for this setting."),
                 new ConstNumberParameter("sortOrder", "The sort order of this setting relative to other settings in the same category. Settings with a higher sort order will come after settings with a lower sort order.")
             },
-            DoesReturnValue = true,
-            Action = (actionSet, methodCall) => Element.Part<V_WorkshopSettingHero>(
-                new V_CustomString((string)methodCall.AdditionalParameterData[0]),
-                new V_CustomString((string)methodCall.AdditionalParameterData[1]),
-                EnumData.GetEnumValue(((ConstHeroValueResolver)methodCall.AdditionalParameterData[2]).Hero),
-                new V_Number((double)methodCall.AdditionalParameterData[3])
+            Action = (actionSet, methodCall) => Element.Part("Workshop Setting Hero",
+                Element.CustomString((string)methodCall.AdditionalParameterData[0]),
+                Element.CustomString((string)methodCall.AdditionalParameterData[1]),
+                new AnonymousWorkshopValue(((ConstHeroValueResolver)methodCall.AdditionalParameterData[2]).Hero, true),
+                Element.Num((double)methodCall.AdditionalParameterData[3])
             )
         };
 
@@ -36,13 +35,12 @@ namespace Deltin.Deltinteger.GlobalFunctions
                 new ConstStringArrayParameter("options", "The options for this setting."),
                 new ConstNumberParameter("sortOrder", "The sort order of this setting relative to other settings in the same category. Settings with a higher sort order will come after settings with a lower sort order.")
             },
-            DoesReturnValue = true,
-            Action = (actionSet, methodCall) => Element.Part<V_WorkshopSettingCombo>(
-                new V_CustomString((string)methodCall.AdditionalParameterData[0]),
-                new V_CustomString((string)methodCall.AdditionalParameterData[1]),
-                new V_Number((double)methodCall.AdditionalParameterData[2]),
-                Element.CreateArray(((List<string>)methodCall.AdditionalParameterData[3]).Select(a => new V_CustomString(a)).ToArray()),
-                new V_Number((double)methodCall.AdditionalParameterData[4])
+            Action = (actionSet, methodCall) => Element.Part("Workshop Setting Combo",
+                Element.CustomString((string)methodCall.AdditionalParameterData[0]),
+                Element.CustomString((string)methodCall.AdditionalParameterData[1]),
+                Element.Num((double)methodCall.AdditionalParameterData[2]),
+                Element.CreateArray(((List<string>)methodCall.AdditionalParameterData[3]).Select(a => Element.CustomString(a)).ToArray()),
+                Element.Num((double)methodCall.AdditionalParameterData[4])
             )
         };
 

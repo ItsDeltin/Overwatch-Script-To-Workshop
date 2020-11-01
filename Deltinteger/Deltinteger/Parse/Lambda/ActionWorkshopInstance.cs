@@ -17,6 +17,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
             => Action.Invoke(Assigner, actionSet, parameterValues);
 
         bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new System.NotImplementedException();
-        string IWorkshopTree.ToWorkshop(OutputLanguage language, ToWorkshopContext context) => throw new System.NotImplementedException();
+        void IWorkshopTree.ToWorkshop(WorkshopBuilder language, ToWorkshopContext context) => throw new System.NotImplementedException();
     }
 }

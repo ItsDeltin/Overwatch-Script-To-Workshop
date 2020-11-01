@@ -119,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
                         Script.Diagnostics.Error("Expressions can't be used as statements.", statementContext.Range);
                         return new MissingElementAction(TranslateInfo);
                     }
-                    if (expr is IStatement == false) return MissingElementAction.MissingElement;
+                    if (expr is IStatement == false) return new MissingElementAction(TranslateInfo);
                     return (IStatement)expr;
 
                 default: return new MissingElementAction(TranslateInfo);

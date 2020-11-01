@@ -392,7 +392,9 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public void RetrievedScopeable(IScopeable scopeable)
-        {            
+        {
+            if (scopeable == null) return;
+
             // Narrow down the potential paths.
             for (int i = _potentialPaths.Count - 1; i >= 0; i--)
                 if (!_potentialPaths[i].GetScope().ScopeContains(scopeable))
