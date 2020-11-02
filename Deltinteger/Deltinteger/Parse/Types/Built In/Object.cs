@@ -5,10 +5,6 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    interface IResolveElements {
-        void ResolveElements();
-    }
-
     public class NullType : CodeType
     {
         public static readonly NullType Instance = new NullType();

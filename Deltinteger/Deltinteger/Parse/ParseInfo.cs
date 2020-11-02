@@ -17,8 +17,6 @@ namespace Deltin.Deltinteger.Parse
         public IContinueContainer ContinueHandler { get; private set; }
         public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
         public ExpectingLambdaInfo ExpectingLambda { get; private set; }
-
-        // Do not persist.
         public ITreeContextPart SourceExpression { get; private set; }
 
         // Tail
@@ -42,6 +40,7 @@ namespace Deltin.Deltinteger.Parse
             ContinueHandler = other.ContinueHandler;
             RestrictedCallHandler = other.RestrictedCallHandler;
             ExpectingLambda = other.ExpectingLambda;
+            SourceExpression = other.SourceExpression;
             LocalVariableTracker = other.LocalVariableTracker;
             ResolveInvokeInfo = other.ResolveInvokeInfo;
             AsyncInfo = other.AsyncInfo;
