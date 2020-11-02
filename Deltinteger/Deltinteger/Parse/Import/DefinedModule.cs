@@ -1,13 +1,15 @@
 ﻿using Deltin.Deltinteger;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Deltin.Parse.Import
 {
-    class DefinedModule
+    class DefinedModule : IVariable, IExpression
     {
         string Name { get; }
         List<DefinedModule> Children { get; } = new List<DefinedModule>();
@@ -21,14 +23,28 @@ namespace Deltin.Parse.Import
 
         Scope ModuleScope { get; }
 
+        public CodeType CodeType => NullType.Instance;
+
+        public bool Static => true;
+
+        public bool WholeContext => false;
+
+        string INamed.Name => Name;
+
+        public Deltinteger.LanguageServer.Location DefinedAt { get; }
+
+        //TODO: Public vs private modules
+        public AccessLevel AccessLevel => AccessLevel.Public;
+
         public DefinedModule(ParseInfo parseInfo, Scope scope, RootContext modContext)
         {
             ModuleScope = scope;
+            DefinedAt = new Deltinteger.LanguageServer.Location(parseInfo.Script.Uri, modContext.Name.Range);
 
-            Name = modContext.Name;
+            Name = modContext.Name?.Text;
             foreach(var mod in modContext.Modules)
             {
-                Children.Add(new DefinedModule(parseInfo, ModuleScope.Child(mod.Name), mod));
+                Children.Add(new DefinedModule(parseInfo, ModuleScope.Child(mod.Name?.Text), mod));
             }
             foreach(var rule in modContext.Rules)
             {
@@ -40,25 +56,40 @@ namespace Deltin.Parse.Import
             }
             foreach(var dec in modContext.Declarations)
             {
-                if(dec is MacroFunctionContext macroContext)
+                CodeType type = CodeType.GetCodeTypeFromContext(parseInfo, dec.Type);
+
+                if (dec is MacroFunctionContext macroContext)
                 {
-                    CodeType type = CodeType.GetCodeTypeFromContext(parseInfo, macroContext.Type);
-                    Functions.Add(new DefinedMacro(parseInfo, null, ModuleScope, macroContext, type));
+                    ModuleScope.AddMethod(new DefinedMacro(parseInfo, null, ModuleScope, macroContext, type), parseInfo.Script.Diagnostics, macroContext.Range);
                 } else if(dec is FunctionContext functionContext)
                 {
-                    CodeType type = CodeType.GetCodeTypeFromContext(parseInfo, functionContext.Type);
                     Functions.Add(new DefinedMethod(parseInfo, null, ModuleScope, functionContext, type));
                 } else if(dec is MacroVarDeclaration macroVarDec)
                 {
-                    CodeType type = CodeType.GetCodeTypeFromContext(parseInfo, macroVarDec.Type);
                     Variables.Add(new MacroVar(parseInfo, null, ModuleScope, macroVarDec, type));
                 } else if(dec is VariableDeclaration varDec)
                 {
-                    CodeType type = CodeType.GetCodeTypeFromContext(parseInfo, varDec.Type);
-                    Var var = new Var(new VarInfo(varDec.Identifier.Text, new Deltinteger.LanguageServer.Location(parseInfo.Script.Uri, varDec.Range), parseInfo));
+                    var info = new VarInfo(varDec.Identifier.Text, new Deltinteger.LanguageServer.Location(parseInfo.Script.Uri, varDec.Range), parseInfo);
+                    
+                    Var var = new Var(info);
+                    ModuleScope.AddVariable(var, parseInfo.Script.Diagnostics, varDec.Range);
                     Variables.Add(var);
                 }
             }
+        }
+
+        public Scope ReturningScope() => ModuleScope;
+
+        public CodeType Type() => NullType.Instance;
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            return Type().Parse(actionSet);
+        }
+
+        public CompletionItem GetCompletion()
+        {
+            throw new NotImplementedException();
         }
     }
 }

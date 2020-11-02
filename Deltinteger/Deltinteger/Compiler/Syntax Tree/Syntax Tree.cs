@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
 
-        public string Name;
+        public Token Name;
 
         public List<RootContext> Modules { get; } = new List<RootContext>();
         public List<Hook> Hooks { get; } = new List<Hook>();

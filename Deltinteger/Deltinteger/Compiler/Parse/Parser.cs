@@ -1522,7 +1522,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var attributes = ParseAttributes();
 
             ParseExpected(TokenType.Module);
-            var name = ParseExpected(TokenType.Identifier)?.Text;
+            var name = ParseExpected(TokenType.Identifier);
             var context = new RootContext();
             context.Name = name;
             ParseExpected(TokenType.CurlyBracket_Open);

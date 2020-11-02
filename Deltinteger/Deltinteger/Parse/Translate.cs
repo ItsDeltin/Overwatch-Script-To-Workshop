@@ -128,6 +128,7 @@ namespace Deltin.Deltinteger.Parse
             //     }
             // }
 
+
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var enumContext in script.Context.Enums)
@@ -178,11 +179,13 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            foreach(ScriptFile script in Importer.ScriptFiles)
-            foreach(var modContext in script.Context.Modules)
-            {
-                    modules.Add(new DefinedModule(new ParseInfo(script, this), GlobalScope.Child(modContext.Name), modContext));
-            }
+            foreach (ScriptFile script in Importer.ScriptFiles)
+                foreach (var modContext in script.Context.Modules)
+                {
+                    var module = new DefinedModule(new ParseInfo(script, this), GlobalScope.Child(), modContext);
+
+                    GlobalScope.AddVariable(module, script.Diagnostics, modContext.Name.Range);
+                }
 
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
             foreach (var apply in _applyBlocks) apply.SetupParameters();
