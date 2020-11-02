@@ -12,13 +12,38 @@ namespace Deltin.Deltinteger.Parse
         public CodeType ReturnType { get; }
         private readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Resolver;
 
-        public TypeOperation(TypeOperator op, CodeType right, CodeType returnType = null, Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> resolver = null)
+        public TypeOperation(ITypeSupplier supplier, TypeOperator op, CodeType right)
         {
             Operator = op;
             Right = right ?? throw new ArgumentNullException(nameof(right));
-            ReturnType = returnType ?? DefaultTypeFromOperator(op);
-            Resolver = resolver ?? DefaultFromOperator(op);
+            ReturnType = DefaultTypeFromOperator(op, supplier);
+            Resolver = DefaultFromOperator(op);
         }
+
+        public TypeOperation(TypeOperator op, CodeType right, CodeType returnType)
+        {
+            Operator = op;
+            Right = right ?? throw new ArgumentNullException(nameof(right));
+            ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
+            Resolver = DefaultFromOperator(op);
+        }
+
+        public TypeOperation(ITypeSupplier supplier, TypeOperator op, CodeType right, Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> resolver)
+        {
+            Operator = op;
+            Right = right ?? throw new ArgumentNullException(nameof(right));
+            ReturnType = DefaultTypeFromOperator(op, supplier);
+            Resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+        }
+
+        public TypeOperation(TypeOperator op, CodeType right, CodeType returnType, Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> resolver)
+        {
+            Operator = op;
+            Right = right ?? throw new ArgumentNullException(nameof(right));
+            ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
+            Resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+        }
+
 
         public IWorkshopTree Resolve(IWorkshopTree left, IWorkshopTree right) => Resolver.Invoke(left, right);
 
@@ -44,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public static CodeType DefaultTypeFromOperator(TypeOperator op)
+        public static CodeType DefaultTypeFromOperator(TypeOperator op, ITypeSupplier supplier)
         {
             switch (op)
             {
@@ -56,7 +81,7 @@ namespace Deltin.Deltinteger.Parse
                 case TypeOperator.GreaterThanOrEqual:
                 case TypeOperator.LessThan:
                 case TypeOperator.LessThanOrEqual:
-                    return BooleanType.Instance;
+                    return supplier.Boolean();
 
                 case TypeOperator.Add:
                 case TypeOperator.Divide:
@@ -64,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
                 case TypeOperator.Multiply:
                 case TypeOperator.Pow:
                 case TypeOperator.Subtract:
-                    return NumberType.Instance;
+                    return supplier.Number();
 
                 default: throw new NotImplementedException(op.ToString());
             }

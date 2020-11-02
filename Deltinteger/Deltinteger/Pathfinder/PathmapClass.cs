@@ -25,6 +25,8 @@ namespace Deltin.Deltinteger.Pathfinder
         private HookVar IsNodeReachedDeterminer;
         private HookVar ApplicableNodeDeterminer;
 
+        private ITypeSupplier _supplier => DeltinScript.Types;
+
         public PathmapClass(DeltinScript deltinScript) : base("Pathmap")
         {
             DeltinScript = deltinScript;
@@ -93,7 +95,7 @@ namespace Deltin.Deltinteger.Pathfinder
             OnPathCompleted.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player completes a pathfind. By default, it will stop throttling the player and call ").Code("StopPathfind(EventPlayer())").Add(", hooking will override this.")
                 .NewLine().Add("Call ").Code("EventPlayer()").Add(" to get the player that completed the path."));
             // The condition to use to determine if a node was reached.
-            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(DeltinScript.Types.Boolean(), new CodeType[] {VectorType.Instance}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
+            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(DeltinScript.Types.Boolean(), new CodeType[] {_supplier.Vector()}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
             IsNodeReachedDeterminer.Documentation = AddHookInfo(new MarkupBuilder()
                 .Add("The condition that is used to determine if a player reached the current node. The given value is the position of the next node. The returned value should be a boolean determining if the player reached the node they are walking towards.")
                 .NewLine()
@@ -101,7 +103,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 .NewSection()
                 .Add("By default, it will return true when the player is less than or equal to " + ResolveInfoComponent.DefaultMoveToNext + " meters away from the next node."));
             // The condition to use to determine the closest node to a player.
-            ApplicableNodeDeterminer = new HookVar("ApplicableNodeDeterminer", new ValueBlockLambda(DeltinScript.Types.Number(), new CodeType[] { new ArrayType(DeltinScript.Types, VectorType.Instance), VectorType.Instance }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.ApplicableNodeDeterminer = (LambdaAction)userLambda));
+            ApplicableNodeDeterminer = new HookVar("ApplicableNodeDeterminer", new ValueBlockLambda(DeltinScript.Types.Number(), new CodeType[] { new ArrayType(DeltinScript.Types, _supplier.Vector()), _supplier.Vector() }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.ApplicableNodeDeterminer = (LambdaAction)userLambda));
             ApplicableNodeDeterminer.Documentation = AddHookInfo(new MarkupBuilder()
                 .Add("Gets a node that is relevent to the specified position. Hooking this will change how OSTW generated rules will get the node. By default, it will return the node that is closest to the specified position.")
                 .NewLine()
@@ -123,7 +125,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             NodesVar = new InternalVar("Nodes") {
                 Documentation = "The nodes of the pathmap.",
-                CodeType = new ArrayType(DeltinScript.Types, VectorType.Instance)
+                CodeType = new ArrayType(DeltinScript.Types, _supplier.Vector())
             };
             SegmentsVar = new InternalVar("Segments") {
                 Documentation = "The segments of the pathmap. These segments connect the nodes together.",
@@ -131,7 +133,7 @@ namespace Deltin.Deltinteger.Pathfinder
             };
             AttributesVar = new InternalVar("Attributes") {
                 Documentation = "The attributes of the pathmap. The X of a value in the array is the first node that the attribute is related to. The Y is the second node the attribute is related to. The Z is the attribute's actual value.",
-                CodeType = new ArrayType(DeltinScript.Types, VectorType.Instance)
+                CodeType = new ArrayType(DeltinScript.Types, _supplier.Vector())
             };
             serveObjectScope.AddNativeVariable(NodesVar);
             serveObjectScope.AddNativeVariable(SegmentsVar);
@@ -397,7 +399,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to place the new node.")
             },
-            ReturnType = NumberType.Instance,
+            ReturnType = _supplier.Number(),
             Action = (actionSet, methodCall) => {
                 // Some nodes may be null
                 if (actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes)
@@ -458,7 +460,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("node_a", "The first node of the segment."),
                 new CodeParameter("node_b", "The second node of the segment.")
             },
-            ReturnType = NumberType.Instance,
+            ReturnType = _supplier.Number(),
             Action = (actionSet, methodCall) => {                
                 Element segmentData = Element.Vector((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1], Element.Num(0));
                 
@@ -492,7 +494,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("node_b", "The secondary node."),
                 new CodeParameter("attribute", "The attribute value. Should be any number.")
             },
-            ReturnType = NumberType.Instance,
+            ReturnType = _supplier.Number(),
             Action = (actionSet, methodCall) => {
                 actionSet.AddAction(Attributes.ModifyVariable(Operation.AppendToArray, Element.Vector(
                     methodCall.ParameterValues[0],
@@ -604,7 +606,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to get the current segment attribute of.")
             },
-            ReturnType = new ArrayType(DeltinScript.Types, NumberType.Instance),
+            ReturnType = new ArrayType(DeltinScript.Types, _supplier.Number()),
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentAttribute.Get((Element)methodCall.ParameterValues[0])
         };
 
@@ -649,7 +651,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to get the next position of.")
             },
-            ReturnType = VectorType.Instance,
+            ReturnType = _supplier.Vector(),
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentPositionWithDestination((Element)methodCall.ParameterValues[0])
         };
 
@@ -660,7 +662,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to get the next node of.")
             },
-            ReturnType = NumberType.Instance,
+            ReturnType = _supplier.Number(),
             Action = (actionSet, methodCall) => Comp(actionSet).Current.Get(methodCall.Get(0))
         };
 

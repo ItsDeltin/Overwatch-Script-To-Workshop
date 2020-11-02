@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
         public string Value { get; private set; }
         public bool Localized { get; private set; }
         public IExpression[] FormatParameters { get; }
-        private IStringParse String;
+        private IStringParse _string;
 
         public StringAction(ParseInfo parseInfo, Scope scope, StringExpression stringContext)
         {
@@ -53,17 +53,17 @@ namespace Deltin.Deltinteger.Parse
 
         private void ParseString()
         {
-            String = GetCachedString(Value, Localized);
-            if (String == null)
+            _string = GetCachedString(Value, Localized);
+            if (_string == null)
             {
                 try
                 {
                     if (!Localized)
-                        String = CustomStringGroup.ParseCustomString(Value, FormatParameters.Length);
+                        _string = CustomStringGroup.ParseCustomString(Value, FormatParameters.Length);
                     else
-                        String = LocalizedString.ParseLocalizedString(Value, 0, Value, FormatParameters.Length);
+                        _string = LocalizedString.ParseLocalizedString(Value, 0, Value, FormatParameters.Length);
                     
-                    lock (_cacheLock) _cache.Add(String);
+                    lock (_cacheLock) _cache.Add(_string);
                 }
                 catch (StringParseFailedException ex)
                 {
@@ -81,12 +81,12 @@ namespace Deltin.Deltinteger.Parse
                     }
                 }
             }
-            _parseInfo.TranslateInfo.GetComponent<StringSaverComponent>().Strings.Add(String);
+            _parseInfo.TranslateInfo.GetComponent<StringSaverComponent>().Strings.Add(_string);
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => StringType.Instance;
-        public IWorkshopTree Parse(ActionSet actionSet) => String.Parse(actionSet, FormatParameters.Select(fp => fp.Parse(actionSet)).ToArray());
+        public CodeType Type() => _parseInfo.TranslateInfo.Types.String();
+        public IWorkshopTree Parse(ActionSet actionSet) => _string.Parse(actionSet, FormatParameters.Select(fp => fp.Parse(actionSet)).ToArray());
 
         private static readonly object _cacheLock = new object();
         private static readonly List<IStringParse> _cache = new List<IStringParse>();

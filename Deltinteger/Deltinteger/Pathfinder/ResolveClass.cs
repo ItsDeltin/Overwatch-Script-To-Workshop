@@ -12,8 +12,11 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <summary>A vector determining the destination.</summary>
         public ObjectVariable Destination { get; private set; }
 
-        public PathResolveClass() : base("PathResolve")
+        private readonly ITypeSupplier _supplier;
+
+        public PathResolveClass(ITypeSupplier supplier) : base("PathResolve")
         {
+            _supplier = supplier;
         }
 
         public override void ResolveElements()
@@ -58,7 +61,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("node", new MarkupBuilder().Add("The index of the node from the ").Code("PathResolve.OriginMap.Nodes").Add(" array.").ToString())
             },
-            ReturnType = NumberType.Instance,
+            ReturnType = _supplier.Number(),
             Action = (actionSet, methodCall) => ParentArray.Get(actionSet)[(Element)methodCall.ParameterValues[0]] - 1
         };
     }

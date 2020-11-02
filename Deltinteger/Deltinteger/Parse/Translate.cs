@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
 
             Types.GetDefaults(this);
 
-            GlobalScope = Scope.GetGlobalScope(Types);
+            GlobalScope = Scope.GetGlobalScope(this);
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
 
@@ -316,26 +316,48 @@ namespace Deltin.Deltinteger.Parse
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
         public List<CodeType> CalledTypes { get; } = new List<CodeType>();
         private readonly PlayerType _playerType;
+        private readonly VectorType _vectorType;
+        private readonly NumberType _numberType;
+        private readonly StringType _stringType;
 
         public ScriptTypes()
         {
-            _playerType = new PlayerType();
+            _playerType = new PlayerType(this);
+            _vectorType = new VectorType(this);
+            _numberType = new NumberType(this);
+            _stringType = new StringType(this);
         }
 
         public void GetDefaults(DeltinScript deltinScript)
         {
             var dynamicType = new DynamicType(deltinScript);
-            AllTypes.Add(_playerType);
-            AllTypes.AddRange(CodeType.DefaultTypes);
-            AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
-            AllTypes.Add(new Pathfinder.PathResolveClass());
-            AllTypes.Add(dynamicType);
-            AllTypes.Add(new Lambda.ValueBlockLambda(dynamicType));
-            AllTypes.Add(new Lambda.MacroLambda(dynamicType));
+            AddType(dynamicType);
+            AddType(_playerType);
+            AddType(_vectorType);
+            AddType(_numberType);
+            AddType(_stringType);
+            AddType(BooleanType.Instance);
+            AddType(TeamType.Instance);
+            AddType(Positionable.Instance);
+            AddType(Pathfinder.SegmentsStruct.Instance);
+            // Pathfinder classes
+            AddType(new Pathfinder.PathmapClass(deltinScript));
+            AddType(new Pathfinder.PathResolveClass(this));
+            // Constant lambda types.
+            AddType(new Lambda.BlockLambda(dynamicType));
+            AddType(new Lambda.ValueBlockLambda(dynamicType));
+            AddType(new Lambda.MacroLambda(dynamicType));
+            // Model static class.
+            // AddType(new Models.AssetClass());
 
-            _playerType.ResolveElements();
+            foreach (var type in AllTypes)
+                if (type is IResolveElements resolveElements)
+                    resolveElements.ResolveElements();
+
             deltinScript.PlayerVariableScope = _playerType.ObjectScope;
         }
+
+        private void AddType(CodeType type) => AllTypes.Add(type);
 
         public CodeType GetCodeType(string name) => AllTypes.FirstOrDefault(type => type.Name == name);
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
@@ -347,10 +369,7 @@ namespace Deltin.Deltinteger.Parse
             
             return type;
         }
-        public bool IsCodeType(string name)
-        {
-            return GetCodeType(name, null, null) != null;
-        }
+        public bool IsCodeType(string name) => GetCodeType(name, null, null) != null;
         public T GetCodeType<T>() where T: CodeType => (T)AllTypes.FirstOrDefault(type => type.GetType() == typeof(T));
 
         public void CallType(CodeType type)
@@ -381,7 +400,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Player() => _playerType;
         public CodeType Players() => new PipeType(_playerType, PlayerArray());
         public CodeType PlayerArray() => new ArrayType(this, _playerType);
-        public CodeType Vector() => VectorType.Instance;
+        public CodeType Vector() => _vectorType;
         public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         public CodeType Button() => Any(); // TODO
     }

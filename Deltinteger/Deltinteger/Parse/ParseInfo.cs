@@ -139,7 +139,7 @@ namespace Deltin.Deltinteger.Parse
 
             switch (exprContext)
             {
-                case NumberExpression number: return new NumberAction(Script, number);
+                case NumberExpression number: return new NumberAction(this, number);
                 case BooleanExpression boolean: return new BoolAction(Script, boolean.Value);
                 case NullExpression @null: return new NullAction();
                 case StringExpression @string: return new StringAction(this, scope, @string);

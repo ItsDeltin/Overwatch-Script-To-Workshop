@@ -16,14 +16,16 @@ namespace Deltin.Deltinteger.Parse
     public class NumberAction : IExpression
     {
         public double Value { get; }
+        private readonly CodeType _type;
 
-        public NumberAction(ScriptFile script, NumberExpression numberContext)
+        public NumberAction(ParseInfo parseInfo, NumberExpression numberContext)
         {
             Value = numberContext.Value;
+            _type = parseInfo.TranslateInfo.Types.Number();
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => NumberType.Instance;
+        public CodeType Type() => _type;
         public IWorkshopTree Parse(ActionSet actionSet) => Element.Num(Value);
     }
 

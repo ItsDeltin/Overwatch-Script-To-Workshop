@@ -1,7 +1,5 @@
 using System;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.CustomMethods;
 using Deltin.Deltinteger.Parse.Lambda;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -35,50 +33,50 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the specified array with any values that do not match the specified condition removed.",
                 ReturnType = this,
                 ArrayOfType = ArrayOfType,
-                FuncType = BooleanType.Instance,
+                FuncType = supplier.Boolean(),
                 ParameterDocumentation = "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array."
-            }.Add("Filtered Array", Scope);
+            }.Add("Filtered Array", Scope, supplier);
             // Sorted Array
             new GenericSortFunction() {
                 Name = "SortedArray",
                 Documentation = "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.",
                 ReturnType = this,
                 ArrayOfType = ArrayOfType,
-                FuncType = BooleanType.Instance,
+                FuncType = supplier.Boolean(),
                 ParameterDocumentation = "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order."
-            }.Add("Sorted Array", Scope);
+            }.Add("Sorted Array", Scope, supplier);
             // Is True For Any
             new GenericSortFunction() {
                 Name = "IsTrueForAny",
                 Documentation = "Whether the specified condition evaluates to true for any value in the specified array.",
-                ReturnType = BooleanType.Instance,
+                ReturnType = supplier.Boolean(),
                 ArrayOfType = ArrayOfType,
-                FuncType = BooleanType.Instance,
+                FuncType = supplier.Boolean(),
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
-            }.Add("Is True For Any", Scope);
+            }.Add("Is True For Any", Scope, supplier);
             // Is True For All
             new GenericSortFunction() {
                 Name = "IsTrueForAll",
                 Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
-                ReturnType = BooleanType.Instance,
+                ReturnType = supplier.Boolean(),
                 ArrayOfType = ArrayOfType,
-                FuncType = BooleanType.Instance,
+                FuncType = supplier.Boolean(),
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
-            }.Add("Is True For All", Scope);
+            }.Add("Is True For All", Scope, supplier);
             // Mapped
             new GenericSortFunction() {
                 Name = "Map",
                 Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
-                ReturnType = ObjectType.Instance,
+                ReturnType = supplier.Any(),
                 ArrayOfType = ArrayOfType,
                 FuncType = supplier.Any(),
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
-            }.Add("Mapped Array", Scope);
+            }.Add("Mapped Array", Scope, supplier);
             // Contains
             Func(new FuncMethodBuilder() {
                 Name = "Contains",
                 Documentation = "Wether the array contains the specified value.",
-                ReturnType = BooleanType.Instance,
+                ReturnType = supplier.Boolean(),
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value that is being looked for in the array.", ArrayOfType)
                 },
@@ -133,7 +131,7 @@ namespace Deltin.Deltinteger.Parse
             Func(new FuncMethodBuilder() {
                 Name = "IndexOf",
                 Documentation = "The index of a value within an array or -1 if no such value can be found.",
-                ReturnType = NumberType.Instance,
+                ReturnType = supplier.Number(),
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value for which to search.")
                 },
@@ -179,7 +177,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType ArrayOfType;
         public CodeType FuncType;
 
-        public void Add(string function, Scope addToScope)
+        public void Add(string function, Scope addToScope, ITypeSupplier supplier)
         {
             // value => ...
             var noIndex = GetFuncMethod();
@@ -192,7 +190,7 @@ namespace Deltin.Deltinteger.Parse
             // (value, index) => ...
             var withIndex = GetFuncMethod();
             withIndex.Parameters = new CodeParameter[] {
-                new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(FuncType, ArrayOfType, NumberType.Instance))
+                new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(FuncType, ArrayOfType, supplier.Number()))
             };
             withIndex.Action = (actionSet, methodCall) =>
                 Element.Part(function, actionSet.CurrentObject, ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, Element.ArrayElement(), Element.ArrayIndex()));

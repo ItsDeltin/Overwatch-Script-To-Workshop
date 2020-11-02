@@ -4,20 +4,21 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class StringType : CodeType, IInitOperations
+    public class StringType : CodeType, IResolveElements
     {
-        public static readonly StringType Instance = new StringType();
+        private readonly ITypeSupplier _typeSupplier;
 
-        private StringType() : base("String")
+        public StringType(ITypeSupplier typeSupplier) : base("String")
         {
+            _typeSupplier = typeSupplier;
             CanBeExtended = false;
-            Inherit(ObjectType.Instance, null, null);
+            // Inherit(ObjectType.Instance, null, null);
         }
 
-        public void InitOperations()
+        public void ResolveElements()
         {
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.Add, ObjectType.Instance, this, (l, r) => new StringElement("{0}{1}", l, r))
+                new TypeOperation(TypeOperator.Add, _typeSupplier.Any(), this, (l, r) => new StringElement("{0}{1}", l, r))
             };
         }
 

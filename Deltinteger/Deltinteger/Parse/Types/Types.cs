@@ -168,7 +168,7 @@ namespace Deltin.Deltinteger.Parse
             if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
             
             CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
-            if (type == null) return ObjectType.Instance; // TODO: ???
+            if (type == null) return parseInfo.TranslateInfo.Types.Any();
 
             // Get generics
             if (typeContext.HasTypeArgs)
@@ -237,34 +237,6 @@ namespace Deltin.Deltinteger.Parse
             var left = GetCodeTypeFromContext(parseInfo, type.Left);
             var right = GetCodeTypeFromContext(parseInfo, type.Right);
             return new PipeType(left, right);
-        }
-
-        static List<CodeType> _defaultTypes;
-        public static List<CodeType> DefaultTypes {
-            get {
-                if (_defaultTypes == null) GetDefaultTypes();
-                return _defaultTypes;
-            }
-        }
-        private static void GetDefaultTypes()
-        {
-            _defaultTypes = new List<CodeType>();
-            _defaultTypes.AddRange(ValueGroupType.EnumTypes);
-
-            // Add custom classes here.
-            _defaultTypes.Add(new Models.AssetClass());
-            _defaultTypes.Add(ObjectType.Instance);
-            _defaultTypes.Add(NumberType.Instance);
-            _defaultTypes.Add(BooleanType.Instance);
-            _defaultTypes.Add(TeamType.Instance);
-            _defaultTypes.Add(VectorType.Instance);
-            _defaultTypes.Add(StringType.Instance);
-            _defaultTypes.Add(Positionable.Instance);
-            _defaultTypes.Add(Pathfinder.SegmentsStruct.Instance);
-            ObjectType.Instance.InitOperations();
-            NumberType.Instance.InitOperations();
-            VectorType.Instance.InitOperations();
-            StringType.Instance.InitOperations();
         }
     }
 }

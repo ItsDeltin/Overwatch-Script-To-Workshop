@@ -35,9 +35,6 @@ namespace Deltin.Deltinteger.CustomMethods
 				case nameof(TeamType):
 					ReturnType = TeamType.Instance;
 					break;
-				case nameof(ObjectType):
-					ReturnType = ObjectType.Instance;
-					break;
 				case nameof(Pathfinder.SegmentsStruct):
 					ReturnType = Pathfinder.SegmentsStruct.Instance;
 					break;
