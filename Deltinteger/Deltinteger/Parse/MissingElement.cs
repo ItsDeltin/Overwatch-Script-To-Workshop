@@ -13,10 +13,11 @@ namespace Deltin.Deltinteger.Parse
             _type = deltinScript.Types.Any();
         }
 
+        private MissingElementAction() {}
+
         public Scope ReturningScope() => null;
         public CodeType Type() => _type;
         public bool IsStatement() => true;
-        public bool ExpressionErrorHandled() => true;
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) {}
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
         public void Translate(ActionSet actionSet) => throw new NotImplementedException();
@@ -37,6 +38,7 @@ namespace Deltin.Deltinteger.Parse
             CodeType = deltinScript.Types.Any();
         }
 
+        public bool IsStatement() => true;
         public Scope ReturningScope() => null;
         public CodeType Type() => CodeType;
         public CompletionItem GetCompletion() => throw new NotImplementedException();

@@ -40,13 +40,15 @@ namespace Deltin.Deltinteger.Parse
             OptimizeOutput = translateSettings.OptimizeOutput;
 
             Types = new ScriptTypes(this);
-            GlobalScope = Scope.GetGlobalScope(Types);
+            Types.GetDefaults();
+            GlobalScope = Scope.GetGlobalScope(this);
+
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
             Types.AddTypesToScope(GlobalScope);
 
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(translateSettings.Root);            
+            Importer.CollectScriptFiles(translateSettings.Root);
             
             Translate();
             if (!Diagnostics.ContainsErrors())
@@ -332,24 +334,50 @@ namespace Deltin.Deltinteger.Parse
         public List<ICodeTypeInitializer> AllTypes { get; } = new List<ICodeTypeInitializer>();
         public List<ICodeTypeInitializer> DefinedTypes { get; } = new List<ICodeTypeInitializer>();
         private readonly PlayerType _playerType;
+        private readonly VectorType _vectorType;
+        private readonly NumberType _numberType;
+        private readonly StringType _stringType;
 
         public ScriptTypes(DeltinScript deltinScript)
         {
             _deltinScript = deltinScript;
-            _playerType = new PlayerType();
+            _playerType = new PlayerType(this);
+            _vectorType = new VectorType(this);
+            _numberType = new NumberType(this);
+            _stringType = new StringType(this);
+        }
 
+        public void GetDefaults()
+        {
             var dynamicType = new DynamicType(_deltinScript);
-            AllTypes.Add(new GenericCodeTypeInitializer(_playerType));
-            AllTypes.AddRange(CodeType.DefaultTypes.Select(t => new GenericCodeTypeInitializer(t)));
-            AllTypes.Add(new Pathfinder.PathmapClass(_deltinScript));
-            AllTypes.Add(new Pathfinder.PathResolveClass());
-            AllTypes.Add(new GenericCodeTypeInitializer(dynamicType));
-            AllTypes.Add(new GenericCodeTypeInitializer(new Lambda.ValueBlockLambda(dynamicType)));
-            AllTypes.Add(new GenericCodeTypeInitializer(new Lambda.MacroLambda(dynamicType)));
+            AddType(dynamicType);
+            AddType(_playerType);
+            AddType(_vectorType);
+            AddType(_numberType);
+            AddType(_stringType);
+            AddType(BooleanType.Instance);
+            AddType(TeamType.Instance);
+            AddType(Positionable.Instance);
+            AddType(Pathfinder.SegmentsStruct.Instance);
+            // Pathfinder classes
+            AddType(new Pathfinder.PathmapClass(_deltinScript));
+            AddType(new Pathfinder.PathResolveClass(this));
+            // Constant lambda types.
+            AddType(new Lambda.BlockLambda(dynamicType));
+            AddType(new Lambda.ValueBlockLambda(dynamicType));
+            AddType(new Lambda.MacroLambda(dynamicType));
+            // Model static class.
+            // AddType(new Models.AssetClass());
 
-            _playerType.ResolveElements();
+            foreach (var type in AllTypes)
+                if (type is IResolveElements resolveElements)
+                    resolveElements.ResolveElements();
+
             _deltinScript.PlayerVariableScope = _playerType.ObjectScope;
         }
+
+        private void AddType(CodeType type) => AllTypes.Add(new GenericCodeTypeInitializer(type));
+        private void AddType(ICodeTypeInitializer initializer) => AllTypes.Add(initializer);
 
         public void AddTypesToScope(Scope scope)
         {
@@ -381,7 +409,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Player() => _playerType;
         public CodeType Players() => new PipeType(_playerType, PlayerArray());
         public CodeType PlayerArray() => new ArrayType(this, _playerType);
-        public CodeType Vector() => VectorType.Instance;
+        public CodeType Vector() => _vectorType;
         public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         public CodeType Button() => Any(); // TODO
     }

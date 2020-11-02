@@ -35,6 +35,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Token NextToken(Token token) => Document.Lexer.Tokens[Document.Lexer.Tokens.IndexOf(token) + 1];
+        public bool IsTokenLast(Token token) => Document.Lexer.Tokens.Count - 1 == Document.Lexer.Tokens.IndexOf(token);
 
         public Location GetLocation(DocRange range) => new Location(Uri, range);
 

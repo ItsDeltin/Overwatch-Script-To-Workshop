@@ -3,7 +3,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DynamicType : CodeType
+    public class DynamicType : CodeType, IResolveElements
     {
         private readonly DeltinScript _deltinScript;
 
@@ -12,16 +12,19 @@ namespace Deltin.Deltinteger.Parse
             CanBeDeleted = true;
             CanBeExtended = false;
             _deltinScript = deltinScript;
+        }
 
+        public void ResolveElements()
+        {
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.Equal, this),
-                new TypeOperation(TypeOperator.NotEqual, this),
-                new TypeOperation(TypeOperator.GreaterThan, this),
-                new TypeOperation(TypeOperator.GreaterThanOrEqual, this),
-                new TypeOperation(TypeOperator.LessThan, this),
-                new TypeOperation(TypeOperator.LessThanOrEqual, this),
-                new TypeOperation(TypeOperator.And, this),
-                new TypeOperation(TypeOperator.Or, this),
+                new TypeOperation(_deltinScript.Types, TypeOperator.Equal, this),
+                new TypeOperation(_deltinScript.Types, TypeOperator.NotEqual, this),
+                new TypeOperation(_deltinScript.Types, TypeOperator.GreaterThan, this),
+                new TypeOperation(_deltinScript.Types, TypeOperator.GreaterThanOrEqual, this),
+                new TypeOperation(_deltinScript.Types, TypeOperator.LessThan, this),
+                new TypeOperation(_deltinScript.Types, TypeOperator.LessThanOrEqual, this),
+                new TypeOperation(_deltinScript.Types, TypeOperator.And, this),
+                new TypeOperation(_deltinScript.Types, TypeOperator.Or, this),
                 
                 new TypeOperation(TypeOperator.Add, this, this),
                 new TypeOperation(TypeOperator.Divide, this, this),

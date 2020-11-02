@@ -4,7 +4,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("AngleOfVectors", "Gets the angle of 3 vectors in 3d space.", CustomMethodType.MultiAction_Value)]
+    [CustomMethod("AngleOfVectors", "Gets the angle of 3 vectors in 3d space.", CustomMethodType.MultiAction_Value, typeof(NumberType))]
     class AngleOfVectors : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {

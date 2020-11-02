@@ -131,7 +131,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public IndexReference Assign(Var var, bool isGlobal)
+        public IndexReference Assign(IIndexReferencer var, bool isGlobal)
         {
             // variableIsGlobal will equal isGlobal if var.VariableType is dynamic. Otherwise, it will equal is var.VariableType global.
             bool variableIsGlobal = var.VariableType == VariableType.Dynamic ? isGlobal : var.VariableType == VariableType.Global;

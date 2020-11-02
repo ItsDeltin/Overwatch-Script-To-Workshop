@@ -108,11 +108,44 @@ namespace Deltin.Deltinteger.Parse
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             StringAction str = value as StringAction;
-            if (str == null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
+            if (str == null && valueRange != null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
             return str?.Value;
         }
 
         public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
+    }
+
+    class ConstHeroParameter : CodeParameter
+    {
+        public ConstHeroParameter(string name, string documentation) : base(name, documentation) {}
+
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        {
+            // ConstantExpressionResolver.Resolve's callback will be called after this function runs,
+            // so we store the value in an object reference whose value will be set later.
+            var promise = new ConstHeroValueResolver();
+
+            // Resolve the expression.
+            ConstantExpressionResolver.Resolve(value, expr => {
+                // If the resulting expression is an EnumValuePair and the EnumValuePair's enum is Hero,
+                if (expr is CallVariableAction call && call.Calling is EnumValuePair pair && pair.Member.Enum.Name == "Hero")
+                    // Resolve the value.
+                    promise.Resolve(pair.Member.Name);
+                // Otherwise, add an error.
+                else if (valueRange != null)
+                    parseInfo.Script.Diagnostics.Error("Expected hero constant", valueRange);
+            });
+
+            return promise;
+        }
+
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
+    }
+
+    class ConstHeroValueResolver
+    {
+        public string Hero { get; private set; }
+        public void Resolve(string hero) => Hero = hero;
     }
 
     class FileParameter : CodeParameter

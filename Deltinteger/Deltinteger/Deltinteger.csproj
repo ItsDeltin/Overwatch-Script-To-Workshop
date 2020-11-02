@@ -35,7 +35,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Custom Methods/Old/**"/>
+    <Compile Remove="Custom Methods/**"/>
+    <Compile Remove="Models/**"/>
+    <Compile Include="Models/Vertex.cs"/>
     <Compile Remove="Pathfinder/Old_Methods.cs"/>
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("Pi", "Represents the ratio of the circumference of a circle to its diameter, specified by the constant π. Equal to `3.1415926535897931`.", CustomMethodType.Value)]
+    [CustomMethod("Pi", "Represents the ratio of the circumference of a circle to its diameter, specified by the constant π. Equal to `3.1415926535897931`.", CustomMethodType.Value, typeof(NumberType))]
     class Pi : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => null;

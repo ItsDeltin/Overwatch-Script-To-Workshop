@@ -253,7 +253,7 @@ namespace Deltin.Deltinteger.Parse
             else RawContinue = true;
 
             // Get the block.
-            Block = parseInfo.GetStatement(varScope, forContext.Block);
+            Block = parseInfo.SetLoop(this).GetStatement(varScope, forContext.Block);
             // Get the path info.
             Path = new PathInfo(Block, forContext.Range, false);
         }

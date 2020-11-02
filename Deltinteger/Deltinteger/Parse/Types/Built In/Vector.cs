@@ -1,15 +1,10 @@
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.CustomMethods;
-using Deltin.Deltinteger.LanguageServer;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class VectorType : CodeType, IInitOperations
+    public class VectorType : CodeType, IResolveElements
     {
-        public static VectorType Instance { get; } = new VectorType();
-
         private Scope objectScope = new Scope("Vector");
         private Scope staticScope = new Scope("Vector");
 
@@ -22,13 +17,16 @@ namespace Deltin.Deltinteger.Parse
 
         private InternalVar Zero;
 
-        public VectorType() : base("Vector")
+        private readonly ITypeSupplier _typeSupplier;
+
+        public VectorType(ITypeSupplier supplier) : base("Vector")
         {
             CanBeDeleted = false;
             CanBeExtended = false;
             Kind = "struct";
             Inherit(Positionable.Instance, null, null);
             TokenType = TokenType.Struct;
+            _typeSupplier = supplier;
         }
 
         public void ResolveElements()
@@ -51,17 +49,14 @@ namespace Deltin.Deltinteger.Parse
             objectScope.AddNativeMethod(Towards);
             objectScope.AddNativeMethod(AsLocalVector);
             objectScope.AddNativeMethod(AsWorldVector);
-        }
 
-        public void InitOperations()
-        {
             Operations = new TypeOperation[] {
                 new TypeOperation(TypeOperator.Add, this, this), // Vector + vector
                 new TypeOperation(TypeOperator.Subtract, this, this), // Vector - vector
                 new TypeOperation(TypeOperator.Multiply, this, this), // Vector * vector
                 new TypeOperation(TypeOperator.Divide, this, this), // Vector / vector
-                new TypeOperation(TypeOperator.Multiply, NumberType.Instance, this), // Vector * number
-                new TypeOperation(TypeOperator.Divide, NumberType.Instance, this), // Vector / number
+                new TypeOperation(TypeOperator.Multiply, _typeSupplier.Number(), this), // Vector * number
+                new TypeOperation(TypeOperator.Divide, _typeSupplier.Number(), this), // Vector / number
             };
         }
 
@@ -107,62 +102,62 @@ namespace Deltin.Deltinteger.Parse
             Kind = CompletionItemKind.Struct
         };
 
-        private static FuncMethod DistanceTo = new FuncMethodBuilder() {
+        private FuncMethod DistanceTo => new FuncMethodBuilder() {
             Name = "DistanceTo",
             Documentation = "Gets the distance between 2 vectors.",
-            ReturnType = NumberType.Instance,
+            ReturnType = _typeSupplier.Number(),
             Parameters = new CodeParameter[] { new CodeParameter("other", "The vector or player to get the distance to.") },
             Action = (ActionSet actionSet, MethodCall call) => Element.DistanceBetween(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod CrossProduct = new FuncMethodBuilder() {
+        private FuncMethod CrossProduct => new FuncMethodBuilder() {
             Name = "CrossProduct",
             Documentation = "The cross product of the specified vector.",
-            ReturnType = Instance,
+            ReturnType = this,
             Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the cross product to.") },
             Action = (ActionSet actionSet, MethodCall call) => Element.CrossProduct(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod DotProduct = new FuncMethodBuilder() {
+        private FuncMethod DotProduct => new FuncMethodBuilder() {
             Name = "DotProduct",
             Documentation = "Returns what amount of one vector goes in the direction of another.",
-            ReturnType = NumberType.Instance,
+            ReturnType = _typeSupplier.Number(),
             Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the dot product to.") },
             Action = (ActionSet actionSet, MethodCall call) => Element.DotProduct(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod Normalize = new FuncMethodBuilder() {
+        private FuncMethod Normalize => new FuncMethodBuilder() {
             Name = "Normalize",
             Documentation = "The unit-length normalization of the vector.",
-            ReturnType = Instance,
+            ReturnType = this,
             Action = (ActionSet actionSet, MethodCall call) => Element.Normalize(actionSet.CurrentObject)
         };
 
-        private static FuncMethod DirectionTowards = new FuncMethodBuilder() {
+        private FuncMethod DirectionTowards => new FuncMethodBuilder() {
             Name = "DirectionTowards",
             Documentation = "The unit-length direction vector to another vector.",
-            ReturnType = Instance,
+            ReturnType = this,
             Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the direction towards.") },
             Action = (ActionSet actionSet, MethodCall call) => Element.DirectionTowards(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod FarthestPlayer = new FuncMethodBuilder() {
+        private FuncMethod FarthestPlayer => new FuncMethodBuilder() {
             Name = "FarthestPlayer",
             Documentation = "The farthest player from the vector, optionally restricted by team.",
-            ReturnType = ObjectType.Instance, // TODO: Switch to player
+            ReturnType = _typeSupplier.Player(),
             Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the farthest player with.", new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Farthest Player From", actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod ClosestPlayer = new FuncMethodBuilder() {
+        private FuncMethod ClosestPlayer => new FuncMethodBuilder() {
             Name = "ClosestPlayer",
             Documentation = "The closest player to the vector, optionally restricted by team.",
-            ReturnType = ObjectType.Instance, // TODO: Switch to player
+            ReturnType = _typeSupplier.Player(),
             Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the closest player with.", new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Closest Player To", actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod IsInLineOfSight = new FuncMethodBuilder() {
+        private FuncMethod IsInLineOfSight => new FuncMethodBuilder() {
             Name = "IsInLineOfSight",
             Documentation = "Whether the vector has line of sight with the specified vector.",
             ReturnType = BooleanType.Instance,
@@ -173,18 +168,18 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Is In Line Of Sight", actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
         };
 
-        private static FuncMethod Towards = new FuncMethodBuilder() {
+        private FuncMethod Towards => new FuncMethodBuilder() {
             Name = "Towards",
             Documentation = "The displacement vector from the vector to another.",
-            ReturnType = Instance,
+            ReturnType = this,
             Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the displacement towards.") },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Vector Towards", actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod AsLocalVector = new FuncMethodBuilder() {
+        private FuncMethod AsLocalVector => new FuncMethodBuilder() {
             Name = "AsLocalVector",
             Documentation = "The vector in local coordinates corresponding to the vector in world coordinates.",
-            ReturnType = Instance,
+            ReturnType = this,
             Parameters = new CodeParameter[] {
                 new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
                 new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", ValueGroupType.GetEnumType("Transformation"))
@@ -192,10 +187,10 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Local Vector Of", actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
         };
 
-        private static FuncMethod AsWorldVector = new FuncMethodBuilder() {
+        private FuncMethod AsWorldVector => new FuncMethodBuilder() {
             Name = "AsWorldVector",
             Documentation = "The vector in world coordinates corresponding to the vector in local coordinates.",
-            ReturnType = Instance,
+            ReturnType = this,
             Parameters = new CodeParameter[] {
                 new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
                 new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", ValueGroupType.GetEnumType("Transformation"))

@@ -83,6 +83,7 @@ namespace Deltin.Deltinteger.Parse
             if (Attributes.Override)
             {
                 IMethod overriding = objectScope.GetMethodOverload(this);
+                Attributes.Overriding = overriding;
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", nameRange);
@@ -144,10 +145,10 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Parses the method.
-        override public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
+        public override IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-            var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(Attributes.AllOverrideOptions().Append(this).Select(op => new DefinedFunctionHandler((DefinedMethod)op)).ToArray()));
+            var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(GetOverrideFunctionHandlers()));
             return controller.Call();
         }
 
@@ -157,39 +158,14 @@ namespace Deltin.Deltinteger.Parse
             if (!IsSubroutine) return null;
             if (SubroutineInfo == null)
             {
-                var builder = new SubroutineBuilder(parseInfo.TranslateInfo, new DefinedSubroutineContext(parseInfo, this));
+                var builder = new SubroutineBuilder(parseInfo.TranslateInfo, new DefinedSubroutineContext(parseInfo, this, GetOverrideFunctionHandlers()));
                 builder.SetupSubroutine();
                 SubroutineInfo = builder.SubroutineInfo;
             }
             return SubroutineInfo;
         }
-
-        public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues, bool recursive)
-        {
-            for (int i = 0; i < ParameterVars.Length; i++)
-            {
-                IGettable indexResult = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
-
-                if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
-                    actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
-
-                foreach (Var virtualParameterOption in VirtualVarGroup(i))
-                    actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
-            }
-        }
-
-        // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.
-        public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues, bool recursive = false)
-        {
-            for (int i = 0; i < parameterVars.Length; i++)
-            {
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
-
-                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference && parameterValues?[i] != null)
-                    actionSet.AddAction(
-                        ((IndexReference)actionSet.IndexAssigner[parameterVars[i]]).SetVariable((Element)parameterValues[i])
-                    );
-            }
-        }
+        
+        private DefinedFunctionHandler[] GetOverrideFunctionHandlers()
+            => Attributes.AllOverrideOptions().Select(op => new DefinedFunctionHandler((DefinedMethod)op, false)).Prepend(new DefinedFunctionHandler(this, true)).ToArray();
     }
 }

@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNode<T>(T node) where T: INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(Lexer.Tokens[TokenRangeStart.Pop()].Range.Start, CurrentOrLast.Range.End);
+                node.Range = new DocRange(TokenAtOrEnd(TokenRangeStart.Pop()).Range.Start, CurrentOrLast.Range.End);
             return node;
         }
 
@@ -394,10 +394,39 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         /// <summary>Parses the current expression. In most cases, 'GetContainExpression' should be called instead.</summary>
         /// <returns>The resulting expression.</returns>
-        public IParseExpression GetExpressionWithArray()
+        public void GetExpressionWithArray()
         {
-            IParseExpression expression = GetSubExpression();
-            return GetArrayAndInvokes(expression);
+            IParseExpression expression;
+            switch (Kind)
+            {
+                // Negative number or unary operator
+                case TokenType.Subtract:
+                    if (IsNumber())
+                    {
+                        expression = ParseNumber();
+                        break;
+                    }
+                    goto case TokenType.Exclamation;
+                
+                // Unary operator
+                case TokenType.Exclamation:
+                    var op = ParseUnaryOperator();
+                    PushOperator(op);
+                    GetExpressionWithArray();
+                    return;
+                
+                // Type cast
+                case TokenType.LessThan:
+                    // Make sure this is actually a type cast and not an operator.
+                    if (IsTypeCast())
+                        ParseTypeCast();
+                    goto default;
+                
+                default:
+                    expression = GetSubExpression();
+                    break;
+            }
+            Operands.Push(GetArrayAndInvokes(expression));
         }
 
         public IParseExpression GetArrayAndInvokes(IParseExpression expression)
@@ -433,19 +462,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             switch (Kind)
             {
-                // Negative number or unary operator
-                case TokenType.Subtract:
-                    if (IsNumber()) return ParseNumber();
-                    goto case TokenType.Exclamation;
-
-                // Unary operator
-                case TokenType.Exclamation:
-                    var op = ParseUnaryOperator();
-                    PushOperator(op);
-                    var value = GetExpressionWithArray();
-                    Operands.Push(value);
-                    return value;
-                
                 // Numbers
                 case TokenType.Number: return ParseNumber();
                 // Booleans
@@ -465,12 +481,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.New: return ParseNew();
                 // Array
                 case TokenType.SquareBracket_Open: return ParseCreateArray();
-                // Type cast
+                // Async
+                case TokenType.Async: return ParseAsync();
+                // Formatted string
                 case TokenType.LessThan:
-                    // Make sure this is actually a type cast and not an operator.
-                    if (IsTypeCast()) return ParseTypeCast();
-                    // Formatted string
-                    else if (Is(TokenType.String, 1) || Is(TokenType.At, 1)) return ParseFormattedString();
+                    // Make sure that the following token is a string.
+                    if (Is(TokenType.String, 1) || Is(TokenType.At, 1)) return ParseFormattedString();
                     goto default;
                 // Other
                 default:
@@ -496,7 +512,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         void GetExpressionWithOperators()
         {
             // Push the expression
-            Operands.Push(GetExpressionWithArray());
+            GetExpressionWithArray();
 
             // Binary operator
             while (TryParseBinaryOperator(out OperatorInfo op))
@@ -1452,7 +1468,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndNode(new ExpressionGroup(expression, left, right));
         }
 
-        IParseExpression ParseTypeCast()
+        void ParseTypeCast()
         {
             DocPos startPosition = Current.Range.Start;
 
@@ -1466,10 +1482,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.GreaterThan);
 
             PushOperator(new TypeCastInfo(type, startPosition));
-
-            var value = GetExpressionWithArray();
-            Operands.Push(value);
-            return value;
         }
 
         StringExpression ParseFormattedString()
@@ -1503,6 +1515,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             return generics;
+        }
+        
+        AsyncContext ParseAsync()
+        {
+            StartNode();
+            var asyncToken = ParseExpected(TokenType.Async);
+            var ignoreIfRunning = ParseOptional(TokenType.Exclamation);
+            var expression = GetContainExpression();
+            return EndNode(new AsyncContext(asyncToken, ignoreIfRunning, expression));
         }
 
         /// <summary>Parses the root of a file.</summary>

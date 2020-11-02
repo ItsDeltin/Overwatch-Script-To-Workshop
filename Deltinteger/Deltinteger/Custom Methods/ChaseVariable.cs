@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("ChaseVariableAtRate", "Gradually modifies the value of a variable at a specific rate.", CustomMethodType.Action)]
+    [CustomMethod("ChaseVariableAtRate", "Gradually modifies the value of a variable at a specific rate.", CustomMethodType.Action, typeof(NullType))]
     public class ChaseVariableAtRate : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.CustomMethods
         }
     }
 
-    [CustomMethod("ChaseVariableOverTime", "Gradually modifies the value of a variable over time.", CustomMethodType.Action)]
+    [CustomMethod("ChaseVariableOverTime", "Gradually modifies the value of a variable over time.", CustomMethodType.Action, typeof(NullType))]
     public class ChaseVariableOverTime : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -81,7 +81,7 @@ namespace Deltin.Deltinteger.CustomMethods
         }
     }
 
-    [CustomMethod("StopChasingVariable", "Stops an in-progress chase of a variable, leaving it at its current value.", CustomMethodType.Action)]
+    [CustomMethod("StopChasingVariable", "Stops an in-progress chase of a variable, leaving it at its current value.", CustomMethodType.Action, typeof(NullType))]
     public class StopChasingVariable : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {

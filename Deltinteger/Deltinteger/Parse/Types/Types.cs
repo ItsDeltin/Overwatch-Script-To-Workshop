@@ -165,33 +165,5 @@ namespace Deltin.Deltinteger.Parse
         public virtual void AddLink(Location location) {}
 
         public virtual void GetRealType(ParseInfo parseInfo, Action<CodeType> callback) => callback(this);
-
-        static List<CodeType> _defaultTypes;
-        public static List<CodeType> DefaultTypes {
-            get {
-                if (_defaultTypes == null) GetDefaultTypes();
-                return _defaultTypes;
-            }
-        }
-        private static void GetDefaultTypes()
-        {
-            _defaultTypes = new List<CodeType>();
-            _defaultTypes.AddRange(ValueGroupType.EnumTypes);
-
-            // Add custom classes here.
-            _defaultTypes.Add(new Models.AssetClass());
-            _defaultTypes.Add(ObjectType.Instance);
-            _defaultTypes.Add(NumberType.Instance);
-            _defaultTypes.Add(BooleanType.Instance);
-            _defaultTypes.Add(TeamType.Instance);
-            _defaultTypes.Add(VectorType.Instance);
-            _defaultTypes.Add(StringType.Instance);
-            _defaultTypes.Add(Positionable.Instance);
-            _defaultTypes.Add(Pathfinder.SegmentsStruct.Instance);
-            ObjectType.Instance.InitOperations();
-            NumberType.Instance.InitOperations();
-            VectorType.Instance.InitOperations();
-            StringType.Instance.InitOperations();
-        }
     }
 }

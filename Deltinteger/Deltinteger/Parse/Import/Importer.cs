@@ -110,6 +110,7 @@ namespace Deltin.Deltinteger.Parse
                         
                         // Get lobby settings.
                         case ".json":
+                        case ".lobby":
                             JObject lobbySettings = null;
 
                             // Make sure the json is in the correct format.

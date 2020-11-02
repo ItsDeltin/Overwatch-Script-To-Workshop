@@ -673,10 +673,10 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Hero", ValueType.Hero)]
     [EnumParameter("Hero", typeof(Hero))]
     [HideElement]
-    public class V_HeroVar : Element {}
+    public class V_HeroValue : Element {}
 
     [ElementData("Hero Icon String", ValueType.Any)]
-    [Parameter("Value", ValueType.String, typeof(V_HeroVar))]
+    [Parameter("Value", ValueType.Hero, typeof(V_HeroValue))]
     public class V_HeroIconString : Element {}
 
     [ElementData("Hero Of", ValueType.Hero)]
@@ -742,7 +742,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Is Button Held", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Button", typeof(Button))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class V_IsButtonHeld : Element {}
 
     [ElementData("Is Communicating", ValueType.Boolean)]
@@ -761,6 +761,10 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Is Communicating Any Voice Line", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_IsCommunicatingAnyVoiceLine : Element {}
+
+    [ElementData("Is Communicating Any Spray", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsCommunicatingAnySpray : Element {}
 
     [ElementData("Is Control Mode Point Locked", ValueType.Boolean)]
     public class V_IsControlModePointLocked : Element {}
@@ -796,7 +800,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsGameInProgress : Element {}
 
     [ElementData("Is Hero Being Played", ValueType.Boolean)]
-    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_IsHeroBeingPlayed : Element {}
 
@@ -1147,7 +1151,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_NumberOfFinalBlows : Element {}
 
     [ElementData("Number Of Heroes", ValueType.Number)]
-    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_NumberOfHeroes : Element {}
 
@@ -1238,8 +1242,8 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("View Angle", ValueType.Number, typeof(V_Number))]
     public class V_PlayersInViewAngle : Element {}
 
-    [ElementData("Players On Hero", ValueType.Players)]
-    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
+    [ElementData("Players On Hero", ValueType.Player)]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_PlayersOnHero : Element {}
 
@@ -1908,11 +1912,12 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsJumping : Element {}
 
     [ElementData("Event Direction", ValueType.Vector)]
-    [Restricted(RestrictedCallType.Knockback)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_EventDirection : Element {}
 
     [ElementData("Button", ValueType.Button)]
     [EnumParameter("Button", typeof(Button))]
+    [HideElement]
     public class V_ButtonValue : Element {}
 
     [ElementData("Event Ability", ValueType.Button)]
@@ -1925,7 +1930,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_AbilityCooldown : Element {}
 
     [ElementData("Ability Icon String", ValueType.String)]
-    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class V_AbilityIconString : Element {}
 
@@ -1991,6 +1996,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Default", ValueType.Number, null)]
     [Parameter("Min", ValueType.Number, null)]
     [Parameter("Max", ValueType.Number, null)]
+    [Parameter("SortOrder", ValueType.Number, null)]
     public class V_WorkshopSettingInteger : Element {}
 
     [ElementData("Workshop Setting Real", ValueType.Number)]
@@ -1999,13 +2005,32 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Default", ValueType.Number, null)]
     [Parameter("Min", ValueType.Number, null)]
     [Parameter("Max", ValueType.Number, null)]
+    [Parameter("SortOrder", ValueType.Number, null)]
     public class V_WorkshopSettingReal : Element {}
 
     [ElementData("Workshop Setting Toggle", ValueType.Boolean)]
     [Parameter("Category", ValueType.String, null)]
     [Parameter("Name", ValueType.String, null)]
     [Parameter("Default", ValueType.Boolean, null)]
+    [Parameter("SortOrder", ValueType.Number, null)]
     public class V_WorkshopSettingToggle : Element {}
+
+    [ElementData("Workshop Setting Combo", ValueType.Boolean)]
+    [Parameter("Category", ValueType.String, null)]
+    [Parameter("Name", ValueType.String, null)]
+    [Parameter("Default", ValueType.Number, null)]
+    [Parameter("Options", ValueType.Any, null)]
+    [Parameter("SortOrder", ValueType.Number, null)]
+    [HideElement]
+    public class V_WorkshopSettingCombo : Element {}
+    
+    [ElementData("Workshop Setting Hero", ValueType.Boolean)]
+    [Parameter("Category", ValueType.String, null)]
+    [Parameter("Name", ValueType.String, null)]
+    [EnumParameter("Default", typeof(Hero))]
+    [Parameter("SortOrder", ValueType.Number, null)]
+    [HideElement]
+    public class V_WorkshopSettingHero : Element {}
 
     [ElementData("Last Created Health Pool", ValueType.Any)]
     public class V_LastCreatedHealthPool : Element {}
@@ -2019,4 +2044,65 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Health Type", typeof(HealthType))]
     public class V_MaxHealthOfType : Element {}
+
+    [ElementData("Color", ValueType.Color)]
+    [EnumParameter("Color", typeof(Color))]
+    [HideElement]
+    public class V_ColorValue : Element {}
+
+    [ElementData("Custom Color", ValueType.Color)]
+    [Parameter("Red", ValueType.Number, typeof(V_Number))]
+    [Parameter("Green", ValueType.Number, typeof(V_Number))]
+    [Parameter("Blue", ValueType.Number, typeof(V_Number))]
+    [Parameter("Alpha", ValueType.Number, typeof(V_Number))]
+    public class V_CustomColor : Element {}
+
+    [ElementData("Evaluate Once", ValueType.Any)]
+    [Parameter("Input Value", ValueType.Any, null)]
+    public class V_EvaluateOnce : Element {}
+
+    [ElementData("Update Every Frame", ValueType.Any)]
+    [Parameter("Input Value", ValueType.Any, null)]
+    public class V_UpdateEveryFrame : Element {}
+
+    [ElementData("Magnitude Of", ValueType.Vector)]
+    [Parameter("Value", ValueType.Vector, null)]
+    public class V_MagnitudeOf : Element {}
+
+    [ElementData("Number Of Slots", ValueType.Number)]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
+    public class V_NumberOfSlots : Element {}
+
+    [ElementData("Spawn Points", ValueType.Any)]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
+    public class V_SpawnPoints : Element {}
+
+    [ElementData("String Contains", ValueType.Boolean)]
+    [Parameter("String", ValueType.String, null)]
+    [Parameter("Value", ValueType.String, null)]
+    public class V_StringContains : Element {}
+
+    [ElementData("String Length", ValueType.Number)]
+    [Parameter("String", ValueType.String, null)]
+    public class V_StringLength : Element {}
+
+    [ElementData("String Slice", ValueType.Number)]
+    [Parameter("String", ValueType.String, null)]
+    [Parameter("Start Character Index", ValueType.Number, typeof(V_Number))]
+    [Parameter("Character Count", ValueType.Number, typeof(V_Number))]
+    public class V_StringSlice : Element {}
+
+    [ElementData("Last Assist ID", ValueType.Any)]
+    public class V_LastAssistID : Element {}
+
+    [ElementData("Player Stat", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [EnumParameter("Stat", typeof(PlayerStat))]
+    public class V_PlayerStat : Element {}
+
+    [ElementData("Player Hero Stat", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
+    [EnumParameter("Stat", typeof(PlayerStat))]
+    public class V_PlayerHeroStat : Element {}
 }

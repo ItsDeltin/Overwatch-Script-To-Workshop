@@ -213,26 +213,6 @@ namespace Deltin.Deltinteger.Elements
                 // Ignore null
                 NullValueHandling = NullValueHandling.Ignore
             });
-
-        private static string GetTypeName(ValueType valueType)
-        {
-            switch (valueType)
-            {
-                case ValueType.Any: return "any";
-                case ValueType.Boolean: return "boolean";
-                case ValueType.Vector: return "vector";
-                case ValueType.VectorAndPlayer: return "player | vector";
-                case ValueType.Button: return "button";
-                case ValueType.Gamemode: return "gamemode";
-                case ValueType.Hero: return "hero";
-                case ValueType.Map: return "map";
-                case ValueType.Number: return "number";
-                case ValueType.Player: return "player";
-                case ValueType.String: return "string";
-                case ValueType.Team: return "team";
-                default: throw new NotImplementedException(valueType.ToString());
-            }
-        }
     }
 
     public abstract class ElementBaseJson
@@ -348,6 +328,7 @@ namespace Deltin.Deltinteger.Elements
         public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => builder.AppendKeyword(Name);
 
         public string CodeName() => Alias ?? Name.Replace(" ", "");
+        public string DecompileName() => Name.Replace("(", "").Replace(")", "");
 
         public bool EqualTo(IWorkshopTree other)
         {

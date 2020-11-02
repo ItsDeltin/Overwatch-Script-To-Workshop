@@ -146,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
         private static void AddCompletion(ParseInfo parseInfo, Token dot, Token value, CompletionItem[] items)
         {
             // Do nothing if there is no dot.
-            if (dot == null) return;
+            if (dot == null || parseInfo.Script.IsTokenLast(dot)) return;
 
             // Add the completion.
             parseInfo.Script.AddCompletionRange(new CompletionRange(

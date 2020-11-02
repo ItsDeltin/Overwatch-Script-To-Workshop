@@ -6,7 +6,7 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("ModifyVariable", "Modifies a variable.", CustomMethodType.Action)]
+    [CustomMethod("ModifyVariable", "Modifies a variable.", CustomMethodType.Action, typeof(NullType))]
     class ModifyVariable : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {

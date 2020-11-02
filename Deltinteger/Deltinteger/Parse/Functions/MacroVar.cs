@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetupBlock()
         {
-            if (_expressionToParse != null) Expression = _parseInfo.SetCallInfo(CallInfo).GetExpression(_scope.Child(), _expressionToParse);
+            if (_expressionToParse != null) Expression = _parseInfo.SetCallInfo(CallInfo).SetExpectingLambda(CodeType).GetExpression(_scope.Child(), _expressionToParse);
             _wasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }

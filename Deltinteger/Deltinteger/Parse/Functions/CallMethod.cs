@@ -19,13 +19,6 @@ namespace Deltin.Deltinteger.Parse
         {
             _parseInfo = parseInfo;
 
-            // TODO
-            // if (methodContext.ASYNC() != null)
-            // {
-            //     if (methodContext.NOT() == null) Parallel = CallParallel.AlreadyRunning_RestartRule;
-            //     else Parallel = CallParallel.AlreadyRunning_DoNothing;
-            // }
-
             // Get the invoke target.
             var resolveInvoke = new ResolveInvokeInfo();
             var target = parseInfo.SetInvokeInfo(resolveInvoke).GetExpression(scope, methodContext.Target);

@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v1.7";
+        public const string VERSION = "v2.0";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -43,7 +43,6 @@ namespace Deltin.Deltinteger
 
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
-            VectorType.Instance.ResolveElements();
             Lobby.HeroSettingCollection.Init();
             Lobby.ModeSettingCollection.Init();
 

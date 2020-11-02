@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public interface IExpression
     {
-        Scope ReturningScope();
+        Scope ReturningScope() => Type()?.GetObjectScope();
         CodeType Type();
         IWorkshopTree Parse(ActionSet actionSet);
         bool IsStatement() => false;
@@ -16,14 +16,16 @@ namespace Deltin.Deltinteger.Parse
     public class NumberAction : IExpression
     {
         public double Value { get; }
+        private readonly CodeType _type;
 
-        public NumberAction(ScriptFile script, NumberExpression numberContext)
+        public NumberAction(ParseInfo parseInfo, NumberExpression numberContext)
         {
             Value = numberContext.Value;
+            _type = parseInfo.TranslateInfo.Types.Number();
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => NumberType.Instance;
+        public CodeType Type() => _type;
         public IWorkshopTree Parse(ActionSet actionSet) => Element.Num(Value);
     }
 
@@ -86,16 +88,18 @@ namespace Deltin.Deltinteger.Parse
     public class CreateArrayAction : IExpression
     {
         public IExpression[] Values { get; }
+        private readonly CodeType _type;
 
         public CreateArrayAction(ParseInfo parseInfo, Scope scope, CreateArray createArrayContext)
         {
             Values = new IExpression[createArrayContext.Values.Count];
             for (int i = 0; i < Values.Length; i++)
                 Values[i] = parseInfo.GetExpression(scope, createArrayContext.Values[i]);
+            
+            _type = new ArrayType(parseInfo.TranslateInfo.Types, Values.Length == 0 ? parseInfo.TranslateInfo.Types.Any() : Values[0].Type());
         }
 
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => _type;
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
@@ -174,6 +178,11 @@ namespace Deltin.Deltinteger.Parse
             Condition = parseInfo.GetExpression(scope, ternaryContext.Condition);
             Consequent = parseInfo.GetExpression(scope, ternaryContext.Consequent);
             Alternative = parseInfo.GetExpression(scope, ternaryContext.Alternative);
+
+            if (Consequent.Type() != null && Consequent.Type().IsConstant())
+                parseInfo.Script.Diagnostics.Error($"Cannot use constant types in a ternary expression.", ternaryContext.Consequent.Range);
+            if (Alternative.Type() != null && Alternative.Type().IsConstant())
+                parseInfo.Script.Diagnostics.Error($"Cannot use constant types in a ternary expression.", ternaryContext.Alternative.Range);
         }
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
