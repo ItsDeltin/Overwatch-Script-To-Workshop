@@ -1300,10 +1300,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             
             // Get the identifier.
             var identifier = ParseExpected(TokenType.Identifier);
+
+            // Get the type args.
+            var typeArgs = ParseOptionalTypeArguments(out bool hasGenerics);
             
             // Function
-            if (ParseOptional(TokenType.Parentheses_Open))
+            if (hasGenerics || Is(TokenType.Parentheses_Open))
             {
+                ParseExpected(TokenType.Parentheses_Open);
+
                 // Get the parameters.
                 var parameters = ParseParameters();
 
@@ -1335,7 +1340,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
                     // Get the function's block.
                     Block block = ParseBlock();
-                    return EndNode(new FunctionContext(attributes, type, identifier, parameters, block, globalvar, playervar, subroutine));
+                    return EndNode(new FunctionContext(attributes, type, identifier, typeArgs, parameters, block, globalvar, playervar, subroutine));
                 }
             }
             // Variable macro
@@ -1516,6 +1521,19 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             return generics;
         }
+
+        List<Token> ParseOptionalTypeArguments(out bool anyGenerics)
+        {
+            var generics = new List<Token>();
+            if (ParseOptional(TokenType.LessThan))
+            {
+                generics = ParseDelimitedList(TokenType.GreaterThan, () => Kind == TokenType.Identifier, () => ParseExpected(TokenType.Identifier));
+                ParseExpected(TokenType.GreaterThan);
+                anyGenerics = true;
+            }
+            else anyGenerics = false;
+            return generics;
+        }
         
         AsyncContext ParseAsync()
         {
@@ -1624,12 +1642,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var identifier = ParseExpected(TokenType.Identifier);
 
             // Get the type parameters.
-            var generics = new List<Token>();
-            if (ParseOptional(TokenType.LessThan))
-            {
-                generics = ParseDelimitedList(TokenType.GreaterThan, () => Kind == TokenType.Identifier, () => ParseExpected(TokenType.Identifier));
-                ParseExpected(TokenType.GreaterThan);
-            }
+            var generics = ParseOptionalTypeArguments(out _);
 
             // Get the types being inherited.
             var inheriting = new List<IParseType>();

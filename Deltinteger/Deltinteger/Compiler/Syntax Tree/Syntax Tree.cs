@@ -49,8 +49,14 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         bool IsVoid { get; }
         bool DefinitelyType { get; }
     }
+    public interface ITypeContextHandler
+    {
+        Token Identifier { get; }
+        List<IParseType> TypeArgs { get; }
+        int ArrayCount { get; }
+    }
 
-    public class ParseType : Node, IParseType
+    public class ParseType : Node, IParseType, ITypeContextHandler
     {
         public Token Identifier { get; }
         public List<IParseType> TypeArgs { get; }
@@ -223,17 +229,19 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public AttributeTokens Attributes { get; }
         public IParseType Type { get; }
         public Token Identifier { get; }
+        public List<Token> TypeArguments { get; }
         public List<VariableDeclaration> Parameters { get; }
         public Block Block { get; }
         public Token GlobalVar { get; }
         public Token PlayerVar { get; }
         public Token Subroutine { get; }
 
-        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
+        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<Token> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
         {
             Attributes = attributes;
             Type = type;
             Identifier = identifier;
+            TypeArguments = typeArgs;
             Parameters = parameters;
             Block = block;
             GlobalVar = globalvar;
@@ -426,17 +434,20 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => '"' + Value + '"'; 
     }
 
-    public class Identifier : Node, IParseExpression
+    public class Identifier : Node, IParseExpression, ITypeContextHandler
     {
         public Token Token { get; }
         public List<ArrayIndex> Index { get; }
-        public List<IParseType> Generics { get; }
+        public List<IParseType> TypeArgs { get; }
+
+        Token ITypeContextHandler.Identifier => Token;
+        int ITypeContextHandler.ArrayCount => 0;
 
         public Identifier(Token token, List<ArrayIndex> index, List<IParseType> generics)
         {
             Token = token;
             Index = index;
-            Generics = generics;
+            TypeArgs = generics;
         }
 
         public override string ToString() => Token.Text + string.Concat(Index.Select(i => i.ToString()));

@@ -4,17 +4,27 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.Parse.Lambda;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class TypeFromContext
     {
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, IParseType typeContext) => GetCodeTypeFromContext(parseInfo, scope, (dynamic)typeContext);
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, IParseType typeContext)
+        {
+            if (typeContext is ITypeContextHandler tch) return GetCodeTypeFromContext(parseInfo, scope, tch);
+            else if (typeContext is LambdaType lambda) return GetCodeTypeFromContext(parseInfo, scope, lambda);
+            else if (typeContext is GroupType groupType) return GetCodeTypeFromContext(parseInfo, scope, groupType);
+            else if (typeContext is PipeTypeContext pipeType) return GetCodeTypeFromContext(parseInfo, scope, pipeType);
+            else throw new NotImplementedException(typeContext.GetType().Name);
+        }
 
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, ParseType typeContext)
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, ITypeContextHandler typeContext) => GetCodeTypeFromContext(new DefaultTypeContextError(parseInfo, typeContext, true), parseInfo, scope, typeContext);
+
+        public static CodeType GetCodeTypeFromContext(ITypeContextError errorHandler, ParseInfo parseInfo, Scope scope, ITypeContextHandler typeContext)
         {
             if (typeContext == null) return null;
-            if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
+            // if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
             
             // Get the type arguments.
             var typeArgs = new CodeType[typeContext.TypeArgs.Count];
@@ -23,11 +33,11 @@ namespace Deltin.Deltinteger.Parse
             
             var instanceInfo = new GetInstanceInfo(typeArgs);
             
-            ICodeTypeInitializer[] types = scope.TypesFromName(typeContext.Identifier.Text);
+            ICodeTypeInitializer[] types = scope.TypesFromName(typeContext.Identifier.GetText());
 
             if (types.Length == 0)
             {
-                parseInfo.Script.Diagnostics.Error("No types by the name of '" + typeContext.Identifier.Text + "' exists in the current context", typeContext.Identifier.Range);
+                errorHandler.Nonexistent();
                 return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
             }
             
@@ -37,10 +47,7 @@ namespace Deltin.Deltinteger.Parse
             if (types.Length == 0) // No types match the generics count.
             {
                 // Add the error.
-                if (fallback.GenericsCount == 0)
-                    parseInfo.Script.Diagnostics.Error("The type '" + fallback.Name + "' cannot be used with type arguments", typeContext.Identifier.Range);
-                else
-                    parseInfo.Script.Diagnostics.Error("Type type '" + fallback.Name + "' requires " + fallback.GenericsCount + " type arguments", typeContext.Identifier.Range);
+                errorHandler.IncorrectTypeArgsCount(fallback);
                 
                 // Return the fallback.
                 return fallback.GetInstance();
@@ -98,6 +105,61 @@ namespace Deltin.Deltinteger.Parse
             var left = GetCodeTypeFromContext(parseInfo, scope, type.Left);
             var right = GetCodeTypeFromContext(parseInfo, scope, type.Right);
             return new PipeType(left, right);
+        }
+    }
+
+    public interface ITypeContextError
+    {
+        void Nonexistent();
+        void IncorrectTypeArgsCount(ICodeTypeInitializer fallback);
+        void ApplyErrors();
+    }
+
+    class DefaultTypeContextError : ITypeContextError
+    {
+        public bool Exists { get; private set; } = true;
+        private readonly ParseInfo _parseInfo;
+        private readonly ITypeContextHandler _context;
+        private readonly bool _autoApplyErrors;
+        private readonly List<Diagnostic> _diagnostics = new List<Diagnostic>();
+
+        public DefaultTypeContextError(ParseInfo parseInfo, ITypeContextHandler context, bool autoApplyErrors)
+        {
+            _parseInfo = parseInfo;
+            _context = context;
+            _autoApplyErrors = autoApplyErrors;
+        }
+
+        public void Nonexistent() 
+        {
+            AddError("No types by the name of '" + _context.Identifier.Text + "' exists in the current context", _context.Identifier.Range);
+            Exists = false;
+        }
+        
+        public void IncorrectTypeArgsCount(ICodeTypeInitializer fallback)
+        {
+            // Add the error.
+            if (fallback.GenericsCount == 0)
+                AddError("The type '" + fallback.Name + "' cannot be used with type arguments", _context.Identifier.Range);
+            else
+                AddError("Type type '" + fallback.Name + "' requires " + fallback.GenericsCount + " type arguments", _context.Identifier.Range);
+        }
+
+        private void AddError(string message, DocRange range)
+        {
+            var diagnostic = new Diagnostic(message, range, Diagnostic.Error);
+            _diagnostics.Add(diagnostic);
+
+            if (_autoApplyErrors)
+                _parseInfo.Script.Diagnostics.AddDiagnostic(diagnostic);
+        }
+
+        public void ApplyErrors()
+        {
+            if (_autoApplyErrors) return;
+
+            foreach (var error in _diagnostics)
+                _parseInfo.Script.Diagnostics.AddDiagnostics(_diagnostics.ToArray());
         }
     }
 }

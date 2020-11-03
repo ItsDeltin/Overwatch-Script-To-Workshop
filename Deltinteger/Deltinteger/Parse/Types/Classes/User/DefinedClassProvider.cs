@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
             base.ResolveElements();
 
             // Get the generics.
-            for (int i = 0; i <  _typeContext.Generics.Count; i++)
+            for (int i = 0; i < _typeContext.Generics.Count; i++)
             {
                 var anonymousType = new AnonymousType(_typeContext.Generics[i].GetText(), i);
                 _anonymousTypes.Add(anonymousType);
