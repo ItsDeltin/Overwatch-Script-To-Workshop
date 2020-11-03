@@ -1,23 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Deltin.Deltinteger.Compiler.Parse;
 
 namespace Deltin.Deltinteger.Compiler.SyntaxTree
 {
     public class RootContext
     {
+        public List<OldImport> OldImports { get; } = new List<OldImport>();
         public List<Import> Imports { get; } = new List<Import>();
         public List<RuleContext> Rules { get; } = new List<RuleContext>();
         public List<ClassContext> Classes { get; } = new List<ClassContext>();
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
 
-        public Token Name;
 
-        public List<RootContext> Modules { get; } = new List<RootContext>();
+        public List<ModuleContext> Modules { get; } = new List<ModuleContext>();
         public List<Hook> Hooks { get; } = new List<Hook>();
         public List<TokenCapture> NodeCaptures { get; set; }
+    }
+
+    public class ModuleContext : RootContext
+    {
+        public Token Name;
+        public AttributeTokens Attributes;
     }
 
     public class Node : INodeRange
@@ -182,14 +189,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class ClassContext : Node
     {
+        public AttributeTokens attributes;
         public Token Identifier { get; }
         public Token InheritToken { get; }
         public List<Token> Inheriting { get; }
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
         public List<ConstructorContext> Constructors { get; } = new List<ConstructorContext>();
 
-        public ClassContext(Token identifier, Token inheritToken, List<Token> inheriting)
+        public ClassContext(Token identifier, Token inheritToken, List<Token> inheriting, AttributeTokens _attributes)
         {
+            attributes = _attributes;
             Identifier = identifier;
             InheritToken = inheritToken;
             Inheriting = inheriting;
@@ -308,15 +317,33 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class Import
     {
+        public List<Token> ImportIdentifiers { get; }
+        public IParseExpression Source { get; }
+
+        public AccessLevel AccessLevel { get; }
+
+        public Import(List<Token> importIdentifiers, IParseExpression source, AccessLevel accessLevel)
+        {
+            ImportIdentifiers = importIdentifiers;
+            Source = source;
+            AccessLevel = accessLevel;
+        }
+    }
+
+    public class OldImport
+    {
         public Token File { get; }
         public Token As { get; }
         public Token Identifier { get; }
 
-        public Import(Token file, Token @as, Token identifier)
+        public AccessLevel AccessLevel { get; }
+
+        public OldImport(Token file, Token @as, Token identifier, AccessLevel accessLevel)
         {
             File = file;
             As = @as;
             Identifier = identifier;
+            AccessLevel = accessLevel;
         }
     }
 

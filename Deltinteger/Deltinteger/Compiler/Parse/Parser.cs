@@ -1475,31 +1475,49 @@ namespace Deltin.Deltinteger.Compiler.Parse
         /// <returns>Determines wether an element was parsed.</returns>
         void ParseScriptRootElement(RootContext context, bool isModule = false)
         {
+            var attributes = ParseAttributes();
+
             // Return false if the EOF was reached.
             switch (Kind)
             {
                 // Rule
                 case TokenType.Rule:
                 case TokenType.Disabled:
-                    context.Rules.Add(ParseRule());
+                    var rule = ParseRule();
+                    if (attributes.AllAttributes.Count > 0)
+                        AddError(new UnexpectedToken(attributes.AllAttributes.First()));
+                    else
+                        context.Rules.Add(rule);
+
                     break;
                 
                 // Class
-                case TokenType.Class:
-                    context.Classes.Add(ParseClass());
+                case TokenType.Class:   
+                    context.Classes.Add(ParseClass(attributes));
                     break;
                 
                 // Enum
                 case TokenType.Enum:
-                    context.Enums.Add(ParseEnum());
+                    context.Enums.Add(ParseEnum(attributes));
                     break;
 
                 // Import
                 case TokenType.Import:
-                    context.Imports.Add(ParseImport());
+                    //old: import "test.del";
+                    //new: import TestClass from Test
+                    bool oldStyle = false;
+                    Lookahead(() => {
+                        Consume();
+                        oldStyle = ParseOptional(TokenType.String) != null;
+                    });
+                    if (oldStyle)
+                        context.OldImports.Add(ParseOldImport(attributes));
+                    else
+                        context.Imports.Add(ParseImport(attributes));
+                        //context.OldImports.Add();
                     break;
                 case TokenType.Module:
-                    context.Modules.Add(ParseModule());
+                    context.Modules.Add(ParseModule(attributes));
                     break;
                 
                 // Others
@@ -1517,15 +1535,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
-        RootContext ParseModule()
+        ModuleContext ParseModule(AttributeTokens attributes)
         {
-            var attributes = ParseAttributes();
+            var context = new ModuleContext();
+            context.Attributes = attributes;
 
             ParseExpected(TokenType.Module);
+
             var name = ParseExpected(TokenType.Identifier);
-            var context = new RootContext();
             context.Name = name;
+
+            
             ParseExpected(TokenType.CurlyBracket_Open);
+
+            
             // Get the module elements.
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
             {
@@ -1536,7 +1559,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // No tokens were consumed, break to prevent an infinite loop.
                 if (s == Token) break;
             }
+
+
             ParseExpected(TokenType.CurlyBracket_Close);
+
             context.NodeCaptures = NodeCaptures;
 
             return context;
@@ -1580,7 +1606,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Parses a class.</summary>
-        ClassContext ParseClass()
+        ClassContext ParseClass(AttributeTokens attributes)
         {
             StartTokenCapture();
             if (GetIncrementalNode(out ClassContext @class)) return EndTokenCapture(@class);
@@ -1597,7 +1623,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Start the class group.
             ParseExpected(TokenType.CurlyBracket_Open);
 
-            ClassContext context = new ClassContext(identifier, inheritToken, inheriting);
+            ClassContext context = new ClassContext(identifier, inheritToken, inheriting, attributes);
 
             // Get the class elements.
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
@@ -1617,7 +1643,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndTokenCapture(context);
         }
 
-        EnumContext ParseEnum()
+        EnumContext ParseEnum(AttributeTokens attributes)
         {
             StartTokenCapture();
             if (GetIncrementalNode(out EnumContext @enum)) return EndTokenCapture(@enum);
@@ -1698,18 +1724,28 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return true;
         }
 
-        Import ParseImport()
+        OldImport ParseOldImport(AttributeTokens attributes)
         {
+            //TODO: Use attributes for re-exporting
             ParseExpected(TokenType.Import);
             var fileToken = ParseExpected(TokenType.String);
-
             // Parse optional 'as'.
             Token asIdentifier = null;
             if (ParseOptional(TokenType.As, out Token @as))
                 asIdentifier = ParseExpected(TokenType.Identifier);
-
             ParseExpected(TokenType.Semicolon);
-            return new Import(fileToken, @as, asIdentifier);
+            return new OldImport(fileToken, @as, asIdentifier, attributes.GetAccessLevel());
+
+        }
+
+        Import ParseImport(AttributeTokens attributes)
+        {
+            ParseExpected(TokenType.Import);
+            
+            var elements = ParseDelimitedList(TokenType.Comma, () => Is(TokenType.Identifier), () => Consume());
+            ParseExpected(TokenType.From);
+            var source = GetContainExpression();
+            return new Import(elements, source, attributes.GetAccessLevel());
         }
 
         Hook ParseHook()

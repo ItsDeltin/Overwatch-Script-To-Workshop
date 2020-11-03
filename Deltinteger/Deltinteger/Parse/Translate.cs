@@ -183,7 +183,7 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var modContext in script.Context.Modules)
                 {
                     var module = new DefinedModule(new ParseInfo(script, this), GlobalScope.Child(), modContext);
-
+                    modules.Add(module);
                     GlobalScope.AddVariable(module, script.Diagnostics, modContext.Name.Range);
                 }
 

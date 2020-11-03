@@ -37,7 +37,9 @@ namespace Deltin.Deltinteger.Parse
             Y = CreateInternalVar("Y", "The Y component of the vector.");
             Z = CreateInternalVar("Z", "The Z component of the vector.");
             HorizontalAngle = CreateInternalVar("HorizontalAngle", "The horizontal angle of the vector.");
+            HorizontalAngle.CodeType = NumberType.Instance;
             VerticalAngle = CreateInternalVar("VerticalAngle", "The vertical angle of the vector.");
+            VerticalAngle.CodeType = NumberType.Instance;
             Zero = CreateInternalVar("Zero", "Equal to `Vector(0, 0, 0)`.", true);
 
             objectScope.AddNativeMethod(DistanceTo);

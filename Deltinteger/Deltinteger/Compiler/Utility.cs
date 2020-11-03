@@ -393,6 +393,9 @@ namespace Deltin.Deltinteger.Compiler
 
         /// <summary>Gets the token's range. If the token is null, the fallback is used.</summary>
         public static DocRange GetRange(this Token token, DocRange fallback) => token ? token.Range : fallback;
+
+        public static TokenType[] ClassMemberModifiers => new TokenType[] { TokenType.Override, TokenType.Static, TokenType.Virtual, TokenType.Ref, TokenType.Recursive };
+        public static TokenType[] VariableModifiers => new TokenType[] { TokenType.Ref, TokenType.PlayerVar, TokenType.GlobalVar};
     }
 
     public enum TokenType
@@ -468,7 +471,8 @@ namespace Deltin.Deltinteger.Compiler
         This,
         Root,
         As,
-        Module,
+        Module, 
+        From,
         // Attributes
         Public,
         Private,
@@ -493,6 +497,7 @@ namespace Deltin.Deltinteger.Compiler
         ActionComment,
         EOF
     }
+
 
     public class UpdateRange
     {

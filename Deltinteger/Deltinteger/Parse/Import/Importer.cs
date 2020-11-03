@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             FileImporter importer = new FileImporter(scriptFile.Diagnostics, this);
 
             // Get the imported files.
-            foreach (var importFileContext in scriptFile.Context.Imports)
+            foreach (var importFileContext in scriptFile.Context.OldImports)
             if (importFileContext.File)
             {
                 string directory = GetImportedFile(scriptFile, importer, importFileContext);
@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
             script.AddCompletionRange(new CompletionRange(completionItems.ToArray(), range, CompletionRangeKind.ClearRest));
         }
 
-        string GetImportedFile(ScriptFile script, FileImporter importer, Import importFileContext)
+        string GetImportedFile(ScriptFile script, FileImporter importer, OldImport importFileContext)
         {
             // If the file being imported is being imported as an object, get the variable name.
             string variableName = importFileContext.Identifier?.Text;

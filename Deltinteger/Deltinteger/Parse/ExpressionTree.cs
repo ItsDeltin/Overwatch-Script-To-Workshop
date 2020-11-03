@@ -493,7 +493,7 @@ namespace Deltin.Deltinteger.Parse
                 _callRange = callRange;
             }
 
-            public Scope GetScope() => _expression.Type()?.GetObjectScope() ?? _parseInfo.TranslateInfo.PlayerVariableScope;
+            public Scope GetScope() => _expression.ReturningScope() ?? _parseInfo.TranslateInfo.PlayerVariableScope;
             public IExpression GetExpression() => _expression;
             public void Accept()
             {
