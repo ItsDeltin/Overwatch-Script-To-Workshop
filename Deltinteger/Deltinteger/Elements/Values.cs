@@ -1772,7 +1772,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_VelocityOf : Element { }
 
-    [ElementData("Vertical Angle From Direction", ValueType.Vector)]
+    [ElementData("Vertical Angle From Direction", ValueType.Number)]
     [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
     public class V_VerticalAngleFromDirection : Element
     {
