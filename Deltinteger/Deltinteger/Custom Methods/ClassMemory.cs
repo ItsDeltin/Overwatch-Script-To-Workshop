@@ -8,7 +8,8 @@ namespace Deltin.Deltinteger.CustomMethods
     {
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            return Constants.MAX_ARRAY_LENGTH - ClassMemoryUsed.NumberOfClasses(actionSet);
+            //one less class is available because 0 is reserved.
+            return Constants.MAX_ARRAY_LENGTH - ClassMemoryUsed.NumberOfClasses(actionSet) - 1;
         }
 
         public override CodeParameter[] Parameters() => null;
