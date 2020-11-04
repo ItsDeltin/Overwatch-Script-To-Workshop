@@ -221,6 +221,7 @@ Object-serve scope. Only object members.
         public void SetArrayStore(IndexReference store)
         {
             ArrayStore = store;
+
         }
 
         public void AddToAssigner(Element reference, VarIndexAssigner assigner)
@@ -261,12 +262,14 @@ Object-serve scope. Only object members.
         public DeltinScript DeltinScript { get; set; }
         public IndexReference ClassIndexes { get; private set; }
         private List<IndexReference> VariableStacks { get; } = new List<IndexReference>();
-        private int AssignClassID = 1;
+        private int AssignClassID;
 
         public void Init()
         {
             ClassIndexes = DeltinScript.VarCollection.Assign(ClassIndexesTag, true, false);
             DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
+            //Set the first index to -1 so that the first class != null
+            DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(-1, null, 0));
         }
 
         public IndexReference CreateObject(int classIdentifier, ActionSet actionSet, string internalName)
