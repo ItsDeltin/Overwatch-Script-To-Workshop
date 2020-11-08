@@ -21,9 +21,8 @@ namespace Deltin.Deltinteger.Animation
                     var armatureInstance = methodCall.Get(1);
                     var boneStructure = new BoneStructure(file, armature);
 
-                    var colors = Enum.GetValues(typeof(Color));
-                    int i = 0;
-                    object type = BeamType.BadBeam;
+                    object type = BeamType.GrappleBeam;
+                    object color = Color.Red;
 
                     foreach (var boneData in boneStructure._boneData)
                     {
@@ -32,12 +31,9 @@ namespace Deltin.Deltinteger.Animation
                             EnumData.GetEnumValue(type),
                             position + armatureType.BoneLocalPositions.Get(armatureInstance)[boneData.Head],
                             position + armatureType.BoneLocalPositions.Get(armatureInstance)[boneData.Tail],
-                            EnumData.GetEnumValue(colors.GetValue(i)),
+                            EnumData.GetEnumValue(color),
                             EnumData.GetEnumValue(EffectRev.VisibleToPositionAndRadius)
                         ));
-                        i++;
-                        if (i >= colors.Length) i = 0;
-                        if (i == 2) type = BeamType.GrappleBeam;
                     }
                     
                     return null;

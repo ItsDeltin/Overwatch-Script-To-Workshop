@@ -21,56 +21,13 @@ namespace Deltin.Deltinteger.Animation
 {
     public static class AnimationOperations
     {
-        /// <summary>Multiplies 2 Element quaternions.
-        /// Element quaternions are an array where [0] is w, [1] is x, [2] is y, and [3] is z.
-        /// q1 * q2 is NOT equal to q2 * q1.</summary>
-        public static Element MultiplyQuaternion(Element q1, Element q2)
-        {
-            Element w = 0, x = 1, y = 2, z = 3;
-            return Element.CreateArray(
-                q1[w]*q2[w] - q1[x]*q2[x] - q1[y]*q2[y] - q1[z]*q2[z], // w
-                q1[w]*q2[x] + q1[x]*q2[w] + q1[y]*q2[z] - q1[z]*q2[y], // x
-                q1[w]*q2[y] - q1[x]*q2[z] + q1[y]*q2[w] + q1[z]*q2[x], // y
-                q1[w]*q2[z] + q1[x]*q2[y] - q1[y]*q2[x] + q1[z]*q2[w] // z
-            );
-        }
-
         public static (Element axis, Element w) MultiplyQuaternion(Element axis1, Element angle1, Element axis2, Element angle2)
         {
-            Element w1 = angle1, x1 = Element.Part<V_XOf>(axis1), y1 = Element.Part<V_YOf>(axis1), z1 = Element.Part<V_ZOf>(axis1),
-                    w2 = angle2, x2 = Element.Part<V_XOf>(axis2), y2 = Element.Part<V_YOf>(axis2), z2 = Element.Part<V_ZOf>(axis2);
             return (
-                new V_Vector(
-                    w1*x2 + x1*w2 + y1*z2 - z1*y2, // x
-                    w1*y2 - x1*z2 + y1*w2 + z1*x2, // y
-                    w1*z2 + x1*y2 - y1*x2 + z1*w2 // z
-                ),
-                (w1*w2 - x1*x2 - y1*y2 - z1*z2) // w
+                axis1*angle2 + axis2*angle1 + Element.Part<V_CrossProduct>(axis1, axis2),
+                angle1*angle2 - Element.Part<V_DotProduct>(axis1, axis2)
             );
         }
-
-        public static (Element axis, Element w) MultiplyQuaternion2(Element axis1, Element angle1, Element axis2, Element angle2)
-        {
-            Element w1 = angle1, x1 = Element.Part<V_XOf>(axis1), y1 = Element.Part<V_YOf>(axis1), z1 = Element.Part<V_ZOf>(axis1),
-                    w2 = angle2, x2 = Element.Part<V_XOf>(axis2), y2 = Element.Part<V_YOf>(axis2), z2 = Element.Part<V_ZOf>(axis2);
-            return (
-                new V_Vector(
-                     x1*w2 + y1*z2 - z1*y2 + w1*x2, // x
-                    -x1*z2 + y1*w2 + z1*x2 + w1*y2, // y
-                     x1*y2 - y1*x2 + z1*w2 + w1*z2 // z
-                ),
-                -x1*x2 - y1*y2 - z1*z2 + w1*w2 // w
-            );
-        }
-
-        /// <summary>Converts a vector axis and an angle to a quaternion.</summary>
-        public static Element QuaternionFromAxis(Element vectorAxis, Element fAngle) => Element.CreateArray(
-            // It is probably a good idea to turn this into a multi-action function and cache the sine of fAngle/2 into a variable.
-            Element.Part<V_CosineFromRadians>(fAngle / 2), // w
-            Element.Part<V_XOf>(vectorAxis) * Element.Part<V_SineFromRadians>(fAngle / 2), // x
-            Element.Part<V_YOf>(vectorAxis) * Element.Part<V_SineFromRadians>(fAngle / 2), // y
-            Element.Part<V_ZOf>(vectorAxis) * Element.Part<V_SineFromRadians>(fAngle / 2) // z
-        );
 
         /// <summary>Creates a quaternion from an euler vector. X is yaw, Y is pitch, and Z is roll.</summary>
         public static Quaternion QuaternionFromEuler(ActionSet actionSet, Element euler)
@@ -94,98 +51,82 @@ namespace Deltin.Deltinteger.Animation
             return new Quaternion(xyz, w);
         }
 
-        /// <summary>Creates a 3x3 matrix from a quaternion.
-        /// This will return an array with 9 elements.
-        /// To get the 2x3 value, you must do matrix[5].</summary>
-        public static Element Create3x3MatrixFromQuaternion(Element q) 
+        public static Element Create3x3MatrixFromQuaternion(Element xyz, Element w)
         {
-            // If setting a variable once then getting the variable twice is less expensive then doing a multiplication operation twice,
-            // saving xw, xy, xz, yw, yx, yz, etc may be more efficient.
-            Element w = q[0], x = q[1], y = q[2], z = q[3];
-            // return Element.CreateArray(
-            //     1 - 2*y^2 - 2*z^2, // 1x1
-            //     2*x*y - 2*w*z, // 1x2
-            //     2*x*z + 2*w*y, // 1x3
-
-            //     2*x*y + 2*w*z, // 2x1
-            //     1 - 2*x^2-2*z^2, // 2x2
-            //     2*y*z+2*w*x, // 2x3
-
-            //     2*x*z - 2*w*y, // 3x1
-            //     2*y*z - 2*w*x, // 3x2
-            //     1 - 2*x^2-2*y^2 // 3x3
-            // );
-            // return Element.CreateArray(
-            //     1 - 2*y*y - 2*z*z, // 1x1
-            //     2*x*y - 2*w*z, // 1x2
-            //     2*x*z + 2*w*y, // 1x3
-
-            //     2*x*y + 2*w*z, // 2x1
-            //     1 - 2*x*x - 2*z*z, // 2x2
-            //     2*y*z + 2*w*x, // 2x3
-
-            //     2*x*z - 2*w*y, // 3x1
-            //     2*y*z - 2*w*x, // 3x2
-            //     1 - 2*x*x - 2*y*y // 3x3
-            // );
+            Element x = Element.Part<V_XOf>(xyz), y = Element.Part<V_YOf>(xyz), z = Element.Part<V_ZOf>(xyz),
+                m_sqrt2 = (Element)Math.Sqrt(2),
+                q0 = m_sqrt2 * w,
+                q1 = m_sqrt2 * x,
+                q2 = m_sqrt2 * y,
+                q3 = m_sqrt2 * z,
+                qda = q0 * q1,
+                qdb = q0 * q2,
+                qdc = q0 * q3,
+                qaa = q1 * q1,
+                qab = q1 * q2,
+                qac = q1 * q3,
+                qbb = q2 * q2,
+                qbc = q2 * q3,
+                qcc = q3 * q3;
+            
             return Element.CreateArray(
-                w*w + x*x + y*y + z*z,
-                2*x*y - 2*w*z,
-                2*x*z + 2*w*y,
-
-                2*x*y + 2*w*z,
-                w*w - x*x + y*y - z*z,
-                2*y*z + 2*w*x,
-
-                2*x*z - 2*w*y,
-                2*y*z - 2*w*x,
-                w*w - x*x - y*y + z*z
+                (1.0 - qaa - qbb), // [2][2] -> [8]
+                (-qda + qbc),      // [2][1] -> [7]
+                (qdb + qac),       // [2][0] -> [6]
+                (qda + qbc),       // [1][2] -> [5]
+                (1.0 - qaa - qcc), // [1][1] -> [4]
+                (-qdc + qab),      // [1][0] -> [3]
+                (-qdb + qac),      // [0][2] -> [2]
+                (qdc + qab),       // [0][1] -> [1]
+                (1.0 - qbb - qcc)  // [0][0] -> [0]
             );
         }
 
-        /// <summary>Creates a 3x3 matrix from a quaternion.
-        /// This will return an array with 3 elements, each of those elements being a vector.
-        /// For example, to get the 2x3 value, you must do matrix[1].Z</summary>
-        public static Element Create3x3MatrixFromQuaternionVector(Element q) 
-        {
-            // If setting a variable once then getting the variable twice is less expensive then doing a multiplication operation twice,
-            // saving xw, xy, xz, yw, yx, yz, etc may be more efficient.
-            Element w = q[0], x = q[1], y = q[2], z = q[3];
-            return Element.CreateArray(
-                new V_Vector(
-                    1 - 2*y^2 - 2*z^2, // 1x1
-                    2*x*y - 2*w*z, // 1x2
-                    2*x*z + 2*w*y // 1x3
-                ),
-                new V_Vector(
-                    2*x*y + 2*w*z, // 2x1
-                    1 - 2*x^2-2*z^2, // 2x2
-                    2*y*z+2*w*x // 2x3
-                ),
-                new V_Vector(
-                    2*x*z - 2*w*y, // 3x1
-                    2*y*z - 2*w*x, // 3x2
-                    1 - 2*x^2-2*y^2 // 3x3
-                )
+        public static Element Multiply3x3MatrixAndVectorToVector(Element m, Element v) {
+            Element t0 = Element.Part<V_XOf>(v), t1 = Element.Part<V_YOf>(v), t2 = Element.Part<V_ZOf>(v);
+            return new V_Vector(
+                m[0] * t0 + m[3] * t1 + m[6] * t2,
+                m[1] * t0 + m[4] * t1 + m[7] * t2,
+                m[2] * t0 + m[5] * t1 + m[8] * t2
             );
         }
 
-        /// <summary>Multiplies a 3x3 matrix and a 3x1 matrix into a vector.</summary>
-        public static Element MultiplyMatrix3x3AndMatrix3x1ToVector(Element m3x3, Element m3x1) => new V_Vector(
-            m3x3[0]*m3x1[0] + m3x3[1]*m3x1[1] + m3x3[2]*m3x1[2],
-            m3x3[3]*m3x1[0] + m3x3[4]*m3x1[1] + m3x3[5]*m3x1[2],
-            m3x3[6]*m3x1[0] + m3x3[7]*m3x1[1] + m3x3[8]*m3x1[2]
-        );
+        public static Element Create3x3MatrixFromEulerRadiansVector(Element eulerVector)
+            => Create3x3MatrixFromEulerRadians(Element.Part<V_XOf>(eulerVector), Element.Part<V_YOf>(eulerVector), Element.Part<V_ZOf>(eulerVector));
+
+        public static Element Create3x3MatrixFromEulerRadians(Element attitude, Element bank, Element heading)
+        {
+            Func<Element, Element> sin = e => Element.Part<V_SineFromRadians>(e), cos = e => Element.Part<V_CosineFromRadians>(e);
+            
+            Element sa = sin(attitude),
+                ca = cos(attitude),
+                sb = sin(bank),
+                cb = cos(bank),
+                sh = sin(heading),
+                ch = cos(heading);
+
+            return Element.CreateArray(
+                ch*ca,  -ch*sa*cb+sh*sb, ch*sa*sb+sh*cb,
+                sa,     ca*cb,           -ca*sb,
+                -sh*ca, sh*sa*cb+sh*sb,  -sh*sa*sb+ch*cb
+            );
+        }
         
         /// <summary>Multiplies a 3x3 matrix and a vector.</summary>
         /// <returns>Returns a Vector.</returns>
         public static Element MultiplyMatrix3x3AndVectorToVector(Element m3x3, Element vector)
         {
-            Element x = Element.Part<V_XOf>(vector), y = Element.Part<V_YOf>(vector), z = Element.Part<V_ZOf>(vector);
+            Element x = Element.Part<V_XOf>(vector), y = Element.Part<V_YOf>(vector), z = Element.Part<V_ZOf>(vector),
+                r = m3x3;
+            // return new V_Vector(
+            //     m3x3[0]*x + m3x3[1]*y + m3x3[2]*z,
+            //     m3x3[3]*x + m3x3[4]*y + m3x3[5]*z,
+            //     m3x3[6]*x + m3x3[7]*y + m3x3[8]*z
+            // );
             return new V_Vector(
-                m3x3[0]*x + m3x3[1]*y + m3x3[2]*z,
-                m3x3[3]*x + m3x3[4]*y + m3x3[5]*z,
-                m3x3[6]*x + m3x3[7]*y + m3x3[8]*z
+                -r[0]*x-r[1]*y-r[2]*z,
+                -r[3]*x-r[4]*y-r[5]*z,
+                -r[6]*x-r[7]*y-r[8]*z
             );
         }
 
@@ -225,29 +166,6 @@ namespace Deltin.Deltinteger.Animation
             return product.Get();
         }
 
-        /// <summary>Represents a quaternion without any rotation (1, 0, 0, 0).
-        /// In reality, this returns an array containing only the number 1. It is assumed that accessing
-        /// the other values will return 0 by default.</summary>
-        public static Element ZeroQuaternion() => Element.CreateArray(new V_Number(1));
-
-        /// <summary>Normalizes a quaternion.</summary>
-        public static Element NormalizeQuaternion(ActionSet actionSet, Element q)
-        {
-            Element w = q[0], x = q[1], y = q[2], z = q[3];
-            var magnitude = actionSet.SaveValue("Normalize Quaternion -> Magnitude", Element.Part<V_SquareRoot>(
-                w^2 +
-                x^2 +
-                y^2 +
-                z^2
-            ), false);
-            return Element.CreateArray(
-                w / magnitude,
-                x / magnitude,
-                y / magnitude,
-                z / magnitude
-            );
-        }
-
         public static void NormalizeQuaternion(ActionSet actionSet, IndexReference axis, IndexReference angle)
         {
             Element w = angle.Get(), x = Element.Part<V_XOf>(axis.Get()), y = Element.Part<V_YOf>(axis.Get()), z = Element.Part<V_ZOf>(axis.Get());
@@ -261,62 +179,21 @@ namespace Deltin.Deltinteger.Animation
             actionSet.AddAction(angle.ModifyVariable(Operation.Divide, magnitude));
         }
 
-        public static Element QuaternionFromVector(Element v) => Element.CreateArray(new V_Number(0), Element.Part<V_XOf>(v), Element.Part<V_YOf>(v), Element.Part<V_ZOf>(v));
-
-        /// <summary>Creates a quaternion array from a vector. This is used to multiply existing vectors with quaternions.
-        /// Alternatively, use QuaternionFromAxis to create a true quaternion from a vector and angle.</summary>
-        /// <returns>[0, x, y, z]</returns>
-        public static Element VectorFromQuaternion(Element q) => new V_Vector(q[1], q[2], q[3]);
-
-        /// <summary>Inverts a quaternion.</summary>
-        public static Element InvertQuaternion(Element q) => Element.CreateArray(q[0], q[1] * -1, q[2] * -1, q[3] * -1);
-
-        /// <summary>Rotates a vector with a quaternion.</summary>
-        public static Element RotatePoint(ActionSet actionSet, Element v, Element q)
+        public static Element RotatePointDir(ActionSet actionSet, Element p, Element a, Element w)
         {
-            v = actionSet.SaveValue("rotate_p_to_4d", QuaternionFromVector(v), false);
-            q = actionSet.SaveValue("q", q, false);
-            Element half = actionSet.SaveValue("half", MultiplyQuaternion(q, v), false);
-            Element result = actionSet.SaveValue("rotate_result", MultiplyQuaternion(half, actionSet.SaveValue("rotate_inverse", InvertQuaternion(q), false)), false);
-            return VectorFromQuaternion(result);
+            var rot = MultiplyQuaternion(a, w, p, 0);
+            var half_a = actionSet.AssignAndSave("half_a", rot.Item1).Get();
+            var half_w = actionSet.AssignAndSave("half_w", rot.Item2).Get();
+            var a_inv = actionSet.AssignAndSave("a_inv", a * -1).Get();
+            var result = MultiplyQuaternion(half_a, half_w, a_inv, w);
+            return result.Item1;
         }
 
         public static Element RotatePoint(ActionSet actionSet, Element p, Element a, Element w)
         {
-            var rot = MultiplyQuaternion2(a, w, p, 0);
-            var half_a = actionSet.AssignAndSave("half_a", rot.Item1).Get();
-            var half_w = actionSet.AssignAndSave("half_w", rot.Item2).Get();
-            var a_inv = actionSet.AssignAndSave("a_inv", a * -1).Get();
-            var result = MultiplyQuaternion2(half_a, half_w, a_inv, w);
-            return result.Item1;
+            var matrix = actionSet.AssignAndSave("matrix", Create3x3MatrixFromQuaternion(a, w)).Get();
+            return MultiplyMatrix3x3AndVectorToVector(matrix, p);
         }
-
-        /// <summary>Rotates a local vector around an axis and angle.
-        /// Unlike the alternative overload, this will generate a quaternion from the input axis and angle.
-        /// The elements will be stored inside a variable, so storing them beforehand is not required.</summary>
-        public static Element RotatePointRodrique(ActionSet actionSet, Element position, Element axis, Element angle)
-        {
-            Element v = position;
-            Element u = actionSet.SaveValue("a", new V_Vector(
-                Element.Part<V_XOf>(axis) * Element.Part<V_SineFromRadians>(angle / 2), // x
-                Element.Part<V_YOf>(axis) * Element.Part<V_SineFromRadians>(angle / 2), // y
-                Element.Part<V_ZOf>(axis) * Element.Part<V_SineFromRadians>(angle / 2) // z
-            ));
-            // Element s = angle;
-            Element s = actionSet.SaveValue("s", Element.Part<V_CosineFromRadians>(angle / 2), false);
-            return RotatePointRodrique(v, u, s);
-        }
-
-        /// <summary>Rotates a local vector around an axis and angle.</summary>
-        /// <param name="v">The vector that will be rotated. This element is accessed 3 times, so store this into a variable if it is complicated.</param>
-        /// <param name="u">A vector containing the X, Y, and Z values of the quaternion. This element is accessed 3 times, so store this into a variable if it is complicated.</param>
-        /// <param name="s">The W value of the quaternion. This element is accessed only once, so storing it inside a variable is not required.</param>
-        /// <returns>The vector rotated around the point.</returns>
-        public static Element RotatePointRodrique(Element v, Element u, Element s)
-            => v + ((Element.Part<V_CrossProduct>(u, v) * s) + Element.Part<V_CrossProduct>(u, Element.Part<V_CrossProduct>(u, v))) * 2;
-        
-        public static Element RotatePointRodrique2(Element p, Element v, Element w)
-            => p + 2*w*Element.Part<V_CrossProduct>(v, p) + 2*Element.Part<V_CrossProduct>(v, Element.Part<V_CrossProduct>(v, p));
         
         /// <summary>Gets the dot product of 2 quaternions defined as a vector axis (X, Y, Z) and an angle (W).</summary>
         public static Element QuaternionDotProduct(Element axis0, Element angle0, Element axis1, Element angle1)
@@ -421,13 +298,18 @@ namespace Deltin.Deltinteger.Animation
 
     public class Quaternion
     {
-        public Element Axis { get; }
-        public Element Angle { get; }
+        public Element V { get; }
+        public Element W { get; }
 
         public Quaternion(Element axis, Element angle)
         {
-            Axis = axis;
-            Angle = angle;
+            V = axis;
+            W = angle;
         }
+
+        public Quaternion Multiply(Quaternion q) => new Quaternion(
+            V*q.W + q.V*W + Element.Part<V_CrossProduct>(V, q.V),
+            W*q.W - Element.Part<V_DotProduct>(V, q.V)
+        );
     }
 }
