@@ -100,8 +100,8 @@ namespace Deltin.Deltinteger.Compiler
             End = end;
         }
 
-        public bool IsInside(DocPos pos) => (Start.Line < pos.Line || (Start.Line == pos.Line && pos.Character >= Start.Character))
-            && (End.Line > pos.Line || (End.Line == pos.Line && pos.Character <= End.Character));
+        public bool IsInside(DocPos pos) => (Start.Line < pos.Line || (Start.Line == pos.Line && pos.Character > Start.Character))
+            && (End.Line > pos.Line || (End.Line == pos.Line && pos.Character < End.Character));
 
         public bool DoOverlap(DocRange other) => IsInside(other.Start) || IsInside(other.End) || other.IsInside(Start) || other.IsInside(End);
 
