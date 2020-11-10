@@ -268,6 +268,8 @@ Object-serve scope. Only object members.
         {
             ClassIndexes = DeltinScript.VarCollection.Assign(ClassIndexesTag, true, false);
             DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
+            //set the first element to -1. This makes it so that no instance == 0
+            DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(-1, null, 0));
         }
 
         public IndexReference CreateObject(int classIdentifier, ActionSet actionSet, string internalName)

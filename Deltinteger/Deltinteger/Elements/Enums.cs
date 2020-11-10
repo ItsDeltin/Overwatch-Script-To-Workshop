@@ -538,32 +538,24 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum ObjectiveRev
-    {
-        [EnumOverride(null, "Visible To and String")]
-        VisibleToAndString,
-        String,
-        [EnumOverride(null, "Visible To Sort Order and String")]
-        VisibleToSortOrderAndString,
-        SortOrderAndString,
-        VisibleToAndSortOrder,
-        VisibleTo,
-        SortOrder,
-        None
-    }
-
-    [WorkshopEnum]
     public enum HudTextRev
     {
         [EnumOverride(null, "Visible To and String")]
         VisibleToAndString,
         String,
+        StringAndColor,
+        [EnumOverride(null, "Visible To Sort Order String and Color")]
+        VisibleToSortOrderStringAndColor,
         [EnumOverride(null, "Visible To Sort Order and String")]
         VisibleToSortOrderAndString,
+        [EnumOverride(null, "Visible To String and Color")]
+        VisibleToStringAndColor,
         SortOrderAndString,
         VisibleToAndSortOrder,
+        VisibleToAndColor,
         VisibleTo,
         SortOrder,
+        SortOrderAndColor,
         None
     }
 
