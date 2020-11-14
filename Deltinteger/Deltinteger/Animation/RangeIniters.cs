@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Animation
                             new V_AllPlayers(),
                             EnumData.GetEnumValue(type),
                             position + armatureType.BoneLocalPositions.Get(armatureInstance)[boneData.Head],
-                            position + armatureType.BoneLocalPositions.Get(armatureInstance)[boneData.Tail],
+                            position + armatureType.BoneLocalPositions.Get(armatureInstance)[boneData.Tail] + new V_Vector(0.001, 0, 0),
                             EnumData.GetEnumValue(color),
                             EnumData.GetEnumValue(EffectRev.VisibleToPositionAndRadius)
                         ));

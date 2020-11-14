@@ -72,6 +72,7 @@ namespace Deltin.Deltinteger.Animation
         public ObjectVariable BoneLocalPositions { get; private set; }
         /// <summary>The bone's parents.</summary>
         public ObjectVariable BoneParents { get; private set; }
+        public ObjectVariable BoneNames { get; private set; }
 
         public ArmatureInstanceType(DeltinScript deltinScript) : base(deltinScript, "AnimationArmature") {}
 
@@ -86,6 +87,7 @@ namespace Deltin.Deltinteger.Animation
             BonePositions = AddPrivateObjectVariable();
             BoneLocalPositions = AddPrivateObjectVariable();
             BoneParents = AddPrivateObjectVariable();
+            BoneNames = AddPrivateObjectVariable();
         }
     }
 }

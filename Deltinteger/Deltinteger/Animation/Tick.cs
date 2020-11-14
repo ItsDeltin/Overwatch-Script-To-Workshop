@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Animation
 
             // Reset bone positions.
             _armatureType.BonePositions.Set(actionSet, currentReference, _armatureType.BoneInitialPositions.Get(currentReference));
-            _armatureType.BoneLocalPositions.Set(actionSet, currentReference, _armatureType.BoneInitialPositions.Get(currentReference));
+            // _armatureType.BoneLocalPositions.Set(actionSet, currentReference, _armatureType.BoneInitialPositions.Get(currentReference));
 
             // Loop through each bone
             var boneLoop = new ForRangeBuilder(actionSet, "animation_bone_loop", 0, Element.Part<V_CountOf>(_armatureType.BoneVertexLinks.Get(currentReference)), 1);
@@ -91,6 +91,9 @@ namespace Deltin.Deltinteger.Animation
             actionSet.AddAction(Element.Part<A_SkipIf>(new V_Compare(fcurve.Get(), Operators.NotEqual, new V_Number(0)), new V_Number(1)));
             actionSet.AddAction(new A_Continue());
 
+            // Debug bone name
+            DebugVariable(actionSet, "db_current_bone", _armatureType.BoneNames.Get(currentReference)[boneLoop]);
+
             // Now we get the A and B keyframes from the fcurve using the current time in the animation.
             // This will occur if all keyframes were surpassed.
             var keyframe_index = actionSet.AssignAndSave("animation_keyframe_index", Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
@@ -119,6 +122,7 @@ namespace Deltin.Deltinteger.Animation
             var c = actionSet.AssignAndSave("animation_test_current_time", new V_TotalTimeElapsed()).Get();
             // var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0] / 60) / (keyframeB[0] / 60 - keyframeA[0] / 60)), new V_Number(1)));
             var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0]) / (keyframeB[0] - keyframeA[0])), new V_Number(1)));
+            // var t = actionSet.AssignAndSave("animation_t", 1);
 
             // Get the interpolated rotation.
             var slerp = AnimationOperations.Slerp(
@@ -137,7 +141,7 @@ namespace Deltin.Deltinteger.Animation
 
             Element descendentIndex = actionSet.AssignAndSave("animation_descendent_index", _armatureType.BoneDescendants.Get(currentReference)[boneLoop.Value][descendentLoop.Value]).Get();
             Element originalPoint = actionSet.AssignAndSave("animation_rodrique_original", _armatureType.BonePositions.Get(currentReference)[descendentIndex]).Get();
-            Element rodriqueResult = actionSet.AssignAndSave("animation_newpoint", AnimationOperations.MultiplyMatrix3x3AndVectorToVector(matrix, originalPoint)).Get();
+            Element rodriqueResult = actionSet.AssignAndSave("animation_newpoint", AnimationOperations.Multiply3x3MatrixAndVectorToVector(matrix, originalPoint)).Get();
 
             actionSet.AddAction(_armatureType.BonePositions.ArrayStore.SetVariable(
                 // New point
@@ -170,7 +174,14 @@ namespace Deltin.Deltinteger.Animation
 
             descendentLoop.Finish();
             actionLoop.Finish(); // End action loop
+
+            // ! debug: skip proceeding bones
+            // actionSet.AddAction(new A_Break());
+
             boneLoop.Finish(); // End the bone loop
+
+            // actionSet.AddAction(new A_Abort());
+
             actionSet.AddAction(new A_End()); // End armature
             referenceLoop.Finish(); // End object loop
             actionSet.AddAction(A_Wait.MinimumWait);
@@ -200,6 +211,8 @@ namespace Deltin.Deltinteger.Animation
             // [i, t]
             actionSet.AddAction(_animationInfoList.ModifyVariable(Operation.AppendToArray, Element.CreateArray(Element.CreateArray(actionIndex, new V_TotalTimeElapsed())), index: objectIndexInAnimationList.Get()));
         }
+
+        void DebugVariable(ActionSet actionSet, string name, Element value) => actionSet.AssignAndSave(name, value);
 
         Element ReferenceListCount => Element.Part<V_CountOf>(_animationReferenceList.Get());
     }

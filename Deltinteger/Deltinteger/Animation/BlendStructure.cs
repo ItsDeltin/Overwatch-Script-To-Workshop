@@ -191,6 +191,8 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>When the bone has a parent, the bone's head is stuck to the parent's tail.</summary>
         [JsonProperty("use_connect")]
         public bool IsConnected { get; set; }
+
+        public Vertex TailRelative => TailLocal - HeadLocal;
     }
 
     /// <summary>Deserializes BlendObjects.</summary>

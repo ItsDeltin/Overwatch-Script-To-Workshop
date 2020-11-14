@@ -146,5 +146,15 @@ namespace Deltin.Deltinteger.Models
 
         public Vertex VectorTowards(Vertex vert2) =>
             new Vertex(vert2.X - X, vert2.Y - Y, vert2.Z - Z);
+        
+        public Vertex SwapYZ() =>
+            new Vertex(X, Z, Y, W);
+
+        public override string ToString() => "[" + X + ", " + Y + ", " + Z + ", " + W + "]";
+
+        public static Vertex operator +(Vertex a, Vertex b) => new Vertex(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
+        public static Vertex operator -(Vertex a, Vertex b) => new Vertex(a.X - b.X, a.Y - b.Y, a.Z - b.Z, a.W - b.W);
+        public static Vertex operator *(Vertex a, Vertex b) => new Vertex(a.X * b.X, a.Y * b.Y, a.Z * b.Z, a.W * b.W);
+        public static Vertex operator /(Vertex a, Vertex b) => new Vertex(a.X / b.X, a.Y / b.Y, a.Z / b.Z, a.W / b.W);
     }
 }

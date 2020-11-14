@@ -54,6 +54,7 @@ namespace Deltin.Deltinteger.Animation
         public static Element Create3x3MatrixFromQuaternion(Element xyz, Element w)
         {
             Element x = Element.Part<V_XOf>(xyz), y = Element.Part<V_YOf>(xyz), z = Element.Part<V_ZOf>(xyz),
+                ww = w*w, xx = x*x, yy = y*y, zz = z*z,
                 m_sqrt2 = (Element)Math.Sqrt(2),
                 q0 = m_sqrt2 * w,
                 q1 = m_sqrt2 * x,
@@ -69,6 +70,81 @@ namespace Deltin.Deltinteger.Animation
                 qbc = q2 * q3,
                 qcc = q3 * q3;
             
+            /*return Element.CreateArray(
+                1 - 2*x*x - 2*y*y, // 3x3
+                2*y*z - 2*w*x, // 3x2
+                2*x*z - 2*w*y, // 3x1
+
+                2*y*z + 2*w*x, // 2x3
+                1 - 2*x*x - 2*z*z, // 2x2
+                2*x*y + 2*w*z, // 2x1
+
+                2*x*z + 2*w*y, // 1x3
+                2*x*y - 2*w*z, // 1x2
+                1 - 2*y*y - 2*z*z // 1x1
+            );*/
+            // v1 original
+            
+            /*return Element.CreateArray(
+                1 - 2*y*y - 2*z*z, // 1x1
+                2*x*y - 2*w*z, // 1x2
+                2*x*z + 2*w*y, // 1x3
+
+                2*x*y + 2*w*z, // 2x1
+                1 - 2*x*x - 2*z*z, // 2x2
+                2*y*z + 2*w*x, // 2x3
+
+                2*x*z - 2*w*y, // 3x1
+                2*y*z - 2*w*x, // 3x2
+                1 - 2*x*x - 2*y*y // 3x3
+            );*/
+            
+            /*return Element.CreateArray(
+                w*w + x*x + y*y + z*z,
+                2*x*y - 2*w*z,
+                2*x*z + 2*w*y,
+
+                2*x*y + 2*w*z,
+                w*w - x*x + y*y - z*z,
+                2*y*z + 2*w*x,
+
+                2*x*z - 2*w*y,
+                2*y*z - 2*w*x,
+                w*w - x*x - y*y + z*z
+            );*/
+
+            /*
+            bpy original
+
+            return Element.CreateArray(
+                (1.0 - qbb - qcc),
+                (qdc + qab),
+                (-qdb + qac),
+                (-qdc + qab),
+                (1.0 - qaa - qcc),
+                (qda + qbc),
+                (qdb + qac),
+                (-qda + qbc),
+                (1.0 - qaa - qbb)
+            );
+            */
+
+            // Real result adjusted
+            return Element.CreateArray(
+                (1.0 - qbb - qcc),  // [0][0] -> [0] 8
+                (-qdc + qab),      // [1][0] -> [1] 5
+                (qdb + qac),       // [2][0] -> [2] 2
+
+                (qdc + qab),       // [0][1] -> [3] 7
+                (1.0 - qaa - qcc), // [1][1] -> [4] 4
+                (-qda + qbc),      // [2][1] -> [5] 1
+
+                (-qdb + qac),      // [0][2] -> [6] 6
+                (qda + qbc),       // [1][2] -> [7] 3
+                (1.0 - qaa - qbb)  // [2][2] -> [8] 0
+            );
+            
+            // bpy original adjusted
             return Element.CreateArray(
                 (1.0 - qaa - qbb), // [2][2] -> [8]
                 (-qda + qbc),      // [2][1] -> [7]
@@ -85,9 +161,20 @@ namespace Deltin.Deltinteger.Animation
         public static Element Multiply3x3MatrixAndVectorToVector(Element m, Element v) {
             Element t0 = Element.Part<V_XOf>(v), t1 = Element.Part<V_YOf>(v), t2 = Element.Part<V_ZOf>(v);
             return new V_Vector(
-                m[0] * t0 + m[3] * t1 + m[6] * t2,
-                m[1] * t0 + m[4] * t1 + m[7] * t2,
-                m[2] * t0 + m[5] * t1 + m[8] * t2
+                // m[2] * t0 + m[5] * t1 + m[8] * t2,
+                // m[1] * t0 + m[4] * t1 + m[7] * t2,
+                // m[0] * t0 + m[3] * t1 + m[6] * t2
+
+                // m[6] * t0 + m[7] * t1 + m[8] * t2,
+                // m[3] * t0 + m[4] * t1 + m[5] * t2,
+                // m[0] * t0 + m[1] * t1 + m[2] * t2
+
+                m[0] * t0 + m[3] * t1 + m[2] * t2,
+                m[1] * t0 + m[4] * t1 + m[5] * t2,
+                m[6] * t0 + m[7] * t1 + m[8] * t2
+                // m[0] * t0 + m[3] * t1 + m[6] * t2,
+                // m[1] * t0 + m[4] * t1 + m[7] * t2,
+                // m[2] * t0 + m[5] * t1 + m[8] * t2
             );
         }
 

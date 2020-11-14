@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Animation
                 var keyframeData = new List<Element>();
 
                 // Add the keyframe number.
-                keyframeData.Add(keyframe.Start);
+                keyframeData.Add(keyframe.Start / 30.0);
 
                 // Add the value.
                 switch (curve.FCurveType)
@@ -317,7 +317,9 @@ namespace Deltin.Deltinteger.Animation
 
     class BonePoint
     {
+        /// <summary>The position of the bone relative to the parent.</summary>
         public Vertex Position { get; }
+        /// <summary>The position of the bone relative to the armature.</summary>
         public Vertex LocalPosition { get; }
         public int Parent { get; }
 
@@ -331,7 +333,8 @@ namespace Deltin.Deltinteger.Animation
             }
             else
             {
-                Position = bone.Tail;
+                // Position = bone.Tail;
+                Position = bone.TailRelative;
                 LocalPosition = bone.TailLocal;
             }
         }
