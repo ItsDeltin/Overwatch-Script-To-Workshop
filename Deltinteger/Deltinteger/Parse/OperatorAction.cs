@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Left { get; private set; }
         public IExpression Right { get; private set; }
-        public TypeOperation Operation { get; private set; }
+        public ITypeOperation Operation { get; private set; }
 
         public OperatorAction(ParseInfo parseInfo, Scope scope, BinaryOperatorExpression context)
         {
@@ -25,11 +25,6 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => Operation?.ReturnType.GetObjectScope();
         public CodeType Type() => Operation?.ReturnType;
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            IWorkshopTree left = Left.Parse(actionSet);
-            IWorkshopTree right = Right.Parse(actionSet);
-            return Operation.Resolve(left, right);
-        }
+        public IWorkshopTree Parse(ActionSet actionSet) => Operation.Resolve(actionSet, Left, Right);
     }
 }
