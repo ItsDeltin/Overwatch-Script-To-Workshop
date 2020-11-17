@@ -869,8 +869,8 @@
         },
         "Button": {
           "documentation": "The button to check. Designed by any action inputs by ability but not directional inputs. (i.e. Primary Fire, Secondary Fire, Ultimate Ability, Jump, Crouch, etc.)",
-          "type": "Button",
-          "defaultValue": "Primary Fire"
+          "type": "button",
+          "defaultValue": "Button"
         }
       }
     },
@@ -924,6 +924,18 @@
           "documentation": "The player whose voice line status to check. Can use most player based Value Syntax to retrieve this value.",
           "type": "player",
           "defaultValue": "Event Player"
+        }
+      }
+    },
+    {
+      "type": "boolean",
+      "name": "Is Communicating Any Spray",
+      "documentation": "Whether a player is using a spray.",
+      "parameters": {
+        "Player": {
+          "type": "player",
+          "defaultValue": "Event Player",
+          "documentation": "The player whose spray status to check."
         }
       }
     },
@@ -2545,7 +2557,42 @@
           "defaultValue": "Primary Fire"
         }
       },
-      "alias": "ButtonValue"
+      "alias": "ButtonValue",
+      "hidden": true
+    },
+    {
+      "type": "color",
+      "name": "Color",
+      "parameters": {
+        "Color": {
+          "type": "Color",
+          "defaultValue": "Blue"
+        }
+      },
+      "alias": "ColorValue",
+      "hidden": true
+    },
+    {
+      "name": "Custom Color",
+      "type": "color",
+      "parameters": {
+        "Red": {
+          "type": "number",
+          "defaultValue": 0
+        },
+        "Green": {
+          "type": "number",
+          "defaultValue": 0
+        },
+        "Blue": {
+          "type": "number",
+          "defaultValue": 0
+        },
+        "Alpha": {
+          "type": "number",
+          "defaultValue": 0
+        }
+      }
     },
     {
       "type": "button",
@@ -2735,6 +2782,10 @@
         },
         "Max": {
           "type": "number"
+        },
+        "Sort Order": {
+          "type": "number",
+          "defaultValue": 0
         }
       }
     },
@@ -2756,6 +2807,10 @@
         },
         "Max": {
           "type": "number"
+        },
+        "Sort Order": {
+          "type": "number",
+          "defaultValue": 0
         }
       }
     },
@@ -2771,6 +2826,51 @@
         },
         "Default": {
           "type": "boolean"
+        },
+        "Sort Order": {
+          "type": "number",
+          "defaultValue": 0
+        }
+      }
+    },
+    {
+      "type": "number",
+      "name": "Workshop Setting Combo",
+      "parameters": {
+        "Category": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Default": {
+          "type": "number"
+        },
+        "Options": {
+          "type": "any"
+        },
+        "Sort Order": {
+          "type": "number",
+          "defaultValue": 0
+        }
+      }
+    },
+    {
+      "type": "boolean",
+      "name": "Workshop Setting Hero",
+      "parameters": {
+        "Category": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Default": {
+          "type": "Hero"
+        },
+        "Sort Order": {
+          "type": "number",
+          "defaultValue": 0
         }
       }
     },
@@ -2803,6 +2903,121 @@
         "Health Type": {
           "type": "HealthType",
           "defaultValue": "Health"
+        }
+      }
+    },
+    {
+      "name": "Evaluate Once",
+      "type": "any",
+      "parameters": {
+        "Input Value": {
+          "type": "any"
+        }
+      }
+    },
+    {
+      "name": "Update Every Frame",
+      "type": "any",
+      "parameters": {
+        "Input Value": {
+          "type": "any"
+        }
+      }
+    },
+    {
+      "name": "Magnitude Of",
+      "type": "number",
+      "parameters": {
+        "Value": {
+          "type": "vector"
+        }
+      }
+    },
+    {
+      "name": "Number Of Slots",
+      "type": "number",
+      "parameters": {
+        "Team": {
+          "defaultValue": "Team",
+          "type": "team"
+        }
+      }
+    },
+    {
+      "name": "Spawn Points",
+      "type": "vector[]",
+      "parameters": {
+        "Team": {
+          "type": "team"
+        }
+      }
+    },
+    {
+      "name": "String Contains",
+      "type": "boolean",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Value": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "name": "String Length",
+      "type": "number",
+      "parameters": {
+        "String": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "name": "String Slice",
+      "type": "string",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Start Character Index": {
+          "type": "number",
+          "defaultValue": 0
+        },
+        "Character Count": {
+          "type": "number",
+          "defaultValue": 9999
+        }
+      }
+    },
+    {
+      "name": "Last Assist ID",
+      "type": "any"
+    },
+    {
+      "name": "Player Stat",
+      "type": "number",
+      "parameters": {
+        "Player": {
+          "type": "player"
+        },
+        "Stat": {
+          "type": "PlayerStat"
+        }
+      }
+    },
+    {
+      "name": "Player Hero Stat",
+      "type": "number",
+      "parameters": {
+        "Player": {
+          "type": "player"
+        },
+        "Hero": {
+          "type": "hero" 
+        },
+        "Stat": {
+          "type": "PlayerHeroStat"
         }
       }
     }
@@ -2842,8 +3057,8 @@
         },
         "Button": {
           "documentation": "The logical button that is being reenabled.",
-          "type": "Button",
-          "defaultValue": "Primary Fire"
+          "type": "button",
+          "defaultValue": "Button"
         }
       }
     },
@@ -3082,8 +3297,8 @@
         },
         "Color": {
           "documentation": "The color of the beam effect to be created. IF a particular team is chosen, the effect will either be red or blue, depending on whether the team is hostile to the viewer. Does not apply to sound effects.",
-          "type": "Color",
-          "defaultValue": "White"
+          "type": "color",
+          "defaultValue": "Color"
         },
         "Reevaluation": {
           "documentation": "Specifies which of this action’s inputs will be continuously reevaluated, the effect will keep asking for and using new values from reevaluated inputs.\n\nVisible to, position, and radius\nPosition and radius\nVisible to\nNone",
@@ -3139,8 +3354,8 @@
         },
         "Color": {
           "documentation": "The color of the effect to be created. IF a particular team is chosen, the effect will either be red or blue, depending on whether the team is hostile to the viewer. Does not apply to sound effects.",
-          "type": "Color",
-          "defaultValue": "White"
+          "type": "color",
+          "defaultValue": "Color"
         },
         "Position": {
           "documentation": "The effect’s position. If this value is a player, then the effect will move along with the player, otherwise, the value is interpreted as a position in the world. Can use most Player or Vector based Value Syntax.",
@@ -3196,18 +3411,18 @@
         },
         "Header Color": {
           "documentation": "The color of the Header text to be created. If a particular team is chosen, the effect will either be red or blue.",
-          "type": "Color",
-          "defaultValue": "White"
+          "type": "color",
+          "defaultValue": "Color"
         },
         "Subheader Color": {
           "documentation": "The color of the Subheader text to be created. If a particular team is chosen, the effect will either be red or blue.",
-          "type": "Color",
-          "defaultValue": "White"
+          "type": "color",
+          "defaultValue": "Color"
         },
         "Text Color": {
           "documentation": "The color of the body text to be created. If a particular team is chosen, the effect will either be red or blue.",
-          "type": "Color",
-          "defaultValue": "White"
+          "type": "color",
+          "defaultValue": "Color"
         },
         "Reevaluation": {
           "documentation": "Specifies which of this action’s inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.\n\nVisible to and String\nString\nNone",
@@ -3246,8 +3461,8 @@
         },
         "Icon Color": {
           "documentation": "The color of the icon to be created. IF a particular team is chosen, the icon will either be red or blue, depending on whether the team is hostile to the viewer.",
-          "type": "Color",
-          "defaultValue": "White"
+          "type": "color",
+          "defaultValue": "Color"
         },
         "Show When Offscreen": {
           "documentation": "Should this icon still appear even when it is behind you? Can use most Boolean based Value Syntax to specify.",
@@ -3291,8 +3506,8 @@
           "defaultValue": "Visible To Position and String"
         },
         "Text Color": {
-          "type": "Color",
-          "defaultValue": "White"
+          "type": "color",
+          "defaultValue": "Color"
         },
         "Spectators": {
           "type": "Spectators",
@@ -3498,8 +3713,8 @@
           "defaultValue": "Event Player"
         },
         "Button": {
-          "type": "Button",
-          "defaultValue": "Primary Fire"
+          "type": "button",
+          "defaultValue": "Button"
         }
       }
     },
@@ -3853,8 +4068,8 @@
         },
         "Color": {
           "documentation": "The color of the effect to be created. IF a particular team is chosen, the effect will either be red or blue, depending on whether the team is hostile to the viewer.",
-          "type": "Color",
-          "defaultValue": "White"
+          "type": "color",
+          "defaultValue": "Color"
         },
         "Position": {
           "documentation": "The effect’s position. If this value is a player, then the effect will move along with the player, otherwise, the value is interpreted as a position in the world. Can use most Player or Vector based Value Syntax.",
@@ -3895,8 +4110,8 @@
         },
         "Button": {
           "documentation": "The button to be pressed.",
-          "type": "Button",
-          "defaultValue": "Primary Fire"
+          "type": "button",
+          "defaultValue": "Button"
         }
       }
     },
@@ -4187,7 +4402,7 @@
         },
         "Reevaluation": {
           "documentation": "Specifies which of this action’s inputs will be continously reevaluated. The message will keep asking for and using new values from reevaluated inputs. Can choose “Visible to and String” or “String”",
-          "type": "ObjectiveRev",
+          "type": "HudTextRev",
           "defaultValue": "Visible To And String"
         }
       }
@@ -4761,8 +4976,8 @@
         },
         "Button": {
           "documentation": "The logical button that is being held virtually.",
-          "type": "Button",
-          "defaultValue": "Primary Fire"
+          "type": "button",
+          "defaultValue": "Button"
         }
       }
     },
@@ -4988,8 +5203,8 @@
           "defaultValue": "Event Player"
         },
         "Button": {
-          "type": "Button",
-          "defaultValue": "Primary Fire"
+          "type": "button",
+          "defaultValue": "Button"
         }
       }
     },
@@ -5452,8 +5667,12 @@
           "defaultValue": true
         },
         "Color": {
-          "type": "Color",
-          "defaultValue": "White"
+          "type": "color",
+          "defaultValue": "Color"
+        },
+        "Outline Type": {
+          "type": "OutlineType",
+          "defaultValue": "Default"
         }
       }
     },
@@ -5643,6 +5862,195 @@
           "defaultValue": 0.0
         }
       }
+    },
+    {
+      "name": "Log To Inspector",
+      "parameters": {
+        "Text": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "name": "Wait Until",
+      "parameters": {
+        "Continue Condition": {
+          "type": "boolean"
+        },
+        "Timeout": {
+          "type": "number"
+        }
+      }
+    },
+    {
+      "name": "Set Knockback Dealt",
+      "parameters": {
+        "Player": {
+          "type": "players",
+          "defaultValue": "Event Player"
+        },
+        "Knockback Dealt Percent": {
+          "type": "number",
+          "defaultValue": 100
+        }
+      }
+    },
+    {
+      "name": "Set Knockback Received",
+      "parameters": {
+        "Player": {
+          "type": "players",
+          "defaultValue": "Event Player"
+        },
+        "Knockback Received Percent": {
+          "type": "number",
+          "defaultValue": 100
+        }
+      }
+    },
+    {
+      "name": "Set Environment Credit Player",
+      "parameters": {
+        "Target": {
+          "type": "player",
+          "defaultValue": "Event Player"
+        },
+        "Environment Credit Player": {
+          "type": "player"
+        }
+      }
+    },
+    {
+      "name": "Start Assist",
+      "parameters": {
+        "Assisters": {
+          "type": "player",
+          "defaultValue": "Event Player"
+        },
+        "Targets": {
+          "type": "player",
+          "defaultValue": "All Players"
+        },
+        "Reevaluation": {
+          "type": "Assist",
+          "defaultValue": "AssistersAndTargets"
+        }
+      }
+    },
+    {
+      "name": "Stop Assist",
+      "parameters": {
+        "Assist ID": {
+          "type": "any"
+        }
+      }
+    },
+    {
+      "name": "Stop All Assists"
+    },
+    {
+      "name": "Create Progress Bar HUD Text",
+      "parameters": {
+        "Visible To": {
+          "type": "players",
+          "defaultValue": "All Players"
+        },
+        "Value": {
+          "type": "number"
+        },
+        "Text": {
+          "type": "string",
+          "defaultValue": null
+        },
+        "Location": {
+          "type": "Location",
+          "defaultValue": "Top"
+        },
+        "Sort Order": {
+          "type": "number",
+          "defaultValue": 0
+        },
+        "Progress Bar Color": {
+          "type": "color",
+          "defaultValue": "Color"
+        },
+        "Text Color": {
+          "type": "color",
+          "defaultValue": "Color"
+        },
+        "Reevaluation": {
+          "type": "ProgressBarEvaluation",
+          "defaultValue": "Visible To Values And Color"
+        },
+        "Nonteam Spectators": {
+          "type": "Spectators",
+          "defaultValue": "Default Visibility"
+        }
+      }
+    },
+    {
+      "name": "Destroy Progress Bar HUD Text",
+      "parameters": {
+        "Text ID": {
+          "type": "any"
+        }
+      }
+    },
+    {
+      "name": "Destroy All Progress Bar HUD Text"
+    },
+    {
+      "name": "Create Progress Bar In-World Text",
+      "parameters": {
+        "Visible To": {
+          "type": "players",
+          "defaultValue": "All Players"
+        },
+        "Value": {
+          "type": "number"
+        },
+        "Text": {
+          "type": "string"
+        },
+        "Position": {
+          "type": "player | vector"
+        },
+        "Scale": {
+          "type": "number",
+          "defaultValue": 1
+        },
+        "Clipping": {
+          "type": "Clipping",
+          "defaultValue": "Clip Against Surfaces"
+        },
+        "Progress Bar Color": {
+          "type": "color",
+          "defaultValue": "Color"
+        },
+        "Text Color": {
+          "type": "color",
+          "defaultValue": "Color"
+        },
+        "Reevaluation": {
+          "type": "ProgressBarEvaluation",
+          "defaultValue": "Visible To Values And Color"
+        },
+        "Nonteam Spectators": {
+          "type": "Spectators",
+          "defaultValue": "Default Visibility"
+        }
+      }
+    },
+    {
+      "name": "Destroy Progress Bar In-World Text",
+      "parameters": {
+        "Text ID": {
+          "type": "any"
+        }
+      }
+    },
+    {
+      "name": "Destroy All Progress Bar In-World Text"
     }
   ],
   "enumerators": {
@@ -5867,6 +6275,10 @@
         "alias": "Cancel"
       },
       {
+        "name": "Cancel Contrary Motion XYZ",
+        "alias": "CancelXYZ"
+      },
+      {
         "name": "Incorporate Contrary Motion",
         "alias": "Incorporate"
       }
@@ -5941,7 +6353,11 @@
       "Orange",
       "Sky Blue",
       "Turquoise",
-      "Lime Green"
+      "Lime Green",
+      "Black",
+      "Gray",
+      "Rose",
+      "Violet"
     ],
     "EffectRev": [
       {
@@ -5992,25 +6408,16 @@
       "Defending",
       "Need Help",
       "Sorry",
-      "Countdown"
+      "Countdown",
+      "Spray Up",
+      "Spray Left",
+      "Spray Right",
+      "Spray Down"
     ],
     "Location": [
       "Left",
       "Top",
       "Right"
-    ],
-    "ObjectiveRev": [
-      "Visible To And String",
-      "String",
-      {
-        "name": "Visible To Sort Order and String",
-        "alias": "VisibleToSortOrderAndString"
-      },
-      "Sort Order And String",
-      "Visible To And Sort Order",
-      "Visible To",
-      "Sort Order",
-      "None"
     ],
     "HudTextRev": [
       "Visible To And String",
@@ -6422,6 +6829,82 @@
       "Health",
       "Armor",
       "Shields"
+    ],
+    "OutlineType": [
+      "Default",
+      "Occluded",
+      "Always"
+    ],
+    "Assist": [
+      "AssistersAndTargets",
+      "None"
+    ],
+    "ProgressBarEvaluation": [
+      "Visible To Values And Color",
+      "Visible To And Values",
+      "Visible To And Color",
+      "Visible To",
+      "Values And Color",
+      "Values",
+      "Color",
+      "None"
+    ],
+    "PlayerStat": [
+      "All Damage Dealt",
+      "Barrier Damage Dealt",
+      "Damage Blocked",
+      "Damage Taken",
+      "Deaths",
+      "Defensive Assists",
+      "Eliminations",
+      "Final Blows",
+      "Environmental Deaths",
+      "Environmental Kills",
+      "Hero Damage Dealt",
+      "Healing Dealt",
+      "Multikill Best",
+      "Multikills",
+      "Objective Kills",
+      "Offensive Assists",
+      "Solo Kills",
+      "Ultimates Earned",
+      "Ultimates Used",
+      "Weapon Accuracy"
+    ],
+    "PlayerHeroStat": [
+      "All Damage Dealt",
+      "Barrier Damage Dealt",
+      "Critical Hit Accuracy",
+      "Critical Hits",
+      "Damage Blocked",
+      "Damage Taken",
+      "Deaths",
+      "Defensive Assists",
+      "Eliminations",
+      "Environmental Deaths",
+      "Environmental Kills",
+      "Final Blows",
+      "Healing Dealt",
+      "Healing Received",
+      "Hero Damage Dealt",
+      "Multikill Best",
+      "Multikills",
+      "Objective Kills",
+      "Offensive Assists",
+      "Scoped Accuracy",
+      "Scoped Critical Hit Accuracy",
+      "Scoped Critical Hit Kills",
+      "Scoped Critical Hits",
+      "Scoped Hits",
+      "Scoped Shots",
+      "Self Healing",
+      "Shots Fired",
+      "Shots Hit",
+      "Shots Missed",
+      "Solo Kills",
+      "Ultimates Earned",
+      "Ultimates Used",
+      "Weapon Accuracy"
     ]
   }
 }

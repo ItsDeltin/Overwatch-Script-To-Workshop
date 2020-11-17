@@ -401,6 +401,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Players() => new PipeType(_playerType, PlayerArray());
         public CodeType PlayerArray() => new ArrayType(this, _playerType);
         public CodeType Vector() => _vectorType;
+        public CodeType VectorArray() => new ArrayType(this, _vectorType);
         public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         public CodeType Button() => Any(); // TODO
     }

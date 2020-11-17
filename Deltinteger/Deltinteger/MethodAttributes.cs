@@ -101,6 +101,7 @@ namespace Deltin.Deltinteger
     {
         public IWorkshopTree[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
+        public object AdditionalData { get; set; }
         public CallParallel ParallelMode { get; set; } = CallParallel.NoParallel;
         public string ActionComment { get; set; }
 

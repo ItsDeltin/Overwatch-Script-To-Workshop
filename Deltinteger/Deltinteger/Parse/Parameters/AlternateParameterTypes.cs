@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             Options = options ?? new VariableResolveOptions();
         }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             VariableResolve resolvedVariable = new VariableResolve(Options, value, valueRange, parseInfo.Script.Diagnostics);
 
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
             DefaultConstValue = defaultValue;
         }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             if (value is ExpressionOrWorkshopValue expressionOrWorkshop && expressionOrWorkshop.WorkshopValue is Element asElement)
                 return asElement.Function.Name == "True";
@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
             DefaultConstValue = defaultValue;
         }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             if (value == null) return DefaultConstValue;
 
@@ -105,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public ConstStringParameter(string name, string documentation) : base(name, documentation) {}
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             StringAction str = value as StringAction;
             if (str == null && valueRange != null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
@@ -119,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public ConstHeroParameter(string name, string documentation) : base(name, documentation) {}
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             // ConstantExpressionResolver.Resolve's callback will be called after this function runs,
             // so we store the value in an object reference whose value will be set later.
@@ -169,7 +169,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             StringAction str = value as StringAction;
             if (str == null)

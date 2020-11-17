@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Elements
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
 
-        public void Call(ParseInfo parseInfo, DocRange callRange)
+        public object Call(ParseInfo parseInfo, DocRange callRange)
         {
             if (_restricted != null)
                 // If there is a restricted call type, add it.
@@ -113,6 +113,8 @@ namespace Deltin.Deltinteger.Elements
                     parseInfo.GetLocation(callRange),
                     RestrictedCall.Message_Element((RestrictedCallType)_restricted)
                 ));
+            
+            return null;
         }
 
         public static IMethod[] GetWorkshopFunctions(ITypeSupplier typeSupplier)

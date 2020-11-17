@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
         {
             public ConstStringArrayParameter(string name, string documentation) : base(name, documentation) {}
 
-            public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+            public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
             {
                 var values = new List<string>();
                 ConstantExpressionResolver.Resolve(value, expr => {
