@@ -1131,7 +1131,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 Is(TokenType.Exclamation) || // Extended collection marker.
                 Is(TokenType.Number) ||      // Assigned workshop ID.
                 Is(TokenType.Colon) ||       // Macro variable value.
-                (functionDeclaration && Is(TokenType.Parentheses_Open)) || // Function parameter start.
+                (functionDeclaration && (Is(TokenType.Parentheses_Open) || Is(TokenType.LessThan))) || // Function parameter start.
                 IsFinished                   // EOF was reached.
             ));
         });
@@ -1515,7 +1515,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             if (ParseOptional(TokenType.LessThan))
             {
-                generics = ParseDelimitedList(TokenType.GreaterThan, () => ParseType().LookaheadValid, ParseType);
+                generics = ParseDelimitedList(TokenType.GreaterThan, () => Lookahead(() => ParseType().LookaheadValid), ParseType);
                 ParseExpected(TokenType.GreaterThan);
             }
 
