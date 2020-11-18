@@ -262,16 +262,16 @@ namespace Deltin.Deltinteger.LanguageServer
                     var workshopToCode = new WorkshopDecompiler(workshop, new FileLobbySettingsResolver(args.File, workshop.LobbySettings), new CodeFormattingOptions());
                     string result = workshopToCode.Decompile();
 
+                    // Warning if the end of the file was not reached.
+                    if (!tte.ReachedEnd)
+                        return new { success = false, msg = "End of file not reached, stuck at: '" + tte.LocalStream.Substring(0, Math.Min(tte.LocalStream.Length, 50)) };
+                    
                     // Create the file.
                     using (var writer = File.CreateText(args.File))
                         // Write the code to the file.
                         writer.Write(result);
 
-                    // Warning if the end of the file was not reached.
-                    if (!tte.ReachedEnd)
-                        return new { success = false, msg = "End of file not reached, stuck at: '" + tte.LocalStream.Substring(0, Math.Min(tte.LocalStream.Length, 50)) + "'" };
-                    else
-                        return new { success = true };
+                    return new { success = true };
                 }
                 catch (Exception ex)
                 {

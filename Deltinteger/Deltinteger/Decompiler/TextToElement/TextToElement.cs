@@ -471,11 +471,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 }
                 else throw new Exception("Expected 'Restart Rule' or 'Do Nothing'.");
             }
-            // Function.
-            else if (Function(true, out FunctionExpression func))
-            {
-                action = func;
-            }
             // Set variable.
             else if (Expression(out ITTEExpression expr))
             {
@@ -502,6 +497,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
                 Expression(out ITTEExpression value);
                 action = new SetVariableAction((ITTEVariable)expr, op, value, index);
+            }
+            // Function.
+            else if (Function(true, out FunctionExpression func))
+            {
+                action = func;
             }
             // Unknown.
             else
@@ -1208,9 +1208,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 // Test hook.
                 if (onInterupt != null && onInterupt.Invoke())
                 {
-                    // If the hook handled the match, break.
+                    // If the hook handled the match, continue.
                     matched = true;
-                    break;
+                    continue;
                 }
 
                 foreach (var lobbySetting in orderedSettings)
