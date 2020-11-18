@@ -23,11 +23,11 @@ namespace Deltin.Deltinteger.Parse
 
         public static CodeType GetCodeTypeFromContext(ITypeContextError errorHandler, ParseInfo parseInfo, Scope scope, ITypeContextHandler typeContext)
         {
-            if (typeContext == null) return null;
+            if (typeContext?.Identifier == null) return parseInfo.TranslateInfo.Types.Any();
             // if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
             
             // Get the type arguments.
-            var typeArgs = new CodeType[typeContext.TypeArgs.Count];
+            var typeArgs = new CodeType[typeContext.TypeArgs?.Count ?? 0];
             for (int i = 0; i < typeArgs.Length; i++)
                 typeArgs[i] = GetCodeTypeFromContext(parseInfo, scope, typeContext.TypeArgs[i]);
             

@@ -183,7 +183,7 @@ namespace Deltin.Deltinteger.Parse
             if (element == null) return new MissingVariable(TranslateInfo, variableName);
             
             // Additional syntax checking.
-            var expression = new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);
+            var expression = new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), GetGenerics(getter, variableContext.TypeArgs), variableRange);
 
             // Accept the method group.
             if (expression is CallMethodGroup methodGroup)
@@ -198,8 +198,6 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>An IExpression[] of each indexer in the chain. Will return null if arrayContext is null.</returns>
         public IExpression[] ExpressionIndexArray(Scope scope, List<ArrayIndex> arrayContext)
         {
-            if (arrayContext == null) return null;
-
             IExpression[] index = null;
             if (arrayContext != null)
             {
@@ -208,6 +206,18 @@ namespace Deltin.Deltinteger.Parse
                     index[i] = GetExpression(scope, arrayContext[i].Expression);
             }
             return index;
+        }
+
+        public CodeType[] GetGenerics(Scope scope, List<IParseType> genericsContext)
+        {
+            CodeType[] types = null;
+            if (genericsContext != null)
+            {
+                types = new CodeType[genericsContext.Count];
+                for (int i = 0; i < types.Length; i++)
+                    types[i] = TypeFromContext.GetCodeTypeFromContext(this, scope, genericsContext[i]);
+            }
+            return types;
         }
 
         /// <summary>Creates a macro from a Define_macroContext.</summary>
@@ -259,7 +269,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
         }
 
-        public IExpression Apply(IVariable variable, IExpression[] index, DocRange variableRange)
+        public IExpression Apply(IVariable variable, IExpression[] index, CodeType[] typeArgs, DocRange variableRange)
         {
             // Callable
             if (variable is ICallable callable) Call(callable, variableRange);
@@ -291,7 +301,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Function group.
             if (variable is MethodGroup methodGroup)
-                return new CallMethodGroup(_parseInfo, variableRange, methodGroup);
+                return new CallMethodGroup(_parseInfo, variableRange, methodGroup, typeArgs);
 
             return (IExpression)variable;
         }

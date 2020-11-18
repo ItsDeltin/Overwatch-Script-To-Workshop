@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -12,13 +14,23 @@ namespace Deltin.Deltinteger.Parse
         {
             _index = index;
         }
-
-        public override void GetRealType(ParseInfo parseInfo, Action<CodeType> callback) =>
-            parseInfo.SourceExpression.OnResolve(expr => callback(expr.Type().Generics[_index]));
+        
+        public override CodeType GetRealerType(InstanceAnonymousTypeLinker instanceInfo) => instanceInfo.Links.TryGetValue(this, out CodeType result) ? result : this;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.TypeParameter
         };
+
+        public static AnonymousType[] GetGenerics(List<Token> typeArgs)
+        {
+            var generics = new AnonymousType[typeArgs.Count];
+            for (int i = 0; i < typeArgs.Count; i++)
+            {
+                var anonymousType = new AnonymousType(typeArgs[i].GetText(), i);
+                generics[i] = anonymousType;
+            }
+            return generics;
+        }
     }
 }

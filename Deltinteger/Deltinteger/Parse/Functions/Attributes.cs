@@ -185,6 +185,41 @@ namespace Deltin.Deltinteger.Parse
         public void SetSubroutine(string name) => SubroutineName = name;
         public void SetVariableType(bool isGlobal) => throw new NotImplementedException();
     }
+
+    class GenericAttributeAppender : IFunctionAppendResult
+    {
+        public bool IsStatic { get; private set; }
+        public bool IsVirtual { get; private set; }
+        public AccessLevel AccessLevel { get; private set; }
+        public bool IsOverride { get; private set; }
+        public bool IsRecursive { get; private set; }
+        public string SubroutineName { get; private set; }
+        public bool DefaultVariableType { get; private set; }
+        public bool IsOverridable => IsVirtual || IsOverride;
+        public bool IsSubroutine { get; private set; }
+
+        bool IFunctionAppendResult.IsStatic() => IsStatic;
+        bool IFunctionAppendResult.IsVirtual() => IsVirtual;
+        void IFunctionAppendResult.SetAccessLevel(AccessLevel accessLevel) => AccessLevel = accessLevel;
+        void IFunctionAppendResult.SetOverride() => IsOverride = true;
+        void IFunctionAppendResult.SetRecursive() => IsRecursive = true;
+        void IFunctionAppendResult.SetStatic() => IsStatic = true;
+        void IFunctionAppendResult.SetSubroutine(string name)
+        {
+            SubroutineName = name;
+            IsSubroutine = true;
+        }
+        void IFunctionAppendResult.SetVariableType(bool isGlobal) => DefaultVariableType = isGlobal;
+        void IFunctionAppendResult.SetVirtual() => IsVirtual = true;
+
+        public void Apply(MethodAttributes attributes)
+        {
+            attributes.Virtual = IsVirtual;
+            attributes.Override = IsOverridable;
+            attributes.Recursive = IsRecursive;
+            attributes.Parallelable = IsSubroutine;
+        }
+    }
     
     // Attribute handler for defined methods
     class MethodAttributesGetter : FunctionAttributesGetter

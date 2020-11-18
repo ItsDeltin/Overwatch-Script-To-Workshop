@@ -4,28 +4,14 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class ClassType : CodeType
+    public class ClassType : CodeType, IScopeAppender
     {
         public ClassInitializer Initializer { get; protected set; }
 
-        /*
-Static scope, static members only.
-> Give to returning scope
-> static methods
-
-Operational scope. All object and static members.
-> object methods
-
-Object-serve scope. Only object members.
-> Give to object scope.
-        */
-
-        /// <summary>Used in object methods and constructors.</summary>
-        protected Scope operationalScope => Initializer.OperationalScope;
         /// <summary>Used in static methods and returned when ReturningScope() is called. Contains all static members in the inheritance tree.</summary>
-        protected Scope staticScope => Initializer.StaticScope;
+        public Scope StaticScope { get; set; }
         /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
-        protected Scope serveObjectScope => Initializer.ServeObjectScope;
+        public Scope ServeObjectScope { get; set; }
 
         public int Identifier => Initializer.Identifier;
 
@@ -96,12 +82,15 @@ Object-serve scope. Only object members.
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) => Initializer.AddObjectVariablesToAssigner(reference, assigner);
 
-        public override Scope GetObjectScope() => serveObjectScope;
-        public override Scope ReturningScope() => staticScope;
+        public override Scope GetObjectScope() => ServeObjectScope;
+        public override Scope ReturningScope() => StaticScope;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.Class
         };
+
+        public virtual void AddObjectBasedScope(IMethod function) => ServeObjectScope.CopyMethod(function);
+        public virtual void AddStaticBasedScope(IMethod function) => StaticScope.CopyMethod(function);
     }
 }

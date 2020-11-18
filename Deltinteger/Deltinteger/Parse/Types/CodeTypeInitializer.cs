@@ -45,4 +45,15 @@ namespace Deltin.Deltinteger.Parse
             Generics = generics;
         }
     }
+
+    public class InstanceAnonymousTypeLinker
+    {
+        public Dictionary<AnonymousType, CodeType> Links { get; } = new Dictionary<AnonymousType, CodeType>();
+
+        public InstanceAnonymousTypeLinker(AnonymousType[] typeArgs, CodeType[] generics)
+        {
+            for (int i = 0; i < typeArgs.Length; i++)
+                Links.Add(typeArgs[i], generics[i]);
+        }
+    }
 }

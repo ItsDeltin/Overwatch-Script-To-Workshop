@@ -6,16 +6,19 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedClassInitializer : ClassInitializer, IResolveElements
+    public class DefinedClassInitializer : ClassInitializer, IResolveElements, IScopeProvider, IScopeAppender
     {
-        public override int GenericsCount => _anonymousTypes.Count;
+        public override int GenericsCount => AnonymousTypes?.Length ?? 0;
+        public List<IElementProvider> DeclaredElements { get; } = new List<IElementProvider>();
         private readonly ParseInfo _parseInfo;
         private readonly ClassContext _typeContext;
         private readonly Location _definedAt;
         private readonly List<Var> _staticVariables = new List<Var>();
         private readonly Scope _scope;
         private Constructor[] _constructors;
-        private readonly List<AnonymousType> _anonymousTypes = new List<AnonymousType>();
+        public AnonymousType[] AnonymousTypes { get; private set; }
+        private Scope _operationalObjectScope;
+        private Scope _operationalStaticScope;
 
         public DefinedClassInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
@@ -27,10 +30,10 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.AddWorkshopInit(this);
             parseInfo.TranslateInfo.AddResolve(this);
 
-            /*
-            this._typeContext = typeContext;
-            this._parseInfo = parseInfo;
+            // Get the generics.
+            AnonymousTypes = AnonymousType.GetGenerics(_typeContext.Generics);
 
+            /*
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", typeContext.Identifier.Range);
             
@@ -82,60 +85,77 @@ namespace Deltin.Deltinteger.Parse
 
             base.ResolveElements();
 
-            // Get the generics.
-            for (int i = 0; i < _typeContext.Generics.Count; i++)
+            if (Extends == null)
+            {   
+                _operationalStaticScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
+                _operationalObjectScope = _operationalStaticScope.Child(Name);
+            }
+            else
             {
-                var anonymousType = new AnonymousType(_typeContext.Generics[i].GetText(), i);
-                _anonymousTypes.Add(anonymousType);
-                OperationalScope.AddType(new GenericCodeTypeInitializer(anonymousType));
+                // TODO
+                throw new NotImplementedException();
+            }
+
+            foreach (var type in AnonymousTypes)
+            {
+                _operationalStaticScope.AddType(new GenericCodeTypeInitializer(type));
+                _operationalObjectScope.AddType(new GenericCodeTypeInitializer(type));
             }
 
             // Get the declarations.
             foreach (var declaration in _typeContext.Declarations)
             {
-                IScopeable scopeable;
-
                 // Function
                 if (declaration is FunctionContext function)
-                    scopeable = new DefinedMethod(_parseInfo, OperationalScope, StaticScope, function, WorkingInstance);
-                // Macro function
-                else if (declaration is MacroFunctionContext macroFunction)
-                    scopeable = _parseInfo.GetMacro(OperationalScope, StaticScope, macroFunction);
-                // Variable
-                else if (declaration is VariableDeclaration variable)
-                    scopeable = new ClassVariable(OperationalScope, StaticScope, new DefineContextHandler(_parseInfo, variable)).GetVar();
-                // Macro variable
-                else if (declaration is MacroVarDeclaration macroVar)
-                    scopeable = _parseInfo.GetMacro(OperationalScope, StaticScope, macroVar);
-                // Unknown
-                else throw new NotImplementedException(declaration.GetType().ToString());
+                {
+                    var result = DefinedMethodProvider.GetDefinedMethod(_parseInfo, this, function, this);
+                    result.AddDefaultInstance(this);
+                    DeclaredElements.Add(result);
+                }
+                // else
+                // {
+                //     IScopeable scopeable;
 
-                // Add the object variable if it is an IIndexReferencer.
-                if (scopeable is IIndexReferencer referencer)
-                    AddObjectVariable(referencer);
-                
-                // Copy to scopes.
-                // Method copy
-                if (scopeable is IMethod method)
-                {
-                    if (method.Static) OperationalScope.CopyMethod(method);
-                    else ServeObjectScope.CopyMethod(method);
-                }
-                // Variable copy
-                else if (scopeable is IVariable variable)
-                {
-                    if (scopeable.Static) OperationalScope.CopyVariable(variable);
-                    else ServeObjectScope.CopyVariable(variable);
-                }
-                else throw new NotImplementedException();
+                //     if (declaration is MacroFunctionContext macroFunction)
+                //         scopeable = _parseInfo.GetMacro(OperationalScope, StaticScope, macroFunction);
+                //     // Variable
+                //     else if (declaration is VariableDeclaration variable)
+                //         scopeable = new ClassVariable(OperationalScope, StaticScope, new DefineContextHandler(_parseInfo, variable)).GetVar();
+                //     // Macro variable
+                //     else if (declaration is MacroVarDeclaration macroVar)
+                //         scopeable = _parseInfo.GetMacro(OperationalScope, StaticScope, macroVar);
+                //     // Unknown
+                //     else throw new NotImplementedException(declaration.GetType().ToString());
+
+                //     // Add the object variable if it is an IIndexReferencer.
+                //     if (scopeable is IIndexReferencer referencer)
+                //         AddObjectVariable(referencer);
+                    
+                //     // Copy to scopes.
+                //     // Method copy
+                //     if (scopeable is IMethod method)
+                //     {
+                //         if (method.Static) OperationalScope.CopyMethod(method);
+                //         else ServeObjectScope.CopyMethod(method);
+                //     }
+                //     // Variable copy
+                //     else if (scopeable is IVariable variable)
+                //     {
+                //         if (scopeable.Static) OperationalScope.CopyVariable(variable);
+                //         else ServeObjectScope.CopyVariable(variable);
+                //     }
+                //     else throw new NotImplementedException();
+                // }
             }
+
+            WorkingInstance = GetInstance();
 
             // Get the constructors.
             if (_typeContext.Constructors.Count > 0)
             {
                 _constructors = new Constructor[_typeContext.Constructors.Count];
                 for (int i = 0; i < _constructors.Length; i++)
-                    _constructors[i] = new DefinedConstructor(_parseInfo, OperationalScope, WorkingInstance, _typeContext.Constructors[i]);
+                    _constructors[i] = new DefinedConstructor(_parseInfo, _operationalObjectScope, WorkingInstance, _typeContext.Constructors[i]);
             }
             else
             {
@@ -161,18 +181,15 @@ namespace Deltin.Deltinteger.Parse
             //     ));
             // _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, CodeLensSourceType.Type, _definedAt.range));
         }
-
-        protected override void BaseScopes(string scopeName)
-        {
-            Scope classContainer = _parseInfo.TranslateInfo.GlobalScope.Child();
-            classContainer.CatchConflict = true;
-
-            StaticScope = classContainer.Child(scopeName);
-            OperationalScope = classContainer.Child(scopeName);
-            ServeObjectScope = new Scope(scopeName);
-        }
         
-        public override CodeType GetInstance() => new DefinedClass(_parseInfo, this, _anonymousTypes.ToArray());
+        public override CodeType GetInstance() => new DefinedClass(_parseInfo, this, AnonymousTypes);
         public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedClass(_parseInfo, this, instanceInfo.Generics);
+        // TODO
+        // public IMethod GetOverridenFunction(IMethodProvider provider) => ServeObjectScope.GetMethodOverload(provider.Name, provider.ArgumentTypes);
+        public IMethod GetOverridenFunction(IMethodProvider provider) => throw new NotImplementedException();
+        Scope IScopeProvider.GetObjectBasedScope() => _operationalObjectScope;
+        Scope IScopeProvider.GetStaticBasedScope() => _operationalStaticScope;
+        void IScopeAppender.AddObjectBasedScope(IMethod function) => _operationalObjectScope.CopyMethod(function);
+        void IScopeAppender.AddStaticBasedScope(IMethod function) => _operationalStaticScope.CopyMethod(function);
     }
 }

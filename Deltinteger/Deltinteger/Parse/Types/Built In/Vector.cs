@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse
             _typeSupplier = supplier;
         }
 
-        public void ResolveElements()
+        public override void ResolveElements()
         {
             X = CreateInternalVar("X", "The X component of the vector.");
             Y = CreateInternalVar("Y", "The Y component of the vector.");

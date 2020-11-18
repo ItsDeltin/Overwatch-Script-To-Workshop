@@ -9,7 +9,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class PathmapClass : ClassInitializer
+    public class PathmapClass : SelfContainedClassProvider
     {
         private DeltinScript DeltinScript { get; }
         public IndexReference Nodes { get; private set; }
@@ -50,21 +50,21 @@ namespace Deltin.Deltinteger.Pathfinder
             if (_elementsResolved) return;
             base.ResolveElements();
 
-            ServeObjectScope.AddNativeMethod(Pathfind);
-            ServeObjectScope.AddNativeMethod(PathfindAll);
-            ServeObjectScope.AddNativeMethod(GetPath);
-            ServeObjectScope.AddNativeMethod(PathfindEither);
-            ServeObjectScope.AddNativeMethod(GetResolve(DeltinScript));
-            ServeObjectScope.AddNativeMethod(GetResolveTo(DeltinScript));
-            ServeObjectScope.AddNativeMethod(AddNode);
-            ServeObjectScope.AddNativeMethod(DeleteNode);
-            ServeObjectScope.AddNativeMethod(AddSegment);
-            ServeObjectScope.AddNativeMethod(DeleteSegment);
-            ServeObjectScope.AddNativeMethod(AddAttribute);
-            ServeObjectScope.AddNativeMethod(DeleteAttribute);
-            ServeObjectScope.AddNativeMethod(DeleteAllAttributes);
-            ServeObjectScope.AddNativeMethod(DeleteAllAttributesConnectedToNode);
-            ServeObjectScope.AddNativeMethod(SegmentFromNodes);
+            ObjectScope.AddNativeMethod(Pathfind);
+            ObjectScope.AddNativeMethod(PathfindAll);
+            ObjectScope.AddNativeMethod(GetPath);
+            ObjectScope.AddNativeMethod(PathfindEither);
+            ObjectScope.AddNativeMethod(GetResolve(DeltinScript));
+            ObjectScope.AddNativeMethod(GetResolveTo(DeltinScript));
+            ObjectScope.AddNativeMethod(AddNode);
+            ObjectScope.AddNativeMethod(DeleteNode);
+            ObjectScope.AddNativeMethod(AddSegment);
+            ObjectScope.AddNativeMethod(DeleteSegment);
+            ObjectScope.AddNativeMethod(AddAttribute);
+            ObjectScope.AddNativeMethod(DeleteAttribute);
+            ObjectScope.AddNativeMethod(DeleteAllAttributes);
+            ObjectScope.AddNativeMethod(DeleteAllAttributesConnectedToNode);
+            ObjectScope.AddNativeMethod(SegmentFromNodes);
 
             StaticScope.AddNativeMethod(StopPathfind);
             StaticScope.AddNativeMethod(CurrentSegmentAttribute);
@@ -137,9 +137,9 @@ namespace Deltin.Deltinteger.Pathfinder
                 Documentation = "The attributes of the pathmap. The X of a value in the array is the first node that the attribute is related to. The Y is the second node the attribute is related to. The Z is the attribute's actual value.",
                 CodeType = new ArrayType(DeltinScript.Types, _supplier.Vector())
             };
-            ServeObjectScope.AddNativeVariable(NodesVar);
-            ServeObjectScope.AddNativeVariable(SegmentsVar);
-            ServeObjectScope.AddNativeVariable(AttributesVar);
+            ObjectScope.AddNativeVariable(NodesVar);
+            ObjectScope.AddNativeVariable(SegmentsVar);
+            ObjectScope.AddNativeVariable(AttributesVar);
         }
 
         private static MarkupBuilder AddHookInfo(MarkupBuilder markupBuilder) => markupBuilder.NewLine().Add("This is a hook variable, meaning it can only be set at the rule-level.");

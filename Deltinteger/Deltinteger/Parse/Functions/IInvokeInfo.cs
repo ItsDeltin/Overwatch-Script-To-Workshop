@@ -15,7 +15,8 @@ namespace Deltin.Deltinteger.Parse
         public IInvokeResult Invoke(InvokeData invokeInfo)
         {
             var parseInfo = invokeInfo.ParseInfo;
-            MethodGroup group = ((CallMethodGroup)invokeInfo.Target).Group;
+            var groupCall = (CallMethodGroup)invokeInfo.Target;
+            var group = groupCall.Group;
 
             // Make an OverloadChooser to choose an Overload.
             var overloadChooser = new OverloadChooser(group.Functions.ToArray(), parseInfo, invokeInfo.Scope, invokeInfo.Getter, invokeInfo.TargetRange, invokeInfo.CallRange, new OverloadError("method '" + group.Name + "'"));
@@ -29,6 +30,9 @@ namespace Deltin.Deltinteger.Parse
             // CallingMethod may be null if no good functions are found.
             if (callingMethod != null)
             {
+                var provider = callingMethod.GetProvider();
+                result.ReturnType = callingMethod.CodeType.GetRealerType(provider.GetInstanceInfo(groupCall.TypeArgs));
+
                 callingMethod.Call(parseInfo, invokeInfo.TargetRange);
 
                 // If the function's block needs to be applied, check optional restricted calls when 'Applied()' runs.
@@ -136,7 +140,7 @@ namespace Deltin.Deltinteger.Parse
 
     class FunctionInvokeResult : IInvokeResult, IBlockListener, IOnBlockApplied
     {
-        public CodeType ReturnType => Function.CodeType;
+        public CodeType ReturnType { get; set; }
         public IMethod Function { get; }
         public IExpression[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }

@@ -44,6 +44,7 @@ namespace Deltin.Deltinteger.Parse
     public class CallMethodGroup : IExpression, ILambdaApplier, ILambdaInvocable, IWorkshopTree
     {
         public MethodGroup Group { get; }
+        public CodeType[] TypeArgs { get; }
         private readonly ParseInfo _parseInfo;
         private readonly DocRange _range;
         private PortableLambdaType _type = new PortableLambdaType(LambdaKind.Anonymous);
@@ -55,11 +56,12 @@ namespace Deltin.Deltinteger.Parse
         public bool ResolvedSource => _chosenFunction != null;
         public IBridgeInvocable[] InvokedState { get; private set; }
 
-        public CallMethodGroup(ParseInfo parseInfo, DocRange range, MethodGroup group)
+        public CallMethodGroup(ParseInfo parseInfo, DocRange range, MethodGroup group, CodeType[] typeArgs)
         {
             _parseInfo = parseInfo;
             _range = range;
             Group = group;
+            TypeArgs = typeArgs;
         }
 
         public void Accept()
@@ -119,8 +121,8 @@ namespace Deltin.Deltinteger.Parse
         private static IMethodGroupInvoker GetLambdaHandler(IMethod function)
         {
             // If the chosen function is a DefinedMethod, use the DefinedFunctionHandler.
-            if (function is DefinedMethod definedMethod)
-                return new FunctionMethodGroupInvoker(new DefinedFunctionHandler(definedMethod, false));
+            if (function is DefinedMethodInstance definedMethod)
+                return new FunctionMethodGroupInvoker(new DefinedFunctionHandler(definedMethod.Provider, false));
             
             // If the chosen function is a macro.
             if (function is DefinedMacro definedMacro)

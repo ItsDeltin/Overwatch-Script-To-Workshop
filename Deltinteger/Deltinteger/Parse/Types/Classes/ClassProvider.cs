@@ -16,36 +16,16 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Extends { get; protected set; }
         public Constructor[] Constructors { get; protected set; }
 
-        /*
-Static scope, static members only.
-> Give to returning scope
-> static methods
-
-Operational scope. All object and static members.
-> object methods
-
-Object-serve scope. Only object members.
-> Give to object scope.
-        */
-
-        /// <summary>Used in object methods and constructors.</summary>
-        public Scope OperationalScope { get; protected set; }
-        /// <summary>Used in static methods and returned when ReturningScope() is called. Contains all static members in the inheritance tree.</summary>
-        public Scope StaticScope { get; protected set; }
-        /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
-        public Scope ServeObjectScope { get; protected set; }
-
         /// <summary>Determines if the class elements were resolved.</summary>
         protected bool _elementsResolved = false;
         /// <summary>Determines if the class was initialized for the workshop output.</summary>
         protected bool _workshopInitialized = false;
 
-        public CodeType WorkingInstance { get; private set; }
+        public CodeType WorkingInstance { get; protected set; }
 
         public ClassInitializer(string name)
         {
             Name = name;
-            WorkingInstance = GetInstance();
         }
 
         public abstract bool BuiltInTypeMatches(Type type);
@@ -54,36 +34,7 @@ Object-serve scope. Only object members.
         {
             if (_elementsResolved) return;
             _elementsResolved = true;
-
-            string scopeName = "class " + Name;
-
-            if (Extends == null)
-            {
-                BaseScopes(scopeName);
-
-                StaticScope.CompletionCatch = true;
-                StaticScope.ProtectedCatch = true;
-                ServeObjectScope.CompletionCatch = true;
-            }
-            else
-            {
-                ((ClassType)Extends).ResolveElements();
-
-                StaticScope      = ((ClassType)Extends).Initializer.StaticScope.Child(scopeName);
-                OperationalScope = ((ClassType)Extends).Initializer.OperationalScope.Child(scopeName);
-                ServeObjectScope = ((ClassType)Extends).Initializer.ServeObjectScope.Child(scopeName);
-            }
-
-            StaticScope.PrivateCatch = true;
-            OperationalScope.PrivateCatch = true;
-            OperationalScope.This = WorkingInstance;
-        }
-
-        protected virtual void BaseScopes(string scopeName)
-        {
-            StaticScope = new Scope(scopeName);
-            OperationalScope = new Scope(scopeName);
-            ServeObjectScope = new Scope(scopeName);
+            if (Extends != null) ((ClassType)Extends).ResolveElements();
         }
 
         private int StackStart(bool inclusive)
@@ -154,14 +105,12 @@ Object-serve scope. Only object members.
             newClassInfo.Constructor.Parse(actionSet, newClassInfo.ConstructorValues, newClassInfo.AdditionalParameterData);
         }
 
-        protected ObjectVariable AddObjectVariable(IIndexReferencer variable)
+        protected virtual ObjectVariable AddObjectVariable(IIndexReferencer variable)
         {
             // Create an ObjectVariable
             ObjectVariable createdObjectVariable = new ObjectVariable(variable);
             // Add the ObjectVariable to the ObjectVariables list. This will assign the variable a stack when WorkshopInit executes.
             ObjectVariables.Add(createdObjectVariable);
-            // Copy the variable to the serve object scope. This allows the variable to be accessed when doing className.variableName. 
-            ServeObjectScope.CopyVariable(variable);
             // Return the created ObjectVariable.
             return createdObjectVariable;
         }

@@ -165,5 +165,8 @@ namespace Deltin.Deltinteger.Parse
         public virtual void AddLink(Location location) {}
 
         public virtual void GetRealType(ParseInfo parseInfo, Action<CodeType> callback) => callback(this);
+        public virtual CodeType GetRealerType(InstanceAnonymousTypeLinker instanceInfo) => this;
+
+        public override string ToString() => GetName();
     }
 }

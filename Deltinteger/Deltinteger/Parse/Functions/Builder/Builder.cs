@@ -262,24 +262,24 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
     public class DefinedFunctionHandler : IFunctionHandler
     {
-        private readonly DefinedMethod _method;
+        private readonly DefinedMethodProvider _method;
         private readonly bool _primarySubroutineFunction;
 
-        public DefinedFunctionHandler(DefinedMethod method, bool primarySubroutineFunction)
+        public DefinedFunctionHandler(DefinedMethodProvider method, bool primarySubroutineFunction)
         {
             _method = method;
             _primarySubroutineFunction = primarySubroutineFunction;
         }
 
         public string GetName() => _method.Name;
-        public bool IsObject() => _method.Attributes.ContainingType != null && !_method.Static;
-        public bool IsRecursive() => _method.Attributes.Recursive;
+        public bool IsObject() => _method.ContainingType != null && !_method.Static;
+        public bool IsRecursive() => _method.Recursive;
         public bool IsSubroutine() => _method.IsSubroutine;
-        public int ParameterCount() => _method.Parameters.Length;
+        public int ParameterCount() => _method.ParameterProviders.Length;
         public bool MultiplePaths() => _method.MultiplePaths;
-        public bool DoesReturnValue() => _method.CodeType != null;
+        public bool DoesReturnValue() => _method.ReturnType != null;
         public SubroutineInfo GetSubroutineInfo() => _method.GetSubroutineInfo();
-        public IIndexReferencer GetParameterVar(int index) => index < ParameterCount() ? _method.ParameterVars[index] : null;
+        public IIndexReferencer GetParameterVar(int index) => index < ParameterCount() ? _method.ParameterProviders[index].Var : null;
         public void ParseInner(ActionSet actionSet) => _method.Block.Translate(actionSet);
         public object UniqueIdentifier() => _method;
         public void Subcall(FunctionBuildController builder, ActionSet actionSet)
@@ -290,7 +290,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 builder.Subcall(actionSet, this);
         }
 
-        public CodeType ContainingType => _method.Attributes.ContainingType;
+        public CodeType ContainingType => _method.ContainingType?.GetInstance();
     }
 
     public interface IParameterHandler
@@ -504,22 +504,22 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     public class DefinedSubroutineContext : ISubroutineContext
     {
         private readonly ParseInfo _parseInfo;
-        private readonly DefinedMethod _method;
+        private readonly DefinedMethodProvider _method;
         private readonly IFunctionHandler[] _virtualOptions;
 
-        public DefinedSubroutineContext(ParseInfo parseInfo, DefinedMethod method, IFunctionHandler[] virtualOptions)
+        public DefinedSubroutineContext(ParseInfo parseInfo, DefinedMethodProvider method, IFunctionHandler[] virtualOptions)
         {
             _parseInfo = parseInfo;
             _method = method;
             _virtualOptions = virtualOptions;
         }
 
-        public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_method.Parameters.Length, _virtualOptions, _method.Attributes.Recursive);
+        public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_method.ParameterProviders.Length, _virtualOptions, _method.Recursive);
         public string ElementName() => _method.Name;
         public string RuleName() => _method.SubroutineName;
         public string ThisArrayName() => "_" + ElementName() + "_object_stack";
         public bool VariableGlobalDefault() => _method.SubroutineDefaultGlobal;
-        public CodeType ContainingType() => _method.Attributes.ContainingType;
+        public CodeType ContainingType() => _method.ContainingType.GetInstance();
         public void SetSubroutineInfo(SubroutineInfo subroutineInfo) => _method.SubroutineInfo = subroutineInfo;
 
         public void Finish(Rule rule)
@@ -534,14 +534,14 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             // If any of the parent overriden functions are a subroutine,
             // inherit the variables used to store the parameters.
             // Start from the current parent then work up.
-            var current = _method.Attributes.Overriding;
+            var current = _method.OverridingFunction;
             while (current != null) // When current equals null, there are no more parent functions.
             {
                 // If the current function is a subroutine
-                if (((DefinedMethod)current).IsSubroutine)
+                if (((DefinedMethodProvider)current).IsSubroutine)
                 {
                     // Get the parameter stack.
-                    var parameters = ((DefinedMethod)current).GetSubroutineInfo().ParameterStores;
+                    var parameters = ((DefinedMethodProvider)current).GetSubroutineInfo().ParameterStores;
                     
                     // Iterate through each parameter handler and apply the stack. 
                     for (int i = 0; i < Parameters().Length; i++)
@@ -551,7 +551,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                     return parameters;
                 }
                 // Set current to the function that the current function is overriding.
-                current = _method.Attributes.Overriding;
+                current = _method.OverridingFunction;
             }
 
             // If no subroutine is found, get the default parameter stacks.

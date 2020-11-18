@@ -1,22 +1,48 @@
-using System.Text;
+using System;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger
 {
+    public interface IElementProvider
+    {
+        void AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker);
+    }
+
+    public interface IMethodProvider
+    {
+        string Name { get; }
+        CodeType[] ArgumentTypes { get; }
+        AnonymousType[] GenericTypes { get; }
+
+        IMethod GetDefaultInstance()
+        {
+            if (this is IMethod method)
+                return method;
+            throw new NotImplementedException();
+        }
+        IMethod GetInstance(GetInstanceInfo instanceInfo) => GetDefaultInstance();
+
+        void Override(IMethodProvider overridenBy) => throw new NotImplementedException();
+
+        public InstanceAnonymousTypeLinker GetInstanceInfo(CodeType[] typeArgs) => new InstanceAnonymousTypeLinker(GenericTypes, typeArgs);
+    }
+
     public interface IMethod : IScopeable, IParameterCallable
     {
         MethodAttributes Attributes { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         void Call(ParseInfo parseInfo, DocRange callRange) {}
         bool DoesReturnValue => CodeType != null;
+
+        IMethodProvider GetProvider()
+        {
+            if (this is IMethodProvider provider) return provider;
+            else throw new NotImplementedException();
+        }
 
         public static string GetLabel(IMethod function, bool includeReturnType)
         {

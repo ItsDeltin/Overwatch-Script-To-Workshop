@@ -17,15 +17,15 @@ namespace Deltin.Deltinteger.Parse
 {
     public class OverloadChooser
     {
-        private ParseInfo parseInfo { get; }
-        private Scope scope { get; }
-        private Scope getter { get; }
-        private DocRange genericErrorRange { get; }
         public DocRange CallRange { get; }
-        private OverloadError ErrorMessages { get; }
+        private readonly ParseInfo _parseInfo;
+        private readonly Scope _scope;
+        private readonly Scope _getter;
+        private readonly DocRange _genericErrorRange;
+        private readonly OverloadError _errorMessages;
 
-        private IParameterCallable[] AllOverloads { get; }
-        private List<IParameterCallable> CurrentOptions { get; set; }
+        private readonly IParameterCallable[] _allOverloads;
+        private List<IParameterCallable> _currentOptions;
 
         public OverloadMatch Match { get; private set; }
         public IParameterCallable Overload { get; private set; }
@@ -35,16 +35,16 @@ namespace Deltin.Deltinteger.Parse
 
         public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
         {
-            AllOverloads = overloads
+            _allOverloads = overloads
                 .OrderBy(overload => overload.Parameters.Length)
                 .ToArray();
-            CurrentOptions = AllOverloads.ToList();
-            this.parseInfo = parseInfo;
-            this.scope = elementScope;
-            this.getter = getter;
-            this.genericErrorRange = genericErrorRange;
+            _currentOptions = _allOverloads.ToList();
+            this._parseInfo = parseInfo;
+            this._scope = elementScope;
+            this._getter = getter;
+            this._genericErrorRange = genericErrorRange;
             CallRange = callRange;
-            this.ErrorMessages = errorMessages;
+            this._errorMessages = errorMessages;
 
             parseInfo.Script.AddOverloadData(this);
         }
@@ -57,8 +57,8 @@ namespace Deltin.Deltinteger.Parse
             if (!SetParameterCount(inputParameters.Length)) return;
 
             // Match overloads.
-            OverloadMatch[] matches = new OverloadMatch[CurrentOptions.Count];
-            for (int i = 0; i < matches.Length; i++) matches[i] = MatchOverload(CurrentOptions[i], inputParameters, context);
+            OverloadMatch[] matches = new OverloadMatch[_currentOptions.Count];
+            for (int i = 0; i < matches.Length; i++) matches[i] = MatchOverload(_currentOptions[i], inputParameters, context);
 
             // Choose the best option.
             Match = BestOption(matches);
@@ -90,12 +90,12 @@ namespace Deltin.Deltinteger.Parse
                     // Check if there are any duplicate names.
                     if (parameters.Any(p => p != null && p.Picky && p != parameter && p.Name == parameter.Name))
                         // If there are, syntax error
-                        parseInfo.Script.Diagnostics.Error($"The parameter {parameter.Name} was already set.", parameter.NameRange);
+                        _parseInfo.Script.Diagnostics.Error($"The parameter {parameter.Name} was already set.", parameter.NameRange);
                 }
 
                 // Set expression and expressionRange.
                 parameter.LambdaInfo = new ExpectingLambdaInfo();
-                parameter.Value = parseInfo.SetLambdaInfo(parameter.LambdaInfo).GetExpression(getter, context[i].Expression);
+                parameter.Value = _parseInfo.SetLambdaInfo(parameter.LambdaInfo).GetExpression(_getter, context[i].Expression);
                 parameter.ExpressionRange = context[i].Expression.Range;
             }
 
@@ -149,7 +149,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(i);
 
             // Get the missing parameters.
-            match.GetMissingParameters(genericErrorRange, ErrorMessages, context, CallRange);
+            match.GetMissingParameters(_genericErrorRange, _errorMessages, context, CallRange);
 
             return match;
         }
@@ -162,7 +162,7 @@ namespace Deltin.Deltinteger.Parse
             else bestOption = matches.First(match => match.Option == Overload);
 
             // Add the diagnostics of the best option.
-            bestOption.AddDiagnostics(parseInfo.Script.Diagnostics);
+            bestOption.AddDiagnostics(_parseInfo.Script.Diagnostics);
             CheckAccessLevel();
 
             // Apply the lambdas and method group parameters.
@@ -186,29 +186,29 @@ namespace Deltin.Deltinteger.Parse
 
             if (Overload is IMethod asMethod)
             {
-                if (!getter.AccessorMatches(asMethod)) accessable = false;
+                if (!_getter.AccessorMatches(asMethod)) accessable = false;
             }
-            else if (!getter.AccessorMatches(scope, Overload.AccessLevel)) accessable = false;
+            else if (!_getter.AccessorMatches(_scope, Overload.AccessLevel)) accessable = false;
 
             if (!accessable)
-                parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), genericErrorRange);
+                _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), _genericErrorRange);
         }
 
         private bool SetParameterCount(int numberOfParameters)
         {
-            Overload = AllOverloads
+            Overload = _allOverloads
                 .OrderBy(o => Math.Abs(numberOfParameters - o.Parameters.Length))
                 .FirstOrDefault();
             
-            CurrentOptions = CurrentOptions
+            _currentOptions = _currentOptions
                 .Where(o => numberOfParameters <= o.Parameters.Length)
                 .ToList();
                         
-            if (CurrentOptions.Count == 0)
+            if (_currentOptions.Count == 0)
             {
-                parseInfo.Script.Diagnostics.Error(
-                    string.Format(ErrorMessages.BadParameterCount, numberOfParameters),
-                    genericErrorRange
+                _parseInfo.Script.Diagnostics.Error(
+                    string.Format(_errorMessages.BadParameterCount, numberOfParameters),
+                    _genericErrorRange
                 );
                 return false;
             }
@@ -219,7 +219,7 @@ namespace Deltin.Deltinteger.Parse
         {
             AdditionalParameterData = new object[Overload.Parameters.Length];
             for (int i = 0; i < Overload.Parameters.Length; i++)
-                AdditionalParameterData[i] = Overload.Parameters[i].Validate(parseInfo, Values[i], ParameterRanges.ElementAtOrDefault(i));
+                AdditionalParameterData[i] = Overload.Parameters[i].Validate(_parseInfo, Values[i], ParameterRanges.ElementAtOrDefault(i));
         }
 
         public SignatureHelp GetSignatureHelp(DocPos caretPos)
@@ -234,33 +234,33 @@ namespace Deltin.Deltinteger.Parse
                         activeParameter = i;
             
             // Get the signature information.
-            SignatureInformation[] overloads = new SignatureInformation[AllOverloads.Length];
+            SignatureInformation[] overloads = new SignatureInformation[_allOverloads.Length];
             for (int i = 0; i < overloads.Length; i++)
             {
                 // Get the parameter information for the signature.
-                var parameters = new ParameterInformation[AllOverloads[i].Parameters.Length];
+                var parameters = new ParameterInformation[_allOverloads[i].Parameters.Length];
 
                 // Convert parameters to parameter information.
                 for (int p = 0; p < parameters.Length; p++)
                     parameters[p] = new ParameterInformation() {
                         // Get the label to show in the signature.
-                        Label = AllOverloads[i].Parameters[p].GetLabel(),
+                        Label = _allOverloads[i].Parameters[p].GetLabel(),
                         // Get the documentation.
-                        Documentation = Extras.GetMarkupContent(AllOverloads[i].Parameters[p].Documentation)
+                        Documentation = Extras.GetMarkupContent(_allOverloads[i].Parameters[p].Documentation)
                     };
 
                 // Create the signature information.
                 overloads[i] = new SignatureInformation() {
-                    Label = AllOverloads[i].GetLabel(false),
+                    Label = _allOverloads[i].GetLabel(false),
                     Parameters = parameters,
-                    Documentation = AllOverloads[i].Documentation
+                    Documentation = _allOverloads[i].Documentation
                 };
             }
 
             return new SignatureHelp()
             {
                 ActiveParameter = activeParameter,
-                ActiveSignature = Array.IndexOf(AllOverloads, Overload),
+                ActiveSignature = Array.IndexOf(_allOverloads, Overload),
                 Signatures = overloads
             };
         }

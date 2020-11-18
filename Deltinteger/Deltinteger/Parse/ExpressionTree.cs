@@ -371,7 +371,12 @@ namespace Deltin.Deltinteger.Parse
                         apply.Error(string.Format("'{0}' is inaccessable due to its access level.", _name), _range);
 
                     // Get the wrapped expression.
-                    IExpression expression = apply.Apply(variable, tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.Index), _range);
+                    IExpression expression = apply.Apply(
+                        variable,
+                        tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.Index),
+                        tcParseInfo.ParseInfo.GetGenerics(tcParseInfo.Getter, _variable.TypeArgs),
+                        _range
+                    );
 
                     // Add the potential path.
                     potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, expression, variable, tcParseInfo.ParseInfo, _range));
@@ -382,11 +387,11 @@ namespace Deltin.Deltinteger.Parse
             // Currently, OSTW does not support nested types, so make sure there is no parent.
             if (_canBeType)
             {
-                // TODO
-                // var types = tcParseInfo.Scope.TypesFromName(_name);
+                var typeErrorHandler = new DefaultTypeContextError(tcParseInfo.ParseInfo, _variable, false);
+                var type = TypeFromContext.GetCodeTypeFromContext(typeErrorHandler, tcParseInfo.ParseInfo, tcParseInfo.Scope, _variable);
                 // If the type exists, add it to potentialPaths.
-                // if (type != null)
-                //     potentialPaths.Add(new TypeOption(type, tcParseInfo.ParseInfo, _range));
+                if (typeErrorHandler.Exists)
+                    potentialPaths.Add(new TypeOption(typeErrorHandler, type, tcParseInfo.ParseInfo, _range));
             }
             
             return potentialPaths;
@@ -474,17 +479,23 @@ namespace Deltin.Deltinteger.Parse
             private readonly CodeType _type;
             private readonly ParseInfo _parseInfo;
             private readonly DocRange _callRange;
+            private readonly ITypeContextError _errorHandler;
             
-            public TypeOption(CodeType type, ParseInfo parseInfo, DocRange callRange) {
+            public TypeOption(ITypeContextError typeErrorHandler, CodeType type, ParseInfo parseInfo, DocRange callRange) {
                 _type = type;
                 _parseInfo = parseInfo;
                 _callRange = callRange;
+                _errorHandler = typeErrorHandler;
             }
 
             public Scope GetScope() => _type.ReturningScope();
             public IExpression GetExpression() => _type;
             public bool IsAmbiguousTo(IPotentialPathOption other) => other is TypeOption;
-            public void Accept() => _type.Call(_parseInfo, _callRange);
+            public void Accept()
+            {
+                _type.Call(_parseInfo, _callRange);
+                _errorHandler.ApplyErrors();
+            }
         }
         class VariableOption : IPotentialPathOption
         {

@@ -11,7 +11,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DeltinScript
+    public class DeltinScript : IScopeProvider, IScopeAppender
     {
         private FileGetter FileGetter { get; }
         private Importer Importer { get; }
@@ -158,7 +158,10 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Function
                     if (declaration is FunctionContext function)
-                        new DefinedMethod(parseInfo, RulesetScope, RulesetScope, function, null);
+                    {
+                        var p = DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, null);
+                        p.AddDefaultInstance(this);
+                    }
                     // Macro function
                     else if (declaration is MacroFunctionContext macroFunction)
                         parseInfo.GetMacro(RulesetScope, RulesetScope, macroFunction);
@@ -326,6 +329,12 @@ namespace Deltin.Deltinteger.Parse
             if (!_workshopInit.Contains(workshopInit))
                 _workshopInit.Add(workshopInit);
         }
+
+        Scope IScopeProvider.GetObjectBasedScope() => RulesetScope;
+        Scope IScopeProvider.GetStaticBasedScope() => RulesetScope;
+        void IScopeAppender.AddObjectBasedScope(IMethod function) => RulesetScope.CopyMethod(function);
+        void IScopeAppender.AddStaticBasedScope(IMethod function) => RulesetScope.CopyMethod(function);
+        IMethod IScopeProvider.GetOverridenFunction(IMethodProvider provider) => throw new NotImplementedException();
     }
 
     public class ScriptTypes : ITypeSupplier
@@ -372,6 +381,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (var type in AllTypes)
                 if (type is IResolveElements resolveElements)
                     resolveElements.ResolveElements();
+                else if (type.GetInstance() is IResolveElements resolveDefaultInstance)
+                    resolveDefaultInstance.ResolveElements();
 
             _deltinScript.PlayerVariableScope = _playerType.ObjectScope;
         }

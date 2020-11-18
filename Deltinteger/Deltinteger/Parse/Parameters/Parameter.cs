@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type { get; set; }
         public string Documentation { get; set; }
         public ExpressionOrWorkshopValue DefaultValue { get; set; }
-        public List<RestrictedCallType> RestrictedCalls { get; } = new List<RestrictedCallType>();
+        public List<RestrictedCallType> RestrictedCalls { get; set; } = new List<RestrictedCallType>();
         public ParameterInvokedInfo Invoked { get; set; } = new ParameterInvokedInfo();
 
         public CodeParameter(string name)

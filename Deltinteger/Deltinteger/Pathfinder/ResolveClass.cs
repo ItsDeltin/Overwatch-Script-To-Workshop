@@ -4,7 +4,7 @@ using System;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class PathResolveClass : ClassInitializer
+    public class PathResolveClass : SelfContainedClassProvider
     {
         /// <summary>An array of numbers where each value is that index's parent index. Following the path will lead to the source. Subtract value by -1 since 0 is used for unset.</summary>
         public ObjectVariable ParentArray { get; private set; }
@@ -34,8 +34,8 @@ namespace Deltin.Deltinteger.Pathfinder
             // Set Destination
             Destination = AddObjectVariable(new InternalVar("Destination"));
 
-            ServeObjectScope.AddNativeMethod(PathfindFunction);
-            ServeObjectScope.AddNativeMethod(Next);
+            ObjectScope.AddNativeMethod(PathfindFunction);
+            ObjectScope.AddNativeMethod(Next);
         }
 
         public override bool BuiltInTypeMatches(Type type) => false;
