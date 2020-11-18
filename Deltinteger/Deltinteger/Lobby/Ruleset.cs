@@ -18,10 +18,10 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Return To Lobby", "After A Mirror Match", "After A Game", "Never"),
             new SelectValue("Team Balancing", "Off", "After A Mirror Match", "After A Game"),
             new SwitchValue("Swap Teams After Match", true, SwitchType.YesNo),
-            new RangeValue(true, "Max Team 1 Players", 0, 12, 6),
-            new RangeValue(true, "Max Team 2 Players", 0, 12, 6),
-            new RangeValue(true, "Max FFA Players", 0, 12, 0),
-            new RangeValue(true, "Max Spectators", 0, 12, 2),
+            new RangeValue(true, false, "Max Team 1 Players", 0, 12, 6),
+            new RangeValue(true, false, "Max Team 2 Players", 0, 12, 6),
+            new RangeValue(true, false, "Max FFA Players", 0, 12, 0),
+            new RangeValue(true, false, "Max Spectators", 0, 12, 2),
             new SwitchValue("Allow Players Who Are In Queue", false, SwitchType.YesNo),
             new SwitchValue("Use Experimental Update If Available", false, SwitchType.YesNo),
             new SwitchValue("Match Voice Chat", false, SwitchType.EnabledDisabled),
@@ -472,13 +472,13 @@ namespace Deltin.Deltinteger.Lobby
 
         public T AddRange(string name, double min = 0, double max = 500, double defaultValue = 100)
         {
-            Add(new RangeValue(name, min, max, defaultValue));
+            Add(new RangeValue(false, true, name, min, max, defaultValue));
             return (T)(object)this;
         }
 
-        public T AddIntRange(string name, int min, int max, int defaultValue, string referenceName = null)
+        public T AddIntRange(string name, bool percentage, int min, int max, int defaultValue, string referenceName = null)
         {
-            Add(new RangeValue(true, name, min, max, defaultValue) { ReferenceName = referenceName ?? name });
+            Add(new RangeValue(true, percentage, name, min, max, defaultValue) { ReferenceName = referenceName ?? name });
             return (T)(object)this;
         }
 
