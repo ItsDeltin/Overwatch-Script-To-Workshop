@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Parse.Overload;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
@@ -28,9 +28,9 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the constructor to use.
                 OverloadChooser = new OverloadChooser(
-                    CreatingObjectOf.Constructors, parseInfo, CreatingObjectOf.ReturningScope(), scope, nameRange, context.Range, new OverloadError("type " + CreatingObjectOf.Name)
+                    CreatingObjectOf.Constructors.Select(c => new ConstructorOverload(c)).ToArray(), parseInfo, CreatingObjectOf.ReturningScope(), scope, nameRange, context.Range, new OverloadError("type " + CreatingObjectOf.Name)
                 );
-                OverloadChooser.Apply(context.Parameters);
+                OverloadChooser.Apply(context.Parameters, false, null);
 
                 Constructor = (Constructor)OverloadChooser.Overload;
                 ConstructorValues = OverloadChooser.Values ?? new IExpression[0];

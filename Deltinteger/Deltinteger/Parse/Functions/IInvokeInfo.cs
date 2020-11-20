@@ -1,7 +1,8 @@
+using System.Linq;
+using Deltin.Deltinteger.Parse.Lambda;
+using Deltin.Deltinteger.Parse.Overload;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
-using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Parse.Lambda;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -19,19 +20,20 @@ namespace Deltin.Deltinteger.Parse
             var group = groupCall.Group;
 
             // Make an OverloadChooser to choose an Overload.
-            var overloadChooser = new OverloadChooser(group.Functions.ToArray(), parseInfo, invokeInfo.Scope, invokeInfo.Getter, invokeInfo.TargetRange, invokeInfo.CallRange, new OverloadError("method '" + group.Name + "'"));
+            var overloadChooser = new OverloadChooser(group.Functions.Select(f => new MethodOverload(f)).ToArray(), parseInfo, invokeInfo.Scope, invokeInfo.Getter, invokeInfo.TargetRange, invokeInfo.CallRange, new OverloadError("method '" + group.Name + "'"));
             // Apply the parameters.
-            overloadChooser.Apply(invokeInfo.Context.Parameters);
+            overloadChooser.Apply(invokeInfo.Context.Parameters, groupCall.TypeArgs.Length > 0, groupCall.TypeArgs);
         
             // Get the best function.
             var callingMethod = (IMethod)overloadChooser.Overload;
             var result = new FunctionInvokeResult(parseInfo, invokeInfo.TargetRange, invokeInfo.UsedAsExpression, callingMethod, overloadChooser.Values, overloadChooser.AdditionalParameterData, overloadChooser.Match);
+            var typeArgLinker = overloadChooser.Match?.TypeArgLinker;
 
             // CallingMethod may be null if no good functions are found.
             if (callingMethod != null)
             {
                 var provider = callingMethod.GetProvider();
-                result.ReturnType = callingMethod.CodeType.GetRealerType(provider.GetInstanceInfo(groupCall.TypeArgs));
+                result.ReturnType = callingMethod.CodeType?.GetRealerType(typeArgLinker);
 
                 callingMethod.Call(parseInfo, invokeInfo.TargetRange);
 
@@ -75,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Create the overload chooser for the invoke function.
             var overloadChooser = new OverloadChooser(
-                new IParameterCallable[] { _lambdaType.InvokeFunction },
+                new MethodOverload[] { new MethodOverload(_lambdaType.InvokeFunction) },
                 parseInfo,
                 invokeInfo.Scope,
                 invokeInfo.Getter,
@@ -84,7 +86,7 @@ namespace Deltin.Deltinteger.Parse
                 new OverloadError("lambda '" + _lambdaType.GetName() + "'")
             );
             // Apply the parameters.
-            overloadChooser.Apply(invokeInfo.Context.Parameters);
+            overloadChooser.Apply(invokeInfo.Context.Parameters, false, null);
 
             var invoke = (LambdaInvoke)overloadChooser.Overload;
             invoke?.Call(parseInfo, invokeInfo.TargetRange);

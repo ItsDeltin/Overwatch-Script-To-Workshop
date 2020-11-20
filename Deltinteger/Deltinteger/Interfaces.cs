@@ -15,8 +15,8 @@ namespace Deltin.Deltinteger
     public interface IMethodProvider
     {
         string Name { get; }
-        CodeType[] ArgumentTypes { get; }
         AnonymousType[] GenericTypes { get; }
+        public int TypeArgCount => GenericTypes == null ? 0 : GenericTypes.Length;
 
         IMethod GetDefaultInstance()
         {
@@ -31,6 +31,19 @@ namespace Deltin.Deltinteger
         public InstanceAnonymousTypeLinker GetInstanceInfo(CodeType[] typeArgs) => new InstanceAnonymousTypeLinker(GenericTypes, typeArgs);
     }
 
+    class DefaultProvider : IMethodProvider
+    {
+        private readonly IMethod _function;
+
+        public DefaultProvider(IMethod function)
+        {
+            _function = function;
+        }
+
+        public string Name => _function.Name;
+        public AnonymousType[] GenericTypes => null;
+    }
+
     public interface IMethod : IScopeable, IParameterCallable
     {
         MethodAttributes Attributes { get; }
@@ -41,7 +54,7 @@ namespace Deltin.Deltinteger
         IMethodProvider GetProvider()
         {
             if (this is IMethodProvider provider) return provider;
-            else throw new NotImplementedException();
+            else return new DefaultProvider(this);
         }
 
         public static string GetLabel(IMethod function, bool includeReturnType)

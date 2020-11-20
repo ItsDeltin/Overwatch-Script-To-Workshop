@@ -13,7 +13,7 @@ using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKin
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
-namespace Deltin.Deltinteger.Parse
+namespace Deltin.Deltinteger.Parse.Overload
 {
     public class OverloadChooser
     {
@@ -24,41 +24,39 @@ namespace Deltin.Deltinteger.Parse
         private readonly DocRange _genericErrorRange;
         private readonly OverloadError _errorMessages;
 
-        private readonly IParameterCallable[] _allOverloads;
-        private List<IParameterCallable> _currentOptions;
+        private readonly IOverload[] _overloads;
+        private CodeType[] _generics;
+        private bool _genericsProvided;
 
         public OverloadMatch Match { get; private set; }
-        public IParameterCallable Overload { get; private set; }
+        public IParameterCallable Overload => Match?.Option.Value;
         public IExpression[] Values { get; private set; }
         public DocRange[] ParameterRanges { get; private set; }
         public object[] AdditionalParameterData { get; private set; }
 
-        public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
+        public OverloadChooser(IOverload[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
         {
-            _allOverloads = overloads
-                .OrderBy(overload => overload.Parameters.Length)
-                .ToArray();
-            _currentOptions = _allOverloads.ToList();
-            this._parseInfo = parseInfo;
-            this._scope = elementScope;
-            this._getter = getter;
-            this._genericErrorRange = genericErrorRange;
+            _overloads = overloads;
+            _parseInfo = parseInfo;
+            _scope = elementScope;
+            _getter = getter;
+            _genericErrorRange = genericErrorRange;
+            _errorMessages = errorMessages;
             CallRange = callRange;
-            this._errorMessages = errorMessages;
 
-            parseInfo.Script.AddOverloadData(this);
+            // todo
+            // parseInfo.Script.AddOverloadData(this);
         }
 
-        public void Apply(List<ParameterValue> context)
+        public void Apply(List<ParameterValue> context, bool genericsProvided, CodeType[] generics)
         {
+            _genericsProvided = genericsProvided;
+            _generics = generics;
             PickyParameter[] inputParameters = ParametersFromContext(context);
 
-            // Compare parameter counts.
-            if (!SetParameterCount(inputParameters.Length)) return;
-
             // Match overloads.
-            OverloadMatch[] matches = new OverloadMatch[_currentOptions.Count];
-            for (int i = 0; i < matches.Length; i++) matches[i] = MatchOverload(_currentOptions[i], inputParameters, context);
+            OverloadMatch[] matches = new OverloadMatch[_overloads.Length];
+            for (int i = 0; i < matches.Length; i++) matches[i] = MatchOverload(_overloads[i], inputParameters, context);
 
             // Choose the best option.
             Match = BestOption(matches);
@@ -102,13 +100,22 @@ namespace Deltin.Deltinteger.Parse
             return parameters;
         }
 
-        private OverloadMatch MatchOverload(IParameterCallable option, PickyParameter[] inputParameters, List<ParameterValue> context)
+        private OverloadMatch MatchOverload(IOverload option, PickyParameter[] inputParameters, List<ParameterValue> context)
         {
             PickyParameter lastPicky = null;
 
             OverloadMatch match = new OverloadMatch(option);
             match.OrderedParameters = new PickyParameter[option.Parameters.Length];
 
+            // Set the type arg linker.
+            // If the generics were provided ('_genericsProvided'), get the type linker from the option.
+            // Otherwise if '_genericsProvided' is false, create an empty type linker.
+            match.TypeArgLinker = _genericsProvided ? option.GetTypeLinker(_generics) : new InstanceAnonymousTypeLinker();
+
+            // Check type arg count.
+            if (_genericsProvided && _generics.Length != option.TypeArgCount)
+                match.IncorrectTypeArgCount();
+            
             // Iterate through the option's parameters.
             for (int i = 0; i < inputParameters.Length; i++)
             {
@@ -120,6 +127,11 @@ namespace Deltin.Deltinteger.Parse
                     else
                     {
                         match.OrderedParameters[i] = inputParameters[i];
+
+                        // If _genericsFilled is false, get context-inferred type arguments.
+                        if (!_genericsProvided)
+                            ExtractInferredGenerics(match.TypeArgLinker, option.Parameters[i].Type, inputParameters[i].Value.Type());
+
                         // Next contextual parameter
                         if (i == inputParameters.Length - 1 && i < option.Parameters.Length - 1)
                             match.LastContextualParameterIndex = i + 1;
@@ -135,13 +147,18 @@ namespace Deltin.Deltinteger.Parse
                     for (int p = 0; p < option.Parameters.Length && !nameFound; p++)
                         if (inputParameters[i].Name == option.Parameters[p].Name)
                         {
+                            // A matching parameter was found.
                             match.OrderedParameters[p] = inputParameters[i];
                             nameFound = true;
+
+                            // If _genericsFilled is false, get context-inferred type arguments.
+                            if (!_genericsProvided)
+                                ExtractInferredGenerics(match.TypeArgLinker, option.Parameters[p].Type, inputParameters[i].Value.Type());
                         }
                     
                     // If the named argument's name is not found, throw an error.
                     if (!nameFound)
-                        match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.GetLabel(false)}'.", inputParameters[i].NameRange);
+                        match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.Label}'.", inputParameters[i].NameRange);
                 }
             }
 
@@ -154,12 +171,29 @@ namespace Deltin.Deltinteger.Parse
             return match;
         }
 
+        // TODO: should this can be moved to the 'InstanceAnonymousTypeLinker' class?
+        private void ExtractInferredGenerics(InstanceAnonymousTypeLinker typeLinker, CodeType parameterType, CodeType expressionType)
+        {
+            // If the parameter type is an AnonymousType, add the link for the expression type if it doesn't already exist.
+            // TODO: Add an error if the key already exists and the key's value != expressionType.
+            //       If the parameter type is something like 'C<T, T>', providing 'C<Vector, Number>' should add an error.
+            //       (Should parameter type checks be handled here?)
+            if (parameterType is AnonymousType pat && !typeLinker.Links.ContainsKey(pat))
+                typeLinker.Links.Add(pat, expressionType);
+            
+            // Recursively match generics.
+            if (parameterType.Generics != null)
+                for (int i = 0; i < parameterType.Generics.Length; i++)
+                    // TODO: At this point, if this condition is false then the type structure does not match.
+                    if (expressionType.Generics != null && i < expressionType.Generics.Length)
+                        // Recursively check the generics.
+                        ExtractInferredGenerics(typeLinker, parameterType, expressionType);
+        }
+
         private OverloadMatch BestOption(OverloadMatch[] matches)
         {
             // If there are any methods with no errors, set that as the best option.
-            OverloadMatch bestOption = matches.FirstOrDefault(match => !match.HasError) ?? matches.FirstOrDefault(match => !match.HasDeterminingError);
-            if (bestOption != null) Overload = bestOption.Option;
-            else bestOption = matches.First(match => match.Option == Overload);
+            OverloadMatch bestOption = matches.FirstOrDefault(match => !match.HasError) ?? matches.FirstOrDefault(match => !match.HasDeterminingError) ?? matches.FirstOrDefault();
 
             // Add the diagnostics of the best option.
             bestOption.AddDiagnostics(_parseInfo.Script.Diagnostics);
@@ -182,6 +216,8 @@ namespace Deltin.Deltinteger.Parse
 
         private void CheckAccessLevel()
         {
+            if (Overload == null) return;
+
             bool accessable = true;
 
             if (Overload is IMethod asMethod)
@@ -192,27 +228,6 @@ namespace Deltin.Deltinteger.Parse
 
             if (!accessable)
                 _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), _genericErrorRange);
-        }
-
-        private bool SetParameterCount(int numberOfParameters)
-        {
-            Overload = _allOverloads
-                .OrderBy(o => Math.Abs(numberOfParameters - o.Parameters.Length))
-                .FirstOrDefault();
-            
-            _currentOptions = _currentOptions
-                .Where(o => numberOfParameters <= o.Parameters.Length)
-                .ToList();
-                        
-            if (_currentOptions.Count == 0)
-            {
-                _parseInfo.Script.Diagnostics.Error(
-                    string.Format(_errorMessages.BadParameterCount, numberOfParameters),
-                    _genericErrorRange
-                );
-                return false;
-            }
-            return true;
         }
     
         private void GetAdditionalData()
@@ -234,33 +249,33 @@ namespace Deltin.Deltinteger.Parse
                         activeParameter = i;
             
             // Get the signature information.
-            SignatureInformation[] overloads = new SignatureInformation[_allOverloads.Length];
+            SignatureInformation[] overloads = new SignatureInformation[_overloads.Length];
             for (int i = 0; i < overloads.Length; i++)
             {
                 // Get the parameter information for the signature.
-                var parameters = new ParameterInformation[_allOverloads[i].Parameters.Length];
+                var parameters = new ParameterInformation[_overloads[i].Parameters.Length];
 
                 // Convert parameters to parameter information.
                 for (int p = 0; p < parameters.Length; p++)
                     parameters[p] = new ParameterInformation() {
                         // Get the label to show in the signature.
-                        Label = _allOverloads[i].Parameters[p].GetLabel(),
+                        Label = _overloads[i].Parameters[p].GetLabel(),
                         // Get the documentation.
-                        Documentation = Extras.GetMarkupContent(_allOverloads[i].Parameters[p].Documentation)
+                        Documentation = Extras.GetMarkupContent(_overloads[i].Parameters[p].Documentation)
                     };
 
                 // Create the signature information.
                 overloads[i] = new SignatureInformation() {
-                    Label = _allOverloads[i].GetLabel(false),
+                    Label = _overloads[i].Label,
                     Parameters = parameters,
-                    Documentation = _allOverloads[i].Documentation
+                    Documentation = _overloads[i].Documentation
                 };
             }
 
             return new SignatureHelp()
             {
                 ActiveParameter = activeParameter,
-                ActiveSignature = Array.IndexOf(_allOverloads, Overload),
+                ActiveSignature = Array.IndexOf(_overloads, Overload),
                 Signatures = overloads
             };
         }
@@ -295,14 +310,15 @@ namespace Deltin.Deltinteger.Parse
 
     public class OverloadMatch
     {
-        public IParameterCallable Option { get; }
+        public IOverload Option { get; }
         public PickyParameter[] OrderedParameters { get; set; }
         public List<OverloadMatchError> Errors { get; } = new List<OverloadMatchError>();
         public bool HasDeterminingError => Errors.Any(error => error.Vital);
         public bool HasError => Errors.Count > 0;
         public int LastContextualParameterIndex { get; set; } = -1;
+        public InstanceAnonymousTypeLinker TypeArgLinker { get; set; }
 
-        public OverloadMatch(IParameterCallable option)
+        public OverloadMatch(IOverload option)
         {
             Option = option;
         }
@@ -312,17 +328,17 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Confirms that a parameter type matches.</summary>
         public void CompareParameterTypes(int parameter)
         {
-            CodeType parameterType = Option.Parameters[parameter].Type;
+            CodeType parameterType = Option.Parameters[parameter].Type.GetRealerType(TypeArgLinker);
             IExpression value = OrderedParameters[parameter]?.Value;
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
 
-            if (parameterType is PortableLambdaType && value is PortableLambdaType portableType && portableType.LambdaKind == LambdaKind.Anonymous)
+            if (parameterType is PortableLambdaType == false || (value is PortableLambdaType portableType && portableType.LambdaKind == LambdaKind.Anonymous))
             {
                 if (parameterType.CodeTypeParameterInvalid(value.Type()))
                 {
                     // The parameter type does not match.
-                    string msg = string.Format("Cannot convert type '{0}' to '{1}'", value.Type().GetNameOrVoid(), Option.Parameters[parameter].Type.GetNameOrVoid());
+                    string msg = string.Format("Cannot convert type '{0}' to '{1}'", value.Type().GetNameOrVoid(), parameterType.GetNameOrVoid());
                     Error(msg, errorRange);
                 }
                 else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
@@ -380,8 +396,13 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                             callType,
                             parseInfo.GetLocation(callRange),
-                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.GetLabel(false), callType)
+                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.Label, callType)
                         ));
+        }
+    
+        public void IncorrectTypeArgCount()
+        {
+
         }
     }
 

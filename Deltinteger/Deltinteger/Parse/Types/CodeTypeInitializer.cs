@@ -55,5 +55,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < typeArgs.Length; i++)
                 Links.Add(typeArgs[i], generics[i]);
         }
+
+        public InstanceAnonymousTypeLinker() {}
     }
 }

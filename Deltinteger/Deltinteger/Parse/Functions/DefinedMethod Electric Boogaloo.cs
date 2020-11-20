@@ -26,7 +26,6 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedMethodProvider : IElementProvider, IMethodProvider, IApplyBlock
     {
         public string Name => Context.Identifier.GetText();
-        public CodeType[] ArgumentTypes => ParameterProviders.Select(p => p.Type).ToArray();
         public LanguageServer.Location DefinedAt => new LanguageServer.Location(_parseInfo.Script.Uri, Context.Identifier.GetRange(Context.Range));
 
         public FunctionContext Context { get; }

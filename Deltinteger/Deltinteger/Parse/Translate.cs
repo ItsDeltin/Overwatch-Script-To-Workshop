@@ -376,6 +376,8 @@ namespace Deltin.Deltinteger.Parse
             AddType(new Lambda.ValueBlockLambda(dynamicType));
             AddType(new Lambda.MacroLambda(dynamicType));
             // Model static class.
+            foreach (var type in ValueGroupType.EnumTypes)
+                AddType(type);
             // AddType(new Models.AssetClass());
 
             foreach (var type in AllTypes)
