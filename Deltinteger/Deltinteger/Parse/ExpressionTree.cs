@@ -22,9 +22,12 @@ namespace Deltin.Deltinteger.Parse
             ExprContextTree = Flatten(parseInfo.Script, exprContext);
 
             // Setup
+            var usageResolvers = new UsageResolver[ExprContextTree.Length];
             for (int i = 0; i < ExprContextTree.Length; i++)
             {
-                ParseInfo partInfo = parseInfo;
+                usageResolvers[i] = new UsageResolver();
+
+                ParseInfo partInfo = parseInfo.SetUsageResolver(usageResolvers[i], i == 0 ? null : usageResolvers[i - 1]);
                 // If this is not the first expression, clear tail data and set the source expression.
                 if (i != 0) partInfo = partInfo.ClearTail().SetSourceExpression(ExprContextTree[i - 1]);
                 // If this is not the last expression, clear head data.
@@ -39,6 +42,9 @@ namespace Deltin.Deltinteger.Parse
                     IsLast = i == ExprContextTree.Length - 1
                 });
             }
+
+            for (int i = 0; i < usageResolvers.Length; i++)
+                usageResolvers[i].ResolveUnknownIfNotResolved();
 
             // Get expressions
             Tree = new IExpression[ExprContextTree.Length];
@@ -231,12 +237,6 @@ namespace Deltin.Deltinteger.Parse
         }
     
         public bool IsStatement() => _trailingSeperator || (Result?.IsStatement() ?? true);
-
-        public static IExpression ResultingExpression(IExpression expression)
-        {
-            if (expression is ExpressionTree expressionTree) return expressionTree.Result;
-            return expression;
-        }
     }
 
     /// <summary>Data that gets sent to ITreeContextPart.</summary>
@@ -582,5 +582,29 @@ namespace Deltin.Deltinteger.Parse
     public interface IAmbiguityCheck
     {
         bool CanBeAmbiguous();
+    }
+
+    public class UsageResolver
+    {
+        public bool WasResolved { get; private set; }
+        private readonly List<Action<UsageType>> _onResolve = new List<Action<UsageType>>();
+
+        public void ResolveUnknownIfNotResolved() => Resolve(UsageType.Unknown);
+
+        public void OnResolve(Action<UsageType> action) => _onResolve.Add(action);
+
+        public void Resolve(UsageType usageType)
+        {
+            if (WasResolved) return;
+            WasResolved = true;
+            foreach (var action in _onResolve)
+                action(usageType);
+        }
+    }
+
+    public enum UsageType
+    {
+        Unknown,
+        StringFormat
     }
 }

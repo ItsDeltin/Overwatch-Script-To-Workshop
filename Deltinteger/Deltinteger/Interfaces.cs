@@ -48,7 +48,6 @@ namespace Deltin.Deltinteger
     {
         MethodAttributes Attributes { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
-        void Call(ParseInfo parseInfo, DocRange callRange) {}
         bool DoesReturnValue => CodeType != null;
 
         IMethodProvider GetProvider()
@@ -110,6 +109,7 @@ namespace Deltin.Deltinteger
     {
         CodeParameter[] Parameters { get; }
         string Documentation { get; }
+        object Call(ParseInfo parseInfo, DocRange callRange) => null;
     }
 
     public interface IAccessable

@@ -3,7 +3,15 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class TypeOperation
+    public interface ITypeOperation
+    {
+        TypeOperator Operator { get; }
+        CodeType Right { get; }
+        CodeType ReturnType { get; }
+        IWorkshopTree Resolve(ActionSet actionSet, IExpression left, IExpression right);
+    }
+
+    public class TypeOperation : ITypeOperation
     {
         public TypeOperator Operator { get; }
         /// <summary>The righthand of the operator. May be null if there is no right operator.</summary>
@@ -45,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
 
-        public IWorkshopTree Resolve(IWorkshopTree left, IWorkshopTree right) => Resolver.Invoke(left, right);
+        public IWorkshopTree Resolve(ActionSet actionSet, IExpression left, IExpression right) => Resolver.Invoke(left.Parse(actionSet), right.Parse(actionSet));
 
         public static TypeOperator TypeOperatorFromString(string str)
         {

@@ -253,7 +253,7 @@ namespace Deltin.Deltinteger.Json
 
             public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
 
-            public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+            public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
             {
                 StringAction stringAction = value as StringAction;
                 if (stringAction == null)

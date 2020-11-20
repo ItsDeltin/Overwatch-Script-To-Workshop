@@ -18,6 +18,8 @@ namespace Deltin.Deltinteger.Parse
         public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
         public ExpectingLambdaInfo ExpectingLambda { get; private set; }
         public ITreeContextPart SourceExpression { get; private set; }
+        public UsageResolver CurrentUsageResolver { get; private set; }
+        public UsageResolver SourceUsageResolver { get; private set; }
 
         // Tail
         public IVariableTracker[] LocalVariableTracker { get; private set; }
@@ -41,6 +43,8 @@ namespace Deltin.Deltinteger.Parse
             RestrictedCallHandler = other.RestrictedCallHandler;
             ExpectingLambda = other.ExpectingLambda;
             SourceExpression = other.SourceExpression;
+            CurrentUsageResolver = other.CurrentUsageResolver;
+            SourceUsageResolver = other.SourceUsageResolver;
             LocalVariableTracker = other.LocalVariableTracker;
             ResolveInvokeInfo = other.ResolveInvokeInfo;
             AsyncInfo = other.AsyncInfo;
@@ -67,6 +71,10 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetLambdaInfo(ExpectingLambdaInfo lambdaInfo) => new ParseInfo(this) { ExpectingLambda = lambdaInfo };
         public ParseInfo SetInvokeInfo(ResolveInvokeInfo invokeInfo) => new ParseInfo(this) { ResolveInvokeInfo = invokeInfo };
         public ParseInfo SetAsyncInfo(AsyncInfo asyncInfo) => new ParseInfo(this) { AsyncInfo = asyncInfo };
+        public ParseInfo SetUsageResolver(UsageResolver currentUsageResolver, UsageResolver sourceUsageResolver) => new ParseInfo(this) {
+            CurrentUsageResolver = currentUsageResolver,
+            SourceUsageResolver = sourceUsageResolver
+        };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>

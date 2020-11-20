@@ -32,6 +32,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public IParameterCallable Overload => Match?.Option.Value;
         public IExpression[] Values { get; private set; }
         public DocRange[] ParameterRanges { get; private set; }
+        public object AdditionalData { get; private set; }
         public object[] AdditionalParameterData { get; private set; }
 
         public OverloadChooser(IOverload[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
@@ -232,9 +233,10 @@ namespace Deltin.Deltinteger.Parse.Overload
     
         private void GetAdditionalData()
         {
+            AdditionalData = Overload.Call(_parseInfo, CallRange);
             AdditionalParameterData = new object[Overload.Parameters.Length];
             for (int i = 0; i < Overload.Parameters.Length; i++)
-                AdditionalParameterData[i] = Overload.Parameters[i].Validate(_parseInfo, Values[i], ParameterRanges.ElementAtOrDefault(i));
+                AdditionalParameterData[i] = Overload.Parameters[i].Validate(_parseInfo, Values[i], ParameterRanges.ElementAtOrDefault(i), AdditionalData);
         }
 
         public SignatureHelp GetSignatureHelp(DocPos caretPos)

@@ -224,7 +224,7 @@
                 "url": "./LobbySettingValidation.json"
             },
             {
-                "fileMatch": "elements.json",
+                "fileMatch": "Elements.json",
                 "url": "./json-schemas/ElementValidation.json"
             }
         ],

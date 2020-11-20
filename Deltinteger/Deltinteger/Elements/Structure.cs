@@ -290,7 +290,10 @@ namespace Deltin.Deltinteger.Elements
             // Boolean
             else if (DefaultValue is bool boolean) return boolean ? Element.True() : Element.False();
             // Number
-            else if (DefaultValue is double number) return Element.Num(number);
+            else if (DefaultValue is double d) return Element.Num(d);
+            else if (DefaultValue is Int32 i32) return Element.Num(i32);
+            else if (DefaultValue is Int64 i64) return Element.Num(i64);
+            else if (DefaultValue is float f) return Element.Num(f);
             // String
             else if (DefaultValue is string str)
             {

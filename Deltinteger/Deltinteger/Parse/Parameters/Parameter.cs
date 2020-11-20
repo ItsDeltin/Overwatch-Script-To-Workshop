@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = documentation;
         }
 
-        public virtual object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public virtual object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             // If the type of the parameter is a lambda, then resolve the expression.
             if (Type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr => {

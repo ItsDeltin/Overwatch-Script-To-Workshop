@@ -433,7 +433,10 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("node_index", "The index of the node to remove.")
             },
-            OnCall = (parseInfo, range) => parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.PotentiallyNullNodes = true),
+            OnCall = (parseInfo, range) => {
+                parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.PotentiallyNullNodes = true);
+                return null;
+            },
             Action = (actionSet, methodCall) => {
                 actionSet.AddAction(Nodes.SetVariable(value: Element.Null(), index: new Element[] { (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0] }));
 
@@ -625,7 +628,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 )
             },
             ReturnType = BooleanType.Instance,
-            OnCall = (parseInfo, docRange) => { parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.TrackTimeSinceLastNode = true); },
+            OnCall = (parseInfo, docRange) => {
+                parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.TrackTimeSinceLastNode = true);
+                return null;
+            },
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsPathfindingStuck((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
         };
 
@@ -760,9 +766,9 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public PathmapFileParameter(string parameterName, string description) : base(parameterName, description, ".pathmap") {}
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
-            string filepath = base.Validate(parseInfo, value, valueRange) as string;
+            string filepath = base.Validate(parseInfo, value, valueRange, additionalData) as string;
             if (filepath == null) return null;
 
             Pathmap map;

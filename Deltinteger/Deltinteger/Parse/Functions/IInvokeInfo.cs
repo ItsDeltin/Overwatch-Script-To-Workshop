@@ -26,16 +26,13 @@ namespace Deltin.Deltinteger.Parse
         
             // Get the best function.
             var callingMethod = (IMethod)overloadChooser.Overload;
-            var result = new FunctionInvokeResult(parseInfo, invokeInfo.TargetRange, invokeInfo.UsedAsExpression, callingMethod, overloadChooser.Values, overloadChooser.AdditionalParameterData, overloadChooser.Match);
+            var result = new FunctionInvokeResult(parseInfo, invokeInfo.TargetRange, invokeInfo.UsedAsExpression, callingMethod, overloadChooser.AdditionalData, overloadChooser.Values, overloadChooser.AdditionalParameterData, overloadChooser.Match);
             var typeArgLinker = overloadChooser.Match?.TypeArgLinker;
 
             // CallingMethod may be null if no good functions are found.
             if (callingMethod != null)
             {
-                var provider = callingMethod.GetProvider();
                 result.ReturnType = callingMethod.CodeType?.GetRealerType(typeArgLinker);
-
-                callingMethod.Call(parseInfo, invokeInfo.TargetRange);
 
                 // If the function's block needs to be applied, check optional restricted calls when 'Applied()' runs.
                 if (callingMethod is IApplyBlock applyBlock)
@@ -146,6 +143,7 @@ namespace Deltin.Deltinteger.Parse
         public IMethod Function { get; }
         public IExpression[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
+        private readonly object _additionalData;
         private readonly OverloadMatch _match;
         private readonly ParseInfo _parseInfo;
         private readonly DocRange _targetRange;
@@ -153,11 +151,12 @@ namespace Deltin.Deltinteger.Parse
         private readonly AsyncInfo _asyncInfo;
         private string _comment;
 
-        public FunctionInvokeResult(ParseInfo parseInfo, DocRange targetRange, bool usedAsExpression, IMethod function, IExpression[] parameterValues, object[] additionalParameterData, OverloadMatch match)
+        public FunctionInvokeResult(ParseInfo parseInfo, DocRange targetRange, bool usedAsExpression, IMethod function, object additionalData, IExpression[] parameterValues, object[] additionalParameterData, OverloadMatch match)
         {
             Function = function;
             ParameterValues = parameterValues;
             AdditionalParameterData = additionalParameterData;
+            _additionalData = additionalData;
             _match = match;
             _parseInfo = parseInfo;
             _targetRange = targetRange;
@@ -167,7 +166,8 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet) => Function.Parse(actionSet, new MethodCall(((IInvokeResult)this).GetParameterValuesAsWorkshop(actionSet), AdditionalParameterData) {
             ParallelMode = _asyncInfo?.ParallelMode ?? CallParallel.NoParallel,
-            ActionComment = _comment
+            ActionComment = _comment,
+            AdditionalData = _additionalData
         });
 
         public void OnBlockApply(IOnBlockApplied onBlockApplied)

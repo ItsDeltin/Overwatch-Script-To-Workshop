@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
-        public TypeOperation[] Operations { get; protected set; }
+        public ITypeOperation[] Operations { get; protected set; }
 
         public CodeType(string name)
         {
@@ -131,13 +131,13 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="op">The operation's operator type.</param>
         /// <param name="right">The right object's type.</param>
         /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>
-        public TypeOperation GetOperation(TypeOperator op, CodeType right)
+        public ITypeOperation GetOperation(TypeOperator op, CodeType right)
         {
             CodeType current = this;
             while (current != null)
             {
                 if (current.Operations != null)
-                    foreach (TypeOperation operation in current.Operations)
+                    foreach (ITypeOperation operation in current.Operations)
                         if (operation.Operator == op && right != null && right.Implements(operation.Right))
                             return operation;
                 
