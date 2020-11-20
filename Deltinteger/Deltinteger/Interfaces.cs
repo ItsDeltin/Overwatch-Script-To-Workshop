@@ -75,6 +75,35 @@ namespace Deltin.Deltinteger
             result += ")";
             return result;
         }
+
+        public static MarkupBuilder Hover(InstanceAnonymousTypeLinker typeLinker, string name, CodeType returnType, CodeType[] typeArgs, CodeParameter[] parameters)
+        {
+            MarkupBuilder builder = new MarkupBuilder()
+                .StartCodeLine()
+                .Add(typeLinker == null || returnType == null ? returnType.GetNameOrVoid() : returnType.GetRealerType(typeLinker).GetNameOrVoid())
+                .Add(" " + name);
+
+            if (typeArgs != null && typeArgs.Length > 0)
+            {
+                builder.Add("<");
+                for (int i = 0; i < typeArgs.Length; i++)
+                {
+                    builder.Add((typeLinker == null ? typeArgs[i] : typeArgs[i].GetRealerType(typeLinker)).GetName());
+                    if (i != typeArgs.Length - 1) builder.Add(", ");
+                }
+                builder.Add(">");
+            }
+
+            builder.Add("(");
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                builder.Add((typeLinker == null ? parameters[i].Type : parameters[i].Type.GetRealerType(typeLinker)).GetName() + " " + parameters[i].Name);
+                if (i != parameters.Length - 1) builder.Add(", ");
+            }
+            builder.Add(")");
+
+            return builder.EndCodeLine();
+        }
     }
 
     public interface ISkip

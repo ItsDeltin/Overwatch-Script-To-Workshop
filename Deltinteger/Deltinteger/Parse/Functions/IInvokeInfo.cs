@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.AsyncInfo.Accept();
                 }
                 
-                parseInfo.Script.AddHover(invokeInfo.Context.Range, callingMethod.GetLabel(true));
+                parseInfo.Script.AddHover(invokeInfo.Context.Range, IMethod.Hover(typeArgLinker, callingMethod.Name, callingMethod.CodeType, groupCall.TypeArgs, callingMethod.Parameters).ToString(true));
             }
 
             return result;

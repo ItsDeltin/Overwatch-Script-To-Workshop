@@ -45,8 +45,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             _errorMessages = errorMessages;
             CallRange = callRange;
 
-            // todo
-            // parseInfo.Script.AddOverloadData(this);
+            parseInfo.Script.AddOverloadData(this);
         }
 
         public void Apply(List<ParameterValue> context, bool genericsProvided, CodeType[] generics)
@@ -115,7 +114,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
             // Check type arg count.
             if (_genericsProvided && _generics.Length != option.TypeArgCount)
-                match.IncorrectTypeArgCount();
+                match.IncorrectTypeArgCount(_genericErrorRange);
             
             // Iterate through the option's parameters.
             for (int i = 0; i < inputParameters.Length; i++)
@@ -131,7 +130,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
                         // If _genericsFilled is false, get context-inferred type arguments.
                         if (!_genericsProvided)
-                            ExtractInferredGenerics(match.TypeArgLinker, option.Parameters[i].Type, inputParameters[i].Value.Type());
+                            ExtractInferredGenerics(match, match.TypeArgLinker, option.Parameters[i].Type, inputParameters[i].Value.Type());
 
                         // Next contextual parameter
                         if (i == inputParameters.Length - 1 && i < option.Parameters.Length - 1)
@@ -154,7 +153,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
                             // If _genericsFilled is false, get context-inferred type arguments.
                             if (!_genericsProvided)
-                                ExtractInferredGenerics(match.TypeArgLinker, option.Parameters[p].Type, inputParameters[i].Value.Type());
+                                ExtractInferredGenerics(match, match.TypeArgLinker, option.Parameters[p].Type, inputParameters[i].Value.Type());
                         }
                     
                     // If the named argument's name is not found, throw an error.
@@ -172,29 +171,36 @@ namespace Deltin.Deltinteger.Parse.Overload
             return match;
         }
 
-        // TODO: should this can be moved to the 'InstanceAnonymousTypeLinker' class?
-        private void ExtractInferredGenerics(InstanceAnonymousTypeLinker typeLinker, CodeType parameterType, CodeType expressionType)
+        private void ExtractInferredGenerics(OverloadMatch match, InstanceAnonymousTypeLinker typeLinker, CodeType parameterType, CodeType expressionType)
         {
+            string couldNotInfer = $"The type arguments for method '{match.Option.Label}' cannot be inferred from the usage. Try specifying the type arguments explicitly.";
+
             // If the parameter type is an AnonymousType, add the link for the expression type if it doesn't already exist.
-            // TODO: Add an error if the key already exists and the key's value != expressionType.
-            //       If the parameter type is something like 'C<T, T>', providing 'C<Vector, Number>' should add an error.
-            //       (Should parameter type checks be handled here?)
-            if (parameterType is AnonymousType pat && !typeLinker.Links.ContainsKey(pat))
-                typeLinker.Links.Add(pat, expressionType);
+            if (parameterType is AnonymousType pat)
+            {
+                // If the AnonymousType does not exist in the links, add a new link.
+                if (!typeLinker.Links.ContainsKey(pat))
+                    typeLinker.Links.Add(pat, expressionType);
+                // Otherwise, the link exists. If the expression type is not equal to the link type, add an error.
+                else if (!expressionType.Is(typeLinker.Links[pat]))
+                    match.Error(couldNotInfer, _genericErrorRange);
+            }
             
             // Recursively match generics.
             if (parameterType.Generics != null)
                 for (int i = 0; i < parameterType.Generics.Length; i++)
-                    // TODO: At this point, if this condition is false then the type structure does not match.
+                    // Make sure the expression's type's structure is usable.
                     if (expressionType.Generics != null && i < expressionType.Generics.Length)
                         // Recursively check the generics.
-                        ExtractInferredGenerics(typeLinker, parameterType, expressionType);
+                        ExtractInferredGenerics(match, typeLinker, parameterType, expressionType);
+                    else
+                        match.Error(couldNotInfer, _genericErrorRange);
         }
 
         private OverloadMatch BestOption(OverloadMatch[] matches)
         {
             // If there are any methods with no errors, set that as the best option.
-            OverloadMatch bestOption = matches.FirstOrDefault(match => !match.HasError) ?? matches.FirstOrDefault(match => !match.HasDeterminingError) ?? matches.FirstOrDefault();
+            OverloadMatch bestOption = matches.FirstOrDefault(match => !match.HasError) ?? matches.FirstOrDefault();
 
             // Add the diagnostics of the best option.
             bestOption.AddDiagnostics(_parseInfo.Script.Diagnostics);
@@ -315,7 +321,6 @@ namespace Deltin.Deltinteger.Parse.Overload
         public IOverload Option { get; }
         public PickyParameter[] OrderedParameters { get; set; }
         public List<OverloadMatchError> Errors { get; } = new List<OverloadMatchError>();
-        public bool HasDeterminingError => Errors.Any(error => error.Vital);
         public bool HasError => Errors.Count > 0;
         public int LastContextualParameterIndex { get; set; } = -1;
         public InstanceAnonymousTypeLinker TypeArgLinker { get; set; }
@@ -325,7 +330,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             Option = option;
         }
 
-        public void Error(string message, DocRange range, bool vital = true) => Errors.Add(new OverloadMatchError(message, range, vital));
+        public void Error(string message, DocRange range) => Errors.Add(new OverloadMatchError(message, range));
 
         /// <summary>Confirms that a parameter type matches.</summary>
         public void CompareParameterTypes(int parameter)
@@ -402,23 +407,18 @@ namespace Deltin.Deltinteger.Parse.Overload
                         ));
         }
     
-        public void IncorrectTypeArgCount()
-        {
-
-        }
+        public void IncorrectTypeArgCount(DocRange range) => Error("The function '" + Option.Label + "' requires " + Option.TypeArgCount + " type arguments", range);
     }
 
     public class OverloadMatchError
     {
         public string Message { get; }
         public DocRange Range { get; }
-        public bool Vital { get; }
 
-        public OverloadMatchError(string message, DocRange range, bool vital = true)
+        public OverloadMatchError(string message, DocRange range)
         {
             Message = message;
             Range = range;
-            Vital = vital;
         }
     }
 

@@ -360,7 +360,7 @@ namespace Deltin.Deltinteger.Compiler
             }
         }
 
-        public static bool IsPartOfType(this TokenType tokenType)
+        public static bool IsPartOfTypeArgs(this TokenType tokenType)
         {
             switch (tokenType)
             {
@@ -372,6 +372,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.LessThan:
                 case TokenType.Define:
                 case TokenType.Identifier:
+                case TokenType.Comma:
                     return true;
                 
                 default:

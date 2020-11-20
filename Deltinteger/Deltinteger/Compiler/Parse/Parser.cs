@@ -1212,7 +1212,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (Kind != TokenType.LessThan) return false;
 
             int genericLevel = 0;
-            while (Kind.IsPartOfType())
+            while (Kind.IsPartOfTypeArgs())
             {
                 if (Kind == TokenType.LessThan)
                     genericLevel++;
