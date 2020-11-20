@@ -184,9 +184,7 @@ namespace Deltin.Deltinteger.Parse
         
         public override CodeType GetInstance() => new DefinedClass(_parseInfo, this, AnonymousTypes);
         public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedClass(_parseInfo, this, instanceInfo.Generics);
-        // TODO
-        // public IMethod GetOverridenFunction(IMethodProvider provider) => ServeObjectScope.GetMethodOverload(provider.Name, provider.ArgumentTypes);
-        public IMethod GetOverridenFunction(IMethodProvider provider) => throw new NotImplementedException();
+        public IMethod GetOverridenFunction(IMethodProvider provider) => Extends.GetVirtualFunction(provider.Name, provider.ParameterTypes);
         Scope IScopeProvider.GetObjectBasedScope() => _operationalObjectScope;
         Scope IScopeProvider.GetStaticBasedScope() => _operationalStaticScope;
         void IScopeAppender.AddObjectBasedScope(IMethod function) => _operationalObjectScope.CopyMethod(function);

@@ -36,11 +36,13 @@ namespace Deltin.Deltinteger.Parse
         public string SubroutineName { get; }
         public AccessLevel AccessLevel { get; }
         public bool Recursive { get; }
+        public bool Virtual { get; }
         public bool SubroutineDefaultGlobal { get; }
 
         public AnonymousType[] GenericTypes { get; }
         public CodeType ReturnType { get; }
         public ParameterProvider[] ParameterProviders { get; }
+        public CodeType[] ParameterTypes { get; }
 
         public IMethod OverridingFunction { get; }
 
@@ -77,6 +79,7 @@ namespace Deltin.Deltinteger.Parse
             SubroutineName = attributeResult.SubroutineName;
             AccessLevel = attributeResult.AccessLevel;
             Recursive = attributeResult.IsRecursive;
+            Virtual = attributeResult.IsVirtual;
             SubroutineDefaultGlobal = attributeResult.DefaultVariableType;
 
             // Setup the scope.
@@ -96,6 +99,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Setup the parameters.
             ParameterProviders = ParameterProvider.GetParameterProviders(parseInfo, _methodScope, context.Parameters, IsSubroutine);
+            ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
 
             // Override
             if (attributeResult.IsOverride)
@@ -157,7 +161,7 @@ namespace Deltin.Deltinteger.Parse
                 scopeHandler.AddObjectBasedScope(instance);
         }
         public IMethod GetInstance(GetInstanceInfo instanceInfo) => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));
-        public void AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
+        public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
             // Get the instance.
             IMethod instance = new DefinedMethodInstance(Name, this, genericsLinker);
@@ -167,6 +171,8 @@ namespace Deltin.Deltinteger.Parse
                 scopeHandler.AddStaticBasedScope(instance);
             else
                 scopeHandler.AddObjectBasedScope(instance);
+            
+            return instance;
         }
 
         public SubroutineInfo GetSubroutineInfo()
@@ -199,7 +205,7 @@ namespace Deltin.Deltinteger.Parse
         public string Documentation => null;
         public CodeType CodeType { get; }
         public CodeParameter[] Parameters { get; }
-        public MethodAttributes Attributes { get; }
+        public MethodAttributes Attributes { get; } = new MethodAttributes();
         public bool Static => Provider.Static;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => Provider.DefinedAt;
@@ -210,7 +216,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = name;
             Provider = provider;
-            CodeType = provider.ReturnType?.GetRealerType(instanceInfo);
+            CodeType = provider.ReturnType?.GetRealType(instanceInfo);
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             for (int i = 0; i < Parameters.Length; i++)

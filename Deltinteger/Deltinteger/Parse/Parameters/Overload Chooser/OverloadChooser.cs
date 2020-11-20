@@ -335,7 +335,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         /// <summary>Confirms that a parameter type matches.</summary>
         public void CompareParameterTypes(int parameter)
         {
-            CodeType parameterType = Option.Parameters[parameter].Type.GetRealerType(TypeArgLinker);
+            CodeType parameterType = Option.Parameters[parameter].Type.GetRealType(TypeArgLinker);
             IExpression value = OrderedParameters[parameter]?.Value;
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;

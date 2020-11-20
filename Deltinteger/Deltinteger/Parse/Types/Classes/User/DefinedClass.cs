@@ -28,7 +28,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Add elements to scope.
             foreach (var element in initializer.DeclaredElements)
-                element.AddInstance(this, anonymousTypeLinker);
+            {
+                var instance = element.AddInstance(this, anonymousTypeLinker);
+
+                if (instance is IMethod method && method.Attributes.Virtual)
+                    VirtualFunctions.Add(method);
+            }
         }
 
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)
@@ -52,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
             StaticScope.CopyMethod(function);
         }
 
-        public override CodeType GetRealerType(InstanceAnonymousTypeLinker instanceInfo)
+        public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
         {
             var newGenerics = new CodeType[Generics.Length];
 

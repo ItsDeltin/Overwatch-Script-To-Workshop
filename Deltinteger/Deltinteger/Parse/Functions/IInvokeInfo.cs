@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Parse
             // CallingMethod may be null if no good functions are found.
             if (callingMethod != null)
             {
-                result.ReturnType = callingMethod.CodeType?.GetRealerType(typeArgLinker);
+                result.ReturnType = callingMethod.CodeType?.GetRealType(typeArgLinker);
 
                 // If the function's block needs to be applied, check optional restricted calls when 'Applied()' runs.
                 if (callingMethod is IApplyBlock applyBlock)

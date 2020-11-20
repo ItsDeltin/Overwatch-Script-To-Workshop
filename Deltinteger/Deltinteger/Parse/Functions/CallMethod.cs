@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope()
         {
             if (Result == null) return null;
-            return Result.ReturnType.GetObjectScope();
+            return Result.ReturnType?.GetObjectScope();
         }
 
         public CodeType Type() => Result?.ReturnType;

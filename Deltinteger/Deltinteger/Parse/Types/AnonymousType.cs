@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
             _index = index;
         }
         
-        public override CodeType GetRealerType(InstanceAnonymousTypeLinker instanceInfo) => instanceInfo.Links.TryGetValue(this, out CodeType result) ? result : this;
+        public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => instanceInfo.Links.TryGetValue(this, out CodeType result) ? result : this;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,

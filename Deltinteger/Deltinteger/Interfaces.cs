@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
@@ -9,13 +10,14 @@ namespace Deltin.Deltinteger
 {
     public interface IElementProvider
     {
-        void AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker);
+        IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker);
     }
 
     public interface IMethodProvider
     {
         string Name { get; }
         AnonymousType[] GenericTypes { get; }
+        CodeType[] ParameterTypes { get; }
         public int TypeArgCount => GenericTypes == null ? 0 : GenericTypes.Length;
 
         IMethod GetDefaultInstance()
@@ -34,14 +36,15 @@ namespace Deltin.Deltinteger
     class DefaultProvider : IMethodProvider
     {
         private readonly IMethod _function;
+        public string Name => _function.Name;
+        public AnonymousType[] GenericTypes => null;
+        public CodeType[] ParameterTypes { get; }
 
         public DefaultProvider(IMethod function)
         {
             _function = function;
+            ParameterTypes = function.Parameters.Select(p => p.Type).ToArray();
         }
-
-        public string Name => _function.Name;
-        public AnonymousType[] GenericTypes => null;
     }
 
     public interface IMethod : IScopeable, IParameterCallable
@@ -80,7 +83,7 @@ namespace Deltin.Deltinteger
         {
             MarkupBuilder builder = new MarkupBuilder()
                 .StartCodeLine()
-                .Add(typeLinker == null || returnType == null ? returnType.GetNameOrVoid() : returnType.GetRealerType(typeLinker).GetNameOrVoid())
+                .Add(typeLinker == null || returnType == null ? returnType.GetNameOrVoid() : returnType.GetRealType(typeLinker).GetNameOrVoid())
                 .Add(" " + name);
 
             if (typeArgs != null && typeArgs.Length > 0)
@@ -88,7 +91,7 @@ namespace Deltin.Deltinteger
                 builder.Add("<");
                 for (int i = 0; i < typeArgs.Length; i++)
                 {
-                    builder.Add((typeLinker == null ? typeArgs[i] : typeArgs[i].GetRealerType(typeLinker)).GetName());
+                    builder.Add((typeLinker == null ? typeArgs[i] : typeArgs[i].GetRealType(typeLinker)).GetName());
                     if (i != typeArgs.Length - 1) builder.Add(", ");
                 }
                 builder.Add(">");
@@ -97,7 +100,7 @@ namespace Deltin.Deltinteger
             builder.Add("(");
             for (int i = 0; i < parameters.Length; i++)
             {
-                builder.Add((typeLinker == null ? parameters[i].Type : parameters[i].Type.GetRealerType(typeLinker)).GetName() + " " + parameters[i].Name);
+                builder.Add((typeLinker == null ? parameters[i].Type : parameters[i].Type.GetRealType(typeLinker)).GetName() + " " + parameters[i].Name);
                 if (i != parameters.Length - 1) builder.Add(", ");
             }
             builder.Add(")");

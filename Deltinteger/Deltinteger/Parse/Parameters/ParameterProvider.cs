@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
         }
 
-        public CodeParameter GetInstance(InstanceAnonymousTypeLinker instanceInfo) => new CodeParameter(Name, Type.GetRealerType(instanceInfo), DefaultValue) {
+        public CodeParameter GetInstance(InstanceAnonymousTypeLinker instanceInfo) => new CodeParameter(Name, Type.GetRealType(instanceInfo), DefaultValue) {
             Invoked = _invoked,
             RestrictedCalls = _restrictedCalls
         };

@@ -32,6 +32,7 @@ namespace Deltin.Deltinteger.Parse
         public bool CanBeExtended { get; protected set; } = false;
 
         public ITypeOperation[] Operations { get; protected set; }
+        public List<IMethod> VirtualFunctions { get; } = new List<IMethod>();
 
         public CodeType(string name)
         {
@@ -164,9 +165,33 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual void AddLink(Location location) {}
 
-        public virtual void GetRealType(ParseInfo parseInfo, Action<CodeType> callback) => callback(this);
-        public virtual CodeType GetRealerType(InstanceAnonymousTypeLinker instanceInfo) => this;
+        public virtual CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => this;
 
         public override string ToString() => GetName();
+
+        public IMethod GetVirtualFunction(string name, CodeType[] parameterTypes)
+        {
+            // Loop through each virtual function.
+            foreach (var virtualFunction in VirtualFunctions)
+                // If the function's name matches and the parameter lengths are the same.
+                if (virtualFunction.Name == name && parameterTypes.Length == virtualFunction.Parameters.Length)
+                {
+                    bool matches = true;
+                    // Loop though the parameters.
+                    for (int i = 0; i < parameterTypes.Length; i++)
+                        // Make sure the parameter types match.
+                        if (!parameterTypes[i].Is(virtualFunction.Parameters[i].Type))
+                        {
+                            matches = false;
+                            break;
+                        }
+                    
+                    if (matches)
+                        return virtualFunction;
+                }
+            
+            if (Extends != null) Extends.GetVirtualFunction(name, parameterTypes);
+            return null;
+        }
     }
 }
