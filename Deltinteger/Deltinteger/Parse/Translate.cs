@@ -337,7 +337,6 @@ namespace Deltin.Deltinteger.Parse
             AddType(_numberType);
             AddType(_stringType);
             AddType(BooleanType.Instance);
-            AddType(TeamType.Instance);
             AddType(Positionable.Instance);
             AddType(Pathfinder.SegmentsStruct.Instance);
             // Pathfinder classes
@@ -349,6 +348,9 @@ namespace Deltin.Deltinteger.Parse
             AddType(new Lambda.MacroLambda(dynamicType));
             // Model static class.
             // AddType(new Models.AssetClass());
+            // Enums
+            foreach (var type in ValueGroupType.GetEnumTypes(this))
+                AddType(type);
 
             foreach (var type in AllTypes)
                 if (type is IResolveElements resolveElements)
@@ -404,6 +406,14 @@ namespace Deltin.Deltinteger.Parse
         public CodeType VectorArray() => new ArrayType(this, _vectorType);
         public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         public CodeType Button() => Any(); // TODO
+
+        public CodeType EnumType(string typeName)
+        {
+            foreach (var type in AllTypes)
+                if (type is ValueGroupType valueGroupType && type.Name == typeName)
+                    return type;
+            throw new Exception("No enum type by the name of '" + typeName + "' exists.");
+        }
     }
 
     public interface IComponent

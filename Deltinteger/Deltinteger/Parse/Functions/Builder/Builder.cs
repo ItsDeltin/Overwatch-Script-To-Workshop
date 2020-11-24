@@ -331,7 +331,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public IndexReference GetSubroutineStack(ActionSet actionSet, bool defaultGlobal)
         {
             // Create the workshop variable the parameter will be stored as.
-            IndexReference indexResult = actionSet.IndexAssigner.AddIndexReference(actionSet.VarCollection, (Var)_variables[0], defaultGlobal, _recursive);
+            IndexReference indexResult = actionSet.IndexAssigner.AddIndexReference(actionSet.VarCollection, _variables[0], defaultGlobal, _recursive);
             CopyToAll(actionSet, indexResult);
         
             return indexResult;

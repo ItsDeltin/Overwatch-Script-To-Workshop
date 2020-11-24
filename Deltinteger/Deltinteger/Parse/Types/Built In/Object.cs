@@ -58,23 +58,6 @@ namespace Deltin.Deltinteger.Parse
         public override Scope ReturningScope() => null;
     }
 
-    public class TeamType : CodeType
-    {
-        public static readonly TeamType Instance = new TeamType();
-
-        private TeamType() : base("Team")
-        {
-            CanBeExtended = false;
-            // Inherit(ObjectType.Instance, null, null);
-        }
-
-        public override CompletionItem GetCompletion() => new CompletionItem() {
-            Label = Name,
-            Kind = CompletionItemKind.Struct
-        };
-        public override Scope ReturningScope() => null;
-    }
-
     public class BooleanType : CodeType
     {
         public static readonly BooleanType Instance = new BooleanType();

@@ -163,7 +163,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnType = BooleanType.Instance,
             Parameters = new CodeParameter[] {
                 new CodeParameter("other", "The vector to determine line of site."),
-                new CodeParameter("barriers", "Defines how barriers affect line of sight.", ValueGroupType.GetEnumType("BarrierLOS"), new ExpressionOrWorkshopValue(ElementRoot.Instance.GetEnumValue("BarrierLOS", "NoBarriersBlock")))
+                new CodeParameter("barriers", "Defines how barriers affect line of sight.", _typeSupplier.EnumType("BarrierLOS"), new ExpressionOrWorkshopValue(ElementRoot.Instance.GetEnumValue("BarrierLOS", "NoBarriersBlock")))
             },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Is In Line Of Sight", actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
         };
@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnType = this,
             Parameters = new CodeParameter[] {
                 new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
-                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", ValueGroupType.GetEnumType("Transformation"))
+                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", _typeSupplier.EnumType("Transformation"))
             },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Local Vector Of", actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
         };
@@ -193,7 +193,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnType = this,
             Parameters = new CodeParameter[] {
                 new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
-                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", ValueGroupType.GetEnumType("Transformation"))
+                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", _typeSupplier.EnumType("Transformation"))
             },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("World Vector Of", actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
         };
