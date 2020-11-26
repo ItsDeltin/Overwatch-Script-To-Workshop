@@ -443,6 +443,11 @@ namespace Deltin.Deltinteger.Compiler
         True,
         False,
         Null,
+        // Strings
+        String,
+        InterpolatedStringTail,
+        InterpolatedStringMiddle,
+        InterpolatedStringHead,
         // Keywords
         Import,
         Define,

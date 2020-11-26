@@ -593,6 +593,15 @@ repository:
       name: string.quoted.single
     - match: '{{string-double}}'
       name: string.quoted.double
+    # Interpolated string
+    - begin: \$~(\'|\")
+      end: (\'|\") # TODO: escape strings
+      name: string.quoted
+      patterns:
+      - begin: '{'
+        end: '}'
+        patterns:
+        - include: '#expression'
   
   # Function call
   function-call:

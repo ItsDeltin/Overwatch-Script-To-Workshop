@@ -151,6 +151,7 @@ namespace Deltin.Deltinteger.Parse
                 case BooleanExpression boolean: return new BoolAction(Script, boolean.Value);
                 case NullExpression @null: return new NullAction();
                 case StringExpression @string: return new StringAction(this, scope, @string);
+                case InterpolatedStringExpression interpolatedString: return new Strings.InterpolatedStringAction(interpolatedString, this, scope);
                 case Identifier identifier: return GetVariable(scope, getter, identifier, selfContained);
                 case FunctionExpression method: return new CallMethodAction(this, scope, method, usedAsValue, getter);
                 case NewExpression newObject: return new CreateObjectAction(this, scope, newObject);

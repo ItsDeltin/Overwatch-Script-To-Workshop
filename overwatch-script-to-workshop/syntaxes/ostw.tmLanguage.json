@@ -864,6 +864,22 @@
         {
           "match": "\\\"(?:[^\"\\\\]|\\\\.)*\\\"",
           "name": "string.quoted.double"
+        },
+        {
+          "begin": "\\$\\s*(\\'|\\\")",
+          "end": "(\\'|\\\")",
+          "name": "string.quoted",
+          "patterns": [
+            {
+              "begin": "{",
+              "end": "}",
+              "patterns": [
+                {
+                  "include": "#expression"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
