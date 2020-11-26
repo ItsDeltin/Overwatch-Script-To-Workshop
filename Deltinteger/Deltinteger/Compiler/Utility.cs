@@ -181,6 +181,7 @@ namespace Deltin.Deltinteger.Compiler
         public string Text { get; }
         public DocRange Range { get; set; }
         public TokenType TokenType { get; }
+        public TokenFlags Flags { get; set; }
 
         public Token(string text, DocRange range, TokenType tokenType)
         {
@@ -195,6 +196,14 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator false(Token x) => x == null;
         public static bool operator !(Token x) => x == null;
         public static implicit operator bool(Token x) => x != null;
+        public static implicit operator DocRange(Token x) => x.Range;
+    }
+
+    [Flags]
+    public enum TokenFlags
+    {
+        None = 0,
+        StringSingleQuotes = 1
     }
 
     public static class TokenExtensions
@@ -438,7 +447,6 @@ namespace Deltin.Deltinteger.Compiler
         Or,
         Pipe,
         // Generic expressions
-        String,
         Number,
         True,
         False,
