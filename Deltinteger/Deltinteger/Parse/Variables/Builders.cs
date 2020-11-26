@@ -192,8 +192,21 @@ namespace Deltin.Deltinteger.Parse
                 base.GetCodeType();
             // Otherwise, we can supply the parameter code type from the contextual lambda type.
             else
-                ApplyCodeType(_contextualLambdaType.Parameters[_parameter]);
-        } 
+            {
+                var inferredType = _contextualLambdaType.Parameters[_parameter];
+
+                // If an explicit type was provided, make sure the inferred type matches.
+                if (_contextHandler.GetCodeType() != null)
+                {
+                    CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, _contextHandler.GetCodeType());
+
+                    if (!type.Is(inferredType))
+                        _parseInfo.Script.Diagnostics.Error("Expected the '" + inferredType.GetName() + "' type", _contextHandler.GetTypeRange());
+                }
+
+                ApplyCodeType(inferredType);
+            }
+        }
     }
 
     class ForeachVariable : VarBuilder
