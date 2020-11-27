@@ -922,7 +922,7 @@ namespace Deltin.Deltinteger.Elements
         public override Element Optimize() {
             Element array = (Element)ParameterValues[0];
             if(array is V_Array arr) {
-                return (Element)arr.ParameterValues[arr.ParameterValues.Count()];
+                return (Element)arr.ParameterValues[arr.ParameterValues.Count() - 1];
             }
             else return this;
         }
