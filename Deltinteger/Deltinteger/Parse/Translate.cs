@@ -356,7 +356,7 @@ namespace Deltin.Deltinteger.Parse
                 if (type is IResolveElements resolveElements)
                     resolveElements.ResolveElements();
 
-            deltinScript.PlayerVariableScope = _playerType.ObjectScope;
+            deltinScript.PlayerVariableScope = _playerType.PlayerVariableScope;
         }
 
         private void AddType(CodeType type) => AllTypes.Add(type);
