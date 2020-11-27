@@ -402,10 +402,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
             char lookingFor = single ? '\'' : '\"';
 
             //escaped will be 0 whenever it's not escaped
-            int escaped = 0;
+            bool escaped = false;
             // Look for end of string.
-            while (!scanner.ReachedEnd && ((escaped > 0) || !scanner.Match(lookingFor)))
+            while (!scanner.ReachedEnd && (escaped || !scanner.Match(lookingFor)))
             {
+                var progressCheck = scanner.Index;
+
                 // If this is an interpolated string, look for a '{' that is not followed by another '{'.
                 if (interpolated && scanner.Match('{') && !scanner.Match('{'))
                 {
@@ -416,10 +418,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     return true;
                 }
 
-                if (scanner.At('\\') && escaped == 0) escaped = 2;
-                else if (escaped > 0) escaped -= 1;
+                escaped = escaped ? false : scanner.Match('\\');
 
-                scanner.Advance();
+                // If the scanner did not progress, advance.
+                if (progressCheck == scanner.Index)
+                    scanner.Advance();
             }
 
             PushToken(scanner, interpolated ? TokenType.InterpolatedStringHead : TokenType.String);

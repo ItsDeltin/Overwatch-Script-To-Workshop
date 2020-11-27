@@ -31,6 +31,7 @@ variables:
   attribute-list: (((public|private|protected|virtual|override|abstract|static|recursive)\b\s*)*)
   variable-attribute-list: (((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\b\s*)*)
   number: -?[0-9]+(\.[0-9]+)?\b
+  unescaped: (?<!\\)(?:\\{2})*
 
   # Scopes
   statement-end: punctuation.terminator.statement.ostw
@@ -589,19 +590,48 @@ repository:
   # Strings
   string:
     patterns:
-    - match: '{{string-single}}'
+    # String single quote
+    - begin: \'
+      end: "{{unescaped}}'"
       name: string.quoted.single
-    - match: '{{string-double}}'
-      name: string.quoted.double
-    # Interpolated string
-    - begin: \$~(\'|\")
-      end: (\'|\") # TODO: escape strings
-      name: string.quoted
       patterns:
-      - begin: '{'
-        end: '}'
-        patterns:
-        - include: '#expression'
+      - include: '#escaped-string-character'
+    # String double quote
+    - begin: \"
+      end: '{{unescaped}}"'
+      name: string.quoted.double
+      patterns:
+      - include: '#escaped-string-character'
+    # Interpolated string single quote
+    - begin: \$~\'
+      end: "{{unescaped}}'"
+      name: string.quoted.single
+      patterns:
+      - include: '#escaped-string-character'
+      - include: '#interpolated-string-inner'
+    # Interpolated string double quote
+    - begin: \$~\"
+      end: '{{unescaped}}"'
+      name: string.quoted.double
+      patterns:
+      - include: '#escaped-string-character'
+      - include: '#interpolated-string-inner'
+  
+  interpolated-string-inner:
+    begin: '(?<!{)({{)*({)(?!{)'
+    end: '}'
+    beginCaptures:
+      2:
+        name: punctuation.definition.interpolation.begin
+    endCaptures:
+      0:
+        name: punctuation.definition.interpolation.end
+    patterns:
+    - include: '#expression'
+  
+  escaped-string-character:
+    match: \\.
+    name: constant.character.escape
   
   # Function call
   function-call:

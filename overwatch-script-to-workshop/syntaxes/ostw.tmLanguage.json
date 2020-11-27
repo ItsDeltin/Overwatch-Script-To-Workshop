@@ -858,30 +858,75 @@
     "string": {
       "patterns": [
         {
-          "match": "\\'(?:[^'\\\\]|\\\\.)*\\'",
-          "name": "string.quoted.single"
-        },
-        {
-          "match": "\\\"(?:[^\"\\\\]|\\\\.)*\\\"",
-          "name": "string.quoted.double"
-        },
-        {
-          "begin": "\\$\\s*(\\'|\\\")",
-          "end": "(\\'|\\\")",
-          "name": "string.quoted",
+          "begin": "\\'",
+          "end": "(?<!\\\\)(?:\\\\{2})*'",
+          "name": "string.quoted.single",
           "patterns": [
             {
-              "begin": "{",
-              "end": "}",
-              "patterns": [
-                {
-                  "include": "#expression"
-                }
-              ]
+              "include": "#escaped-string-character"
+            }
+          ]
+        },
+        {
+          "begin": "\\\"",
+          "end": "(?<!\\\\)(?:\\\\{2})*\"",
+          "name": "string.quoted.double",
+          "patterns": [
+            {
+              "include": "#escaped-string-character"
+            }
+          ]
+        },
+        {
+          "begin": "\\$\\s*\\'",
+          "end": "(?<!\\\\)(?:\\\\{2})*'",
+          "name": "string.quoted.single",
+          "patterns": [
+            {
+              "include": "#escaped-string-character"
+            },
+            {
+              "include": "#interpolated-string-inner"
+            }
+          ]
+        },
+        {
+          "begin": "\\$\\s*\\\"",
+          "end": "(?<!\\\\)(?:\\\\{2})*\"",
+          "name": "string.quoted.double",
+          "patterns": [
+            {
+              "include": "#escaped-string-character"
+            },
+            {
+              "include": "#interpolated-string-inner"
             }
           ]
         }
       ]
+    },
+    "interpolated-string-inner": {
+      "begin": "(?<!{)({{)*({)(?!{)",
+      "end": "}",
+      "beginCaptures": {
+        "2": {
+          "name": "punctuation.definition.interpolation.begin"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.interpolation.end"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "escaped-string-character": {
+      "match": "\\\\.",
+      "name": "constant.character.escape"
     },
     "function-call": {
       "begin": "(\\.\\s*)?([_[:alnum:]]+)\\s*(\\()",
