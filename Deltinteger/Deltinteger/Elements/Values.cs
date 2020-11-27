@@ -1646,8 +1646,13 @@ namespace Deltin.Deltinteger.Elements
             Element array = (Element)ParameterValues[0];
             Element index = (Element)ParameterValues[1];
 
+
             if (index is V_Number num)
-                if (num.Value == 0) // Needs to be in a seperate if or else the compiler will complain.
+                if(array is V_Array arr)
+                {
+                    return (Element)arr.ParameterValues[(int)num.Value];
+                }
+                else if (num.Value == 0) // Needs to be in a seperate if or else the compiler will complain.
                 {
                     return Element.Part<V_FirstOf>(array);
                 }
