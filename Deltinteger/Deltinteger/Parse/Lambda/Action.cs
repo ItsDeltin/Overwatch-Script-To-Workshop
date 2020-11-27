@@ -15,7 +15,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
         private readonly ParseInfo _parseInfo;
         private readonly CodeType[] _argumentTypes;
         private readonly bool _isExplicit;
-        private readonly bool _contextualParameterTypesKnown;
 
         /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
         public PortableLambdaType LambdaType { get; private set; }
@@ -53,7 +52,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _context = context;
             _lambdaScope = scope.Child();
             _parseInfo = parseInfo;
-            _contextualParameterTypesKnown = _parseInfo.ExpectingLambda != null && _parseInfo.ExpectingLambda.Type.ParameterTypesKnown;
             RecursiveCallHandler = new LambdaRecursionHandler(this);
             CallInfo = new CallInfo(RecursiveCallHandler, parseInfo.Script);
             This = scope.GetThis();

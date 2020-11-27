@@ -253,7 +253,7 @@ namespace Deltin.Deltinteger.Parse
                 overloads[i] = new SignatureInformation() {
                     Label = AllOverloads[i].GetLabel(false),
                     Parameters = parameters,
-                    Documentation = AllOverloads[i].Documentation
+                    Documentation = Extras.GetMarkupContent(AllOverloads[i].Documentation)
                 };
             }
 
