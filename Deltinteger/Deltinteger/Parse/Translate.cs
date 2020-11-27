@@ -330,7 +330,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void GetDefaults(DeltinScript deltinScript)
         {
-            var dynamicType = new DynamicType(deltinScript);
+            var dynamicType = new AnyType(deltinScript);
             AddType(dynamicType);
             AddType(_playerType);
             AddType(_vectorType);
@@ -394,7 +394,7 @@ namespace Deltin.Deltinteger.Parse
         public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
 
         public CodeType Default() => Any();
-        public CodeType Any() => GetInstance<DynamicType>();
+        public CodeType Any() => GetInstance<AnyType>();
         public CodeType AnyArray() => new ArrayType(this, Any());
         public CodeType Boolean() => GetInstance<BooleanType>();
         public CodeType Number() => GetInstance<NumberType>();

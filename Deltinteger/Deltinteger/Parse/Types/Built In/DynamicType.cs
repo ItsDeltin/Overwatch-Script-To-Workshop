@@ -3,11 +3,11 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DynamicType : CodeType, IResolveElements
+    public class AnyType : CodeType, IResolveElements
     {
         private readonly DeltinScript _deltinScript;
 
-        public DynamicType(DeltinScript deltinScript) : base("dynamic")
+        public AnyType(DeltinScript deltinScript) : base("Any")
         {
             CanBeDeleted = true;
             CanBeExtended = false;

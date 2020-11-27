@@ -307,7 +307,8 @@
     {
       "type": "player",
       "name": "Attacker",
-      "documentation": "The player that dealt damage for the event currently being processed by this rule. May be the same as the victim or the event player."
+      "documentation": "The player that dealt damage for the event currently being processed by this rule. May be the same as the victim or the event player.",
+      "restricted": "Attacker"
     },
     {
       "type": "vector",
@@ -541,24 +542,29 @@
     },
     {
       "type": "number",
-      "name": "Event Damage"
+      "name": "Event Damage",
+      "restricted": "Attacker"
     },
     {
       "type": "number",
-      "name": "Event Healing"
+      "name": "Event Healing",
+      "restricted": "Healer"
     },
     {
       "type": "player",
       "name": "Event Player",
-      "documentation": "The player executing the rule, as specified by the event, may be the same as the attacker or victim."
+      "documentation": "The player executing the rule, as specified by the event, may be the same as the attacker or victim.",
+      "restricted": "Event Player"
     },
     {
       "type": "boolean",
-      "name": "Event Was Critical Hit"
+      "name": "Event Was Critical Hit",
+      "restricted": "Attacker"
     },
     {
       "type": "boolean",
-      "name": "Event Was Health Pack"
+      "name": "Event Was Health Pack",
+      "restricted": "Healer"
     },
     {
       "type": "vector",
@@ -707,11 +713,13 @@
     },
     {
       "type": "player",
-      "name": "Healee"
+      "name": "Healee",
+      "restricted": "Healer"
     },
     {
       "type": "player",
-      "name": "Healer"
+      "name": "Healer",
+      "restricted": "Healer"
     },
     {
       "type": "number",
@@ -2440,7 +2448,8 @@
     {
       "type": "player",
       "name": "Victim",
-      "documentation": "The player that received damage for the event currently being processed by this rule. May be the same as the attacker or the event player."
+      "documentation": "The player that received damage for the event currently being processed by this rule. May be the same as the attacker or the event player.",
+      "restricted": "Attacker"
     },
     {
       "type": "vector",
@@ -2546,7 +2555,8 @@
     },
     {
       "type": "vector",
-      "name": "Event Direction"
+      "name": "Event Direction",
+      "restricted": "Attacker"
     },
     {
       "type": "button",
@@ -2596,7 +2606,8 @@
     },
     {
       "type": "button",
-      "name": "Event Ability"
+      "name": "Event Ability",
+      "restricted": "Ability"
     },
     {
       "type": "number",
@@ -2706,7 +2717,8 @@
     },
     {
       "type": "boolean",
-      "name": "Event Was Environment"
+      "name": "Event Was Environment",
+      "restricted": "Attacker"
     },
     {
       "type": "number",

@@ -165,7 +165,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (typeContext == null) return null;
 
-            if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
+            if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<AnyType>();
             
             CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
             if (type == null) return parseInfo.TranslateInfo.Types.Any();
