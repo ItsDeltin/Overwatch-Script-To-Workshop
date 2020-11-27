@@ -621,7 +621,16 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("First Of", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_FirstOf : Element { }
+    public class V_FirstOf : Element {
+
+        public override Element Optimize() {
+            Element array = (Element)ParameterValues[0];
+            if(array is V_Array arr) {
+                return (Element)arr.ParameterValues[0];
+            }
+            else return this;
+        }
+    }
 
     [ElementData("Flag Position", ValueType.Vector)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
@@ -908,7 +917,16 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Last Of", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_LastOf : Element { }
+    public class V_LastOf : Element { 
+
+        public override Element Optimize() {
+            Element array = (Element)ParameterValues[0];
+            if(array is V_Array arr) {
+                return (Element)arr.ParameterValues[arr.ParameterValues.Count()];
+            }
+            else return this;
+        }
+    }
 
     [ElementData("Last Text ID", ValueType.Number)]
     public class V_LastTextID : Element { }
