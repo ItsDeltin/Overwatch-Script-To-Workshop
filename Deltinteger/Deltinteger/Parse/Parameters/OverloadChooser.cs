@@ -319,7 +319,7 @@ namespace Deltin.Deltinteger.Parse
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
 
-            if (parameterType is PortableLambdaType && value is PortableLambdaType portableType && portableType.LambdaKind == LambdaKind.Anonymous)
+            if (parameterType is PortableLambdaType == false || (value is PortableLambdaType portableType && portableType.LambdaKind == LambdaKind.Anonymous))
             {
                 if (parameterType.CodeTypeParameterInvalid(value.Type()))
                 {
