@@ -591,7 +591,8 @@
     {
       "type": "boolean",
       "name": "False",
-      "documentation": "The Boolean value of false."
+      "documentation": "The Boolean value of false.",
+      "hidden": true
     },
     {
       "type": "player",
@@ -2306,7 +2307,8 @@
     {
       "type": "boolean",
       "name": "True",
-      "documentation": "The Boolean value of true."
+      "documentation": "The Boolean value of true.",
+      "hidden": true
     },
     {
       "type": "number",
