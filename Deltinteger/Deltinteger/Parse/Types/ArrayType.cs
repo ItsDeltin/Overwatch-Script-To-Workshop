@@ -1,4 +1,5 @@
 using System;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Lambda;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
@@ -137,6 +138,39 @@ namespace Deltin.Deltinteger.Parse
                 },
                 Action = (actionSet, methodCall) => Element.IndexOfArrayValue(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
+            // Modify Append
+            Func(new FuncMethodBuilder() {
+                Name = "ModAppend",
+                Documentation = "Appends a value to the array. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
+                Parameters = new CodeParameter[] {
+                    new CodeParameter("value", "The value that is pushed to the array.", new PipeType(arrayOfType, this))
+                },
+                OnCall = SourceVariableResolver.GetSourceVariable,
+                ReturnType = supplier.Number(),
+                Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.AppendToArray)
+            });
+            // Modify Remove By Value
+            Func(new FuncMethodBuilder() {
+                Name = "ModRemoveByValue",
+                Documentation = "Removes an element from the array by a value. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
+                Parameters = new CodeParameter[] {
+                    new CodeParameter("value", "The value that is removed from the array.", arrayOfType)
+                },
+                OnCall = SourceVariableResolver.GetSourceVariable,
+                ReturnType = supplier.Number(),
+                Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.RemoveFromArrayByValue)
+            });
+            // Modify Remove By Index
+            Func(new FuncMethodBuilder() {
+                Name = "ModRemoveByIndex",
+                Documentation = "Removes an element from the array by the index. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
+                Parameters = new CodeParameter[] {
+                    new CodeParameter("index", "The index of the element that is removed from the array.", supplier.Number())
+                },
+                OnCall = SourceVariableResolver.GetSourceVariable,
+                ReturnType = supplier.Number(),
+                Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.RemoveFromArrayByIndex)
+            });
 
             if (arrayOfType is IAdditionalArray addition)
                 addition.OverrideArray(this);
@@ -209,5 +243,33 @@ namespace Deltin.Deltinteger.Parse
     interface IAdditionalArray
     {
         void OverrideArray(ArrayType array);
+    }
+
+    class SourceVariableResolver
+    {
+        public IIndexReferencer Calling { get; private set; }
+
+        public static object GetSourceVariable(ParseInfo parseInfo, DocRange range)
+        {
+            var resolver = new SourceVariableResolver();
+            parseInfo.SourceExpression.OnResolve(expr => {
+                // Make sure the expression is a variable call.
+                if (expr is CallVariableAction variableCall && variableCall.Calling.VariableType != VariableType.ElementReference)
+                    resolver.Calling = variableCall.Calling;
+                // Otherwise, add an error.
+                else
+                    parseInfo.Script.Diagnostics.Error("Functions that directly modify arrays requires a variable as the source.", range);
+            });
+            return resolver;
+        }
+
+        public static IndexReference GetIndexReference(ActionSet actionSet, MethodCall methodCall) => (IndexReference)actionSet.IndexAssigner[((SourceVariableResolver)methodCall.AdditionalData).Calling];
+
+        public static IWorkshopTree Modify(ActionSet actionSet, MethodCall methodCall, Operation operation)
+        {
+            var calling = SourceVariableResolver.GetIndexReference(actionSet, methodCall);
+            actionSet.AddAction(calling.ModifyVariable(operation, methodCall.Get(0), actionSet.CurrentObjectRelatedIndex.Target));
+            return Element.CountOf(calling.Get());
+        }
     }
 }

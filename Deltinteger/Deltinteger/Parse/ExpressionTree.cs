@@ -175,10 +175,12 @@ namespace Deltin.Deltinteger.Parse
             IGettable resultingVariable = null; // The resulting variable.
             IndexReference currentObjectReference = null;
             IWorkshopTree target = null; // The resulting player.
+            IWorkshopTree previousTarget = null;
             IWorkshopTree result = null; // The resulting value.
             VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
             IWorkshopTree currentObject = null;
             Element[] resultIndex = new Element[0];
+            List<IWorkshopTree> resultingSources = new List<IWorkshopTree>();
 
             for (int i = 0; i < Tree.Length; i++)
             {
@@ -205,31 +207,32 @@ namespace Deltin.Deltinteger.Parse
                 }
                 else
                 {
-                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject).New(currentObjectReference));
+                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject).New(currentObjectReference, previousTarget as Element));
                     if (newCurrent != null)
                     {
                         current = newCurrent;
                         resultIndex = new Element[0];
                     }
                 }
-                
-                if (Tree[i].Type() == null)
-                {
-                    // If this isn't the last in the tree, set it as the target.
-                    if (!isLast)
-                        target = current;
-                    currentObject = null;
-                }
-                else
+
+                currentObject = current;
+                if (Tree[i].Type() != null)
                 {
                     var type = Tree[i].Type();
 
-                    currentObject = current;
+                    // If this isn't the last in the tree, set it as the target.
+                    if (!isLast)
+                    {
+                        previousTarget = target;
+                        target = type.Implements(actionSet.Translate.DeltinScript.Types.Player()) ? current : null;
+                    }
+
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
                     type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
                 }
 
                 result = current;
+                resultingSources.Add(result);
             }
 
             if (result == null && expectingValue) throw new Exception("Expression tree result is null");
@@ -511,7 +514,7 @@ namespace Deltin.Deltinteger.Parse
                 if (_variable is ICallable callable) callable.Call(_parseInfo, _callRange);
 
                 // Restricted value type check.
-                if (_parent != null && _variable is IIndexReferencer referencer && RestrictedCall.EventPlayerDefaultCall(referencer, _parent.GetExpression(), _parseInfo))
+                if (_variable is IIndexReferencer referencer && RestrictedCall.EventPlayerDefaultCall(referencer, _parent?.GetExpression(), _parseInfo))
                     _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
                 
                 // Accept method group.

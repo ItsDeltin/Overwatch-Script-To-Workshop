@@ -140,7 +140,7 @@ namespace Deltin.Deltinteger.Parse
         public VarIndexAssigner IndexAssigner { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
         public IWorkshopTree CurrentObject { get; private set; }
-        public IndexReference CurrentObjectRelatedIndex { get; private set; }
+        public SourceIndexReference CurrentObjectRelatedIndex { get; private set; }
         public IWorkshopTree This { get; private set; }
         public bool IsRecursive { get; private set; }
         public bool IsGlobal { get; }
@@ -190,7 +190,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler))
         };
         public ActionSet New(IWorkshopTree currentObject) => new ActionSet(this) { CurrentObject = currentObject };
-        public ActionSet New(IndexReference relatedIndex) => new ActionSet(this) { CurrentObjectRelatedIndex = relatedIndex };
+        public ActionSet New(IndexReference relatedIndex, Element target = null) => new ActionSet(this) { CurrentObjectRelatedIndex = new SourceIndexReference(relatedIndex, target) };
         public ActionSet New(bool isRecursive) => new ActionSet(this) { IsRecursive = isRecursive };
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
@@ -343,5 +343,17 @@ namespace Deltin.Deltinteger.Parse
         public bool IsAction { get; } = false;
         public Element GetAction() => throw new NotImplementedException();
         public bool ShouldRemove() => false;
+    }
+
+    public struct SourceIndexReference
+    {
+        public IndexReference Reference { get; }
+        public Element Target { get; }
+
+        public SourceIndexReference(IndexReference reference, Element target)
+        {
+            Reference = reference;
+            Target = target;
+        }
     }
 }
