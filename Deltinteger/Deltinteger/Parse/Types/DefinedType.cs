@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // If the extend token exists, add completion that only contains all extendable classes.
-            if (_typeContext.InheritToken != null)
+            if (_typeContext.InheritToken != null && !_parseInfo.Script.IsTokenLast(_typeContext.InheritToken))
                 _parseInfo.Script.AddCompletionRange(new CompletionRange(
                     // Get the completion items of all types.
                     _parseInfo.TranslateInfo.Types.AllTypes
@@ -128,10 +128,11 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void BaseScopes(string scopeName)
         {
-            Scope global = _parseInfo.TranslateInfo.GlobalScope;
+            Scope classContainer = _parseInfo.TranslateInfo.GlobalScope.Child();
+            classContainer.CatchConflict = true;
 
-            staticScope = global.Child(scopeName);
-            operationalScope = global.Child(scopeName);
+            staticScope = classContainer.Child(scopeName);
+            operationalScope = classContainer.Child(scopeName);
             serveObjectScope = new Scope(scopeName);
         }
 

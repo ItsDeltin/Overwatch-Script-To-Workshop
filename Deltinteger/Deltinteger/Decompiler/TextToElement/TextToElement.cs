@@ -170,6 +170,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return true;
         }
 
+        string CustomSettingName()
+        {
+            string name = "";
+            while (!Is('{') && !Is('}') && !Is(':'))
+            {
+                name += Current;
+                Advance();
+            }
+            SkipWhitespace();
+            return name;
+        }
+
         // Integer
         public bool Integer(out int value)
         {
@@ -550,8 +562,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     else if (func.WorkshopParameters[currentParameter] is EnumParameter enumParam)
                     {
                         // Match enum member
-                        foreach (var member in enumParam.EnumData.Members.OrderByDescending(m => m.WorkshopName.Length))
-                            if (Match(Kw(member.WorkshopName), false))
+                        foreach (var member in enumParam.EnumData.Members.OrderByDescending(m => m.DecompileName.Length))
+                            if (Match(Kw(member.DecompileName), false))
                             {
                                 values.Add(new ConstantEnumeratorExpression(member));
                                 break;
@@ -886,9 +898,29 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             if (op.Type == OperatorType.Binary)
             {
                 // Binary
-                var right = _operands.Pop();
-                var left = _operands.Pop();
-                _operands.Push(new BinaryOperatorExpression(left, right, op));
+                if (op.Contain == ContainGroup.Left)
+                {
+                     var right = _operands.Pop();
+                    var left = _operands.Pop();
+                    _operands.Push(new BinaryOperatorExpression(left, right, op));
+                    return;
+                }
+
+                Stack<ITTEExpression> exprs = new Stack<ITTEExpression>();
+                exprs.Push(_operands.Pop());
+                exprs.Push(_operands.Pop());
+
+                while (_operators.Peek() == op)
+                {
+                    _operators.Pop();
+                    exprs.Push(_operands.Pop());
+                }
+
+                ITTEExpression result = exprs.Pop();
+                while (exprs.Count != 0)
+                    result = new BinaryOperatorExpression(result, exprs.Pop(), op);
+                
+                _operands.Push(result);
             }
             else if (op.Type == OperatorType.Unary)
             {
@@ -964,6 +996,45 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Match("}"); // End heroes section.
             }
 
+            // Custom workshop settings
+            if (Match(Kw("workshop")))
+            {
+                ruleset.Workshop = new WorkshopValuePair();
+                Match("{"); // Start workshop section.
+
+                // Match settings.
+                while(!Match("}"))
+                {
+                    string identifier = CustomSettingName();
+                    Match(":");
+
+                    object value = "?";
+
+                    // Boolean: On
+                    if (Match(Kw("On")))
+                        value = true;
+                    // Boolean: Off
+                    else if (Match(Kw("Off")))
+                        value = false;
+                    // Number
+                    else if (Double(out double num))
+                        value = num;
+                    // Combo
+                    else if (Match("["))
+                    {
+                        Double(out double comboIndex);
+                        value = comboIndex;
+                        Match("]");
+                    }
+                    // Match hero names.
+                    else if (MatchHeroNames(out var hero))
+                        value = hero.HeroName;
+                    
+                    // Add the custom setting.
+                    ruleset.Workshop.Add(identifier, value);
+                }
+            }
+
             Match("}"); // End settings section.
             LobbySettings = ruleset;
             return true;
@@ -980,6 +1051,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Match("}"); // End general settings section.
                 return true;
             }
+
+            // Disabled
+            bool disabled = Match(Kw("disabled"));
 
             foreach (var mode in ModeSettingCollection.AllModeSettings)
             // Match the mode name.
@@ -1029,6 +1103,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     return true;
                 });
                 Match("}"); // End specific mode settings section.
+
+                if (disabled) relatedModeSettings.Settings.Add("Enabled", !disabled);
                 return true;
             }
             return false;
@@ -1051,20 +1127,19 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             // Match general settings.
             GroupSettings(list.Settings, HeroSettingCollection.AllHeroSettings.First(hero => hero.HeroName == "General").ToArray(), () => {
                 // Match hero names.
-                foreach (var hero in HeroSettingCollection.AllHeroSettings.Where(heroSettings => heroSettings.HeroName != "General"))
-                    if (Match(Kw(hero.HeroName), false))
-                    {
-                        WorkshopValuePair heroSettings = new WorkshopValuePair();
-                        list.Settings.Add(hero.HeroName, heroSettings);
+                if (MatchHeroNames(out var hero))
+                {
+                    WorkshopValuePair heroSettings = new WorkshopValuePair();
+                    list.Settings.Add(hero.HeroName, heroSettings);
 
-                        Match("{"); // Start specific hero settings section.
+                    Match("{"); // Start specific hero settings section.
 
-                        // Match settings.
-                        GroupSettings(heroSettings, hero.ToArray());
-                        
-                        Match("}"); // End specific hero settings section.
-                        return true;
-                    }
+                    // Match settings.
+                    GroupSettings(heroSettings, hero.ToArray());
+                    
+                    Match("}"); // End specific hero settings section.
+                    return true;
+                }
                 
                 bool enabledHeroes; // Determines if the hero group is matching enabled or disabled heroes.
                 // Enabled heroes
@@ -1092,6 +1167,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return true;
         }
 
+        bool MatchHeroNames(out HeroSettingCollection collection)
+        {
+            foreach (var hero in HeroSettingCollection.AllHeroSettings.Where(heroSettings => heroSettings.HeroName != "General"))
+                if (Match(Kw(hero.HeroName), false))
+                {
+                    collection = hero;
+                    return true;
+                }
+            collection = null;
+            return false;
+        }
+
         bool MatchHero(out string heroName)
         {
             // Iterate through all hero names.
@@ -1109,24 +1196,25 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         void GroupSettings(Dictionary<string, object> collection, LobbySetting[] settings, Func<Boolean> onInterupt = null)
         {
-            var orderedSettings = settings.OrderByDescending(s => s.Name); // Order the settings so longer names are matched first.
+            var orderedSettings = settings.OrderByDescending(s => s.Name.Length); // Order the settings so longer names are matched first.
 
             bool matched = true;
             while (matched)
             {
                 matched = false;
+
+                // Test hook.
+                if (onInterupt != null && onInterupt.Invoke())
+                {
+                    // If the hook handled the match, break.
+                    matched = true;
+                    break;
+                }
+
                 foreach (var lobbySetting in orderedSettings)
                 {
-                    // Test hook.
-                    if (onInterupt != null && onInterupt.Invoke())
-                    {
-                        // If the hook handled the match, break.
-                        matched = true;
-                        break;
-                    }
-
                     // Match the setting name.
-                    else if (MatchLobbySetting(collection, lobbySetting))
+                    if (MatchLobbySetting(collection, lobbySetting))
                     {
                         // Indicate that a setting was matched.
                         matched = true;

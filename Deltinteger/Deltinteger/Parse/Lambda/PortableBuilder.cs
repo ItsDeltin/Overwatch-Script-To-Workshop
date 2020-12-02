@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return _subroutineInfo;
         }
         public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_parameterCount, _functionHandlers.ToArray(), true);
-        public NewRecursiveStack GetExistingRecursiveStack(List<NewRecursiveStack> stack) => throw new NotImplementedException();
+        public RecursiveStack GetExistingRecursiveStack(List<RecursiveStack> stack) => throw new NotImplementedException();
         public object GetStackIdentifier() => throw new NotImplementedException();
 
         // IFunctionLookupTable
@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 option.ContainingType?.AddObjectVariablesToAssigner(callerObject, optionSet.IndexAssigner);
 
                 // then parse the block.
-                builder.Subcall(optionSet.New(callerObject), option);
+                builder.Subcall(optionSet.SetThis(callerObject).New(builder.ActionSet.CurrentObject), option);
             }
 
             // Finish the switch.
@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _lambda = lambda;
         }
 
-        public bool DoesReturnValue() => _lambda.LambdaType.DoesReturnValue();
+        public bool DoesReturnValue() => _lambda.LambdaType.ReturnsValue;
         public IIndexReferencer GetParameterVar(int index) => index < _lambda.Parameters.Length ? _lambda.Parameters[index] : null;
         public int ParameterCount() => _lambda.Parameters.Length;
 
@@ -133,11 +133,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
             var infoSaver = actionSet.VarCollection.Assign("funcSaver", true, false);
             actionSet.AddAction(infoSaver.SetVariable((Element)actionSet.CurrentObject));
 
+            actionSet = actionSet.New(infoSaver.Get());
+
             // Add the contained variables.
             for (int i = 0; i < _lambda.CapturedVariables.Count; i++)
                 actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 2));
             
-            _lambda.Statement.Translate(actionSet);
+            if (_lambda.Expression != null)
+                actionSet.ReturnHandler.ReturnValue(_lambda.Expression.Parse(actionSet));
+            else
+                _lambda.Statement.Translate(actionSet);
         }
     }
 }

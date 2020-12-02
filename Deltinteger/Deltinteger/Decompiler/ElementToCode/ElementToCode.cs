@@ -271,13 +271,13 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         {
             // Get the file name.
             string directory = Path.GetDirectoryName(_sourceFile);
-            string file = Path.Join(directory, "customGameSettings.json");
+            string file = Path.Join(directory, "customGameSettings.lobby");
 
             // Change file if the name already exists.
             int i = 0;
             while (File.Exists(file))
             {
-                file = Path.Join(directory, "customGameSettings_" + i + ".json");
+                file = Path.Join(directory, "customGameSettings_" + i + ".lobby");
                 i++;
             }
 

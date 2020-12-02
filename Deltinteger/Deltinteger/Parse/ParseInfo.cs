@@ -20,7 +20,13 @@ namespace Deltin.Deltinteger.Parse
 
         // Do not persist.
         public ITreeContextPart SourceExpression { get; private set; }
-        public IVariableTracker LocalVariableTracker { get; private set; }
+
+        // Tail
+        public IVariableTracker[] LocalVariableTracker { get; private set; }
+
+        // Head
+        public ResolveInvokeInfo ResolveInvokeInfo { get; private set; }
+        public AsyncInfo AsyncInfo { get; private set; }
 
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
@@ -37,6 +43,8 @@ namespace Deltin.Deltinteger.Parse
             RestrictedCallHandler = other.RestrictedCallHandler;
             ExpectingLambda = other.ExpectingLambda;
             LocalVariableTracker = other.LocalVariableTracker;
+            ResolveInvokeInfo = other.ResolveInvokeInfo;
+            AsyncInfo = other.AsyncInfo;
         }
         public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo, RestrictedCallHandler = currentCallInfo };
         public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { BreakHandler = loop, ContinueHandler = loop };
@@ -44,10 +52,22 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetContinueHandler(IContinueContainer handler) => new ParseInfo(this) { ContinueHandler = handler };
         public ParseInfo SetSourceExpression(ITreeContextPart treePart) => new ParseInfo(this) { SourceExpression = treePart };
         public ParseInfo SetRestrictedCallHandler(IRestrictedCallHandler callHandler) => new ParseInfo(this) { RestrictedCallHandler = callHandler };
-        public ParseInfo SetVariableTracker(IVariableTracker variableTracker) => new ParseInfo(this) { LocalVariableTracker = variableTracker };
+        public ParseInfo AddVariableTracker(IVariableTracker variableTracker)
+        {
+            if (LocalVariableTracker == null) return new ParseInfo(this) { LocalVariableTracker = new IVariableTracker[] { variableTracker } };
+            // Create a new variable tracker array with +1 length.
+            var variableTrackerArray = new IVariableTracker[LocalVariableTracker.Length + 1];
+            // Copy the current variable trackers.
+            LocalVariableTracker.CopyTo(variableTrackerArray, 0);
+            // Set the tracker.
+            variableTrackerArray[LocalVariableTracker.Length] = variableTracker;
+
+            return new ParseInfo(this) { LocalVariableTracker = variableTrackerArray };
+        }
         public ParseInfo SetExpectingLambda(CodeType sourceType) => new ParseInfo(this) { ExpectingLambda = sourceType is PortableLambdaType portable ? new ExpectingLambdaInfo(portable) : null };
-        public ParseInfo SetPotentialLambda() => new ParseInfo(this) { ExpectingLambda = new ExpectingLambdaInfo() };
-        public ParseInfo ClearExpectingLambda() => new ParseInfo(this) { ExpectingLambda = null };
+        public ParseInfo SetLambdaInfo(ExpectingLambdaInfo lambdaInfo) => new ParseInfo(this) { ExpectingLambda = lambdaInfo };
+        public ParseInfo SetInvokeInfo(ResolveInvokeInfo invokeInfo) => new ParseInfo(this) { ResolveInvokeInfo = invokeInfo };
+        public ParseInfo SetAsyncInfo(AsyncInfo asyncInfo) => new ParseInfo(this) { AsyncInfo = asyncInfo };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
@@ -99,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
                         Script.Diagnostics.Error("Expressions can't be used as statements.", statementContext.Range);
                         return MissingElementAction.MissingElement;
                     }
-                    // When IsStatement is true, expr should be castable to a statement.
+                    if (expr is IStatement == false) return MissingElementAction.MissingElement;
                     return (IStatement)expr;
 
                 default: return MissingElementAction.MissingElement;
@@ -139,9 +159,8 @@ namespace Deltin.Deltinteger.Parse
                 case TypeCast typeCast: return new TypeConvertAction(this, scope, typeCast);
                 case ThisExpression @this: return new ThisAction(this, scope, @this);
                 case RootExpression root: return new RootAction(this.TranslateInfo);
-                // case DeltinScriptParser.E_baseContext @base: return new BaseAction(this, scope, @base);
-                // case DeltinScriptParser.E_isContext @is: return new IsAction(this, scope, @is);
                 case LambdaExpression lambda: return new Lambda.LambdaAction(this, scope, lambda);
+                case AsyncContext asyncContext: return AsyncInfo.ParseAsync(this, scope, asyncContext, usedAsValue);
                 // Missing
                 case MissingElement missing: return MissingElementAction.MissingElement;
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
@@ -161,11 +180,17 @@ namespace Deltin.Deltinteger.Parse
             DocRange variableRange = variableContext.Token.Range;
 
             // Get the variable.
-            IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
+            IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange, ResolveInvokeInfo != null);
             if (element == null) return new MissingVariable(variableName);
             
             // Additional syntax checking.
-            return new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);
+            var expression = new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);
+
+            // Accept the method group.
+            if (expression is CallMethodGroup methodGroup)
+                methodGroup.Accept();
+
+            return expression;
         }
 
         /// <summary>Gets an IExpression[] from a DeltinScriptParser.ArrayContext.</summary>
@@ -212,7 +237,23 @@ namespace Deltin.Deltinteger.Parse
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;
         }
-    
+
+        public void LocalVariableAccessed(IIndexReferencer referencer)
+        {
+            if (LocalVariableTracker != null)
+                foreach (var tracker in LocalVariableTracker)
+                    tracker.LocalVariableAccessed(referencer);
+        }
+
+        public ParseInfo ClearTail() => new ParseInfo(this) {
+            LocalVariableTracker = null
+        };
+
+        public ParseInfo ClearHead() => new ParseInfo(this) {
+            ResolveInvokeInfo = null,
+            AsyncInfo = null
+        };
+
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
     }
 
@@ -240,8 +281,8 @@ namespace Deltin.Deltinteger.Parse
                     EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
                 
                 // If there is a local variable tracker and the variable requires capture.
-                if (referencer.RequiresCapture && _parseInfo.LocalVariableTracker != null)
-                    _parseInfo.LocalVariableTracker.LocalVariableAccessed(referencer);
+                if (referencer.RequiresCapture)
+                    _parseInfo.LocalVariableAccessed(referencer);
 
                 return new CallVariableAction(referencer, index);
             }

@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public Diagnostic(string message, DocRange range, int severity)
         {
             this.message = message ?? throw new NullReferenceException(nameof(message));
-            this.range = range ?? throw new NullReferenceException(nameof(message));
+            this.range = range ?? throw new NullReferenceException(nameof(range));
             this.severity = severity;
         }
 

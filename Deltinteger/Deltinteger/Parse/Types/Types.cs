@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
+        public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
         protected string Kind = "class";
         protected TokenType TokenType { get; set; } = TokenType.Type;
@@ -176,11 +177,28 @@ namespace Deltin.Deltinteger.Parse
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, LambdaType type)
         {
+            // Get the lambda type's parameters.
             var parameters = new CodeType[type.Parameters.Count];
             for (int i = 0; i < parameters.Length; i++)
+            {
                 parameters[i] = GetCodeTypeFromContext(parseInfo, type.Parameters[i]);
+
+                // Constant types are not allowed.
+                if (parameters[i] != null && parameters[i].IsConstant())
+                    parseInfo.Script.Diagnostics.Error("The constant type '" + parameters[i].GetName() + "' cannot be used in method types", type.Parameters[i].Range);
+            }
+
+            // Get the return type.
+            CodeType returnType = null;
+            bool returnsValue = false;
             
-            return new PortableLambdaType(LambdaKind.Portable, parameters, type.ReturnType.IsVoid ? null : GetCodeTypeFromContext(parseInfo, type.ReturnType), true);
+            if (!type.ReturnType.IsVoid)
+            {
+                returnType = GetCodeTypeFromContext(parseInfo, type.ReturnType);
+                returnsValue = true;
+            }
+            
+            return new PortableLambdaType(LambdaKind.Portable, parameters, returnsValue, returnType, true);
         }
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, GroupType type)
@@ -208,8 +226,8 @@ namespace Deltin.Deltinteger.Parse
             // Add custom classes here.
             _defaultTypes.Add(new Models.AssetClass());
             _defaultTypes.Add(new Lambda.BlockLambda());
-            _defaultTypes.Add(new Lambda.ValueBlockLambda());
-            _defaultTypes.Add(new Lambda.MacroLambda());
+            _defaultTypes.Add(new Lambda.ValueBlockLambda(null));
+            _defaultTypes.Add(new Lambda.MacroLambda(null));
             _defaultTypes.Add(VectorType.Instance);
             _defaultTypes.Add(Pathfinder.SegmentsStruct.Instance);
         }

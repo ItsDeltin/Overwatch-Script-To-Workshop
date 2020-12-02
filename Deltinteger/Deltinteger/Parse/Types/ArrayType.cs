@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly InternalVar _last;
         private readonly InternalVar _first;
 
-        public ArrayType(CodeType arrayOfType) : base((arrayOfType?.Name ?? "define") + "[]")
+        public ArrayType(CodeType arrayOfType) : base(arrayOfType.GetNameOrDefine() + "[]")
         {
             ArrayOfType = arrayOfType;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
@@ -138,7 +138,7 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        private static IWorkshopTree GenericSort<T>(ActionSet actionSet, MethodCall methodCall) where T: Element, new() => Element.Part<T>(actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
+        private static IWorkshopTree GenericSort<T>(ActionSet actionSet, MethodCall methodCall) where T: Element, new() => Element.Part<T>(actionSet.CurrentObject, ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
 
         private void Func(FuncMethodBuilder builder)
         {
@@ -156,6 +156,13 @@ namespace Deltin.Deltinteger.Parse
         public override Scope GetObjectScope() => _scope;
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
+
+        public override string GetName()
+        {
+            string result = ArrayOfType.GetNameOrDefine();
+            if (ArrayOfType is PortableLambdaType) result = "(" + result + ")";
+            return result + "[]"; 
+        }
     }
 
     class GenericSortFunction
@@ -174,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
                 new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(null, ArrayOfType))
             };
             noIndex.Action = (actionSet, methodCall) =>
-                Element.Part<T>(actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
+                Element.Part<T>(actionSet.CurrentObject, ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
 
             // (value, index) => ...
             var withIndex = GetFuncMethod();
@@ -182,7 +189,7 @@ namespace Deltin.Deltinteger.Parse
                 new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(null, ArrayOfType, null))
             };
             withIndex.Action = (actionSet, methodCall) =>
-                Element.Part<T>(actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement(), new V_CurrentArrayIndex()));
+                Element.Part<T>(actionSet.CurrentObject, ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement(), new V_CurrentArrayIndex()));
             
             addToScope.AddNativeMethod(new FuncMethod(noIndex));
             addToScope.AddNativeMethod(new FuncMethod(withIndex));

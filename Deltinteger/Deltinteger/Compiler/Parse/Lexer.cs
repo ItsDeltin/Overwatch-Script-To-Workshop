@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             controller.Match();
             Content = newContent;
-            return new IncrementInfo(affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex, Tokens.Count - lastTokenCount);
+            return new IncrementInfo(affectedArea.StartingTokenIndex, Math.Max(tokenInsert.Current, affectedArea.EndingTokenIndex), Tokens.Count - lastTokenCount);
         }
 
         AffectedAreaInfo GetAffectedArea(UpdateRange updateRange)
@@ -263,6 +263,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("ref", TokenType.Ref) ||
                     MatchKeyword("this", TokenType.This) ||
                     MatchKeyword("root", TokenType.Root) ||
+                    MatchKeyword("async", TokenType.Async) ||
                     MatchKeyword("as", TokenType.As) ||
                     MatchIdentifier() ||
                     MatchString();
@@ -361,15 +362,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             char lookingFor = single ? '\'' : '\"';
 
-            bool escaped = false;
+            //escaped will be 0 whenever it's not escaped
+            int escaped = 0;
             // Look for end of string.
             do
             {
                 scanner.Advance();
-                if (scanner.At('\\') && !escaped) escaped = true;
-                else if (escaped) escaped = false;
+                if (scanner.At('\\') && escaped == 0) escaped = 2;
+                else if (escaped > 0) escaped -= 1;
             }
-            while (!scanner.ReachedEnd && (escaped || !scanner.At(lookingFor)));
+            while (!scanner.ReachedEnd && ((escaped > 0) || !scanner.At(lookingFor)));
             scanner.Advance();
 
             PushToken(scanner, TokenType.String);
@@ -458,7 +460,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
             scanner.Advance();
 
             // Match every character to the end of the line.
-            while(!scanner.ReachedEnd && !scanner.At('*') && !scanner.At('/')) scanner.Advance();
+            while(!scanner.ReachedEnd)
+            {
+                if (scanner.At('*') && scanner.At('/', 1))
+                {
+                    scanner.Advance();
+                    scanner.Advance();
+                    break;
+                }
+                scanner.Advance();
+            }
             
             // Done.
             Accept(scanner);

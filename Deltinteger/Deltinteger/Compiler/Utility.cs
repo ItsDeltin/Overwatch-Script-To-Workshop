@@ -304,9 +304,12 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.String:
                 case TokenType.Parentheses_Open:
                 case TokenType.SquareBracket_Open:
+                case TokenType.Async:
                 // Unary
                 case TokenType.Subtract:
                 case TokenType.Exclamation:
+                // Type cast
+                case TokenType.LessThan:
                     return true;
                 
                 default:
@@ -464,6 +467,7 @@ namespace Deltin.Deltinteger.Compiler
         This,
         Root,
         As,
+        Async,
         // Attributes
         Public,
         Private,

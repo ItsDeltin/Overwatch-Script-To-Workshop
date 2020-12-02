@@ -626,7 +626,7 @@ export async function cancelableGet(url: string, token: vscode.CancellationToken
 }
 
 function getModuleCommand(module: string): string {
-	return 'dotnet exec ' + module;
+	return 'dotnet exec "' + module +'"';
 }
 
 // Gets the latest release's download URL.

@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext => true;
 
         public IExpression Expression { get; private set; }
-        public CodeType ReturnType { get; private set; }
+        public CodeType CodeType { get; private set; }
 
         private readonly IParseExpression _expressionToParse;
         private readonly Scope _scope;
@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
             DefinedAt = new Location(parseInfo.Script.Uri, nameRange);
             _recursiveCallHandler = new RecursiveCallHandler(this);
             CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
-            ReturnType = returnType;
+            CodeType = returnType;
             _expressionToParse = macroContext.Value;
             _scope = Static ? staticScope : objectScope;
             this._parseInfo = parseInfo;
@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetupBlock()
         {
-            if (_expressionToParse != null) Expression = _parseInfo.SetCallInfo(CallInfo).GetExpression(_scope.Child(), _expressionToParse);
+            if (_expressionToParse != null) Expression = _parseInfo.SetCallInfo(CallInfo).SetExpectingLambda(CodeType).GetExpression(_scope.Child(), _expressionToParse);
             _wasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }
@@ -102,9 +102,9 @@ namespace Deltin.Deltinteger.Parse
             return AbstractMacroBuilder.Call(actionSet, this);
         }
 
-        public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? _parseInfo.TranslateInfo.PlayerVariableScope;
+        public Scope ReturningScope() => CodeType?.GetObjectScope() ?? _parseInfo.TranslateInfo.PlayerVariableScope;
 
-        public CodeType Type() => ReturnType;
+        public CodeType Type() => CodeType;
 
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
@@ -122,7 +122,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown)
         {
-            string name = (ReturnType?.GetName() ?? "define") + " " + Name;
+            string name = (CodeType?.GetName() ?? "define") + " " + Name;
             if (markdown) return HoverHandler.Sectioned(name, null);
             else return name;
         }

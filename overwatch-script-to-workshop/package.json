@@ -2,7 +2,7 @@
     "name": "overwatch-script-to-workshop",
     "displayName": "Overwatch Script To Workshop",
     "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-    "version": "2.1.0",
+    "version": "2.2.1",
     "publisher": "Deltin",
     "engines": {
         "vscode": "^1.47.0"
@@ -31,8 +31,7 @@
     "main": "./dist/extensions.js",
     "icon": "icon.png",
     "contributes": {
-        "languages": [
-            {
+        "languages": [{
                 "id": "ostw",
                 "aliases": [
                     "Overwatch Script To Workshop",
@@ -56,10 +55,15 @@
                     ".overwatch"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "json",
+                "extensions": [
+                    ".lobby"
+                ]
             }
         ],
-        "grammars": [
-            {
+        "grammars": [{
                 "language": "ostw",
                 "scopeName": "source.del",
                 "path": "./syntaxes/ostw.tmLanguage.json"
@@ -160,8 +164,7 @@
                 }
             }
         },
-        "commands": [
-            {
+        "commands": [{
                 "command": "ostw.downloadLatestRelease",
                 "title": "Download the latest OSTW release",
                 "category": "Overwatch Script To Workshop"
@@ -202,8 +205,7 @@
                 "category": "Overwatch Script To Workshop"
             }
         ],
-        "keybindings": [
-            {
+        "keybindings": [{
                 "command": "ostw.copyWorkshopCode",
                 "key": "Ctrl+Alt+C"
             },
@@ -212,54 +214,50 @@
                 "key": "Ctrl+K Ctrl+V"
             }
         ],
-        "jsonValidation": [
-            {
-                "fileMatch": "customGameSettings.json",
-                "url": "./LobbySettingValidation.json"
-            }
-        ],
-        "debuggers": [
-            {
+        "jsonValidation": [{
+            "fileMatch": [
+                "customGameSettings.json",
+                "*.lobby.json",
+                "*.lobby"
+            ],
+            "url": "./LobbySettingValidation.json"
+        }],
+        "debuggers": [{
+            "type": "ostw",
+            "label": "Overwatch Script To Workshop",
+            "languages": [
+                "ostw"
+            ],
+            "configurationSnippets": [{
+                "label": "Overwatch Script To Workshop: Debug Current File",
+                "name": "Overwatch Script To Workshop Configuration",
+                "description": "A new configuration for debugging an OSTW script.",
+                "body": {
+                    "type": "ostw",
+                    "program": "${workspaceFolder}/${file}"
+                }
+            }],
+            "initialConfigurations": [{
                 "type": "ostw",
-                "label": "Overwatch Script To Workshop",
-                "languages": [
-                    "ostw"
-                ],
-                "configurationSnippets": [
-                    {
-                        "label": "Overwatch Script To Workshop: Debug Current File",
-                        "name": "Overwatch Script To Workshop Configuration",
-                        "description": "A new configuration for debugging an OSTW script.",
-                        "body": {
-                            "type": "ostw",
-                            "program": "${workspaceFolder}/${file}"
-                        }
-                    }
-                ],
-                "initialConfigurations": [
-                    {
-                        "type": "ostw",
-                        "name": "OSTW",
-                        "program": "${workspaceFolder}/${file}",
-                        "request": "launch"
-                    }
-                ],
-                "configurationAttributes": {
-                    "launch": {
-                        "required": [
-                            "program"
-                        ],
-                        "properties": {
-                            "program": {
-                                "type": "string",
-                                "description": "The script to debug.",
-                                "default": "${workspaceFolder}/${file}"
-                            }
+                "name": "OSTW",
+                "program": "${workspaceFolder}/${file}",
+                "request": "launch"
+            }],
+            "configurationAttributes": {
+                "launch": {
+                    "required": [
+                        "program"
+                    ],
+                    "properties": {
+                        "program": {
+                            "type": "string",
+                            "description": "The script to debug.",
+                            "default": "${workspaceFolder}/${file}"
                         }
                     }
                 }
             }
-        ]
+        }]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && webpack --mode production",

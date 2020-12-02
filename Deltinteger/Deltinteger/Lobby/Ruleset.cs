@@ -25,13 +25,15 @@ namespace Deltin.Deltinteger.Lobby
             new SwitchValue("Allow Players Who Are In Queue", false, SwitchType.YesNo),
             new SwitchValue("Use Experimental Update If Available", false, SwitchType.YesNo),
             new SwitchValue("Match Voice Chat", false, SwitchType.EnabledDisabled),
-            new SwitchValue("Pause Game On Player Disconnect", false, SwitchType.YesNo)
+            new SwitchValue("Pause Game On Player Disconnect", false, SwitchType.YesNo),
+            new SelectValue("Data Center Preference", "Best Available", "USA - Central", "Brazil", "Singapore", "USA - West", "Australia 3")
         };
 
         public WorkshopValuePair Lobby { get; set; }
         public ModesRoot Modes { get; set; }
         public HeroesRoot Heroes { get; set; }
         public string Description { get; set; }
+        public WorkshopValuePair Workshop { get; set; }
 
         public void ToWorkshop(WorkshopBuilder builder)
         {
@@ -69,6 +71,17 @@ namespace Deltin.Deltinteger.Lobby
             // Get the hero settings.
             if (Heroes != null) Heroes.ToWorkshop(builder, allSettings);
 
+            // Get the custom workshop settings.
+            if (Workshop != null)
+            {
+                builder.AppendKeywordLine("workshop");
+                builder.AppendLine("{");
+                builder.Indent();
+                Workshop.ToWorkshopCustom(builder);
+                builder.Unindent();
+                builder.AppendLine("}");
+            }
+
             builder.Unindent();
             builder.AppendLine("}");
         }
@@ -102,22 +115,27 @@ namespace Deltin.Deltinteger.Lobby
 
             SchemaGenerate generate = new SchemaGenerate(root.Definitions);
 
-            root.Properties.Add("Lobby", GetLobby(generate));
-            root.Properties.Add("Modes", GetModes(generate));
+            root.Properties.Add("Lobby", GetLobby(generate)); // Add 'Lobby' property.
+            root.Properties.Add("Modes", GetModes(generate)); // Add 'Modes' property.
             root.Definitions.Add("HeroList", GetHeroList(generate));
 
             // Get the hero settings.
             RootSchema heroesRoot = new RootSchema("Hero settings.").InitProperties();
-            root.Properties.Add("Heroes", heroesRoot);
+            root.Properties.Add("Heroes", heroesRoot); // Add 'Heroes' property.
 
+            // Add team properties to heroes.
             heroesRoot.Properties.Add("General", GetHeroListReference("The list of hero settings that affects both teams."));
             heroesRoot.Properties.Add("Team 1", GetHeroListReference("The list of hero settings that affects team 1."));
             heroesRoot.Properties.Add("Team 2", GetHeroListReference("The list of hero settings that affects team 2."));
             heroesRoot.AdditionalProperties = false;
 
+            // Add 'Description' property.
             root.Properties.Add("Description", new RootSchema("The description of the custom game.") {
                 Type = SchemaObjectType.String
             });
+
+            // Add 'Workshop' property.
+            root.Properties.Add("Workshop", GetCustomSettingsSchema(generate));
             
             // Get the result.
             string result = JsonConvert.SerializeObject(root, new JsonSerializerSettings() {
@@ -183,6 +201,14 @@ namespace Deltin.Deltinteger.Lobby
             return schema;
         }
     
+        private static RootSchema GetCustomSettingsSchema(SchemaGenerate generate)
+        {
+            RootSchema schema = new RootSchema().InitProperties();
+            schema.AdditionalProperties = true;
+            schema.Type = SchemaObjectType.Object;
+            return schema;
+        }
+
         /// <summary>Gets the keywords used for translation.</summary>
         public static string[] Keywords()
         {
@@ -247,7 +273,7 @@ namespace Deltin.Deltinteger.Lobby
 
             // Check for invalid properties.
             foreach (JProperty setting in jobject.Properties())
-                if (!new string[] { "Lobby", "Modes", "Heroes", "Description" }.Contains(setting.Name))
+                if (!new string[] { "Lobby", "Modes", "Heroes", "Description", "Workshop" }.Contains(setting.Name))
                     validation.InvalidSetting(setting.Name);
             
             // Check lobby settings.
@@ -360,6 +386,17 @@ namespace Deltin.Deltinteger.Lobby
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
             ToWorkshop(this, builder, allSettings);
+        }
+
+        public void ToWorkshopCustom(WorkshopBuilder builder)
+        {
+            foreach (var setting in this)
+            {
+                string value = setting.Value.ToString();
+                if (setting.Value is bool boolean)
+                    value = boolean ? "On" : "Off";
+                builder.AppendLine($"{setting.Key}: {value}");
+            }
         }
 
         public static void ToWorkshop(Dictionary<String, object> dict, WorkshopBuilder builder, List<LobbySetting> allSettings)

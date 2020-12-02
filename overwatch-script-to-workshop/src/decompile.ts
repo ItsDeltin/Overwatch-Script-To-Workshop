@@ -11,13 +11,14 @@ export function decompileClipboard()
     }).then((uri: vscode.Uri) => {
         if (uri == undefined) return; // Canceled
 
-        exec.exec(serverModuleCommand + ' --decompile-clipboard "' + uri.fsPath + '"', {timeout: 10000}, (error, stdout, stderr) => {
-            if (stdout == 'Success') {
+        client.sendRequest('decompile.file', {file: uri.fsPath}).then((value: {success: boolean, msg: string}) => {
+            if (value.success) {
                 vscode.workspace.openTextDocument(uri).then(document => {
                     vscode.window.showTextDocument(document);
                 });
             }
-            else vscode.window.showErrorMessage(stdout);
+            else
+                vscode.window.showErrorMessage(value.msg);
         });
     });
 }

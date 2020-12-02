@@ -314,16 +314,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     // Both expressions and statements
     public class FunctionExpression : Node, IParseExpression, IParseStatement
     {
-        public Token Identifier { get; }
+        public IParseExpression Target { get; }
         public List<ParameterValue> Parameters { get; }
 
-        public FunctionExpression(Token identifier, List<ParameterValue> parameters)
+        public FunctionExpression(IParseExpression target, List<ParameterValue> parameters)
         {
-            Identifier = identifier;
+            Target = target;
             Parameters = parameters;
         }
 
-        public override string ToString() => Identifier.Text + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
+        public override string ToString() => Target.ToString() + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
     }
 
     public class ParameterValue : IListComma
@@ -394,7 +394,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             Localized = localized;
             Token = token;
-            Value = Extras.RemoveQuotes(token.Text);
+            Value = token.Text.StartsWith("\"") ? Extras.RemoveQuotes(token.Text) : token.Text.Trim('\'');
         }
 
         public StringExpression(Token localized, Token token, List<IParseExpression> formats) : this(localized, token)
@@ -559,6 +559,20 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public LambdaParameter(Token identifier)
         {
             Identifier = identifier;
+        }
+    }
+
+    public class AsyncContext : Node, IParseExpression
+    {
+        public Token AsyncToken { get; }
+        public Token IgnoreIfRunning { get; }
+        public IParseExpression Expression { get; }
+
+        public AsyncContext(Token asyncToken, Token ignoreIfRunning, IParseExpression expression)
+        {
+            AsyncToken = asyncToken;
+            IgnoreIfRunning = ignoreIfRunning;
+            Expression = expression;
         }
     }
 

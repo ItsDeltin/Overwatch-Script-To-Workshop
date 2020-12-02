@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
     public abstract class DefinedFunction : IMethod, ICallable, IApplyBlock
     {
         public string Name { get; }
-        public CodeType ReturnType { get; protected set; }
+        public CodeType CodeType { get; protected set; }
         public CodeParameter[] Parameters { get; private set; }
         public AccessLevel AccessLevel { get; protected set; }
         public Location DefinedAt { get; }
@@ -46,6 +46,7 @@ namespace Deltin.Deltinteger.Parse
         protected void SetupScope(Scope chosenScope)
         {
             methodScope = chosenScope.Child();
+            methodScope.CatchConflict = true;
             containingScope = chosenScope;
         }
 
@@ -69,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual IRecursiveCallHandler GetRecursiveCallHandler() => null;
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, null);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
 
