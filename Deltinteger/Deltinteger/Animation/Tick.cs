@@ -106,9 +106,13 @@ namespace Deltin.Deltinteger.Animation
                 )
             )));
 
+            actionSet.AddAction(Element.Part<A_If>(Element.Part<V_Not>(keyframe_index.Get())));
+            actionSet.AddAction(keyframe_index.SetVariable(Element.Part<V_CountOf>(fcurve.Get()) - 1));
+            actionSet.AddAction(new A_End());
+
             // Keyframe A is fcurve[i - 1], keyframe B is furve[i].
             var keyframeA = actionSet.AssignAndSave("animation_keyframe_a", fcurve.Get()[Element.Part<V_Max>(keyframe_index.Get() - 1, (Element)2)]).Get(); // Save to variable if needed.
-            var keyframeB = actionSet.AssignAndSave("animation_keyframe_b", fcurve.Get()[keyframe_index.Get()]).Get(); // Save to variable if needed.
+            var keyframeB = actionSet.AssignAndSave("animation_keyframe_b", fcurve.Get()[Element.Part<V_Max>(keyframe_index.Get())]).Get(); // Save to variable if needed.
 
             // TODO: Use this to determine if there is only one keyframe.
             // actionSet.AddAction(Element.Part<A_If>(new V_Compare(keyframe_index.Get(), Operators.LessThan, Element.Part<V_CountOf>(fcurve.Get()) - 1)));
@@ -121,8 +125,8 @@ namespace Deltin.Deltinteger.Animation
             //  (c-s-a) / (b-a) = (9-5-2) / (6-2) = 0.5
             var c = actionSet.AssignAndSave("animation_test_current_time", new V_TotalTimeElapsed()).Get();
             // var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0] / 60) / (keyframeB[0] / 60 - keyframeA[0] / 60)), new V_Number(1)));
-            var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0]) / (keyframeB[0] - keyframeA[0])), new V_Number(1)));
-            // var t = actionSet.AssignAndSave("animation_t", 1);
+            // var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0]) / (keyframeB[0] - keyframeA[0])), new V_Number(1)));
+            var t = actionSet.AssignAndSave("animation_t", 1);
 
             // Get the interpolated rotation.
             var slerp = AnimationOperations.Slerp(
@@ -180,11 +184,11 @@ namespace Deltin.Deltinteger.Animation
 
             boneLoop.Finish(); // End the bone loop
 
-            // actionSet.AddAction(new A_Abort());
+            // ! debug: only 1 tick
+            actionSet.AddAction(new A_Abort());
 
             actionSet.AddAction(new A_End()); // End armature
             referenceLoop.Finish(); // End object loop
-            actionSet.AddAction(A_Wait.MinimumWait);
             actionSet.AddAction(A_Wait.MinimumWait);
             actionSet.AddAction(A_Wait.MinimumWait);
             actionSet.AddAction(new A_LoopIfConditionIsTrue());

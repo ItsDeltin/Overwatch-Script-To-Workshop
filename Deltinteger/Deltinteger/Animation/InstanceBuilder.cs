@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Animation
         }
 
         // IGroupDeterminer
-        public NewRecursiveStack GetExistingRecursiveStack(List<NewRecursiveStack> stack) => throw new NotImplementedException();
+        public RecursiveStack GetExistingRecursiveStack(List<RecursiveStack> stack) => throw new NotImplementedException();
         public IFunctionLookupTable GetLookupTable() => this;
         public object GetStackIdentifier() => throw new NotImplementedException();
         public SubroutineInfo GetSubroutineInfo()

@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Animation
         public bool Static => false;
         public bool WholeContext => true;
         public bool DoesReturnValue => false;
-        public CodeType ReturnType => null;
+        public CodeType CodeType => null;
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
 

@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Animation
     {
         public string Name => "CreateInstance";
         public string Documentation => "Creates an instance of the mesh or armature.";
-        public CodeType ReturnType => _type;
+        public CodeType CodeType => _type;
         public bool DoesReturnValue => true;
         public bool Static => false;
         public bool WholeContext => true;

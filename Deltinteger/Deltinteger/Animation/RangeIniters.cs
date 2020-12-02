@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Animation
                             EnumData.GetEnumValue(type),
                             position + armatureType.BoneLocalPositions.Get(armatureInstance)[boneData.Head],
                             position + armatureType.BoneLocalPositions.Get(armatureInstance)[boneData.Tail] + new V_Vector(0.001, 0, 0),
-                            EnumData.GetEnumValue(color),
+                            Element.Part<V_ColorValue>(EnumData.GetEnumValue(color)),
                             EnumData.GetEnumValue(EffectRev.VisibleToPositionAndRadius)
                         ));
                     }

@@ -30,9 +30,9 @@ namespace Deltin.Deltinteger.Parse
 
         public ImportedScript GetImportedFile(Uri uri)
         {
-            foreach (ImportedScript importedFile in ImportedFiles)
+            foreach (ImportedFile importedFile in ImportedFiles)
                 if (importedFile.Uri == uri)
-                    return importedFile;
+                    return (ImportedScript)importedFile;
             var newImportedFile = new ImportedScript(uri);
             ImportedFiles.Add(newImportedFile);
             return newImportedFile;

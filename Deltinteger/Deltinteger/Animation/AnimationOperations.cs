@@ -114,7 +114,7 @@ namespace Deltin.Deltinteger.Animation
             );*/
 
             /*
-            bpy original
+            bpy original (true to src)
 
             return Element.CreateArray(
                 (1.0 - qbb - qcc),
@@ -126,10 +126,9 @@ namespace Deltin.Deltinteger.Animation
                 (qdb + qac),
                 (-qda + qbc),
                 (1.0 - qaa - qbb)
-            );
-            */
+            );*/
 
-            // Real result adjusted
+            // Real result adjusted (true to blender)
             return Element.CreateArray(
                 (1.0 - qbb - qcc),  // [0][0] -> [0] 8
                 (-qdc + qab),      // [1][0] -> [1] 5
@@ -169,12 +168,14 @@ namespace Deltin.Deltinteger.Animation
                 // m[3] * t0 + m[4] * t1 + m[5] * t2,
                 // m[0] * t0 + m[1] * t1 + m[2] * t2
 
-                m[0] * t0 + m[3] * t1 + m[2] * t2,
-                m[1] * t0 + m[4] * t1 + m[5] * t2,
+                // Compatible: Real result adjusted (true to blender)
+                // m[0] * t0 + m[3] * t1 + m[2] * t2,
+                // m[1] * t0 + m[4] * t1 + m[5] * t2,
+                // m[6] * t0 + m[7] * t1 + m[8] * t2
+
+                m[0] * t0 + m[1] * t1 + m[2] * t2,
+                m[3] * t0 + m[4] * t1 + m[5] * t2,
                 m[6] * t0 + m[7] * t1 + m[8] * t2
-                // m[0] * t0 + m[3] * t1 + m[6] * t2,
-                // m[1] * t0 + m[4] * t1 + m[7] * t2,
-                // m[2] * t0 + m[5] * t1 + m[8] * t2
             );
         }
 

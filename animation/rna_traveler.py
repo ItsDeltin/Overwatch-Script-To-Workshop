@@ -70,7 +70,8 @@ class _bone_euler_rotation_handler:
         self.index = index
     
     # def get_value(self, obj): return Vector(obj.pose.bones[self.bone_name].rotation_quaternion)
-    def get_value(self, obj): return Vector(obj.pose.bones[self.bone_name].matrix_basis.to_quaternion())
+    # def get_value(self, obj): return Vector(obj.pose.bones[self.bone_name].matrix_basis.to_quaternion())
+    def get_value(self, obj): return Vector(obj.pose.bones[self.bone_name].matrix_channel.to_quaternion())
 
     def get_target(self, obj): return self.bone_name
     def get_type(self): return 1

@@ -1,0 +1,51 @@
+// Element rodriqueResult = actionSet.AssignAndSave("animation_rodrique", AnimationOperations.RotatePointRodrique2(
+//     // Original point
+//     originalPoint,
+//     // Quaternion
+//     slerp.Axis, slerp.Angle
+// )).Get();
+
+// Element rodriqueResult = actionSet.AssignAndSave("animation_rodrique", AnimationOperations.RotatePointFuckYou(
+//     actionSet,
+//     // Original point
+//     originalPoint,
+//     // Quaternion
+//     slerp.V, slerp.W
+// )).Get();
+
+// AnimationOperations.RotatePointRodrique(
+//     // Original point
+//     _armatureType.BonePositions.Get(currentReference)[descendentIndex],
+//     // Quaternion
+//     slerp.Angle, slerp.Axis
+// ),
+
+// Get the bone keyframe.
+            // var boneKeyframe = actionSet.AssignAndSave("animation_curve", Element.Part<V_FirstOf>(
+            //     Element.Part<V_FilteredArray>(
+            //         Element.Part<V_FilteredArray>(
+            //             // Get the action info.
+            //             _objectType.Actions.Get(currentReference)[_animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][0]],
+            //             // FCurve type and index matches.
+            //             Element.Part<V_And>(
+            //                 // The Fcurve's type is BoneRotation.
+            //                 new V_Compare(new V_ArrayElement()[0], Operators.Equal, (Element)(int)FCurveType.BoneRotation),
+            //                 // The Fcurve's bone index is equal to the target bone.
+            //                 new V_Compare(boneLoop.Value, Operators.Equal, new V_ArrayElement()[1])
+            //             )
+            //         )[0],
+            //         Element.Part<V_And>(
+            //             // Ignore keyframe meta (first 2 elements, indices 0 and 1.)
+            //             new V_Compare(new V_CurrentArrayIndex(), Operators.GreaterThanOrEqual, new V_Number(2)),
+            //             // Time reached.
+            //             new V_Compare(new V_TotalTimeElapsed(), Operators.GreaterThanOrEqual, new V_ArrayElement()[0] + _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][1])
+            //         )
+            //     )
+            // ));
+        
+
+
+
+// public Element GetParents() => Element.CreateArray(_armature.Bones.Select(b => new V_Number(b.Parent)).ToArray());
+        // public Element GetParents() => Element.CreateArray(_boneData.Select(b => new V_Number(b.Head)).ToArray());
+        // public Element GetParents() => Element.CreateArray(GetBoneDescendentData().Select(bd => bd.GetParentArray()).ToArray());
