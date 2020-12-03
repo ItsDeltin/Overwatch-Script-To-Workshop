@@ -131,7 +131,7 @@ namespace Deltin.Deltinteger.Elements
             @Enum = @enum;
             CodeName = codeName;
             WorkshopName = workshopName;
-            DecompileName = WorkshopName.Replace("(", "").Replace(")", "");
+            DecompileName = WorkshopName.Replace("(", "").Replace(")", "").Replace(",", "");
             UnderlyingValue = System.Convert.ChangeType(value, @Enum.UnderlyingType);
             Value = value;
             IsHidden = isHidden;
@@ -894,7 +894,8 @@ namespace Deltin.Deltinteger.Elements
         PracticeRange,
         Skirmish,
         TeamDeathmatch,
-        YetiHunter
+        YetiHunter,
+        SnowballDeathmatch
     }
 
     [WorkshopEnum]
