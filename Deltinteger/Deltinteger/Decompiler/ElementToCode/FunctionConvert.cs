@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 decompiler.Append("]");
             }},
 
+            {"Team", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Map", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Color", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Button", (decompiler, function) => function.Values[0].Decompile(decompiler)},
