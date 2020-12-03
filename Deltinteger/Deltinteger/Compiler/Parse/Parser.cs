@@ -711,7 +711,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Return: return ParseReturn();
                 // If
                 case TokenType.If:
-                case TokenType.Else: // Error handling in the case of an else with no if.
                     return ParseIf();
                 // Switch
                 case TokenType.Switch: return ParseSwitch();
