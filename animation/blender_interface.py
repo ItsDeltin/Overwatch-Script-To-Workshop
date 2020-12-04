@@ -118,8 +118,11 @@ class tree_link:
                     break
 
 def get_project_json():
-    file = get_blend_file()
-    return json.dumps(file, default = serialize)
+    try:
+        file = get_blend_file()
+        return json.dumps(file, default = serialize)
+    except Exception as e:
+        return str(e)
 
 def get_blend_file():
     # Get the objects.

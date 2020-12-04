@@ -382,6 +382,38 @@ namespace Deltin.Deltinteger.Animation
 
             return new Quaternion(axisResult.Get(), angleResult.Get());
         }
+    
+        /// <summary>Multiplies two 3x3 matrices.</summary>
+        /// <param name="lefthandMatrix">The lefthand matrix that will be multiplied. The numbers in this matrix should be row-grouped like so:
+        /// ```
+        /// m1 = [(3, 12, 4), // v1 / row1
+        /// |     (5, 6,  8), // v2 / row2
+        /// |     (1, 0,  2)] // v3 / row3
+        /// ```</param>
+        /// <param name="righthandMatrix">The righthand matrix that will be multipled. Unlike 'lefthandMatrix', the numbers in this
+        /// matrix should be column grouped like so:
+        /// ```
+        /// //   v1   v2   v3
+        /// m2= [(7,  (3, (8,
+        /// |     11,  9,  5
+        /// |     6),  8), 4)]
+        /// ```
+        /// To convert a row-grouped matrix to a column-grouped matrix, use the `ConvertRowGroupedMatrixToColumnGroupedMatrix` function.</param>
+        /// <returns>The two matrices multiplied to an array-grouped matrix.</returns>
+        public static Element VectorNotatedMultiplyMatrix3x3AndMatrix3x3(Element lefthandMatrix, Element righthandMatrix)
+        {
+            Element m1 = lefthandMatrix, m2 = righthandMatrix;
+            return Element.CreateArray(MultiplyMatrixRow(m1, m2, 0), MultiplyMatrixRow(m1, m2, 1), MultiplyMatrixRow(m1, m2, 2));
+        }
+        private static Element MultiplyMatrixRow(Element m1, Element m2, Element row) =>
+            Element.Part<V_MappedArray>(Element.Part<V_MappedArray>(m2, m1[row] * new V_ArrayElement()), Element.Part<V_XOf>(new V_ArrayElement()) + Element.Part<V_YOf>(new V_ArrayElement()) + Element.Part<V_ZOf>(new V_ArrayElement()));
+
+        public static Element ConvertArrayGroupedMatrixToColumnGroupedMatrix(Element matrix) => Element.Part<V_MappedArray>(matrix, Element.Part<V_Vector>(
+            matrix[new V_CurrentArrayIndex()][0], matrix[new V_CurrentArrayIndex()][1], matrix[new V_CurrentArrayIndex()][2] 
+        ));
+        public static Element ConvertArrayGroupedMatrixToRowGroupedMatrix(Element matrix) => Element.Part<V_MappedArray>(matrix, Element.Part<V_Vector>(
+            matrix[0][new V_CurrentArrayIndex()], matrix[1][new V_CurrentArrayIndex()], matrix[2][new V_CurrentArrayIndex()] 
+        ));
     }
 
     public class Quaternion

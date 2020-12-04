@@ -35,7 +35,8 @@ namespace Deltin.Deltinteger.Animation
         {
             Init();
             _process.StandardInput.WriteLine(File);
-            string json = _process.StandardOutput.ReadToEnd().Split(new string[] { "\r\n" }, System.StringSplitOptions.RemoveEmptyEntries)[0];
+            string presplit = _process.StandardOutput.ReadToEnd();
+            string json = presplit.Split(new string[] { "\r\n" }, System.StringSplitOptions.RemoveEmptyEntries)[0];
             return BlendFile.FromJson(json);
         }
 

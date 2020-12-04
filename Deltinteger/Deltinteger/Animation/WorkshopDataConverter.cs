@@ -83,6 +83,7 @@ namespace Deltin.Deltinteger.Animation
                 var keyframeData = new List<Element>();
 
                 // Add the keyframe number.
+                // TODO: / 30.0
                 keyframeData.Add(keyframe.Start / 30.0);
 
                 // Add the value.
