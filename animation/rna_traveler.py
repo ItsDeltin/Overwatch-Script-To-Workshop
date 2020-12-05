@@ -75,14 +75,21 @@ class _bone_euler_rotation_handler:
         # basis = obj.pose.bones[self.bone_name].matrix_basis.to_3x3()
         # parent_matrix = obj.data.bones[self.bone_name].parent.matrix
         # transformed = basis @ parent_matrix
-        return Vector(obj.pose.bones[self.bone_name].matrix_channel.to_quaternion())
+        
+        pose_bone = obj.pose.bones[self.bone_name]
+        return Vector(pose_bone.matrix_basis.to_quaternion())
+        # matrix = pose_bone.bone.matrix_local.to_3x3() @ pose_bone.matrix_basis.to_3x3()
+        # return Vector(matrix.to_quaternion())
 
-        channel        = obj.pose.bones[self.bone_name].       matrix_channel.to_3x3()
-        if not obj.pose.bones[self.bone_name].parent:
-            return Vector(channel.to_quaternion())
-        parent_channel = obj.pose.bones[self.bone_name].parent.matrix_channel.to_3x3()
-        transformed = parent_channel @ channel
-        return Vector(transformed.to_quaternion())
+        # return Vector(obj.pose.bones[self.bone_name].matrix.decompose()[1])
+        # return Vector(obj.pose.bones[self.bone_name].matrix_channel.to_quaternion())
+
+        # channel        = obj.pose.bones[self.bone_name].       matrix_channel.to_3x3()
+        # if not obj.pose.bones[self.bone_name].parent:
+        #     return Vector(channel.to_quaternion())
+        # parent_channel = obj.pose.bones[self.bone_name].parent.matrix_channel.to_3x3()
+        # transformed = parent_channel @ channel
+        # return Vector(transformed.to_quaternion())
 
     def get_target(self, obj): return self.bone_name
     def get_type(self): return 1

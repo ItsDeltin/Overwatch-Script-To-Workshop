@@ -1,5 +1,5 @@
 using Deltin.Deltinteger.Parse;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Animation
 {
@@ -72,7 +72,11 @@ namespace Deltin.Deltinteger.Animation
         public ObjectVariable BoneLocalPositions { get; private set; }
         /// <summary>The bone's parents.</summary>
         public ObjectVariable BoneParents { get; private set; }
+        public ObjectVariable BonePointParents { get; private set; }
         public ObjectVariable BoneNames { get; private set; }
+        public ObjectVariable BoneMagnitudes { get; private set; }
+        public ObjectVariable BoneMatrices { get; private set; }
+        public ObjectVariable BoneLocalMatrices { get; private set; }
 
         public ArmatureInstanceType(DeltinScript deltinScript) : base(deltinScript, "AnimationArmature") {}
 
@@ -87,7 +91,26 @@ namespace Deltin.Deltinteger.Animation
             BonePositions = AddPrivateObjectVariable();
             BoneLocalPositions = AddPrivateObjectVariable();
             BoneParents = AddPrivateObjectVariable();
+            BonePointParents = AddPrivateObjectVariable();
             BoneNames = AddPrivateObjectVariable();
+            BoneMagnitudes = AddPrivateObjectVariable();
+            BoneMatrices = AddPrivateObjectVariable();
+            BoneLocalMatrices = AddPrivateObjectVariable();
+        }
+
+        public void Init(ActionSet actionSet, Element reference, BoneStructure boneStructure)
+        {
+            BoneVertexLinks.Set(actionSet, reference, boneStructure.GetBoneVertexData()); // Set the vertex links.
+            BoneDescendants.Set(actionSet, reference, boneStructure.GetBoneDescendents()); // Set the descendants.
+            BoneInitialPositions.Set(actionSet, reference, boneStructure.GetInitialBonePositions()); // Set the initial bone positions.
+            BonePositions.Set(actionSet, reference, BoneInitialPositions.Get(reference)); // Set the current bone positions to the initial positions array.
+            BoneLocalPositions.Set(actionSet, reference, boneStructure.GetLocalArmaturePositions());
+            BoneParents.Set(actionSet, reference, boneStructure.GetParents());
+            BonePointParents.Set(actionSet, reference, boneStructure.GetPointParents());
+            BoneNames.Set(actionSet, reference, boneStructure.GetNameArray());
+            BoneMagnitudes.Set(actionSet, reference, boneStructure.GetBoneMagnitudes());
+            BoneMatrices.Set(actionSet, reference, boneStructure.GetBoneMatrices());
+            BoneLocalMatrices.Set(actionSet, reference, new V_EmptyArray());
         }
     }
 }

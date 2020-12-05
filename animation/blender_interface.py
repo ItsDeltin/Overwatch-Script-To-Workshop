@@ -1,15 +1,14 @@
 import bpy
 import json
 import sys
-from vector import Vector
+from vector import Vector, get_matrix
 from rna_traveler import Rna_traveler
 
 def load(fp):
     bpy.ops.wm.open_mainfile(filepath = fp, load_ui=False)
 
 def debug():
-    # load('C:/Users/Deltin/Downloads/hook4.blend')
-    load('C:/Users/Deltin/Documents/Blender/debug_armature.blend')
+    load('C:/Users/Deltin/Documents/Blender/Web.blend')
 
 class tree_item:
     def __init__(self):
@@ -70,7 +69,7 @@ class bone(tree_item):
         self.tail = Vector(original.tail)
         self.tail_local = Vector(original.tail_local)
         self.length = original.length
-        self.rotation = Vector(original.matrix.to_quaternion())
+        self.matrix = get_matrix(original.matrix)
         self.use_connect = original.use_connect
 
 class blend_action:

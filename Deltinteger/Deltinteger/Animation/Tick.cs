@@ -1,5 +1,6 @@
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using static Deltin.Deltinteger.Animation.AnimationOperations;
 
 namespace Deltin.Deltinteger.Animation
 {
@@ -54,7 +55,7 @@ namespace Deltin.Deltinteger.Animation
             actionSet.AddAction(Element.Part<A_If>(_classData.IsInstanceOf(currentReference, _armatureType)));
 
             // Reset bone positions.
-            _armatureType.BonePositions.Set(actionSet, currentReference, _armatureType.BoneInitialPositions.Get(currentReference));
+            // _armatureType.BonePositions.Set(actionSet, currentReference, _armatureType.BoneInitialPositions.Get(currentReference));
             // _armatureType.BoneLocalPositions.Set(actionSet, currentReference, _armatureType.BoneInitialPositions.Get(currentReference));
 
             // Loop through each bone
@@ -125,8 +126,8 @@ namespace Deltin.Deltinteger.Animation
             //  (c-s-a) / (b-a) = (9-5-2) / (6-2) = 0.5
             var c = actionSet.AssignAndSave("animation_test_current_time", new V_TotalTimeElapsed()).Get();
             // var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0] / 60) / (keyframeB[0] / 60 - keyframeA[0] / 60)), new V_Number(1)));
-            // var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0]) / (keyframeB[0] - keyframeA[0])), new V_Number(1)));
-            var t = actionSet.AssignAndSave("animation_t", 1);
+            var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0]) / (keyframeB[0] - keyframeA[0])), new V_Number(1)));
+            // var t = actionSet.AssignAndSave("animation_t", 1);
 
             // Get the interpolated rotation.
             var slerp = AnimationOperations.Slerp(
@@ -136,7 +137,45 @@ namespace Deltin.Deltinteger.Animation
                 t.Get()
             );
 
-            Element matrix = actionSet.AssignAndSave("animation_matrix", AnimationOperations.Create3x3MatrixFromQuaternion(slerp.V, slerp.W)).Get();
+            var basis = actionSet.AssignAndSave("animation_matrix_basis", AnimationOperations.CreateColumnGrouped3x3MatrixFromQuaternion(slerp.V, slerp.W));
+
+            var local = actionSet.AssignAndSave("animation_matrix_local", _armatureType.BoneMatrices.Get(currentReference)[boneLoop.Value]);
+            Element parentBoneIndex = actionSet.AssignAndSave("animation_bone_parent", _armatureType.BoneParents.Get(currentReference)[boneLoop.Value]).Get();
+
+            // 'local' is an array-grouped matrix.
+            // If the bone has a parent, multiply the parent bone's local matrix.
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(parentBoneIndex, Operators.NotEqual, new V_Number(-1))));
+                // Convert 'local' to a column grouped matrix.
+                // The matrix multiplication function requires the right matrix to be column grouped.
+                actionSet.AddAction(local.SetVariable(ConvertArrayGroupedMatrixToColumnGroupedMatrix(local.Get())));
+
+                // Save the parent index.
+                Element parentLocal = actionSet.AssignAndSave("animation_parent_local", _armatureType.BoneLocalMatrices.Get(currentReference)[parentBoneIndex]).Get();
+
+                // Set 'local' to 'parentLocal @ local'.
+                actionSet.AddAction(local.SetVariable(
+                    // Multiply the matrices.
+                    // This assumes 'parentLocal' is already a row-grouped matrix.
+                    VectorNotatedMultiplyMatrix3x3AndMatrix3x3(parentLocal, local.Get())
+                ));
+
+            // End the if.
+            actionSet.AddAction(new A_End());
+
+            // Make the resulting local matrix row-grouped.
+            // After this is called, local can only be used in the left side of a matrix multiplication.
+            actionSet.AddAction(local.SetVariable(ConvertArrayGroupedMatrixToRowGroupedMatrix(local.Get())));
+
+            // Multiply the 'local' matrix by the 'basis' matrix.
+            actionSet.AddAction(basis.SetVariable(VectorNotatedMultiplyMatrix3x3AndMatrix3x3(local.Get(), basis.Get())));
+
+            // * At this point, 'local' and 'basis' are no longer required.
+            // * 'matrixResult' is just basis.Get() to reuse a workshop variable.
+            Element matrixResult = basis.Get();
+
+            // Save the matrix.
+            // todo: This will use the multi-dimensional array builder. Sadge
+            _armatureType.BoneLocalMatrices.Set(actionSet, currentReference, ConvertArrayGroupedMatrixToRowGroupedMatrix(matrixResult), boneLoop.Value);
 
             // Set the current bone's decendant's bone points.
             // Loop through each descendent.
@@ -144,19 +183,19 @@ namespace Deltin.Deltinteger.Animation
             descendentLoop.Init();
 
             Element descendentIndex = actionSet.AssignAndSave("animation_descendent_index", _armatureType.BoneDescendants.Get(currentReference)[boneLoop.Value][descendentLoop.Value]).Get();
-            Element originalPoint = actionSet.AssignAndSave("animation_rodrique_original", _armatureType.BonePositions.Get(currentReference)[descendentIndex]).Get();
-            Element rodriqueResult = actionSet.AssignAndSave("animation_newpoint", AnimationOperations.Multiply3x3MatrixAndVectorToVector(matrix, originalPoint)).Get();
+            Element originalPoint = actionSet.AssignAndSave("animation_rodrique_original", _armatureType.BoneInitialPositions.Get(currentReference)[descendentIndex]).Get();
+            Element rodriqueResult = actionSet.AssignAndSave("animation_newpoint", AnimationOperations.Multiply3x3MatrixAndVectorToVector(matrixResult, originalPoint)).Get();
 
-            actionSet.AddAction(_armatureType.BonePositions.ArrayStore.SetVariable(
-                // New point
-                rodriqueResult,
-                null, // Player
-                // Index is the object reference + the descendent loop value.
-                currentReference,
-                descendentIndex
-            ));
+            // actionSet.AddAction(_armatureType.BonePositions.ArrayStore.SetVariable(
+            //     // New point
+            //     rodriqueResult,
+            //     null, // Player
+            //     // Index is the object reference + the descendent loop value.
+            //     currentReference,
+            //     descendentIndex
+            // ));
 
-            Element parent = actionSet.AssignAndSave("animation_parent", _armatureType.BoneParents.Get(currentReference)[descendentIndex]).Get();
+            Element parent = actionSet.AssignAndSave("animation_parent", _armatureType.BonePointParents.Get(currentReference)[descendentIndex]).Get();
 
             // World positions
             actionSet.AddAction(_armatureType.BoneLocalPositions.ArrayStore.SetVariable(
@@ -176,6 +215,8 @@ namespace Deltin.Deltinteger.Animation
                 descendentIndex
             ));
 
+            // actionSet.AddAction(new A_Break()); // ! only change first descendent
+
             descendentLoop.Finish();
             actionLoop.Finish(); // End action loop
 
@@ -185,7 +226,7 @@ namespace Deltin.Deltinteger.Animation
             boneLoop.Finish(); // End the bone loop
 
             // ! debug: only 1 tick
-            actionSet.AddAction(new A_Abort());
+            // actionSet.AddAction(new A_Abort());
 
             actionSet.AddAction(new A_End()); // End armature
             referenceLoop.Finish(); // End object loop

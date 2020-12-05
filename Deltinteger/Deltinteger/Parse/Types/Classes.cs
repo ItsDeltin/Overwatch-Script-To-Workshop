@@ -254,9 +254,9 @@ Object-serve scope. Only object members.
         /// <summary>Gets the value from the current context's object reference.</summary>
         public Element Get(ActionSet actionSet) => Get((Element)actionSet.CurrentObject);
 
-        public void Set(ActionSet actionSet, Element reference, Element value)
+        public void Set(ActionSet actionSet, Element reference, Element value, params Element[] index)
         {
-            actionSet.AddAction(ArrayStore.SetVariable(value: value, index: reference));
+            actionSet.AddAction(ArrayStore.SetVariable(value: value, index: ArrayBuilder<Element>.Build(reference, index)));
         }
     }
 

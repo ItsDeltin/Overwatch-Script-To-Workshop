@@ -179,9 +179,9 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>The length of the bone.</summary>
         [JsonProperty("length")]
         public double Length { get; set; }
-        /// <summary>The default rotation of the bone.</summary>
-        [JsonProperty("rotation")]
-        public Vertex Rotation { get; set; }
+        /// <summary>The matrix of the bone.</summary>
+        [JsonProperty("matrix")]
+        public double[] Matrix { get; set; }
         /// <summary>The children of the Bone. The values are the indices of the Armature's bones.</summary>
         [JsonProperty("children")]
         public int[] Children { get; set; }

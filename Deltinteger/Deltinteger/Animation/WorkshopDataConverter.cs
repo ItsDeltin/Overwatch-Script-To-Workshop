@@ -108,10 +108,11 @@ namespace Deltin.Deltinteger.Animation
         }
     }
 
-    class BoneStructure
+    public class BoneStructure
     {
         readonly BlendFile _file;
         readonly BlendArmature _armature;
+        Bone[] _bones => _armature.Bones;
         public readonly List<BonePoint> _pointData = new List<BonePoint>();
         public readonly List<BoneData> _boneData = new List<BoneData>();
 
@@ -313,10 +314,17 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>Gets an array of initial bone positions.</summary>
         public Element GetInitialBonePositions() => Element.CreateArray(_pointData.Select(p => p.Position.ToVector()).ToArray());
         public Element GetLocalArmaturePositions() => Element.CreateArray(_pointData.Select(p => p.LocalPosition.ToVector()).ToArray());
-        public Element GetParents() => Element.CreateArray(_pointData.Select(p => (Element)p.Parent).ToArray());
+        public Element GetParents() => Element.CreateArray(_bones.Select(b => (Element)b.Parent).ToArray());
+        public Element GetPointParents() => Element.CreateArray(_pointData.Select(p => (Element)p.Parent).ToArray());
+        public Element GetBoneMagnitudes() => Element.CreateArray(_boneData.Select(p => (Element)p.Original.Length).ToArray());
+        public Element GetBoneMatrices() => Element.CreateArray(_bones.Select(b => Element.CreateArray(
+            Element.CreateArray((Element)b.Matrix[0], (Element)b.Matrix[1], (Element)b.Matrix[2]),
+            Element.CreateArray((Element)b.Matrix[3], (Element)b.Matrix[4], (Element)b.Matrix[5]),
+            Element.CreateArray((Element)b.Matrix[6], (Element)b.Matrix[7], (Element)b.Matrix[8])
+        )).ToArray());
     }
 
-    class BonePoint
+    public class BonePoint
     {
         /// <summary>The position of the bone relative to the parent.</summary>
         public Vertex Position { get; }
@@ -335,13 +343,14 @@ namespace Deltin.Deltinteger.Animation
             else
             {
                 // Position = bone.Tail;
-                Position = bone.TailRelative;
+                // Position = bone.TailRelative;
+                Position = new Vertex(0, bone.Length, 0);
                 LocalPosition = bone.TailLocal;
             }
         }
     }
 
-    class BoneData
+    public class BoneData
     {
         public Bone Original { get; }
         public int Head { get; set; }

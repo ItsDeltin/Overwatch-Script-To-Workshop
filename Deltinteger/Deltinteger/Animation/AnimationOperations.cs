@@ -51,7 +51,19 @@ namespace Deltin.Deltinteger.Animation
             return new Quaternion(xyz, w);
         }
 
-        public static Element Create3x3MatrixFromQuaternion(Element xyz, Element w)
+        public static Element CreateColumnGrouped3x3MatrixFromQuaternion(Element xyz, Element w)
+        {
+            var array = Create3x3MatrixRawArrayFromQuaternion(xyz, w);
+            return Element.CreateArray(
+                Element.Part<V_Vector>(array[0], array[3], array[6]),
+                Element.Part<V_Vector>(array[1], array[4], array[7]),
+                Element.Part<V_Vector>(array[2], array[5], array[8])
+            );
+        }
+
+        public static Element Create3x3MatrixArrayFromQuaternion(Element xyz, Element w) => Element.CreateArray(Create3x3MatrixRawArrayFromQuaternion(xyz, w));
+
+        public static Element[] Create3x3MatrixRawArrayFromQuaternion(Element xyz, Element w)
         {
             Element x = Element.Part<V_XOf>(xyz), y = Element.Part<V_YOf>(xyz), z = Element.Part<V_ZOf>(xyz),
                 ww = w*w, xx = x*x, yy = y*y, zz = z*z,
@@ -69,67 +81,8 @@ namespace Deltin.Deltinteger.Animation
                 qbb = q2 * q2,
                 qbc = q2 * q3,
                 qcc = q3 * q3;
-            
-            /*return Element.CreateArray(
-                1 - 2*x*x - 2*y*y, // 3x3
-                2*y*z - 2*w*x, // 3x2
-                2*x*z - 2*w*y, // 3x1
 
-                2*y*z + 2*w*x, // 2x3
-                1 - 2*x*x - 2*z*z, // 2x2
-                2*x*y + 2*w*z, // 2x1
-
-                2*x*z + 2*w*y, // 1x3
-                2*x*y - 2*w*z, // 1x2
-                1 - 2*y*y - 2*z*z // 1x1
-            );*/
-            // v1 original
-            
-            /*return Element.CreateArray(
-                1 - 2*y*y - 2*z*z, // 1x1
-                2*x*y - 2*w*z, // 1x2
-                2*x*z + 2*w*y, // 1x3
-
-                2*x*y + 2*w*z, // 2x1
-                1 - 2*x*x - 2*z*z, // 2x2
-                2*y*z + 2*w*x, // 2x3
-
-                2*x*z - 2*w*y, // 3x1
-                2*y*z - 2*w*x, // 3x2
-                1 - 2*x*x - 2*y*y // 3x3
-            );*/
-            
-            /*return Element.CreateArray(
-                w*w + x*x + y*y + z*z,
-                2*x*y - 2*w*z,
-                2*x*z + 2*w*y,
-
-                2*x*y + 2*w*z,
-                w*w - x*x + y*y - z*z,
-                2*y*z + 2*w*x,
-
-                2*x*z - 2*w*y,
-                2*y*z - 2*w*x,
-                w*w - x*x - y*y + z*z
-            );*/
-
-            /*
-            bpy original (true to src)
-
-            return Element.CreateArray(
-                (1.0 - qbb - qcc),
-                (qdc + qab),
-                (-qdb + qac),
-                (-qdc + qab),
-                (1.0 - qaa - qcc),
-                (qda + qbc),
-                (qdb + qac),
-                (-qda + qbc),
-                (1.0 - qaa - qbb)
-            );*/
-
-            // Real result adjusted (true to blender)
-            return Element.CreateArray(
+            return new Element[] {
                 (1.0 - qbb - qcc),  // [0][0] -> [0] 8
                 (-qdc + qab),      // [1][0] -> [1] 5
                 (qdb + qac),       // [2][0] -> [2] 2
@@ -141,38 +94,13 @@ namespace Deltin.Deltinteger.Animation
                 (-qdb + qac),      // [0][2] -> [6] 6
                 (qda + qbc),       // [1][2] -> [7] 3
                 (1.0 - qaa - qbb)  // [2][2] -> [8] 0
-            );
-            
-            // bpy original adjusted
-            return Element.CreateArray(
-                (1.0 - qaa - qbb), // [2][2] -> [8]
-                (-qda + qbc),      // [2][1] -> [7]
-                (qdb + qac),       // [2][0] -> [6]
-                (qda + qbc),       // [1][2] -> [5]
-                (1.0 - qaa - qcc), // [1][1] -> [4]
-                (-qdc + qab),      // [1][0] -> [3]
-                (-qdb + qac),      // [0][2] -> [2]
-                (qdc + qab),       // [0][1] -> [1]
-                (1.0 - qbb - qcc)  // [0][0] -> [0]
-            );
+            };
         }
 
-        public static Element Multiply3x3MatrixAndVectorToVector(Element m, Element v) {
+        public static Element Multiply3x3MatrixAndVectorToVector(Element ma, Element v) {
+            var m = new Element[] { ma[0][0], ma[0][1], ma[0][2], ma[1][0], ma[1][1], ma[1][2], ma[2][0], ma[2][1], ma[2][2] };
             Element t0 = Element.Part<V_XOf>(v), t1 = Element.Part<V_YOf>(v), t2 = Element.Part<V_ZOf>(v);
             return new V_Vector(
-                // m[2] * t0 + m[5] * t1 + m[8] * t2,
-                // m[1] * t0 + m[4] * t1 + m[7] * t2,
-                // m[0] * t0 + m[3] * t1 + m[6] * t2
-
-                // m[6] * t0 + m[7] * t1 + m[8] * t2,
-                // m[3] * t0 + m[4] * t1 + m[5] * t2,
-                // m[0] * t0 + m[1] * t1 + m[2] * t2
-
-                // Compatible: Real result adjusted (true to blender)
-                // m[0] * t0 + m[3] * t1 + m[2] * t2,
-                // m[1] * t0 + m[4] * t1 + m[5] * t2,
-                // m[6] * t0 + m[7] * t1 + m[8] * t2
-
                 m[0] * t0 + m[1] * t1 + m[2] * t2,
                 m[3] * t0 + m[4] * t1 + m[5] * t2,
                 m[6] * t0 + m[7] * t1 + m[8] * t2
@@ -200,24 +128,6 @@ namespace Deltin.Deltinteger.Animation
             );
         }
         
-        /// <summary>Multiplies a 3x3 matrix and a vector.</summary>
-        /// <returns>Returns a Vector.</returns>
-        public static Element MultiplyMatrix3x3AndVectorToVector(Element m3x3, Element vector)
-        {
-            Element x = Element.Part<V_XOf>(vector), y = Element.Part<V_YOf>(vector), z = Element.Part<V_ZOf>(vector),
-                r = m3x3;
-            // return new V_Vector(
-            //     m3x3[0]*x + m3x3[1]*y + m3x3[2]*z,
-            //     m3x3[3]*x + m3x3[4]*y + m3x3[5]*z,
-            //     m3x3[6]*x + m3x3[7]*y + m3x3[8]*z
-            // );
-            return new V_Vector(
-                -r[0]*x-r[1]*y-r[2]*z,
-                -r[3]*x-r[4]*y-r[5]*z,
-                -r[6]*x-r[7]*y-r[8]*z
-            );
-        }
-
         /// <summary>Multiplies 2 3x3 matrixes into a matrix.</summary>
         /// <param name="actionSet">The actionset of the current rule. Inline multiplication is not practical.</param>
         /// <param name="a">The first 3x3 matrix.</param>
@@ -279,8 +189,8 @@ namespace Deltin.Deltinteger.Animation
 
         public static Element RotatePoint(ActionSet actionSet, Element p, Element a, Element w)
         {
-            var matrix = actionSet.AssignAndSave("matrix", Create3x3MatrixFromQuaternion(a, w)).Get();
-            return MultiplyMatrix3x3AndVectorToVector(matrix, p);
+            var matrix = actionSet.AssignAndSave("matrix", Create3x3MatrixArrayFromQuaternion(a, w)).Get();
+            return Multiply3x3MatrixAndVectorToVector(matrix, p);
         }
         
         /// <summary>Gets the dot product of 2 quaternions defined as a vector axis (X, Y, Z) and an angle (W).</summary>
@@ -409,10 +319,15 @@ namespace Deltin.Deltinteger.Animation
             Element.Part<V_MappedArray>(Element.Part<V_MappedArray>(m2, m1[row] * new V_ArrayElement()), Element.Part<V_XOf>(new V_ArrayElement()) + Element.Part<V_YOf>(new V_ArrayElement()) + Element.Part<V_ZOf>(new V_ArrayElement()));
 
         public static Element ConvertArrayGroupedMatrixToColumnGroupedMatrix(Element matrix) => Element.Part<V_MappedArray>(matrix, Element.Part<V_Vector>(
-            matrix[new V_CurrentArrayIndex()][0], matrix[new V_CurrentArrayIndex()][1], matrix[new V_CurrentArrayIndex()][2] 
+            matrix[0][new V_CurrentArrayIndex()], matrix[1][new V_CurrentArrayIndex()], matrix[2][new V_CurrentArrayIndex()] 
         ));
         public static Element ConvertArrayGroupedMatrixToRowGroupedMatrix(Element matrix) => Element.Part<V_MappedArray>(matrix, Element.Part<V_Vector>(
-            matrix[0][new V_CurrentArrayIndex()], matrix[1][new V_CurrentArrayIndex()], matrix[2][new V_CurrentArrayIndex()] 
+            matrix[new V_CurrentArrayIndex()][0], matrix[new V_CurrentArrayIndex()][1], matrix[new V_CurrentArrayIndex()][2]
+        ));
+
+        public static Element CaptureValue(Element value, Func<Element, Element> operation) => Element.Part<V_FirstOf>(Element.Part<V_MappedArray>(
+            Element.Part<V_Array>(value),
+            operation(new V_ArrayElement())
         ));
     }
 
