@@ -88,9 +88,34 @@ namespace Deltin.Deltinteger.Animation
                 )
             )[0]); // FilteredArray will return an array with 1 value. Use [0] to convert from '[x]' to 'x'.
 
+            var local = actionSet.AssignAndSave("animation_matrix_local", _armatureType.BoneMatrices.Get(currentReference)[boneLoop.Value]);
+            Element parentBoneIndex = actionSet.AssignAndSave("animation_bone_parent", _armatureType.BoneParents.Get(currentReference)[boneLoop.Value]).Get();
+
+            // 'local' is an array-grouped matrix.
+            // If the bone has a parent, multiply the parent bone's local matrix.
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(parentBoneIndex, Operators.NotEqual, new V_Number(-1))));
+                // Convert 'local' to a column grouped matrix.
+                // The matrix multiplication function requires the right matrix to be column grouped.
+                actionSet.AddAction(local.SetVariable(ConvertArrayGroupedMatrixToColumnGroupedMatrix(local.Get())));
+
+                // Save the parent index.
+                Element parentLocal = actionSet.AssignAndSave("animation_parent_local", _armatureType.BoneLocalMatrices.Get(currentReference)[parentBoneIndex]).Get();
+
+                // Multiply the matrices: Set 'local' to 'parentLocal @ local'.
+                // This assumes 'parentLocal' is already a row-grouped matrix.
+                actionSet.AddAction(local.SetVariable(VectorNotatedMultiplyMatrix3x3AndMatrix3x3(parentLocal, local.Get())));
+
+            // End the if.
+            actionSet.AddAction(new A_End());
+
             // Ew yuck no curve
-            actionSet.AddAction(Element.Part<A_SkipIf>(new V_Compare(fcurve.Get(), Operators.NotEqual, new V_Number(0)), new V_Number(1)));
-            actionSet.AddAction(new A_Continue());
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(fcurve.Get(), Operators.Equal, new V_Number(0))));
+                // Save the matrix.
+                // todo: This will use the multi-dimensional array builder. Sadge
+                _armatureType.BoneLocalMatrices.Set(actionSet, currentReference, ConvertArrayGroupedMatrixToRowGroupedMatrix(local.Get()), boneLoop.Value);
+
+                actionSet.AddAction(new A_Continue());
+            actionSet.AddAction(new A_End());
 
             // Debug bone name
             DebugVariable(actionSet, "db_current_bone", _armatureType.BoneNames.Get(currentReference)[boneLoop]);
@@ -138,29 +163,6 @@ namespace Deltin.Deltinteger.Animation
             );
 
             var basis = actionSet.AssignAndSave("animation_matrix_basis", AnimationOperations.CreateColumnGrouped3x3MatrixFromQuaternion(slerp.V, slerp.W));
-
-            var local = actionSet.AssignAndSave("animation_matrix_local", _armatureType.BoneMatrices.Get(currentReference)[boneLoop.Value]);
-            Element parentBoneIndex = actionSet.AssignAndSave("animation_bone_parent", _armatureType.BoneParents.Get(currentReference)[boneLoop.Value]).Get();
-
-            // 'local' is an array-grouped matrix.
-            // If the bone has a parent, multiply the parent bone's local matrix.
-            actionSet.AddAction(Element.Part<A_If>(new V_Compare(parentBoneIndex, Operators.NotEqual, new V_Number(-1))));
-                // Convert 'local' to a column grouped matrix.
-                // The matrix multiplication function requires the right matrix to be column grouped.
-                actionSet.AddAction(local.SetVariable(ConvertArrayGroupedMatrixToColumnGroupedMatrix(local.Get())));
-
-                // Save the parent index.
-                Element parentLocal = actionSet.AssignAndSave("animation_parent_local", _armatureType.BoneLocalMatrices.Get(currentReference)[parentBoneIndex]).Get();
-
-                // Set 'local' to 'parentLocal @ local'.
-                actionSet.AddAction(local.SetVariable(
-                    // Multiply the matrices.
-                    // This assumes 'parentLocal' is already a row-grouped matrix.
-                    VectorNotatedMultiplyMatrix3x3AndMatrix3x3(parentLocal, local.Get())
-                ));
-
-            // End the if.
-            actionSet.AddAction(new A_End());
 
             // Make the resulting local matrix row-grouped.
             // After this is called, local can only be used in the left side of a matrix multiplication.
