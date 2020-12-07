@@ -15,7 +15,6 @@ namespace Deltin.Deltinteger.Parse
 
         private NullType() : base("?") {}
 
-        // public override bool Implements(CodeType type) => type.Implements(ObjectType.Instance);
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.Struct
@@ -51,6 +50,8 @@ namespace Deltin.Deltinteger.Parse
             };
         }
 
+        public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Boolean());
+
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.Struct
@@ -60,18 +61,21 @@ namespace Deltin.Deltinteger.Parse
 
     public class BooleanType : CodeType
     {
-        public static readonly BooleanType Instance = new BooleanType();
+        private readonly ITypeSupplier _supplier;
 
-        private BooleanType() : base("Boolean")
+        public BooleanType(ITypeSupplier supplier) : base("Boolean")
         {
             CanBeExtended = false;
             Kind = "struct";
+            _supplier = supplier;
 
             Operations = new TypeOperation[] {
                 new TypeOperation(TypeOperator.And, this, this),
                 new TypeOperation(TypeOperator.Or, this, this),
             };
         }
+
+        public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Number());
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,

@@ -319,6 +319,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly VectorType _vectorType;
         private readonly NumberType _numberType;
         private readonly StringType _stringType;
+        private readonly BooleanType _booleanType;
 
         public ScriptTypes()
         {
@@ -326,6 +327,7 @@ namespace Deltin.Deltinteger.Parse
             _vectorType = new VectorType(this);
             _numberType = new NumberType(this);
             _stringType = new StringType(this);
+            _booleanType = new BooleanType(this);
         }
 
         public void GetDefaults(DeltinScript deltinScript)
@@ -336,7 +338,7 @@ namespace Deltin.Deltinteger.Parse
             AddType(_vectorType);
             AddType(_numberType);
             AddType(_stringType);
-            AddType(BooleanType.Instance);
+            AddType(_booleanType);
             AddType(Positionable.Instance);
             AddType(Pathfinder.SegmentsStruct.Instance);
             // Pathfinder classes

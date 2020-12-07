@@ -160,7 +160,7 @@ namespace Deltin.Deltinteger.Parse
         private FuncMethod IsInLineOfSight => new FuncMethodBuilder() {
             Name = "IsInLineOfSight",
             Documentation = "Whether the vector has line of sight with the specified vector.",
-            ReturnType = BooleanType.Instance,
+            ReturnType = _typeSupplier.Boolean(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("other", "The vector to determine line of site."),
                 new CodeParameter("barriers", "Defines how barriers affect line of sight.", _typeSupplier.EnumType("BarrierLOS"), new ExpressionOrWorkshopValue(ElementRoot.Instance.GetEnumValue("BarrierLOS", "NoBarriersBlock")))

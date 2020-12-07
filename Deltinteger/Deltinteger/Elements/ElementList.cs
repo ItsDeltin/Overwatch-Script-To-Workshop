@@ -17,13 +17,14 @@ namespace Deltin.Deltinteger.Elements
         public CodeType CodeType { get; private set; }
         private readonly RestrictedCallType? _restricted;
         private readonly ElementBaseJson _function;
+        private readonly Element _actionReturnValue;
 
         // IScopeable defaults
         public LanguageServer.Location DefinedAt { get; } = null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public bool WholeContext { get; } = true;
         public bool Static => true;
-        public bool DoesReturnValue => _function is ElementJsonValue;
+        public bool DoesReturnValue => _function is ElementJsonValue || _actionReturnValue != null;
 
         ElementList(ElementBaseJson function, ITypeSupplier typeSupplier)
         {
@@ -90,6 +91,16 @@ namespace Deltin.Deltinteger.Elements
             CodeType = typeSupplier.FromString(value.ReturnType);
         }
 
+        ElementList(ElementJsonAction action, ITypeSupplier typeSupplier) : this((ElementBaseJson)action, typeSupplier)
+        {
+            if (action.ReturnValue != null)
+            {
+                var returnValue = (ElementJsonValue)ElementRoot.Instance.GetFunction(action.ReturnValue);
+                _actionReturnValue = Element.Part(returnValue);
+                CodeType = typeSupplier.FromString(returnValue.ReturnType);
+            }
+        }
+
         private RestrictedCallType GetRestrictedCallTypeFromString(string value)
         {
             switch (value)
@@ -112,8 +123,8 @@ namespace Deltin.Deltinteger.Elements
             {
                 actionSet.AddAction(element);
 
-                if (((ElementJsonAction)_function).ReturnValue != null)
-                    return Element.Part(((ElementJsonAction)_function).ReturnValue);
+                if (_actionReturnValue != null)
+                    return _actionReturnValue;
                 return null;
             }
             else return element;

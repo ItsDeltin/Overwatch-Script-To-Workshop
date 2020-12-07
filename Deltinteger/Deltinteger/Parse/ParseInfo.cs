@@ -148,7 +148,7 @@ namespace Deltin.Deltinteger.Parse
             switch (exprContext)
             {
                 case NumberExpression number: return new NumberAction(this, number);
-                case BooleanExpression boolean: return new BoolAction(Script, boolean.Value);
+                case BooleanExpression boolean: return new BoolAction(this, boolean.Value);
                 case NullExpression @null: return new NullAction();
                 case StringExpression @string: return new StringAction(this, scope, @string);
                 case Identifier identifier: return GetVariable(scope, getter, identifier, selfContained);

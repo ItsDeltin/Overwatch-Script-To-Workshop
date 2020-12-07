@@ -28,6 +28,8 @@ namespace Deltin.Deltinteger.Parse
             Scope.AddNativeVariable(_last);
             Scope.AddNativeVariable(_first);
 
+            var pipeType = new PipeType(ArrayOfType, this);
+
             // Filtered Array
             new GenericSortFunction() {
                 Name = "FilteredArray",
@@ -103,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the array with the specified value appended to it.",
                 ReturnType = this,
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value that is appended to the array. If the value is an array, it will be flattened.")
+                    new CodeParameter("value", "The value that is appended to the array. If the value is an array, it will be flattened.", pipeType)
                 },
                 Action = (actionSet, methodCall) => Element.Append(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
@@ -113,7 +115,7 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the array with the specified value removed from it.",
                 ReturnType = this,
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value that is removed from the array.")
+                    new CodeParameter("value", "The value that is removed from the array.", pipeType)
                 },
                 Action = (actionSet, methodCall) => Element.Part("Remove From Array", actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
@@ -134,7 +136,7 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "The index of a value within an array or -1 if no such value can be found.",
                 ReturnType = supplier.Number(),
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value for which to search.")
+                    new CodeParameter("value", "The value for which to search.", arrayOfType)
                 },
                 Action = (actionSet, methodCall) => Element.IndexOfArrayValue(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
@@ -143,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
                 Name = "ModAppend",
                 Documentation = "Appends a value to the array. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value that is pushed to the array.", new PipeType(arrayOfType, this))
+                    new CodeParameter("value", "The value that is pushed to the array.", pipeType)
                 },
                 OnCall = SourceVariableResolver.GetSourceVariable,
                 ReturnType = supplier.Number(),
@@ -171,6 +173,12 @@ namespace Deltin.Deltinteger.Parse
                 ReturnType = supplier.Number(),
                 Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.RemoveFromArrayByIndex)
             });
+
+            // Add type operations.
+            Operations = new ITypeOperation[] {
+                new TypeOperation(TypeOperator.Add, pipeType, this, (l, r) => Element.Append(l, r)),
+                new TypeOperation(TypeOperator.Subtract, pipeType, this, (l, r) => Element.Remove(l, r))
+            };
 
             if (arrayOfType is IAdditionalArray addition)
                 addition.OverrideArray(this);

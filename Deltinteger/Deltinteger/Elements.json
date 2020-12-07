@@ -1311,7 +1311,7 @@
       "documentation": "Whether the match is waiting for players to join before starting."
     },
     {
-      "type": "player",
+      "type": "any",
       "name": "Last Created Entity",
       "documentation": "A reference to the last effect or icon entity created by the event player (or created at the global level)."
     },
@@ -3319,7 +3319,8 @@
           "type": "EffectRev",
           "defaultValue": "Visible To Position and Radius"
         }
-      }
+      },
+      "return-value": "Last Created Entity"
     },
     {
       "name": "Create Dummy Bot",
@@ -3350,7 +3351,8 @@
           "type": "player | vector",
           "defaultValue": "Vector"
         }
-      }
+      },
+      "return-value": "Last Created Entity"
     },
     {
       "name": "Create Effect",
@@ -3386,7 +3388,8 @@
           "type": "EffectRev",
           "defaultValue": "Visible To Position and Radius"
         }
-      }
+      },
+      "return-value": "Last Created Entity"
     },
     {
       "name": "Create HUD Text",
@@ -3447,7 +3450,8 @@
           "type": "Spectators",
           "defaultValue": "Default Visibility"
         }
-      }
+      },
+      "return-value": "Last Text ID"
     },
     {
       "name": "Create Icon",
@@ -3483,7 +3487,8 @@
           "type": "boolean",
           "defaultValue": true
         }
-      }
+      },
+      "return-value": "Last Created Entity"
     },
     {
       "name": "Create In-World Text",
@@ -3528,7 +3533,8 @@
           "defaultValue": "Default Visibility"
         }
       },
-      "alias": "CreateInWorldText"
+      "alias": "CreateInWorldText",
+      "return-value": "Last Text ID"
     },
     {
       "name": "Damage",
@@ -4793,7 +4799,8 @@
           "type": "DamageModificationRev",
           "defaultValue": "Receivers, Damagers, and Damage Percent"
         }
-      }
+      },
+      "return-value": "Last Damage Modification ID"
     },
     {
       "name": "Start Damage Over Time",
@@ -4817,7 +4824,8 @@
           "type": "number",
           "defaultValue": 0.0
         }
-      }
+      },
+      "return-value": "Last Damage Over Time ID"
     },
     {
       "name": "Start Facing",
@@ -4944,7 +4952,8 @@
           "type": "HealingModificationRev",
           "defaultValue": "Receivers, Healers, and Healing Percent"
         }
-      }
+      },
+      "return-value": "Last Healing Modification ID"
     },
     {
       "name": "Stop Healing Modification",
@@ -4977,7 +4986,8 @@
           "type": "number",
           "defaultValue": 0.0
         }
-      }
+      },
+      "return-value": "Last Heal Over Time ID"
     },
     {
       "name": "Start Holding Button",
@@ -5844,7 +5854,8 @@
           "type": "boolean",
           "defaultValue": true
         }
-      }
+      },
+      "return-value": "Last Created Health Pool"
     },
     {
       "name": "Remove Health Pool From Player",
@@ -5949,7 +5960,8 @@
           "type": "Assist",
           "defaultValue": "AssistersAndTargets"
         }
-      }
+      },
+      "return-value": "Last Assist ID"
     },
     {
       "name": "Stop Assist",
@@ -6000,7 +6012,8 @@
           "type": "Spectators",
           "defaultValue": "Default Visibility"
         }
-      }
+      },
+      "return-value": "Last Text ID"
     },
     {
       "name": "Destroy Progress Bar HUD Text",
@@ -6053,7 +6066,8 @@
           "type": "Spectators",
           "defaultValue": "Default Visibility"
         }
-      }
+      },
+      "return-value": "Last Text ID"
     },
     {
       "name": "Destroy Progress Bar In-World Text",

@@ -65,14 +65,14 @@ namespace Deltin.Deltinteger.Parse
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsButtonHeld",
                 Parameters = new CodeParameter[] { new CodeParameter("button", _supplier.EnumType("Button")) },
-                ReturnType = BooleanType.Instance,
+                ReturnType = _supplier.Boolean(),
                 Action = (set, call) => Element.Part("Is Button Held", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is holding a button."
             });
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsCommunicating",
                 Parameters = new CodeParameter[] { new CodeParameter("communication", _supplier.EnumType("Communication")) },
-                ReturnType = BooleanType.Instance,
+                ReturnType = _supplier.Boolean(),
                 Action = (set, call) => Element.Part("Is Communicating", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is communicating."
             });
