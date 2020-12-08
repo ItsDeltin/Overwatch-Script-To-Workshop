@@ -105,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
 
     class ParameterVariable : VarBuilder
     {
-        private readonly Scope _operationalScope;
+        protected readonly Scope _operationalScope;
         private readonly Lambda.IBridgeInvocable _bridgeInvocable;
 
         public ParameterVariable(Scope operationalScope, IVarContextHandler contextHandler, Lambda.IBridgeInvocable bridgeInvocable) : base(contextHandler)
@@ -198,7 +198,7 @@ namespace Deltin.Deltinteger.Parse
                 // If an explicit type was provided, make sure the inferred type matches.
                 if (_contextHandler.GetCodeType() != null)
                 {
-                    CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, _contextHandler.GetCodeType());
+                    CodeType type = TypeFromContext.GetCodeTypeFromContext(_parseInfo, _operationalScope, _contextHandler.GetCodeType());
 
                     if (!type.Is(inferredType))
                         _parseInfo.Script.Diagnostics.Error("Expected the '" + inferredType.GetName() + "' type", _contextHandler.GetTypeRange());

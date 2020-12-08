@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             if (types.Length == 0)
             {
                 errorHandler.Nonexistent();
-                return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
+                return parseInfo.TranslateInfo.Types.GetInstance<AnyType>();
             }
             
             var fallback = types[0];

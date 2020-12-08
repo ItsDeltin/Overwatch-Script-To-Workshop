@@ -430,8 +430,8 @@ namespace Deltin.Deltinteger.Parse
         public CodeType EnumType(string typeName)
         {
             foreach (var type in AllTypes)
-                if (type is ValueGroupType valueGroupType && type.Name == typeName)
-                    return type;
+                if (type.GetInstance() is ValueGroupType valueGroupType && type.Name == typeName)
+                    return valueGroupType;
             throw new Exception("No enum type by the name of '" + typeName + "' exists.");
         }
     }
