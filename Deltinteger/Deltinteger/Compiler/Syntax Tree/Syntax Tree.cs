@@ -12,6 +12,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<ClassContext> Classes { get; } = new List<ClassContext>();
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
+        public List<Token> PlayervarReservations {get; } = new List<Token>();
+        public List<Token> GlobalvarReservations {get; } = new List<Token>();
         public List<Hook> Hooks { get; } = new List<Hook>();
         public List<TokenCapture> NodeCaptures { get; set; }
     }

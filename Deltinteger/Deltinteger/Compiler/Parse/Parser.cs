@@ -1519,7 +1519,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Import:
                     context.Imports.Add(ParseImport());
                     break;
-
+                case TokenType.GlobalVar:
+                    if(Is(TokenType.CurlyBracket_Open, 1)) {
+                        context.GlobalvarReservations.AddRange(ParseVariableReservation());
+                    } else goto default;
+                    break;
+                case TokenType.PlayerVar:
+                    if(Is(TokenType.CurlyBracket_Open, 1)) {
+                        context.PlayervarReservations.AddRange(ParseVariableReservation());
+                    } else goto default;
+                    break;
                 // Others
                 default:
                     // Variable declaration
@@ -1533,6 +1542,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
                         Unexpected(true);
                     break;
             }
+        }
+
+
+        List<Token> ParseVariableReservation() {
+            if(Is(TokenType.GlobalVar)) {
+                ParseExpected(TokenType.GlobalVar);
+            } else {
+                ParseExpected(TokenType.PlayerVar);
+            }
+            ParseExpected(TokenType.CurlyBracket_Open);
+            var variables = ParseDelimitedList(TokenType.CurlyBracket_Close, () => true, () => ParseOptional(TokenType.String)??ParseOptional(TokenType.Number));
+            ParseExpected(TokenType.CurlyBracket_Close);
+            return variables;
+            
+            //TODO
         }
 
         /// <summary>Parses a rule.</summary>

@@ -126,6 +126,27 @@ namespace Deltin.Deltinteger.Parse
             //     }
             // }
 
+            // Get the variable reservations
+            foreach (ScriptFile script in Importer.ScriptFiles)
+                foreach (Token reservation in script.Context.GlobalvarReservations)
+                {
+                    string text = reservation.GetText();
+                    if(Int32.TryParse(text, out int id)){
+                        VarCollection.Reserve(id, true, script.Diagnostics, reservation.Range);
+                    } else {
+                        VarCollection.Reserve(text, true);
+                    }
+                }
+            foreach (ScriptFile script in Importer.ScriptFiles)
+                foreach (Token reservation in script.Context.PlayervarReservations)
+                {
+                    string text = reservation.GetText();
+                    if(Int32.TryParse(text, out int id)){
+                        VarCollection.Reserve(id, false, script.Diagnostics, reservation.Range);
+                    } else {
+                        VarCollection.Reserve(text, false);
+                    }
+                }
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var enumContext in script.Context.Enums)
