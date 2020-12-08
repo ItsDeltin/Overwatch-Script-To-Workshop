@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             };
 
             if (start is IBlockListener blockListener)
-                blockListener.OnBlockApply(new OnBlockApplied(() => resolver.Invoke()));
+                blockListener.OnBlockApply(new OnBlockApplied(resolver));
             else
                 resolver.Invoke();
         }

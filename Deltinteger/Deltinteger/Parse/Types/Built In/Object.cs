@@ -11,7 +11,6 @@ namespace Deltin.Deltinteger.Parse
 
         private NullType() : base("?") {}
 
-        // public override bool Implements(CodeType type) => type.Implements(ObjectType.Instance);
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.Struct
@@ -27,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
         {
             CanBeExtended = false;
             _supplier = supplier;
-            // Inherit(ObjectType.Instance, null, null);
+            Kind = "struct";
         }
 
         public void ResolveElements()
@@ -47,22 +46,7 @@ namespace Deltin.Deltinteger.Parse
             };
         }
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
-            Label = Name,
-            Kind = CompletionItemKind.Struct
-        };
-        public override Scope ReturningScope() => null;
-    }
-
-    public class TeamType : CodeType
-    {
-        public static readonly TeamType Instance = new TeamType();
-
-        private TeamType() : base("Team")
-        {
-            CanBeExtended = false;
-            // Inherit(ObjectType.Instance, null, null);
-        }
+        public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Boolean());
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
@@ -73,18 +57,21 @@ namespace Deltin.Deltinteger.Parse
 
     public class BooleanType : CodeType
     {
-        public static readonly BooleanType Instance = new BooleanType();
+        private readonly ITypeSupplier _supplier;
 
-        private BooleanType() : base("Boolean")
+        public BooleanType(ITypeSupplier supplier) : base("Boolean")
         {
             CanBeExtended = false;
-            // Inherit(ObjectType.Instance, null, null);
+            Kind = "struct";
+            _supplier = supplier;
 
             Operations = new TypeOperation[] {
                 new TypeOperation(TypeOperator.And, this, this),
                 new TypeOperation(TypeOperator.Or, this, this),
             };
         }
+
+        public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Number());
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
@@ -100,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
         private Positionable() : base("Positionable")
         {
             CanBeExtended = true;
-            // Inherit(ObjectType.Instance, null, null);
+            Kind = "struct";
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {

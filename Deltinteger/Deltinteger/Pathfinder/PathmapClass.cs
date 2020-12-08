@@ -627,7 +627,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     new ExpressionOrWorkshopValue(Element.Num(1))
                 )
             },
-            ReturnType = BooleanType.Instance,
+            ReturnType = _supplier.Boolean(),
             OnCall = (parseInfo, docRange) => {
                 parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.TrackTimeSinceLastNode = true);
                 return null;
@@ -686,7 +686,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The target player to determine if pathfinding.")
             },
-            ReturnType = BooleanType.Instance,
+            ReturnType = _supplier.Boolean(),
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsPathfinding((Element)methodCall.ParameterValues[0])
         };
     
@@ -715,7 +715,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private FuncMethod IsPathfindingToNode => new FuncMethodBuilder() {
             Name = "IsPathfindingToNode",
             Documentation = "Determines if a player is pathfinding towards a node. This will return true if the node is anywhere in their path, not just the one they are currently walking towards.",
-            ReturnType = BooleanType.Instance,
+            ReturnType = _supplier.Boolean(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to check."),
                 new CodeParameter("node_index", "The node to check. This is the index of the node in the pathmap's Node array.")
@@ -726,7 +726,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private FuncMethod IsPathfindingToSegment => new FuncMethodBuilder() {
             Name = "IsPathfindingToSegment",
             Documentation = "Determines if a player is pathfinding towards a node. This will return true if the segment is anywhere in their path, not just the one they are currently walking towards.",
-            ReturnType = BooleanType.Instance,
+            ReturnType = _supplier.Boolean(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to check."),
                 new CodeParameter("segment", "The segment to check. This is not an index of the pathmap's segment array, instead it is the segment itself.")
@@ -740,7 +740,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 .Add(" This will return true if the attribute is anywhere in their path, not just the one they are currently walking towards.")
                 .Add(" This will not return true if the attribute is on the segment the player is currently walking on, instead for this case use ").Code("CurrentSegmentAttribute").Add(".")
                 .ToString(),
-            ReturnType = BooleanType.Instance,
+            ReturnType = _supplier.Boolean(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to check."),
                 new CodeParameter("attribute", "The segment to check.")

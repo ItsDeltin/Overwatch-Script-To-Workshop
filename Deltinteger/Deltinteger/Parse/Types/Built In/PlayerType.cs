@@ -45,7 +45,8 @@ namespace Deltin.Deltinteger.Parse
             }
         };
 
-        public readonly Scope ObjectScope = new Scope("player variables") { TagPlayerVariables = true };
+        public Scope PlayerVariableScope { get; } = new Scope("player variables") { TagPlayerVariables = true };
+        private Scope _objectScope;
         private readonly ITypeSupplier _supplier;
 
         public PlayerType(ITypeSupplier typeSupplier) : base("Player")
@@ -57,20 +58,21 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public void ResolveElements()
-        {            
-            AddSharedFunctionsToScope(ObjectScope);
+        {
+            _objectScope = PlayerVariableScope.Child();
+            AddSharedFunctionsToScope(_objectScope);
 
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsButtonHeld",
-                Parameters = new CodeParameter[] { new CodeParameter("button", ValueGroupType.GetEnumType("Button")) },
-                ReturnType = BooleanType.Instance,
+                Parameters = new CodeParameter[] { new CodeParameter("button", _supplier.EnumType("Button")) },
+                ReturnType = _supplier.Boolean(),
                 Action = (set, call) => Element.Part("Is Button Held", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is holding a button."
             });
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsCommunicating",
-                Parameters = new CodeParameter[] { new CodeParameter("communication", ValueGroupType.GetEnumType("Communication")) },
-                ReturnType = BooleanType.Instance,
+                Parameters = new CodeParameter[] { new CodeParameter("communication", _supplier.EnumType("Communication")) },
+                ReturnType = _supplier.Boolean(),
                 Action = (set, call) => Element.Part("Is Communicating", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is communicating."
             });
@@ -103,9 +105,9 @@ namespace Deltin.Deltinteger.Parse
             Label = Name,
             Kind = CompletionItemKind.Struct
         };
-        public override Scope GetObjectScope() => ObjectScope;
+        public override Scope GetObjectScope() => _objectScope;
         public override Scope ReturningScope() => null;
-        private void AddFunc(FuncMethodBuilder builder) => ObjectScope.AddNativeMethod(new FuncMethod(builder));
+        private void AddFunc(FuncMethodBuilder builder) => _objectScope.AddNativeMethod(new FuncMethod(builder));
         private void AddFunc(string name, CodeType returnType, Func<ActionSet, MethodCall, IWorkshopTree> action, string documentation) => AddFunc(new FuncMethodBuilder() { Name = name, ReturnType = returnType, Action = action, Documentation = documentation });
         public void OverrideArray(ArrayType array)
         {

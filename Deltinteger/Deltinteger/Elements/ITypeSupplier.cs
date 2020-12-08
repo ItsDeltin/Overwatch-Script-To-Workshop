@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Elements
         CodeType Map() => EnumType("Map");
         CodeType GameMode() => EnumType("GameMode");
         CodeType Team() => EnumType("Team");
-        CodeType EnumType(string typeName) => ValueGroupType.GetEnumType(typeName);
+        CodeType EnumType(string typeName);
 
         public CodeType FromString(string value)
         {

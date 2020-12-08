@@ -210,6 +210,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element IndexOfArrayValue(IWorkshopTree array, IWorkshopTree value) => Part("Index Of Array Value", array, value);
         public static Element Append(Element array, Element value) => Part("Append To Array", array, value);
         public static Element Append(IWorkshopTree array, IWorkshopTree value) => Part("Append To Array", array, value);
+        public static Element Remove(IWorkshopTree array, IWorkshopTree value) => Part("Remove From Array", array, value);
         public static Element FirstOf(IWorkshopTree array) => Part("First Of", array);
         public static Element LastOf(IWorkshopTree array) => Part("Last Of", array);
         public static Element CountOf(IWorkshopTree array) => Part("Count Of", array);

@@ -126,9 +126,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="reference">The object reference.</param>
         public virtual void Delete(ActionSet actionSet, Element reference) {}
 
-        /// <summary>
-        /// Gets an operation.
-        /// </summary>
+        /// <summary>Gets an operation.</summary>
         /// <param name="op">The operation's operator type.</param>
         /// <param name="right">The right object's type.</param>
         /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>

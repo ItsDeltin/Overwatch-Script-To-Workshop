@@ -32,14 +32,16 @@ namespace Deltin.Deltinteger.Parse
     public class BoolAction : IExpression
     {
         public bool Value { get; }
+        private readonly CodeType _type;
 
-        public BoolAction(ScriptFile script, bool value)
+        public BoolAction(ParseInfo parseInfo, bool value)
         {
             Value = value;
+            _type = parseInfo.TranslateInfo.Types.Boolean();
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => BooleanType.Instance;
+        public CodeType Type() => _type;
 
         public IWorkshopTree Parse(ActionSet actionSet) => Value ? Element.True() : Element.False();
     }

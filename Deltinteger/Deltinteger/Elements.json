@@ -307,7 +307,8 @@
     {
       "type": "player",
       "name": "Attacker",
-      "documentation": "The player that dealt damage for the event currently being processed by this rule. May be the same as the victim or the event player."
+      "documentation": "The player that dealt damage for the event currently being processed by this rule. May be the same as the victim or the event player.",
+      "restricted": "Attacker"
     },
     {
       "type": "vector",
@@ -541,24 +542,29 @@
     },
     {
       "type": "number",
-      "name": "Event Damage"
+      "name": "Event Damage",
+      "restricted": "Attacker"
     },
     {
       "type": "number",
-      "name": "Event Healing"
+      "name": "Event Healing",
+      "restricted": "Healer"
     },
     {
       "type": "player",
       "name": "Event Player",
-      "documentation": "The player executing the rule, as specified by the event, may be the same as the attacker or victim."
+      "documentation": "The player executing the rule, as specified by the event, may be the same as the attacker or victim.",
+      "restricted": "Event Player"
     },
     {
       "type": "boolean",
-      "name": "Event Was Critical Hit"
+      "name": "Event Was Critical Hit",
+      "restricted": "Attacker"
     },
     {
       "type": "boolean",
-      "name": "Event Was Health Pack"
+      "name": "Event Was Health Pack",
+      "restricted": "Healer"
     },
     {
       "type": "vector",
@@ -585,7 +591,8 @@
     {
       "type": "boolean",
       "name": "False",
-      "documentation": "The Boolean value of false."
+      "documentation": "The Boolean value of false.",
+      "hidden": true
     },
     {
       "type": "player",
@@ -707,11 +714,13 @@
     },
     {
       "type": "player",
-      "name": "Healee"
+      "name": "Healee",
+      "restricted": "Healer"
     },
     {
       "type": "player",
-      "name": "Healer"
+      "name": "Healer",
+      "restricted": "Healer"
     },
     {
       "type": "number",
@@ -1302,7 +1311,7 @@
       "documentation": "Whether the match is waiting for players to join before starting."
     },
     {
-      "type": "player",
+      "type": "any",
       "name": "Last Created Entity",
       "documentation": "A reference to the last effect or icon entity created by the event player (or created at the global level)."
     },
@@ -2298,7 +2307,8 @@
     {
       "type": "boolean",
       "name": "True",
-      "documentation": "The Boolean value of true."
+      "documentation": "The Boolean value of true.",
+      "hidden": true
     },
     {
       "type": "number",
@@ -2440,7 +2450,8 @@
     {
       "type": "player",
       "name": "Victim",
-      "documentation": "The player that received damage for the event currently being processed by this rule. May be the same as the attacker or the event player."
+      "documentation": "The player that received damage for the event currently being processed by this rule. May be the same as the attacker or the event player.",
+      "restricted": "Attacker"
     },
     {
       "type": "vector",
@@ -2546,7 +2557,8 @@
     },
     {
       "type": "vector",
-      "name": "Event Direction"
+      "name": "Event Direction",
+      "restricted": "Attacker"
     },
     {
       "type": "button",
@@ -2596,7 +2608,8 @@
     },
     {
       "type": "button",
-      "name": "Event Ability"
+      "name": "Event Ability",
+      "restricted": "Ability"
     },
     {
       "type": "number",
@@ -2706,7 +2719,8 @@
     },
     {
       "type": "boolean",
-      "name": "Event Was Environment"
+      "name": "Event Was Environment",
+      "restricted": "Attacker"
     },
     {
       "type": "number",
@@ -3305,7 +3319,8 @@
           "type": "EffectRev",
           "defaultValue": "Visible To Position and Radius"
         }
-      }
+      },
+      "return-value": "Last Created Entity"
     },
     {
       "name": "Create Dummy Bot",
@@ -3336,7 +3351,8 @@
           "type": "player | vector",
           "defaultValue": "Vector"
         }
-      }
+      },
+      "return-value": "Last Created Entity"
     },
     {
       "name": "Create Effect",
@@ -3372,7 +3388,8 @@
           "type": "EffectRev",
           "defaultValue": "Visible To Position and Radius"
         }
-      }
+      },
+      "return-value": "Last Created Entity"
     },
     {
       "name": "Create HUD Text",
@@ -3433,7 +3450,8 @@
           "type": "Spectators",
           "defaultValue": "Default Visibility"
         }
-      }
+      },
+      "return-value": "Last Text ID"
     },
     {
       "name": "Create Icon",
@@ -3469,7 +3487,8 @@
           "type": "boolean",
           "defaultValue": true
         }
-      }
+      },
+      "return-value": "Last Created Entity"
     },
     {
       "name": "Create In-World Text",
@@ -3514,7 +3533,8 @@
           "defaultValue": "Default Visibility"
         }
       },
-      "alias": "CreateInWorldText"
+      "alias": "CreateInWorldText",
+      "return-value": "Last Text ID"
     },
     {
       "name": "Damage",
@@ -4779,7 +4799,8 @@
           "type": "DamageModificationRev",
           "defaultValue": "Receivers, Damagers, and Damage Percent"
         }
-      }
+      },
+      "return-value": "Last Damage Modification ID"
     },
     {
       "name": "Start Damage Over Time",
@@ -4803,7 +4824,8 @@
           "type": "number",
           "defaultValue": 0.0
         }
-      }
+      },
+      "return-value": "Last Damage Over Time ID"
     },
     {
       "name": "Start Facing",
@@ -4930,7 +4952,8 @@
           "type": "HealingModificationRev",
           "defaultValue": "Receivers, Healers, and Healing Percent"
         }
-      }
+      },
+      "return-value": "Last Healing Modification ID"
     },
     {
       "name": "Stop Healing Modification",
@@ -4963,7 +4986,8 @@
           "type": "number",
           "defaultValue": 0.0
         }
-      }
+      },
+      "return-value": "Last Heal Over Time ID"
     },
     {
       "name": "Start Holding Button",
@@ -5830,7 +5854,8 @@
           "type": "boolean",
           "defaultValue": true
         }
-      }
+      },
+      "return-value": "Last Created Health Pool"
     },
     {
       "name": "Remove Health Pool From Player",
@@ -5935,7 +5960,8 @@
           "type": "Assist",
           "defaultValue": "AssistersAndTargets"
         }
-      }
+      },
+      "return-value": "Last Assist ID"
     },
     {
       "name": "Stop Assist",
@@ -5986,7 +6012,8 @@
           "type": "Spectators",
           "defaultValue": "Default Visibility"
         }
-      }
+      },
+      "return-value": "Last Text ID"
     },
     {
       "name": "Destroy Progress Bar HUD Text",
@@ -6039,7 +6066,8 @@
           "type": "Spectators",
           "defaultValue": "Default Visibility"
         }
-      }
+      },
+      "return-value": "Last Text ID"
     },
     {
       "name": "Destroy Progress Bar In-World Text",

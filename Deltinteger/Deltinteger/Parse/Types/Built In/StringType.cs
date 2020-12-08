@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _typeSupplier = typeSupplier;
             CanBeExtended = false;
+            Kind = "struct";
         }
 
         public void ResolveElements()

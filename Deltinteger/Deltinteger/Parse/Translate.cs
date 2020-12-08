@@ -346,6 +346,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly VectorType _vectorType;
         private readonly NumberType _numberType;
         private readonly StringType _stringType;
+        private readonly BooleanType _booleanType;
 
         public ScriptTypes(DeltinScript deltinScript)
         {
@@ -354,18 +355,18 @@ namespace Deltin.Deltinteger.Parse
             _vectorType = new VectorType(this);
             _numberType = new NumberType(this);
             _stringType = new StringType(this);
+            _booleanType = new BooleanType(this);
         }
 
         public void GetDefaults()
         {
-            var dynamicType = new DynamicType(_deltinScript);
+            var dynamicType = new AnyType(_deltinScript);
             AddType(dynamicType);
             AddType(_playerType);
             AddType(_vectorType);
             AddType(_numberType);
             AddType(_stringType);
-            AddType(BooleanType.Instance);
-            AddType(TeamType.Instance);
+            AddType(_booleanType);
             AddType(Positionable.Instance);
             AddType(Pathfinder.SegmentsStruct.Instance);
             // Pathfinder classes
@@ -375,10 +376,9 @@ namespace Deltin.Deltinteger.Parse
             AddType(new Lambda.BlockLambda(dynamicType));
             AddType(new Lambda.ValueBlockLambda(dynamicType));
             AddType(new Lambda.MacroLambda(dynamicType));
-            // Model static class.
-            foreach (var type in ValueGroupType.EnumTypes)
+            // Enums
+            foreach (var type in ValueGroupType.GetEnumTypes(this))
                 AddType(type);
-            // AddType(new Models.AssetClass());
 
             foreach (var type in AllTypes)
                 if (type is IResolveElements resolveElements)
@@ -386,7 +386,7 @@ namespace Deltin.Deltinteger.Parse
                 else if (type.GetInstance() is IResolveElements resolveDefaultInstance)
                     resolveDefaultInstance.ResolveElements();
 
-            _deltinScript.PlayerVariableScope = _playerType.ObjectScope;
+            _deltinScript.PlayerVariableScope = _playerType.PlayerVariableScope;
         }
 
         private void AddType(CodeType type) => AllTypes.Add(new GenericCodeTypeInitializer(type));
@@ -414,7 +414,7 @@ namespace Deltin.Deltinteger.Parse
         public T GetInitializer<T>() where T: ICodeTypeInitializer => (T)AllTypes.First(type => type.GetType() == typeof(T));
 
         public CodeType Default() => Any();
-        public CodeType Any() => GetInstance<DynamicType>();
+        public CodeType Any() => GetInstance<AnyType>();
         public CodeType AnyArray() => new ArrayType(this, Any());
         public CodeType Boolean() => GetInstance<BooleanType>();
         public CodeType Number() => GetInstance<NumberType>();
@@ -426,6 +426,14 @@ namespace Deltin.Deltinteger.Parse
         public CodeType VectorArray() => new ArrayType(this, _vectorType);
         public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         public CodeType Button() => Any(); // TODO
+
+        public CodeType EnumType(string typeName)
+        {
+            foreach (var type in AllTypes)
+                if (type is ValueGroupType valueGroupType && type.Name == typeName)
+                    return type;
+            throw new Exception("No enum type by the name of '" + typeName + "' exists.");
+        }
     }
 
     public interface IComponent
