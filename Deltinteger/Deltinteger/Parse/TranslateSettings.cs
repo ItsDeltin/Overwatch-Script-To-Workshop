@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public Diagnostics Diagnostics { get; }
         public ScriptFile Root { get; }
-        public FileGetter FileGetter { get; } = new FileGetter(null);
+        public FileGetter FileGetter { get; } = new FileGetter(null, new LanguageServer.DefaultSettingsResolver());
         public Func<VarCollection, Rule[]> AdditionalRules { get; set; }
 
         public bool OptimizeOutput { get; set; } = true;

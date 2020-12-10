@@ -10,14 +10,18 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public List<Token> Tokens { get; } = new List<Token>();
         public VersionInstance Content { get; private set; }
         public List<int> Newlines { get; } = new List<int>();
+        private readonly ParserSettings _parseSettings;
 
-        public Lexer() {}
+        public Lexer(ParserSettings parseSettings)
+        {
+            _parseSettings = parseSettings;
+        }
 
         public void Init(VersionInstance content)
         {
             Content = content;
 
-            LexController controller = new LexController(Content.Text, new InitTokenPush(Tokens));
+            LexController controller = new LexController(_parseSettings, Content.Text, new InitTokenPush(Tokens));
             controller.Match();
         }
 
@@ -55,7 +59,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             var tokenInsert = new IncrementalTokenInsert(Tokens, affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex);
-            LexController controller = new LexController(newContent.Text, tokenInsert);
+            LexController controller = new LexController(_parseSettings, newContent.Text, tokenInsert);
 
             // Set start range
             controller.Index = affectedArea.StartIndex;
@@ -170,11 +174,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public int Column;
         public string Content { get; }
         private readonly ITokenPush _push;
+        private readonly ParserSettings _settings;
 
-        public LexController(string content, ITokenPush push)
+        public LexController(ParserSettings settings, string content, ITokenPush push)
         {
             Content = content;
             _push = push;
+            _settings = settings;
         }
 
         public void Match()

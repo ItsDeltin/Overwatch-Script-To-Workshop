@@ -28,13 +28,15 @@ namespace Deltin.Deltinteger.LanguageServer
 
         // Object
         public List<Document> Documents { get; } = new List<Document>();
-        private DeltintegerLanguageServer _languageServer { get; } 
+        private readonly DeltintegerLanguageServer _languageServer;
+        private readonly ParserSettingsResolver _parserSettingsResolver;
         private SynchronizationCapability _compatibility;
         private TaskCompletionSource<Unit> _scriptReady = new TaskCompletionSource<Unit>();
 
-        public DocumentHandler(DeltintegerLanguageServer languageServer)
+        public DocumentHandler(LanguageServerBuilder builder)
         {
-            _languageServer = languageServer;
+            _languageServer = builder.Server;
+            _parserSettingsResolver = builder.ParserSettingsResolver;
             SetupUpdateListener();
         }
 
@@ -66,7 +68,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (_sendTextOnSave)
             {
                 var document = TextDocumentFromUri(saveParams.TextDocument.Uri.ToUri());
-                document.UpdateIfChanged(saveParams.Text);
+                document.UpdateIfChanged(saveParams.Text, _parserSettingsResolver.GetParserSettings(document.Uri));
                 return Parse(document);
             }
             else return Parse(saveParams.TextDocument.Uri.ToUri());
@@ -99,7 +101,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 rep.Remove(start, length);
                 rep.Insert(start, change.Text);
 
-                document.Update(rep.ToString(), change, changeParams.TextDocument.Version);
+                document.Update(rep.ToString(), change, changeParams.TextDocument.Version, _parserSettingsResolver.GetParserSettings(document.Uri));
             }
             return Parse(document.Uri);
         }

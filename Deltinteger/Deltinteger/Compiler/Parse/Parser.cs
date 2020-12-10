@@ -25,14 +25,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public List<IParserError> Errors { get; } = new List<IParserError>();
         private readonly RootContext _last;
         private readonly IncrementInfo _incrementInfo;
+        private readonly ParserSettings _parserSettings;
 
         private int LookaheadDepth = 0;
 
-        public Parser(Lexer lexer, RootContext last = null, IncrementInfo incrementInfo = null)
+        public Parser(Lexer lexer, ParserSettings parserSettings, RootContext last = null, IncrementInfo incrementInfo = null)
         {
             Lexer = lexer;
             _last = last;
             _incrementInfo = incrementInfo;
+            _parserSettings = parserSettings;
             StringCheck.Push(false);
         }
 

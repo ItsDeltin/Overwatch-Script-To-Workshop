@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "JSON schema for OSTW config files.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "compiler": {
+            "description": "Changes how OSTW scripts are compiled.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "variableDeclaration": {
+                    "type": "string",
+                    "enum": ["let", "define"],
+                    "default": "let",
+                    "description": ""
+                }
+            }
+        }
+    }
+}

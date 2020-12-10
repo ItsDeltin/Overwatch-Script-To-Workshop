@@ -221,10 +221,14 @@
                     "*.lobby.json",
                     "*.lobby"
                 ],
-                "url": "./LobbySettingValidation.json"
+                "url": "./json-schemas/LobbySettingValidation.json"
             },
             {
                 "fileMatch": "Elements.json",
+                "url": "./json-schemas/ElementValidation.json"
+            },
+            {
+                "fileMatch": "dsconfig.json",
                 "url": "./json-schemas/ElementValidation.json"
             }
         ],

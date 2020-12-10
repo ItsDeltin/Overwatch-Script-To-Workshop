@@ -11,10 +11,12 @@ namespace Deltin.Deltinteger.Parse
         private DocumentHandler DocumentHandler { get; }
         // Importing scripts not being edited.
         private List<ImportedFile> ImportedFiles = new List<ImportedFile>();
+        private readonly IParserSettingsResolver _settingsResolver;
 
-        public FileGetter(DocumentHandler documentHandler)
+        public FileGetter(DocumentHandler documentHandler, IParserSettingsResolver settingsResolver)
         {
             DocumentHandler = documentHandler;
+            _settingsResolver = settingsResolver;
         }
 
         public Document GetScript(Uri uri)
@@ -33,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ImportedScript importedFile in ImportedFiles)
                 if (importedFile.Uri == uri)
                     return importedFile;
-            var newImportedFile = new ImportedScript(uri);
+            var newImportedFile = new ImportedScript(uri, _settingsResolver);
             ImportedFiles.Add(newImportedFile);
             return newImportedFile;
         }
