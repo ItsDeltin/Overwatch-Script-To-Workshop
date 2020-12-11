@@ -112,12 +112,6 @@
                     "type": "string",
                     "description": "The command to run to start the OSTW server."
                 },
-                "ostw.dev.deltintegerWatchBuild": {
-                    "scope": "machine",
-                    "type": "string",
-                    "description": "Restarts the language server when the provided file changes.",
-                    "default": null
-                },
                 "ostw.deltintegerShell": {
                     "scope": "machine",
                     "type": "boolean",
@@ -169,6 +163,18 @@
                     ],
                     "default": "off",
                     "description": "Traces the communication between VS Code and the language server."
+                },
+                "ostw.dev.deltintegerWatchBuild": {
+                    "scope": "machine",
+                    "type": "string",
+                    "description": "Restarts the language server when the provided file changes.",
+                    "default": null
+                },
+                "ostw.dev.waitForDebugger": {
+                    "scope": "machine",
+                    "type": "boolean",
+                    "description": "Will not start the language server until a debugger is attached.",
+                    "default": false
                 }
             }
         },
@@ -211,6 +217,11 @@
             {
                 "command": "ostw.decompile.clipboard",
                 "title": "Decompile from clipboard to file",
+                "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.restartLanguageServer",
+                "title": "Restart OSTW Language Server",
                 "category": "Overwatch Script To Workshop"
             }
         ],

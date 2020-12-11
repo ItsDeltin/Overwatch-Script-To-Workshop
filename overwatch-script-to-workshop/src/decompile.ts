@@ -1,5 +1,5 @@
 import exec = require('child_process');
-import { serverModuleCommand, client } from './extensions';
+import { serverModuleCommand, client } from './languageServer';
 import * as vscode from 'vscode';
 
 export function decompileClipboard()

@@ -1,11 +1,17 @@
-import { ExtensionContext, window } from 'vscode';
-import { config, startLanguageServer, stopLanguageServer, restartLanguageServer } from './extensions';
-import fs = require('fs');
+import { window } from 'vscode';
+import { config } from './config';
+import { restartLanguageServer } from './languageServer';
 import chokidar = require('chokidar');
 
 let watcher: chokidar.FSWatcher;
 
 export function setupBuildWatcher() {
+    if (watcher != null)
+    {
+        watcher.close();
+        watcher = null;
+    }
+
     let watch = config.get<string>('dev.deltintegerWatchBuild');
     if (watch != null && watch != '')
     {
