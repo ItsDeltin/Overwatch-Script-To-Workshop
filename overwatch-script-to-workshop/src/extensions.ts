@@ -10,6 +10,7 @@ import yauzl = require("yauzl");
 import exec = require('child_process');
 import { register } from './debugger';
 import { decompileClipboard, insertActions, decompilerOriginalWorkshopCode } from './decompile';
+import { setupBuildWatcher } from './dev';
 
 let globalStoragePath:string;
 let defaultServerFolder:string;
@@ -18,7 +19,7 @@ export let client: LanguageClient;
 let idk: Disposable;
 let workshopOut: OutputChannel;
 let elementCountStatus: vscode.StatusBarItem;
-let config = workspace.getConfiguration("ostw", null);
+export let config = workspace.getConfiguration("ostw", null);
 let isServerRunning = false;
 let isServerReady = false;
 let canBeStarted = false;
@@ -50,6 +51,7 @@ export async function activate(context: ExtensionContext) {
 	});
 
 	makeLanguageServer();
+	setupBuildWatcher();
 }
 
 function setElementCount(count)
@@ -117,7 +119,7 @@ async function makeLanguageServer()
 
 let onServerReady = new vscode.EventEmitter();
 
-function startLanguageServer() {
+export function startLanguageServer() {
 	// If the server is running, or the server cannot be started, or the command server option is invalid, return.
 	if (isServerRunning || !canBeStarted || serverOptions.run.command == null || serverOptions.run.command == '') return;
 
@@ -223,12 +225,20 @@ function weAreReady()
 	});
 }
 
-async function stopLanguageServer() {
+export async function stopLanguageServer() {
 	if (!isServerRunning) return;
 	isServerReady = false;
 	await client.stop();
 	idk.dispose();
 	isServerRunning = false;
+}
+
+export async function restartLanguageServer(timeout:number = 5000) {
+	await stopLanguageServer();
+	await new Promise(resolve => setTimeout(() => {
+		resolve();
+	}, timeout));
+	startLanguageServer();
 }
 
 export let serverModuleCommand: string;
@@ -681,7 +691,7 @@ function ensureDirectoryExistence(filePath) {
 async function locateDLL(root: string): Promise<string>
 {
 	return new Promise<string>((resolve, reject) =>
-		glob('**/deltinteger.dll', {cwd: root}, (error, matches: string[]) => {
+		glob('**/deltinteger.dll', {cwd: root, nocase: true}, (error, matches: string[]) => {
 			if (error || matches.length == 0) resolve(null);
 			return resolve(path.join(root, matches[0]));
 		})
