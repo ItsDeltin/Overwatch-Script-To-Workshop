@@ -168,10 +168,10 @@ namespace Deltin.Deltinteger.Animation
         {
             Element w = angle.Get(), x = Element.Part<V_XOf>(axis.Get()), y = Element.Part<V_YOf>(axis.Get()), z = Element.Part<V_ZOf>(axis.Get());
             var magnitude = actionSet.SaveValue("Normalize Quaternion -> Magnitude", Element.Part<V_SquareRoot>(
-                (w^2) +
-                (x^2) +
-                (y^2) +
-                (z^2)
+                (w*w) +
+                (x*x) +
+                (y*y) +
+                (z*z)
             ), false);
             actionSet.AddAction(axis.ModifyVariable(Operation.Divide, magnitude));
             actionSet.AddAction(angle.ModifyVariable(Operation.Divide, magnitude));
