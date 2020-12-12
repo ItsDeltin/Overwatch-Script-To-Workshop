@@ -1529,12 +1529,14 @@
     {
       "type": "any",
       "name": "Null",
-      "documentation": "The absence of a player, used when no player is desired for a particular input, equivalent to the real number 0 for the purposes of comparison and debugging."
+      "documentation": "The absence of a player, used when no player is desired for a particular input, equivalent to the real number 0 for the purposes of comparison and debugging.",
+      "hidden": true
     },
     {
       "type": "number",
       "name": "Number",
-      "documentation": "A real number constant."
+      "documentation": "A real number constant.",
+      "hidden": true
     },
     {
       "type": "number",
