@@ -54,13 +54,13 @@ namespace Deltin.Deltinteger.Animation
             // Armature
             actionSet.AddAction(Element.Part<A_If>(_classData.IsInstanceOf(currentReference, _armatureType)));
 
-            // Reset bone positions.
-            // _armatureType.BonePositions.Set(actionSet, currentReference, _armatureType.BoneInitialPositions.Get(currentReference));
-            // _armatureType.BoneLocalPositions.Set(actionSet, currentReference, _armatureType.BoneInitialPositions.Get(currentReference));
 
             // Loop through each bone
             var boneLoop = new ForRangeBuilder(actionSet, "animation_bone_loop", 0, Element.Part<V_CountOf>(_armatureType.BoneVertexLinks.Get(currentReference)), 1);
             boneLoop.Init();
+
+            // Debug bone name
+            DebugVariable(actionSet, "db_current_bone", _armatureType.BoneNames.Get(currentReference)[boneLoop]);
 
             // Loop through each action.
             var actionLoop = new ForRangeBuilder(actionSet, "animation_action_loop", 0, Element.Part<V_CountOf>(_animationInfoList.Get()[referenceLoop.Value]), 1);
@@ -114,11 +114,7 @@ namespace Deltin.Deltinteger.Animation
                 // todo: This will use the multi-dimensional array builder. Sadge
                 _armatureType.BoneLocalMatrices.Set(actionSet, currentReference, ConvertArrayGroupedMatrixToRowGroupedMatrix(local.Get()), boneLoop.Value);
 
-                actionSet.AddAction(new A_Continue());
-            actionSet.AddAction(new A_End());
-
-            // Debug bone name
-            DebugVariable(actionSet, "db_current_bone", _armatureType.BoneNames.Get(currentReference)[boneLoop]);
+            actionSet.AddAction(new A_Else());
 
             // Now we get the A and B keyframes from the fcurve using the current time in the animation.
             // This will occur if all keyframes were surpassed.
@@ -169,11 +165,13 @@ namespace Deltin.Deltinteger.Animation
             actionSet.AddAction(local.SetVariable(ConvertArrayGroupedMatrixToRowGroupedMatrix(local.Get())));
 
             // Multiply the 'local' matrix by the 'basis' matrix.
-            actionSet.AddAction(basis.SetVariable(VectorNotatedMultiplyMatrix3x3AndMatrix3x3(local.Get(), basis.Get())));
+            actionSet.AddAction(local.SetVariable(VectorNotatedMultiplyMatrix3x3AndMatrix3x3(local.Get(), basis.Get())));
+
+            actionSet.AddAction(new A_End());
 
             // * At this point, 'local' and 'basis' are no longer required.
             // * 'matrixResult' is just basis.Get() to reuse a workshop variable.
-            Element matrixResult = basis.Get();
+            Element matrixResult = local.Get();
 
             // Save the matrix.
             // todo: This will use the multi-dimensional array builder. Sadge
@@ -185,18 +183,8 @@ namespace Deltin.Deltinteger.Animation
             descendentLoop.Init();
 
             Element descendentIndex = actionSet.AssignAndSave("animation_descendent_index", _armatureType.BoneDescendants.Get(currentReference)[boneLoop.Value][descendentLoop.Value]).Get();
-            Element originalPoint = actionSet.AssignAndSave("animation_rodrique_original", _armatureType.BoneInitialPositions.Get(currentReference)[descendentIndex]).Get();
+            Element originalPoint = actionSet.AssignAndSave("animation_rodrique_original", _armatureType.BonePositions.Get(currentReference)[descendentIndex]).Get();
             Element rodriqueResult = actionSet.AssignAndSave("animation_newpoint", AnimationOperations.Multiply3x3MatrixAndVectorToVector(matrixResult, originalPoint)).Get();
-
-            // actionSet.AddAction(_armatureType.BonePositions.ArrayStore.SetVariable(
-            //     // New point
-            //     rodriqueResult,
-            //     null, // Player
-            //     // Index is the object reference + the descendent loop value.
-            //     currentReference,
-            //     descendentIndex
-            // ));
-
             Element parent = actionSet.AssignAndSave("animation_parent", _armatureType.BonePointParents.Get(currentReference)[descendentIndex]).Get();
 
             // World positions
@@ -217,14 +205,8 @@ namespace Deltin.Deltinteger.Animation
                 descendentIndex
             ));
 
-            // actionSet.AddAction(new A_Break()); // ! only change first descendent
-
             descendentLoop.Finish();
             actionLoop.Finish(); // End action loop
-
-            // ! debug: skip proceeding bones
-            // actionSet.AddAction(new A_Break());
-
             boneLoop.Finish(); // End the bone loop
 
             // ! debug: only 1 tick
@@ -232,6 +214,8 @@ namespace Deltin.Deltinteger.Animation
 
             actionSet.AddAction(new A_End()); // End armature
             referenceLoop.Finish(); // End object loop
+            actionSet.AddAction(A_Wait.MinimumWait);
+            actionSet.AddAction(A_Wait.MinimumWait);
             actionSet.AddAction(A_Wait.MinimumWait);
             actionSet.AddAction(A_Wait.MinimumWait);
             actionSet.AddAction(new A_LoopIfConditionIsTrue());

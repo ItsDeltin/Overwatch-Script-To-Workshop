@@ -55,44 +55,40 @@ class Rna_traveler:
                 # Get the element.
                 if self.current_is('rotation_euler') or self.current_is('rotation_quaternion'):
                     return _bone_euler_rotation_handler(bone_name, self.index)
+                
+                elif self.current_is('location'):
+                    return _bone_location_handler(bone_name, self.index)
         
         # Location
         if self.current_is('location'):
             return _location_handler(self.index)
         
         return None
-        # raise Exception('could not resolve rna "' + self.value + '"')
 
 class _bone_euler_rotation_handler:
     def __init__(self, bone_name, index):
         self.bone_name = bone_name
         self.index = index
     
-    # def get_value(self, obj): return Vector(obj.pose.bones[self.bone_name].rotation_quaternion)
-    # def get_value(self, obj): return Vector(obj.pose.bones[self.bone_name].matrix_basis.to_quaternion())
-    # def get_value(self, obj): return Vector(obj.pose.bones[self.bone_name].matrix_channel.to_quaternion())
-    def get_value(self, obj):
-        # basis = obj.pose.bones[self.bone_name].matrix_basis.to_3x3()
-        # parent_matrix = obj.data.bones[self.bone_name].parent.matrix
-        # transformed = basis @ parent_matrix
-        
+    def get_value(self, obj):        
         pose_bone = obj.pose.bones[self.bone_name]
         return Vector(pose_bone.matrix_basis.to_quaternion())
-        # matrix = pose_bone.bone.matrix_local.to_3x3() @ pose_bone.matrix_basis.to_3x3()
-        # return Vector(matrix.to_quaternion())
-
-        # return Vector(obj.pose.bones[self.bone_name].matrix.decompose()[1])
-        # return Vector(obj.pose.bones[self.bone_name].matrix_channel.to_quaternion())
-
-        # channel        = obj.pose.bones[self.bone_name].       matrix_channel.to_3x3()
-        # if not obj.pose.bones[self.bone_name].parent:
-        #     return Vector(channel.to_quaternion())
-        # parent_channel = obj.pose.bones[self.bone_name].parent.matrix_channel.to_3x3()
-        # transformed = parent_channel @ channel
-        # return Vector(transformed.to_quaternion())
 
     def get_target(self, obj): return self.bone_name
     def get_type(self): return 1
+    def do_use(self): return self.index == 0
+
+class _bone_location_handler:
+    def __init__(self, bone_name, index):
+        self.bone_name = bone_name
+        self.index = index
+    
+    def get_value(self, obj):        
+        pose_bone = obj.pose.bones[self.bone_name]
+        return Vector(pose_bone.location)
+
+    def get_target(self, obj): return self.bone_name
+    def get_type(self): return 2
     def do_use(self): return self.index == 0
 
 class _location_handler:

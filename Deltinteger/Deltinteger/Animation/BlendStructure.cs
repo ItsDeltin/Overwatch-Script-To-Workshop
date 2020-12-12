@@ -89,7 +89,10 @@ namespace Deltin.Deltinteger.Animation
         Location = 0,
         /// <summary>Changes the rotation of a bone. The value of the f-curve's keyframes will be of type Vertex (quaternion).</summary>
         [JsonProperty("bone_rotation")]
-        BoneRotation = 1
+        BoneRotation = 1,
+        /// <summary>Changes the location of a bone. The value of the f-curve's keyframes will be of type Vertex.</summary>
+        [JsonProperty("bone_location")]
+        BoneLocation = 2
     }
 
     /// <summary>A point in an f-curve.</summary>
@@ -155,6 +158,9 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>The bones in the armature.</summary>
         [JsonProperty("bones")]
         public Bone[] Bones { get; set; }
+        /// <summary>The empties in the armature.</summary>
+        [JsonProperty("empties")]
+        public BoneEmpty[] Empties { get; set; }
     }
 
     /// <summary>A bone in the armature.</summary>
@@ -193,6 +199,20 @@ namespace Deltin.Deltinteger.Animation
         public bool IsConnected { get; set; }
 
         public Vertex TailRelative => TailLocal - HeadLocal;
+    }
+
+    /// <summary>A point linked to a bone in an armature.</summary>
+    public class BoneEmpty
+    {
+        /// <summary>The name of the empty.</summary>
+        [JsonProperty("name")]
+        public string Name { get; set; }
+        /// <summary>The location of the empty relative to the bone it is connected to.</summary>
+        [JsonProperty("location")]
+        public Vertex Location { get; set; }
+        /// <summary>The name of the bone that the empty is connected to.</summary>
+        [JsonProperty("parent_bone")]
+        public string ParentBone { get; set; }
     }
 
     /// <summary>Deserializes BlendObjects.</summary>

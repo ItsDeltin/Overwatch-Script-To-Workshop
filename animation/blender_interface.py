@@ -56,9 +56,10 @@ class edge:
         self.v2 = v2
 
 class blend_armature(blend_object):
-    def __init__(self, name, animation_data, bones):
+    def __init__(self, name, animation_data, bones, empties):
         super(blend_armature, self).__init__(name, animation_data)
         self.bones = bones
+        self.empties = empties
 
 class bone(tree_item):
     def __init__(self, original):
@@ -71,6 +72,12 @@ class bone(tree_item):
         self.length = original.length
         self.matrix = get_matrix(original.matrix)
         self.use_connect = original.use_connect
+
+class empty:
+    def __init__(self, original):
+        self.name = original.name
+        self.location = Vector(original.location)
+        self.parent_bone = original.parent_bone
 
 class blend_action:
     def __init__(self, name, fcurves):
@@ -170,8 +177,14 @@ def get_armature(obj):
     for raw_bone in obj.data.bones:
         bone_linker.add(bone(raw_bone), raw_bone)
     
+    # Get linked empties.
+    empties = []
+    for scene_object in bpy.context.scene.objects:
+        if obj is scene_object.parent and scene_object.type == 'EMPTY' and scene_object.parent_type == 'BONE':
+            empties.append(empty(obj))
+    
     # Link the bone's children and parents.
-    return blend_armature(obj.name, get_animation_data(obj), bone_linker.link())
+    return blend_armature(obj.name, get_animation_data(obj), bone_linker.link(), empties)
 
 def get_animation_data(obj):
     if not obj.animation_data or not obj.animation_data.action:

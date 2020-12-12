@@ -72,6 +72,7 @@ namespace Deltin.Deltinteger.Animation
                 
                 // For bone rotation, add the index of the bone.
                 case FCurveType.BoneRotation:
+                case FCurveType.BoneLocation:
                     fcurveData.Add(Array.FindIndex(((BlendArmature)blendObject).Bones, b => b.Name == curve.Target));
                     break;
             }
@@ -100,6 +101,12 @@ namespace Deltin.Deltinteger.Animation
                         keyframeData.Add(vertex.ToVector());
                         keyframeData.Add(vertex.W);
                         break;
+                    
+                    // Bone location
+                    case FCurveType.BoneLocation:
+                        vertex = keyframe.Value.ToObject<Vertex>();
+                        keyframeData.Add(vertex.ToVector());
+                        break;
                 }
 
                 fcurveData.Add(Element.CreateArray(keyframeData.ToArray()));
@@ -115,6 +122,7 @@ namespace Deltin.Deltinteger.Animation
         Bone[] _bones => _armature.Bones;
         public readonly List<BonePoint> _pointData = new List<BonePoint>();
         public readonly List<BoneData> _boneData = new List<BoneData>();
+        public List<EmptyData> Empties { get; } = new List<EmptyData>();
 
         public BoneStructure(BlendFile file, BlendArmature armature)
         {
@@ -194,8 +202,6 @@ namespace Deltin.Deltinteger.Animation
                 // Create a point for the head and tail of the bone.
                 _pointData.Add(new BonePoint(bone, true, -1));
                 _pointData.Add(new BonePoint(bone, false, 0));
-                // _pointData.Add(bone.HeadLocal.ToVector());
-                // _pointData.Add(bone.TailLocal.ToVector());
 
                 // Create the bone link data then add it to the BoneData list.
                 BoneData root = new BoneData(bone, _pointData.Count - 2, _pointData.Count - 1);
@@ -209,6 +215,8 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>Recursively called by LinkRootBones to link the descendant bones.</summary>
         void GetChildBoneData(BoneData data, Bone bone)
         {
+            AddEmptyData(data);
+
             // Iterate through each child.
             foreach(var childIndex in bone.Children)
             {
@@ -222,51 +230,36 @@ namespace Deltin.Deltinteger.Animation
                 else // Otherwise, create a new point.
                 {
                     _pointData.Add(new BonePoint(child, true, data.Tail));
-                    // _pointData.Add(child.Head.ToVector());
                     childData.Head = _pointData.Count - 1;
                 }
 
                 // Create the tail point.
                 _pointData.Add(new BonePoint(child, false, childData.Head));
-                // _pointData.Add(child.Tail.ToVector());
                 childData.Tail = _pointData.Count - 1;
 
                 // Recursively get this bone's children.
                 GetChildBoneData(childData, child);
             }
         }
+
+        /// <summary>Adds the empties to _pointData.</summary>
+        /// <param name="bone">The bone whose empties will be added.</param>
+        /// <param name="parent">The parent bone point. This should be the parent's tail point.</param>
+        void AddEmptyData(BoneData boneData)
+        {
+            var empties = GetBoneEmpties(boneData.Original);
+            foreach (var empty in empties)
+            {
+                _pointData.Add(new BonePoint(empty, boneData.Tail));
+                boneData.Empties.Add(_pointData.Count - 1);
+                Empties.Add(new EmptyData(empty, _pointData.Count - 1));
+            }
+        }
+
+        BoneEmpty[] GetBoneEmpties(Bone bone) => _armature.Empties.Where(empty => empty.ParentBone == bone.Name).ToArray();
     
         /// <summary>Creates a 2d array where the first dimension is the bone and the second dimension is an array of indices which is the bone's descendants.</summary>
-        public Element GetBoneDescendents()
-        {
-            return Element.CreateArray(GetBoneDescendentData().Select(bd => bd.GetDescendentArray()).ToArray());
-
-            var boneDescendentArrays = new Element[_boneData.Count];
-
-            // For each bone, create an array of indices which indicates which points will change then the bone translates.
-            for (int i = 0; i < _boneData.Count; i++)
-            {
-                // The list of bone point indices.
-                var childBonePoints = new List<Element>();
-                childBonePoints.Add(_boneData[i].Tail);
-
-                // Iterate through each bone.
-                foreach (BoneData compare in _boneData)
-                // Make sure the compare bone is a descendant of the current bone.
-                if (_boneData[i] != compare && IsBoneDescendentOf(_boneData[i].Original, compare.Original))
-                {
-                    // If the head is not in the point list, add it.
-                    if (!childBonePoints.Contains(compare.Head)) childBonePoints.Add(compare.Head);
-                    // If the tail is not in the point list, add it.
-                    if (!childBonePoints.Contains(compare.Tail)) childBonePoints.Add(compare.Tail);
-                }
-
-                boneDescendentArrays[i] = Element.CreateArray(childBonePoints.ToArray());
-            }
-
-            // Done.
-            return Element.CreateArray(boneDescendentArrays);
-        }
+        public Element GetBoneDescendents() => Element.CreateArray(GetBoneDescendentData().Select(bd => bd.GetDescendentArray()).ToArray());
 
         private BoneDescendentInfo[] GetBoneDescendentData()
         {
@@ -275,23 +268,14 @@ namespace Deltin.Deltinteger.Animation
             // For each bone, create an array of indices which indicates which points will change then the bone translates.
             for (int i = 0; i < _boneData.Count; i++)
             {
+                int parent = _boneData[i].Original.Parent == -1 ? -1 : _boneData[_boneData[i].Original.Parent].Tail;
+
                 // The list of bone point indices.
                 var childBonePoints = new List<BoneDescendentNode>();
-                if (_boneData[i].Original.Parent == -1)
-                    childBonePoints.Add(new BoneDescendentNode(_boneData[i].Tail, -1));
-                else
-                    childBonePoints.Add(new BoneDescendentNode(_boneData[i].Tail, _boneData[_boneData[i].Original.Parent].Tail));
 
-                // Iterate through each bone.
-                foreach (BoneData compare in _boneData)
-                // Make sure the compare bone is a descendant of the current bone.
-                if (_boneData[i] != compare && IsBoneDescendentOf(_boneData[i].Original, compare.Original))
-                {
-                    // If the head is not in the point list, add it.
-                    if (!childBonePoints.Any(d => d.ID == compare.Head)) childBonePoints.Add(new BoneDescendentNode(compare.Head, _boneData[compare.Original.Parent].Tail));
-                    // If the tail is not in the point list, add it.
-                    if (!childBonePoints.Any(d => d.ID == compare.Tail)) childBonePoints.Add(new BoneDescendentNode(compare.Tail, compare.Head));
-                }
+                childBonePoints.Add(new BoneDescendentNode(_boneData[i].Tail, parent));
+                foreach (var empty in _boneData[i].Empties)
+                    childBonePoints.Add(new BoneDescendentNode(empty, parent));
 
                 descendentInfo[i] = new BoneDescendentInfo(childBonePoints);
             }
@@ -348,6 +332,12 @@ namespace Deltin.Deltinteger.Animation
                 LocalPosition = bone.TailLocal;
             }
         }
+
+        public BonePoint(BoneEmpty empty, int parent)
+        {
+            Position = empty.Location;
+            Parent = parent;
+        }
     }
 
     public class BoneData
@@ -355,6 +345,7 @@ namespace Deltin.Deltinteger.Animation
         public Bone Original { get; }
         public int Head { get; set; }
         public int Tail { get; set; }
+        public List<int> Empties { get; } = new List<int>();
 
         public BoneData(Bone original, int head, int tail)
         {
@@ -366,6 +357,18 @@ namespace Deltin.Deltinteger.Animation
         public BoneData(Bone original)
         {
             Original = original;
+        }
+    }
+
+    public class EmptyData
+    {
+        public BoneEmpty Original { get; }
+        public int Point { get; }
+
+        public EmptyData(BoneEmpty original, int point)
+        {
+            Original = original;
+            Point = point;
         }
     }
 
