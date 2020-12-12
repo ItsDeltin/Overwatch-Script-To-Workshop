@@ -22,30 +22,36 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public HoverRegistrationOptions GetRegistrationOptions()
         {
-            return new HoverRegistrationOptions() {
+            return new HoverRegistrationOptions()
+            {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector
             };
         }
 
         public async Task<Hover> Handle(HoverParams request, CancellationToken cancellationToken)
-        {   
-            var hoverRanges = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
-            if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
+        {
+            return await Task.Run(() =>
+            {
+                var hoverRanges = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
+                if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
 
-            HoverRange chosen = hoverRanges
-                .Where(hoverRange => hoverRange.Range.IsInside(request.Position))
-                .OrderBy(hoverRange => hoverRange.Range)
-                .FirstOrDefault();
-            
-            if (chosen == null) return new Hover();
+                HoverRange chosen = hoverRanges
+                    .Where(hoverRange => hoverRange.Range.IsInside(request.Position))
+                    .OrderBy(hoverRange => hoverRange.Range)
+                    .FirstOrDefault();
 
-            return new Hover() {
-                Range = chosen.Range,
-                Contents = new MarkedStringsOrMarkupContent(new MarkupContent() {
-                    Kind = MarkupKind.Markdown,
-                    Value = chosen.Content
-                })
-            };
+                if (chosen == null) return new Hover();
+
+                return new Hover()
+                {
+                    Range = chosen.Range,
+                    Contents = new MarkedStringsOrMarkupContent(new MarkupContent()
+                    {
+                        Kind = MarkupKind.Markdown,
+                        Value = chosen.Content
+                    })
+                };
+            });
         }
 
         // Definition capability

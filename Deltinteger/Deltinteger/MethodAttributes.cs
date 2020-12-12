@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger
 
         private readonly List<IMethod> _overriders = new List<IMethod>();
 
-        public MethodAttributes() {}
+        public MethodAttributes() { }
 
         public MethodAttributes(bool isParallelable, bool isVirtual, bool isAbstract)
         {
@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger
 
             foreach (var overrider in _overriders)
                 options.AddRange(overrider.Attributes.AllOverrideOptions());
-            
+
             return options.ToArray();
         }
     }
@@ -173,7 +173,7 @@ namespace Deltin.Deltinteger
                 default: return type.ToString();
             }
         }
-        
+
         public static bool EventPlayerDefaultCall(IIndexReferencer referencer, IExpression parent, ParseInfo parseInfo)
             => referencer.VariableType == VariableType.Player && (parent == null || parent is RootAction);
     }

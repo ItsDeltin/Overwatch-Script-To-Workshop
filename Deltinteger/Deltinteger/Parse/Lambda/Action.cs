@@ -154,7 +154,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             // If the lambda type is constant, return the lambda itself.
             if (LambdaType.IsConstant())
                 return new LambdaActionWorkshopInstance(actionSet, this);
-            
+
             // Otherwise, return an array containing data of the lambda.
             var lambdaMeta = new List<IWorkshopTree>();
 
@@ -186,16 +186,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 // Constant macro
                 case LambdaKind.ConstantMacro:
                     return OutputConstantMacro(lambaAssigner, actionSet, parameterValues);
-                
+
                 // Constant block
                 case LambdaKind.ConstantBlock:
                 case LambdaKind.ConstantValue:
                     return OutputContantBlock(lambaAssigner, actionSet, parameterValues);
-                
+
                 // Portable
                 case LambdaKind.Portable:
                     return OutputPortable(actionSet, parameterValues);
-                
+
                 // Unknown
                 case LambdaKind.Anonymous:
                 default:
@@ -211,7 +211,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             for (int i = 0; i < parameterValues.Length; i++)
                 newSet.IndexAssigner.Add(Parameters[i], parameterValues[i]);
-            
+
             return newSet;
         }
         /// <summary>Outputs a constant macro lambda.</summary>
@@ -227,9 +227,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 returnHandler.ReturnValue(Expression.Parse(actionSet));
             else
                 Statement.Translate(actionSet);
-            
+
             returnHandler.ApplyReturnSkips();
-            
+
             return returnHandler.GetReturnedValue();
         }
 
@@ -265,8 +265,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return label;
         }
 
-        public void SetupParameters() {}
-        public void SetupBlock() {}
+        public void SetupParameters() { }
+        public void SetupBlock() { }
         public void OnBlockApply(IOnBlockApplied onBlockApplied) => onBlockApplied.Applied();
 
         public void LocalVariableAccessed(IIndexReferencer variable)

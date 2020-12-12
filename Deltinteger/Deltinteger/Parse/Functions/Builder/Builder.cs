@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     - (recursive) pop this
     - (recursive) pop parameters
     */
-            
+
     public class FunctionBuildController
     {
         public ActionSet ActionSet { get; private set; }
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                     else
                         ActionSet.AddAction(subroutineInfo.ObjectStore.ModifyVariable(Operation.AppendToArray, Element.CreateArray(ActionSet.CurrentObject)));
                 }
-                
+
                 ExecuteSubroutine(subroutineInfo.Subroutine, CallHandler.ParallelMode);
                 return subroutineInfo.ReturnHandler.GetReturnedValue();
             }
@@ -154,11 +154,11 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 case CallParallel.NoParallel:
                     ActionSet.AddAction(Element.CallSubroutine(subroutine));
                     break;
-                
+
                 case CallParallel.AlreadyRunning_DoNothing:
                     ActionSet.AddAction(Element.StartRule(subroutine, false));
                     break;
-                
+
                 case CallParallel.AlreadyRunning_RestartRule:
                     ActionSet.AddAction(Element.StartRule(subroutine, true));
                     break;
@@ -333,7 +333,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             // Create the workshop variable the parameter will be stored as.
             IndexReference indexResult = actionSet.IndexAssigner.AddIndexReference(actionSet.VarCollection, _variables[0], defaultGlobal, _recursive);
             CopyToAll(actionSet, indexResult);
-        
+
             return indexResult;
         }
 
@@ -432,13 +432,13 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
             // Setup the return handler.
             ActionSet actionSet = subroutineRule.ActionSet.New(subroutineRule.ActionSet.IndexAssigner.CreateContained());
-            
+
             // Create the function builder.
             var determiner = _context.GetDeterminer();
 
             // Get the variables that will be used to store the parameters.
             IndexReference[] parameterStores = _context.GetParameterStacks(actionSet);
-            
+
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             IndexReference objectStore = null;
             if (determiner.IsObject())
@@ -458,7 +458,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                     actionSet = actionSet.New(objectStore.Get()).PackThis().New(objectStore);
                 }
             }
-            
+
             var functionBuilder = new FunctionBuildController(actionSet, null, determiner);
 
             // Set the subroutine info.
@@ -542,11 +542,11 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 {
                     // Get the parameter stack.
                     var parameters = ((DefinedMethod)current).GetSubroutineInfo().ParameterStores;
-                    
+
                     // Iterate through each parameter handler and apply the stack. 
                     for (int i = 0; i < Parameters().Length; i++)
                         Parameters()[i].Apply(actionSet, parameters[i]);
-                    
+
                     // Return the parameter stacks.
                     return parameters;
                 }
@@ -578,7 +578,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
         /// <summary>The skip used to return the executing position after a recursive call.</summary>
         private SkipStartMarker continueAt;
-        
+
         /// <summary>Marks the end of the method.</summary>
         private readonly SkipEndMarker endOfMethod = new SkipEndMarker();
 

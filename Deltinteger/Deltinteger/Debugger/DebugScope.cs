@@ -13,7 +13,8 @@ namespace Deltin.Deltinteger.Debugger
             Name = name;
         }
 
-        public DBPScope GetScope(DebugVariableLinkCollection collection) => new DBPScope() {
+        public DBPScope GetScope(DebugVariableLinkCollection collection) => new DBPScope()
+        {
             name = Name,
             variablesReference = collection.References[this]
         };

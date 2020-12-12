@@ -33,7 +33,8 @@ namespace Deltin.Deltinteger.Parse
                 // If this is not the last expression, clear head data.
                 if (i != ExprContextTree.Length - 1) partInfo = partInfo.ClearHead();
 
-                ExprContextTree[i].Setup(new TreeContextParseInfo() {
+                ExprContextTree[i].Setup(new TreeContextParseInfo()
+                {
                     ParseInfo = partInfo,
                     Getter = scope,
                     Scope = i == 0 ? scope : ExprContextTree[i - 1].GetScope() ?? new Scope(),
@@ -64,10 +65,10 @@ namespace Deltin.Deltinteger.Parse
                     }
                 }
             else Completed = false;
-        
+
             if (Completed)
                 Result = Tree[Tree.Length - 1];
-            
+
             // Get the completion items for each expression in the path.
             GetCompletion(parseInfo.Script, scope);
         }
@@ -98,7 +99,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Get the expression to the right of the dot.
-                
+
                 // If the expression is a Tree, recursively flatten.
                 if (exprContext.Right is BinaryOperatorExpression rop && rop.IsDotExpression())
                     Flatten(script, rop, exprList);
@@ -121,30 +122,30 @@ namespace Deltin.Deltinteger.Parse
         private void GetCompletion(ScriptFile script, Scope scope)
         {
             for (int i = 0; i < Tree.Length; i++)
-            if (Tree[i] != null)
-            {
-                // Get the treescope. Don't get the completion items if it is null.
-                var treeScope = ExprContextTree[i].GetScope();
-                if (treeScope != null)
+                if (Tree[i] != null)
                 {
-                    DocRange range;
-                    if (i < Tree.Length - 1)
+                    // Get the treescope. Don't get the completion items if it is null.
+                    var treeScope = ExprContextTree[i].GetScope();
+                    if (treeScope != null)
                     {
-                        range = ExprContextTree[i + 1].GetRange();
-                    }
-                    // Expression path has a trailing '.'
-                    else if (_trailingSeperator != null && !script.IsTokenLast(_trailingSeperator))
-                    {
-                        range = new DocRange(
-                            _trailingSeperator.Range.End,
-                            script.NextToken(_trailingSeperator).Range.Start
-                        );
-                    }
-                    else continue;
+                        DocRange range;
+                        if (i < Tree.Length - 1)
+                        {
+                            range = ExprContextTree[i + 1].GetRange();
+                        }
+                        // Expression path has a trailing '.'
+                        else if (_trailingSeperator != null && !script.IsTokenLast(_trailingSeperator))
+                        {
+                            range = new DocRange(
+                                _trailingSeperator.Range.End,
+                                script.NextToken(_trailingSeperator).Range.Start
+                            );
+                        }
+                        else continue;
 
-                    script.AddCompletionRange(new CompletionRange(treeScope, scope, range, CompletionRangeKind.ClearRest));
+                        script.AddCompletionRange(new CompletionRange(treeScope, scope, range, CompletionRangeKind.ClearRest));
+                    }
                 }
-            }
         }
 
         public Scope ReturningScope()
@@ -238,7 +239,7 @@ namespace Deltin.Deltinteger.Parse
             if (result == null && expectingValue) throw new Exception("Expression tree result is null");
             return new ExpressionTreeParseResult(result, resultIndex, target, resultingVariable);
         }
-    
+
         public bool IsStatement() => _trailingSeperator || (Result?.IsStatement() ?? true);
     }
 
@@ -261,7 +262,7 @@ namespace Deltin.Deltinteger.Parse
         void Setup(TreeContextParseInfo tcParseInfo);
         void OnResolve(Action<IExpression> resolved) => resolved.Invoke(GetExpression());
         Scope GetScope();
-        void RetrievedScopeable(IScopeable scopeable) {}
+        void RetrievedScopeable(IScopeable scopeable) { }
         IExpression GetExpression();
         DocRange GetRange();
     }
@@ -272,7 +273,8 @@ namespace Deltin.Deltinteger.Parse
         private readonly IParseExpression _expressionContext;
         private IExpression _expression;
 
-        public ExpressionPart(IParseExpression expression) {
+        public ExpressionPart(IParseExpression expression)
+        {
             _expressionContext = expression;
         }
 
@@ -292,7 +294,8 @@ namespace Deltin.Deltinteger.Parse
         private readonly FunctionExpression _methodContext;
         private CallMethodAction _methodCall;
 
-        public FunctionPart(FunctionExpression method) {
+        public FunctionPart(FunctionExpression method)
+        {
             _methodContext = method;
         }
 
@@ -318,7 +321,8 @@ namespace Deltin.Deltinteger.Parse
         private List<IPotentialPathOption> _potentialPaths;
         private IPotentialPathOption _chosenPath;
 
-        public VariableOrTypePart(Identifier variable) {
+        public VariableOrTypePart(Identifier variable)
+        {
             _variable = variable;
             _range = _variable.Token.Range;
             _name = variable.Token.Text;
@@ -380,7 +384,7 @@ namespace Deltin.Deltinteger.Parse
                     potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, expression, variable, tcParseInfo.ParseInfo, _range));
                 }
             }
-            
+
             // Get the potential type.
             // Currently, OSTW does not support nested types, so make sure there is no parent.
             if (_canBeType)
@@ -465,7 +469,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (var onResolve in _onResolve) onResolve.Invoke(result);
         }
 
-        interface IPotentialPathOption {
+        interface IPotentialPathOption
+        {
             Scope GetScope();
             IExpression GetExpression();
             void Accept();
@@ -476,8 +481,9 @@ namespace Deltin.Deltinteger.Parse
             private readonly CodeType _type;
             private readonly ParseInfo _parseInfo;
             private readonly DocRange _callRange;
-            
-            public TypeOption(CodeType type, ParseInfo parseInfo, DocRange callRange) {
+
+            public TypeOption(CodeType type, ParseInfo parseInfo, DocRange callRange)
+            {
                 _type = type;
                 _parseInfo = parseInfo;
                 _callRange = callRange;
@@ -497,7 +503,8 @@ namespace Deltin.Deltinteger.Parse
             private readonly ParseInfo _parseInfo;
             private readonly DocRange _callRange;
 
-            public VariableOption(ITreeContextPart parent, PotentialVariableApply apply, IExpression expression, IVariable variable, ParseInfo parseInfo, DocRange callRange) {
+            public VariableOption(ITreeContextPart parent, PotentialVariableApply apply, IExpression expression, IVariable variable, ParseInfo parseInfo, DocRange callRange)
+            {
                 _parent = parent;
                 _apply = apply;
                 _expression = expression;
@@ -516,7 +523,7 @@ namespace Deltin.Deltinteger.Parse
                 // Restricted value type check.
                 if (_variable is IIndexReferencer referencer && RestrictedCall.EventPlayerDefaultCall(referencer, _parent?.GetExpression(), _parseInfo))
                     _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
-                
+
                 // Accept method group.
                 if (_expression is CallMethodGroup group)
                     group.Accept();
@@ -540,15 +547,15 @@ namespace Deltin.Deltinteger.Parse
                 return false;
             }
         }
-    
+
         class PotentialVariableApply : VariableApply
         {
             public List<Diagnostic> Errors { get; } = new List<Diagnostic>();
 
-            public PotentialVariableApply(ParseInfo parseInfo) : base(parseInfo) {}
+            public PotentialVariableApply(ParseInfo parseInfo) : base(parseInfo) { }
 
-            protected override void Call(ICallable callable, DocRange range) {}
-            protected override void EventPlayerRestrictedCall(RestrictedCall restrictedCall) {}
+            protected override void Call(ICallable callable, DocRange range) { }
+            protected override void EventPlayerRestrictedCall(RestrictedCall restrictedCall) { }
             public override void Error(string message, DocRange range) => Errors.Add(new Diagnostic(message, range, Diagnostic.Error));
         }
     }

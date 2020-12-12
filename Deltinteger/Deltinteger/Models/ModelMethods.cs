@@ -30,7 +30,8 @@ namespace Deltin.Deltinteger.Models
 
         public override Scope ReturningScope() => StaticScope;
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = "Asset",
             Kind = CompletionItemKind.Class
         };
@@ -89,7 +90,7 @@ namespace Deltin.Deltinteger.Models
 
                 if (constantScale == 1)
                     scaleSet = true;
-                
+
                 if (!scaleSet && constantScale != null)
                 {
                     vertex1 = vertex1.Scale((double)constantScale);
@@ -113,10 +114,10 @@ namespace Deltin.Deltinteger.Models
                 // Null constant rotation
                 else if (rotation.Function.Name == "Null")
                     rotationConstant = new Vertex(0, 0, 0);
-                
+
                 if (rotationConstant != null && rotationConstant.EqualTo(new Vertex(0, 0, 0)))
                     rotationSet = true;
-                
+
                 if (rotationConstant != null && !rotationSet)
                 {
                     vertex1 = vertex1.Rotate(rotationConstant);
@@ -212,9 +213,9 @@ namespace Deltin.Deltinteger.Models
                 effects = actionSet.VarCollection.Assign("_modelEffects", actionSet.IsGlobal, true);
                 actionSet.AddAction(effects.SetVariable(Element.EmptyArray()));
             }
-            
+
             RenderModel(actionSet, model, visibleTo, location, rotation, scale, effectRev, getIds);
-            
+
             return effects?.GetVariable();
         }
 
@@ -250,12 +251,12 @@ namespace Deltin.Deltinteger.Models
 
                 return family;
             }
-            
+
             if (!FontFamily.Families.Any(fam => fam.Name.ToLower() == name.ToLower()))
             {
                 script.Diagnostics.Error($"The font {name} does not exist.", range);
                 return null;
-            }   
+            }
             return new FontFamily(name);
         }
 
@@ -291,8 +292,8 @@ namespace Deltin.Deltinteger.Models
 
     class ModelParameter : FileParameter
     {
-        public ModelParameter(string parameterName, string description) : base(parameterName, description, ".obj") {}
-    
+        public ModelParameter(string parameterName, string description) : base(parameterName, description, ".obj") { }
+
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             string filepath = base.Validate(parseInfo, value, valueRange) as string;
@@ -346,7 +347,7 @@ namespace Deltin.Deltinteger.Models
 
     class FontParameter : ConstStringParameter
     {
-        public FontParameter(string name, string documentation) : base(name, documentation) {}
+        public FontParameter(string name, string documentation) : base(name, documentation) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
@@ -412,7 +413,7 @@ namespace Deltin.Deltinteger.Models
 
     class EconomicTextParameter : ConstStringParameter
     {
-        public EconomicTextParameter(string name, string documentation) : base(name, documentation) {}
+        public EconomicTextParameter(string name, string documentation) : base(name, documentation) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {

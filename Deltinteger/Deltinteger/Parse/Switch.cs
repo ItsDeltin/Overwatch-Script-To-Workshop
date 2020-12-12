@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
                 if (switchCondition && addingStatements)
                 {
                     // Add the switch section.
-                    sections.Add(new SwitchSection(errorRange, currentIsDefault, currentCases.ToArray(), currentStatements.ToArray()));    
+                    sections.Add(new SwitchSection(errorRange, currentIsDefault, currentCases.ToArray(), currentStatements.ToArray()));
 
                     // Reset case info.
                     currentStatements = new List<IStatement>();
@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
                     case SwitchElementType.Case:
                         currentCases.Add(element.Condition);
                         break;
-                    
+
                     // Add statement.
                     case SwitchElementType.Statement:
                         currentStatements.Add(element.Statement);
@@ -132,12 +132,12 @@ namespace Deltin.Deltinteger.Parse
 
             switchBuilder = new SwitchBuilder(actionSet);
             switchBuilder.AutoBreak = false;
-            
+
             foreach (SwitchSection section in paths)
             {
                 foreach (IExpression caseExpression in section.Cases)
                     switchBuilder.NextCase((Element)caseExpression.Parse(actionSet));
-                
+
                 if (section.IsDefault) switchBuilder.AddDefault();
                 section.Block.Translate(actionSet);
             }

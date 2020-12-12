@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (var statement in Statements)
                 statement.Translate(actionSet);
-            
+
             if (!Statements.Any(s => s is ReturnAction))
                 BlockScope?.EndScope(actionSet, false);
         }

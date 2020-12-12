@@ -26,9 +26,9 @@ namespace Deltin.Deltinteger.Parse
             Parameters = new CodeParameter[0];
         }
 
-        public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData) {}
+        public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData) { }
 
-        public virtual void Call(ParseInfo parseInfo, DocRange callRange) {}
+        public virtual void Call(ParseInfo parseInfo, DocRange callRange) { }
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel("new " + Type.Name, Parameters, markdown, Documentation);
     }
@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (Type is DefinedType)
                 ((DefinedType)Type).AddLink(DefinedAt);
-            
+
             parseInfo.TranslateInfo.ApplyBlock(this);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Constructor, DefinedAt.range));
@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _function = function;
         }
-        public ConstructorDeterminer(DefinedConstructor constructor) : this(new DefinedConstructorHandler(constructor)) {}
+        public ConstructorDeterminer(DefinedConstructor constructor) : this(new DefinedConstructorHandler(constructor)) { }
 
         // IGroupDeterminer
         public IFunctionLookupTable GetLookupTable() => this;
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
         public string ThisArrayName() => GroupName();
         public bool VariableGlobalDefault() => true;
         public CodeType ContainingType() => _function.ContainingType;
-        public void Finish(Rule rule) {}
+        public void Finish(Rule rule) { }
         public IGroupDeterminer GetDeterminer() => this;
         public void SetSubroutineInfo(SubroutineInfo subroutineInfo) => _function.SetSubroutineInfo(subroutineInfo);
     }

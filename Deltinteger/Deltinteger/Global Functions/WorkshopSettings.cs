@@ -8,7 +8,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
 {
     partial class GlobalFunctions
     {
-        public static FuncMethod WorkshopSettingHero(DeltinScript deltinScript) => new FuncMethodBuilder() {
+        public static FuncMethod WorkshopSettingHero(DeltinScript deltinScript) => new FuncMethodBuilder()
+        {
             Name = "WorkshopSettingHero",
             Documentation = "Provides the value of a new hero setting that will appear in the Workshop Settings card as a combo box.",
             Parameters = new CodeParameter[] {
@@ -25,7 +26,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
             )
         };
 
-        public static FuncMethod WorkshopSettingCombo(DeltinScript deltinScript) => new FuncMethodBuilder() {
+        public static FuncMethod WorkshopSettingCombo(DeltinScript deltinScript) => new FuncMethodBuilder()
+        {
             Name = "WorkshopSettingCombo",
             Documentation = "Proves the value (a choice of strings) of a new option setting that will appear in the Workshop Seettings card as a combo box. This value returns the index of the selected choice.",
             Parameters = new CodeParameter[] {
@@ -46,12 +48,13 @@ namespace Deltin.Deltinteger.GlobalFunctions
 
         class ConstStringArrayParameter : CodeParameter
         {
-            public ConstStringArrayParameter(string name, string documentation) : base(name, documentation) {}
+            public ConstStringArrayParameter(string name, string documentation) : base(name, documentation) { }
 
             public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
             {
                 var values = new List<string>();
-                ConstantExpressionResolver.Resolve(value, expr => {
+                ConstantExpressionResolver.Resolve(value, expr =>
+                {
                     // If the resulting expression is a CreateArray,
                     if (expr is CreateArrayAction array)
                     {
@@ -59,7 +62,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
 
                         // Iterate through each element in the array and get the string value.
                         foreach (var value in array.Values)
-                            ConstantExpressionResolver.Resolve(value, expr => {
+                            ConstantExpressionResolver.Resolve(value, expr =>
+                            {
                                 // Make sure the value is a string.
                                 if (value is StringAction stringAction)
                                     values.Add(stringAction.Value);

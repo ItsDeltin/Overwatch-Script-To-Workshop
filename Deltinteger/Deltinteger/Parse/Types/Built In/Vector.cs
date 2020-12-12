@@ -96,7 +96,8 @@ namespace Deltin.Deltinteger.Parse
         public override Scope GetObjectScope() => objectScope;
         public override Scope ReturningScope() => staticScope;
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Struct
         };

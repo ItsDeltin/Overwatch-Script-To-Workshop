@@ -22,34 +22,38 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<LocationContainer> Handle(ReferenceParams request, CancellationToken cancellationToken)
         {
-            bool includeDeclaration = request.Context.IncludeDeclaration;
+            return await Task.Run(() =>
+            {
+                bool includeDeclaration = request.Context.IncludeDeclaration;
 
-            var allSymbolLinks = _languageServer.LastParse?.GetComponent<SymbolLinkComponent>().GetSymbolLinks();
-            if (allSymbolLinks == null) return new LocationContainer();
+                var allSymbolLinks = _languageServer.LastParse?.GetComponent<SymbolLinkComponent>().GetSymbolLinks();
+                if (allSymbolLinks == null) return new LocationContainer();
 
-            ICallable use = null;
-            Location declaredAt = null;
+                ICallable use = null;
+                Location declaredAt = null;
 
-            foreach (var pair in allSymbolLinks)
-                foreach (var link in pair.Value)
-                    if (link.Location.uri.Compare(request.TextDocument.Uri.ToUri()) && link.Location.range.IsInside(request.Position))
-                    {
-                        use = pair.Key;
-                        declaredAt = link.Location;
-                    }
-            
-            if (use == null) return new LocationContainer();
+                foreach (var pair in allSymbolLinks)
+                    foreach (var link in pair.Value)
+                        if (link.Location.uri.Compare(request.TextDocument.Uri.ToUri()) && link.Location.range.IsInside(request.Position))
+                        {
+                            use = pair.Key;
+                            declaredAt = link.Location;
+                        }
 
-            return allSymbolLinks[use]
-                .GetSymbolLinks(includeDeclaration)
-                // Convert to Language Server API location.
-                .Select(loc => loc.Location.ToLsLocation())
-                .ToArray();
+                if (use == null) return new LocationContainer();
+
+                return allSymbolLinks[use]
+                    .GetSymbolLinks(includeDeclaration)
+                    // Convert to Language Server API location.
+                    .Select(loc => loc.Location.ToLsLocation())
+                    .ToArray();
+            });
         }
 
         public ReferenceRegistrationOptions GetRegistrationOptions()
         {
-            return new ReferenceRegistrationOptions() {
+            return new ReferenceRegistrationOptions()
+            {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector
             };
         }

@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Elements
                     ElementRoot.Instance.GetEnumValue("Player", Player.ToString()).ToWorkshop(builder, ToWorkshopContext.Other); // Player attribute
                     builder.Append(";").AppendLine();
                     break;
-                
+
                 case RuleType.Subroutine:
                     Subroutine.ToWorkshop(builder, ToWorkshopContext.Other); // Attribute name
                     builder.Append(";").AppendLine();
@@ -116,7 +116,7 @@ namespace Deltin.Deltinteger.Elements
             }
             builder.Outdent().AppendLine("}");
         }
-    
+
         public int ElementCount(bool optimized)
         {
             int count = 1;
@@ -133,7 +133,7 @@ namespace Deltin.Deltinteger.Elements
                     else
                         count += action.ElementCount();
                 }
-            
+
             return count;
         }
     }

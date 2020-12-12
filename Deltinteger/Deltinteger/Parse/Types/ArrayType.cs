@@ -31,7 +31,8 @@ namespace Deltin.Deltinteger.Parse
             var pipeType = new PipeType(ArrayOfType, this);
 
             // Filtered Array
-            new GenericSortFunction() {
+            new GenericSortFunction()
+            {
                 Name = "FilteredArray",
                 Documentation = "A copy of the specified array with any values that do not match the specified condition removed.",
                 ReturnType = this,
@@ -40,7 +41,8 @@ namespace Deltin.Deltinteger.Parse
                 ParameterDocumentation = "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array."
             }.Add("Filtered Array", Scope, supplier);
             // Sorted Array
-            new GenericSortFunction() {
+            new GenericSortFunction()
+            {
                 Name = "SortedArray",
                 Documentation = "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.",
                 ReturnType = this,
@@ -49,7 +51,8 @@ namespace Deltin.Deltinteger.Parse
                 ParameterDocumentation = "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order."
             }.Add("Sorted Array", Scope, supplier);
             // Is True For Any
-            new GenericSortFunction() {
+            new GenericSortFunction()
+            {
                 Name = "IsTrueForAny",
                 Documentation = "Whether the specified condition evaluates to true for any value in the specified array.",
                 ReturnType = supplier.Boolean(),
@@ -58,7 +61,8 @@ namespace Deltin.Deltinteger.Parse
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
             }.Add("Is True For Any", Scope, supplier);
             // Is True For All
-            new GenericSortFunction() {
+            new GenericSortFunction()
+            {
                 Name = "IsTrueForAll",
                 Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
                 ReturnType = supplier.Boolean(),
@@ -67,7 +71,8 @@ namespace Deltin.Deltinteger.Parse
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
             }.Add("Is True For All", Scope, supplier);
             // Mapped
-            new GenericSortFunction() {
+            new GenericSortFunction()
+            {
                 Name = "Map",
                 Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
                 ReturnType = supplier.Any(),
@@ -76,7 +81,8 @@ namespace Deltin.Deltinteger.Parse
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
             }.Add("Mapped Array", Scope, supplier);
             // Contains
-            Func(new FuncMethodBuilder() {
+            Func(new FuncMethodBuilder()
+            {
                 Name = "Contains",
                 Documentation = "Wether the array contains the specified value.",
                 ReturnType = supplier.Boolean(),
@@ -86,21 +92,24 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => Element.Contains(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Random
-            Func(new FuncMethodBuilder() {
+            Func(new FuncMethodBuilder()
+            {
                 Name = "Random",
                 Documentation = "Gets a random value from the array.",
                 ReturnType = ArrayOfType,
                 Action = (actionSet, methodCall) => Element.Part("Random Value In Array", actionSet.CurrentObject)
             });
             // Randomize
-            Func(new FuncMethodBuilder() {
+            Func(new FuncMethodBuilder()
+            {
                 Name = "Randomize",
                 Documentation = "Returns a copy of the array that is randomized.",
                 ReturnType = this,
                 Action = (actionSet, methodCall) => Element.Part("Randomized Array", actionSet.CurrentObject)
             });
             // Append
-            Func(new FuncMethodBuilder() {
+            Func(new FuncMethodBuilder()
+            {
                 Name = "Append",
                 Documentation = "A copy of the array with the specified value appended to it.",
                 ReturnType = this,
@@ -110,7 +119,8 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => Element.Append(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Remove
-            Func(new FuncMethodBuilder() {
+            Func(new FuncMethodBuilder()
+            {
                 Name = "Remove",
                 Documentation = "A copy of the array with the specified value removed from it.",
                 ReturnType = this,
@@ -120,7 +130,8 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => Element.Part("Remove From Array", actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Slice
-            Func(new FuncMethodBuilder() {
+            Func(new FuncMethodBuilder()
+            {
                 Name = "Slice",
                 Documentation = "A copy of the array containing only values from a specified index range.",
                 ReturnType = this,
@@ -131,7 +142,8 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => Element.Part("Array Slice", actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
             });
             // Index Of
-            Func(new FuncMethodBuilder() {
+            Func(new FuncMethodBuilder()
+            {
                 Name = "IndexOf",
                 Documentation = "The index of a value within an array or -1 if no such value can be found.",
                 ReturnType = supplier.Number(),
@@ -206,7 +218,7 @@ namespace Deltin.Deltinteger.Parse
         {
             string result = ArrayOfType.GetName();
             if (ArrayOfType is PortableLambdaType) result = "(" + result + ")";
-            return result + "[]"; 
+            return result + "[]";
         }
     }
 
@@ -241,7 +253,8 @@ namespace Deltin.Deltinteger.Parse
             addToScope.AddNativeMethod(new FuncMethod(withIndex));
         }
 
-        private FuncMethodBuilder GetFuncMethod() => new FuncMethodBuilder() {
+        private FuncMethodBuilder GetFuncMethod() => new FuncMethodBuilder()
+        {
             Name = Name,
             Documentation = Documentation,
             ReturnType = ReturnType

@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<VarIndexAssigner> children = new List<VarIndexAssigner>();
         private readonly VarIndexAssigner parent = null;
 
-        public VarIndexAssigner() {}
+        public VarIndexAssigner() { }
         private VarIndexAssigner(VarIndexAssigner parent)
         {
             this.parent = parent;
@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public IGettable Add(VarCollection varCollection, IIndexReferencer var, bool isGlobal, IWorkshopTree referenceValue, bool recursive = false)
         {
             if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
-            if (var == null)           throw new ArgumentNullException(nameof(var          ));
+            if (var == null) throw new ArgumentNullException(nameof(var));
             CheckIfAdded(var);
 
             IGettable assigned;
@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
                 if (recursive || var.Recursive) assigned = new RecursiveIndexReference((IndexReference)assigned);
                 references.Add(var, assigned);
             }
-            
+
             // Element reference
             else if (var.VariableType == VariableType.ElementReference)
             {
@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
                 assigned = new WorkshopElementReference(referenceValue);
                 references.Add(var, assigned);
             }
-            
+
             else throw new NotImplementedException();
 
             return assigned;
@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
         public IndexReference AddIndexReference(VarCollection varCollection, IIndexReferencer var, bool isGlobal, bool recursive = false)
         {
             if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
-            if (var == null)           throw new ArgumentNullException(nameof(var          ));
+            if (var == null) throw new ArgumentNullException(nameof(var));
             CheckIfAdded(var);
 
             IndexReference assigned = varCollection.Assign(var, isGlobal);
@@ -95,11 +95,12 @@ namespace Deltin.Deltinteger.Parse
 
         public IGettable this[IIndexReferencer var]
         {
-            get {
+            get
+            {
                 if (TryGet(var, out IGettable gettable)) return gettable;
                 throw new Exception(string.Format("The variable {0} is not assigned to an index.", var.Name));
             }
-            private set {}
+            private set { }
         }
 
         public bool TryGet(IIndexReferencer var, out IGettable gettable)

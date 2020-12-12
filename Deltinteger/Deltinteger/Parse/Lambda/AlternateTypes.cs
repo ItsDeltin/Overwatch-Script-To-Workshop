@@ -14,7 +14,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             Kind = TypeKind.Constant;
         }
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Constant
         };
@@ -34,7 +35,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
     public class BlockLambda : BaseLambda
     {
-        public BlockLambda(params CodeType[] argumentTypes) : base("BlockLambda", LambdaKind.ConstantBlock, argumentTypes) {}
+        public BlockLambda(params CodeType[] argumentTypes) : base("BlockLambda", LambdaKind.ConstantBlock, argumentTypes) { }
     }
 
     public class ValueBlockLambda : BaseLambda

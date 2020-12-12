@@ -45,10 +45,10 @@ namespace Deltin.Deltinteger.Parse
 
             if (!extend.CanBeExtended)
                 errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
-            
+
             else if (extend == this)
                 errorMessage = "Cannot extend self.";
-            
+
             else if (extend.Implements(this))
                 errorMessage = $"The class {extend.Name} extends this class.";
 
@@ -103,24 +103,24 @@ namespace Deltin.Deltinteger.Parse
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();
         }
-        
+
         /// <summary>Sets up an object reference when a new object is created. Is also called when a new object of a class extending this type is created.</summary>
         /// <param name="actionSet">The actionset to use.</param>
         /// <param name="reference">The reference of the object.</param>
         public virtual void BaseSetup(ActionSet actionSet, Element reference) => throw new NotImplementedException();
 
         /// <summary>Assigns workshop elements so the class can function. Implementers should check if `wasCalled` is true.</summary>
-        public virtual void WorkshopInit(DeltinScript translateInfo) {}
+        public virtual void WorkshopInit(DeltinScript translateInfo) { }
 
         /// <summary>Adds the class objects to the index assigner.</summary>
         /// <param name="source">The source of the type.</param>
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
-        public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
+        public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) { }
 
         /// <summary>Deletes a variable from memory.</summary>
         /// <param name="actionSet">The action set to add the actions to.</param>
         /// <param name="reference">The object reference.</param>
-        public virtual void Delete(ActionSet actionSet, Element reference) {}
+        public virtual void Delete(ActionSet actionSet, Element reference) { }
 
         /// <summary>Gets an operation.</summary>
         /// <param name="op">The operation's operator type.</param>
@@ -188,7 +188,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the generics.
                 foreach (var genericContext in typeContext.TypeArgs)
                     generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
-                
+
                 if (type is Lambda.ValueBlockLambda)
                     type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
                 else if (type is Lambda.BlockLambda)
@@ -221,13 +221,13 @@ namespace Deltin.Deltinteger.Parse
             // Get the return type.
             CodeType returnType = null;
             bool returnsValue = false;
-            
+
             if (!type.ReturnType.IsVoid)
             {
                 returnType = GetCodeTypeFromContext(parseInfo, type.ReturnType);
                 returnsValue = true;
             }
-            
+
             return new PortableLambdaType(LambdaKind.Portable, parameters, returnsValue, returnType, true);
         }
 

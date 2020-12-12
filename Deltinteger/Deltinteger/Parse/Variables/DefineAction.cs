@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree initialValue = Element.Num(0);
             if (var.InitialValue != null)
                 initialValue = var.InitialValue.Parse(actionSet);
-            
+
             // Add the variable to the assigner.
             actionSet.IndexAssigner.Add(actionSet.VarCollection, var, actionSet.IsGlobal, initialValue);
 

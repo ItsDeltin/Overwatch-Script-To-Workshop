@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public DeltinScript DeltinScript { get; }
         public bool IsGlobal { get; }
         public List<RecursiveStack> MethodStack { get; } = new List<RecursiveStack>();
-        
+
         public List<Condition> Conditions { get; } = new List<Condition>();
 
         private string Name { get; }
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
             Subroutine = subroutine;
             ActionSet = new ActionSet(this, null, Actions);
         }
-        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) {}
+        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) { }
 
         private void GetConditions(RuleAction ruleAction)
         {
@@ -120,7 +120,7 @@ namespace Deltin.Deltinteger.Parse
                         Actions.RemoveAt(i);
                         anyRemoved = true;
                     }
-                
+
                 doLoop = anyRemoved;
             }
             while (doLoop);
@@ -183,10 +183,12 @@ namespace Deltin.Deltinteger.Parse
             return new ActionSet(this);
         }
 
-        public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this) {
+        public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this)
+        {
             IndexAssigner = indexAssigner ?? throw new ArgumentNullException(nameof(indexAssigner))
         };
-        public ActionSet New(ReturnHandler returnHandler) => new ActionSet(this) {
+        public ActionSet New(ReturnHandler returnHandler) => new ActionSet(this)
+        {
             ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler))
         };
         public ActionSet New(IWorkshopTree currentObject) => new ActionSet(this) { CurrentObject = currentObject };

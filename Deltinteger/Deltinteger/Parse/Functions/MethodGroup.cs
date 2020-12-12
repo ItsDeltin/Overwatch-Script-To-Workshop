@@ -29,7 +29,8 @@ namespace Deltin.Deltinteger.Parse
         public bool MethodIsValid(IMethod method) => method.Name == Name;
         public void AddMethod(IMethod method) => Functions.Add(method);
 
-        public CompletionItem GetCompletion() => new CompletionItem() {
+        public CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Function,
             Documentation = new MarkupBuilder()
@@ -90,7 +91,7 @@ namespace Deltin.Deltinteger.Parse
                     for (int i = 0; i < func.Parameters.Length; i++)
                         if (func.Parameters[i].Type != null && !func.Parameters[i].Type.Implements(expecting.Parameters[i]))
                             continue;
-                    
+
                     _chosenFunction = func;
                     found = true;
                     break;
@@ -121,11 +122,11 @@ namespace Deltin.Deltinteger.Parse
             // If the chosen function is a DefinedMethod, use the DefinedFunctionHandler.
             if (function is DefinedMethod definedMethod)
                 return new FunctionMethodGroupInvoker(new DefinedFunctionHandler(definedMethod, false));
-            
+
             // If the chosen function is a macro.
             if (function is DefinedMacro definedMacro)
                 return new MacroMethodGroupInvoker(definedMacro);
-            
+
             // Otherwise, use the generic function handler.
             return new FunctionMethodGroupInvoker(new GenericMethodHandler(function));
         }
@@ -217,7 +218,7 @@ namespace Deltin.Deltinteger.Parse
         public void ParseInner(ActionSet actionSet)
         {
             var parameterValues = new IWorkshopTree[_parameterSavers.Length];
-            for (int i = 0; i < _parameterSavers.Length; i++)   
+            for (int i = 0; i < _parameterSavers.Length; i++)
                 parameterValues[i] = actionSet.IndexAssigner[_parameterSavers[i]].GetVariable();
 
             var result = _method.Parse(actionSet, new MethodCall(parameterValues, new object[parameterValues.Length]));

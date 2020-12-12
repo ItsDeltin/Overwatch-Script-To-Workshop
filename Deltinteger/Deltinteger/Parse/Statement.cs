@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (DeleteValue.Type() == null)
                 parseInfo.Script.Diagnostics.Error("Expression has no type.", deleteContext.Deleting.Range);
-            
+
             else if (!DeleteValue.Type().CanBeDeleted)
                 parseInfo.Script.Diagnostics.Error($"Type '{DeleteValue.Type().Name}' cannot be deleted.", deleteContext.Deleting.Range);
         }

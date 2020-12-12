@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the type. Syntax error if there is no type name.
             CreatingObjectOf = parseInfo.TranslateInfo.Types.GetCodeType(context.ClassIdentifier.Text, parseInfo.Script.Diagnostics, context.ClassIdentifier.Range);
-            
+
             if (CreatingObjectOf != null)
             {
                 DocRange nameRange = context.ClassIdentifier.Range;

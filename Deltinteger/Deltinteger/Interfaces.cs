@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger
     public interface IApplyBlock : IBlockListener, ILabeled
     {
         void SetupParameters();
-        void SetupBlock();        
+        void SetupBlock();
         CallInfo CallInfo { get; }
     }
 

@@ -62,7 +62,8 @@ namespace Deltin.Deltinteger.Compiler
 
         public Diagnostic[] GetDiagnostics() => Errors.Select(e => e.GetDiagnostic()).ToArray();
 
-        public TextDocumentItem AsItem() => new TextDocumentItem() {
+        public TextDocumentItem AsItem() => new TextDocumentItem()
+        {
             Uri = Uri,
             Text = Content,
             LanguageId = "ostw"

@@ -52,7 +52,8 @@ namespace Deltin.Deltinteger.Parse
             if (TokenType != null) parseInfo.Script.AddToken(callRange, (TokenType)TokenType);
         }
 
-        public virtual CompletionItem GetCompletion() => new CompletionItem() {
+        public virtual CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind,
             Detail = GetLabel(false),

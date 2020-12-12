@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Parse
         public TernaryConditionalAction(ParseInfo parseInfo, Scope scope, TernaryExpression ternaryContext)
         {
             this.parseInfo = parseInfo;
-            
+
             Condition = parseInfo.GetExpression(scope, ternaryContext.Condition);
             Consequent = parseInfo.GetExpression(scope, ternaryContext.Consequent);
             Alternative = parseInfo.GetExpression(scope, ternaryContext.Alternative);

@@ -139,7 +139,7 @@ namespace Deltin.Deltinteger.Parse
                             match.OrderedParameters[p] = inputParameters[i];
                             nameFound = true;
                         }
-                    
+
                     // If the named argument's name is not found, throw an error.
                     if (!nameFound)
                         match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.GetLabel(false)}'.", inputParameters[i].NameRange);
@@ -200,11 +200,11 @@ namespace Deltin.Deltinteger.Parse
             Overload = AllOverloads
                 .OrderBy(o => Math.Abs(numberOfParameters - o.Parameters.Length))
                 .FirstOrDefault();
-            
+
             CurrentOptions = CurrentOptions
                 .Where(o => numberOfParameters <= o.Parameters.Length)
                 .ToList();
-                        
+
             if (CurrentOptions.Count == 0)
             {
                 parseInfo.Script.Diagnostics.Error(
@@ -215,7 +215,7 @@ namespace Deltin.Deltinteger.Parse
             }
             return true;
         }
-    
+
         private void GetAdditionalData()
         {
             AdditionalData = Overload.Call(parseInfo, CallRange);
@@ -234,7 +234,7 @@ namespace Deltin.Deltinteger.Parse
                     // If the proved caret position is inside the parameter range, set it as the active parameter.
                     if (ParameterRanges[i] != null && ParameterRanges[i].IsInside(caretPos))
                         activeParameter = i;
-            
+
             // Get the signature information.
             SignatureInformation[] overloads = new SignatureInformation[AllOverloads.Length];
             for (int i = 0; i < overloads.Length; i++)
@@ -244,7 +244,8 @@ namespace Deltin.Deltinteger.Parse
 
                 // Convert parameters to parameter information.
                 for (int p = 0; p < parameters.Length; p++)
-                    parameters[p] = new ParameterInformation() {
+                    parameters[p] = new ParameterInformation()
+                    {
                         // Get the label to show in the signature.
                         Label = AllOverloads[i].Parameters[p].GetLabel(),
                         // Get the documentation.
@@ -252,10 +253,11 @@ namespace Deltin.Deltinteger.Parse
                     };
 
                 // Create the signature information.
-                overloads[i] = new SignatureInformation() {
+                overloads[i] = new SignatureInformation()
+                {
                     Label = AllOverloads[i].GetLabel(false),
                     Parameters = parameters,
-                    Documentation = AllOverloads[i].Documentation
+                    Documentation = Extras.GetMarkupContent(AllOverloads[i].Documentation)
                 };
             }
 
@@ -369,7 +371,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (OverloadMatchError error in Errors) diagnostics.Error(error.Message, error.Range);
         }
-    
+
         ///<summary>Gets the restricted calls from the unfilled optional parameters.</summary>
         public void CheckOptionalsRestrictedCalls(ParseInfo parseInfo, DocRange callRange)
         {
@@ -409,9 +411,9 @@ namespace Deltin.Deltinteger.Parse
 
         public OverloadError(string errorName)
         {
-            BadParameterCount    = $"No overloads for the {errorName} has {{0}} parameters.";
+            BadParameterCount = $"No overloads for the {errorName} has {{0}} parameters.";
             ParameterDoesntExist = $"The parameter '{{0}}' does not exist in the {errorName}.";
-            MissingParameter     = $"The {{0}} parameter is missing in the {errorName}.";
+            MissingParameter = $"The {{0}} parameter is missing in the {errorName}.";
         }
     }
 }

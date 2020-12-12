@@ -59,12 +59,12 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                     NewLine();
                 }
                 NewLine();
-                
+
                 // Rules
                 foreach (var rule in Workshop.Rules)
                     new RuleTraveler(this, rule).Decompile();
             }
-            
+
             return _builder.ToString().Trim();
         }
 
@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         {
             if (!isGlobal && Workshop.Variables.Any(v => v.IsGlobal && v.Name == baseName))
                 baseName = "p_" + baseName;
-            
+
             return baseName;
         }
 
@@ -147,7 +147,8 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         public void NewLine() => Decompiler.NewLine();
         public void AddBlock(bool startBlock = true) => Decompiler.AddBlock(startBlock);
         public void Outdent() => Decompiler.Outdent();
-        public void Advance() {
+        public void Advance()
+        {
             CurrentAction++;
         }
         public void EndAction()
@@ -175,7 +176,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         {
             Rule = rule;
         }
-        
+
         public override void Decompile()
         {
             if (Rule.EventInfo.Event != RuleEvent.Subroutine)
@@ -284,7 +285,8 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             // Create the file.
             using (var writer = File.CreateText(file))
                 // Write to the settings file.
-                writer.Write(JsonConvert.SerializeObject(_settings, new JsonSerializerSettings() {
+                writer.Write(JsonConvert.SerializeObject(_settings, new JsonSerializerSettings()
+                {
                     Formatting = Formatting.Indented,
                     NullValueHandling = NullValueHandling.Ignore
                 }));

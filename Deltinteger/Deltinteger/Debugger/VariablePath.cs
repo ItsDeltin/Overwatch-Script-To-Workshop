@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Debugger
                     index[i] = (int)number.Value;
                 else
                     return;
-                
+
             var newVariable = new LinkableDebugVariable(this, referencer, value.WorkshopVariable, index);
             Variables.Add(newVariable);
             LinkableVariables.Add(newVariable);
@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Debugger
             References.Add(_variablesScope, GetReference());
             References.Add(_rawScope, GetReference());
             _rawScope.Variables.Clear();
-            
+
             foreach (LinkableDebugVariable variable in LinkableVariables)
             {
                 // Reset the obtained variable.
@@ -110,7 +110,7 @@ namespace Deltin.Deltinteger.Debugger
             foreach (var reference in References)
                 if (reference.Value == args.variablesReference)
                     return reference.Key.GetChildren(this).Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).Skip(args.start).Take(args.count == 0 ? int.MaxValue : args.count).ToArray();
-            
+
             return new DBPVariable[0];
         }
 
@@ -121,7 +121,8 @@ namespace Deltin.Deltinteger.Debugger
         public EvaluateResponse Evaluate(EvaluateArgs args)
         {
             if (args.context == "clipboard")
-                return new EvaluateResponse() {
+                return new EvaluateResponse()
+                {
                     result = ClipboardEvaluation[args.expression]
                 };
 
@@ -148,7 +149,7 @@ namespace Deltin.Deltinteger.Debugger
 
             for (int i = 0; ClipboardEvaluation.ContainsKey(current); i++)
                 current = original + "_" + i;
-            
+
             ClipboardEvaluation.Add(current, value);
             return current;
         }

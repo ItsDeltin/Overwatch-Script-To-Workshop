@@ -25,8 +25,8 @@ namespace Deltin.Deltinteger.Parse
             FileGetter = fileGetter;
         }
 
-        public TranslateSettings(Diagnostics diagnostics, Uri root, string content) : this(diagnostics, new ScriptFile(diagnostics, root, content)) {}
-        
+        public TranslateSettings(Diagnostics diagnostics, Uri root, string content) : this(diagnostics, new ScriptFile(diagnostics, root, content)) { }
+
         public TranslateSettings(Diagnostics diagnostics, string file)
         {
             Diagnostics = diagnostics;
@@ -35,6 +35,6 @@ namespace Deltin.Deltinteger.Parse
             Root = new ScriptFile(diagnostics, uri, content);
         }
 
-        public TranslateSettings(string file) : this(new Diagnostics(), file) {}
+        public TranslateSettings(string file) : this(new Diagnostics(), file) { }
     }
 }

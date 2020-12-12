@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         // Object
         public List<Document> Documents { get; } = new List<Document>();
-        private DeltintegerLanguageServer _languageServer { get; } 
+        private DeltintegerLanguageServer _languageServer { get; }
         private SynchronizationCapability _compatibility;
         private TaskCompletionSource<Unit> _scriptReady = new TaskCompletionSource<Unit>();
 
@@ -44,18 +44,21 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         // Text document registeration options.
-        TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() =>  new TextDocumentRegistrationOptions() { 
-            DocumentSelector = DeltintegerLanguageServer.DocumentSelector 
+        TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() => new TextDocumentRegistrationOptions()
+        {
+            DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
         // Save options.
-        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions>.GetRegistrationOptions() => new TextDocumentSaveRegistrationOptions() {
+        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions>.GetRegistrationOptions() => new TextDocumentSaveRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
             IncludeText = _sendTextOnSave
         };
 
         // Document change options.
-        TextDocumentChangeRegistrationOptions IRegistration<TextDocumentChangeRegistrationOptions>.GetRegistrationOptions() => new TextDocumentChangeRegistrationOptions() {
+        TextDocumentChangeRegistrationOptions IRegistration<TextDocumentChangeRegistrationOptions>.GetRegistrationOptions() => new TextDocumentChangeRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
             SyncKind = _syncKind
         };
@@ -139,7 +142,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
                 if (pos.Line == line && pos.Character == character)
                     return i + 1;
-                
+
                 if (line > pos.Line)
                     throw new Exception();
             }
@@ -164,7 +167,8 @@ namespace Deltin.Deltinteger.LanguageServer
         void SetupUpdateListener()
         {
             var stopToken = _stopUpdateListener.Token;
-            Task.Run(() => {
+            Task.Run(() =>
+            {
                 while (!stopToken.IsCancellationRequested)
                 {
                     // If _wait is not signaled, signal _parseDone.
@@ -188,7 +192,8 @@ namespace Deltin.Deltinteger.LanguageServer
             {
                 Diagnostics diagnostics = new Diagnostics();
                 ScriptFile root = new ScriptFile(diagnostics, item);
-                DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter) {
+                DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter)
+                {
                     OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
                     OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput
                 });
@@ -201,7 +206,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 var publishDiagnostics = diagnostics.GetDiagnostics();
                 foreach (var publish in publishDiagnostics)
                     _languageServer.Server.TextDocument.PublishDiagnostics(publish);
-                
+
                 if (deltinScript.WorkshopCode != null)
                 {
                     _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
