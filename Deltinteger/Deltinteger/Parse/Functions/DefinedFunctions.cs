@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // IApplyBlock
-        public virtual void SetupParameters() {}
+        public virtual void SetupParameters() { }
         public abstract void SetupBlock();
 
         protected void SetupParameters(List<VariableDeclaration> context, bool subroutineParameter)

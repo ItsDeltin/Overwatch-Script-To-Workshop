@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.Pathfinder
             OnPathCompleted.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player completes a pathfind. By default, it will stop throttling the player and call ").Code("StopPathfind(EventPlayer())").Add(", hooking will override this.")
                 .NewLine().Add("Call ").Code("EventPlayer()").Add(" to get the player that completed the path."));
             // The condition to use to determine if a node was reached.
-            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, new CodeType[] {VectorType.Instance}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
+            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, new CodeType[] { VectorType.Instance }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
             IsNodeReachedDeterminer.Documentation = AddHookInfo(new MarkupBuilder()
                 .Add("The condition that is used to determine if a player reached the current node. The given value is the position of the next node. The returned value should be a boolean determining if the player reached the node they are walking towards.")
                 .NewLine()
@@ -121,15 +121,18 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeVariable(IsNodeReachedDeterminer);
             staticScope.AddNativeVariable(ApplicableNodeDeterminer);
 
-            NodesVar = new InternalVar("Nodes") {
+            NodesVar = new InternalVar("Nodes")
+            {
                 Documentation = "The nodes of the pathmap.",
                 CodeType = new ArrayType(VectorType.Instance)
             };
-            SegmentsVar = new InternalVar("Segments") {
+            SegmentsVar = new InternalVar("Segments")
+            {
                 Documentation = "The segments of the pathmap. These segments connect the nodes together.",
                 CodeType = new ArrayType(SegmentsStruct.Instance)
             };
-            AttributesVar = new InternalVar("Attributes") {
+            AttributesVar = new InternalVar("Attributes")
+            {
                 Documentation = "The attributes of the pathmap. The X of a value in the array is the first node that the attribute is related to. The Y is the second node the attribute is related to. The Z is the attribute's actual value.",
                 CodeType = new ArrayType(VectorType.Instance)
             };
@@ -180,9 +183,9 @@ namespace Deltin.Deltinteger.Pathfinder
                 return;
             }
 
-             // Get the pathmap data.
+            // Get the pathmap data.
             Pathmap pathMap = (Pathmap)newClassInfo.AdditionalParameterData[0];
-            
+
             IndexReference nodes = actionSet.VarCollection.Assign("_tempNodes", actionSet.IsGlobal, false);
             IndexReference segments = actionSet.VarCollection.Assign("_tempSegments", actionSet.IsGlobal, false);
             IndexReference attributes = actionSet.VarCollection.Assign("_tempAttributes", actionSet.IsGlobal, false);
@@ -194,7 +197,7 @@ namespace Deltin.Deltinteger.Pathfinder
             foreach (var node in pathMap.Nodes) actionSet.AddAction(nodes.ModifyVariable(operation: Operation.AppendToArray, value: node.ToVector()));
             foreach (var segment in pathMap.Segments) actionSet.AddAction(segments.ModifyVariable(operation: Operation.AppendToArray, value: segment.AsWorkshopData()));
             foreach (var attribute in pathMap.Attributes) actionSet.AddAction(attributes.ModifyVariable(operation: Operation.AppendToArray, value: attribute.AsWorkshopData()));
-            
+
             actionSet.AddAction(Nodes.SetVariable((Element)nodes.GetVariable(), index: index));
             actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
             actionSet.AddAction(Attributes.SetVariable((Element)attributes.GetVariable(), index: index));
@@ -219,11 +222,11 @@ namespace Deltin.Deltinteger.Pathfinder
             // OnLoop
             if (onLoop is LambdaAction onLoopLambda)
                 algorithm.OnLoop = actionSet => onLoopLambda.Invoke(actionSet);
-            
+
             // OnConnectLoop
             if (onConnectLoop is LambdaAction onConnectLoopLambda)
                 algorithm.OnConnectLoop = actionSet => onConnectLoopLambda.Invoke(actionSet);
-            
+
             if (ApplicableNodeDeterminer.HookValue != null)
                 algorithm.GetClosestNode = (actionSet, nodes, position) => (Element)((LambdaAction)ApplicableNodeDeterminer.HookValue).Invoke(actionSet, nodes, position);
         }
@@ -240,7 +243,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         // Object Functions
         // Pathfind(player, destination, [attributes])
-        private FuncMethod Pathfind => new FuncMethodBuilder() {
+        private FuncMethod Pathfind => new FuncMethodBuilder()
+        {
             Name = "Pathfind",
             Documentation = "Moves the specified player to the destination by pathfinding.",
             Parameters = new CodeParameter[] {
@@ -250,7 +254,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 Element player = (Element)methodCall.ParameterValues[0];
 
                 // Store the pathfind destination.
@@ -268,7 +273,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // PathfindAll(players, destination, [attributes])
-        private FuncMethod PathfindAll => new FuncMethodBuilder() {
+        private FuncMethod PathfindAll => new FuncMethodBuilder()
+        {
             Name = "PathfindAll",
             Documentation = "Moves an array of players to the specified position by pathfinding.",
             Parameters = new CodeParameter[] {
@@ -278,7 +284,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
 
                 DijkstraMultiSource algorithm = new DijkstraMultiSource(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, (Element)methodCall.ParameterValues[2]);
@@ -293,7 +300,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // PathfindEither(player, destination, [attributes])
-        private FuncMethod PathfindEither => new FuncMethodBuilder() {
+        private FuncMethod PathfindEither => new FuncMethodBuilder()
+        {
             Name = "PathfindEither",
             Documentation = "Moves a player to the closest position in the destination array by pathfinding.",
             Parameters = new CodeParameter[] {
@@ -303,7 +311,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 Element destinations = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
 
                 DijkstraEither algorithm = new DijkstraEither(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destinations, (Element)methodCall.ParameterValues[2]);
@@ -318,14 +327,16 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // GetPath()
-        private static FuncMethod GetPath = new FuncMethodBuilder() {
+        private static FuncMethod GetPath = new FuncMethodBuilder()
+        {
             Name = "GetPath",
             Documentation = "Returns an array of vectors forming a path from the starting point to the destination.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The initial position."),
                 new CodeParameter("destination", "The final destination.")
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
 
                 DijkstraNormal algorithm = new DijkstraNormal(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, null);
@@ -336,7 +347,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // Resolve(position, [attributes])
-        private FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder() {
+        private FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder()
+        {
             Name = "Resolve",
             Documentation = "Resolves all potential paths to the specified destination. This can be used to precalculate the path to a position, or to reuse the calculated path to a position.",
             DoesReturnValue = true,
@@ -347,7 +359,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
-            Action = (actionSet, call) => {
+            Action = (actionSet, call) =>
+            {
                 ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], (Element)call.ParameterValues[1]);
 
                 // Set lambda hooks
@@ -360,7 +373,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // ResolveTo(position, resolveTo, [attributes])
-        private static FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder() {
+        private static FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder()
+        {
             Name = "ResolveTo",
             Documentation = "Resolves the path to the specified destination. This can be used to precalculate the path to a position, or to reuse the calculated path to a position.",
             DoesReturnValue = true,
@@ -370,7 +384,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("resolveTo", "Resolving will stop once this position is reached."),
                 new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(new V_Null()))
             },
-            Action = (actionSet, call) => {
+            Action = (actionSet, call) =>
+            {
                 ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], ContainParameter(actionSet, "_pathfindDestinationStore", call.ParameterValues[1]), (Element)call.ParameterValues[2]);
                 resolve.Get();
                 return resolve.ClassReference.GetVariable();
@@ -381,7 +396,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             // Get the index of the first null node.
             IndexReference index = actionSet.VarCollection.Assign(tempVariableName, actionSet.IsGlobal, true);
-            
+
             // Get the first null value.
             actionSet.AddAction(index.SetVariable(Element.Part<V_IndexOfArrayValue>(array, new V_Null())));
 
@@ -393,14 +408,16 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         // AddNode(position)
-        private FuncMethod AddNode => new FuncMethodBuilder() {
+        private FuncMethod AddNode => new FuncMethodBuilder()
+        {
             Name = "AddNode",
             Documentation = "Dynamically adds a node to the pathmap.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to place the new node.")
             },
             DoesReturnValue = true,
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 // Some nodes may be null
                 if (actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes)
                 {
@@ -408,7 +425,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
                     // Set the position.
                     actionSet.AddAction(Nodes.SetVariable((Element)methodCall.ParameterValues[0], null, (Element)actionSet.CurrentObject, index));
-                    
+
                     // Return the index of the added node.
                     return index;
                 }
@@ -416,7 +433,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 {
                     // Append the position.
                     actionSet.AddAction(Nodes.ModifyVariable(operation: Operation.AppendToArray, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
-                    
+
                     // Return the index of the added node.
                     return Element.Part<V_CountOf>(Nodes.Get()[(Element)actionSet.CurrentObject]) - 1;
                 }
@@ -424,7 +441,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // DeleteNode(node)
-        private FuncMethod DeleteNode => new FuncMethodBuilder() {
+        private FuncMethod DeleteNode => new FuncMethodBuilder()
+        {
             Name = "DeleteNode",
             Documentation = new MarkupBuilder().Add("Deletes a node from the pathmap using the index of the node. Connected segments are also deleted. This may cause issue for pathfinding players who's path contains the node, so it may be a good idea to use the ").Code("Pathmap.IsPathfindingToNode").Add(" function to check if the node is in their path.")
                 .Add("This may also cause issues if this is executed while a pathfinder function is running, like ").Code("Pathmap.Pathfind").Add(" or ").Code("Pathmap.Resolve").Add(".").ToString(),
@@ -432,7 +450,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("node_index", "The index of the node to remove.")
             },
             OnCall = (parseInfo, range) => parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.PotentiallyNullNodes = true),
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Nodes.SetVariable(value: new V_Null(), index: new Element[] { (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0] }));
 
                 // Delete segments.
@@ -445,7 +464,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 ));
 
                 ForeachBuilder loop = new ForeachBuilder(actionSet, connectedSegments);
-                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, value:loop.IndexValue, index:(Element)actionSet.CurrentObject));
+                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, value: loop.IndexValue, index: (Element)actionSet.CurrentObject));
                 loop.Finish();
 
                 return null;
@@ -453,7 +472,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // AddSegment(node_a, node_b)
-        private FuncMethod AddSegment => new FuncMethodBuilder() {
+        private FuncMethod AddSegment => new FuncMethodBuilder()
+        {
             Name = "AddSegment",
             Documentation = "Dynamically connects 2 nodes. Existing path resolves will not reflect the new available path.",
             Parameters = new CodeParameter[] {
@@ -461,9 +481,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("node_b", "The second node of the segment.")
             },
             DoesReturnValue = true,
-            Action = (actionSet, methodCall) => {                
+            Action = (actionSet, methodCall) =>
+            {
                 V_Vector segmentData = new V_Vector((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1], new V_Number(0));
-                
+
                 // Append the vector.
                 actionSet.AddAction(Segments.ModifyVariable(operation: Operation.AppendToArray, value: segmentData, index: (Element)actionSet.CurrentObject));
 
@@ -473,20 +494,23 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // DeleteSegment(segment)
-        private FuncMethod DeleteSegment => new FuncMethodBuilder() {
+        private FuncMethod DeleteSegment => new FuncMethodBuilder()
+        {
             Name = "DeleteSegment",
             Documentation = new MarkupBuilder().Add("Deletes a connection between 2 nodes. This is not destructive, unlike the ").Code("Pathmap.DeleteNode").Add(" counterpart. This can be run while any of the pathfinder functions are running. The change will not reflect for players currently pathfinding.").ToString(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("segment", "The segment that will be deleted.", SegmentsStruct.Instance)
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
                 return null;
             }
         };
 
         // AddAttribute(node_a, node_b, attribute)
-        private FuncMethod AddAttribute => new FuncMethodBuilder() {
+        private FuncMethod AddAttribute => new FuncMethodBuilder()
+        {
             Name = "AddAttribute",
             Documentation = "Adds an attribute between 2 nodes. This will work even if there is not a segment between the two nodes.",
             Parameters = new CodeParameter[] {
@@ -494,7 +518,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("node_b", "The secondary node."),
                 new CodeParameter("attribute", "The attribute value. Should be any number.")
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Attributes.ModifyVariable(Operation.AppendToArray, new V_Vector(
                     methodCall.ParameterValues[0],
                     methodCall.ParameterValues[1],
@@ -505,7 +530,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // DeleteAttribute(node_a, node_b, attribute)
-        private FuncMethod DeleteAttribute => new FuncMethodBuilder() {
+        private FuncMethod DeleteAttribute => new FuncMethodBuilder()
+        {
             Name = "DeleteAttribute",
             Documentation = "Removes an attribute between 2 nodes. This will work even if there is not a segment between the two nodes.",
             Parameters = new CodeParameter[] {
@@ -513,7 +539,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("node_b", "The secondary node."),
                 new CodeParameter("attribute", "The attribute value that will be removed. Should be any number.")
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Attributes.ModifyVariable(Operation.RemoveFromArrayByValue, new V_Vector(
                     methodCall.ParameterValues[0],
                     methodCall.ParameterValues[1],
@@ -524,14 +551,16 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // DeleteAllAttributes(node_a, node_b)
-        private FuncMethod DeleteAllAttributes => new FuncMethodBuilder() {
+        private FuncMethod DeleteAllAttributes => new FuncMethodBuilder()
+        {
             Name = "DeleteAllAttributes",
             Documentation = "Removes all attributes between 2 nodes.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("node_a", "The primary node."),
                 new CodeParameter("node_b", "The secondary node.")
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Attributes.ModifyVariable(
                     Operation.RemoveFromArrayByValue,
                     Element.Part<V_FilteredArray>(
@@ -548,7 +577,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // DeleteAllAttributesConnectedToNode(node);
-        private FuncMethod DeleteAllAttributesConnectedToNode => new FuncMethodBuilder() {
+        private FuncMethod DeleteAllAttributesConnectedToNode => new FuncMethodBuilder()
+        {
             Name = "DeleteAllAttributesConnectedToNode",
             Documentation = new MarkupBuilder().Add("Removes all attributes connected to a node.").NewLine().Add("This is identical to doing ")
                 .Code("ModifyVariable(pathmap.Attributes, Operation.RemoveFromArrayByValue, pathmap.Attributes.FilteredArray(Vector attribute => attribute.X == _node_ || attribute.Y == _node_))")
@@ -556,7 +586,8 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("node", "Attributes whose node_a or node_b are equal to this will be removed.")
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Attributes.ModifyVariable(
                     Operation.RemoveFromArrayByValue,
                     Element.Part<V_FilteredArray>(
@@ -573,7 +604,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // SegmentFromNodes(node_a, node_b)
-        private FuncMethod SegmentFromNodes => new FuncMethodBuilder() {
+        private FuncMethod SegmentFromNodes => new FuncMethodBuilder()
+        {
             Name = "SegmentFromNodes",
             Documentation = "Gets a segment from 2 nodes.",
             Parameters = new CodeParameter[] {
@@ -587,20 +619,23 @@ namespace Deltin.Deltinteger.Pathfinder
 
         // Static functions
         // StopPathfind(players)
-        private static FuncMethod StopPathfind = new FuncMethodBuilder() {
+        private static FuncMethod StopPathfind = new FuncMethodBuilder()
+        {
             Name = "StopPathfind",
             Documentation = "Stops pathfinding for the specified players.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The players that will stop pathfinding. Can be a single player or an array of players.")
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().StopPathfinding(actionSet, (Element)methodCall.ParameterValues[0]);
                 return null;
             }
         };
-    
+
         // CurrentSegmentAttribute(player)
-        private static FuncMethod CurrentSegmentAttribute = new FuncMethodBuilder() {
+        private static FuncMethod CurrentSegmentAttribute = new FuncMethodBuilder()
+        {
             Name = "CurrentSegmentAttribute",
             Documentation = "Gets the attribute of the current pathfind segment. If the player is not pathfinding, -1 is returned.",
             Parameters = new CodeParameter[] {
@@ -612,7 +647,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // IsPathfindStuck(player, [speedScalar])
-        private static FuncMethod IsPathfindStuck = new FuncMethodBuilder() {
+        private static FuncMethod IsPathfindStuck = new FuncMethodBuilder()
+        {
             Name = "IsPathfindStuck",
             Documentation = "Returns true if the specified player takes longer than expected to reach the next pathfind node.",
             Parameters = new CodeParameter[] {
@@ -629,13 +665,15 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // FixPathfind(player)
-        private static FuncMethod FixPathfind = new FuncMethodBuilder() {
+        private static FuncMethod FixPathfind = new FuncMethodBuilder()
+        {
             Name = "FixPathfind",
             Documentation = "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with `IsPathfindStuck()`.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to fix pathfinding for.")
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 Element player = (Element)methodCall.ParameterValues[0];
                 actionSet.AddAction(Element.Part<A_Teleport>(
                     player,
@@ -646,7 +684,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // NextPosition(player)
-        private static FuncMethod NextPosition = new FuncMethodBuilder() {
+        private static FuncMethod NextPosition = new FuncMethodBuilder()
+        {
             Name = "NextPosition",
             Documentation = "Gets the position the player is currently walking towards.",
             Parameters = new CodeParameter[] {
@@ -658,7 +697,8 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // CurrentNode
-        private static FuncMethod CurrentNode = new FuncMethodBuilder() {
+        private static FuncMethod CurrentNode = new FuncMethodBuilder()
+        {
             Name = "CurrentNode",
             Documentation = "The node index the player is currently walking towards.",
             Parameters = new CodeParameter[] {
@@ -669,10 +709,11 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // IsPathfinding(player)
-        private static FuncMethod IsPathfinding = new FuncMethodBuilder() {
+        private static FuncMethod IsPathfinding = new FuncMethodBuilder()
+        {
             Name = "IsPathfinding",
             Documentation = new MarkupBuilder()
-                .Add("Determines if the player is currently pathfinding.").NewLine().Add("This will become ").Code("true").Add(" when any of the pathfinding functions in the pathmap class is used on a player." + 
+                .Add("Determines if the player is currently pathfinding.").NewLine().Add("This will become ").Code("true").Add(" when any of the pathfinding functions in the pathmap class is used on a player." +
                     " This will remain ").Code("true").Add(" even if the player is dead. If the player reaches their destination or ").Code("Pathmap.StopPathfind").Add(" is called, this will become ").Code("false").Add(".")
                 .NewLine()
                 .Add("If the player reaches their destination, ").Code("Pathmap.OnPathCompleted").Add(" will run immediately after this becomes ").Code("false").Add(".")
@@ -682,30 +723,35 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsPathfinding((Element)methodCall.ParameterValues[0])
         };
-    
+
         // ThrottleEventPlayerToNextNode
-        private static FuncMethod ThrottleToNextNode = new FuncMethodBuilder() {
+        private static FuncMethod ThrottleToNextNode = new FuncMethodBuilder()
+        {
             Name = "ThrottleEventPlayerToNextNode",
             Documentation = new MarkupBuilder().Add("Throttles the event player to the next node in their path. This is called by default when the player starts a pathfind, but if the ").Code("Pathmap.OnPathStart").Add(" hook is overridden, then this will need to be called in the hook unless you want to change how the player navigates to the next position").ToString(),
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().ThrottleEventPlayerToNextNode(actionSet);
                 return null;
             }
         };
 
-        private static FuncMethod Recalibrate = new FuncMethodBuilder() {
+        private static FuncMethod Recalibrate = new FuncMethodBuilder()
+        {
             Name = "Recalibrate",
             Documentation = new MarkupBuilder().Add("Specified players will get the closest node and restart the path from there. This is useful when used in conjuction with ").Code("Pathmap.Resolve").Add(" and the players have a chance of being knocked off the path into another possible path.").ToString(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The players that will recalibrate their pathfinding.")
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().SetCurrent(actionSet, (Element)methodCall.ParameterValues[0]);
                 return null;
             }
         };
-    
-        private static FuncMethod IsPathfindingToNode = new FuncMethodBuilder() {
+
+        private static FuncMethod IsPathfindingToNode = new FuncMethodBuilder()
+        {
             Name = "IsPathfindingToNode",
             Documentation = "Determines if a player is pathfinding towards a node. This will return true if the node is anywhere in their path, not just the one they are currently walking towards.",
             DoesReturnValue = true,
@@ -716,7 +762,8 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) => new IsTravelingToNode((Element)methodCall.ParameterValues[1]).Get(actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>(), actionSet, (Element)methodCall.ParameterValues[0])
         };
 
-        private static FuncMethod IsPathfindingToSegment = new FuncMethodBuilder() {
+        private static FuncMethod IsPathfindingToSegment = new FuncMethodBuilder()
+        {
             Name = "IsPathfindingToSegment",
             Documentation = "Determines if a player is pathfinding towards a node. This will return true if the segment is anywhere in their path, not just the one they are currently walking towards.",
             DoesReturnValue = true,
@@ -727,7 +774,8 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) => new IsTravelingToSegment((Element)methodCall.ParameterValues[1]).Get(actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>(), actionSet, (Element)methodCall.ParameterValues[0])
         };
 
-        private static FuncMethod IsPathfindingToAttribute = new FuncMethodBuilder() {
+        private static FuncMethod IsPathfindingToAttribute = new FuncMethodBuilder()
+        {
             Name = "IsPathfindingToAttribute",
             Documentation = new MarkupBuilder().Add("Determines if a player is pathfinding towards an attribute.")
                 .Add(" This will return true if the attribute is anywhere in their path, not just the one they are currently walking towards.")
@@ -757,7 +805,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
     class PathmapFileParameter : FileParameter
     {
-        public PathmapFileParameter(string parameterName, string description) : base(parameterName, description, ".pathmap") {}
+        public PathmapFileParameter(string parameterName, string description) : base(parameterName, description, ".pathmap") { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
@@ -813,7 +861,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override Scope GetObjectScope() => _scope;
         public override Scope ReturningScope() => null;
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = "Segments",
             Kind = CompletionItemKind.Struct
         };

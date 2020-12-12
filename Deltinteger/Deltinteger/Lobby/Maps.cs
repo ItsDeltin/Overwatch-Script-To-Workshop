@@ -17,13 +17,13 @@ namespace Deltin.Deltinteger.Lobby
         public string Workshop { get; set; }
         public List<string> GameModes { get; set; }
 
-        public LobbyMap() {}
+        public LobbyMap() { }
         public LobbyMap(string name)
         {
             Name = name;
             GameModes = new List<string>();
         }
-        
+
         public string GetWorkshopName() => Workshop ?? Name;
 
         private static LobbyMap[] GetMaps()
@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Lobby
                     {
                         Match variantNameMatch = variantName.Match(line);
                         if (variantNameMatch.Success) currentMap.Name = variantNameMatch.Groups[1].Value;
-                    } 
+                    }
                     continue;
                 }
             }

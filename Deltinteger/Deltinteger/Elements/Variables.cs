@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Elements
         public bool IsGlobal { get; }
 
         public WorkshopVariable(bool isGlobal, int id, string name) : base(id, name)
-        {            
+        {
             IsGlobal = isGlobal;
         }
 

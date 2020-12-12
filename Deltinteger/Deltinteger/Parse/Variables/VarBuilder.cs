@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             // Filter missing attributes.
             foreach (VarBuilderAttribute attribute in _attributes)
                 missingTypes.Remove(attribute.Type);
-            
+
             // Check missing attributes.
             MissingAttribute(missingTypes.ToArray());
 
@@ -58,9 +58,9 @@ namespace Deltin.Deltinteger.Parse
             // Apply attributes.
             foreach (VarBuilderAttribute attribute in _attributes)
                 attribute.Apply(_varInfo);
-            
+
             Apply();
-            
+
             // Set the variable and store types.
             if (_varInfo.IsWorkshopReference)
             {
@@ -117,11 +117,11 @@ namespace Deltin.Deltinteger.Parse
         {
             if (type != null && type.IsConstant())
                 _varInfo.IsWorkshopReference = true;
-            
+
             _varInfo.Type = type;
         }
 
-        protected virtual void MissingAttribute(AttributeType[] attributeTypes) {}
+        protected virtual void MissingAttribute(AttributeType[] attributeTypes) { }
         protected abstract void CheckAttributes();
         protected abstract void Apply();
         protected abstract Scope OperationalScope();
@@ -174,22 +174,22 @@ namespace Deltin.Deltinteger.Parse
                 case AttributeType.Private:
                     diagnostics.Error("Accessor not valid here.", Range);
                     break;
-                
+
                 // Workshop ID override
                 case AttributeType.ID:
                     diagnostics.Error($"Cannot override workshop variable ID here.", Range);
                     break;
-                
+
                 // Extended collection
                 case AttributeType.Ext:
                     diagnostics.Error($"Cannot put variable in the extended collection.", Range);
                     break;
-                
+
                 // Initial value
                 case AttributeType.Initial:
                     diagnostics.Error($"Variable cannot have an initial value.", Range);
                     break;
-                
+
                 // Use attribute name
                 case AttributeType.Static:
                 case AttributeType.Globalvar:
@@ -200,7 +200,7 @@ namespace Deltin.Deltinteger.Parse
                     break;
             }
         }
-    
+
         public virtual void Apply(VarInfo varInfo)
         {
             switch (Type)
@@ -209,7 +209,7 @@ namespace Deltin.Deltinteger.Parse
                 case AttributeType.Ext:
                     varInfo.InExtendedCollection = true;
                     break;
-                
+
                 // Access levels
                 case AttributeType.Public: varInfo.AccessLevel = AccessLevel.Public; break;
                 case AttributeType.Protected: varInfo.AccessLevel = AccessLevel.Protected; break;
@@ -219,22 +219,22 @@ namespace Deltin.Deltinteger.Parse
                 case AttributeType.Globalvar:
                     varInfo.VariableType = VariableType.Global;
                     break;
-                
+
                 // playervar
                 case AttributeType.Playervar:
                     varInfo.VariableType = VariableType.Player;
                     break;
-                
+
                 // ref
                 case AttributeType.Ref:
                     varInfo.IsWorkshopReference = true;
                     break;
-                
+
                 // Static
                 case AttributeType.Static:
                     varInfo.Static = true;
                     break;
-                
+
                 // Should be handled by overrides.
                 case AttributeType.ID:
                 case AttributeType.Initial:

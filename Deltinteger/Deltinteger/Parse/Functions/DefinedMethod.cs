@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
         public bool SubroutineDefaultGlobal { get; }
 
         // * Private fields *
-        
+
         /// <summary>The function's subroutine info.</summary>
         public SubroutineInfo SubroutineInfo { get; set; }
 
@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
                     if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(CodeType)))
                         // ... then add a syntax error.
                         parseInfo.Script.Diagnostics.Error("Must return a value of type '" + CodeType.GetName() + "'.", returnAction.ErrorRange);
-            
+
             WasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }
@@ -167,7 +167,7 @@ namespace Deltin.Deltinteger.Parse
             }
             return SubroutineInfo;
         }
-        
+
         private DefinedFunctionHandler[] GetOverrideFunctionHandlers()
             => Attributes.AllOverrideOptions().Select(op => new DefinedFunctionHandler((DefinedMethod)op, false)).Prepend(new DefinedFunctionHandler(this, true)).ToArray();
     }

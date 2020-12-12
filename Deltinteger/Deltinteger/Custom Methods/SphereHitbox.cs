@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.CustomMethods
         };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
-        {            
+        {
             Element linePos = (Element)parameterValues[0];
             Element lineDirection = (Element)parameterValues[1];
             Element planePos = (Element)parameterValues[2];

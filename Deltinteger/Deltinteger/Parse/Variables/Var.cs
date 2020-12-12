@@ -92,7 +92,7 @@ namespace Deltin.Deltinteger.Parse
                 GetInitialValue();
             else
                 parseInfo.TranslateInfo.ApplyBlock(this);
-            
+
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, varInfo.CodeLensType, DefinedAt.range));
         }
 
@@ -117,11 +117,11 @@ namespace Deltin.Deltinteger.Parse
                 // If the initial value's type is constant, make sure the constant type's implements the variable's type.
                 if (InitialValue?.Type() != null && InitialValue.Type().IsConstant() && !InitialValue.Type().Implements(CodeType))
                     parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", _initalValueContext.Range);
-                
+
                 // If the variable's type is constant, make sure the value's type matches.
                 else if (CodeType != null && CodeType.IsConstant() && (InitialValue.Type() == null || !InitialValue.Type().Implements(CodeType)))
                     parseInfo.Script.Diagnostics.Error($"Expected a value of type '" + CodeType.GetName() + "'", _initalValueContext.Range);
-                
+
                 // Check restricted calls.
                 if (_handleRestrictedCalls)
                     foreach (RestrictedCall call in restrictedCalls)
@@ -155,12 +155,12 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
-    
+
         public IWorkshopTree Parse(ActionSet actionSet)
         {
             return actionSet.IndexAssigner[this].GetVariable();
         }
-    
+
         public CompletionItem GetCompletion() => new CompletionItem()
         {
             Label = Name,
@@ -175,7 +175,7 @@ namespace Deltin.Deltinteger.Parse
             return new MarkupBuilder().StartCodeLine().Add(typeName + " " + Name).EndCodeLine().ToString(markdown);
         }
 
-        public void SetupParameters() {}
+        public void SetupParameters() { }
 
         public void SetupBlock()
         {

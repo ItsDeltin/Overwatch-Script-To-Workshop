@@ -8,7 +8,8 @@ namespace Deltin.Deltinteger.CustomMethods
     {
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            return Constants.MAX_ARRAY_LENGTH - ClassMemoryUsed.NumberOfClasses(actionSet);
+            //minus 1 because the first index is reserved
+            return Constants.MAX_ARRAY_LENGTH - ClassMemoryUsed.NumberOfClasses(actionSet) - 1;
         }
 
         public override CodeParameter[] Parameters() => null;
@@ -31,7 +32,7 @@ namespace Deltin.Deltinteger.CustomMethods
                 actionSet.Translate.DeltinScript.GetComponent<ClassData>().ClassIndexes.GetVariable(),
                 new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
             ));
-        } 
+        }
     }
 
     [CustomMethod("ClassMemory", "Gets the percentage of class memory taken.", CustomMethodType.Value)]

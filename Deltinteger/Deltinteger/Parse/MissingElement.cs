@@ -8,12 +8,12 @@ namespace Deltin.Deltinteger.Parse
     {
         public static readonly MissingElementAction MissingElement = new MissingElementAction();
 
-        private MissingElementAction() {}
+        private MissingElementAction() { }
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
         public bool IsStatement() => true;
-        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) {}
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) { }
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
         public void Translate(ActionSet actionSet) => throw new NotImplementedException();
     }

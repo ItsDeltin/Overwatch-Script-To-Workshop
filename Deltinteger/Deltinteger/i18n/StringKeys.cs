@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.I18n
             log?.Write(LogLevel.Normal, $"Got {language} keys.");
         }
     }
-    
+
     public class StringKey
     {
         public string Key { get; }

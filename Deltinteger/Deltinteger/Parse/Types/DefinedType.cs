@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", typeContext.Identifier.Range);
-            
+
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, typeContext.Identifier.GetRange(typeContext.Range));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
         }
@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.Parse
                 // Add the object variable if it is an IIndexReferencer.
                 if (scopeable is IIndexReferencer referencer)
                     AddObjectVariable(referencer);
-                
+
                 // Copy to scopes.
                 // Method copy
                 if (scopeable is IMethod method)
@@ -162,5 +162,5 @@ namespace Deltin.Deltinteger.Parse
         {
             _parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, location);
         }
-    }    
+    }
 }

@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Lobby
             Title = $"'{HeroName}' hero settings.";
             AddGlobals();
         }
-        
+
         public HeroSettingCollection AddGlobals()
         {
             Add(QuickMelee);
@@ -107,10 +107,10 @@ namespace Deltin.Deltinteger.Lobby
             }
 
             // i18n name resolvers.
-            AbilityNameResolver enabledResolver           = new AbilityNameResolver(AbilityNameType.UltimateSwitchSetting    , isEnabled , name ?? isEnabled ); // Toggle
-            AbilityNameResolver generationResolver        = new AbilityNameResolver(AbilityNameType.UltimateGeneration       , generation, name ?? generation); // Generation
-            AbilityNameResolver passiveGenerationResolver = new AbilityNameResolver(AbilityNameType.UltimateGenerationPassive, passive   , name ?? passive   ); // Passive Generation
-            AbilityNameResolver combatGenerationResolver  = new AbilityNameResolver(AbilityNameType.UltimateGenerationCombat , combat    , name ?? combat    ); // Combat Generation
+            AbilityNameResolver enabledResolver = new AbilityNameResolver(AbilityNameType.UltimateSwitchSetting, isEnabled, name ?? isEnabled); // Toggle
+            AbilityNameResolver generationResolver = new AbilityNameResolver(AbilityNameType.UltimateGeneration, generation, name ?? generation); // Generation
+            AbilityNameResolver passiveGenerationResolver = new AbilityNameResolver(AbilityNameType.UltimateGenerationPassive, passive, name ?? passive); // Passive Generation
+            AbilityNameResolver combatGenerationResolver = new AbilityNameResolver(AbilityNameType.UltimateGenerationCombat, combat, name ?? combat); // Combat Generation
 
             // Add the settings.
             Add(new SwitchValue(isEnabled, true) { TitleResolver = enabledResolver });
@@ -138,7 +138,8 @@ namespace Deltin.Deltinteger.Lobby
             if (hasCooldown)
             {
                 string cooldownTimeTitle = name + " Cooldown Time";
-                Add(new RangeValue(cooldownTimeTitle, 0, 500) {
+                Add(new RangeValue(cooldownTimeTitle, 0, 500)
+                {
                     TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name)
                 });
             }
@@ -159,14 +160,16 @@ namespace Deltin.Deltinteger.Lobby
             if (rechargeable)
             {
                 string rechargeRateTitle = name + " Recharge Rate";
-                Add(new RangeValue(rechargeRateTitle, 0, 500) {
+                Add(new RangeValue(rechargeRateTitle, 0, 500)
+                {
                     TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name)
                 });
 
                 if (!noMaximumTime)
                 {
                     string maximumTimeTitle = name + " Maximum Time";
-                    Add(new RangeValue(maximumTimeTitle, 20, 500) {
+                    Add(new RangeValue(maximumTimeTitle, 20, 500)
+                    {
                         TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name)
                     });
                 }
@@ -193,7 +196,7 @@ namespace Deltin.Deltinteger.Lobby
             Remove(NoAmmunitionRequirement);
             return this;
         }
-    
+
         public static void Init()
         {
             AllHeroSettings = new HeroSettingCollection[] {
@@ -207,7 +210,7 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Doomfist").AddUlt("Meteor Strike", hasKnockback: true, hasDuration: true).AddProjectile(false).AddAbility("Rising Uppercut", hasKnockback: true).AddAbility("Rocket Punch", hasKnockback: true).AddAbility("Seismic Slam").AddRange("Ammunition Regeneration Time Scalar", 33, 500),
                 new HeroSettingCollection("Echo").AddUlt("Duplicate").AddProjectile(false).AddAbility("Flight").AddAbility("Focusing Beam").AddAbility("Glide", hasCooldown: false).AddAbility("Sticky Bombs"),
                 new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Swift Strike"),
-                new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrows").AddIntRange("Storm Arrows Quantity", 3, 12, 5),
+                new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrows").AddIntRange("Storm Arrows Quantity", false, 3, 12, 5),
                 new HeroSettingCollection("Junkrat").AddUlt("Rip-Tire", hasDuration: true).AddProjectile(true).AddAbility("Concussion Mine", hasKnockback: true).AddAbility("Steel Trap").AddRange("Frag Launcher Knockback Scalar", 0, 400),
                 new HeroSettingCollection("Lúcio").AddUlt("Sound Barrier").AddHealer().AddProjectile(false).AddAbility("Amp It Up").AddAbility("Crossfade", hasCooldown: false).AddAbility("Soundwave", hasKnockback: true),
                 new HeroSettingCollection("Mccree").AddUlt("Deadeye").AddProjectile(false).AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Flashbang"),
@@ -232,7 +235,7 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Zenyatta").AddUlt("Transcendence").AddProjectile(false).AddSecondaryFire().AddHealer().AddAbility("Orb Of Harmony", hasCooldown: false).AddAbility("Orb Of Discord", hasCooldown: false)
             };
         }
-    
+
         public static void Validate(SettingValidation validation, JObject heroes)
         {
             foreach (JProperty property in heroes.Properties())

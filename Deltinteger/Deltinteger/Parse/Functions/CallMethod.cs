@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => Result?.ReturnType;
-    
+
         // IStatement
         public void Translate(ActionSet actionSet) => Result.Parse(actionSet);
         // IExpression

@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public DeltinScript DeltinScript { get; set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
         public bool PotentiallyNullNodes { get; set; } // Determines if nodes can potentially be null.
-        
+
         // Class Instances
         private PathResolveClass PathResolveInstance;
         private PathmapClass PathmapInstance;
@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public IndexReference ParentArray { get; set; } // Stores the parent path array.
         private IndexReference Destination { get; set; } // The destination to walk to after all nodes have been transversed.
         public IndexReference CurrentAttribute { get; set; } // The current pathfinding attribute.
-        
+
         // Stuck dection workshop variables. These are only assigned if 'TrackTimeSinceLastNode' is true.
         private IndexReference DistanceToNextNode { get; set; } // The distance from the player to the next node.
         private IndexReference TimeSinceLastNode { get; set; } // The time since the last node was reached.
@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Otherwise, use the hook.
             else
                 OnPathStart.Invoke(getResolveRule.ActionSet);
-            
+
             // Update IsPathfindStuck data.
             UpdateStuckDetector(getResolveRule.ActionSet);
 
@@ -172,7 +172,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 value: pathmapReference,
                 targetPlayer: players
             ));
-            
+
             // Set target's parent array.
             actionSet.AddAction(ParentArray.SetVariable(
                 value: parentArray,
@@ -211,7 +211,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     )
                 )
             );
-    
+
         /// <summary>Determines if the target player is pathfinding.</summary>
         public Element IsPathfinding(Element player) => new V_Compare(ParentArray.GetVariable(player), Operators.NotEqual, new V_Null());
 
@@ -223,7 +223,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element defaultSpeed = 5.5;
             Element nodeDistance = DistanceToNextNode.Get(player);
             Element timeSinceLastNode = new V_TotalTimeElapsed() - TimeSinceLastNode.Get(player);
-            
+
             Element isStuck = new V_Compare(
                 nodeDistance - ((defaultSpeed * scalar * timeSinceLastNode) / leniency),
                 Operators.LessThanOrEqual,
@@ -231,7 +231,7 @@ namespace Deltin.Deltinteger.Pathfinder
             );
             return Element.Part<V_And>(IsPathfinding(player), isStuck);
         }
-    
+
         /// <summary>Updates stuck detector.</summary>
         private void UpdateStuckDetector(ActionSet actionSet)
         {
@@ -239,7 +239,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(TimeSinceLastNode.SetVariable(new V_TotalTimeElapsed()));
             actionSet.AddAction(DistanceToNextNode.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), CurrentPositionWithDestination())));
         }
-    
+
         /// <summary>Gets the next pathfinding attribute.</summary>
         // public Element NextSegmentAttribute(Element player) => Element.TernaryConditional(
         //     Element.Part<V_And>(IsPathfinding(player), new V_Compare(Current.GetVariable(player), Operators.NotEqual, new V_Number(-1))),
@@ -253,7 +253,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new V_Compare(Element.Part<V_YOf>(Element.Part<V_ArrayElement>()), Operators.Equal, ParentArray.Get()[Current.Get()] - 1)
             )
         ), Element.Part<V_ZOf>(Element.Part<V_ArrayElement>()));
-    
+
         /// <summary>Throttles the event player to the next node.</summary>
         public void ThrottleEventPlayerToNextNode(ActionSet actionSet)
         {

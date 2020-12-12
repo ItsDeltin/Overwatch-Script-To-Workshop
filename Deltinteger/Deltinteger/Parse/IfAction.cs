@@ -20,13 +20,13 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the if condition.
             Expression = parseInfo.GetExpression(scope, ifContext.Expression);
-            
+
             // Contains the path info of all blocks in the if/else-if/else list.
             var paths = new List<PathInfo>();
 
             // Get the if's block.
             Block = parseInfo.GetStatement(scope, ifContext.Statement);
-            
+
             // Add the if block path info.
             paths.Add(new PathInfo(Block, ifContext.Range, false));
 
@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
             if (ifContext.Else != null)
             {
                 ElseBlock = parseInfo.GetStatement(scope, ifContext.Else.Statement);
-                
+
                 // Add the else path info.
                 paths.Add(new PathInfo(ElseBlock, ifContext.Range, true));
             }
@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Translate the if block.
             Block.Translate(actionSet);
-            
+
             // 'block caps' are skips that are added to the end of the if block and each else-if block.
             // The skips skip to the end of the entire if/else-if/else.
             List<SkipStartMarker> blockCaps = new List<SkipStartMarker>();
@@ -164,7 +164,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the else-if's expression.
             Expression = parseInfo.GetExpression(scope, elseIfContext.Expression);
-            
+
             // Get the else-if's block.
             Block = parseInfo.GetStatement(scope, elseIfContext.Statement);
         }

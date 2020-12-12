@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the variable being set.
             VariableResolve = new VariableResolve(new VariableResolveOptions(), variableExpression, assignmentContext.VariableExpression.Range, parseInfo.Script.Diagnostics);
-            
+
             // Get the operation.
             Operation = assignmentContext.AssignmentToken;
 
@@ -37,11 +37,11 @@ namespace Deltin.Deltinteger.Parse
             {
                 case "=": break;
                 case "^=": modifyOperation = Elements.Operation.RaiseToPower; break;
-                case "*=": modifyOperation = Elements.Operation.Multiply;     break;
-                case "/=": modifyOperation = Elements.Operation.Divide;       break;
-                case "%=": modifyOperation = Elements.Operation.Modulo;       break;
-                case "+=": modifyOperation = Elements.Operation.Add;          break;
-                case "-=": modifyOperation = Elements.Operation.Subtract;     break;
+                case "*=": modifyOperation = Elements.Operation.Multiply; break;
+                case "/=": modifyOperation = Elements.Operation.Divide; break;
+                case "%=": modifyOperation = Elements.Operation.Modulo; break;
+                case "+=": modifyOperation = Elements.Operation.Add; break;
+                case "-=": modifyOperation = Elements.Operation.Subtract; break;
                 default: throw new Exception($"Unknown operation {Operation}.");
             }
 

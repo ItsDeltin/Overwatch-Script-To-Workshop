@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         void GetLambdaStatement();
     }
 
-    public interface ILambdaInvocable 
+    public interface ILambdaInvocable
     {
         IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues);
     }
@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     {
         public bool Invoked { get; private set; }
         public List<Action> Actions { get; } = new List<Action>();
-        
+
         public void WasInvoked() => Invoked = true;
         public void OnInvoke(Action onInvoke) => Actions.Add(onInvoke);
     }

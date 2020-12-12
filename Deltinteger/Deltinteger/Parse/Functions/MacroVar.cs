@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
             _expressionToParse = macroContext.Value;
             _scope = Static ? staticScope : objectScope;
             this._parseInfo = parseInfo;
-            
+
             _scope.AddMacro(this, parseInfo.Script.Diagnostics, nameRange, !Override);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddHover(nameRange, GetLabel(true));
@@ -66,7 +66,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 MacroVar overriding = (MacroVar)objectScope.GetMacroOverload(Name, DefinedAt);
 
-                if(overriding == this) {
+                if (overriding == this)
+                {
                     parseInfo.Script.Diagnostics.Error("Overriding itself!", nameRange);
                 }
 
@@ -86,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public void SetupParameters() {}
+        public void SetupParameters() { }
 
         public void SetupBlock()
         {
@@ -115,7 +116,8 @@ namespace Deltin.Deltinteger.Parse
             OnBlockApply(new MacroVarRestrictedCallHandler(this, parseInfo.RestrictedCallHandler, parseInfo.GetLocation(callRange)));
         }
 
-        public CompletionItem GetCompletion() => new CompletionItem() {
+        public CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Property
         };

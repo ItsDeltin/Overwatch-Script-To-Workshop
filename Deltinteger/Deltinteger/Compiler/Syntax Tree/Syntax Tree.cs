@@ -26,11 +26,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         DocRange Range { get; set; }
     }
-    public interface IParseExpression : INodeRange {}
-    public interface IParseStatement : INodeRange {}
+    public interface IParseExpression : INodeRange { }
+    public interface IParseStatement : INodeRange { }
     public interface ICommentableStatement
     {
-        Token ActionComment { get; }        
+        Token ActionComment { get; }
     }
     public interface IDeclaration
     {
@@ -352,7 +352,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Parameters = parameters;
         }
 
-        public override string ToString() => "new " + ClassIdentifier.Text + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")"; 
+        public override string ToString() => "new " + ClassIdentifier.Text + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
     }
 
     // Expressions
@@ -402,7 +402,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Formats = formats;
         }
 
-        public override string ToString() => '"' + Value + '"'; 
+        public override string ToString() => '"' + Value + '"';
     }
 
     public class Identifier : Node, IParseExpression

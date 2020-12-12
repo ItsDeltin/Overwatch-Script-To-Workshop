@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class NullAction : IExpression
     {
-        public NullAction() {}
+        public NullAction() { }
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IWorkshopTree result = Expression.Parse(actionSet);
 
-            foreach(var index in Index)
+            foreach (var index in Index)
                 result = Element.Part<V_ValueInArray>(result, index.Parse(actionSet));
 
             return result;
@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => ConvertingTo;
         public IWorkshopTree Parse(ActionSet actionSet) => Expression.Parse(actionSet);
     }
-    
+
     public class OperatorAction : IExpression
     {
         public IExpression Left { get; }
@@ -166,20 +166,20 @@ namespace Deltin.Deltinteger.Parse
             var right = Right.Parse(actionSet);
             switch (Operator.Operator.Operator)
             {
-                case "^": return Element.Part<V_RaiseToPower>(left,right);
-                case "*": return Element.Part<V_Multiply>(left,right);
-                case "/": return Element.Part<V_Divide>(left,right);
-                case "%": return Element.Part<V_Modulo>(left,right);
-                case "+": return Element.Part<V_Add>(left,right);
-                case "-": return Element.Part<V_Subtract>(left,right);
+                case "^": return Element.Part<V_RaiseToPower>(left, right);
+                case "*": return Element.Part<V_Multiply>(left, right);
+                case "/": return Element.Part<V_Divide>(left, right);
+                case "%": return Element.Part<V_Modulo>(left, right);
+                case "+": return Element.Part<V_Add>(left, right);
+                case "-": return Element.Part<V_Subtract>(left, right);
                 case "<": return new V_Compare(left, Operators.LessThan, right);
                 case "<=": return new V_Compare(left, Operators.LessThanOrEqual, right);
                 case "==": return new V_Compare(left, Operators.Equal, right);
                 case ">=": return new V_Compare(left, Operators.GreaterThanOrEqual, right);
                 case ">": return new V_Compare(left, Operators.GreaterThan, right);
                 case "!=": return new V_Compare(left, Operators.NotEqual, right);
-                case "&&": return Element.Part<V_And>(left,right);
-                case "||": return Element.Part<V_Or>(left,right);
+                case "&&": return Element.Part<V_And>(left, right);
+                case "||": return Element.Part<V_Or>(left, right);
                 default: throw new Exception($"Unrecognized operator {Operator}.");
             }
         }
@@ -229,7 +229,7 @@ namespace Deltin.Deltinteger.Parse
         public TernaryConditionalAction(ParseInfo parseInfo, Scope scope, TernaryExpression ternaryContext)
         {
             this.parseInfo = parseInfo;
-            
+
             Condition = parseInfo.GetExpression(scope, ternaryContext.Condition);
             Consequent = parseInfo.GetExpression(scope, ternaryContext.Consequent);
             Alternative = parseInfo.GetExpression(scope, ternaryContext.Alternative);

@@ -22,11 +22,13 @@ namespace Deltin.Deltinteger.Pathfinder
         public static Pathmap ImportFromCSVFile(string file, IPathmapErrorHandler errorHandler) => ImportFromCSV(File.ReadAllText(file).Trim(), errorHandler);
         public static Pathmap ImportFromCSV(string text, IPathmapErrorHandler errorHandler)
         {
-            CsvFrame frame; 
-            try {
+            CsvFrame frame;
+            try
+            {
                 frame = CsvFrame.ParseOne(text);
             }
-            catch (Exception) {
+            catch (Exception)
+            {
                 errorHandler.Error("Incorrect CSV format.");
                 return null;
             }
@@ -52,7 +54,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 CsvVector nodeVector = (CsvVector)nodeArray.Values[i];
                 vectors[i] = nodeVector.Value;
             }
-            
+
             // Get segments
             CsvArray segmentArray = frame.VariableValues[segmentsOut] as CsvArray;
 
@@ -71,7 +73,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     (int)segmentVector.Value.Y
                 );
             }
-            
+
             // Get attributes
             CsvArray attributeArray = frame.VariableValues[attributesOut] as CsvArray;
 
@@ -91,7 +93,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     (int)attributeVector.Value.Z
                 );
             }
-            
+
             return new Pathmap(vectors.ToArray(), segments.ToArray(), attributes);
         }
 
@@ -118,7 +120,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Attributes = attributes;
         }
 
-        private Pathmap() {}
+        private Pathmap() { }
 
         public string ExportAsJSON() => JsonConvert.SerializeObject(this, Formatting.Indented);
 
@@ -144,7 +146,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Node2 = node2;
         }
 
-        private Segment() {}
+        private Segment() { }
 
         public V_Vector AsWorkshopData() => new V_Vector((double)Node1, (double)Node2, 0);
     }
@@ -164,7 +166,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Node2 = node2;
             Attribute = attribute;
         }
-        public MapAttribute() {}
+        public MapAttribute() { }
 
         public Element AsWorkshopData() => new V_Vector(Node1, Node2, Attribute);
     }
@@ -173,7 +175,7 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         void Error(string error);
     }
-    
+
     class ConsolePathmapErrorHandler : IPathmapErrorHandler
     {
         private readonly Log log;

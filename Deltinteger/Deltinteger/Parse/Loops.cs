@@ -82,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
         {
             RawContinue = true;
             Condition = parseInfo.GetExpression(scope, whileContext.Condition);
-            
+
             Block = parseInfo.SetLoop(this).GetStatement(scope, whileContext.Statement);
             Path = new PathInfo(Block, whileContext.Range, false);
         }
@@ -98,7 +98,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Create a normal while loop.
                 actionSet.AddAction(Element.Part<A_While>(condition));
-                
+
                 // Translate the block.
                 Block.Translate(actionSet.Indent());
 
@@ -173,7 +173,7 @@ namespace Deltin.Deltinteger.Parse
                     // Variable assignment for initializer
                     else if (forContext.Initializer is Assignment assignment)
                         Initializer = new SetVariableAction(parseInfo, varScope, assignment);
-                    
+
                     // TODO: Throw error on incorrect initializer type.
                 }
             }
@@ -196,7 +196,8 @@ namespace Deltin.Deltinteger.Parse
                 else if (forContext.Initializer is Assignment assignment)
                 {
                     // Get the variable being set.
-                    VariableResolve = new VariableResolve(new VariableResolveOptions() {
+                    VariableResolve = new VariableResolve(new VariableResolveOptions()
+                    {
                         // The for cannot be indexed and should be on the rule-level.
                         CanBeIndexed = false,
                         FullVariable = true
@@ -209,7 +210,8 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // The variable is defined but no start value was given. In this case, just start at 0.
                     // Get the variable.
-                    VariableResolve = new VariableResolve(new VariableResolveOptions() {
+                    VariableResolve = new VariableResolve(new VariableResolveOptions()
+                    {
                         // The for cannot be indexed and should be on the rule-level.
                         CanBeIndexed = false,
                         FullVariable = true
@@ -225,7 +227,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the condition.
             if (forContext.Condition != null)
                 Condition = parseInfo.GetExpression(varScope, forContext.Condition);
-            
+
             // Get the iterator.
             if (forContext.Iterator != null)
             {
@@ -287,7 +289,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (Iterator != null)
                 Iterator.Translate(actionSet.Indent());
-                        
+
             actionSet.AddAction(new A_End());
 
             // Resolve breaks.
@@ -333,7 +335,7 @@ namespace Deltin.Deltinteger.Parse
                     variable,
                     start, stop, step
                 ));
-            
+
             // Translate the block.
             Block.Translate(actionSet.Indent());
 

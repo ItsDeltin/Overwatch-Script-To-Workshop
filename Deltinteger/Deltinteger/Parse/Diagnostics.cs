@@ -15,8 +15,8 @@ namespace Deltin.Deltinteger.Parse
 {
     public class Diagnostics
     {
-        public static readonly ConsoleColor[] SeverityColors = new ConsoleColor[] 
-        { 
+        public static readonly ConsoleColor[] SeverityColors = new ConsoleColor[]
+        {
             ConsoleColor.Red,
             ConsoleColor.Yellow,
             ConsoleColor.DarkGreen,
@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly List<FileDiagnostics> diagnosticFiles = new List<FileDiagnostics>();
 
-        public Diagnostics() {}
+        public Diagnostics() { }
 
         public bool ContainsErrors()
         {
@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
         public FileDiagnostics FromUri(Uri uri)
         {
             ThrowIfFileIsAlreadyAdded(uri);
-            
+
             FileDiagnostics fileDiagnostics = new FileDiagnostics(uri);
             diagnosticFiles.Add(fileDiagnostics);
             return fileDiagnostics;
@@ -81,16 +81,16 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (var file in diagnosticFiles)
                 file.OutputDiagnostics(builder);
-            
+
             return builder.ToString();
         }
     }
 
     public class FileDiagnostics
     {
-        public Uri Uri { get;}
+        public Uri Uri { get; }
         private List<Diagnostic> _diagnostics { get; } = new List<Diagnostic>();
-        public Diagnostic[] Diagnostics { get { return _diagnostics.ToArray(); }}
+        public Diagnostic[] Diagnostics { get { return _diagnostics.ToArray(); } }
 
         public FileDiagnostics(Uri uri)
         {
@@ -126,7 +126,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _diagnostics.AddRange(diagnostics);
         }
-    
+
         public PublishDiagnosticsParams GetDiagnostics()
         {
             LSDiagnostic[] lsDiagnostics = new LSDiagnostic[_diagnostics.Count];
@@ -142,14 +142,14 @@ namespace Deltin.Deltinteger.Parse
                     // TODO: Fix this if Code is ever used.
                     // Code = (DiagnosticCode)_diagnostics[i].code,
                 };
-            
+
             return new PublishDiagnosticsParams()
             {
                 Uri = Uri,
                 Diagnostics = lsDiagnostics
             };
         }
-    
+
         public void OutputDiagnostics(StringBuilder builder)
         {
             var sorted = Diagnostics.OrderBy(d => d.severity);

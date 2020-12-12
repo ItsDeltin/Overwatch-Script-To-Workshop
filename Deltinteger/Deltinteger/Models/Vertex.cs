@@ -24,9 +24,9 @@ namespace Deltin.Deltinteger.Models
             Z = z;
             W = w;
         }
-        public Vertex(double x, double y, double z) : this(x,y,z,0) {}
-        public Vertex(double x, double y) : this(x,y,0,0) {}
-        public Vertex() : this(0,0,0,0) {}
+        public Vertex(double x, double y, double z) : this(x, y, z, 0) { }
+        public Vertex(double x, double y) : this(x, y, 0, 0) { }
+        public Vertex() : this(0, 0, 0, 0) { }
 
         public V_Vector ToVector()
         {
@@ -44,21 +44,21 @@ namespace Deltin.Deltinteger.Models
             var cosc = Math.Cos(roll);
             var sinc = Math.Sin(roll);
 
-            var Axx = cosa*cosb;
-            var Axy = cosa*sinb*sinc - sina*cosc;
-            var Axz = cosa*sinb*cosc + sina*sinc;
+            var Axx = cosa * cosb;
+            var Axy = cosa * sinb * sinc - sina * cosc;
+            var Axz = cosa * sinb * cosc + sina * sinc;
 
-            var Ayx = sina*cosb;
-            var Ayy = sina*sinb*sinc + cosa*cosc;
-            var Ayz = sina*sinb*cosc - cosa*sinc;
+            var Ayx = sina * cosb;
+            var Ayy = sina * sinb * sinc + cosa * cosc;
+            var Ayz = sina * sinb * cosc - cosa * sinc;
 
             var Azx = -sinb;
-            var Azy = cosb*sinc;
-            var Azz = cosb*cosc;
+            var Azy = cosb * sinc;
+            var Azz = cosb * cosc;
 
-            var newX = Axx*X + Axy*Y + Axz*Z;
-            var newY = Ayx*X + Ayy*Y + Ayz*Z;
-            var newZ = Azx*X + Azy*Y + Azz*Z;
+            var newX = Axx * X + Axy * Y + Axz * Z;
+            var newY = Ayx * X + Ayy * Y + Ayz * Z;
+            var newZ = Azx * X + Azy * Y + Azz * Z;
 
             return new Vertex(newX, newY, newZ);
         }
@@ -92,13 +92,13 @@ namespace Deltin.Deltinteger.Models
             if (c == null) throw new ArgumentNullException("c");
 
             double[] ab = { b.X - a.X, b.Y - a.Y, b.Z - a.Z };
-            double[] bc = { c.X - b.X, c.Y - b.Y, c.Z - b.Z  };
+            double[] bc = { c.X - b.X, c.Y - b.Y, c.Z - b.Z };
 
             double abVec = Math.Sqrt(ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2]);
             double bcVec = Math.Sqrt(bc[0] * bc[0] + bc[1] * bc[1] + bc[2] * bc[2]);
 
-            double[] abNorm = {ab[0] / abVec, ab[1] / abVec, ab[2] / abVec};
-            double[] bcNorm = {bc[0] / bcVec, bc[1] / bcVec, bc[2] / bcVec};
+            double[] abNorm = { ab[0] / abVec, ab[1] / abVec, ab[2] / abVec };
+            double[] bcNorm = { bc[0] / bcVec, bc[1] / bcVec, bc[2] / bcVec };
 
             double res = abNorm[0] * bcNorm[0] + abNorm[1] * bcNorm[1] + abNorm[2] * bcNorm[2];
 

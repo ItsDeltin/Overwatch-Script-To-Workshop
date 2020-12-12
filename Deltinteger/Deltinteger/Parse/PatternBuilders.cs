@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             Condition = new V_Compare(IndexStore.GetVariable(), Operators.LessThan, Element.Part<V_CountOf>(Array));
             Index = (Element)IndexStore.GetVariable();
             IndexValue = Element.Part<V_ValueInArray>(Array, IndexStore.GetVariable());
-            
+
             actionSet.AddAction(Element.Part<A_While>(Condition));
         }
 
@@ -131,12 +131,12 @@ namespace Deltin.Deltinteger.Parse
             // Update switch skips to skip to the end of the switch.
             foreach (SkipStartMarker skipToEnd in SkipToEnd)
                 skipToEnd.SetEndMarker(switchEnd);
-            
+
             // Default insert.
             // TODO: Default case
             if (!defaultAdded)
                 skipCounts.Insert(0, Skipper.GetSkipCount(switchEnd));
-            
+
             // Skip to the case.
             Skipper.SetSkipCount(
                 // Create an array of all skip counts.

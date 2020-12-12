@@ -7,7 +7,7 @@ using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.Compl
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
-{    
+{
     class ValueGroupType : CodeType
     {
         public EnumData EnumData { get; }
@@ -44,7 +44,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override Scope ReturningScope() => Scope;
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Enum
         };
@@ -54,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
                 .StartCodeLine()
                 .Add((Constant ? "constant " : "enum ") + Name)
                 .EndCodeLine();
-            
+
             if (Constant)
                 hoverContents.NewSection().Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
 

@@ -37,12 +37,12 @@ namespace Deltin.Deltinteger.Parse
         private bool extGlobalLimitReached = false;
         private bool extPlayerLimitReached = false;
 
-        public VarCollection() {}
+        public VarCollection() { }
 
         public void Setup()
         {
-            global      = AssignWorkshopVariable("_extendedGlobalCollection", true);
-            player      = AssignWorkshopVariable("_extendedPlayerCollection", false);
+            global = AssignWorkshopVariable("_extendedGlobalCollection", true);
+            player = AssignWorkshopVariable("_extendedPlayerCollection", false);
             var builder = AssignWorkshopVariable("_arrayBuilder", true);
 
             IndexReference store = Assign("_arrayBuilderStore", true, true);
@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
             names.AddRange(reservedNames(isGlobal));
             return names.ToArray();
         }
-    
+
         private WorkshopVariable AssignWorkshopVariable(string name, bool isGlobal)
         {
             int id = NextFreeID(isGlobal);
@@ -85,11 +85,11 @@ namespace Deltin.Deltinteger.Parse
             variableList(isGlobal).Add(workshopVariable);
             return workshopVariable;
         }
-        
+
         private int NextFreeID(bool isGlobal)
         {
             // Get the next free ID.
-            for (int i = 0;; i++)
+            for (int i = 0; ; i++)
                 // Make sure the ID is not reserved.
                 if (!variableList(isGlobal).Any(var => var.ID == i) && !reservedIDs(isGlobal).Contains(i))
                 {
@@ -105,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
 
         private int NextFreeExtended(bool isGlobal)
         {
-            for (int i = 0;; i++)
+            for (int i = 0; ; i++)
                 if (!ExtendedVariableList(isGlobal).Any(ex => ex.Index == i))
                 {
                     // Set 'extGlobalLimitReached' or 'extPlayerLimitReached' to true when the variable limit is reached.
@@ -117,7 +117,7 @@ namespace Deltin.Deltinteger.Parse
                     return i;
                 }
         }
-    
+
         public IndexReference Assign(string name, bool isGlobal, bool extended)
         {
             if (!extended)
@@ -155,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
                 return reference;
             }
         }
-    
+
         public void ToWorkshop(WorkshopBuilder builder)
         {
             if (globalLimitReached || playerLimitReached || extGlobalLimitReached || extPlayerLimitReached)

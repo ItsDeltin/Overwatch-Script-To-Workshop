@@ -10,7 +10,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 namespace Deltin.Deltinteger.Elements
 {
     [AttributeUsage(AttributeTargets.Enum)]
-    public class WorkshopEnum : Attribute {}
+    public class WorkshopEnum : Attribute { }
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Enum)]
     public class EnumOverride : Attribute
@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Elements
         {
             // This converts enums with special properties to an Element.
 
-            switch(enumMember.Enum.CodeName)
+            switch (enumMember.Enum.CodeName)
             {
                 case "Hero": return Element.Part<V_HeroValue>(enumMember);
                 case "Team": return Element.Part<V_TeamVar>(enumMember);
@@ -92,7 +92,7 @@ namespace Deltin.Deltinteger.Elements
             for (int v = 0; v < Members.Length; v++)
             {
                 EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
-                string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
+                string fieldCodeName = fieldData?.CodeName ?? fields[v].Name;
                 string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name.Replace('_', ' '), false);
                 bool isHidden = fields[v].GetCustomAttribute<HideElement>() != null;
 
@@ -147,7 +147,7 @@ namespace Deltin.Deltinteger.Elements
             if (@Enum.Type == typeof(PlayerSelector) && WorkshopName.StartsWith("Slot")) return numTranslate("Slot");
             if (@Enum.Type == typeof(Button) && WorkshopName.StartsWith("Ability")) return numTranslate("Ability");
             if ((@Enum.Type == typeof(Team) || @Enum.Type == typeof(Color)) && WorkshopName.StartsWith("Team")) return numTranslate("Team");
-            
+
             return LanguageInfo.Translate(language, WorkshopName).RemoveStructuralChars();
         }
 
@@ -538,32 +538,24 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum ObjectiveRev
-    {
-        [EnumOverride(null, "Visible To and String")]
-        VisibleToAndString,
-        String,
-        [EnumOverride(null, "Visible To Sort Order and String")]
-        VisibleToSortOrderAndString,
-        SortOrderAndString,
-        VisibleToAndSortOrder,
-        VisibleTo,
-        SortOrder,
-        None
-    }
-
-    [WorkshopEnum]
     public enum HudTextRev
     {
         [EnumOverride(null, "Visible To and String")]
         VisibleToAndString,
         String,
+        StringAndColor,
+        [EnumOverride(null, "Visible To Sort Order String and Color")]
+        VisibleToSortOrderStringAndColor,
         [EnumOverride(null, "Visible To Sort Order and String")]
         VisibleToSortOrderAndString,
+        [EnumOverride(null, "Visible To String and Color")]
+        VisibleToStringAndColor,
         SortOrderAndString,
         VisibleToAndSortOrder,
+        VisibleToAndColor,
         VisibleTo,
         SortOrder,
+        SortOrderAndColor,
         None
     }
 

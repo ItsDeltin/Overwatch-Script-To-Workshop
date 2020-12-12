@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private static readonly Log Log = new Log("Editor");
 
         // The names of the WorkshopVariable in LoadNodes, LoadSegments, and LoadAttributes must equal the variable names in Modules/PathfindEditor.del. The ID doesn't matter.
-        private static readonly WorkshopVariable LoadNodes    = new WorkshopVariable(true, 3, "preloadNodes");
+        private static readonly WorkshopVariable LoadNodes = new WorkshopVariable(true, 3, "preloadNodes");
         private static readonly WorkshopVariable LoadSegments = new WorkshopVariable(true, 4, "preloadSegments");
         private static readonly WorkshopVariable LoadAttributes = new WorkshopVariable(true, 5, "preloadAttributes");
 
@@ -36,8 +36,10 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             string baseEditorFile = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
 
-            return new DeltinScript(new TranslateSettings(baseEditorFile) {
-                AdditionalRules = (varCollection) => {
+            return new DeltinScript(new TranslateSettings(baseEditorFile)
+            {
+                AdditionalRules = (varCollection) =>
+                {
                     // Set the initial nodes.
                     Rule initialNodes = new Rule("Initial Nodes");
                     initialNodes.Actions = ArrayBuilder<Element>.Build(

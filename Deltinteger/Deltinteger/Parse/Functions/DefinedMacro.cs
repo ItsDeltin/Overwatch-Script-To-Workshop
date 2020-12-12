@@ -16,8 +16,8 @@ namespace Deltin.Deltinteger.Parse
         {
             _context = context;
             DocRange nameRange = context.Identifier.Range;
-            Attributes.ContainingType = (Static ? staticScope: objectScope).This;
-            
+            Attributes.ContainingType = (Static ? staticScope : objectScope).This;
+
             // Get the attributes.
             MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
             FunctionAttributesGetter attributeInfo = new MacroAttributesGetter(context, attributeResult);
@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             // Copy attribute results
             Static = attributeResult.Static;
             AccessLevel = attributeResult.AccessLevel;
-            
+
             SetupScope(Static ? staticScope : objectScope);
             CodeType = returnType;
             DoesReturnValue = true;
@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
                 IGettable result = actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
 
                 //if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
-                    //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
+                //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
 
                 foreach (Var virtualParameterOption in VirtualVarGroup(i))
                     actionSet.IndexAssigner.Add(virtualParameterOption, result);

@@ -9,7 +9,7 @@ import glob = require('glob');
 import yauzl = require("yauzl");
 import exec = require('child_process');
 import { register } from './debugger';
-import { decompileClipboard, insertActions } from './decompile';
+import { decompileClipboard, insertActions, decompilerOriginalWorkshopCode } from './decompile';
 
 let globalStoragePath:string;
 let defaultServerFolder:string;
@@ -410,8 +410,15 @@ const workshopPanelProvider = new class implements vscode.TextDocumentContentPro
 	onDidChange = this.onDidChangeEmitter.event;
 
 	provideTextDocumentContent(uri: vscode.Uri): string {
-		if (lastWorkshopOutput == null) return "";
-		return lastWorkshopOutput;
+		if (uri.fsPath.startsWith('[decompile]'))
+		{
+			return decompilerOriginalWorkshopCode;
+		}
+		else
+		{
+			if (lastWorkshopOutput == null) return "";
+			return lastWorkshopOutput;
+		}
 	}
 };
 

@@ -162,10 +162,10 @@ namespace Deltin.Deltinteger.Parse
         {
             var context = _contextHandler.GetCodeType();
             CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, context);
-            
+
             if (type != null && type.IsConstant())
                 _diagnostics.Error($"Constant types cannot be used in subroutine parameters.", context.Range);
-            
+
             _varInfo.Type = type;
         }
     }
@@ -193,7 +193,7 @@ namespace Deltin.Deltinteger.Parse
             // Otherwise, we can supply the parameter code type from the contextual lambda type.
             else
                 ApplyCodeType(_contextualLambdaType.Parameters[_parameter]);
-        } 
+        }
     }
 
     class ForeachVariable : VarBuilder

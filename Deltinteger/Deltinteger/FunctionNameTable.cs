@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger
             foreach (var element in ElementList.Elements)
                 if (!element.Hidden && element.Name.ToLower() != element.WorkshopName.Replace(" ", "").Replace("-", "").ToLower())
                     elements.Add(element);
-            
+
             TableElement[,] table = new TableElement[2, elements.Count + 2];
             table[0, 0] = new TextElement("Workshop Name");
             table[1, 0] = new TextElement("Function Name");
@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger
                 for (int c = 0; c < table.GetLength(0); c++)
                 {
                     builder.Append("|");
-                    builder.Append(table[c,r].GetText(ColumnWidth(table, c)));
+                    builder.Append(table[c, r].GetText(ColumnWidth(table, c)));
                 }
                 builder.Append("|");
                 builder.AppendLine();
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger
             int width = 0;
             for (int r = 0; r < table.GetLength(1); r++)
             {
-                int elementWidth = table[column,r].Width();
+                int elementWidth = table[column, r].Width();
                 if (elementWidth > width) width = elementWidth;
             }
             return width;
@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger
         class TextElement : TableElement
         {
             private readonly string _text;
-            
+
             public TextElement(string text)
             {
                 _text = text;
@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger
         }
         class SeperatorElement : TableElement
         {
-            public SeperatorElement() {}
+            public SeperatorElement() { }
             public override string GetText(int columnLength) => new string('-', columnLength);
             public override int Width() => 0;
         }
