@@ -320,6 +320,8 @@ namespace Deltin.Deltinteger.Parse
         private readonly NumberType _numberType;
         private readonly StringType _stringType;
         private readonly BooleanType _booleanType;
+        private AnyType _anyType;
+        private AnyType _unknownType;
 
         public ScriptTypes()
         {
@@ -332,8 +334,9 @@ namespace Deltin.Deltinteger.Parse
 
         public void GetDefaults(DeltinScript deltinScript)
         {
-            var dynamicType = new AnyType(deltinScript);
-            AddType(dynamicType);
+            _anyType = new AnyType(deltinScript);
+            _unknownType = new AnyType("?", deltinScript);
+            AddType(_anyType);
             AddType(_playerType);
             AddType(_vectorType);
             AddType(_numberType);
@@ -345,9 +348,9 @@ namespace Deltin.Deltinteger.Parse
             AddType(new Pathfinder.PathmapClass(deltinScript));
             AddType(new Pathfinder.PathResolveClass(this));
             // Constant lambda types.
-            AddType(new Lambda.BlockLambda(dynamicType));
-            AddType(new Lambda.ValueBlockLambda(dynamicType));
-            AddType(new Lambda.MacroLambda(dynamicType));
+            AddType(new Lambda.BlockLambda(_anyType));
+            AddType(new Lambda.ValueBlockLambda(_anyType));
+            AddType(new Lambda.MacroLambda(_anyType));
             // Model static class.
             // AddType(new Models.AssetClass());
             // Enums
@@ -396,18 +399,19 @@ namespace Deltin.Deltinteger.Parse
         public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
 
         public CodeType Default() => Any();
-        public CodeType Any() => GetInstance<AnyType>();
+        public CodeType Any() => _anyType;
         public CodeType AnyArray() => new ArrayType(this, Any());
-        public CodeType Boolean() => GetInstance<BooleanType>();
-        public CodeType Number() => GetInstance<NumberType>();
-        public CodeType String() => GetInstance<StringType>();
+        public CodeType Boolean() => _booleanType;
+        public CodeType Number() => _numberType;
+        public CodeType String() => _stringType;
         public CodeType Player() => _playerType;
         public CodeType Players() => new PipeType(_playerType, PlayerArray());
         public CodeType PlayerArray() => new ArrayType(this, _playerType);
         public CodeType Vector() => _vectorType;
         public CodeType VectorArray() => new ArrayType(this, _vectorType);
         public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
-        public CodeType Button() => Any(); // TODO
+        public CodeType Button() => Any();
+        public CodeType Unknown() => _unknownType;
 
         public CodeType EnumType(string typeName)
         {

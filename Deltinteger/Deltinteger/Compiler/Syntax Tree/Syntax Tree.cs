@@ -48,6 +48,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         bool LookaheadValid { get; }
         bool IsVoid { get; }
         bool DefinitelyType { get; }
+        bool Infer => false;
     }
 
     public class ParseType : Node, IParseType
@@ -72,9 +73,9 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
 
         public bool HasTypeArgs => TypeArgs != null && TypeArgs.Count > 0;
-        public bool IsArray => ArrayCount > 0;
         public bool LookaheadValid => Identifier != null;
         public bool IsDefault => !Identifier || Identifier.TokenType == TokenType.Define;
+        public bool Infer => Identifier && Identifier.TokenType == TokenType.Define;
         public bool DefinitelyType => IsVoid || Identifier.TokenType == TokenType.Define || TypeArgs.Count > 0;
         Token IParseType.GenericToken => Identifier;
     }

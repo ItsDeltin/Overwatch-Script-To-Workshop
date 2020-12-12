@@ -7,7 +7,9 @@ namespace Deltin.Deltinteger.Parse
     {
         private readonly DeltinScript _deltinScript;
 
-        public AnyType(DeltinScript deltinScript) : base("Any")
+        public AnyType(DeltinScript deltinScript) : this("Any", deltinScript) {}
+
+        public AnyType(string name, DeltinScript deltinScript) : base(name)
         {
             CanBeDeleted = true;
             CanBeExtended = false;

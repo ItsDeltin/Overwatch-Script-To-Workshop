@@ -45,6 +45,7 @@ namespace Deltin.Deltinteger.Parse
         public ScopedVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
         {
             _operationalScope = operationalScope;
+            _canInferType = true;
         }
 
         protected override void CheckAttributes()
@@ -62,9 +63,6 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.WholeContext = false;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
             _varInfo.RequiresCapture = true;
-
-            if (_varInfo.IsWorkshopReference && _varInfo.InitialValueContext == null)
-                _diagnostics.Error("Variables with the 'ref' attribute must have an initial value.", _nameRange);
         }
 
         protected override Scope OperationalScope() => _operationalScope;
@@ -234,9 +232,9 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = false;
-            _varInfo.IsWorkshopReference = true;
             _varInfo.RequiresCapture = true;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
+            _varInfo.VariableTypeHandler.SetWorkshopReference();
 
             _varInfo.TokenType = TokenType.Variable;
             _varInfo.TokenModifiers.Add(TokenModifier.Declaration);

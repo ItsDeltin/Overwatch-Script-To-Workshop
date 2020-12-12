@@ -48,9 +48,11 @@ namespace Deltin.Deltinteger.Parse
 
     public class NullAction : IExpression
     {
-        public NullAction() {}
+        private readonly CodeType _type;
+
+        public NullAction(ParseInfo parseInfo) => _type = parseInfo.TranslateInfo.Types.Any();
         public Scope ReturningScope() => null;
-        public CodeType Type() => NullType.Instance;
+        public CodeType Type() => _type;
         public IWorkshopTree Parse(ActionSet actionSet) => Element.Null();
     }
 

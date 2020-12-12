@@ -161,12 +161,18 @@ namespace Deltin.Deltinteger.Parse
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, ParseType typeContext)
         {
-            if (typeContext == null) return null;
+            if (typeContext == null) return parseInfo.TranslateInfo.Types.Unknown();
 
-            if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<AnyType>();
+            if (typeContext.IsDefault)
+            {
+                if (typeContext.Infer)
+                    parseInfo.Script.Diagnostics.Hint("Unable to infer type", typeContext.Identifier.Range);
+
+                return parseInfo.TranslateInfo.Types.Any();
+            }
             
             CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
-            if (type == null) return parseInfo.TranslateInfo.Types.Any();
+            if (type == null) return parseInfo.TranslateInfo.Types.Unknown();
 
             // Get generics
             if (typeContext.HasTypeArgs)

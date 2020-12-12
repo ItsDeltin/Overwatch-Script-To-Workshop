@@ -149,7 +149,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 case NumberExpression number: return new NumberAction(this, number);
                 case BooleanExpression boolean: return new BoolAction(this, boolean.Value);
-                case NullExpression @null: return new NullAction();
+                case NullExpression @null: return new NullAction(this);
                 case StringExpression @string: return new StringAction(this, scope, @string);
                 case Identifier identifier: return GetVariable(scope, getter, identifier, selfContained);
                 case FunctionExpression method: return new CallMethodAction(this, scope, method, usedAsValue, getter);
