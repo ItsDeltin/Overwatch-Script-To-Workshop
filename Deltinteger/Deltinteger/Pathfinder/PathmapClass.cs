@@ -793,8 +793,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private SegmentsStruct() : base("PathmapSegment")
         {
-            this.Kind = "struct";
-
             Node_A = new InternalVar("Node_A", CompletionItemKind.Property) { Documentation = "The primary node of this segment. This returns a number which is the index of the node in the pathmap." };
             Node_B = new InternalVar("Node_B", CompletionItemKind.Property) { Documentation = "The secondary node of this segment. This returns a number which is the index of the node in the pathmap." };
             _scope.AddNativeVariable(Node_A);

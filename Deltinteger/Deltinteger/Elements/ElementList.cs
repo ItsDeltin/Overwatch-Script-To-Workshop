@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Elements
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, Documentation);
 
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
 
         public object Call(ParseInfo parseInfo, DocRange callRange)
         {

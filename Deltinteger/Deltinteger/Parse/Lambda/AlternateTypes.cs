@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             CanBeDeleted = false;
             CanBeExtended = false;
-            Kind = "constant";
+            Kind = TypeKind.Constant;
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {

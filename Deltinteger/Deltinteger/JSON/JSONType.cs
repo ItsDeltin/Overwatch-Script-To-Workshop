@@ -238,7 +238,7 @@ namespace Deltin.Deltinteger.Json
             Documentation = Documentation
         };
 
-        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
+        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this).ToString(markdown);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => (Element)methodCall.AdditionalParameterData[0];
 

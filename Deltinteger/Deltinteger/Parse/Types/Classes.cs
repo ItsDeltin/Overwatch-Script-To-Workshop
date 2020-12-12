@@ -46,6 +46,7 @@ Object-serve scope. Only object members.
             CanBeExtended = true;
             TokenType = TokenType.Class;
             DebugVariableResolver = new ClassDebugVariableResolver(this);
+            Kind = TypeKind.Class;
         }
 
         public virtual void ResolveElements()

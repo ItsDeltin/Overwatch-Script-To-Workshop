@@ -620,7 +620,7 @@ namespace Deltin.Deltinteger.Parse
             Label = Name,
             Kind = CompletionItemKind.Function,
             Documentation = Primary.Documentation,
-            Detail = IMethod.GetLabel(Primary, true)
+            Detail = IMethod.DefaultLabel(false, Primary).ToString(false)
             // Fancy label (similiar to what c# does)
             // Documentation = new MarkupBuilder()
             //     .StartCodeLine()

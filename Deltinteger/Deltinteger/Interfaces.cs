@@ -17,25 +17,32 @@ namespace Deltin.Deltinteger
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         bool DoesReturnValue => CodeType != null;
 
-        public static string GetLabel(IMethod function, bool includeReturnType)
+        public static MarkupBuilder DefaultLabel(bool includeDescription, IMethod function)
         {
-            // Get the return type.
-            string result = "";
-            if (includeReturnType)
-                result += (function.DoesReturnValue ? function.CodeType?.GetName() ?? "define" : "void") + " ";
+            MarkupBuilder markup = new MarkupBuilder()
+                .StartCodeLine()
+                .Add(function.CodeType.GetNameOrVoid())
+                .Add(" ")
+                .Add(function.Name + CodeParameter.GetLabels(function.Parameters))
+                .EndCodeLine();
             
-            result += function.Name + "(";
-
-            // Get the parameters.
-            for (int i = 0; i < function.Parameters.Length; i++)
+            if (includeDescription && function.Documentation != null)
             {
-                result += function.Parameters[i].GetLabel();
-                if (i < function.Parameters.Length - 1) result += ", ";
+                markup
+                    .NewSection()
+                    .Add(function.Documentation);
             }
             
-            result += ")";
-            return result;
+            return markup;
         }
+
+        public static CompletionItem GetFunctionCompletion(IMethod function) => new CompletionItem()
+        {
+            Label = function.Name,
+            Kind = CompletionItemKind.Method,
+            Detail = function.CodeType.GetNameOrVoid() + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
+            Documentation = Extras.GetMarkupContent(function.Documentation)
+        };
     }
 
     public interface ISkip

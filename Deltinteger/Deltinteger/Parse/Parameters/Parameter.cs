@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel()
         {
-            string result = (Type == null ? "define" : Type.GetName()) + " " + Name;
+            string result = Type.GetNameOrAny() + " " + Name;
             if (DefaultValue != null) result = "[" + result + "]";
             return result;
         }

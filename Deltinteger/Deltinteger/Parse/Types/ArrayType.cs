@@ -125,8 +125,8 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the array containing only values from a specified index range.",
                 ReturnType = this,
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("startIndex", "The first index of the range."),
-                    new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.")
+                    new CodeParameter("startIndex", "The first index of the range.", supplier.Number()),
+                    new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.", supplier.Number())
                 },
                 Action = (actionSet, methodCall) => Element.Part("Array Slice", actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
             });

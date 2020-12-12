@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return false;
         }
 
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue ? CodeType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
 
         /// <summary>Gets the 'Invoke' parameters from an array of CodeTypes.</summary>

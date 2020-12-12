@@ -23,7 +23,6 @@ namespace Deltin.Deltinteger.Parse
         {
             CanBeDeleted = false;
             CanBeExtended = false;
-            Kind = "struct";
             Inherit(Positionable.Instance, null, null);
             TokenType = TokenType.Struct;
             _typeSupplier = supplier;

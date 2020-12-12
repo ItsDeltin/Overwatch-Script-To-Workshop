@@ -53,7 +53,6 @@ namespace Deltin.Deltinteger.Parse
         {
             CanBeExtended = false;
             Inherit(Positionable.Instance, null, null);
-            Kind = "struct";
             _supplier = typeSupplier;
         }
 

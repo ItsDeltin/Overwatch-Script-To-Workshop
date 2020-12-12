@@ -17,7 +17,6 @@ namespace Deltin.Deltinteger.Elements
         CodeType Vector();
         CodeType VectorArray();
         CodeType PlayerOrVector();
-        CodeType Button();
         CodeType Hero() => EnumType("Hero");
         CodeType Map() => EnumType("Map");
         CodeType GameMode() => EnumType("GameMode");
@@ -40,7 +39,7 @@ namespace Deltin.Deltinteger.Elements
                 case "vector": return Vector();
                 case "vector[]": return VectorArray();
                 case "player | vector": return PlayerOrVector();
-                case "button": return Button();
+                case "button": return EnumType("Button");
                 case "hero": return Hero();
                 case "map": return Map();
                 case "team": return Team();

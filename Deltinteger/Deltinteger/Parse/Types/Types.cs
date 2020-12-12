@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
         public string Description { get; protected set; }
         public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
-        protected string Kind = "class";
+        protected TypeKind Kind = TypeKind.Struct;
         protected TokenType TokenType { get; set; } = TokenType.Type;
         protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
@@ -147,12 +147,17 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.TranslateInfo.Types.CallType(this);
-            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind.ToString().ToLower() + " " + Name, Description));
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
+
+        public static CompletionItem GetTypeCompletion(CodeType type) => new CompletionItem() {
+            Label = type.GetName(),
+            Kind = type.Kind == TypeKind.Class ? CompletionItemKind.Class : type.Kind == TypeKind.Constant ? CompletionItemKind.Constant : type.Kind == TypeKind.Enum ? CompletionItemKind.Enum : CompletionItemKind.Struct
+        };
 
         /// <summary>Gets the full name of the type.</summary>
         public virtual string GetName() => Name;

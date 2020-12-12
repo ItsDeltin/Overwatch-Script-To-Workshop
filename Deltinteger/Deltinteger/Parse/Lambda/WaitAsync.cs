@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             new CodeParameter("duration"),
             new CodeParameter("action", new PortableLambdaType(LambdaKind.Portable))
         };
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
         public string GetLabel(bool markdown) => LanguageServer.HoverHandler.GetLabel("void", Name, Parameters, markdown, null);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)

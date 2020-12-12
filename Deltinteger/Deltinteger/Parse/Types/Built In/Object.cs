@@ -30,7 +30,6 @@ namespace Deltin.Deltinteger.Parse
         {
             CanBeExtended = false;
             _supplier = supplier;
-            Kind = "struct";
         }
 
         public void ResolveElements()
@@ -66,7 +65,6 @@ namespace Deltin.Deltinteger.Parse
         public BooleanType(ITypeSupplier supplier) : base("Boolean")
         {
             CanBeExtended = false;
-            Kind = "struct";
             _supplier = supplier;
 
             Operations = new TypeOperation[] {
@@ -91,7 +89,6 @@ namespace Deltin.Deltinteger.Parse
         private Positionable() : base("Positionable")
         {
             CanBeExtended = true;
-            Kind = "struct";
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {

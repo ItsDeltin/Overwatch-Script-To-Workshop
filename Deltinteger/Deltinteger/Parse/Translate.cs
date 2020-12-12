@@ -410,7 +410,6 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Vector() => _vectorType;
         public CodeType VectorArray() => new ArrayType(this, _vectorType);
         public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
-        public CodeType Button() => Any();
         public CodeType Unknown() => _unknownType;
 
         public CodeType EnumType(string typeName)

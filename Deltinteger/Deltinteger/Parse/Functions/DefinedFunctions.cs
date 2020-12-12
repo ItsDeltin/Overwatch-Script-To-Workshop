@@ -67,11 +67,11 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
         }
         
-        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
+        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this).ToString(markdown);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
 
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
 
         protected List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)
