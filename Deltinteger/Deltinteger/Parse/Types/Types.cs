@@ -245,6 +245,10 @@ namespace Deltin.Deltinteger.Parse
         {
             var left = GetCodeTypeFromContext(parseInfo, type.Left);
             var right = GetCodeTypeFromContext(parseInfo, type.Right);
+
+            if (left.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Left.Range);
+            if (right.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Right.Range);
+
             return new PipeType(left, right);
         }
     }
