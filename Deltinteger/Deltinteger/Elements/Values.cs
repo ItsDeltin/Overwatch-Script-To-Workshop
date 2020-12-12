@@ -2126,6 +2126,6 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Player Hero Stat", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroValue))]
-    [EnumParameter("Stat", typeof(PlayerStat))]
+    [EnumParameter("Stat", typeof(PlayerHeroStat))]
     public class V_PlayerHeroStat : Element { }
 }
