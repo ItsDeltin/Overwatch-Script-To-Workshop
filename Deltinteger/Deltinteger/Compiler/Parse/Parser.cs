@@ -878,9 +878,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Open);
 
             // Get the statements.
-            var statements = new List<IParseStatement>();
-            while (!Is(TokenType.CurlyBracket_Close))
-            {
+            var statements = ParseList(TokenType.CurlyBracket_Close, () => Kind.IsStartOfStatement() || Is(TokenType.Case) || Is(TokenType.Default), () => {
                 // Case
                 if (ParseOptional(TokenType.Case, out var caseToken))
                 {
@@ -890,7 +888,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     ParseExpected(TokenType.Colon);
 
                     // Add the case statement.
-                    statements.Add(EndNode(new SwitchCase(caseToken, caseValue)));
+                    return EndNode(new SwitchCase(caseToken, caseValue));
                 }
                 // Default
                 else if (ParseOptional(TokenType.Default, out var defaultToken))
@@ -899,11 +897,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     ParseExpected(TokenType.Colon);
 
                     // Add the default statement.
-                    statements.Add(EndNode(new SwitchCase(defaultToken)));
+                    return EndNode(new SwitchCase(defaultToken));
                 }
                 // Normal statement
-                else statements.Add(ParseStatement());
-            }
+                else return ParseStatement();
+            });
 
             ParseExpected(TokenType.CurlyBracket_Close);
             return EndTokenCapture(new Switch(expression, statements));

@@ -207,7 +207,9 @@ namespace Deltin.Deltinteger.Parse
             WorkshopRules = new List<Rule>();
 
             // Init called types.
-            foreach (var type in Types.CalledTypes.Distinct()) type.WorkshopInit(this);
+            foreach (var type in Types.AllTypes)
+                if (Types.CalledTypes.Contains(type))
+                    type.WorkshopInit(this);
 
             // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
