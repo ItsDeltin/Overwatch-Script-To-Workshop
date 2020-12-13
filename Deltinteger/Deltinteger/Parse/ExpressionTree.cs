@@ -16,9 +16,11 @@ namespace Deltin.Deltinteger.Parse
         public ITreeContextPart[] ExprContextTree { get; }
 
         private Token _trailingSeperator = null;
+        private readonly ParseInfo _parseInfo;
 
         public ExpressionTree(ParseInfo parseInfo, Scope scope, BinaryOperatorExpression exprContext, bool usedAsValue)
         {
+            _parseInfo = parseInfo;
             ExprContextTree = Flatten(parseInfo.Script, exprContext);
 
             // Setup
@@ -156,7 +158,7 @@ namespace Deltin.Deltinteger.Parse
                 return null;
         }
 
-        public CodeType Type() => Result?.Type();
+        public CodeType Type() => Result?.Type() ?? _parseInfo.TranslateInfo.Types.Unknown();
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {

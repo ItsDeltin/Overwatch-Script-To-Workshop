@@ -40,6 +40,7 @@ namespace Deltin.Deltinteger.Parse
         public override bool Implements(CodeType type) => !type.IsConstant();
         public override bool Is(CodeType type) => !type.IsConstant();
         public override CompletionItem GetCompletion() => GetTypeCompletion(this);
-        public override Scope ReturningScope() => _deltinScript.PlayerVariableScope;
+        public override Scope GetObjectScope() => _deltinScript.PlayerVariableScope;
+        public override Scope ReturningScope() => null;
     }
 }

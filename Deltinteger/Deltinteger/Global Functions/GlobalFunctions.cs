@@ -21,7 +21,9 @@ namespace Deltin.Deltinteger.GlobalFunctions
             ClassMemoryUsed(deltinScript),
 
             WorkshopSettingHero(deltinScript),
-            WorkshopSettingCombo(deltinScript)
+            WorkshopSettingCombo(deltinScript),
+
+            MinWait()
         };
     }
 }
