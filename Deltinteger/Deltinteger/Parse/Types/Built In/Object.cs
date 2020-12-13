@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
-            Operations = new TypeOperation[] {
+            Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(TypeOperator.Add, this, this), // Number + number
                 new TypeOperation(TypeOperator.Subtract, this, this), // Number - number
                 new TypeOperation(TypeOperator.Multiply, this, this), // Number * number
@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.LessThanOrEqual, this, _supplier.Boolean()), // Number <= number
                 new TypeOperation(TypeOperator.GreaterThanOrEqual, this, _supplier.Boolean()), // Number >= number
                 new TypeOperation(TypeOperator.GreaterThan, this, _supplier.Boolean()), // Number > number
-            };
+            });
         }
 
         public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Boolean());
@@ -67,10 +67,10 @@ namespace Deltin.Deltinteger.Parse
             CanBeExtended = false;
             _supplier = supplier;
 
-            Operations = new TypeOperation[] {
+            Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(TypeOperator.And, this, this),
                 new TypeOperation(TypeOperator.Or, this, this),
-            };
+            });
         }
 
         public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Number());

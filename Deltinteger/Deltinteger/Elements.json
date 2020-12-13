@@ -31,7 +31,7 @@
       "hidden": true
     },
     {
-      "type": "player",
+      "type": "player[]",
       "name": "All Dead Players",
       "documentation": "An array containing all dead players on a team in a match. A player is defined as being dead when they are eliminated but have not yet respawned back into the game.",
       "parameters": {
@@ -43,12 +43,12 @@
       }
     },
     {
-      "type": "hero",
+      "type": "hero[]",
       "name": "All Heroes",
       "documentation": "An array of all heroes in Overwatch. Not to be confused with the All Players array"
     },
     {
-      "type": "player",
+      "type": "player[]",
       "name": "All Living Players",
       "documentation": "An array containing all living players on a team in a match. A player is defined as being alive when they are spawned into the game but have not yet been eliminated since spawning.",
       "parameters": {
@@ -60,7 +60,7 @@
       }
     },
     {
-      "type": "player",
+      "type": "player[]",
       "name": "All Players",
       "documentation": "An array containing all players on a team in a match.",
       "parameters": {
@@ -72,7 +72,7 @@
       }
     },
     {
-      "type": "player",
+      "type": "player[]",
       "name": "All Players Not On Objective",
       "documentation": "An array containing all players occupying neither a payload nor a control point (either on a team or in a match).",
       "parameters": {
@@ -84,7 +84,7 @@
       }
     },
     {
-      "type": "player",
+      "type": "player[]",
       "name": "All Players On Objective",
       "documentation": "An array containing all players occupying either a payload or a control point (either on a team or in a match).",
       "parameters": {
@@ -96,19 +96,19 @@
       }
     },
     {
-      "type": "hero",
+      "type": "hero[]",
       "name": "All Tank Heroes"
     },
     {
-      "type": "hero",
+      "type": "hero[]",
       "name": "All Damage Heroes"
     },
     {
-      "type": "hero",
+      "type": "hero[]",
       "name": "All Support Heroes"
     },
     {
-      "type": "hero",
+      "type": "hero[]",
       "name": "Allowed Heroes",
       "documentation": "The array of heroes from which the specified player is currently allowed to select.",
       "parameters": {
@@ -150,7 +150,7 @@
       "hidden": true
     },
     {
-      "type": "vector",
+      "type": "number",
       "name": "Angle Between Vectors",
       "parameters": {
         "Vector": {
@@ -509,12 +509,12 @@
       "parameters": {
         "Value": {
           "documentation": "One of the two vector operands of the dot product. Any positional based Syntax may be used here.",
-          "type": "any",
+          "type": "vector | player",
           "defaultValue": 0.0
         },
         "Value": {
           "documentation": "One of the two vector operands of the dot product. Any positional based Syntax may be used here.",
-          "type": "any",
+          "type": "vector | player",
           "defaultValue": 0.0
         }
       }
@@ -748,7 +748,7 @@
       "hidden": true
     },
     {
-      "type": "any",
+      "type": "string",
       "name": "Hero Icon String",
       "documentation": "Converts a hero parameter into a string that shows up as an icon.",
       "parameters": {
@@ -829,7 +829,7 @@
       "name": "Host Player"
     },
     {
-      "type": "any",
+      "type": "number",
       "name": "Index Of Array Value",
       "documentation": "The index of a value within an array or -1 if no such value can be found.",
       "parameters": {
@@ -1493,7 +1493,7 @@
       }
     },
     {
-      "type": "number",
+      "type": "vector",
       "name": "Normalize",
       "documentation": "The unit-length normalization of a vector.",
       "parameters": {
@@ -1645,7 +1645,7 @@
       "documentation": "The control point, payload checkpoint, or payload destination currently active (either 0, 1, or 2). Valid in Assault, Assault/Escort (Hybrid), Escort, and Control."
     },
     {
-      "type": "number",
+      "type": "vector",
       "name": "Objective Position",
       "documentation": "The position in the world of the specified objective (either a control point, a payload checkpoint, or a payload destination) Valid in Assault, Assault/Escort (Hybrid), Escort, and Control.",
       "parameters": {

@@ -187,10 +187,10 @@ namespace Deltin.Deltinteger.Parse
             });
 
             // Add type operations.
-            Operations = new ITypeOperation[] {
+            Operations.AddTypeOperation(new ITypeOperation[] {
                 new TypeOperation(TypeOperator.Add, pipeType, this, (l, r) => Element.Append(l, r)),
                 new TypeOperation(TypeOperator.Subtract, pipeType, this, (l, r) => Element.Remove(l, r))
-            };
+            });
 
             if (arrayOfType is IAdditionalArray addition)
                 addition.OverrideArray(this);
@@ -210,7 +210,7 @@ namespace Deltin.Deltinteger.Parse
 
         // public override bool Implements(CodeType type) => (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType)) || (ArrayOfType is IAdditionalArray additon && additon.AlternateImplements(type));
         public override Scope GetObjectScope() => Scope;
-        public override bool Implements(CodeType type) => type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType);
+        public override bool Implements(CodeType type) => type is AnyType || ArrayOfType is AnyType || (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType));
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
 

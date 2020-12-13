@@ -49,14 +49,14 @@ namespace Deltin.Deltinteger.Parse
             objectScope.AddNativeMethod(AsLocalVector);
             objectScope.AddNativeMethod(AsWorldVector);
 
-            Operations = new TypeOperation[] {
+            Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(TypeOperator.Add, this, this), // Vector + vector
                 new TypeOperation(TypeOperator.Subtract, this, this), // Vector - vector
                 new TypeOperation(TypeOperator.Multiply, this, this), // Vector * vector
                 new TypeOperation(TypeOperator.Divide, this, this), // Vector / vector
                 new TypeOperation(TypeOperator.Multiply, _typeSupplier.Number(), this), // Vector * number
                 new TypeOperation(TypeOperator.Divide, _typeSupplier.Number(), this), // Vector / number
-            };
+            });
         }
 
         private InternalVar CreateInternalVar(string name, string documentation, bool isStatic = false)

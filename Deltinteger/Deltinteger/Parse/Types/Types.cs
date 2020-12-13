@@ -30,11 +30,12 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
-        public ITypeOperation[] Operations { get; protected set; }
+        public TypeOperatorInfo Operations { get; }
 
         public CodeType(string name)
         {
             Name = name;
+            Operations = new TypeOperatorInfo(this);
         }
 
         protected void Inherit(CodeType extend, FileDiagnostics diagnostics, DocRange range)
@@ -73,7 +74,7 @@ namespace Deltin.Deltinteger.Parse
             CodeType checkType = this;
             while (checkType != null)
             {
-                if (type.Is(checkType)) return true;
+                if (type.Is(checkType) || (!checkType.IsConstant() && type is AnyType)) return true;
                 checkType = checkType.Extends;
             }
 
@@ -122,25 +123,6 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="reference">The object reference.</param>
         public virtual void Delete(ActionSet actionSet, Element reference) { }
 
-        /// <summary>Gets an operation.</summary>
-        /// <param name="op">The operation's operator type.</param>
-        /// <param name="right">The right object's type.</param>
-        /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>
-        public ITypeOperation GetOperation(TypeOperator op, CodeType right)
-        {
-            CodeType current = this;
-            while (current != null)
-            {
-                if (current.Operations != null)
-                    foreach (ITypeOperation operation in current.Operations)
-                        if (operation.Operator == op && right != null && right.Implements(operation.Right))
-                            return operation;
-                
-                current = current.Extends;
-            }
-            return null;
-        }
-
         /// <summary>Calls a type from the specified document range.</summary>
         /// <param name="parseInfo">The script that the type was called from.</param>
         /// <param name="callRange">The range of the call.</param>
@@ -168,16 +150,19 @@ namespace Deltin.Deltinteger.Parse
         {
             if (typeContext == null) return parseInfo.TranslateInfo.Types.Unknown();
 
+            CodeType type;
             if (typeContext.IsDefault)
             {
                 if (typeContext.Infer)
                     parseInfo.Script.Diagnostics.Hint("Unable to infer type", typeContext.Identifier.Range);
 
-                return parseInfo.TranslateInfo.Types.Any();
+                type = parseInfo.TranslateInfo.Types.Any();
             }
-            
-            CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
-            if (type == null) return parseInfo.TranslateInfo.Types.Unknown();
+            else
+            {
+                type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
+                if (type == null) return parseInfo.TranslateInfo.Types.Unknown();
+            }
 
             // Get generics
             if (typeContext.HasTypeArgs)

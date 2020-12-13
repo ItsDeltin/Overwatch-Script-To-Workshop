@@ -21,9 +21,9 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
-            Operations = new ITypeOperation[] {
+            Operations.AddTypeOperation(new ITypeOperation[] {
                 new StringAddOperation(_typeSupplier)
-            };
+            });
 
             _length.CodeType = _typeSupplier.Number();
 

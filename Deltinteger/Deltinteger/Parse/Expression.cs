@@ -137,35 +137,34 @@ namespace Deltin.Deltinteger.Parse
     public class UnaryOperatorAction : IExpression
     {
         public IExpression Value { get; }
-        public OperatorInfo Operator { get; }
+        private readonly IUnaryTypeOperation _operation;
+        private readonly CodeType _type;
 
         public UnaryOperatorAction(ParseInfo parseInfo, Scope scope, UnaryOperatorExpression expression)
         {
             Value = parseInfo.GetExpression(scope, expression.Value);
-            Operator = expression.Operator;
+
+            string op = expression.Operator.Operator.Operator;
+            _operation = Value?.Type()?.Operations.GetOperation(UnaryTypeOperation.OperatorFromString(op)) ?? GetDefaultOperation(op, parseInfo.TranslateInfo.Types);
+            _type = _operation.ReturnType ?? parseInfo.TranslateInfo.Types.Unknown();
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet) => _operation.Resolve(actionSet, Value);
+
+        private UnaryTypeOperation GetDefaultOperation(string op, ITypeSupplier supplier)
         {
-            // OperatorInfo (an operator instance) ->
-            // CompilerOperator (the actual operator data) ->
-            // Operator's actual string identifier
-            switch (Operator.Operator.Operator)
+            if (Value.Type().IsConstant())
+                return null;
+            
+            switch (op)
             {
-                // Not
-                case "!":
-                    return Element.Not(Value.Parse(actionSet));
-                // Inverse
-                case "-":
-                    return Element.Multiply(Value.Parse(actionSet), Element.Num(-1));
-                // Unimplemented unary operator.
-                default:
-                    throw new NotImplementedException(Operator.Operator.Operator);
+                case "!": return new UnaryTypeOperation(UnaryTypeOperation.OperatorFromString(op), supplier.Boolean(), v => !(Element)v);
+                case "-": return new UnaryTypeOperation(UnaryTypeOperation.OperatorFromString(op), supplier.Number(), v => (Element)v * -1);
+                default: throw new NotImplementedException();
             }
         }
 
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => _type;
     }
 
     public class TernaryConditionalAction : IExpression
