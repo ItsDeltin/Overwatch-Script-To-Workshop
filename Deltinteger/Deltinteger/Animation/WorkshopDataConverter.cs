@@ -41,14 +41,17 @@ namespace Deltin.Deltinteger.Animation
         }
 
         public static Element GetActionNames(AnimationAction[] actions) => Element.CreateArray(actions.Select(a => new V_CustomString(a.Name)).ToArray());
-        public static Element GetActions(BlendObject blendObject) => Element.CreateArray(GetFcurveArray(blendObject, blendObject.AnimationData));
+        public static Element GetActions(BlendObject blendObject) => Element.CreateArray(GetAction(blendObject, blendObject.AnimationData));
 
-        public static Element GetFcurveArray(BlendObject blendObject, AnimationAction action)
+        public static Element GetAction(BlendObject blendObject, AnimationAction action)
         {
-            var fcurves = new Element[action.FCurves.Length];
-            for (int i = 0; i < fcurves.Length; i ++)
-                fcurves[i] = GetKeyframeData(blendObject, action.FCurves[i]);
-            return Element.CreateArray(fcurves);
+            var actionData = new List<Element>();
+            actionData.Add(action.FrameRange.Y - action.FrameRange.X);
+
+            foreach (var curve in action.FCurves)
+                actionData.Add(GetKeyframeData(blendObject, curve));
+            
+            return Element.CreateArray(actionData.ToArray());
         }
 
         /// <summary>Gets the keyframe data for an FCurve for the workshop.
@@ -84,8 +87,7 @@ namespace Deltin.Deltinteger.Animation
                 var keyframeData = new List<Element>();
 
                 // Add the keyframe number.
-                // TODO: / 30.0
-                keyframeData.Add(keyframe.Start / 30.0);
+                keyframeData.Add(keyframe.Start);
 
                 // Add the value.
                 switch (curve.FCurveType)

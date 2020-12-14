@@ -80,15 +80,17 @@ class empty:
         self.parent_bone = original.parent_bone
 
 class blend_action:
-    def __init__(self, name, fcurves):
+    def __init__(self, name, fcurves, frame_range):
         self.name = name
         self.fcurves = fcurves
+        self.frame_range = frame_range
 
 class fcurve:
-    def __init__(self, keyframes, fcurve_type, target):
+    def __init__(self, keyframes, fcurve_type, target, krange):
         self.fcurve_type = fcurve_type
         self.keyframes = keyframes
         self.target = target
+        self.range = krange
 
 class keyframe:
     def __init__(self, start, value):
@@ -217,10 +219,10 @@ def get_animation_data(obj):
         
         # Append the fcurve.
         if value_handler.do_use():
-            fcurves.append(fcurve(keyframes, value_handler.get_type(), value_handler.get_target(obj)))
+            fcurves.append(fcurve(keyframes, value_handler.get_type(), value_handler.get_target(obj), Vector(fc.range())))
     
     # Return the action.
-    return blend_action(action.name, fcurves)
+    return blend_action(action.name, fcurves, Vector(action.frame_range))
 
 def serialize(obj):
     if hasattr(obj, '__dict__'):

@@ -251,6 +251,9 @@ namespace Deltin.Deltinteger.Parse
             AddAction(variable.SetVariable(value));
             return variable;
         }
+    
+        public void Log(string text) => AddAction(Element.Part<A_LogToInspector>(new V_CustomString(text)));
+        public void Log(Element value) => AddAction(Element.Part<A_LogToInspector>(value));
     }
 
     public interface IActionList

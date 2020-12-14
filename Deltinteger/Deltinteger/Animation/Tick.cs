@@ -14,6 +14,13 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>An array of object references.</summary>
         private IndexReference _animationReferenceList;
         private IndexReference _animationInfoList;
+        private ActionSet actionSet;
+        private Element currentReference;
+        private Element BoneVertexLinks {
+            get => _armatureType.BoneVertexLinks.Get(currentReference);
+            set => _armatureType.BoneVertexLinks.Set(actionSet, currentReference, value);
+        }
+        private Element Actions => _armatureType.Actions.Get(currentReference);
 
         public AnimationTick() {}
 
@@ -38,25 +45,26 @@ namespace Deltin.Deltinteger.Animation
 
             // When _animationReferenceList.Length != 0
             ruleBuilder.Conditions.Add(new Condition(ReferenceListCount, Operators.NotEqual, 0));
+
+            actionSet = ruleBuilder.ActionSet;
             
             // Get the actions.
-            Loop(ruleBuilder.ActionSet);
+            Loop();
 
             return ruleBuilder.GetRule();
         }
 
-        void Loop(ActionSet actionSet)
+        void Loop()
         {
             var referenceLoop = new ForRangeBuilder(actionSet, "animation_ref_loop", 0, ReferenceListCount, 1);
             referenceLoop.Init();
-            Element currentReference = actionSet.AssignAndSave("animation_current_reference", _animationReferenceList.Get()[referenceLoop.Value]).Get();
+            currentReference = actionSet.AssignAndSave("animation_current_reference", _animationReferenceList.Get()[referenceLoop.Value]).Get();
 
             // Armature
             actionSet.AddAction(Element.Part<A_If>(_classData.IsInstanceOf(currentReference, _armatureType)));
 
-
             // Loop through each bone
-            var boneLoop = new ForRangeBuilder(actionSet, "animation_bone_loop", 0, Element.Part<V_CountOf>(_armatureType.BoneVertexLinks.Get(currentReference)), 1);
+            var boneLoop = new ForRangeBuilder(actionSet, "animation_bone_loop", 0, Element.Part<V_CountOf>(BoneVertexLinks), 1);
             boneLoop.Init();
 
             // Debug bone name
@@ -80,9 +88,14 @@ namespace Deltin.Deltinteger.Animation
                         _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][0]
                     ],
                 // Get the f-curve for the bone we are currently iterating on.
-                Element.Part<V_And>(
+                Element.Part<V_And>(Element.Part<V_And>(
+                    // The first value in the action array is the frame range.
+                    // Make sure this is not the first element.
+                    new V_CurrentArrayIndex(),
+                    // !!new V_CurrentArrayIndex(), // 0 is false, 1+ is true.
+                    // new V_Compare(new V_CurrentArrayIndex(), Operators.NotEqual, new V_Number(0)),
                     // The Fcurve's type is BoneRotation.
-                    new V_Compare(new V_ArrayElement()[0], Operators.Equal, (Element)(int)FCurveType.BoneRotation),
+                    new V_Compare(new V_ArrayElement()[0], Operators.Equal, (Element)(int)FCurveType.BoneRotation)),
                     // The Fcurve's bone index is equal to the target bone.
                     new V_Compare(boneLoop.Value, Operators.Equal, new V_ArrayElement()[1])
                 )
@@ -139,6 +152,8 @@ namespace Deltin.Deltinteger.Animation
             // TODO: Use this to determine if there is only one keyframe.
             // actionSet.AddAction(Element.Part<A_If>(new V_Compare(keyframe_index.Get(), Operators.LessThan, Element.Part<V_CountOf>(fcurve.Get()) - 1)));
 
+            Element fps = 24;
+
             // Get the t of the keyframes depending on the current time.
             //  If the action was started at 5 seconds (s),
             //  and keyframe A is set at 2 (7) local seconds (a),
@@ -146,9 +161,9 @@ namespace Deltin.Deltinteger.Animation
             //  and the current time is 9 (c),
             //  (c-s-a) / (b-a) = (9-5-2) / (6-2) = 0.5
             var c = actionSet.AssignAndSave("animation_test_current_time", new V_TotalTimeElapsed()).Get();
-            // var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0] / 60) / (keyframeB[0] / 60 - keyframeA[0] / 60)), new V_Number(1)));
-            var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0]) / (keyframeB[0] - keyframeA[0])), new V_Number(1)));
+            // var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0]) / (keyframeB[0] - keyframeA[0])), new V_Number(1)));
             // var t = actionSet.AssignAndSave("animation_t", 1);
+            var t = actionSet.AssignAndSave("t", ((currentActionTimeDelta * fps) / keyframeB[0]) % 1);
 
             // Get the interpolated rotation.
             var slerp = AnimationOperations.Slerp(
@@ -209,6 +224,8 @@ namespace Deltin.Deltinteger.Animation
             actionLoop.Finish(); // End action loop
             boneLoop.Finish(); // End the bone loop
 
+            UpdateActions(referenceLoop.Value, fps);
+
             // ! debug: only 1 tick
             // actionSet.AddAction(new A_Abort());
 
@@ -221,7 +238,7 @@ namespace Deltin.Deltinteger.Animation
             actionSet.AddAction(new A_LoopIfConditionIsTrue());
         }
 
-        public void AddAnimation(ActionSet actionSet, Element objectReference, Element actionIdentifier)
+        public void AddAnimation(ActionSet actionSet, Element objectReference, Element actionIdentifier, Element loop)
         {
             Element actionIndex = actionSet.AssignAndSave("animation_action_index", Element.Part<V_IndexOfArrayValue>(_objectType.ActionNames.Get(objectReference), actionIdentifier)).Get();
 
@@ -240,7 +257,46 @@ namespace Deltin.Deltinteger.Animation
             actionSet.AddAction(new A_End());
 
             // [i, t]
-            actionSet.AddAction(_animationInfoList.ModifyVariable(Operation.AppendToArray, Element.CreateArray(Element.CreateArray(actionIndex, new V_TotalTimeElapsed())), index: objectIndexInAnimationList.Get()));
+            actionSet.AddAction(_animationInfoList.ModifyVariable(Operation.AppendToArray, Element.CreateArray(Element.CreateArray(actionIndex, new V_TotalTimeElapsed(), loop)), index: objectIndexInAnimationList.Get()));
+        }
+
+        /// <summary>Removes actions from the action list when they finish playing.</summary>
+        /// <param name="i">The current animation reference index.</param>
+        /// <param name="fps">The FPS of the action. This should be removed later.</param>
+        private void UpdateActions(Element i, Element fps)
+        {
+            Element actionArray =  _animationInfoList.Get()[i],
+                // Get the action instance by doing _animationInfoList[ref][array element OR array index]
+                // currentActionInstance[0] = action ID,
+                // currentActionInstance[1] = start time,
+                // currentActionInstance[2] = should loop?
+                currentActionInstance = _animationInfoList.Get()[i][new V_ArrayElement()],
+                // Get the action source.
+                currentActionSource = Actions[currentActionInstance[0]],
+                // Get the action time and frame range.
+                currentActionTimeDelta = new V_TotalTimeElapsed() - currentActionInstance[1],
+                // The proceeding [0] is the action frame range as defined in 'BlendStructureHelper.GetAction()' in 'WorkshopDataConverter.cs'
+                frameRange = currentActionSource[0],
+                // Multiply 'currentActionTimeDelta' by 'fps' to get the frames per second.
+                // TODO: 'fps' is currently hard-coded. Make it customizable to the user can control the animation playback speed.
+                // * NOTE: 'fpsElapsed' is already calculated in the Loop() function, which means that
+                // *       this same value is calculated multiple times.
+                fpsElapsed = currentActionTimeDelta * fps,
+                // Determines if the animation action was completed.
+                completed = new V_Compare(fpsElapsed, Operators.GreaterThanOrEqual, frameRange);
+
+            actionSet.AddAction(_animationInfoList.ModifyVariable(
+                index: i,
+                // Filter by index
+                operation: Operation.RemoveFromArrayByIndex,
+                value: Element.Part<V_FilteredArray>(
+                    // Map to indices so the resulting array is the list of indices.
+                    // [a1, a2, a3] => [0, 1, 2]
+                    Element.Part<V_MappedArray>(actionArray, new V_CurrentArrayIndex()),
+                    // Determines if the action was completed and is not set to loop.
+                    Element.Part<V_And>(!currentActionInstance[2], completed)
+                )
+            ));
         }
 
         void DebugVariable(ActionSet actionSet, string name, Element value) => actionSet.AssignAndSave(name, value);

@@ -63,6 +63,9 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>The individual F-Curves that make up the action.</summary>
         [JsonProperty("fcurves")]
         public FCurve[] FCurves { get; set; }
+        /// <summary>The final frame range of all F-Curves within this action.</summary>
+        [JsonProperty("frame_range")]
+        public Vertex FrameRange { get; set; }
     }
 
     /// <summary>F-Curve defining values of a period of time.</summary>
@@ -79,6 +82,9 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>The keyframes of the F-Curve.</summary>
         [JsonProperty("keyframes")]
         public Keyframe[] Keyframes { get; set; }
+        /// <summary>The range of the curve. X is the starting keyframe, Y is the ending keyframe.</summary>
+        [JsonProperty("range")]
+        public Vertex Range { get; set; }
     }
 
     /// <summary>The type of an F-Curve.</summary>
