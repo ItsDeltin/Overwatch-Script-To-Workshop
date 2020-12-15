@@ -1,9 +1,8 @@
 from vector import Vector
 
 class Rna_traveler:
-    def __init__(self, value: str, index):
+    def __init__(self, value):
         self.value = value
-        self.index = index
     
     # If the current value starts with the specified string, it will be consumed then True will be returned.
     def current_is(self, path: str, skip = 0):
@@ -53,15 +52,15 @@ class Rna_traveler:
                 # Get array value.
                 bone_name = self.array_value()
                 # Get the element.
-                if self.current_is('rotation_euler') or self.current_is('rotation_quaternion'):
-                    return _bone_euler_rotation_handler(bone_name, self.index)
+                if self.current_is('rotation_quaternion'):
+                    return 1, bone_name
                 
                 elif self.current_is('location'):
-                    return _bone_location_handler(bone_name, self.index)
+                    return 2, bone_name
         
         # Location
         if self.current_is('location'):
-            return _location_handler(self.index)
+            return 0
         
         return None
 
@@ -70,9 +69,12 @@ class _bone_euler_rotation_handler:
         self.bone_name = bone_name
         self.index = index
     
-    def get_value(self, obj):        
-        pose_bone = obj.pose.bones[self.bone_name]
-        return Vector(pose_bone.matrix_basis.to_quaternion())
+    def get_value(self, obj, action, keyframe):
+        return Vector(Quaternion(
+            action.fcur
+        ))
+        # pose_bone = obj.pose.bones[self.bone_name]
+        # return Vector(pose_bone.matrix_basis.to_quaternion())
 
     def get_target(self, obj): return self.bone_name
     def get_type(self): return 1
@@ -83,7 +85,7 @@ class _bone_location_handler:
         self.bone_name = bone_name
         self.index = index
     
-    def get_value(self, obj):        
+    def get_value(self, obj, keyframe):        
         pose_bone = obj.pose.bones[self.bone_name]
         return Vector(pose_bone.location)
 
@@ -93,7 +95,7 @@ class _bone_location_handler:
 
 class _location_handler:
     def __init__(self, index): self.index = index
-    def get_value(self, obj): return Vector(obj.location)
+    def get_value(self, obj, keyframe): return Vector(obj.location)
     def get_target(self, obj): return None
     def get_type(self): return 0
     def do_use(self): return self.index == 0

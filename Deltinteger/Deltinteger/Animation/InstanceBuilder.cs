@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.FunctionBuilder;
@@ -106,7 +107,7 @@ namespace Deltin.Deltinteger.Animation
         void SharedSetup(BaseObjectExtender type, ActionSet actionSet, Element reference)
         {
             type.Actions.Set(actionSet, reference, BlendStructureHelper.GetActions(Object));
-            type.ActionNames.Set(actionSet, reference, BlendStructureHelper.GetActionNames(new AnimationAction[] { Object.AnimationData }));
+            type.ActionNames.Set(actionSet, reference, BlendStructureHelper.GetActionNames(Object.AnimationData));
         }
     }
 }

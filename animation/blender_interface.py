@@ -3,6 +3,7 @@ import json
 import sys
 from vector import Vector, get_matrix
 from rna_traveler import Rna_traveler
+from mathutils import Quaternion
 
 def load(fp):
     bpy.ops.wm.open_mainfile(filepath = fp, load_ui=False)
@@ -189,40 +190,65 @@ def get_armature(obj):
     return blend_armature(obj.name, get_animation_data(obj), bone_linker.link(), empties)
 
 def get_animation_data(obj):
-    if not obj.animation_data or not obj.animation_data.action:
+    if not obj.animation_data:
         return None
     
-    action = obj.animation_data.action
+    actions = []
+    
+    for track in obj.animation_data.nla_tracks:
+        if len(track.strips) >= 1:
+            actions.append(get_action(obj, track.strips[0].action))
+
+    return actions
+
+def get_action(obj, action):
+    fcurves = get_action_animation_data(action)
+
+    # Return the action.
+    return blend_action(action.name, fcurves, Vector(action.frame_range))
+
+def get_action_animation_data(action):
+    groups = {}
+    
+    for curve in action.fcurves:
+        groups.setdefault(curve.data_path, [])
+        groups[curve.data_path].append(curve)
+    
     fcurves = []
-    for fc in action.fcurves:
-        # Get RNA data.
-        value_handler = Rna_traveler(fc.data_path, fc.array_index).scan()
 
-        if value_handler == None:
-            continue
+    for group_name in groups:
+        group = groups[group_name]
 
-        # The array of keyframes. There should usually be just one.
         keyframes = []
+        targetType, target = Rna_traveler(group[0].data_path).scan()
+        rng = Vector(group[0].range())
 
-        for k in fc.keyframe_points:
+        for k in group[0].keyframe_points:
             # The target frame of the keyframe.
             frame = k.co.x
 
-            # Set the current frame.
-            bpy.context.scene.frame_set(frame)
-
             # Get the value.
-            keyframe_value = value_handler.get_value(obj)
-
-            # Append the keyframe.
-            keyframes.append(keyframe(frame, keyframe_value))
+            value = None
         
-        # Append the fcurve.
-        if value_handler.do_use():
-            fcurves.append(fcurve(keyframes, value_handler.get_type(), value_handler.get_target(obj), Vector(fc.range())))
+            if targetType == 0: # Location
+                pass
+            elif targetType == 1: # Bone rotation
+                value = Vector(Quaternion((
+                    group[0].evaluate(frame),
+                    group[1].evaluate(frame),
+                    group[2].evaluate(frame),
+                    group[3].evaluate(frame)
+                )))
+            elif targetType == 2: # Bone location
+                pass
+                
+            # Append the keyframe.
+            if value is not None:
+                keyframes.append(keyframe(frame, value))
+
+        fcurves.append(fcurve(keyframes, targetType, target, rng))
     
-    # Return the action.
-    return blend_action(action.name, fcurves, Vector(action.frame_range))
+    return fcurves
 
 def serialize(obj):
     if hasattr(obj, '__dict__'):
@@ -230,6 +256,7 @@ def serialize(obj):
     return None
 
 load(input())
+# load('C:/Users/Deltin/Documents/Blender/Ostw mascot.blend')
 print(get_project_json())
 
 # run command: 'Python: Start REPL'

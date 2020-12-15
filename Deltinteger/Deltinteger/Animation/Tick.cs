@@ -78,6 +78,8 @@ namespace Deltin.Deltinteger.Animation
             currentActionTime = actionSet.AssignAndSave("animation_current_action_time", currentActionTime).Get();
             Element currentActionTimeDelta = actionSet.AssignAndSave("animation_delta", new V_TotalTimeElapsed() - currentActionTime).Get();
 
+            Element actionIdentifier = _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][0];
+
             // Get the fcurve related to this bone.
             var fcurve = actionSet.AssignAndSave("animation_curve", Element.Part<V_FilteredArray>(
                 // Get the fcurve array for the current object and action.
@@ -92,8 +94,6 @@ namespace Deltin.Deltinteger.Animation
                     // The first value in the action array is the frame range.
                     // Make sure this is not the first element.
                     new V_CurrentArrayIndex(),
-                    // !!new V_CurrentArrayIndex(), // 0 is false, 1+ is true.
-                    // new V_Compare(new V_CurrentArrayIndex(), Operators.NotEqual, new V_Number(0)),
                     // The Fcurve's type is BoneRotation.
                     new V_Compare(new V_ArrayElement()[0], Operators.Equal, (Element)(int)FCurveType.BoneRotation)),
                     // The Fcurve's bone index is equal to the target bone.
@@ -129,6 +129,8 @@ namespace Deltin.Deltinteger.Animation
 
             actionSet.AddAction(new A_Else());
 
+            Element fps = 24;
+
             // Now we get the A and B keyframes from the fcurve using the current time in the animation.
             // This will occur if all keyframes were surpassed.
             var keyframe_index = actionSet.AssignAndSave("animation_keyframe_index", Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
@@ -137,7 +139,7 @@ namespace Deltin.Deltinteger.Animation
                 Element.Part<V_And>(
                     // Ignore the first 2 elements, which is fcurve data.
                     new V_Compare(new V_ArrayElement(), Operators.GreaterThanOrEqual, new V_Number(2)),
-                    new V_Compare(currentActionTimeDelta, Operators.LessThan, fcurve.Get()[new V_ArrayElement()][0])
+                    new V_Compare((currentActionTimeDelta * fps % Actions[actionIdentifier][0]), Operators.LessThan, fcurve.Get()[new V_ArrayElement()][0])
                 )
             )));
 
@@ -152,8 +154,6 @@ namespace Deltin.Deltinteger.Animation
             // TODO: Use this to determine if there is only one keyframe.
             // actionSet.AddAction(Element.Part<A_If>(new V_Compare(keyframe_index.Get(), Operators.LessThan, Element.Part<V_CountOf>(fcurve.Get()) - 1)));
 
-            Element fps = 24;
-
             // Get the t of the keyframes depending on the current time.
             //  If the action was started at 5 seconds (s),
             //  and keyframe A is set at 2 (7) local seconds (a),
@@ -163,7 +163,7 @@ namespace Deltin.Deltinteger.Animation
             var c = actionSet.AssignAndSave("animation_test_current_time", new V_TotalTimeElapsed()).Get();
             // var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0]) / (keyframeB[0] - keyframeA[0])), new V_Number(1)));
             // var t = actionSet.AssignAndSave("animation_t", 1);
-            var t = actionSet.AssignAndSave("t", ((currentActionTimeDelta * fps) / keyframeB[0]) % 1);
+            var t = actionSet.AssignAndSave("t", ((currentActionTimeDelta * fps - keyframeA[0]) / (keyframeB[0] - keyframeA[0])) % 1);
 
             // Get the interpolated rotation.
             var slerp = AnimationOperations.Slerp(

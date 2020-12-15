@@ -139,6 +139,8 @@ namespace Deltin.Deltinteger.Animation
 
             public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
             {
+                if (value == null) return null;
+
                 string emptyName = (string)base.Validate(parseInfo, value, valueRange);
 
                 foreach (var empty in _armature.Empties)

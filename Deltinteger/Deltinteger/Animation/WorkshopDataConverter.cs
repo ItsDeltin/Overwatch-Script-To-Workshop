@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Animation
         }
 
         public static Element GetActionNames(AnimationAction[] actions) => Element.CreateArray(actions.Select(a => new V_CustomString(a.Name)).ToArray());
-        public static Element GetActions(BlendObject blendObject) => Element.CreateArray(GetAction(blendObject, blendObject.AnimationData));
+        public static Element GetActions(BlendObject blendObject) => Element.CreateArray(blendObject.AnimationData.Select(a => GetAction(blendObject, a)).ToArray());
 
         public static Element GetAction(BlendObject blendObject, AnimationAction action)
         {

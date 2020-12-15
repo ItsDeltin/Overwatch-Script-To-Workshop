@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Animation
 
         /// <summary>The animation data of the mesh or armature.</summary>
         [JsonProperty("animation_data")]
-        public AnimationAction AnimationData { get; set; }
+        public AnimationAction[] AnimationData { get; set; }
 
         /// <summary>The children of the BlendObject. The values are the indices of the BlendFile's objects.</summary>
         [JsonProperty("children")]
