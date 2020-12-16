@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public MethodAttributes Attributes { get; set; } = new MethodAttributes();
         public bool Static { get; set; }
         public bool WholeContext { get; set; } = true;
-        public string Documentation { get; set; }
+        public MarkupBuilder Documentation { get; set; }
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public bool DoesReturnValue { get; }

@@ -268,7 +268,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     Label = AllOverloads[i].GetLabel(false),
                     Parameters = parameters,
-                    Documentation = Extras.GetMarkupContent(AllOverloads[i].Documentation)
+                    Documentation = AllOverloads[i].Documentation
                 };
             }
 

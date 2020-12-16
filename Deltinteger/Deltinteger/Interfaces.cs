@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger
     public interface IParameterCallable : ILabeled, IAccessable
     {
         CodeParameter[] Parameters { get; }
-        string Documentation { get; }
+        MarkupBuilder Documentation { get; }
     }
 
     public interface IAccessable

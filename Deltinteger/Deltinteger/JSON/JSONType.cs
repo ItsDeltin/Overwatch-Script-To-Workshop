@@ -220,7 +220,7 @@ namespace Deltin.Deltinteger.Json
         public CodeType CodeType => null;
         public bool Static => false;
         public bool WholeContext => true;
-        public string Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";
+        public MarkupBuilder Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";
         public Deltin.Deltinteger.LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool DoesReturnValue => true;

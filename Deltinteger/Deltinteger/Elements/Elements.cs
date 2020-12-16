@@ -369,7 +369,7 @@ namespace Deltin.Deltinteger.Elements
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
-        public string Documentation => Wiki?.Description;
+        public MarkupBuilder Documentation => Wiki?.Description;
         private ValueType ElementValueType { get; }
         private RestrictedCallType? Restricted { get; }
 

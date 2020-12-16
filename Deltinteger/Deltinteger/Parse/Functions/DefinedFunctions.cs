@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; protected set; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; } = true;
-        public string Documentation { get; } = null;
+        public MarkupBuilder Documentation { get; } = null;
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public bool Static { get; protected set; }
 
