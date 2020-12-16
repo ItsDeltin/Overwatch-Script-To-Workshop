@@ -114,9 +114,9 @@ namespace Deltin.Deltinteger.Lobby
 
             // Add the settings.
             Add(new SwitchValue(isEnabled, true) { TitleResolver = enabledResolver });
-            Add(new RangeValue(generation, 10, 500) { TitleResolver = generationResolver });
-            Add(new RangeValue(passive, 0, 500) { TitleResolver = passiveGenerationResolver });
-            Add(new RangeValue(combat, 0, 500) { TitleResolver = combatGenerationResolver });
+            Add(RangeValue.NewPercentage(generation, generationResolver, min:10, max:500));
+            Add(RangeValue.NewPercentage(passive, passiveGenerationResolver, min:0, max:500));
+            Add(RangeValue.NewPercentage(combat, combatGenerationResolver, min:0, max:500));
 
             if (hasDuration)
             {
@@ -125,7 +125,7 @@ namespace Deltin.Deltinteger.Lobby
                 Add(InfiniteDuration);
             }
 
-            if (hasKnockback) Add(new RangeValue(knockback, 0, 500));
+            if (hasKnockback) Add(RangeValue.NewPercentage(knockback, min:0, max:500));
 
             return this;
         }
@@ -138,21 +138,18 @@ namespace Deltin.Deltinteger.Lobby
             if (hasCooldown)
             {
                 string cooldownTimeTitle = name + " Cooldown Time";
-                Add(new RangeValue(cooldownTimeTitle, 0, 500)
-                {
-                    TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name)
-                });
+                Add(RangeValue.NewPercentage(cooldownTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name), min:0, max:500));
             }
 
             // If the ability has a knockback scalar, add the knockback option.
             if (hasKnockback)
             {
                 if (!selfKnockback)
-                    Add(new RangeValue(name + " Knockback Scalar", 0, 500));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar", min:0, max:500));
                 else
                 {
-                    Add(new RangeValue(name + " Knockback Scalar (Enemy)", 0, 300));
-                    Add(new RangeValue(name + " Knockback Scalar (Self)", 0, 300));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Enemy)", min:0, max:300));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Self)", min:0, max:300));
                 }
             }
 
@@ -160,18 +157,12 @@ namespace Deltin.Deltinteger.Lobby
             if (rechargeable)
             {
                 string rechargeRateTitle = name + " Recharge Rate";
-                Add(new RangeValue(rechargeRateTitle, 0, 500)
-                {
-                    TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name)
-                });
+                Add(RangeValue.NewPercentage(rechargeRateTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name), min:0, max:500));
 
                 if (!noMaximumTime)
                 {
                     string maximumTimeTitle = name + " Maximum Time";
-                    Add(new RangeValue(maximumTimeTitle, 20, 500)
-                    {
-                        TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name)
-                    });
+                    Add(RangeValue.NewPercentage(maximumTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name), min:20, max:500));
                 }
             }
             return this;

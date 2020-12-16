@@ -190,16 +190,16 @@ namespace Deltin.Deltinteger.Lobby
             Default = defaultValue;
         }
 
-        public override string GetValue(WorkshopBuilder builder, object value)
-        {
-            if (!Percentage) return value.ToString();
-            else return value.ToString() + "%";
-        }
-
         public RangeValue(bool integer, bool percentage, string name, double min, double max, double defaultValue = 100) : this(name, min, max, defaultValue)
         {
             Integer = integer;
             Percentage = percentage;
+        }
+
+        public override string GetValue(WorkshopBuilder builder, object value)
+        {
+            if (!Percentage) return value.ToString();
+            else return value.ToString() + "%";
         }
 
         protected override RootSchema GetSchema()
@@ -263,6 +263,11 @@ namespace Deltin.Deltinteger.Lobby
                 }
             }
         }
+    
+        public static RangeValue NewPercentage(string name, double min, double max, double defaultValue = 100) => new RangeValue(false, true, name, min, max, defaultValue);
+        public static RangeValue NewPercentage(string name, AbilityNameResolver title, double min, double max, double defaultValue = 100) => new RangeValue(false, true, name, min, max, defaultValue) {
+            TitleResolver = title
+        };
     }
 
     enum SwitchType
