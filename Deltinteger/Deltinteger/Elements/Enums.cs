@@ -887,7 +887,8 @@ namespace Deltin.Deltinteger.Elements
         Skirmish,
         TeamDeathmatch,
         YetiHunter,
-        SnowballDeathmatch
+        SnowballDeathmatch,
+        FreezethawElimination
     }
 
     [WorkshopEnum]

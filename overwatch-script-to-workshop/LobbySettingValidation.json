@@ -348,7 +348,7 @@
     },
     "Game Length In Minutes": {
       "default": 10.0,
-      "type": "number",
+      "type": "integer",
       "minimum": 5.0,
       "maximum": 15.0
     },
@@ -418,7 +418,7 @@
     },
     "Hero Selection Time": {
       "default": 20.0,
-      "type": "number",
+      "type": "integer",
       "minimum": 20.0,
       "maximum": 60.0
     },
@@ -654,6 +654,22 @@
         "type": "string",
         "enum": [
           "Practice Range"
+        ]
+      }
+    },
+    "Freezethaw Elimination Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Ecopoint: Antarctica",
+          "Necropolis",
+          "Black Forest",
+          "Ecopoint: Antarctica (Winter)",
+          "Castillo",
+          "Ayutthaya",
+          "Black Forest (Winter)"
         ]
       }
     },
@@ -5965,6 +5981,92 @@
             "Disabled Maps": {
               "$ref": "#/definitions/Practice Range Maps",
               "description": "An array of disabled maps for the 'Practice Range' mode."
+            }
+          },
+          "additionalProperties": false
+        },
+        "Freezethaw Elimination": {
+          "description": "Freezethaw Elimination settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled Off"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Hero Selection Time": {
+              "$ref": "#/definitions/Hero Selection Time"
+            },
+            "Score To Win": {
+              "$ref": "#/definitions/Score To Win 1-9"
+            },
+            "Restrict Previously Used Heroes": {
+              "$ref": "#/definitions/Restrict Previously Used Heroes"
+            },
+            "Hero Selection": {
+              "$ref": "#/definitions/Hero Selection"
+            },
+            "Limited Choice Pool": {
+              "$ref": "#/definitions/Limited Choice Pool"
+            },
+            "Capture Objective Tiebreaker": {
+              "$ref": "#/definitions/Capture Objective Tiebreaker"
+            },
+            "Tiebreaker After Match Time Elapsed": {
+              "$ref": "#/definitions/Tiebreaker After Match Time Elapsed"
+            },
+            "Time To Capture": {
+              "$ref": "#/definitions/Time To Capture"
+            },
+            "Draw After Match Time Elapsed With No Tiebreaker": {
+              "$ref": "#/definitions/Draw After Match Time Elapsed With No Tiebreaker"
+            },
+            "Reveal Heroes": {
+              "$ref": "#/definitions/Reveal Heroes"
+            },
+            "Reveal Heroes After Match Time Elapsed": {
+              "$ref": "#/definitions/Reveal Heroes After Match Time Elapsed"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Freezethaw Elimination Maps",
+              "description": "An array of enabled maps for the 'Freezethaw Elimination' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Freezethaw Elimination Maps",
+              "description": "An array of disabled maps for the 'Freezethaw Elimination' mode."
             }
           },
           "additionalProperties": false

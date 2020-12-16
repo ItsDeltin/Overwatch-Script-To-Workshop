@@ -223,8 +223,9 @@ namespace Deltin.Deltinteger
             Value = ToString()
         };
         
-        public static implicit operator MarkupBuilder(string value) => new MarkupBuilder(value);
-        public static implicit operator StringOrMarkupContent(MarkupBuilder builder) => new StringOrMarkupContent(builder);
-        public static implicit operator MarkupContent(MarkupBuilder builder) => new MarkupContent() { Kind = MarkupKind.Markdown, Value = builder.ToString(true) };
+        public static implicit operator MarkupBuilder(string value) => value == null ? null : new MarkupBuilder(value);
+        public static implicit operator StringOrMarkupContent(MarkupBuilder builder) => builder == null ? null : new StringOrMarkupContent((MarkupContent)builder);
+        public static implicit operator MarkupContent(MarkupBuilder builder) => builder == null ? null : new MarkupContent() { Kind = MarkupKind.Markdown, Value = builder.ToString(true) };
+        public static implicit operator string(MarkupBuilder builder) => builder?.ToString(false);
     }
 }

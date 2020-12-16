@@ -180,7 +180,8 @@
     "GameModes": [
       "Elimination",
       "Team Deathmatch",
-      "Deathmatch"
+      "Deathmatch",
+      "Freezethaw Elimination"
     ]
   },
   {
@@ -197,7 +198,8 @@
     "GameModes": [
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Freezethaw Elimination"
     ]
   },
   {
@@ -205,7 +207,8 @@
     "GameModes": [
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Freezethaw Elimination"
     ]
   },
   {
@@ -216,7 +219,8 @@
       "Team Deathmatch",
       "Deathmatch",
       "Mei's Snowball Offensive",
-      "Snowball Deathmatch"
+      "Snowball Deathmatch",
+      "Freezethaw Elimination"
     ]
   },
   {
@@ -263,7 +267,8 @@
     "GameModes": [
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Freezethaw Elimination"
     ]
   },
   {
@@ -397,7 +402,8 @@
     "Name": "Ayutthaya",
     "GameModes": [
       "Capture the Flag",
-      "Elimination"
+      "Elimination",
+      "Freezethaw Elimination"
     ]
   },
   {
@@ -432,7 +438,8 @@
       "Deathmatch",
       "Team Deathmatch",
       "Mei's Snowball Offensive",
-      "Snowball Deathmatch"
+      "Snowball Deathmatch",
+      "Freezethaw Elimination"
     ]
   },
   {
