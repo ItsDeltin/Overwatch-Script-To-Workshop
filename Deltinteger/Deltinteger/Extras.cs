@@ -164,6 +164,12 @@ namespace Deltin.Deltinteger
 
         public MarkupBuilder() { }
 
+        public MarkupBuilder(string value)
+        {
+            result.Append(value);
+            noMarkup.Append(value);
+        }
+
         public MarkupBuilder Add(string line)
         {
             result.Append(line);
@@ -216,5 +222,9 @@ namespace Deltin.Deltinteger
             Kind = MarkupKind.Markdown,
             Value = ToString()
         };
+        
+        public static implicit operator MarkupBuilder(string value) => new MarkupBuilder(value);
+        public static implicit operator StringOrMarkupContent(MarkupBuilder builder) => new StringOrMarkupContent(builder);
+        public static implicit operator MarkupContent(MarkupBuilder builder) => new MarkupContent() { Kind = MarkupKind.Markdown, Value = builder.ToString(true) };
     }
 }

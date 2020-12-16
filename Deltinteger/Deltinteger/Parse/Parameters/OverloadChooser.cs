@@ -32,6 +32,8 @@ namespace Deltin.Deltinteger.Parse
         public IExpression[] Values { get; private set; }
         public DocRange[] ParameterRanges { get; private set; }
         public object[] AdditionalParameterData { get; private set; }
+        private int _providedParameterCount;
+        private DocRange _extraneousParameterRange;
 
         public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
         {
@@ -73,10 +75,16 @@ namespace Deltin.Deltinteger.Parse
             // Return empty if context is null.
             if (context == null) return new PickyParameter[0];
 
+            _providedParameterCount = context.Count;
+
             // Create the parameters array with the same length as the number of input parameters.
             PickyParameter[] parameters = new PickyParameter[context.Count];
             for (int i = 0; i < parameters.Length; i++)
             {
+                // If this is the last parameter and there is a proceeding comma, set the extraneous comma range.
+                if (i == parameters.Length - 1 && context[i].NextComma != null)
+                    _extraneousParameterRange = context[i].NextComma.Range;
+
                 PickyParameter parameter = new PickyParameter(false);
                 parameters[i] = parameter;
 
@@ -226,7 +234,12 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the active parameter.
             int activeParameter = -1;
-            if (ParameterRanges != null)
+
+            // Comma with no proceeding value.
+            if (_extraneousParameterRange != null && (_extraneousParameterRange.Start + CallRange.End).IsInside(caretPos))
+                activeParameter = _providedParameterCount;
+            // Parameter
+            else if (ParameterRanges != null)
                 // Loop through parameter ranges while activeParameter is -1.
                 for (int i = 0; i < ParameterRanges.Length && activeParameter == -1; i++)
                     // If the proved caret position is inside the parameter range, set it as the active parameter.
@@ -247,7 +260,7 @@ namespace Deltin.Deltinteger.Parse
                         // Get the label to show in the signature.
                         Label = AllOverloads[i].Parameters[p].GetLabel(false),
                         // Get the documentation.
-                        Documentation = Extras.GetMarkupContent(AllOverloads[i].Parameters[p].Documentation)
+                        Documentation = AllOverloads[i].Parameters[p].Documentation
                     };
 
                 // Create the signature information.

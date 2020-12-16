@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNodeFrom<T>(T node, DocPos start) where T : INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = start + CurrentOrLast.Range.End;
+                node.Range = start + TokenAtOrEnd(Token - 1).Range.End;
             return node;
         }
 
