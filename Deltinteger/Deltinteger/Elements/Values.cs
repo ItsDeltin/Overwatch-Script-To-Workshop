@@ -566,6 +566,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [ElementData("Empty Array", ValueType.Any)]
+    [HideElement]
     public class V_EmptyArray : Element { }
 
     [ElementData("Entity Exists", ValueType.Boolean)]
