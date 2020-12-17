@@ -157,13 +157,18 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             NewLine();
             Advance();
         }
-        public void AddComment(ITTEAction action)
+        public void AddComment(ITTEAction action) => AddComment(action.Comment, action.Disabled);
+        public void AddComment(string comment, bool disabled)
         {
-            if (action.Comment == null) return;
-            if (action.Disabled) Append("// ");
-            else Append("# ");
-            Append(action.Comment);
-            NewLine();
+            if (comment == null) return;
+
+            var lines = comment.Split(new[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.None);
+            foreach (var line in lines)
+            {
+                if (disabled) Append("// " + line);
+                else Append("# " + line);
+                NewLine();
+            }
         }
     }
 

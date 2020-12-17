@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                      .Replace("{1}", "<1>")
                      .Replace("{2}", "<2>");
 
-            if (Formats == null || Formats.Length == 0)
+            if (Formats == null || Formats.Length == 0 || count == 0)
                 decompiler.Append(str);
             else
             {

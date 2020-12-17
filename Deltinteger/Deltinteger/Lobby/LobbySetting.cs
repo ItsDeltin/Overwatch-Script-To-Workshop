@@ -98,7 +98,7 @@ namespace Deltin.Deltinteger.Lobby
         {
             // Match the enumerator.
             foreach (string enumerator in Values)
-                if (parser.Match(parser.Kw(enumerator), false, true))
+                if (parser.Match(parser.Kw(enumerator), false))
                 {
                     // Return true if it is found.
                     value = enumerator;
@@ -142,13 +142,13 @@ namespace Deltin.Deltinteger.Lobby
         public override bool Match(ConvertTextToElement parser, out object value)
         {
             // Match enabled
-            if (parser.Match(parser.Kw(EnabledKey()), false, true))
+            if (parser.Match(parser.Kw(EnabledKey()), false))
             {
                 value = true;
                 return true;
             }
             // Match disabled
-            else if (parser.Match(parser.Kw(DisabledKey()), false, true))
+            else if (parser.Match(parser.Kw(DisabledKey()), false))
             {
                 value = false;
                 return true;
@@ -250,7 +250,7 @@ namespace Deltin.Deltinteger.Lobby
                 // Match a double.
                 if (parser.Double(out double d))
                 {
-                    parser.Match("%", noSymbols: true);
+                    parser.Match("%");
                     // Double matched.
                     value = d;
                     return true;
