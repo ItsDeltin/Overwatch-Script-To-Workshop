@@ -601,6 +601,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_FacingDirectionOf : Element { }
 
     [ElementData("False", ValueType.Boolean)]
+    [HideElement]
     public class V_False : Element
     {
         public override bool ConstantSupported<T>() =>
@@ -1117,9 +1118,11 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [ElementData("Null", ValueType.Any)]
+    [HideElement]
     public class V_Null : Element { }
 
     [ElementData("Number", ValueType.Number)]
+    [HideElement]
     public class V_Number : Element
     {
         public static readonly V_Number LargeArbitraryNumber = new V_Number(9999);
@@ -1476,6 +1479,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
     [Parameter("{1}", ValueType.Any, typeof(V_Null))]
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]
+    [HideElement]
     public class V_String : Element
     {
         public V_String(string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
@@ -1631,6 +1635,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_TotalTimeElapsed : Element { }
 
     [ElementData("True", ValueType.Boolean)]
+    [HideElement]
     public class V_True : Element
     {
         public override bool ConstantSupported<T>() =>
