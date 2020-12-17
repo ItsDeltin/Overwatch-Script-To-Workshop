@@ -77,12 +77,8 @@ namespace Deltin.Deltinteger.Parse
             IStatement statement = StatementFromContext(scope, statementContext);
 
             // Apply related output comment.
-            if (statementContext is ICommentableStatement comment && comment.ActionComment != null)
-            {
-                string text = comment.ActionComment.Text.Substring(1).Trim();
-                DocRange range = comment.ActionComment.Range;
-                statement.OutputComment(Script.Diagnostics, range, text);
-            }
+            if (statementContext.Comment != null)
+                statement.OutputComment(Script.Diagnostics, statementContext.Comment.Range, statementContext.Comment.GetContents());
 
             return statement;
         }

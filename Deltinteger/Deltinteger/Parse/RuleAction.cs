@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public bool Disabled { get; }
-        public IExpression[] Conditions { get; }
+        public ConditionAction[] Conditions { get; }
         public IStatement Block { get; }
 
         public RuleEvent EventType { get; private set; }
@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
             CallInfo callInfo = new CallInfo(parseInfo.Script);
 
             // Get the conditions.
-            Conditions = new IExpression[ruleContext.Conditions.Count];
+            Conditions = new ConditionAction[ruleContext.Conditions.Count];
             for (int i = 0; i < Conditions.Length; i++)
             {
                 // Make sure both left and right parentheses exists.
@@ -47,7 +47,10 @@ namespace Deltin.Deltinteger.Parse
                         CompletionRangeKind.Catch
                     ));
 
-                Conditions[i] = parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression);
+                Conditions[i] = new ConditionAction(
+                    parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression),
+                    ruleContext.Conditions[i].Comment
+                );
             }
 
             // Get the block.
@@ -167,5 +170,17 @@ namespace Deltin.Deltinteger.Parse
                 //Detail = new MarkupBuilder().StartCodeLine().Add(tag + "." + m.CodeName).ToString(),
                 Kind = CompletionItemKind.Constant
             }).ToArray();
+    }
+
+    public class ConditionAction
+    {
+        public IExpression Expression { get; }
+        public MetaComment Comment { get; }
+
+        public ConditionAction(IExpression expression, MetaComment comment)
+        {
+            Expression = expression;
+            Comment = comment;
+        }
     }
 }

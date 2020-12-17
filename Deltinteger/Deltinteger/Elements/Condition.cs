@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Elements
         public Element Value1 { get; private set; }
         public EnumMember CompareOperator { get; private set; }
         public Element Value2 { get; private set; }
+        public string Comment { get; set; }
 
         public Condition(Element value1, EnumMember compareOperator, Element value2)
         {
@@ -33,6 +34,11 @@ namespace Deltin.Deltinteger.Elements
 
         public string ToWorkshop(OutputLanguage language, bool optimize)
         {
+            string result = string.Empty;
+
+            // Add a comment and newline
+            if (Comment != null) result += $"\"{Comment}\"\n" + Extras.Indent(2, false);
+
             Element a = Value1;
             Element b = Value2;
             if (optimize)
@@ -41,7 +47,8 @@ namespace Deltin.Deltinteger.Elements
                 b = b.Optimize();
             }
 
-            return a.ToWorkshop(language, ToWorkshopContext.ConditionValue) + " " + CompareOperator.ToWorkshop(language, ToWorkshopContext.Other) + " " + b.ToWorkshop(language, ToWorkshopContext.ConditionValue);
+            result += a.ToWorkshop(language, ToWorkshopContext.ConditionValue) + " " + CompareOperator.ToWorkshop(language, ToWorkshopContext.Other) + " " + b.ToWorkshop(language, ToWorkshopContext.ConditionValue);
+            return result;
         }
 
         public int ElementCount(bool optimized)
