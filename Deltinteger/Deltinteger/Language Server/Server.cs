@@ -135,7 +135,6 @@ namespace Deltin.Deltinteger.LanguageServer
             // Pathmap save request.
             options.OnRequest<Newtonsoft.Json.Linq.JToken>("pathmapApply", uriToken => Task.Run(() =>
             {
-
                 // Save 'lastMap' to a file.
                 string result = lastMap.ExportAsJSON();
                 string output = uriToken["path"].ToObject<string>().Trim('/');
@@ -233,24 +232,23 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // Decompile insert
-            options.OnRequest<object>("decompile.insert", () => Task.Run(() =>
+            options.OnRequest<DecompileResult>("decompile.insert", () => Task<DecompileResult>.Run(() =>
             {
                 try
                 {
-                    var workshop = new ConvertTextToElement(Clipboard.GetText()).Get();
+                    var tte = new ConvertTextToElement(Clipboard.GetText());
+                    var workshop = tte.Get();
                     var code = new WorkshopDecompiler(workshop, new OmitLobbySettingsResolver(), new CodeFormattingOptions()).Decompile();
-                    object result = new { success = true, code = code };
-                    return result;
+                    return new DecompileResult(tte, code);
                 }
                 catch (Exception ex)
                 {
-                    object result = new { success = false, code = ex.ToString() };
-                    return result;
+                    return new DecompileResult(ex);
                 }
             }));
 
             // Decompile file
-            options.OnRequest<DecompileFileArgs, object>("decompile.file", args => Task.Run<object>(() =>
+            options.OnRequest<DecompileFileArgs, DecompileResult>("decompile.file", args => Task.Run<DecompileResult>(() =>
             {
                 try
                 {
@@ -260,22 +258,22 @@ namespace Deltin.Deltinteger.LanguageServer
 
                     // Decompile the parsed workshop code.
                     var workshopToCode = new WorkshopDecompiler(workshop, new FileLobbySettingsResolver(args.File, workshop.LobbySettings), new CodeFormattingOptions());
-                    string result = workshopToCode.Decompile();
+                    var code = workshopToCode.Decompile();
 
-                    // Warning if the end of the file was not reached.
-                    if (!tte.ReachedEnd)
-                        return new { success = false, msg = "End of file not reached, stuck at: '" + tte.LocalStream.Substring(0, Math.Min(tte.LocalStream.Length, 50)) };
-                    
-                    // Create the file.
-                    using (var writer = File.CreateText(args.File))
-                        // Write the code to the file.
-                        writer.Write(result);
+                    var result = new DecompileResult(tte, code);
 
-                    return new { success = true };
+                    // Only create the decompile was successful.
+                    if (result.Success)
+                        // Create the file.
+                        using (var writer = File.CreateText(args.File))
+                            // Write the code to the file.
+                            writer.Write(code);
+
+                    return result;
                 }
                 catch (Exception ex)
                 {
-                    return new { success = false, msg = ex.ToString() };
+                    return new DecompileResult(ex);
                 }
             }));
 

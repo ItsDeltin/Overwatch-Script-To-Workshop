@@ -4,6 +4,8 @@ using System.Linq;
 using Deltin.Deltinteger.Decompiler.ElementToCode;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
+using DocRange = Deltin.Deltinteger.Compiler.DocRange;
+using DocPos = Deltin.Deltinteger.Compiler.DocPos;
 
 namespace Deltin.Deltinteger.Decompiler.TextToElement
 {
@@ -17,6 +19,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public char Current => Content[Position];
         public bool ReachedEnd => Position >= Content.Length;
         public string LocalStream => Content.Substring(Position); // ! For debugging
+
+        public int Line { get; private set; }
+        public int Character { get; private set; }
 
         private readonly Stack<TTEOperator> _operators = new Stack<TTEOperator>();
         private readonly Stack<ITTEExpression> _operands = new Stack<ITTEExpression>();
@@ -76,12 +81,23 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         void Advance()
         {
             if (!ReachedEnd)
+            {
+                if (Current == '\n')
+                {
+                    Line++;
+                    Character = 0;
+                }
+                else
+                    Character++;
                 Position += 1;
+            }
         }
 
         void Advance(int length)
         {
-            Position = Math.Min(Content.Length, Position + length);
+            int end = Position + length;
+            while (Position < Math.Min(Content.Length, end))
+                Advance();
         }
 
         void SkipWhitespace()
@@ -604,8 +620,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             }
             // Number
             else if (Number(out expr)) { }
-            // String
-            else if (WorkshopString(out expr)) { }
             // Enum value
             else if (EnumeratorValue(out expr)) { }
             // Variable
@@ -617,6 +631,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             {
                 expr = value;
             }
+            // String
+            else if (WorkshopString(out expr)) { }
             // Unary operator
             else if (MatchUnary(out TTEOperator unaryOperator))
             {
