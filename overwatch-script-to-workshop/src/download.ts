@@ -27,19 +27,30 @@ export async function isDotnetInstalled(): Promise<boolean>
 	}
 }
 
-export async function downloadOSTW(): Promise<void>
+export async function downloadLatest()
+{
+	await progressBarDownload(async (token, resolve, reject) => {
+		// Get the downloadable url for the ostw server.
+		const url: string = await getLatestAssetUrl(token);
+
+		if (url == null)
+		{
+			// Could not retrieve asset url.
+			reject('Could not get release assets, do you have a connection?');
+			return;
+		}
+		
+		doDownload(url, token, resolve, reject);
+	})
+}
+
+export async function progressBarDownload(action: (token: CancellationToken, resolve: () => void, reject: (reason: string) => void) => void): Promise<void>
 {
 	window.withProgress(
 		{ location: ProgressLocation.Notification, title: 'Downloading the Overwatch Script To Workshop server.', cancellable: true },
 		async(progress, token) => {
 			try {
-				await new Promise((resolve, reject) => {
-					doDownload(token, successResponse => {
-						resolve(successResponse);
-					}, errorResponse => {
-						reject(errorResponse)
-					});
-				});
+				await new Promise<void>((resolve, reject) => action(token, resolve, reject));
 			}
 			// On error
 			catch (ex) {
@@ -51,25 +62,15 @@ export async function downloadOSTW(): Promise<void>
 	)
 }
 
-async function doDownload(token: CancellationToken, success, error)
+export async function doDownload(url: string, token: CancellationToken, success: () => void, error: (msg: String) => void)
 {
 	// Stop the server.
 	await stopLanguageServer();
 
-	// Get the downloadable url for the ostw server.
-	const url: string = await getAssetUrl(token);
-
-	if (url == null)
-	{
-		// Could not retrieve asset url.
-		error('Could not get release assets, do you have a connection?');
-		return;
-	}
-
 	let data = await cancelableGet(url, token);
 	if (data == null)
 	{
-		success(null);
+		success();
 		return;
 	}
 	else if (typeof data == 'string')
@@ -81,10 +82,11 @@ async function doDownload(token: CancellationToken, success, error)
 	// Send previous installation to the trash.
 	if (fs.existsSync(defaultServerFolder)) {
 		try {
-			await workspace.fs.delete(Uri.parse('file://' + defaultServerFolder, true), {recursive: true, useTrash: true});
+			await workspace.fs.delete(Uri.file(defaultServerFolder), {recursive: true, useTrash: true});
 		}
 		catch (ex) {
-			window.showWarningMessage('Failed to delete previous server installation: ' + ex);
+			error('Failed to delete previous server installation: ' + ex);
+			return;
 		}
 	}
 
@@ -136,7 +138,7 @@ async function doDownload(token: CancellationToken, success, error)
 				startLanguageServer();
 
 				// Done.
-				success(newCommand);
+				success();
 			}
 			else
 			{
@@ -153,7 +155,7 @@ export async function cancelableGet(url: string, token: CancellationToken)
 	let source = CancelToken.source();
 
 	// When the progress bar is canceled, cancel the axios request.
-	token.onCancellationRequested(e => {
+	token?.onCancellationRequested(e => {
 		source.cancel(e);
 	}, this);
 
@@ -180,8 +182,10 @@ export function getModuleCommand(module: string): string {
 }
 
 // Gets the latest release's download URL.
-async function getAssetUrl(token: CancellationToken): Promise<string> {
-	let assets: any[] = (await getLatestRelease())?.assets;
+async function getLatestAssetUrl(token: CancellationToken): Promise<string> {
+	return chooseAsset((await getLatestRelease())?.assets, token);
+}
+export async function chooseAsset(assets: any[], token: CancellationToken = null): Promise<string> {
 	if (assets == null) return null;
 
 	let names:string[] = [];
@@ -206,6 +210,15 @@ async function getAssetUrl(token: CancellationToken): Promise<string> {
 export async function getLatestRelease() {
 	try {
 		return (await axios.get('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')).data;
+	}
+	catch (ex) {
+		return null;
+	}
+}
+
+export async function getReleases() {
+	try {
+		return (await axios.get('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases')).data;
 	}
 	catch (ex) {
 		return null;

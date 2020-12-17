@@ -2,8 +2,9 @@ import { env, window, ConfigurationTarget, EventEmitter, OutputChannel, StatusBa
 import { LanguageClient, LanguageClientOptions, Executable, ErrorHandler, ErrorAction, Message, CloseAction } from 'vscode-languageclient';
 import { defaultServerFolder, selector, addSubscribable } from './extensions';
 import { config } from './config';
-import { downloadOSTW, locateDLL, getModuleCommand, isDotnetInstalled, getLatestRelease } from './download';
+import { locateDLL, getModuleCommand, isDotnetInstalled, getLatestRelease, downloadLatest } from './download';
 import { workshopPanelProvider } from './workshopPanelProvider';
+import * as versionSelector from './versionSelector';
 
 export let client: LanguageClient;
 
@@ -13,6 +14,7 @@ let clientStartInstance;
 export let isServerReady = false;
 export let onServerReady = new EventEmitter();
 export let serverModuleCommand: string;
+export let serverVersion: string;
 
 export let workshopOut: OutputChannel;
 let elementCountStatus: StatusBarItem;
@@ -41,13 +43,14 @@ export async function makeLanguageServer()
 		// If serverModule is not set, locate the dll at its default location.
 		let findInstallLocation = await locateDLL(defaultServerFolder);
 		if (findInstallLocation == null) {
+			versionSelector.setCurrentVersion('OSTW server not installed');
 			// Not found at the default location.
 			doStart = false;
 			// Ask the user if they want to install the OSTW server.
 			window.showWarningMessage('The Overwatch Script To Workshop server was not found.', 'Automatically Install Latest', 'View Releases')
 				.then(option => {
 					// Download OSTW
-					if (option == 'Automatically Install Latest') downloadOSTW();
+					if (option == 'Automatically Install Latest') downloadLatest();
 					// View releases
 					if (option == 'View Releases') env.openExternal(Uri.parse('https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases'));
 				})
@@ -151,6 +154,9 @@ function clientReady()
 
 	// Check version.
 	client.onNotification("version", async (version: string) => {
+		serverVersion = version;
+		versionSelector.setCurrentVersion('OSTW ' + version);
+
 		// Do not show the message if the newRelease config is false.
 		if (!config.get('newRelease')) return;
 
@@ -172,7 +178,7 @@ function clientReady()
 			).then(chosenOption => {
 				// Download the release.
 				if (chosenOption == "Download release")
-					downloadOSTW();
+					downloadLatest();
 				// Open the release.
 				else if (chosenOption == "View release")
 					env.openExternal(Uri.parse(url));
@@ -194,9 +200,7 @@ export async function stopLanguageServer() {
 
 export async function restartLanguageServer(timeout:number = 5000) {
 	await stopLanguageServer();
-	await new Promise(resolve => setTimeout(() => {
-		resolve();
-	}, timeout));
+	await new Promise<void>(resolve => setTimeout(() => resolve(), timeout));
 	startLanguageServer();
 }
 

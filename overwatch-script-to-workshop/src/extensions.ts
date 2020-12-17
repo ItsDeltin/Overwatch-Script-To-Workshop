@@ -7,10 +7,11 @@ import { setupBuildWatcher } from './dev';
 import path = require('path');
 import exec = require('child_process');
 import { client, makeLanguageServer, startLanguageServer, stopLanguageServer, setServerOptions, lastWorkshopOutput, restartLanguageServer } from './languageServer';
-import { downloadOSTW, getModuleCommand } from './download';
+import { downloadLatest, getModuleCommand } from './download';
 import { setupConfig, config } from './config';
 import { workshopPanelProvider } from './workshopPanelProvider';
 import * as semantics from './semantics';
+import { createVersionStatusBar } from './versionSelector';
 
 export let extensionContext: ExtensionContext;
 export let globalStoragePath:string;
@@ -25,6 +26,7 @@ export async function activate(context: ExtensionContext) {
 
 	setupConfig();
 	subscribe(context);
+	createVersionStatusBar(context);
 	makeLanguageServer();
 	setupBuildWatcher();
 	semantics.setupSemantics();
@@ -59,7 +61,7 @@ function subscribe(context: ExtensionContext)
 
 	// Download latest release
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.downloadLatestRelease', () => {
-		downloadOSTW();
+		downloadLatest();
 	}));
 
 	// Virtual document
@@ -186,4 +188,9 @@ function subscribe(context: ExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.restartLanguageServer', async () => {
 		await restartLanguageServer(500);
 	}));
+}
+
+export function openIssues()
+{
+	vscode.env.openExternal(vscode.Uri.parse('https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/issues'));
 }
