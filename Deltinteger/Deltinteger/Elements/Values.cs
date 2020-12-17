@@ -450,12 +450,12 @@ namespace Deltin.Deltinteger.Elements
 
             if (ParameterValues[0] is V_Number a && ParameterValues[1] is V_Number b)
             {
-                double h = a.Value;
-                double v = b.Value;
+                double h = a.Value * (Math.PI / 180);
+                double v = b.Value * (Math.PI / 180);
 
-                double x = Math.Sin(h * (Math.PI / 180));
-                double y = -Math.Sin(v * (Math.PI / 180));
-                double z = Math.Cos(h * (Math.PI / 180));
+                double x = Math.Sin(h) * Math.Cos(v);
+                double y = Math.Sin(v);
+                double z = Math.Cos(h) * Math.Cos(v);
 
                 if (y == -0)
                     y = 0;
@@ -1510,6 +1510,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
     [Parameter("{1}", ValueType.Any, typeof(V_Null))]
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]
+    [HideElement]
     public class V_CustomString : Element
     {
         public string Text { get; }
