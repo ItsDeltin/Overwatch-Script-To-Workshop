@@ -684,8 +684,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public void EndReached()
         {
-            while (_tokens.Count > Current)
-                _tokens.RemoveAt(Current);
+            if (Current != -1)
+                while (_tokens.Count > Current)
+                    _tokens.RemoveAt(Current);
         }
     }
 
