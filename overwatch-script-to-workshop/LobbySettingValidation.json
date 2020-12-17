@@ -988,6 +988,26 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Barrier Shield": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Barrier Shield Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Barrier Shield Recharge Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Barrier Shield Maximum Time": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 20.0,
+      "maximum": 500.0
+    },
     "Repair Pack": {
       "default": true,
       "type": "boolean"
@@ -2919,6 +2939,18 @@
             },
             "Healing Dealt": {
               "$ref": "#/definitions/Healing Dealt"
+            },
+            "Barrier Shield": {
+              "$ref": "#/definitions/Barrier Shield"
+            },
+            "Barrier Shield Cooldown Time": {
+              "$ref": "#/definitions/Barrier Shield Cooldown Time"
+            },
+            "Barrier Shield Recharge Rate": {
+              "$ref": "#/definitions/Barrier Shield Recharge Rate"
+            },
+            "Barrier Shield Maximum Time": {
+              "$ref": "#/definitions/Barrier Shield Maximum Time"
             },
             "Repair Pack": {
               "$ref": "#/definitions/Repair Pack"

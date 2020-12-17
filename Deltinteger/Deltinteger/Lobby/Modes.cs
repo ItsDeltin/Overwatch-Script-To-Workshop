@@ -186,8 +186,8 @@ namespace Deltin.Deltinteger.Lobby
             new SwitchValue("Respawn As Random Hero", false),
             new RangeValue(false, true, "Respawn Time Scalar", 0, 100)
         };
-        private static readonly LobbySetting CaptureSpeed = new RangeValue("Capture Speed Modifier", 10, 500);
-        private static readonly LobbySetting PayloadSpeed = new RangeValue("Payload Speed Modifier", 10, 500);
+        private static readonly LobbySetting CaptureSpeed = new RangeValue(false, true, "Capture Speed Modifier", 10, 500);
+        private static readonly LobbySetting PayloadSpeed = new RangeValue(false, true, "Payload Speed Modifier", 10, 500);
         private static readonly LobbySetting CompetitiveRules = new SwitchValue("Competitive Rules", false);
         private static readonly LobbySetting Enabled_DefaultOn = new SwitchValue("Enabled", true) { ReferenceName = "Enabled On" };
         private static readonly LobbySetting Enabled_DefaultOff = new SwitchValue("Enabled", false) { ReferenceName = "Enabled Off" };
