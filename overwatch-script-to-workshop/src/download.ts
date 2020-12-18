@@ -220,15 +220,12 @@ export async function chooseAsset(assets: any[], token: CancellationToken = null
 
 // Gets the latest release.
 export async function getLatestRelease() {
-	try {
-		return (await axios.get('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')).data;
-	}
-	catch (ex) {
-		return null;
-	}
+	let releases = await getReleases();
+	if (releases != null) return releases[0];
+	return null;
 }
 
-export async function getReleases() {
+export async function getReleases(): Promise<any[]> {
 	try {
 		return (await axios.get('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases')).data;
 	}
