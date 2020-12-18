@@ -179,7 +179,7 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
 
-            string resultingPath = Extras.CombinePathWithDotNotation(parseInfo.Script.Uri.FilePath(), str.Value);
+            string resultingPath = Extras.CombinePathWithDotNotation(parseInfo.Script.Uri.LocalPath, str.Value);
 
             if (resultingPath == null)
             {
@@ -203,7 +203,7 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
 
-            parseInfo.Script.AddDefinitionLink(valueRange, new Location(Extras.Definition(resultingPath), DocRange.Zero));
+            parseInfo.Script.AddDefinitionLink(valueRange, new Location(new Uri(resultingPath), DocRange.Zero));
             parseInfo.Script.AddHover(valueRange, resultingPath);
 
             return resultingPath;

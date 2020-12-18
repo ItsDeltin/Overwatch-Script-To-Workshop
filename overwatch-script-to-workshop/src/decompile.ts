@@ -1,5 +1,6 @@
 import exec = require('child_process');
-import { serverModuleCommand, client } from './extensions';
+import { client } from './languageServer';
+import { openIssues } from './extensions';
 import * as vscode from 'vscode';
 
 export function decompileClipboard()
@@ -41,7 +42,7 @@ async function handleDecompileResult(value, onSuccess: () => void)
                 if (option == 'Show error location')
                     showDecompileError(value);
                 else if (option == 'Report on github')
-                    vscode.env.openExternal(vscode.Uri.parse('https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/issues'))
+                    openIssues();
             });
     }
     else if (value.result == 'exception')

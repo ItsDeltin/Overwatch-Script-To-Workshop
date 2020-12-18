@@ -3,7 +3,7 @@ import { ProviderResult, ExtensionContext } from 'vscode';
 import * as debugAdapter from 'vscode-debugadapter';
 import { LoggingDebugSession, Scope, Handles, InitializedEvent, StoppedEvent, Thread, StackFrame } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { serverModuleCommand, client } from './extensions';
+import { client } from './languageServer';
 
 export function register(context: ExtensionContext)
 {

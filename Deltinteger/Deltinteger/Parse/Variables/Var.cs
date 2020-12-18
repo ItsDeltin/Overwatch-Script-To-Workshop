@@ -55,7 +55,6 @@ namespace Deltin.Deltinteger.Parse
             DefinedAt = varInfo.DefinedAt;
             parseInfo = varInfo.ParseInfo;
             AccessLevel = varInfo.AccessLevel;
-            DefinedAt = varInfo.DefinedAt;
             WholeContext = varInfo.WholeContext;
             CodeType = varInfo.Type;
             VariableType = varInfo.VariableType;

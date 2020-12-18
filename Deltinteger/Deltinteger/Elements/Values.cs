@@ -450,12 +450,12 @@ namespace Deltin.Deltinteger.Elements
 
             if (ParameterValues[0] is V_Number a && ParameterValues[1] is V_Number b)
             {
-                double h = a.Value;
-                double v = b.Value;
+                double h = a.Value * (Math.PI / 180);
+                double v = b.Value * (Math.PI / 180);
 
-                double x = Math.Sin(h * (Math.PI / 180));
-                double y = -Math.Sin(v * (Math.PI / 180));
-                double z = Math.Cos(h * (Math.PI / 180));
+                double x = Math.Sin(h) * Math.Cos(v);
+                double y = -Math.Sin(v);
+                double z = Math.Cos(h) * Math.Cos(v);
 
                 if (y == -0)
                     y = 0;
@@ -566,6 +566,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [ElementData("Empty Array", ValueType.Any)]
+    [HideElement]
     public class V_EmptyArray : Element { }
 
     [ElementData("Entity Exists", ValueType.Boolean)]
@@ -601,6 +602,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_FacingDirectionOf : Element { }
 
     [ElementData("False", ValueType.Boolean)]
+    [HideElement]
     public class V_False : Element
     {
         public override bool ConstantSupported<T>() =>
@@ -1117,9 +1119,11 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [ElementData("Null", ValueType.Any)]
+    [HideElement]
     public class V_Null : Element { }
 
     [ElementData("Number", ValueType.Number)]
+    [HideElement]
     public class V_Number : Element
     {
         public static readonly V_Number LargeArbitraryNumber = new V_Number(9999);
@@ -1476,6 +1480,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
     [Parameter("{1}", ValueType.Any, typeof(V_Null))]
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]
+    [HideElement]
     public class V_String : Element
     {
         public V_String(string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
@@ -1510,6 +1515,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
     [Parameter("{1}", ValueType.Any, typeof(V_Null))]
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]
+    [HideElement]
     public class V_CustomString : Element
     {
         public string Text { get; }
@@ -1630,6 +1636,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_TotalTimeElapsed : Element { }
 
     [ElementData("True", ValueType.Boolean)]
+    [HideElement]
     public class V_True : Element
     {
         public override bool ConstantSupported<T>() =>
