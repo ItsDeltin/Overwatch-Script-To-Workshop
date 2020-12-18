@@ -2,7 +2,7 @@ import { languages, Disposable, DocumentSemanticTokensProvider, SemanticTokensBu
 import { Range as LSRange } from 'vscode-languageclient';
 import { selector } from './extensions';
 import { config } from './config';
-import { client, isServerReady, onServerReady } from './languageServer';
+import { client, serverStatus, onServerReady } from './languageServer';
 
 let semantics: Disposable;
 
@@ -49,7 +49,7 @@ const provider: DocumentSemanticTokensProvider = {
 
 async function waitForServer(): Promise<boolean>
 {
-	if (isServerReady) return true;
+	if (serverStatus == 'ready') return true;
 	return new Promise(resolve =>
 		{
 			onServerReady.event(() => {

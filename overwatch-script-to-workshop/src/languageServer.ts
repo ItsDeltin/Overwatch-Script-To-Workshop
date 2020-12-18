@@ -1,20 +1,19 @@
-import { env, window, ConfigurationTarget, EventEmitter, OutputChannel, StatusBarItem, StatusBarAlignment, Uri } from 'vscode';
-import { LanguageClient, LanguageClientOptions, Executable, ErrorHandler, ErrorAction, Message, CloseAction } from 'vscode-languageclient';
+import { env, window, ConfigurationTarget, EventEmitter, OutputChannel, StatusBarItem, StatusBarAlignment, Uri, SourceBreakpoint } from 'vscode';
+import { LanguageClient, LanguageClientOptions, Executable, ErrorHandler, ErrorAction, Message, CloseAction, ReferencesRequest } from 'vscode-languageclient';
 import { defaultServerFolder, selector, addSubscribable } from './extensions';
 import { config } from './config';
-import { locateDLL, getModuleCommand, isDotnetInstalled, getLatestRelease, downloadLatest } from './download';
+import { isDotnetInstalled, getLatestRelease, downloadLatest, locateAndApplyServerModule, getVersionInfo, pingModule } from './download';
 import { workshopPanelProvider } from './workshopPanelProvider';
 import * as versionSelector from './versionSelector';
+import fs = require('fs');
 
 export let client: LanguageClient;
 
-let isServerRunning = false;
-let canBeStarted = false;
+export let serverStatus: 'stopped' | 'starting' | 'started' | 'ready' = 'stopped';
 let clientStartInstance;
-export let isServerReady = false;
 export let onServerReady = new EventEmitter();
-export let serverModuleCommand: string;
 export let serverVersion: string;
+let gotVersionThisInstance = false;
 
 export let workshopOut: OutputChannel;
 let elementCountStatus: StatusBarItem;
@@ -30,22 +29,23 @@ export async function makeLanguageServer()
 	elementCountStatus.tooltip = "The number of elements in the workshop output. The workshop will accept a maximum of 20,000.";
 	elementCountStatus.show();
 	setElementCount(0);
+	startLanguageServer();
+}
+
+async function checkServerModule()
+{
+	serverStatus = 'starting';
+	gotVersionThisInstance = false;
 
 	// Gets the path to the server executable.
 	let serverModule = <string>config.get('deltintegerPath');
-
-	// Determines if the server should be started after this call.
-	let doStart: boolean = true;
 
 	// Confirm the serverModule.
 	if (serverModule == null || serverModule == '')
 	{
 		// If serverModule is not set, locate the dll at its default location.
-		let findInstallLocation = await locateDLL(defaultServerFolder);
-		if (findInstallLocation == null) {
+		if (!await locateAndApplyServerModule(defaultServerFolder)) {
 			versionSelector.setCurrentVersion('OSTW server not installed');
-			// Not found at the default location.
-			doStart = false;
 			// Ask the user if they want to install the OSTW server.
 			window.showWarningMessage('The Overwatch Script To Workshop server was not found.', 'Automatically Install Latest', 'View Releases')
 				.then(option => {
@@ -53,39 +53,46 @@ export async function makeLanguageServer()
 					if (option == 'Automatically Install Latest') downloadLatest();
 					// View releases
 					if (option == 'View Releases') env.openExternal(Uri.parse('https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases'));
-				})
+				});
+			
+			serverStatus = 'stopped';
+			return false;
 		}
-		else {
-			serverModule = getModuleCommand(findInstallLocation);
-			// Was found at the default location, update config.
-			config.update('deltintegerPath', serverModule, ConfigurationTarget.Global);
+		else
+		{
+			serverModule = <string>config.get('deltintegerPath');
 		}
 	}
 
-	// Update the server options.
-	setServerOptions(serverModule);
+	// Make sure dotnet is installed.
+	let version = await getVersionInfo(serverModule);
 
-	// Confirm that dotnet is installed.
-	if (!await isDotnetInstalled())
+	if (version.version != 'unprovided')
+		gotVersion(version.version);
+
+	if (version.arch == 'crossplatform' && !await isDotnetInstalled())
 	{
-		doStart = false;
-		canBeStarted = false;
-		window.showWarningMessage('Overwatch Script To Workshop requires .Net Core 3.1 to be installed.', 'View Download Page')
-			.then(option => {
-				// View dotnet
-				if (option == 'View Download Page') env.openExternal(Uri.parse('https://dotnet.microsoft.com/download/dotnet-core/current/runtime'));
-			});
+		window.showWarningMessage('Overwatch Script To Workshop cross-platform requires .Net Core 3.1 to be installed.', 'View Download Page').then(option => {
+			// View dotnet
+			if (option == 'View Download Page') env.openExternal(Uri.parse('https://dotnet.microsoft.com/download/dotnet-core/current/runtime'));
+		});
+		serverStatus = 'stopped';
+		return false;
 	}
-	else
+
+	if (!await pingModule(serverModule))
 	{
-		canBeStarted = true;
-		if (doStart) startLanguageServer();
+		window.showErrorMessage('Failed to ping the Overwatch Script To Workshop server.');
+		serverStatus = 'stopped';
+		return false;
 	}
+	
+	return true;
 }
 
-export function startLanguageServer() {
+export async function startLanguageServer() {
 	// If the server is running, or the server cannot be started, or the command server option is invalid, return.
-	if (isServerRunning || !canBeStarted || serverModuleCommand == null || serverModuleCommand == '') return;
+	if (serverStatus != 'stopped' || !await checkServerModule()) return;
 
 	let waitForDebugger = config.get<string>('ostw.dev.waitForDebugger');
 	if (waitForDebugger)
@@ -104,33 +111,28 @@ export function startLanguageServer() {
 	let serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
 	let serverOptions: { run: Executable; debug: Executable; } = {
 		run: {
-			command: serverModuleCommand,
+			command: <string>config.get('deltintegerPath'),
 			args: ['--langserver', ...waitForDebugger ? ['--waitfordebugger'] : []],
 			options: serverExecutableOptions
 		},
 		debug: {
-			command: serverModuleCommand,
+			command: <string>config.get('deltintegerPath'),
 			args: ['--langserver', '--debug', ...waitForDebugger ? ['--waitfordebugger'] : []],
 			options: serverExecutableOptions
 		}
 	};
 	
 	// Create the language client and start the client.
-	client = new LanguageClient(
-		'ostw',
-		'Overwatch Script To Workshop',
-		serverOptions,
-		clientOptions
-	);
+	client = new LanguageClient('ostw', 'Overwatch Script To Workshop', serverOptions, clientOptions);
 
 	client.onReady().then(clientReady);
 	clientStartInstance = client.start();
-	isServerRunning = true;
+	serverStatus = 'started';
 }
 
 function clientReady()
 {
-	isServerReady = true;
+	serverStatus = 'ready';
 	onServerReady.fire(null);
 
 	// When the client is ready, setup the workshopCode notification.
@@ -153,60 +155,61 @@ function clientReady()
 	});
 
 	// Check version.
-	client.onNotification("version", async (version: string) => {
-		serverVersion = version;
-		versionSelector.setCurrentVersion('OSTW ' + version);
-
-		// Do not show the message if the newRelease config is false.
-		if (!config.get('newRelease')) return;
-
-		// Get the latest release.
-		let latestRelease = await getLatestRelease();
-		if (latestRelease == null) return;
-
-		// Get the name and url.
-		let latest: string = latestRelease.tag_name;
-		let url: string = latestRelease.html_url;
-
-		if (version != latest && config.get('ignoreRelease') != latest)
-		{
-			window.showInformationMessage(
-				// Message
-				"A new version of Overwatch Script To Workshop (" + latest + ") is now available. (Current: " + version + ")",
-				// Options
-				"Download release", "Ignore release", "View release"
-			).then(chosenOption => {
-				// Download the release.
-				if (chosenOption == "Download release")
-					downloadLatest();
-				// Open the release.
-				else if (chosenOption == "View release")
-					env.openExternal(Uri.parse(url));
-				// Don't show again for this version.
-				else if (chosenOption == "Ignore release")
-					config.update('ignoreRelease', latest, ConfigurationTarget.Global);
-			});
-		}
-	});
+	client.onNotification("version", gotVersion);
 }
 
 export async function stopLanguageServer() {
-	if (!isServerRunning) return;
-	isServerReady = false;
-	await client.stop();
+	if (serverStatus == 'stopped') return;
+	serverStatus = 'stopped';
+	if (client.needsStop()) await client.stop();
 	clientStartInstance.dispose();
-	isServerRunning = false;
 }
 
 export async function restartLanguageServer(timeout:number = 5000) {
 	await stopLanguageServer();
 	await new Promise<void>(resolve => setTimeout(() => resolve(), timeout));
-	startLanguageServer();
+	await startLanguageServer();
 }
 
-export function setServerOptions(serverModule: string)
+async function gotVersion(version: string)
 {
-	serverModuleCommand = serverModule;
+	if (gotVersionThisInstance)
+		return;
+	
+	gotVersionThisInstance = true;
+	serverVersion = version;
+	versionSelector.setCurrentVersion('OSTW ' + version);
+
+	// Do not show the message if the newRelease config is false.
+	if (!config.get('newRelease')) return;
+
+	// Get the latest release.
+	let latestRelease = await getLatestRelease();
+	if (latestRelease == null) return;
+
+	// Get the name and url.
+	let latest: string = latestRelease.tag_name;
+	let url: string = latestRelease.html_url;
+
+	if (version != latest && config.get('ignoreRelease') != latest)
+	{
+		window.showInformationMessage(
+			// Message
+			"A new version of Overwatch Script To Workshop (" + latest + ") is now available. (Current: " + version + ")",
+			// Options
+			"Download release", "Ignore release", "View release"
+		).then(chosenOption => {
+			// Download the release.
+			if (chosenOption == "Download release")
+				downloadLatest();
+			// Open the release.
+			else if (chosenOption == "View release")
+				env.openExternal(Uri.parse(url));
+			// Don't show again for this version.
+			else if (chosenOption == "Ignore release")
+				config.update('ignoreRelease', latest, ConfigurationTarget.Global);
+		});
+	}
 }
 
 function setElementCount(count)

@@ -8,7 +8,7 @@ let versionStatus: StatusBarItem;
 export function createVersionStatusBar(context: ExtensionContext)
 {
     versionStatus = window.createStatusBarItem(StatusBarAlignment.Left, 0);
-    versionStatus.text = 'Loading...';
+    versionStatus.text = 'OSTW';
     versionStatus.tooltip = 'Select version';
     versionStatus.command = 'ostw.versionInfo';
     versionStatus.show();

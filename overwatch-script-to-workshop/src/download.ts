@@ -7,7 +7,8 @@ import glob = require('glob');
 import path = require('path');
 import { defaultServerFolder } from './extensions';
 import { config } from './config';
-import { startLanguageServer, stopLanguageServer, setServerOptions } from './languageServer';
+import { startLanguageServer, stopLanguageServer } from './languageServer';
+import process = require('process');
 
 export async function isDotnetInstalled(): Promise<boolean>
 {
@@ -125,17 +126,10 @@ export async function doDownload(url: string, token: CancellationToken, success:
 		await zipfile.once("end", async () => {
 			// Extraction done.
 			// Locate the DLL file.
-			let executable = await locateDLL(defaultServerFolder);
-			if (executable != null)
+			if (await locateAndApplyServerModule(defaultServerFolder))
 			{
-				let newCommand = getModuleCommand(executable);
-				setServerOptions(newCommand);
-
-				// Update config.
-				await config.update('deltintegerPath', newCommand, ConfigurationTarget.Global);
-
 				// If updating the config does not start the client, start it now.
-				startLanguageServer();
+				await startLanguageServer();
 
 				// Done.
 				success();
@@ -148,7 +142,7 @@ export async function doDownload(url: string, token: CancellationToken, success:
 	});
 }
 
-export async function cancelableGet(url: string, token: CancellationToken)
+async function cancelableGet(url: string, token: CancellationToken)
 {
 	// Set up the cancel token.
 	const CancelToken = axios.CancelToken;
@@ -177,10 +171,6 @@ export async function cancelableGet(url: string, token: CancellationToken)
 	}
 }
 
-export function getModuleCommand(module: string): string {
-	return 'dotnet exec "' + module +'"';
-}
-
 // Gets the latest release's download URL.
 async function getLatestAssetUrl(token: CancellationToken): Promise<string> {
 	return chooseAsset((await getLatestRelease())?.assets, token);
@@ -198,8 +188,30 @@ export async function chooseAsset(assets: any[], token: CancellationToken = null
 		urls.push(asset.browser_download_url);
 	}
 
+	// No zip assets
 	if (urls.length == 0) return null;
+	// Only one zip asset
 	if (urls.length == 1) return urls[0];
+
+	// Get default installation.
+	let dotnetInstalled = await isDotnetInstalled();
+	for (let i = 0; i < names.length; i++) {
+		let fileName = names[i].replace(/\.[^/.]+$/, "");
+
+		// Cross-platform
+		if (dotnetInstalled && fileName.endsWith('crossplatform'))
+			return urls[i]
+		// Win x32
+		else if (fileName.endsWith('win-x86') && process.arch == 'x32' && process.platform == 'win32')
+			return urls[i];
+		// Win x64
+		else if (fileName.endsWith('win-x64') && process.arch == 'x64' && process.platform == 'win32')
+			return urls[i];
+		// Linux x64
+		else if (fileName.endsWith('linux-x64') && process.arch == 'x64' && process.platform == 'linux')
+			return urls[i];
+
+	}
 
 	let selected:string = await window.showQuickPick(names, {canPickMany: false, placeHolder: 'Download release', ignoreFocusOut: true}, token);
 	if (selected == undefined) return null;
@@ -234,43 +246,108 @@ function ensureDirectoryExistence(filePath) {
 	fs.mkdirSync(dirname);
 }
 
-export async function locateDLL(root: string): Promise<string>
+export async function locateAndApplyServerModule(root: string): Promise<boolean>
 {
-	return new Promise<string>((resolve, reject) =>
-		glob('**/deltinteger.dll', {cwd: root, nocase: true}, (error, matches: string[]) => {
-			if (error || matches.length == 0) resolve(null);
-			return resolve(path.join(root, matches[0]));
-		})
-	);
+	let module = await getServerModuleFromFolder(root);
+	if (!module)
+		return false;
+		
+	await config.update('deltintegerPath', module, ConfigurationTarget.Global);
+	return true;
+}
+
+async function getServerModuleFromFolder(root: string): Promise<string> {
+	let pattern = process.platform == 'win32' ? '**/Deltinteger.@(dll|exe)' : '**/Deltinteger?(.dll)'
+
+	return new Promise<string>((resolve, reject) => glob(pattern, {cwd: root, nocase: true}, async (error, matches: string[]) => {
+		if (matches.length == 0)
+		{
+			resolve(null);
+			return;
+		}
+		
+		for (const match of matches) {
+			let result = getServerModuleFromFile(path.join(root, match));
+			if (result)
+			{
+				resolve(result);
+				return;
+			}
+		}
+		resolve(null);
+	}));
+}
+
+export function getServerModuleFromFile(file: string): string {
+	let ext = path.extname(file).toLowerCase();
+	if (ext == '.dll') return 'dotnet exec "' + file + '"';
+	else if (ext == '') return file;
+	else if (ext == '.exe') return file;
+	return null;
+}
+
+export async function getVersionInfo(file: string): Promise<{arch:string, version:string}>
+{
+	let versionFile = path.join(path.dirname(file), 'Version');
+	let def = {
+		arch: 'crossplatform',
+		version: 'unprovided'
+	};
+
+	if (!fs.existsSync(versionFile))
+		return def;
+	
+	try
+	{
+		return await new Promise((resolve, reject) => fs.readFile(versionFile, 'utf8', (err, data) => {
+			if (err)
+			{
+				reject(err);
+				return;
+			}
+
+			let split = data.split(/\r?\n/);
+			if (split.length < 2)
+			{
+				reject('Invalid version file');
+				return;
+			}
+
+			resolve({ arch: split[0], version: split[1] });
+		}));
+	}
+	catch (ex)
+	{
+		window.showErrorMessage('Failed to retrieve version info: ' + ex);
+		return def;
+	}
 }
 
 export async function chooseServerLocation()
 {
 	// Open a file picker to locate the server.
-	let openedFiles = await window.showOpenDialog({canSelectMany: false, filters: { 'Application': ['exe', 'dll'] }});
+	let openedFiles = await window.showOpenDialog({canSelectMany: false, filters: { 'Application': ['exe', 'dll', ''] }});
 
 	// 'opened' will be undefined if canceled.
 	if (openedFiles == undefined) return;
 
 	let opened = openedFiles[0];
-	let ext = path.extname(opened.fsPath).toLowerCase();
-	let module:string = null;
+	let module:string = getServerModuleFromFile(opened.fsPath);
 
-	if (ext == '.dll')
-		module = getModuleCommand(opened.fsPath);
-	else if (ext == '.exe')
-		module = opened.fsPath;
-	
-	if (!await pingModule(module))
-		window.showWarningMessage('Failed to ping the Overwatch Script To Workshop server.');
-
-	await stopLanguageServer();
-	setServerOptions(module);
-	config.update('deltintegerPath', module, ConfigurationTarget.Global);
-	startLanguageServer();
+	if (!module)
+	{
+		window.showWarningMessage('Selected file is not a valid target.');
+		return;
+	}
+	else
+	{
+		await config.update('deltintegerPath', module, ConfigurationTarget.Global);
+		await stopLanguageServer();
+		await startLanguageServer();
+	}
 }
 
-async function pingModule(module: string): Promise<boolean> {
+export async function pingModule(module: string): Promise<boolean> {
 	return new Promise<boolean>(resolve => {
 		exec.exec(module + ' --ping', {timeout: 10000}, (error, stdout, stderr) => {
 			if (error) resolve(false);

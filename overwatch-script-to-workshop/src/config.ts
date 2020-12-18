@@ -1,7 +1,7 @@
 import { workspace, ConfigurationChangeEvent, WorkspaceConfiguration } from 'vscode';
 import { addSubscribable } from './extensions';
 import { setupBuildWatcher } from './dev';
-import { stopLanguageServer, startLanguageServer, setServerOptions, resetLastWorkshopOutput } from './languageServer';
+import { stopLanguageServer, startLanguageServer, resetLastWorkshopOutput } from './languageServer';
 
 export let config: WorkspaceConfiguration;
 
@@ -18,8 +18,7 @@ export function setupConfig()
 		{
 			resetLastWorkshopOutput();
 			await stopLanguageServer();
-			setServerOptions(config.get('deltintegerPath'));
-			startLanguageServer();
+			await startLanguageServer();
         }
 
 		// ostw.dev.deltintegerWatchBuild changed

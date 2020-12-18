@@ -6,7 +6,7 @@ import { decompileClipboard, insertActions } from './decompile';
 import { setupBuildWatcher } from './dev';
 import path = require('path');
 import exec = require('child_process');
-import { client, makeLanguageServer, startLanguageServer, stopLanguageServer, setServerOptions, lastWorkshopOutput, restartLanguageServer } from './languageServer';
+import { client, makeLanguageServer, lastWorkshopOutput, restartLanguageServer } from './languageServer';
 import { downloadLatest, chooseServerLocation } from './download';
 import { setupConfig, config } from './config';
 import { workshopPanelProvider } from './workshopPanelProvider';
