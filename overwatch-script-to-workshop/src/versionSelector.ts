@@ -1,6 +1,6 @@
 import { window, commands, workspace, env, Uri, StatusBarAlignment, StatusBarItem, ExtensionContext, TextDocument, QuickPickItem } from 'vscode';
 import * as download from './download';
-import { serverVersion } from './languageServer'
+import { serverVersion, restartLanguageServer } from './languageServer'
 import { openIssues } from './extensions'
 
 let versionStatus: StatusBarItem;
@@ -15,10 +15,16 @@ export function createVersionStatusBar(context: ExtensionContext)
     context.subscriptions.push(commands.registerCommand('ostw.versionInfo', async () => {
 
         let items: (QuickPickItem & {action: () => void})[] = [
+            // Wiki
+            {label: 'Wiki', action: () => env.openExternal(Uri.parse('https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki'))},
             // Report issues
             {label: 'Report an issue', action: openIssues},
+            // Restart language server
+            {label: 'Restart language server', action: restartLanguageServer},
             // Download new version option
-            {label: 'Download new version' + (serverVersion != null ? ' (current: ' + serverVersion + ')' : ''), action: selectVersion}
+            {label: 'Download new server version' + (serverVersion != null ? ' (current: ' + serverVersion + ')' : ''), action: selectVersion},
+            // Choose server location
+            {label: 'Choose server location', action: download.chooseServerLocation}
         ];
 
         let option = await window.showQuickPick(items);

@@ -243,3 +243,38 @@ export async function locateDLL(root: string): Promise<string>
 		})
 	);
 }
+
+export async function chooseServerLocation()
+{
+	// Open a file picker to locate the server.
+	let openedFiles = await window.showOpenDialog({canSelectMany: false, filters: { 'Application': ['exe', 'dll'] }});
+
+	// 'opened' will be undefined if canceled.
+	if (openedFiles == undefined) return;
+
+	let opened = openedFiles[0];
+	let ext = path.extname(opened.fsPath).toLowerCase();
+	let module:string = null;
+
+	if (ext == '.dll')
+		module = getModuleCommand(opened.fsPath);
+	else if (ext == '.exe')
+		module = opened.fsPath;
+	
+	if (!await pingModule(module))
+		window.showWarningMessage('Failed to ping the Overwatch Script To Workshop server.');
+
+	await stopLanguageServer();
+	setServerOptions(module);
+	config.update('deltintegerPath', module, ConfigurationTarget.Global);
+	startLanguageServer();
+}
+
+async function pingModule(module: string): Promise<boolean> {
+	return new Promise<boolean>(resolve => {
+		exec.exec(module + ' --ping', {timeout: 10000}, (error, stdout, stderr) => {
+			if (error) resolve(false);
+			resolve(stdout == 'Hello!');
+		});
+	});
+}

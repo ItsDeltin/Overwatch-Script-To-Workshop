@@ -7,7 +7,7 @@ import { setupBuildWatcher } from './dev';
 import path = require('path');
 import exec = require('child_process');
 import { client, makeLanguageServer, startLanguageServer, stopLanguageServer, setServerOptions, lastWorkshopOutput, restartLanguageServer } from './languageServer';
-import { downloadLatest, getModuleCommand } from './download';
+import { downloadLatest, chooseServerLocation } from './download';
 import { setupConfig, config } from './config';
 import { workshopPanelProvider } from './workshopPanelProvider';
 import * as semantics from './semantics';
@@ -35,15 +35,6 @@ export async function activate(context: ExtensionContext) {
 export function addSubscribable(disposable)
 {
 	extensionContext.subscriptions.push(disposable);
-}
-
-async function pingModule(module: string): Promise<boolean> {
-	return new Promise<boolean>(resolve => {
-		exec.exec(module + ' --ping', {timeout: 10000}, (error, stdout, stderr) => {
-			if (error) resolve(false);
-			resolve(stdout == 'Hello!');
-		});
-	});
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -144,30 +135,7 @@ function subscribe(context: ExtensionContext)
 	}, this));
 
 	// Locate server installation
-	context.subscriptions.push(vscode.commands.registerCommand('ostw.locateServerInstallation', async () => {
-		// Open a file picker to locate the server.
-		let openedFiles = await vscode.window.showOpenDialog({canSelectMany: false, filters: { 'Application': ['exe', 'dll'] }});
-
-		// 'opened' will be undefined if canceled.
-		if (openedFiles == undefined) return;
-
-		let opened = openedFiles[0];
-		let ext = path.extname(opened.fsPath).toLowerCase();
-		let module:string = null;
-
-		if (ext == '.dll')
-			module = getModuleCommand(opened.fsPath);
-		else if (ext == '.exe')
-			module = opened.fsPath;
-		
-		if (!await pingModule(module))
-			vscode.window.showWarningMessage('Failed to ping the Overwatch Script To Workshop server.');
-
-		await stopLanguageServer();
-		setServerOptions(module);
-		config.update('deltintegerPath', module, vscode.ConfigurationTarget.Global);
-		startLanguageServer();
-	}));
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.locateServerInstallation', chooseServerLocation));
 
 	// Copy workshop code
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.copyWorkshopCode', () => {
