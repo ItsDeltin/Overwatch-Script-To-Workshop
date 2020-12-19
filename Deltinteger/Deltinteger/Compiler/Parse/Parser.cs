@@ -444,14 +444,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     expression = EndNodeFrom(new ValueInArray(expression, index, Lexer.Tokens[Token - 1]), expression.Range.Start);
                 }
                 // Invoke
-                else if (ParseOptional(TokenType.Parentheses_Open))
+                else if (ParseOptional(TokenType.Parentheses_Open, out Token leftParentheses))
                 {
                     // Parse parameters.
                     var values = ParseParameterValues();
                     // End the parentheses.
-                    ParseExpected(TokenType.Parentheses_Close);
+                    Token rightParentheses = ParseExpected(TokenType.Parentheses_Close);
                     // Update the expression.
-                    expression = EndNodeFrom(new FunctionExpression(expression, values), expression.Range.Start);
+                    expression = EndNodeFrom(new FunctionExpression(expression, leftParentheses, rightParentheses, values), expression.Range.Start);
                 }
                 // No more array indices or invocations.
                 else break;

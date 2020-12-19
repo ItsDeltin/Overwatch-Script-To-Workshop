@@ -315,12 +315,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class FunctionExpression : Node, IParseExpression, IParseStatement
     {
         public IParseExpression Target { get; }
+        public Token LeftParentheses { get; }
+        public Token RightParentheses { get; }
         public List<ParameterValue> Parameters { get; }
         public MetaComment Comment { get; set; }
 
-        public FunctionExpression(IParseExpression target, List<ParameterValue> parameters)
+        public FunctionExpression(IParseExpression target, Token leftParentheses, Token rightParentheses, List<ParameterValue> parameters)
         {
             Target = target;
+            LeftParentheses = leftParentheses;
+            RightParentheses = rightParentheses;
             Parameters = parameters;
         }
 
