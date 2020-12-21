@@ -3,7 +3,13 @@ import json
 import sys
 from vector import Vector, get_matrix
 from rna_traveler import Rna_traveler
-from mathutils import Quaternion
+from mathutils import Matrix, Quaternion
+
+coordinate_system_translation = Matrix([
+    [-1, 0, 0],
+    [0, 0, 1],
+    [0, 1, 0]
+])
 
 def load(fp):
     bpy.ops.wm.open_mainfile(filepath = fp, load_ui=False)
@@ -71,7 +77,12 @@ class bone(tree_item):
         self.tail = Vector(original.tail)
         self.tail_local = Vector(original.tail_local)
         self.length = original.length
-        self.matrix = get_matrix(original.matrix)
+
+        if original.parent == None:
+            self.matrix = get_matrix(coordinate_system_translation @ original.matrix)
+        else:
+            self.matrix = get_matrix(original.matrix)
+
         self.use_connect = original.use_connect
 
 class empty:
@@ -238,6 +249,10 @@ def get_action_animation_data(action):
                     group[1].evaluate(frame),
                     group[2].evaluate(frame),
                     group[3].evaluate(frame)
+                    # group[0].evaluate(frame),
+                    # -group[1].evaluate(frame),
+                    # group[3].evaluate(frame),
+                    # group[2].evaluate(frame)
                 )))
             elif targetType == 2: # Bone location
                 pass

@@ -63,39 +63,4 @@ class Rna_traveler:
             return 0
         
         return None
-
-class _bone_euler_rotation_handler:
-    def __init__(self, bone_name, index):
-        self.bone_name = bone_name
-        self.index = index
-    
-    def get_value(self, obj, action, keyframe):
-        return Vector(Quaternion(
-            action.fcur
-        ))
-        # pose_bone = obj.pose.bones[self.bone_name]
-        # return Vector(pose_bone.matrix_basis.to_quaternion())
-
-    def get_target(self, obj): return self.bone_name
-    def get_type(self): return 1
-    def do_use(self): return self.index == 0
-
-class _bone_location_handler:
-    def __init__(self, bone_name, index):
-        self.bone_name = bone_name
-        self.index = index
-    
-    def get_value(self, obj, keyframe):        
-        pose_bone = obj.pose.bones[self.bone_name]
-        return Vector(pose_bone.location)
-
-    def get_target(self, obj): return self.bone_name
-    def get_type(self): return 2
-    def do_use(self): return self.index == 0
-
-class _location_handler:
-    def __init__(self, index): self.index = index
-    def get_value(self, obj, keyframe): return Vector(obj.location)
-    def get_target(self, obj): return None
-    def get_type(self): return 0
-    def do_use(self): return self.index == 0
+        return None
