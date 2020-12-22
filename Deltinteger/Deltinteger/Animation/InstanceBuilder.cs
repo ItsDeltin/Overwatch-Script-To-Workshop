@@ -106,8 +106,11 @@ namespace Deltin.Deltinteger.Animation
 
         void SharedSetup(BaseObjectExtender type, ActionSet actionSet, Element reference)
         {
-            type.Actions.Set(actionSet, reference, BlendStructureHelper.GetActions(Object));
-            type.ActionNames.Set(actionSet, reference, BlendStructureHelper.GetActionNames(Object.AnimationData));
+            if (Object.AnimationData != null)
+            {
+                type.Actions.Set(actionSet, reference, BlendStructureHelper.GetActions(Object));
+                type.ActionNames.Set(actionSet, reference, BlendStructureHelper.GetActionNames(Object.AnimationData));
+            }
         }
     }
 }

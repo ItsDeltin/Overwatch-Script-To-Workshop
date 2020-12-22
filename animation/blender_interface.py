@@ -77,7 +77,7 @@ class bone(tree_item):
 class empty:
     def __init__(self, original):
         self.name = original.name
-        self.location = Vector(original.location)
+        self.location = Vector(original.matrix_local.decompose()[0])
         self.parent_bone = original.parent_bone
 
 class blend_action:
@@ -184,7 +184,7 @@ def get_armature(obj):
     empties = []
     for scene_object in bpy.context.scene.objects:
         if obj is scene_object.parent and scene_object.type == 'EMPTY' and scene_object.parent_type == 'BONE':
-            empties.append(empty(obj))
+            empties.append(empty(scene_object))
     
     # Link the bone's children and parents.
     return blend_armature(obj.name, get_animation_data(obj), bone_linker.link(), empties)

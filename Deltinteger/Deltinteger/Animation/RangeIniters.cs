@@ -117,6 +117,8 @@ namespace Deltin.Deltinteger.Animation
 
             public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
             {
+                if (value == null) return null;
+
                 string boneName = (string)base.Validate(parseInfo, value, valueRange);
 
                 foreach (var bone in _armature.Bones)
@@ -147,7 +149,7 @@ namespace Deltin.Deltinteger.Animation
                     if (empty.Name == emptyName)
                         return empty;
                 
-                parseInfo.Script.Diagnostics.Error("The bone '" + emptyName + "' does not exist in the '" + _armature.Name + "' armature.", valueRange);
+                parseInfo.Script.Diagnostics.Error("The empty '" + emptyName + "' does not exist in the '" + _armature.Name + "' armature.", valueRange);
                 return null;
             }
         }

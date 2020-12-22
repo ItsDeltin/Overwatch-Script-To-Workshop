@@ -346,6 +346,7 @@ namespace Deltin.Deltinteger.Animation
             Bone = bone;
             Position = empty.Location;
             Parent = parent;
+            LocalPosition = new Vertex(0, 0, 0);
         }
     }
 
