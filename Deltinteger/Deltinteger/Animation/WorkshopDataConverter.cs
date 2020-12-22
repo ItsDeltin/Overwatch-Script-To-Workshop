@@ -202,8 +202,8 @@ namespace Deltin.Deltinteger.Animation
             foreach (var bone in rootBones)
             {
                 // Create a point for the head and tail of the bone.
-                _pointData.Add(new BonePoint(bone, true, -1));
-                _pointData.Add(new BonePoint(bone, false, 0));
+                _pointData.Add(new BonePoint(bone, bone, true, -1));
+                _pointData.Add(new BonePoint(bone, bone, false, 0));
 
                 // Create the bone link data then add it to the BoneData list.
                 BoneData root = new BoneData(bone, _pointData.Count - 2, _pointData.Count - 1);
@@ -231,12 +231,12 @@ namespace Deltin.Deltinteger.Animation
                     childData.Head = data.Tail;
                 else // Otherwise, create a new point.
                 {
-                    _pointData.Add(new BonePoint(child, true, data.Tail));
+                    _pointData.Add(new BonePoint(child, bone, true, data.Tail));
                     childData.Head = _pointData.Count - 1;
                 }
 
                 // Create the tail point.
-                _pointData.Add(new BonePoint(child, false, childData.Head));
+                _pointData.Add(new BonePoint(child, child, false, childData.Head));
                 childData.Tail = _pointData.Count - 1;
 
                 // Recursively get this bone's children.
@@ -252,7 +252,7 @@ namespace Deltin.Deltinteger.Animation
             var empties = GetBoneEmpties(boneData.Original);
             foreach (var empty in empties)
             {
-                _pointData.Add(new BonePoint(empty, boneData.Tail));
+                _pointData.Add(new BonePoint(boneData.Original, empty, boneData.Tail));
                 boneData.Empties.Add(_pointData.Count - 1);
                 Empties.Add(new EmptyData(empty, _pointData.Count - 1));
             }
@@ -303,6 +303,7 @@ namespace Deltin.Deltinteger.Animation
         public Element GetParents() => Element.CreateArray(_bones.Select(b => (Element)b.Parent).ToArray());
         public Element GetPointParents() => Element.CreateArray(_pointData.Select(p => (Element)p.Parent).ToArray());
         public Element GetBoneMagnitudes() => Element.CreateArray(_boneData.Select(p => (Element)p.Original.Length).ToArray());
+        public Element GetBonePointsBone() => Element.CreateArray(_pointData.Select(p => (Element)Array.IndexOf(_bones, p.Bone)).ToArray());
         public Element GetBoneMatrices() => Element.CreateArray(_bones.Select(b => Element.CreateArray(
             Element.CreateArray((Element)b.Matrix[0], (Element)b.Matrix[1], (Element)b.Matrix[2]),
             Element.CreateArray((Element)b.Matrix[3], (Element)b.Matrix[4], (Element)b.Matrix[5]),
@@ -317,13 +318,18 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>The position of the bone relative to the armature.</summary>
         public Vertex LocalPosition { get; }
         public int Parent { get; }
+        public Bone Bone { get; }
 
-        public BonePoint(Bone bone, bool head, int parent)
+        public BonePoint(Bone bone, Bone controller, bool head, int parent)
         {
+            Bone = controller;
             Parent = parent;
             if (head)
             {
-                Position = bone.Head;
+                if (parent == -1)
+                    Position = new Vertex(0, 0, 0);
+                else
+                    Position = bone.Head;
                 LocalPosition = bone.HeadLocal;
             }
             else
@@ -335,8 +341,9 @@ namespace Deltin.Deltinteger.Animation
             }
         }
 
-        public BonePoint(BoneEmpty empty, int parent)
+        public BonePoint(Bone bone, BoneEmpty empty, int parent)
         {
+            Bone = bone;
             Position = empty.Location;
             Parent = parent;
         }

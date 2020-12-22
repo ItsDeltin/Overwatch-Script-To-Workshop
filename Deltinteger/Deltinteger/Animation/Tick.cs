@@ -1,3 +1,4 @@
+using System;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using static Deltin.Deltinteger.Animation.AnimationOperations;
@@ -16,10 +17,18 @@ namespace Deltin.Deltinteger.Animation
         private IndexReference _animationInfoList;
         private ActionSet actionSet;
         private Element currentReference;
-        private Element BoneVertexLinks {
+        Element BoneVertexLinks {
             get => _armatureType.BoneVertexLinks.Get(currentReference);
             set => _armatureType.BoneVertexLinks.Set(actionSet, currentReference, value);
         }
+        Element BoneLocalPositions {
+            get => _armatureType.BoneLocalPositions.Get(currentReference);
+            set => _armatureType.BoneLocalPositions.Set(actionSet, currentReference, value);
+        }
+        Element BoneDescendants => _armatureType.BoneDescendants.Get(currentReference);
+        Element BonePositions => _armatureType.BonePositions.Get(currentReference);
+        Element BonePointParents => _armatureType.BonePointParents.Get(currentReference);
+        Element BonePointsBone => _armatureType.BonePointsBone.Get(currentReference);
         private Element Actions => _armatureType.Actions.Get(currentReference);
 
         public AnimationTick() {}
@@ -62,6 +71,8 @@ namespace Deltin.Deltinteger.Animation
 
             // Armature
             actionSet.AddAction(Element.Part<A_If>(_classData.IsInstanceOf(currentReference, _armatureType)));
+
+            var localMatrices = actionSet.AssignAndSave("local_matrices", new V_EmptyArray());
 
             // Loop through each bone
             var boneLoop = new ForRangeBuilder(actionSet, "animation_bone_loop", 0, Element.Part<V_CountOf>(BoneVertexLinks), 1);
@@ -112,7 +123,7 @@ namespace Deltin.Deltinteger.Animation
                 actionSet.AddAction(local.SetVariable(ConvertArrayGroupedMatrixToColumnGroupedMatrix(local.Get())));
 
                 // Save the parent index.
-                Element parentLocal = actionSet.AssignAndSave("animation_parent_local", _armatureType.BoneLocalMatrices.Get(currentReference)[parentBoneIndex]).Get();
+                Element parentLocal = actionSet.AssignAndSave("animation_parent_local", localMatrices.Get()[parentBoneIndex]).Get();
 
                 // Multiply the matrices: Set 'local' to 'parentLocal @ local'.
                 // This assumes 'parentLocal' is already a row-grouped matrix.
@@ -124,8 +135,7 @@ namespace Deltin.Deltinteger.Animation
             // Ew yuck no curve
             actionSet.AddAction(Element.Part<A_If>(new V_Compare(fcurve.Get(), Operators.Equal, new V_Number(0))));
                 // Save the matrix.
-                // todo: This will use the multi-dimensional array builder. Sadge
-                _armatureType.BoneLocalMatrices.Set(actionSet, currentReference, ConvertArrayGroupedMatrixToRowGroupedMatrix(local.Get()), boneLoop.Value);
+                actionSet.AddAction(localMatrices.SetVariable(ConvertArrayGroupedMatrixToRowGroupedMatrix(local.Get()), index: boneLoop.Value));
 
             actionSet.AddAction(new A_Else());
 
@@ -151,9 +161,6 @@ namespace Deltin.Deltinteger.Animation
             var keyframeA = actionSet.AssignAndSave("animation_keyframe_a", fcurve.Get()[Element.Part<V_Max>(keyframe_index.Get() - 1, (Element)2)]).Get(); // Save to variable if needed.
             var keyframeB = actionSet.AssignAndSave("animation_keyframe_b", fcurve.Get()[Element.Part<V_Max>(keyframe_index.Get())]).Get(); // Save to variable if needed.
 
-            // TODO: Use this to determine if there is only one keyframe.
-            // actionSet.AddAction(Element.Part<A_If>(new V_Compare(keyframe_index.Get(), Operators.LessThan, Element.Part<V_CountOf>(fcurve.Get()) - 1)));
-
             // Get the t of the keyframes depending on the current time.
             //  If the action was started at 5 seconds (s),
             //  and keyframe A is set at 2 (7) local seconds (a),
@@ -161,9 +168,8 @@ namespace Deltin.Deltinteger.Animation
             //  and the current time is 9 (c),
             //  (c-s-a) / (b-a) = (9-5-2) / (6-2) = 0.5
             var c = actionSet.AssignAndSave("animation_test_current_time", new V_TotalTimeElapsed()).Get();
-            // var t = actionSet.AssignAndSave("animation_t", Element.Part<V_Min>(Element.Part<V_Max>(new V_Number(0), (c - currentActionTime - keyframeA[0]) / (keyframeB[0] - keyframeA[0])), new V_Number(1)));
-            // var t = actionSet.AssignAndSave("animation_t", 1);
             var t = actionSet.AssignAndSave("t", ((currentActionTimeDelta * fps - keyframeA[0]) / (keyframeB[0] - keyframeA[0])) % 1);
+            // var t = actionSet.AssignAndSave("animation_t", 0);
 
             // Get the interpolated rotation.
             var slerp = AnimationOperations.Slerp(
@@ -189,40 +195,39 @@ namespace Deltin.Deltinteger.Animation
             Element matrixResult = local.Get();
 
             // Save the matrix.
-            // todo: This will use the multi-dimensional array builder. Sadge
-            _armatureType.BoneLocalMatrices.Set(actionSet, currentReference, ConvertArrayGroupedMatrixToRowGroupedMatrix(matrixResult), boneLoop.Value);
+            actionSet.AddAction(localMatrices.SetVariable(ConvertArrayGroupedMatrixToRowGroupedMatrix(matrixResult), index:boneLoop.Value));
 
-            // Set the current bone's decendant's bone points.
-            // Loop through each descendent.
-            var descendentLoop = new ForRangeBuilder(actionSet, "animation_descendents", 0, Element.Part<V_CountOf>(_armatureType.BoneDescendants.Get(currentReference)[boneLoop.Value]), 1);
-            descendentLoop.Init();
+            actionLoop.Finish(); // End action loop
 
-            Element descendentIndex = actionSet.AssignAndSave("animation_descendent_index", _armatureType.BoneDescendants.Get(currentReference)[boneLoop.Value][descendentLoop.Value]).Get();
-            Element originalPoint = actionSet.AssignAndSave("animation_rodrique_original", _armatureType.BonePositions.Get(currentReference)[descendentIndex]).Get();
-            Element rodriqueResult = actionSet.AssignAndSave("animation_newpoint", AnimationOperations.Multiply3x3MatrixAndVectorToVector(matrixResult, originalPoint)).Get();
-            Element parent = actionSet.AssignAndSave("animation_parent", _armatureType.BonePointParents.Get(currentReference)[descendentIndex]).Get();
+            actionSet.AddAction(Element.Part<A_SkipIf>(boneLoop.Value % 6, new V_Number(1)));
+            actionSet.AddAction(A_Wait.MinimumWait);
 
-            // World positions
-            actionSet.AddAction(_armatureType.BoneLocalPositions.ArrayStore.SetVariable(
-                // Add local position to parent
-                rodriqueResult // Local position
-                    + Element.TernaryConditional(
-                        // If the parent index is not equal to -1,
-                        new V_Compare(parent, Operators.NotEqual, new V_Number(-1)),
-                        // Add the parent's local position.
-                        _armatureType.BoneLocalPositions.Get(currentReference)[parent],
-                        // Otherwise, add zero.
-                        V_Vector.Zero
-                    ),
-                null, // Player
-                // Index is the object reference + the descendent loop value.
-                currentReference,
-                descendentIndex
+            boneLoop.Finish(); // End the bone loop
+
+            var newBoneLocalPositions = actionSet.AssignAndSave("newBoneLocalPositions", Element.Part<V_MappedArray>(
+                BonePositions,
+                Multiply3x3MatrixAndVectorToVector(localMatrices.Get()[BonePointsBone[new V_CurrentArrayIndex()]], new V_ArrayElement())
             ));
 
-            descendentLoop.Finish();
-            actionLoop.Finish(); // End action loop
-            boneLoop.Finish(); // End the bone loop
+            actionSet.AddAction(A_Wait.MinimumWait);
+
+            var newPosLoop = new ForRangeBuilder(actionSet, "newPosIndex", 0, Element.Part<V_CountOf>(newBoneLocalPositions.Get()), 1);
+            newPosLoop.Init();
+            var parent = BonePointParents[newPosLoop.Value];
+            actionSet.AddAction(newBoneLocalPositions.ModifyVariable(
+                Operation.Add, 
+                Element.TernaryConditional(
+                    // If the parent index is not equal to -1,
+                    new V_Compare(parent, Operators.NotEqual, new V_Number(-1)),
+                    // Add the parent's local position.
+                    newBoneLocalPositions.Get()[parent],
+                    // Otherwise, add zero.
+                    V_Vector.Zero
+                ),
+                index: newPosLoop.Value
+            ));
+            newPosLoop.Finish();
+            BoneLocalPositions = newBoneLocalPositions.Get();
 
             UpdateActions(referenceLoop.Value, fps);
 
@@ -231,9 +236,6 @@ namespace Deltin.Deltinteger.Animation
 
             actionSet.AddAction(new A_End()); // End armature
             referenceLoop.Finish(); // End object loop
-            actionSet.AddAction(A_Wait.MinimumWait);
-            actionSet.AddAction(A_Wait.MinimumWait);
-            actionSet.AddAction(A_Wait.MinimumWait);
             actionSet.AddAction(A_Wait.MinimumWait);
             actionSet.AddAction(new A_LoopIfConditionIsTrue());
         }

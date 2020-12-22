@@ -98,7 +98,11 @@ namespace Deltin.Deltinteger.Animation
         }
 
         public static Element Multiply3x3MatrixAndVectorToVector(Element ma, Element v) {
-            var m = new Element[] { ma[0][0], ma[0][1], ma[0][2], ma[1][0], ma[1][1], ma[1][2], ma[2][0], ma[2][1], ma[2][2] };
+            var m = new Element[] {
+                Element.Part<V_XOf>(ma[0]), Element.Part<V_YOf>(ma[0]), Element.Part<V_ZOf>(ma[0]),
+                Element.Part<V_XOf>(ma[1]), Element.Part<V_YOf>(ma[1]), Element.Part<V_ZOf>(ma[1]),
+                Element.Part<V_XOf>(ma[2]), Element.Part<V_YOf>(ma[2]), Element.Part<V_ZOf>(ma[2])
+            };
             Element t0 = Element.Part<V_XOf>(v), t1 = Element.Part<V_YOf>(v), t2 = Element.Part<V_ZOf>(v);
             return new V_Vector(
                 m[0] * t0 + m[1] * t1 + m[2] * t2,
@@ -185,12 +189,6 @@ namespace Deltin.Deltinteger.Animation
             var a_inv = actionSet.AssignAndSave("a_inv", a * -1).Get();
             var result = MultiplyQuaternion(half_a, half_w, a_inv, w);
             return result.Item1;
-        }
-
-        public static Element RotatePoint(ActionSet actionSet, Element p, Element a, Element w)
-        {
-            var matrix = actionSet.AssignAndSave("matrix", Create3x3MatrixArrayFromQuaternion(a, w)).Get();
-            return Multiply3x3MatrixAndVectorToVector(matrix, p);
         }
         
         /// <summary>Gets the dot product of 2 quaternions defined as a vector axis (X, Y, Z) and an angle (W).</summary>

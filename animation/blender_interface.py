@@ -1,15 +1,9 @@
 import bpy
 import json
 import sys
-from vector import Vector, get_matrix
+from vector import Vector, get_matrix, get_accumulative_local_matrix
 from rna_traveler import Rna_traveler
 from mathutils import Matrix, Quaternion
-
-coordinate_system_translation = Matrix([
-    [-1, 0, 0],
-    [0, 0, 1],
-    [0, 1, 0]
-])
 
 def load(fp):
     bpy.ops.wm.open_mainfile(filepath = fp, load_ui=False)
@@ -77,12 +71,7 @@ class bone(tree_item):
         self.tail = Vector(original.tail)
         self.tail_local = Vector(original.tail_local)
         self.length = original.length
-
-        if original.parent == None:
-            self.matrix = get_matrix(coordinate_system_translation @ original.matrix)
-        else:
-            self.matrix = get_matrix(original.matrix)
-
+        self.matrix = get_matrix(get_accumulative_local_matrix(original))
         self.use_connect = original.use_connect
 
 class empty:

@@ -74,9 +74,8 @@ namespace Deltin.Deltinteger.Animation
         public ObjectVariable BoneParents { get; private set; }
         public ObjectVariable BonePointParents { get; private set; }
         public ObjectVariable BoneNames { get; private set; }
-        public ObjectVariable BoneMagnitudes { get; private set; }
         public ObjectVariable BoneMatrices { get; private set; }
-        public ObjectVariable BoneLocalMatrices { get; private set; }
+        public ObjectVariable BonePointsBone { get; private set; }
 
         public ArmatureInstanceType(DeltinScript deltinScript) : base(deltinScript, "AnimationArmature") {}
 
@@ -93,9 +92,8 @@ namespace Deltin.Deltinteger.Animation
             BoneParents = AddPrivateObjectVariable();
             BonePointParents = AddPrivateObjectVariable();
             BoneNames = AddPrivateObjectVariable();
-            BoneMagnitudes = AddPrivateObjectVariable();
             BoneMatrices = AddPrivateObjectVariable();
-            BoneLocalMatrices = AddPrivateObjectVariable();
+            BonePointsBone = AddPrivateObjectVariable();
         }
 
         public void Init(ActionSet actionSet, Element reference, BoneStructure boneStructure)
@@ -108,9 +106,8 @@ namespace Deltin.Deltinteger.Animation
             BoneParents.Set(actionSet, reference, boneStructure.GetParents());
             BonePointParents.Set(actionSet, reference, boneStructure.GetPointParents());
             BoneNames.Set(actionSet, reference, boneStructure.GetNameArray());
-            BoneMagnitudes.Set(actionSet, reference, boneStructure.GetBoneMagnitudes());
             BoneMatrices.Set(actionSet, reference, boneStructure.GetBoneMatrices());
-            BoneLocalMatrices.Set(actionSet, reference, new V_EmptyArray());
+            BonePointsBone.Set(actionSet, reference, boneStructure.GetBonePointsBone());
         }
     }
 }
