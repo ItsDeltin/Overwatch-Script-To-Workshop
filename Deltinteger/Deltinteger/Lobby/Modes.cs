@@ -37,6 +37,9 @@ namespace Deltin.Deltinteger.Lobby
         [JsonProperty("Practice Range")]
         public ModeSettings PracticeRange { get; set; }
 
+        [JsonProperty("Freezethaw Elimination")]
+        public ModeSettings FreezethawElimination { get; set; }
+
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
             builder.AppendKeywordLine("modes");
@@ -63,6 +66,7 @@ namespace Deltin.Deltinteger.Lobby
             PracticeRange?.ToWorkshop(builder, allSettings, "PracticeRange");
             Skirmish?.ToWorkshop(builder, allSettings, "Skirmish");
             TeamDeathmatch?.ToWorkshop(builder, allSettings, "TeamDeathmatch");
+            FreezethawElimination?.ToWorkshop(builder, allSettings, "FreezethawElimination");
 
             builder.Outdent();
             builder.AppendLine("}");
@@ -70,55 +74,41 @@ namespace Deltin.Deltinteger.Lobby
 
         public ModeSettings SettingsFromModeCollection(ModeSettingCollection collection)
         {
-            if (collection.ModeName == "Assault")
+            switch (collection.ModeName)
             {
-                if (Assault == null) Assault = new ModeSettings();
-                return Assault;
-            }
-            if (collection.ModeName == "Capture The Flag")
-            {
-                if (CaptureTheFlag == null) CaptureTheFlag = new ModeSettings();
-                return CaptureTheFlag;
-            }
-            if (collection.ModeName == "Control")
-            {
-                if (Control == null) Control = new ModeSettings();
-                return Control;
-            }
-            if (collection.ModeName == "Deathmatch")
-            {
-                if (Deathmatch == null) Deathmatch = new ModeSettings();
-                return Deathmatch;
-            }
-            if (collection.ModeName == "Elimination")
-            {
-                if (Elimination == null) Elimination = new ModeSettings();
-                return Elimination;
-            }
-            if (collection.ModeName == "Escort")
-            {
-                if (Escort == null) Escort = new ModeSettings();
-                return Escort;
-            }
-            if (collection.ModeName == "Hybrid")
-            {
-                if (Hybrid == null) Hybrid = new ModeSettings();
-                return Hybrid;
-            }
-            if (collection.ModeName == "Practice Range")
-            {
-                if (PracticeRange == null) PracticeRange = new ModeSettings();
-                return PracticeRange;
-            }
-            if (collection.ModeName == "Skirmish")
-            {
-                if (Skirmish == null) Skirmish = new ModeSettings();
-                return Skirmish;
-            }
-            if (collection.ModeName == "Team Deathmatch")
-            {
-                if (TeamDeathmatch == null) TeamDeathmatch = new ModeSettings();
-                return TeamDeathmatch;
+                case "Assault":
+                    if (Assault == null) Assault = new ModeSettings();
+                    return Assault;
+                case "Capture The Flag":
+                    if (CaptureTheFlag == null) CaptureTheFlag = new ModeSettings();
+                    return CaptureTheFlag;
+                case "Control":
+                    if (Control == null) Control = new ModeSettings();
+                    return Control;
+                case "Deathmatch":
+                    if (Deathmatch == null) Deathmatch = new ModeSettings();
+                    return Deathmatch;
+                case "Elimination":
+                    if (Elimination == null) Elimination = new ModeSettings();
+                    return Elimination;
+                case "Escort":
+                    if (Escort == null) Escort = new ModeSettings();
+                    return Escort;
+                case "Hybrid":
+                    if (Hybrid == null) Hybrid = new ModeSettings();
+                    return Hybrid;
+                case "Practice Range":
+                    if (PracticeRange == null) PracticeRange = new ModeSettings();
+                    return PracticeRange;
+                case "Skirmish":
+                    if (Skirmish == null) Skirmish = new ModeSettings();
+                    return Skirmish;
+                case "Team Deathmatch":
+                    if (TeamDeathmatch == null) TeamDeathmatch = new ModeSettings();
+                    return TeamDeathmatch;
+                case "Freezethaw Elimination":
+                    if (FreezethawElimination == null) FreezethawElimination = new ModeSettings();
+                    return FreezethawElimination;
             }
             throw new NotImplementedException(collection.ModeName);
         }
@@ -181,11 +171,11 @@ namespace Deltin.Deltinteger.Lobby
 
     public class ModeSettingCollection : LobbySettingCollection<ModeSettingCollection>
     {
-        private static LobbySetting[] DefaultModeSettings = new LobbySetting[]
+        private static readonly LobbySetting[] DefaultModeSettings = new LobbySetting[]
         {
             new SwitchValue("Enemy Health Bars", true),
             new SelectValue("Game Mode Start", "All Slots Filled", "Immediately", "Manual"),
-            new RangeValue("Health Pack Respawn Time Scalar", 10, 500),
+            new RangeValue(false, true, "Health Pack Respawn Time Scalar", 10, 500),
             new SwitchValue("Kill Cam", true),
             new SwitchValue("Kill Feed", true),
             new SwitchValue("Skins", true),
@@ -194,17 +184,27 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Hero Limit", "1 Per Team", "2 Per Team", "1 Per Game", "2 Per Game", "Off"),
             new SelectValue("Limit Roles", "2 Of Each Role Per Team", "Off"),
             new SwitchValue("Respawn As Random Hero", false),
-            new RangeValue("Respawn Time Scalar", 0, 100)
+            new RangeValue(false, true, "Respawn Time Scalar", 0, 100)
         };
-        private static LobbySetting CaptureSpeed = new RangeValue("Capture Speed Modifier", 10, 500);
-        private static LobbySetting PayloadSpeed = new RangeValue("Payload Speed Modifier", 10, 500);
-        private static LobbySetting CompetitiveRules = new SwitchValue("Competitive Rules", false);
-        private static LobbySetting Enabled_DefaultOn = new SwitchValue("Enabled", true) { ReferenceName = "Enabled On" };
-        private static LobbySetting Enabled_DefaultOff = new SwitchValue("Enabled", false) { ReferenceName = "Enabled Off" };
-        private static LobbySetting GameLengthInMinutes = new RangeValue(true, false, "Game Length In Minutes", 5, 15, 10);
-        private static LobbySetting SelfInitiatedRespawn = new SwitchValue("Self Initiated Respawn", true);
-        private static LobbySetting ScoreToWin_1to9 = new RangeValue(false, false, "Score To Win", 1, 9, 3) { ReferenceName = "Score To Win 1-9" };
-        private static LobbySetting LimitValidControlPoints = new SelectValue("Limit Valid Control Points", "All", "First", "Second", "Third");
+        private static readonly LobbySetting CaptureSpeed = new RangeValue(false, true, "Capture Speed Modifier", 10, 500);
+        private static readonly LobbySetting PayloadSpeed = new RangeValue(false, true, "Payload Speed Modifier", 10, 500);
+        private static readonly LobbySetting CompetitiveRules = new SwitchValue("Competitive Rules", false);
+        private static readonly LobbySetting Enabled_DefaultOn = new SwitchValue("Enabled", true) { ReferenceName = "Enabled On" };
+        private static readonly LobbySetting Enabled_DefaultOff = new SwitchValue("Enabled", false) { ReferenceName = "Enabled Off" };
+        private static readonly LobbySetting GameLengthInMinutes = new RangeValue(true, false, "Game Length In Minutes", 5, 15, 10);
+        private static readonly LobbySetting SelfInitiatedRespawn = new SwitchValue("Self Initiated Respawn", true);
+        private static readonly LobbySetting ScoreToWin_1to9 = new RangeValue(false, false, "Score To Win", 1, 9, 3) { ReferenceName = "Score To Win 1-9" };
+        private static readonly LobbySetting LimitValidControlPoints = new SelectValue("Limit Valid Control Points", "All", "First", "Second", "Third");
+        private static readonly LobbySetting HeroSelectionTime = new RangeValue(true, false, "Hero Selection Time", 20, 60, 20);
+        private static readonly LobbySetting RestrictPreviouslyUsedHeroes = new SelectValue("Restrict Previously Used Heroes", "Off", "After Round Won", "After Round Played");
+        private static readonly LobbySetting HeroSelection = new SelectValue("Hero Selection", "Any", "Limited", "Random", "Random (Mirrored)");
+        private static readonly LobbySetting LimitedChoicePool = new SelectValue("Limited Choice Pool", "Team Size +2", "Team Size", "Team Size +1", "Team Size +3");
+        private static readonly LobbySetting CaptureObjectiveTiebreaker = new SwitchValue("Capture Objective Tiebreaker", true);
+        private static readonly LobbySetting TiebreakerAfterTimeElapsed = new RangeValue(true, false, "Tiebreaker After Match Time Elapsed", 30, 300, 105);
+        private static readonly LobbySetting TimeToCapture = new RangeValue(true, false, "Time To Capture", 1, 7, 3);
+        private static readonly LobbySetting DrawAfterMatchTimeElaspedWithNoTiebreaker = new RangeValue(true, false, "Draw After Match Time Elapsed With No Tiebreaker", 60, 300, 135);
+        private static readonly LobbySetting RevealHeroes = new SwitchValue("Reveal Heroes", false);
+        private static readonly LobbySetting RevealHeroesAfterMatchTimeElapsed = new RangeValue(true, false, "Reveal Heroes After Match Time Elapsed", 0, 180, 75);
 
         public static ModeSettingCollection[] AllModeSettings { get; private set; }
 
@@ -245,6 +245,9 @@ namespace Deltin.Deltinteger.Lobby
             Add(CompetitiveRules);
             return this;
         }
+
+        public ModeSettingCollection Elimination() => Add(HeroSelectionTime).Add(ScoreToWin_1to9).Add(RestrictPreviouslyUsedHeroes).Add(HeroSelection).Add(LimitedChoicePool)
+            .Add(CaptureObjectiveTiebreaker).Add(TiebreakerAfterTimeElapsed).Add(TimeToCapture).Add(DrawAfterMatchTimeElaspedWithNoTiebreaker).Add(RevealHeroes).Add(RevealHeroesAfterMatchTimeElapsed);
 
         public override RootSchema GetSchema(SchemaGenerate generate)
         {
@@ -294,14 +297,12 @@ namespace Deltin.Deltinteger.Lobby
                     .AddRange("Flag Score Respawn Time", 0, 20, 15).AddIntRange("Game Length (Minutes)", false, 5, 15, 8).AddRange("Respawn Speed Buff Duration", 0, 60, 0).Add(ScoreToWin_1to9)
                     .AddSwitch("Team Needs Flag At Base To Score", false),
                 new ModeSettingCollection("Deathmatch", false).Add(GameLengthInMinutes).Add(SelfInitiatedRespawn).AddIntRange("Score To Win", false, 1, 50, 20, "Score To Win 1-50"),
-                new ModeSettingCollection("Elimination", false).AddRange("Hero Selection Time", 20, 60, 20).Add(ScoreToWin_1to9).AddSelect("Restrict Previously Used Heroes", "Off", "After Round Won", "After Round Played")
-                    .AddSelect("Hero Selection", "Any", "Limited", "Random", "Random (Mirrored)").AddSelect("Limited Choice Pool", "Team Size +2", "Team Size", "Team Size +1", "Team Size +3")
-                    .AddSwitch("Capture Objective Tiebreaker", true).AddIntRange("Tiebreaker After Match Time Elapsed", false, 30, 300, 105).AddIntRange("Time To Capture", false, 1, 7, 3).AddIntRange("Draw After Match Time Elapsed With No Tiebreaker", false, 60, 300, 135)
-                    .AddSwitch("Reveal Heroes", false).AddIntRange("Reveal Heroes After Match Time Elapsed", false, 0, 180, 75),
+                new ModeSettingCollection("Elimination", false).Elimination(),
                 new ModeSettingCollection("Team Deathmatch", false).Add(GameLengthInMinutes).AddSwitch("Mercy Resurrect Counteracts Kills", true).AddIntRange("Score To Win", false, 1, 200, 30, "Score To Win 1-200").Add(SelfInitiatedRespawn).AddSwitch("Imbalanced Team Score To Win", false)
                     .AddIntRange("Team 1 Score To Win", false, 1, 200, 30).AddIntRange("Team 2 Score To Win", false, 1, 200, 30),
                 new ModeSettingCollection("Skirmish", false).Add(LimitValidControlPoints),
-                new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500)
+                new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500),
+                new ModeSettingCollection("Freezethaw Elimination", false).Elimination()
             };
         }
 

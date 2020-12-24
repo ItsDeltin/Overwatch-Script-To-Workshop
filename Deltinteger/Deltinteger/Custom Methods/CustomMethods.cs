@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public CodeType CodeType { get; }
 
-        public string Documentation { get; }
+        public MarkupBuilder Documentation { get; }
 
         public CustomMethodData(Type type)
         {

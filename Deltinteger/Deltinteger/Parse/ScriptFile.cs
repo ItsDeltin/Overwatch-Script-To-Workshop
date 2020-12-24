@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
             _callLinks.Add(new LocationLink()
             {
                 OriginSelectionRange = callRange,
-                TargetUri = definedAt.uri,
+                TargetUri = definedAt.uri.ToDefinition(),
                 TargetRange = definedAt.range,
                 TargetSelectionRange = definedAt.range
             });

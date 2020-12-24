@@ -379,6 +379,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Semicolon:
                 case TokenType.Switch:
                 case TokenType.While:
+                case TokenType.ActionComment:
                     return true;
 
                 default:

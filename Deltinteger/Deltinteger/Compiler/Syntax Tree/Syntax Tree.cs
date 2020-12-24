@@ -27,10 +27,9 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         DocRange Range { get; set; }
     }
     public interface IParseExpression : INodeRange { }
-    public interface IParseStatement : INodeRange { }
-    public interface ICommentableStatement
+    public interface IParseStatement : INodeRange
     {
-        Token ActionComment { get; }
+        MetaComment Comment { get; set; }
     }
     public interface IDeclaration
     {
@@ -299,6 +298,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token LeftParen;
         public IParseExpression Expression;
         public Token RightParen;
+        public MetaComment Comment;
 
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }
@@ -333,11 +333,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class FunctionExpression : Node, IParseExpression, IParseStatement
     {
         public IParseExpression Target { get; }
+        public Token LeftParentheses { get; }
+        public Token RightParentheses { get; }
         public List<ParameterValue> Parameters { get; }
+        public MetaComment Comment { get; set; }
 
-        public FunctionExpression(IParseExpression target, List<ParameterValue> parameters)
+        public FunctionExpression(IParseExpression target, Token leftParentheses, Token rightParentheses, List<ParameterValue> parameters)
         {
             Target = target;
+            LeftParentheses = leftParentheses;
+            RightParentheses = rightParentheses;
             Parameters = parameters;
         }
 
@@ -363,6 +368,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public Token ClassIdentifier { get; }
         public List<ParameterValue> Parameters { get; }
+        public MetaComment Comment { get; set; }
 
         public NewExpression(Token classIdentifier, List<ParameterValue> parameters)
         {
@@ -412,7 +418,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             Localized = localized;
             Token = token;
-            Value = token.Text.StartsWith("\"") ? Extras.RemoveQuotes(token.Text) : token.Text.Trim('\'');
+            Value = Extras.RemoveQuotes(token.Text);
         }
 
         public StringExpression(Token localized, Token token, List<IParseExpression> formats) : this(localized, token)
@@ -599,6 +605,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression Expression { get; }
         public Token ActionComment { get; }
+        public MetaComment Comment { get; set; }
 
         public ExpressionStatement(IParseExpression expression, Token actionComment)
         {
@@ -613,6 +620,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class Block : Node, IParseStatement
     {
         public List<IParseStatement> Statements { get; }
+        public MetaComment Comment { get; set; }
 
         public Block(List<IParseStatement> statements)
         {
@@ -622,12 +630,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => "block [" + Statements.Count + " statements]";
     }
 
-    public class Assignment : Node, IParseStatement, ICommentableStatement
+    public class Assignment : Node, IParseStatement
     {
         public IParseExpression VariableExpression { get; }
         public Token AssignmentToken { get; }
         public IParseExpression Value { get; }
         public Token ActionComment { get; }
+        public MetaComment Comment { get; set; }
 
         public Assignment(IParseExpression variableExpression, Token assignmentToken, IParseExpression value, Token actionComment)
         {
@@ -644,6 +653,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public Token Token { get; }
         public IParseExpression Expression { get; }
+        public MetaComment Comment { get; set; }
 
         public Return(Token token, IParseExpression expression)
         {
@@ -656,11 +666,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class Continue : Node, IParseStatement
     {
+        public MetaComment Comment { get; set; }
         public override string ToString() => "continue";
     }
 
     public class Break : Node, IParseStatement
     {
+        public MetaComment Comment { get; set; }
         public override string ToString() => "break";
     }
 
@@ -670,6 +682,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseStatement Statement { get; }
         public List<ElseIf> ElseIfs { get; }
         public Else Else { get; }
+        public MetaComment Comment { get; set; }
 
         public If(IParseExpression expression, IParseStatement statement, List<ElseIf> elseIfs, Else els)
         {
@@ -685,6 +698,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression Expression { get; }
         public IParseStatement Statement { get; }
+        public MetaComment Comment { get; set; }
 
         public ElseIf(IParseExpression expression, IParseStatement statement)
         {
@@ -697,6 +711,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class Else : Node, IParseStatement
     {
         public IParseStatement Statement { get; }
+        public MetaComment Comment { get; set; }
 
         public Else(IParseStatement statement)
         {
@@ -708,6 +723,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression Expression { get; }
         public List<IParseStatement> Statements { get; }
+        public MetaComment Comment { get; set; }
 
         public Switch(IParseExpression expression, List<IParseStatement> statements)
         {
@@ -721,6 +737,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Token { get; }
         public IParseExpression Value { get; }
         public bool IsDefault { get; }
+        public MetaComment Comment { get; set; }
 
         public SwitchCase(Token caseToken, IParseExpression value)
         {
@@ -743,6 +760,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseStatement Iterator { get; }
         public IParseStatement Block { get; }
         public Token InitializerSemicolon { get; }
+        public MetaComment Comment { get; set; }
 
         public For(IParseStatement initializer, IParseExpression condition, IParseStatement iterator, IParseStatement block, Token initializerSemicolon)
         {
@@ -758,6 +776,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression Condition { get; }
         public IParseStatement Statement { get; }
+        public MetaComment Comment { get; set; }
 
         public While(IParseExpression condition, IParseStatement statement)
         {
@@ -772,6 +791,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Identifier { get; }
         public IParseExpression Expression { get; }
         public IParseStatement Statement { get; }
+        public MetaComment Comment { get; set; }
 
         public Foreach(IParseType type, Token identifier, IParseExpression expression, IParseStatement statement)
         {
@@ -790,6 +810,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseExpression InitialValue { get; }
         public Token Extended { get; }
         public Token ID { get; }
+        public MetaComment Comment { get; set; }
 
         public VariableDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id)
         {
@@ -822,6 +843,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression VariableExpression { get; }
         public bool Decrement { get; }
+        public MetaComment Comment { get; set; }
 
         public Increment(IParseExpression variableExpression, bool decrement)
         {
@@ -835,6 +857,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class Delete : Node, IParseStatement
     {
         public IParseExpression Deleting { get; }
+        public MetaComment Comment { get; set; }
 
         public Delete(IParseExpression deleting)
         {
@@ -842,9 +865,30 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
+    public class MetaComment : Node
+    {
+        public List<Token> Comments { get; }
+
+        public MetaComment(List<Token> comments)
+        {
+            Comments = comments;
+        }
+
+        public string GetContents()
+        {
+            string result = string.Empty;
+            foreach (var comment in Comments)
+                // Substring(1) skips the first #
+                result += comment.Text.Substring(1).Trim();
+            return result;
+        }
+    }
+
     // Errors
     public class MissingElement : Node, IParseExpression, IParseStatement
     {
+        public MetaComment Comment { get; set; }
+
         public MissingElement(DocRange range)
         {
             Range = range;

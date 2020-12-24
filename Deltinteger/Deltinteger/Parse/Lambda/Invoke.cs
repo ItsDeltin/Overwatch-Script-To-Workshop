@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public MethodAttributes Attributes => new MethodAttributes();
         public bool Static => false;
         public bool WholeContext => true;
-        public string Documentation => "Invokes the lambda expression.";
+        public MarkupBuilder Documentation => "Invokes the lambda expression.";
         public Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool DoesReturnValue => LambdaType.ReturnsValue;

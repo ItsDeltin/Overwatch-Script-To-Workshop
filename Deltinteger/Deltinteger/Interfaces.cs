@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger
     public interface IParameterCallable : ILabeled, IAccessable
     {
         CodeParameter[] Parameters { get; }
-        string Documentation { get; }
+        MarkupBuilder Documentation { get; }
         object Call(ParseInfo parseInfo, DocRange callRange) => null;
     }
 

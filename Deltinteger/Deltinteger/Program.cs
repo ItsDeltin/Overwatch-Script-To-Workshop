@@ -42,6 +42,9 @@ namespace Deltin.Deltinteger
                 return;
             }
 
+            if (args.Contains("--waitfordebugger") && !WaitForDebugger())
+                return;
+
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
             Lobby.HeroSettingCollection.Init();
@@ -61,9 +64,19 @@ namespace Deltin.Deltinteger
             }
         }
 
-        static void WaitForDebugger()
+        static bool WaitForDebugger()
         {
-            while (!System.Diagnostics.Debugger.IsAttached) Thread.Sleep(100);
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+
+            while (!System.Diagnostics.Debugger.IsAttached)
+            {
+                Thread.Sleep(100);
+
+                if (stopwatch.ElapsedMilliseconds > 30000)
+                    return false;
+            }
+            return true;
         }
 
         public static void Script(string parseFile)

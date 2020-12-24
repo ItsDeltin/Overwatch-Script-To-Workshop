@@ -24,11 +24,13 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
     public class TTECondition
     {
+        public string Comment { get; }
         public bool Disabled { get; }
         public ITTEExpression Expression { get; }
 
-        public TTECondition(bool disabled, ITTEExpression expression)
+        public TTECondition(string comment, bool disabled, ITTEExpression expression)
         {
+            Comment = comment;
             Disabled = disabled;
             Expression = expression;
         }
@@ -36,6 +38,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public void Decompile(DecompileRule decompiler)
         {
             decompiler.NewLine();
+
+            decompiler.AddComment(Comment, Disabled);
 
             // Make the condition a comment if it is disabled.
             if (Disabled) decompiler.Append("// ");

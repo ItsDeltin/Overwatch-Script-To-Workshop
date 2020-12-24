@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; set; }
         public bool WholeContext => true;
         public CompletionItemKind CompletionItemKind { get; set; } = CompletionItemKind.Variable;
-        public string Documentation { get; set; }
+        public MarkupBuilder Documentation { get; set; }
         public CodeType CodeType { get; set; }
         public bool IsSettable { get; set; } = true;
         public VariableType VariableType { get; set; } = VariableType.Global;
@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
             Label = Name,
             Kind = CompletionItemKind,
             Detail = GetLabel(false),
-            Documentation = Extras.GetMarkupContent(Documentation)
+            Documentation = Documentation
         };
 
         public virtual string GetLabel(bool markdown)

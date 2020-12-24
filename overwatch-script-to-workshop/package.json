@@ -31,7 +31,8 @@
     "main": "./dist/extensions.js",
     "icon": "icon.png",
     "contributes": {
-        "languages": [{
+        "languages": [
+            {
                 "id": "ostw",
                 "aliases": [
                     "Overwatch Script To Workshop",
@@ -63,7 +64,8 @@
                 ]
             }
         ],
-        "grammars": [{
+        "grammars": [
+            {
                 "language": "ostw",
                 "scopeName": "source.del",
                 "path": "./syntaxes/ostw.tmLanguage.json"
@@ -161,10 +163,23 @@
                     ],
                     "default": "off",
                     "description": "Traces the communication between VS Code and the language server."
+                },
+                "ostw.dev.deltintegerWatchBuild": {
+                    "scope": "machine",
+                    "type": "string",
+                    "description": "Restarts the language server when the provided file changes.",
+                    "default": null
+                },
+                "ostw.dev.waitForDebugger": {
+                    "scope": "machine",
+                    "type": "boolean",
+                    "description": "Will not start the language server until a debugger is attached.",
+                    "default": false
                 }
             }
         },
-        "commands": [{
+        "commands": [
+            {
                 "command": "ostw.downloadLatestRelease",
                 "title": "Download the latest OSTW release",
                 "category": "Overwatch Script To Workshop"
@@ -203,9 +218,15 @@
                 "command": "ostw.decompile.clipboard",
                 "title": "Decompile from clipboard to file",
                 "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.restartLanguageServer",
+                "title": "Restart OSTW Language Server",
+                "category": "Overwatch Script To Workshop"
             }
         ],
-        "keybindings": [{
+        "keybindings": [
+            {
                 "command": "ostw.copyWorkshopCode",
                 "key": "Ctrl+Alt+C"
             },
@@ -245,24 +266,44 @@
             }],
             "initialConfigurations": [{
                 "type": "ostw",
-                "name": "OSTW",
-                "program": "${workspaceFolder}/${file}",
-                "request": "launch"
-            }],
-            "configurationAttributes": {
-                "launch": {
-                    "required": [
-                        "program"
-                    ],
-                    "properties": {
-                        "program": {
-                            "type": "string",
-                            "description": "The script to debug.",
-                            "default": "${workspaceFolder}/${file}"
+                "label": "Overwatch Script To Workshop",
+                "languages": [
+                    "ostw"
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "Overwatch Script To Workshop: Debug Current File",
+                        "name": "Overwatch Script To Workshop Configuration",
+                        "description": "A new configuration for debugging an OSTW script.",
+                        "body": {
+                            "type": "ostw",
+                            "program": "${workspaceFolder}/${file}"
+                        }
+                    }
+                ],
+                "initialConfigurations": [
+                    {
+                        "type": "ostw",
+                        "name": "OSTW",
+                        "program": "${workspaceFolder}/${file}",
+                        "request": "launch"
+                    }
+                ],
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "program"
+                        ],
+                        "properties": {
+                            "program": {
+                                "type": "string",
+                                "description": "The script to debug.",
+                                "default": "${workspaceFolder}/${file}"
+                            }
                         }
                     }
                 }
-            }
+            }]
         }]
     },
     "scripts": {
@@ -288,6 +329,7 @@
     "dependencies": {
         "async": "^3.2.0",
         "axios": "^0.19.2",
+        "chokidar": "^3.4.3",
         "glob": "^7.1.6",
         "vscode-debugadapter": "^1.41.1",
         "vscode-debugprotocol": "^1.41.0",

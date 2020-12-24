@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Parse
             ParseInfo = parseInfo;
             Context = context;
             TargetRange = context.Target.Range;
-            CallRange = context.Range;
+            CallRange = context.LeftParentheses.Range.Start + context.RightParentheses.Range.Start;
             Target = target;
             Scope = scope;
             Getter = getter;

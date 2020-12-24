@@ -98,7 +98,7 @@ namespace Deltin.Deltinteger.Lobby
         {
             // Match the enumerator.
             foreach (string enumerator in Values)
-                if (parser.Match(parser.Kw(enumerator), false, true))
+                if (parser.Match(parser.Kw(enumerator), false))
                 {
                     // Return true if it is found.
                     value = enumerator;
@@ -142,13 +142,13 @@ namespace Deltin.Deltinteger.Lobby
         public override bool Match(ConvertTextToElement parser, out object value)
         {
             // Match enabled
-            if (parser.Match(parser.Kw(EnabledKey()), false, true))
+            if (parser.Match(parser.Kw(EnabledKey()), false))
             {
                 value = true;
                 return true;
             }
             // Match disabled
-            else if (parser.Match(parser.Kw(DisabledKey()), false, true))
+            else if (parser.Match(parser.Kw(DisabledKey()), false))
             {
                 value = false;
                 return true;
@@ -190,16 +190,16 @@ namespace Deltin.Deltinteger.Lobby
             Default = defaultValue;
         }
 
-        public override string GetValue(WorkshopBuilder builder, object value)
-        {
-            if (!Percentage) return value.ToString();
-            else return value.ToString() + "%";
-        }
-
         public RangeValue(bool integer, bool percentage, string name, double min, double max, double defaultValue = 100) : this(name, min, max, defaultValue)
         {
             Integer = integer;
             Percentage = percentage;
+        }
+
+        public override string GetValue(WorkshopBuilder builder, object value)
+        {
+            if (!Percentage) return value.ToString();
+            else return value.ToString() + "%";
         }
 
         protected override RootSchema GetSchema()
@@ -250,7 +250,7 @@ namespace Deltin.Deltinteger.Lobby
                 // Match a double.
                 if (parser.Double(out double d))
                 {
-                    parser.Match("%", noSymbols: true);
+                    parser.Match("%");
                     // Double matched.
                     value = d;
                     return true;
@@ -263,6 +263,11 @@ namespace Deltin.Deltinteger.Lobby
                 }
             }
         }
+    
+        public static RangeValue NewPercentage(string name, double min, double max, double defaultValue = 100) => new RangeValue(false, true, name, min, max, defaultValue);
+        public static RangeValue NewPercentage(string name, AbilityNameResolver title, double min, double max, double defaultValue = 100) => new RangeValue(false, true, name, min, max, defaultValue) {
+            TitleResolver = title
+        };
     }
 
     enum SwitchType

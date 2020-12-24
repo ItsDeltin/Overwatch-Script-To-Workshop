@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private FileStream GetStream() => new FileStream(Uri.FilePath(), FileMode.Open, FileAccess.Read);
+        private FileStream GetStream() => new FileStream(Uri.LocalPath, FileMode.Open, FileAccess.Read);
 
         private byte[] GetFileHash(FileStream stream)
         {

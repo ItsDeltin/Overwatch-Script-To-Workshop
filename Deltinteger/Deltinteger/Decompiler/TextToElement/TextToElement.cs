@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     {
         private readonly static char[] WHITESPACE = new char[] { '\r', '\n', '\t', ' ' };
         private readonly static string[] DEFAULT_VARIABLES = new string[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
+        private readonly static string[] _disallowedValues = new string[] { "Add", "Subtract", "Multiply", "Divide", "Modulo", "Raise To Power", "And", "Or", "Compare", "String", "Custom String", "If-Then-Else" };
 
         public string Content { get; }
         public int Position { get; private set; }
@@ -29,6 +30,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         private readonly ElementJsonAction[] _actions;
         private readonly ElementJsonValue[] _values;
 
+        private int _lookaheadDepth;
+
         public List<WorkshopVariable> Variables { get; } = new List<WorkshopVariable>();
         public List<Subroutine> Subroutines { get; } = new List<Subroutine>();
         public List<TTERule> Rules { get; } = new List<TTERule>();
@@ -38,8 +41,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         {
             Content = content;
             _actions = ElementRoot.Instance.Actions.OrderByDescending(e => e.Name.Length).ToArray();
-            _values = ElementRoot.Instance.Values.OrderByDescending(e => e.Name.Length).ToArray();
+            _values = ElementRoot.Instance.Values.Where(e => !_disallowedValues.Contains(e.Name)).OrderByDescending(e => e.Name.Length).ToArray();
             _operators.Push(TTEOperator.Sentinel);
+        }
+
+        bool Lookahead(Func<bool> action)
+        {
+            int position = Position, line = Line, character = Character;
+            _lookaheadDepth++;
+            bool result = action();
+            if(!result) Position = position; Line = line; Character = character;
+            _lookaheadDepth--;
+            return result;
         }
 
         public Workshop Get()
@@ -117,31 +130,35 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         bool Is(char character) => !ReachedEnd && Current == character;
         bool Is(int position, char character) => Position + position < Content.Length && Content[Position + position] == character;
         bool IsInsensitive(int position, char character) => Position + position < Content.Length && Char.ToLower(Content[Position + position]) == Char.ToLower(character);
-        bool IsSymbol(int position) => Position + position < Content.Length && char.IsSymbol(Content[Position + position]);
         bool IsAny(params char[] characters) => !ReachedEnd && characters.Contains(Current);
         bool IsAny(string characters) => IsAny(characters.ToCharArray());
         bool IsNumeric() => IsAny("0123456789");
         bool IsAlpha() => IsAny("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
         bool IsAlphaNumeric() => IsNumeric() || IsAlpha();
 
-        public bool Match(string str, bool caseSensitive = true, bool noSymbols = false)
+        public bool Match(string str, bool caseSensitive = true)
         {
             for (int i = 0; i < str.Length; i++)
                 if ((caseSensitive && !Is(i, str[i])) || !IsInsensitive(i, str[i]))
                     return false;
-
-            if (!noSymbols && IsSymbol(str.Length)) return false;
 
             Advance(str.Length);
             SkipWhitespace();
             return true;
         }
 
+        bool MatchAll(bool caseSensitive, params string[] values) => Lookahead(() => { 
+            foreach (string value in values)
+                if (!Match(value, caseSensitive))
+                    return false;
+            return true;
+        });
+
         // Commons
         // String
         bool MatchString(out string value)
         {
-            if (!Match("\"", noSymbols: true))
+            if (!Match("\""))
             {
                 value = null;
                 return false;
@@ -150,7 +167,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             value = "";
 
             // Empty string
-            if (Match("\"", noSymbols: true)) return true;
+            if (Match("\"")) return true;
 
             bool escaped = false;
             do
@@ -425,13 +442,15 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         bool Condition(out TTECondition condition)
         {
+            MatchString(out string comment);
+
             // Is the condition disabled?
             bool isDisabled = Match(Kw("disabled"));
 
             // Match the condition's expression.
             if (Expression(out ITTEExpression expression))
             {
-                condition = new TTECondition(isDisabled, expression);
+                condition = new TTECondition(comment, isDisabled, expression);
                 return true;
             }
 
@@ -705,17 +724,16 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         {
             TTEOperator op = null;
 
-            if (Match(Kw("Add"))) op = TTEOperator.Add;
-            else if (Match(Kw("Subtract"))) op = TTEOperator.Subtract;
-            else if (Match(Kw("Multiply"))) op = TTEOperator.Multiply;
-            else if (Match(Kw("Divide"))) op = TTEOperator.Divide;
-            else if (Match(Kw("Modulo"))) op = TTEOperator.Modulo;
-            else if (Match(Kw("Raise To Power"))) op = TTEOperator.Power;
-            else if (Match(Kw("And"))) op = TTEOperator.And;
-            else if (Match(Kw("Or"))) op = TTEOperator.Or;
-            else if (Match(Kw("Compare")))
+            if (MatchAll(true, Kw("Add"), "(")) op = TTEOperator.Add;
+            else if (MatchAll(true, Kw("Subtract"), "(")) op = TTEOperator.Subtract;
+            else if (MatchAll(true, Kw("Multiply"), "(")) op = TTEOperator.Multiply;
+            else if (MatchAll(true, Kw("Divide"), "(")) op = TTEOperator.Divide;
+            else if (MatchAll(true, Kw("Modulo"), "(")) op = TTEOperator.Modulo;
+            else if (MatchAll(true, Kw("Raise To Power"), "(")) op = TTEOperator.Power;
+            else if (MatchAll(true, Kw("And"), "(")) op = TTEOperator.And;
+            else if (MatchAll(true, Kw("Or"), "(")) op = TTEOperator.Or;
+            else if (MatchAll(true, Kw("Compare"), "("))
             {
-                Match("(");
                 ContainExpression(out ITTEExpression compareLeft);
                 Match(",");
 
@@ -733,6 +751,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 expr = new BinaryOperatorExpression(compareLeft, compareRight, op);
                 return true;
             }
+            else if (MatchAll(true, Kw("If-Then-Else"), "("))
+            {
+                ContainExpression(out ITTEExpression condition);
+                Match(",");
+                ContainExpression(out ITTEExpression consequent);
+                Match(",");
+                ContainExpression(out ITTEExpression alternative);
+                Match(")");
+
+                expr = new TernaryExpression(condition, consequent, alternative);
+                return true;
+            }
 
             if (op == null)
             {
@@ -740,7 +770,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return false;
             }
 
-            Match("(");
             ContainExpression(out ITTEExpression left);
             Match(",");
             ContainExpression(out ITTEExpression right);

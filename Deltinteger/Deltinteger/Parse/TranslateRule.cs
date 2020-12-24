@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (var condition in ruleAction.Conditions)
             {
-                var conditionParse = condition.Parse(ActionSet);
+                var conditionParse = condition.Expression.Parse(ActionSet);
 
                 Element value1;
                 Operator compareOperator;
@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
                     value2 = Element.True();
                 }
 
-                Conditions.Add(new Condition(value1, compareOperator, value2));
+                Conditions.Add(new Condition(value1, compareOperator, value2) { Comment = condition.Comment?.GetContents() });
             }
         }
 

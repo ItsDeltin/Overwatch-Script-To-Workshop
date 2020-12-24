@@ -27,10 +27,8 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             {"Team", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Map", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Color", (decompiler, function) => function.Values[0].Decompile(decompiler)},
-            {"Button", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Game Mode", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Button", (decompiler, function) => function.Values[0].Decompile(decompiler)},
-            {"Color", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Hero", (decompiler, function) => function.Values[0].Decompile(decompiler)},
 
             {"Modify Global Variable", (decompiler, function) => {

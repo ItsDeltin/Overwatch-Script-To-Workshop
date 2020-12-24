@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNode<T>(T node) where T : INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(TokenAtOrEnd(TokenRangeStart.Pop()).Range.Start, CurrentOrLast.Range.End);
+                node.Range = new DocRange(TokenAtOrEnd(TokenRangeStart.Pop()).Range.Start, TokenAtOrEnd(Token - 1).Range.End);
             return node;
         }
 
@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNodeFrom<T>(T node, DocPos start) where T : INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = start + CurrentOrLast.Range.End;
+                node.Range = start + TokenAtOrEnd(Token - 1).Range.End;
             return node;
         }
 
@@ -444,14 +444,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     expression = EndNodeFrom(new ValueInArray(expression, index, Lexer.Tokens[Token - 1]), expression.Range.Start);
                 }
                 // Invoke
-                else if (ParseOptional(TokenType.Parentheses_Open))
+                else if (ParseOptional(TokenType.Parentheses_Open, out Token leftParentheses))
                 {
                     // Parse parameters.
                     var values = ParseParameterValues();
                     // End the parentheses.
-                    ParseExpected(TokenType.Parentheses_Close);
+                    Token rightParentheses = ParseExpected(TokenType.Parentheses_Close);
                     // Update the expression.
-                    expression = EndNodeFrom(new FunctionExpression(expression, values), expression.Range.Start);
+                    expression = EndNodeFrom(new FunctionExpression(expression, leftParentheses, rightParentheses, values), expression.Range.Start);
                 }
                 // No more array indices or invocations.
                 else break;
@@ -702,30 +702,42 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         IParseStatement ParseStatement(bool parseSemicolon = true)
         {
+            MetaComment metaComment = Is(TokenType.ActionComment) ? ParseMetaComment() : null;
+
+            IParseStatement statement;
+
             switch (Kind)
             {
                 // Block
-                case TokenType.CurlyBracket_Open: return ParseBlock();
+                case TokenType.CurlyBracket_Open: statement = ParseBlock(); break;
                 // Continue and break
-                case TokenType.Break: return ParseBreak();
-                case TokenType.Continue: return ParseContinue();
+                case TokenType.Break: statement = ParseBreak(); break;
+                case TokenType.Continue: statement = ParseContinue(); break;
                 // Return
-                case TokenType.Return: return ParseReturn();
+                case TokenType.Return: statement = ParseReturn(); break;
                 // If
-                case TokenType.If:
-                    return ParseIf();
+                case TokenType.If: statement = ParseIf(); break;
                 // Switch
-                case TokenType.Switch: return ParseSwitch();
+                case TokenType.Switch: statement = ParseSwitch(); break;
                 // Loops
-                case TokenType.For: return ParseFor();
-                case TokenType.While: return ParseWhile();
-                case TokenType.Foreach: return ParseForeach();
+                case TokenType.For: statement = ParseFor(); break;
+                case TokenType.While: statement = ParseWhile(); break;
+                case TokenType.Foreach: statement = ParseForeach(); break;
                 // Delete
-                case TokenType.Delete: return ParseDelete();
+                case TokenType.Delete: statement = ParseDelete(); break;
+                // Declaration and expression statements.
+                default:
+                    // Declaration
+                    if (IsDeclaration(false))
+                        statement = ParseDeclaration(parseSemicolon);
+                    // Expression statement
+                    else
+                        statement = ParseExpressionStatement(parseSemicolon);
+                    break;
             }
 
-            if (IsDeclaration(false)) return ParseDeclaration(parseSemicolon);
-            return ParseExpressionStatement(parseSemicolon);
+            statement.Comment = metaComment;
+            return statement;
         }
 
         IParseStatement ParseExpressionStatement(bool parseSemicolon)
@@ -878,9 +890,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Open);
 
             // Get the statements.
-            var statements = new List<IParseStatement>();
-            while (!Is(TokenType.CurlyBracket_Close))
-            {
+            var statements = ParseList(TokenType.CurlyBracket_Close, () => Kind.IsStartOfStatement() || Is(TokenType.Case) || Is(TokenType.Default), () => {
                 // Case
                 if (ParseOptional(TokenType.Case, out var caseToken))
                 {
@@ -890,7 +900,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     ParseExpected(TokenType.Colon);
 
                     // Add the case statement.
-                    statements.Add(EndNode(new SwitchCase(caseToken, caseValue)));
+                    return EndNode(new SwitchCase(caseToken, caseValue));
                 }
                 // Default
                 else if (ParseOptional(TokenType.Default, out var defaultToken))
@@ -899,11 +909,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     ParseExpected(TokenType.Colon);
 
                     // Add the default statement.
-                    statements.Add(EndNode(new SwitchCase(defaultToken)));
+                    return EndNode(new SwitchCase(defaultToken));
                 }
                 // Normal statement
-                else statements.Add(ParseStatement());
-            }
+                else return ParseStatement();
+            });
 
             ParseExpected(TokenType.CurlyBracket_Close);
             return EndTokenCapture(new Switch(expression, statements));
@@ -1683,8 +1693,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool TryGetIfStatement(out IfCondition condition)
         {
             condition = new IfCondition();
+            condition.Comment = Is(TokenType.ActionComment) ? ParseMetaComment() : null;
 
-            if (!ParseOptional(TokenType.If, out condition.If))
+            if (condition.Comment != null)
+            {
+                if(!ParseExpected(TokenType.If, out condition.If))
+                {
+                    condition = null;
+                    return false;
+                }
+            }
+            else if (!ParseOptional(TokenType.If, out condition.If))
             {
                 condition = null;
                 return false;
@@ -1717,6 +1736,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var variableValue = GetContainExpression();
             ParseSemicolon();
             return new Hook(variableExpression, variableValue);
+        }
+
+        MetaComment ParseMetaComment()
+        {
+            StartNode();
+            List<Token> comments = new List<Token>();
+            while (ParseOptional(TokenType.ActionComment, out Token comment)) comments.Add(comment);
+            return EndNode(new MetaComment(comments));
         }
 
         public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices) => new Identifier(identifier, indices);

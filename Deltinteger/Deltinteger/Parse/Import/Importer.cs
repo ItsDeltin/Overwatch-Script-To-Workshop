@@ -204,7 +204,7 @@ namespace Deltin.Deltinteger.Parse
 
         public ImportResult(FileImporter fileImporter, DocRange importRange, string relativePath, Uri referencingFile)
         {
-            string resultingPath = Extras.CombinePathWithDotNotation(referencingFile.FilePath(), relativePath);
+            string resultingPath = Extras.CombinePathWithDotNotation(referencingFile.LocalPath, relativePath);
 
             // Syntax error if the filename has invalid characters.
             if (resultingPath == null)
@@ -212,7 +212,7 @@ namespace Deltin.Deltinteger.Parse
                 fileImporter.Diagnostics.Error("File path contains invalid characters.", importRange);
                 return;
             }
-            Uri = Extras.Definition(resultingPath);
+            Uri = new Uri(resultingPath);
             Directory = Path.GetDirectoryName(resultingPath);
             FilePath = resultingPath;
             FileType = Path.GetExtension(FilePath).ToLower();
