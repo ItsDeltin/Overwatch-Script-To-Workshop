@@ -66,10 +66,10 @@ class bone(tree_item):
     def __init__(self, original):
         super(bone, self).__init__()
         self.name = original.name
-        self.head = Vector(original.head)
-        self.head_local = Vector(original.head_local)
-        self.tail = Vector(original.tail)
-        self.tail_local = Vector(original.tail_local)
+        self.head = Vector(original.head, False)
+        self.head_local = Vector(original.head_local, True)
+        self.tail = Vector(original.tail, False)
+        self.tail_local = Vector(original.tail_local, True)
         self.length = original.length
         self.matrix = get_matrix(get_accumulative_local_matrix(original))
         self.use_connect = original.use_connect
@@ -77,7 +77,8 @@ class bone(tree_item):
 class empty:
     def __init__(self, original):
         self.name = original.name
-        self.location = Vector(original.matrix_local.decompose()[0])
+        self.location = Vector(original.matrix_local.decompose()[0], False)
+        self.location_local = Vector(original.matrix_basis.decompose()[0], True)
         self.parent_bone = original.parent_bone
 
 class blend_action:
@@ -163,7 +164,7 @@ def get_mesh(obj):
     # Get the vertices.
     vertices = []
     for vert in obj.data.vertices:
-        vertices.append(vertex(Vector(vert.co), [vertex_group_element(a.group, a.weight) for a in vert.groups]))
+        vertices.append(vertex(Vector(vert.co, False), [vertex_group_element(a.group, a.weight) for a in vert.groups]))
     
     # Get the edges.
     edges = []
@@ -205,7 +206,7 @@ def get_action(obj, action):
     fcurves = get_action_animation_data(action)
 
     # Return the action.
-    return blend_action(action.name, fcurves, Vector(action.frame_range))
+    return blend_action(action.name, fcurves, Vector(action.frame_range, False))
 
 def get_action_animation_data(action):
     groups = {}
@@ -221,7 +222,10 @@ def get_action_animation_data(action):
 
         keyframes = []
         targetType, target = Rna_traveler(group[0].data_path).scan()
-        rng = Vector(group[0].range())
+        rng = Vector(group[0].range(), False)
+
+        if targetType == -1:
+            continue
 
         for k in group[0].keyframe_points:
             # The target frame of the keyframe.
@@ -238,13 +242,13 @@ def get_action_animation_data(action):
                     group[1].evaluate(frame),
                     group[2].evaluate(frame),
                     group[3].evaluate(frame)
-                    # group[0].evaluate(frame),
-                    # -group[1].evaluate(frame),
-                    # group[3].evaluate(frame),
-                    # group[2].evaluate(frame)
-                )))
+                )), False)
             elif targetType == 2: # Bone location
-                pass
+                value = Vector(
+                    group[0].evaluate(frame),
+                    group[1].evaluate(frame),
+                    group[2].evaluate(frame)
+                )
                 
             # Append the keyframe.
             if value is not None:

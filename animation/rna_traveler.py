@@ -60,7 +60,6 @@ class Rna_traveler:
         
         # Location
         if self.current_is('location'):
-            return 0
+            return 0, None
         
-        return None
-        return None
+        return -1, None

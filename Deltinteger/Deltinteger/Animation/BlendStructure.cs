@@ -216,6 +216,9 @@ namespace Deltin.Deltinteger.Animation
         /// <summary>The location of the empty relative to the bone it is connected to.</summary>
         [JsonProperty("location")]
         public Vertex Location { get; set; }
+        /// <summary>The location of the empty relative to the armature.</summary>
+        [JsonProperty("location_local")]
+        public Vertex LocalLocation { get; set; }
         /// <summary>The name of the bone that the empty is connected to.</summary>
         [JsonProperty("parent_bone")]
         public string ParentBone { get; set; }

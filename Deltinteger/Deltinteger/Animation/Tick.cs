@@ -14,6 +14,10 @@ namespace Deltin.Deltinteger.Animation
         private ClassData _classData;
         /// <summary>An array of object references.</summary>
         private IndexReference _animationReferenceList;
+        /// <summary>[x]: the object reference in correlation to _animationReferenceList.
+        /// <p>[x][0]: the action index.
+        /// <p>[x][1]: the action start time.
+        /// <p>[x][2]: should the animation loop?</summary>
         private IndexReference _animationInfoList;
         private ActionSet actionSet;
         private Element currentReference;
@@ -85,11 +89,12 @@ namespace Deltin.Deltinteger.Animation
             var actionLoop = new ForRangeBuilder(actionSet, "animation_action_loop", 0, Element.Part<V_CountOf>(_animationInfoList.Get()[referenceLoop.Value]), 1);
             actionLoop.Init();
 
+            Element actionIdentifier = _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][0];
             Element currentActionTime = _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][1];
+            Element currentActionShouldLoop = _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][2];
+
             currentActionTime = actionSet.AssignAndSave("animation_current_action_time", currentActionTime).Get();
             Element currentActionTimeDelta = actionSet.AssignAndSave("animation_delta", new V_TotalTimeElapsed() - currentActionTime).Get();
-
-            Element actionIdentifier = _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][0];
 
             // Get the fcurve related to this bone.
             var fcurve = actionSet.AssignAndSave("animation_curve", Element.Part<V_FilteredArray>(
@@ -149,7 +154,11 @@ namespace Deltin.Deltinteger.Animation
                 Element.Part<V_And>(
                     // Ignore the first 2 elements, which is fcurve data.
                     new V_Compare(new V_ArrayElement(), Operators.GreaterThanOrEqual, new V_Number(2)),
-                    new V_Compare((currentActionTimeDelta * fps % Actions[actionIdentifier][0]), Operators.LessThan, fcurve.Get()[new V_ArrayElement()][0])
+                    new V_Compare(
+                        currentActionTimeDelta * fps % Element.TernaryConditional(currentActionShouldLoop, Actions[actionIdentifier][0], V_Number.LargeArbitraryNumber),
+                        Operators.LessThan,
+                        fcurve.Get()[new V_ArrayElement()][0]
+                    )
                 )
             )));
 
@@ -168,7 +177,7 @@ namespace Deltin.Deltinteger.Animation
             //  and the current time is 9 (c),
             //  (c-s-a) / (b-a) = (9-5-2) / (6-2) = 0.5
             var c = actionSet.AssignAndSave("animation_test_current_time", new V_TotalTimeElapsed()).Get();
-            var t = actionSet.AssignAndSave("t", ((currentActionTimeDelta * fps - keyframeA[0]) / (keyframeB[0] - keyframeA[0])) % 1);
+            var t = actionSet.AssignAndSave("t", CaptureValue((currentActionTimeDelta * fps - keyframeA[0]) / (keyframeB[0] - keyframeA[0]), t => Element.TernaryConditional(currentActionShouldLoop, t % 1, Element.Part<V_Min>(t, new V_Number(1)))));
             // var t = actionSet.AssignAndSave("animation_t", 0);
 
             // Get the interpolated rotation.
@@ -229,7 +238,7 @@ namespace Deltin.Deltinteger.Animation
             newPosLoop.Finish();
             BoneLocalPositions = newBoneLocalPositions.Get();
 
-            UpdateActions(referenceLoop.Value, fps);
+            // UpdateActions(referenceLoop.Value, fps);
 
             // ! debug: only 1 tick
             // actionSet.AddAction(new A_Abort());
@@ -242,7 +251,7 @@ namespace Deltin.Deltinteger.Animation
 
         public void AddAnimation(ActionSet actionSet, Element objectReference, Element actionIdentifier, Element loop)
         {
-            Element actionIndex = actionSet.AssignAndSave("animation_action_index", Element.Part<V_IndexOfArrayValue>(_objectType.ActionNames.Get(objectReference), actionIdentifier)).Get();
+            Element actionIndex = actionSet.AssignAndSave("animation_action_index", GetActionIndexFromName(objectReference, actionIdentifier)).Get();
 
             var objectIndexInAnimationList = actionSet.AssignAndSave("animation_existing_obj_push", Element.Part<V_IndexOfArrayValue>(_animationReferenceList.Get(), objectReference));
             
@@ -262,6 +271,41 @@ namespace Deltin.Deltinteger.Animation
             actionSet.AddAction(_animationInfoList.ModifyVariable(Operation.AppendToArray, Element.CreateArray(Element.CreateArray(actionIndex, new V_TotalTimeElapsed(), loop)), index: objectIndexInAnimationList.Get()));
         }
 
+        public void StopAnimation(ActionSet actionSet, Element objectReference, Element actionIdentifier)
+        {
+            Element i = Element.Part<V_IndexOfArrayValue>(_animationReferenceList.Get(), objectReference),
+                actionArray = _animationInfoList.Get()[i],
+                currentActionInstance = actionArray[new V_ArrayElement()],
+                actionIndex = GetActionIndexFromName(objectReference, actionIdentifier);
+
+            // TODO: Make action remove queue.
+            // For now, just remove it here.
+            actionSet.AddAction(_animationInfoList.ModifyVariable(
+                index: i,
+                // Filter by index
+                operation: Operation.RemoveFromArrayByIndex,
+                value: Element.Part<V_FilteredArray>(
+                    // Map to indices so the resulting array is the list of indices.
+                    // [a1, a2, a3] => [0, 1, 2]
+                    Element.Part<V_MappedArray>(actionArray, new V_CurrentArrayIndex()),
+                    // Determines if the action was completed and is not set to loop.
+                    new V_Compare(currentActionInstance[0], Operators.Equal, actionIndex)
+                )
+            ));
+        }
+
+        public void StopAllAnimations(ActionSet actionSet, Element objectReference)
+        {
+            Element i = Element.Part<V_IndexOfArrayValue>(_animationReferenceList.Get(), objectReference),
+                actionArray = _animationInfoList.Get()[i];
+
+            // TODO: Make action remove queue.
+            // For now, just remove it here.
+            actionSet.AddAction(_animationInfoList.SetVariable(index: i, value: new V_EmptyArray()));
+        }
+
+        private Element GetActionIndexFromName(Element objectReference, Element name) => Element.Part<V_IndexOfArrayValue>(_objectType.ActionNames.Get(objectReference), name);
+
         /// <summary>Removes actions from the action list when they finish playing.</summary>
         /// <param name="i">The current animation reference index.</param>
         /// <param name="fps">The FPS of the action. This should be removed later.</param>
@@ -272,7 +316,7 @@ namespace Deltin.Deltinteger.Animation
                 // currentActionInstance[0] = action ID,
                 // currentActionInstance[1] = start time,
                 // currentActionInstance[2] = should loop?
-                currentActionInstance = _animationInfoList.Get()[i][new V_ArrayElement()],
+                currentActionInstance = actionArray[new V_ArrayElement()],
                 // Get the action source.
                 currentActionSource = Actions[currentActionInstance[0]],
                 // Get the action time and frame range.
