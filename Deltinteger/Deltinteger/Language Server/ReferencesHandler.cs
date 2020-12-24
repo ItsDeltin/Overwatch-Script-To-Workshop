@@ -50,18 +50,8 @@ namespace Deltin.Deltinteger.LanguageServer
             });
         }
 
-        public ReferenceRegistrationOptions GetRegistrationOptions()
-        {
-            return new ReferenceRegistrationOptions()
-            {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector
-            };
-        }
-
-        private ReferenceCapability _capability;
-        public void SetCapability(ReferenceCapability capability)
-        {
-            _capability = capability;
-        }
+        public ReferenceRegistrationOptions GetRegistrationOptions(ReferenceCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities) => new ReferenceRegistrationOptions() {
+            DocumentSelector = DeltintegerLanguageServer.DocumentSelector
+        };
     }
 }

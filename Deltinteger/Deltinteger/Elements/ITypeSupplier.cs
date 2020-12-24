@@ -38,6 +38,7 @@ namespace Deltin.Deltinteger.Elements
                 case "players": return Players();
                 case "vector": return Vector();
                 case "vector[]": return VectorArray();
+                case "vector | player":
                 case "player | vector": return PlayerOrVector();
                 case "button": return EnumType("Button");
                 case "hero": return Hero();
@@ -45,6 +46,7 @@ namespace Deltin.Deltinteger.Elements
                 case "team": return Team();
                 case "gamemode": return GameMode();
                 case "color": return EnumType("Color");
+                case "hero[]": return new ArrayType(this, Hero());
                 default: return EnumType(value) ?? throw new NotImplementedException("Type '" + value + "' not handled.");
             }
         }

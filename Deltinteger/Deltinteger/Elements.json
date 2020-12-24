@@ -2589,6 +2589,7 @@
     {
       "name": "Custom Color",
       "type": "color",
+      "hidden": true,
       "parameters": {
         "Red": {
           "type": "number",

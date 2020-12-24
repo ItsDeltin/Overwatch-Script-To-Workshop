@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 
 using IHoverHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.IHoverHandler;
 using HoverCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.HoverCapability;
@@ -20,7 +21,7 @@ namespace Deltin.Deltinteger.LanguageServer
             _languageServer = languageServer;
         }
 
-        public HoverRegistrationOptions GetRegistrationOptions()
+        public HoverRegistrationOptions GetRegistrationOptions(HoverCapability capabilties, ClientCapabilities clientCapabilities)
         {
             return new HoverRegistrationOptions()
             {

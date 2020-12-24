@@ -6,7 +6,8 @@ using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using LocationLink = OmniSharp.Extensions.LanguageServer.Protocol.Models.LocationLink;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using ColorInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ColorInformation;
+using DocumentColor = OmniSharp.Extensions.LanguageServer.Protocol.Models.DocumentColor;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -17,12 +18,13 @@ namespace Deltin.Deltinteger.Parse
         public FileDiagnostics Diagnostics { get; }
         public Document Document { get; }
 
-        private List<CompletionRange> completionRanges { get; } = new List<CompletionRange>();
-        private List<OverloadChooser> overloads { get; } = new List<OverloadChooser>();
-        private List<LocationLink> callLinks { get; } = new List<LocationLink>();
-        private List<HoverRange> hoverRanges { get; } = new List<HoverRange>();
-        private List<CodeLensRange> codeLensRanges { get; } = new List<CodeLensRange>();
-        private List<SemanticToken> semanticTokens { get; } = new List<SemanticToken>();
+        private readonly List<CompletionRange> _completionRanges = new List<CompletionRange>();
+        private readonly List<OverloadChooser> _overloads = new List<OverloadChooser>();
+        private readonly List<LocationLink> _callLinks = new List<LocationLink>();
+        private readonly List<HoverRange> _hoverRanges = new List<HoverRange>();
+        private readonly List<CodeLensRange> _codeLensRanges = new List<CodeLensRange>();
+        private readonly List<SemanticToken> _semanticTokens = new List<SemanticToken>();
+        private readonly List<ColorInformation> _colorRanges = new List<ColorInformation>();
 
         public ScriptFile(Diagnostics diagnostics, Document document)
         {
@@ -38,17 +40,11 @@ namespace Deltin.Deltinteger.Parse
 
         public bool IsTokenLast(Token token) => Document.Lexer.Tokens.Count - 1 == Document.Lexer.Tokens.IndexOf(token);
 
-        public void AddCompletionRange(CompletionRange completionRange)
-        {
-            completionRanges.Add(completionRange);
-        }
-        public CompletionRange[] GetCompletionRanges() => completionRanges.ToArray();
+        public void AddCompletionRange(CompletionRange completionRange) => _completionRanges.Add(completionRange);
+        public CompletionRange[] GetCompletionRanges() => _completionRanges.ToArray();
 
-        public void AddOverloadData(OverloadChooser overload)
-        {
-            overloads.Add(overload);
-        }
-        public OverloadChooser[] GetSignatures() => overloads.ToArray();
+        public void AddOverloadData(OverloadChooser overload) => _overloads.Add(overload);
+        public OverloadChooser[] GetSignatures() => _overloads.ToArray();
 
         /// <summary>Adds a link that can be clicked on in the script.</summary>
         public void AddDefinitionLink(DocRange callRange, Location definedAt)
@@ -56,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
             if (callRange == null) throw new ArgumentNullException(nameof(callRange));
             if (definedAt == null) throw new ArgumentNullException(nameof(definedAt));
 
-            callLinks.Add(new LocationLink()
+            _callLinks.Add(new LocationLink()
             {
                 OriginSelectionRange = callRange,
                 TargetUri = definedAt.uri,
@@ -64,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
                 TargetSelectionRange = definedAt.range
             });
         }
-        public LocationLink[] GetDefinitionLinks() => callLinks.ToArray();
+        public LocationLink[] GetDefinitionLinks() => _callLinks.ToArray();
 
         ///<summary>Adds a hover to the file.</summary>
         public void AddHover(DocRange range, string content)
@@ -72,22 +68,22 @@ namespace Deltin.Deltinteger.Parse
             if (range == null) throw new ArgumentNullException(nameof(range));
             if (content == null) throw new ArgumentNullException(nameof(content));
 
-            hoverRanges.Add(new HoverRange(range, content));
+            _hoverRanges.Add(new HoverRange(range, content));
         }
-        public HoverRange[] GetHoverRanges() => hoverRanges.ToArray();
+        public HoverRange[] GetHoverRanges() => _hoverRanges.ToArray();
 
         ///<summary>Adds a codelens to the file.</summary>
-        public void AddCodeLensRange(CodeLensRange codeLensRange)
-        {
-            codeLensRanges.Add(codeLensRange ?? throw new ArgumentNullException(nameof(codeLensRange)));
-        }
-        public CodeLensRange[] GetCodeLensRanges() => codeLensRanges.ToArray();
+        public void AddCodeLensRange(CodeLensRange codeLensRange) => _codeLensRanges.Add(codeLensRange ?? throw new ArgumentNullException(nameof(codeLensRange)));
+        public CodeLensRange[] GetCodeLensRanges() => _codeLensRanges.ToArray();
 
         /// <summary>Adds a semantic token to the file.</summary>
         public void AddToken(DocRange range, TokenType type, params TokenModifier[] modifiers) => AddToken(new SemanticToken(range, type, modifiers));
         /// <summary>Adds a semantic token to the file.</summary>
-        public void AddToken(SemanticToken token) => semanticTokens.Add(token);
-        public SemanticToken[] GetSemanticTokens() => semanticTokens.ToArray();
+        public void AddToken(SemanticToken token) => _semanticTokens.Add(token);
+        public SemanticToken[] GetSemanticTokens() => _semanticTokens.ToArray();
+
+        public void AddColorRange(ColorInformation colorRange) => _colorRanges.Add(colorRange);
+        public ColorInformation[] GetColorRanges() => _colorRanges.ToArray();
     }
 
     public class CompletionRange
@@ -193,5 +189,17 @@ namespace Deltin.Deltinteger.Parse
         Declaration,
         Readonly, Static, Deprecated, Abstract,
         Async, Modification, Documentation, DefaultLibrary
+    }
+    
+    public class ColorRange
+    {
+        public DocRange Range { get; }
+        public DocumentColor Color { get; }
+
+        public ColorRange(DocRange range, DocumentColor color)
+        {
+            Range = range;
+            Color = color;
+        }
     }
 }

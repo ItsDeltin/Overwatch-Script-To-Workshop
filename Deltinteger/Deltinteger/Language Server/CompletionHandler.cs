@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.LanguageServer
             return items;
         }
 
-        public CompletionRegistrationOptions GetRegistrationOptions()
+        public CompletionRegistrationOptions GetRegistrationOptions(CompletionCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
             return new CompletionRegistrationOptions()
             {
@@ -101,13 +101,6 @@ namespace Deltin.Deltinteger.LanguageServer
                 // information for a completion item.
                 ResolveProvider = false
             };
-        }
-
-        // Client compatibility
-        private CompletionCapability _capability;
-        public void SetCapability(CompletionCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

@@ -12,6 +12,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
         }
 
         public static IMethod[] GetFunctions(DeltinScript deltinScript) => new IMethod[] {
+            CustomColor(deltinScript),
+
             ModifyVariable(deltinScript),
 
             ChaseVariableAtRate(deltinScript),

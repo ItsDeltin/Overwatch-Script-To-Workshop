@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.LanguageServer
             ReferenceHandler referenceHandler = new ReferenceHandler(this);
             CodeLensHandler codeLensHandler = new CodeLensHandler(this);
             DoRenameHandler renameHandler = new DoRenameHandler(this);
-            PrepareRenameHandler prepareRenameHandler = new PrepareRenameHandler(this);
+            ColorHandler colorHandler = new ColorHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => AddRequests(options
                 .WithInput(Console.OpenStandardInput())
@@ -89,16 +89,16 @@ namespace Deltin.Deltinteger.LanguageServer
                     .AddSerilog()
                     .AddLanguageProtocolLogging()
                     .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
-                .WithHandler<DocumentHandler>(DocumentHandler)
-                .WithHandler<CompletionHandler>(completionHandler)
-                .WithHandler<SignatureHandler>(signatureHandler)
-                .WithHandler<ConfigurationHandler>(ConfigurationHandler)
-                .WithHandler<DefinitionHandler>(definitionHandler)
-                .WithHandler<HoverHandler>(hoverHandler)
-                .WithHandler<ReferenceHandler>(referenceHandler)
-                .WithHandler<CodeLensHandler>(codeLensHandler)
-                .WithHandler<DoRenameHandler>(renameHandler)
-                .WithHandler<PrepareRenameHandler>(prepareRenameHandler)
+                .AddHandler(DocumentHandler)
+                .AddHandler(completionHandler)
+                .AddHandler(signatureHandler)
+                .AddHandler(ConfigurationHandler)
+                .AddHandler(definitionHandler)
+                .AddHandler(hoverHandler)
+                .AddHandler(referenceHandler)
+                .AddHandler(codeLensHandler)
+                .AddHandler(renameHandler)
+                .AddHandler(colorHandler)
             ));
 
             Server.SendNotification(Version, Program.VERSION);

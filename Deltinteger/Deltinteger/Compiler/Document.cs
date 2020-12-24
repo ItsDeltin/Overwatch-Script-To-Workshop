@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Compiler
         public Lexer Lexer { get; }
         public string Content { get; private set; }
         public RootContext Syntax { get; private set; }
-        public long Version { get; private set; }
+        public int? Version { get; private set; }
         public List<IParserError> Errors { get; private set; }
 
         public Document(Uri uri, string initialContent)
@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Compiler
             Errors = parser.Errors;
         }
 
-        public void Update(string newContent, UpdateRange updateRange, long version)
+        public void Update(string newContent, UpdateRange updateRange, int? version)
         {
             Version = version;
             Content = newContent;
