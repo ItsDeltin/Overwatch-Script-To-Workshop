@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Elements
         public string Name { get; }
         public CodeParameter[] Parameters { get; private set; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
-        public string Documentation { get; }
+        public MarkupBuilder Documentation { get; }
         public CodeType CodeType { get; private set; }
         private readonly RestrictedCallType? _restricted;
         private readonly ElementBaseJson _function;

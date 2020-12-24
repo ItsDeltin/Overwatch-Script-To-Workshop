@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger.Parse
         public DocRange CallRange { get; }
         private OverloadError _errorMessages;
         private readonly DocRange _targetRange;
+        private readonly DocRange _fullRange;
 
         private IParameterCallable[] AllOverloads { get; }
         private List<IParameterCallable> CurrentOptions { get; set; }
@@ -36,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
         private int _providedParameterCount;
         private DocRange _extraneousParameterRange;
 
-        public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
+        public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange targetRange, DocRange callRange, DocRange fullRange, OverloadError errorMessages)
         {
             AllOverloads = overloads
                 .OrderBy(overload => overload.Parameters.Length)
@@ -45,8 +46,9 @@ namespace Deltin.Deltinteger.Parse
             this.parseInfo = parseInfo;
             this.scope = elementScope;
             this.getter = getter;
-            this._targetRange = genericErrorRange;
+            this._targetRange = targetRange;
             CallRange = callRange;
+            this._fullRange = fullRange;
             this._errorMessages = errorMessages;
 
             parseInfo.Script.AddOverloadData(this);
@@ -226,7 +228,7 @@ namespace Deltin.Deltinteger.Parse
 
         private void GetAdditionalData()
         {
-            AdditionalData = Overload.Call(parseInfo, CallRange);
+            AdditionalData = Overload.Call(parseInfo, _fullRange);
             AdditionalParameterData = new object[Overload.Parameters.Length];
             for (int i = 0; i < Overload.Parameters.Length; i++)
                 AdditionalParameterData[i] = Overload.Parameters[i].Validate(parseInfo, Values[i], ParameterRanges.ElementAtOrDefault(i), AdditionalData);

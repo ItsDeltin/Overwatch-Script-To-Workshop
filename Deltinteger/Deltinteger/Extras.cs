@@ -79,8 +79,6 @@ namespace Deltin.Deltinteger
 			return new Uri(uri.FilePath());
         }
 
-        public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
-
         public static string GetNameOrVoid(this CodeType type) => type?.GetName() ?? "void";
         public static string GetNameOrAny(this CodeType type) => type?.GetName() ?? "Any";
 

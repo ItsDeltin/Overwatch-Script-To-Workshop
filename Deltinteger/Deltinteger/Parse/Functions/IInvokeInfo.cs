@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
             MethodGroup group = ((CallMethodGroup)invokeInfo.Target).Group;
 
             // Make an OverloadChooser to choose an Overload.
-            var overloadChooser = new OverloadChooser(group.Functions.ToArray(), parseInfo, invokeInfo.Scope, invokeInfo.Getter, invokeInfo.TargetRange, invokeInfo.CallRange, new OverloadError("method '" + group.Name + "'"));
+            var overloadChooser = new OverloadChooser(group.Functions.ToArray(), parseInfo, invokeInfo.Scope, invokeInfo.Getter, invokeInfo.TargetRange, invokeInfo.CallRange, invokeInfo.FullRange, new OverloadError("method '" + group.Name + "'"));
             // Apply the parameters.
             overloadChooser.Apply(invokeInfo.Context.Parameters);
 
@@ -75,6 +75,7 @@ namespace Deltin.Deltinteger.Parse
                 invokeInfo.Getter,
                 invokeInfo.TargetRange,
                 invokeInfo.CallRange,
+                invokeInfo.FullRange,
                 new OverloadError("lambda '" + _lambdaType.GetName() + "'")
             );
             // Apply the parameters.
@@ -97,6 +98,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope Getter { get; }
         public DocRange TargetRange { get; }
         public DocRange CallRange { get; }
+        public DocRange FullRange { get; }
         public bool UsedAsExpression { get; }
 
         public InvokeData(ParseInfo parseInfo, FunctionExpression context, IExpression target, Scope scope, Scope getter, bool usedAsExpression)
@@ -104,7 +106,8 @@ namespace Deltin.Deltinteger.Parse
             ParseInfo = parseInfo;
             Context = context;
             TargetRange = context.Target.Range;
-            CallRange = context.LeftParentheses.Range.Start + context.RightParentheses.Range.Start;
+            CallRange = context.LeftParentheses.Range.Start + (context.RightParentheses?.Range.Start ?? context.Range.End);
+            FullRange = context.Range;
             Target = target;
             Scope = scope;
             Getter = getter;
