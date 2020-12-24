@@ -203,7 +203,7 @@ namespace Deltin.Deltinteger.Animation
             {
                 // Create a point for the head and tail of the bone.
                 _pointData.Add(new BonePoint(bone, bone, true, -1));
-                _pointData.Add(new BonePoint(bone, bone, false, 0));
+                _pointData.Add(new BonePoint(bone, bone, false, _pointData.Count - 1));
 
                 // Create the bone link data then add it to the BoneData list.
                 BoneData root = new BoneData(bone, _pointData.Count - 2, _pointData.Count - 1);
@@ -303,7 +303,12 @@ namespace Deltin.Deltinteger.Animation
         public Element GetParents() => Element.CreateArray(_bones.Select(b => (Element)b.Parent).ToArray());
         public Element GetPointParents() => Element.CreateArray(_pointData.Select(p => (Element)p.Parent).ToArray());
         public Element GetBoneMagnitudes() => Element.CreateArray(_boneData.Select(p => (Element)p.Original.Length).ToArray());
-        public Element GetBonePointsBone() => Element.CreateArray(_pointData.Select(p => (Element)Array.IndexOf(_bones, p.Bone)).ToArray());
+        public Element GetBonePointsBone() => Element.CreateArray(_pointData.Select(p => {
+            if (p.Parent == -1)
+                return _bones.Length;
+            return (Element)Array.IndexOf(_bones, p.Bone);
+        }).ToArray());
+        public Element GetRootBonePoint() => Element.CreateArray(_boneData.Select(p => (Element)p.Head).ToArray());
         public Element GetBoneMatrices() => Element.CreateArray(_bones.Select(b => Element.CreateArray(
             Element.CreateArray((Element)b.Matrix[0], (Element)b.Matrix[1], (Element)b.Matrix[2]),
             Element.CreateArray((Element)b.Matrix[3], (Element)b.Matrix[4], (Element)b.Matrix[5]),

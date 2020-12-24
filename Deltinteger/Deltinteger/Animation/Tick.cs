@@ -19,8 +19,17 @@ namespace Deltin.Deltinteger.Animation
         /// <p>[x][1]: the action start time.
         /// <p>[x][2]: should the animation loop?</summary>
         private IndexReference _animationInfoList;
+
+        private IndexReference _keyframeA;
+        private IndexReference _keyframeB;
+        private IndexReference _t;
+
         private ActionSet actionSet;
         private Element currentReference;
+        private ForRangeBuilder referenceLoop;
+        private ForRangeBuilder boneLoop;
+        private ForRangeBuilder actionLoop;
+
         Element BoneVertexLinks {
             get => _armatureType.BoneVertexLinks.Get(currentReference);
             set => _armatureType.BoneVertexLinks.Set(actionSet, currentReference, value);
@@ -46,6 +55,11 @@ namespace Deltin.Deltinteger.Animation
 
             _animationReferenceList = DeltinScript.VarCollection.Assign("animation_reference_list", true, false);
             _animationInfoList = DeltinScript.VarCollection.Assign("animation_info_list", true, false);
+            _keyframeA = DeltinScript.VarCollection.Assign("keyframe_a", true, false);
+            _keyframeB = DeltinScript.VarCollection.Assign("keyframe_b", true, false);
+            _t = DeltinScript.VarCollection.Assign("ttttttttttt", true, false);
+
+
             DeltinScript.InitialGlobal.ActionSet.AddAction(_animationReferenceList.SetVariable(new V_EmptyArray()));
             DeltinScript.InitialGlobal.ActionSet.AddAction(_animationInfoList.SetVariable(new V_EmptyArray()));
 
@@ -69,7 +83,7 @@ namespace Deltin.Deltinteger.Animation
 
         void Loop()
         {
-            var referenceLoop = new ForRangeBuilder(actionSet, "animation_ref_loop", 0, ReferenceListCount, 1);
+            referenceLoop = new ForRangeBuilder(actionSet, "animation_ref_loop", 0, ReferenceListCount, 1);
             referenceLoop.Init();
             currentReference = actionSet.AssignAndSave("animation_current_reference", _animationReferenceList.Get()[referenceLoop.Value]).Get();
 
@@ -77,16 +91,17 @@ namespace Deltin.Deltinteger.Animation
             actionSet.AddAction(Element.Part<A_If>(_classData.IsInstanceOf(currentReference, _armatureType)));
 
             var localMatrices = actionSet.AssignAndSave("local_matrices", new V_EmptyArray());
+            var localPositions = actionSet.AssignAndSave("local_positions", BonePositions);
 
             // Loop through each bone
-            var boneLoop = new ForRangeBuilder(actionSet, "animation_bone_loop", 0, Element.Part<V_CountOf>(BoneVertexLinks), 1);
+            boneLoop = new ForRangeBuilder(actionSet, "animation_bone_loop", 0, Element.Part<V_CountOf>(BoneVertexLinks), 1);
             boneLoop.Init();
 
             // Debug bone name
             DebugVariable(actionSet, "db_current_bone", _armatureType.BoneNames.Get(currentReference)[boneLoop]);
 
             // Loop through each action.
-            var actionLoop = new ForRangeBuilder(actionSet, "animation_action_loop", 0, Element.Part<V_CountOf>(_animationInfoList.Get()[referenceLoop.Value]), 1);
+            actionLoop = new ForRangeBuilder(actionSet, "animation_action_loop", 0, Element.Part<V_CountOf>(_animationInfoList.Get()[referenceLoop.Value]), 1);
             actionLoop.Init();
 
             Element actionIdentifier = _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][0];
@@ -95,27 +110,6 @@ namespace Deltin.Deltinteger.Animation
 
             currentActionTime = actionSet.AssignAndSave("animation_current_action_time", currentActionTime).Get();
             Element currentActionTimeDelta = actionSet.AssignAndSave("animation_delta", new V_TotalTimeElapsed() - currentActionTime).Get();
-
-            // Get the fcurve related to this bone.
-            var fcurve = actionSet.AssignAndSave("animation_curve", Element.Part<V_FilteredArray>(
-                // Get the fcurve array for the current object and action.
-                _objectType.Actions.Get(currentReference) // The action array
-                    [ // Getting a value in the action array will return an array of fcurves.
-                        // Get the action index. The action index being used is stored in the _animationInfoList array.
-                        // [reference loop index][action loop index][0 = gets real action index]
-                        _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][0]
-                    ],
-                // Get the f-curve for the bone we are currently iterating on.
-                Element.Part<V_And>(Element.Part<V_And>(
-                    // The first value in the action array is the frame range.
-                    // Make sure this is not the first element.
-                    new V_CurrentArrayIndex(),
-                    // The Fcurve's type is BoneRotation.
-                    new V_Compare(new V_ArrayElement()[0], Operators.Equal, (Element)(int)FCurveType.BoneRotation)),
-                    // The Fcurve's bone index is equal to the target bone.
-                    new V_Compare(boneLoop.Value, Operators.Equal, new V_ArrayElement()[1])
-                )
-            )[0]); // FilteredArray will return an array with 1 value. Use [0] to convert from '[x]' to 'x'.
 
             var local = actionSet.AssignAndSave("animation_matrix_local", _armatureType.BoneMatrices.Get(currentReference)[boneLoop.Value]);
             Element parentBoneIndex = actionSet.AssignAndSave("animation_bone_parent", _armatureType.BoneParents.Get(currentReference)[boneLoop.Value]).Get();
@@ -137,55 +131,45 @@ namespace Deltin.Deltinteger.Animation
             // End the if.
             actionSet.AddAction(new A_End());
 
+            // Get the fcurve related to this bone.
+            var curves = GetFcurve();
+            var rotationCurve = actionSet.AssignAndSave("rotation_curve", GetCurve(curves, FCurveType.BoneRotation)).Get();
+            var locationCurve = actionSet.AssignAndSave("location_curve", GetCurve(curves, FCurveType.BoneLocation)).Get();
+
+            Element fps = 24;
+
+            // Lerp location
+            actionSet.AddAction(Element.Part<A_If>(locationCurve));
+
+                // Get curve and t
+                KeyframeFromCurve(locationCurve, currentActionTimeDelta, fps, actionIdentifier, currentActionShouldLoop);
+                SetT(currentActionTimeDelta, fps, currentActionShouldLoop);
+
+                // Inaccurate but faster,
+                // alternative: '(1 - t) * v0 + t * v1'
+               actionSet.AddAction(localPositions.SetVariable(
+                   index: _armatureType.BoneRootPoint.Get(currentReference)[boneLoop.Value],
+                   value: _keyframeA.Get()[1] + _t.Get() * (_keyframeB.Get()[1] - _keyframeA.Get()[1])
+                ));
+
+            actionSet.AddAction(Element.Part<A_End>());
+
             // Ew yuck no curve
-            actionSet.AddAction(Element.Part<A_If>(new V_Compare(fcurve.Get(), Operators.Equal, new V_Number(0))));
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(Element.Part<V_CountOf>(rotationCurve), Operators.Equal, new V_Number(0))));
                 // Save the matrix.
                 actionSet.AddAction(localMatrices.SetVariable(ConvertArrayGroupedMatrixToRowGroupedMatrix(local.Get()), index: boneLoop.Value));
 
             actionSet.AddAction(new A_Else());
 
-            Element fps = 24;
-
-            // Now we get the A and B keyframes from the fcurve using the current time in the animation.
-            // This will occur if all keyframes were surpassed.
-            var keyframe_index = actionSet.AssignAndSave("animation_keyframe_index", Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
-                // We want the index of the keyframe, convert to a range of numbers.
-                Element.Part<V_MappedArray>(fcurve.Get(), new V_CurrentArrayIndex()),
-                Element.Part<V_And>(
-                    // Ignore the first 2 elements, which is fcurve data.
-                    new V_Compare(new V_ArrayElement(), Operators.GreaterThanOrEqual, new V_Number(2)),
-                    new V_Compare(
-                        currentActionTimeDelta * fps % Element.TernaryConditional(currentActionShouldLoop, Actions[actionIdentifier][0], V_Number.LargeArbitraryNumber),
-                        Operators.LessThan,
-                        fcurve.Get()[new V_ArrayElement()][0]
-                    )
-                )
-            )));
-
-            actionSet.AddAction(Element.Part<A_If>(Element.Part<V_Not>(keyframe_index.Get())));
-            actionSet.AddAction(keyframe_index.SetVariable(Element.Part<V_CountOf>(fcurve.Get()) - 1));
-            actionSet.AddAction(new A_End());
-
-            // Keyframe A is fcurve[i - 1], keyframe B is furve[i].
-            var keyframeA = actionSet.AssignAndSave("animation_keyframe_a", fcurve.Get()[Element.Part<V_Max>(keyframe_index.Get() - 1, (Element)2)]).Get(); // Save to variable if needed.
-            var keyframeB = actionSet.AssignAndSave("animation_keyframe_b", fcurve.Get()[Element.Part<V_Max>(keyframe_index.Get())]).Get(); // Save to variable if needed.
-
-            // Get the t of the keyframes depending on the current time.
-            //  If the action was started at 5 seconds (s),
-            //  and keyframe A is set at 2 (7) local seconds (a),
-            //  and keyframe B is set at 6 (11) local seconds (b),
-            //  and the current time is 9 (c),
-            //  (c-s-a) / (b-a) = (9-5-2) / (6-2) = 0.5
-            var c = actionSet.AssignAndSave("animation_test_current_time", new V_TotalTimeElapsed()).Get();
-            var t = actionSet.AssignAndSave("t", CaptureValue((currentActionTimeDelta * fps - keyframeA[0]) / (keyframeB[0] - keyframeA[0]), t => Element.TernaryConditional(currentActionShouldLoop, t % 1, Element.Part<V_Min>(t, new V_Number(1)))));
-            // var t = actionSet.AssignAndSave("animation_t", 0);
+            KeyframeFromCurve(rotationCurve, currentActionTimeDelta, fps, actionIdentifier, currentActionShouldLoop);
+            SetT(currentActionTimeDelta, fps, currentActionShouldLoop);
 
             // Get the interpolated rotation.
             var slerp = AnimationOperations.Slerp(
                 actionSet,
-                keyframeA[1], keyframeA[2], // Quaternion A is at keyframeA[1] for XYZ and keyframeA[2] for W.
-                keyframeB[1], keyframeB[2], // Quaternion B is at keyframeB[1] for XYZ and keyframeB[2] for W.
-                t.Get()
+                _keyframeA.Get()[1], _keyframeA.Get()[2], // Quaternion A is at keyframeA[1] for XYZ and keyframeA[2] for W.
+                _keyframeB.Get()[1], _keyframeB.Get()[2], // Quaternion B is at keyframeB[1] for XYZ and keyframeB[2] for W.
+                _t.Get()
             );
 
             var basis = actionSet.AssignAndSave("animation_matrix_basis", AnimationOperations.CreateColumnGrouped3x3MatrixFromQuaternion(slerp.V, slerp.W));
@@ -213,8 +197,15 @@ namespace Deltin.Deltinteger.Animation
 
             boneLoop.Finish(); // End the bone loop
 
+            // Append default matrix
+            actionSet.AddAction(localMatrices.ModifyVariable(Operation.AppendToArray, Element.CreateArray(Element.CreateArray(
+                new V_Vector(1, 0, 0),
+                new V_Vector(0, 1, 0),
+                new V_Vector(0, 0, 1)
+            ))));
+
             var newBoneLocalPositions = actionSet.AssignAndSave("newBoneLocalPositions", Element.Part<V_MappedArray>(
-                BonePositions,
+                localPositions.Get(),
                 Multiply3x3MatrixAndVectorToVector(localMatrices.Get()[BonePointsBone[new V_CurrentArrayIndex()]], new V_ArrayElement())
             ));
 
@@ -247,6 +238,64 @@ namespace Deltin.Deltinteger.Animation
             referenceLoop.Finish(); // End object loop
             actionSet.AddAction(A_Wait.MinimumWait);
             actionSet.AddAction(new A_LoopIfConditionIsTrue());
+        }
+
+        Element GetFcurve() => actionSet.AssignAndSave("animation_curve", Element.Part<V_FilteredArray>(
+            // Get the fcurve array for the current object and action.
+            _objectType.Actions.Get(currentReference) // The action array
+                [ // Getting a value in the action array will return an array of fcurves.
+                    // Get the action index. The action index being used is stored in the _animationInfoList array.
+                    // [reference loop index][action loop index][0 = gets real action index]
+                    _animationInfoList.Get()[referenceLoop.Value][actionLoop.Value][0]
+                ],
+            // Get the f-curve for the bone we are currently iterating on.
+            Element.Part<V_And>(//Element.Part<V_And>(
+                // The first value in the action array is the frame range.
+                // Make sure this is not the first element.
+                new V_CurrentArrayIndex(),
+                // The Fcurve's type is BoneRotation.
+                // new V_Compare(new V_ArrayElement()[0], Operators.Equal, (Element)(int)type)),
+                // The Fcurve's bone index is equal to the target bone.
+                new V_Compare(boneLoop.Value, Operators.Equal, new V_ArrayElement()[1])
+            )
+        )).Get();
+
+        Element GetCurve(Element curveArray, FCurveType type) => Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
+            curveArray,
+            new V_Compare(Element.Part<V_ArrayElement>()[0], Operators.Equal, (Element)(int)type)
+        ));
+
+        void KeyframeFromCurve(Element curve, Element currentActionTimeDelta, Element fps, Element actionIdentifier, Element currentActionShouldLoop)
+        {
+            // Now we get the A and B keyframes from the fcurve using the current time in the animation.
+            // This will occur if all keyframes were surpassed.
+            var keyframe_index = actionSet.AssignAndSave("animation_keyframe_index", Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
+                // We want the index of the keyframe, convert to a range of numbers.
+                Element.Part<V_MappedArray>(curve, new V_CurrentArrayIndex()),
+                Element.Part<V_And>(
+                    // Ignore the first 2 elements, which is fcurve data.
+                    new V_Compare(new V_ArrayElement(), Operators.GreaterThanOrEqual, new V_Number(2)),
+                    new V_Compare(
+                        currentActionTimeDelta * fps % Element.TernaryConditional(currentActionShouldLoop, Actions[actionIdentifier][0], V_Number.LargeArbitraryNumber),
+                        Operators.LessThan,
+                        curve[new V_ArrayElement()][0]
+                    )
+                )
+            )));
+
+            actionSet.AddAction(Element.Part<A_If>(Element.Part<V_Not>(keyframe_index.Get())));
+            actionSet.AddAction(keyframe_index.SetVariable(Element.Part<V_CountOf>(curve) - 1));
+            actionSet.AddAction(new A_End());
+
+            // Keyframe A is fcurve[i - 1], keyframe B is furve[i].
+            actionSet.AddAction(_keyframeA.SetVariable(curve[Element.Part<V_Max>(keyframe_index.Get() - 1, (Element)2)]));
+            actionSet.AddAction(_keyframeB.SetVariable(curve[Element.Part<V_Max>(keyframe_index.Get())]));
+        }
+
+        void SetT(Element currentActionTimeDelta, Element fps, Element currentActionShouldLoop)
+        {
+            actionSet.AddAction(_t.SetVariable(CaptureValue((currentActionTimeDelta * fps - _keyframeA.Get()[0]) / (_keyframeB.Get()[0] - _keyframeA.Get()[0]), t => Element.TernaryConditional(currentActionShouldLoop, t % 1, Element.Part<V_Min>(t, new V_Number(1))))));
+            // actionSet.AddAction(_t.SetVariable(1));
         }
 
         public void AddAnimation(ActionSet actionSet, Element objectReference, Element actionIdentifier, Element loop)

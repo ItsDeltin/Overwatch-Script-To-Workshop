@@ -6,7 +6,7 @@ coordinate_system_translation = Matrix([
     [0, 1, 0]
 ])
 
-class Vector:
+class JsonVector:
     def __init__(self, original, adjustWorld):
         if not adjustWorld:
             self.x = original.x

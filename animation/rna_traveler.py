@@ -1,5 +1,3 @@
-from vector import Vector
-
 class Rna_traveler:
     def __init__(self, value):
         self.value = value

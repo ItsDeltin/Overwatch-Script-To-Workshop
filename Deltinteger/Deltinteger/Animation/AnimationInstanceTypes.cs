@@ -34,7 +34,9 @@ namespace Deltin.Deltinteger.Animation
         protected BaseObjectExtender(DeltinScript deltinScript, string name) : base(name)
         {
             Inherit(deltinScript.Types.GetInstance<BaseAnimationInstanceType>());
-            _scope.AddNativeMethod(new PlayAnimationFunction());
+            _scope.AddNativeMethod(AnimationPlayFunctions.Play);
+            _scope.AddNativeMethod(AnimationPlayFunctions.Stop);
+            _scope.AddNativeMethod(AnimationPlayFunctions.StopAll);
         }
 
         public override Scope GetObjectScope() => _scope;
@@ -75,7 +77,9 @@ namespace Deltin.Deltinteger.Animation
         public ObjectVariable BonePointParents { get; private set; }
         public ObjectVariable BoneNames { get; private set; }
         public ObjectVariable BoneMatrices { get; private set; }
+        /// <summary>The bone a point is assigned to.</summary>
         public ObjectVariable BonePointsBone { get; private set; }
+        public ObjectVariable BoneRootPoint { get; private set; }
 
         public ArmatureInstanceType(DeltinScript deltinScript) : base(deltinScript, "AnimationArmature") {}
 
@@ -94,6 +98,7 @@ namespace Deltin.Deltinteger.Animation
             BoneNames = AddPrivateObjectVariable();
             BoneMatrices = AddPrivateObjectVariable();
             BonePointsBone = AddPrivateObjectVariable();
+            BoneRootPoint = AddPrivateObjectVariable();
         }
 
         public void Init(ActionSet actionSet, Element reference, BoneStructure boneStructure)
@@ -108,6 +113,7 @@ namespace Deltin.Deltinteger.Animation
             BoneNames.Set(actionSet, reference, boneStructure.GetNameArray());
             BoneMatrices.Set(actionSet, reference, boneStructure.GetBoneMatrices());
             BonePointsBone.Set(actionSet, reference, boneStructure.GetBonePointsBone());
+            BoneRootPoint.Set(actionSet, reference, boneStructure.GetRootBonePoint());
         }
     }
 }

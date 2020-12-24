@@ -1,9 +1,9 @@
 import bpy
 import json
 import sys
-from vector import Vector, get_matrix, get_accumulative_local_matrix
+from vector import JsonVector, get_matrix, get_accumulative_local_matrix
 from rna_traveler import Rna_traveler
-from mathutils import Matrix, Quaternion
+from mathutils import Matrix, Quaternion, Vector
 
 def load(fp):
     bpy.ops.wm.open_mainfile(filepath = fp, load_ui=False)
@@ -66,10 +66,10 @@ class bone(tree_item):
     def __init__(self, original):
         super(bone, self).__init__()
         self.name = original.name
-        self.head = Vector(original.head, False)
-        self.head_local = Vector(original.head_local, True)
-        self.tail = Vector(original.tail, False)
-        self.tail_local = Vector(original.tail_local, True)
+        self.head = JsonVector(original.head, False)
+        self.head_local = JsonVector(original.head_local, True)
+        self.tail = JsonVector(original.tail, False)
+        self.tail_local = JsonVector(original.tail_local, True)
         self.length = original.length
         self.matrix = get_matrix(get_accumulative_local_matrix(original))
         self.use_connect = original.use_connect
@@ -77,8 +77,8 @@ class bone(tree_item):
 class empty:
     def __init__(self, original):
         self.name = original.name
-        self.location = Vector(original.matrix_local.decompose()[0], False)
-        self.location_local = Vector(original.matrix_basis.decompose()[0], True)
+        self.location = JsonVector(original.matrix_local.decompose()[0], False)
+        self.location_local = JsonVector(original.matrix_basis.decompose()[0], True)
         self.parent_bone = original.parent_bone
 
 class blend_action:
@@ -164,7 +164,7 @@ def get_mesh(obj):
     # Get the vertices.
     vertices = []
     for vert in obj.data.vertices:
-        vertices.append(vertex(Vector(vert.co, False), [vertex_group_element(a.group, a.weight) for a in vert.groups]))
+        vertices.append(vertex(JsonVector(vert.co, False), [vertex_group_element(a.group, a.weight) for a in vert.groups]))
     
     # Get the edges.
     edges = []
@@ -203,12 +203,12 @@ def get_animation_data(obj):
     return actions
 
 def get_action(obj, action):
-    fcurves = get_action_animation_data(action)
+    fcurves = get_action_animation_data(action, obj.parent == None)
 
     # Return the action.
-    return blend_action(action.name, fcurves, Vector(action.frame_range, False))
+    return blend_action(action.name, fcurves, JsonVector(action.frame_range, False))
 
-def get_action_animation_data(action):
+def get_action_animation_data(action, is_root):
     groups = {}
     
     for curve in action.fcurves:
@@ -222,7 +222,7 @@ def get_action_animation_data(action):
 
         keyframes = []
         targetType, target = Rna_traveler(group[0].data_path).scan()
-        rng = Vector(group[0].range(), False)
+        rng = JsonVector(group[0].range(), False)
 
         if targetType == -1:
             continue
@@ -237,18 +237,18 @@ def get_action_animation_data(action):
             if targetType == 0: # Location
                 pass
             elif targetType == 1: # Bone rotation
-                value = Vector(Quaternion((
+                value = JsonVector(Quaternion((
                     group[0].evaluate(frame),
                     group[1].evaluate(frame),
                     group[2].evaluate(frame),
                     group[3].evaluate(frame)
                 )), False)
             elif targetType == 2: # Bone location
-                value = Vector(
+                value = JsonVector(Vector((
                     group[0].evaluate(frame),
                     group[1].evaluate(frame),
                     group[2].evaluate(frame)
-                )
+                )), is_root)
                 
             # Append the keyframe.
             if value is not None:
@@ -264,7 +264,7 @@ def serialize(obj):
     return None
 
 load(input())
-# load('C:/Users/Deltin/Documents/Blender/Ostw mascot.blend')
+# load('C:/Users/Deltin/Documents/Blender/Web.blend')
 print(get_project_json())
 
 # run command: 'Python: Start REPL'
