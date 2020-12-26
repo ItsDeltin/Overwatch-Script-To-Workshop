@@ -248,7 +248,8 @@ def get_action_animation_data(action, is_root):
                     group[0].evaluate(frame),
                     group[1].evaluate(frame),
                     group[2].evaluate(frame)
-                )), is_root)
+                )), False)
+                #)), is_root)
                 
             # Append the keyframe.
             if value is not None:

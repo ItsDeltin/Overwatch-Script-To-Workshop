@@ -52,18 +52,13 @@ namespace Deltin.Deltinteger.Animation
         }
 
         public static Element CreateColumnGrouped3x3MatrixFromQuaternion(Element xyz, Element w)
-        {
-            var array = Create3x3MatrixRawArrayFromQuaternion(xyz, w);
-            return Element.CreateArray(
+         => Create3x3MatrixRawArrayFromQuaternion(xyz, w, array => new Element[] {
                 Element.Part<V_Vector>(array[0], array[3], array[6]),
                 Element.Part<V_Vector>(array[1], array[4], array[7]),
                 Element.Part<V_Vector>(array[2], array[5], array[8])
-            );
-        }
+            });
 
-        public static Element Create3x3MatrixArrayFromQuaternion(Element xyz, Element w) => Element.CreateArray(Create3x3MatrixRawArrayFromQuaternion(xyz, w));
-
-        public static Element[] Create3x3MatrixRawArrayFromQuaternion(Element xyz, Element w)
+        public static Element Create3x3MatrixRawArrayFromQuaternion(Element xyz, Element w, Func<Element[], Element[]> convert)
         {
             Element x = Element.Part<V_XOf>(xyz), y = Element.Part<V_YOf>(xyz), z = Element.Part<V_ZOf>(xyz),
                 ww = w*w, xx = x*x, yy = y*y, zz = z*z,
@@ -82,7 +77,7 @@ namespace Deltin.Deltinteger.Animation
                 qbc = q2 * q3,
                 qcc = q3 * q3;
 
-            return new Element[] {
+            return Element.CreateArray(convert(new[] {
                 (1.0 - qbb - qcc),  // [0][0] -> [0] 8
                 (-qdc + qab),      // [1][0] -> [1] 5
                 (qdb + qac),       // [2][0] -> [2] 2
@@ -94,7 +89,7 @@ namespace Deltin.Deltinteger.Animation
                 (-qdb + qac),      // [0][2] -> [6] 6
                 (qda + qbc),       // [1][2] -> [7] 3
                 (1.0 - qaa - qbb)  // [2][2] -> [8] 0
-            };
+            }));
         }
 
         public static Element Multiply3x3MatrixAndVectorToVector(Element ma, Element v) {

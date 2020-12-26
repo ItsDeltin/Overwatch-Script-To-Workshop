@@ -304,8 +304,9 @@ namespace Deltin.Deltinteger.Animation
         public Element GetPointParents() => Element.CreateArray(_pointData.Select(p => (Element)p.Parent).ToArray());
         public Element GetBoneMagnitudes() => Element.CreateArray(_boneData.Select(p => (Element)p.Original.Length).ToArray());
         public Element GetBonePointsBone() => Element.CreateArray(_pointData.Select(p => {
-            if (p.Parent == -1)
-                return _bones.Length;
+            // ! LOOK
+            // if (p.Parent == -1)
+            //     return _bones.Length;
             return (Element)Array.IndexOf(_bones, p.Bone);
         }).ToArray());
         public Element GetRootBonePoint() => Element.CreateArray(_boneData.Select(p => (Element)p.Head).ToArray());
