@@ -395,7 +395,8 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                             callType,
                             parseInfo.GetLocation(callRange),
-                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.GetLabel(false), callType)
+                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.GetLabel(false), callType),
+                            Option.RestrictedValuesAreFatal
                         ));
         }
     }

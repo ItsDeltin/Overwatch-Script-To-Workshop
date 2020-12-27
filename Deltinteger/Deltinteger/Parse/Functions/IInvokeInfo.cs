@@ -185,7 +185,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Check callinfo :)
             foreach (RestrictedCallType type in ((IApplyBlock)Function).CallInfo.GetRestrictedCallTypes())
-                _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(type, _parseInfo.GetLocation(_targetRange), RestrictedCall.Message_FunctionCallsRestricted(Function.Name, type)));
+                _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                    type,
+                    _parseInfo.GetLocation(_targetRange),
+                    RestrictedCall.Message_FunctionCallsRestricted(Function.Name, type),
+                    _match.Option.RestrictedValuesAreFatal
+                ));
         }
 
         public void SetComment(string comment) => _comment = comment;

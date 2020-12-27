@@ -71,6 +71,7 @@ namespace Deltin.Deltinteger
     {
         CodeParameter[] Parameters { get; }
         MarkupBuilder Documentation { get; }
+        bool RestrictedValuesAreFatal => true;
     }
 
     public interface IAccessable

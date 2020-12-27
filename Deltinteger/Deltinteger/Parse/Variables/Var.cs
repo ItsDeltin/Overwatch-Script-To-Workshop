@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
                         if (VariableType == VariableType.Global ||
                             (VariableType == VariableType.Player && call.CallType != RestrictedCallType.EventPlayer))
                             // ... then add the error.
-                            parseInfo.Script.Diagnostics.Error(call.Message, call.CallRange.range);
+                            call.AddDiagnostic(parseInfo.Script.Diagnostics);
             }
         }
 
