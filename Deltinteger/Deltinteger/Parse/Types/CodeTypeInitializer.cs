@@ -48,6 +48,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class InstanceAnonymousTypeLinker
     {
+        public static readonly InstanceAnonymousTypeLinker Empty = new InstanceAnonymousTypeLinker(); 
+
         public Dictionary<AnonymousType, CodeType> Links { get; } = new Dictionary<AnonymousType, CodeType>();
 
         public InstanceAnonymousTypeLinker(AnonymousType[] typeArgs, CodeType[] generics)

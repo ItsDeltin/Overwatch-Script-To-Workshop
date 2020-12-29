@@ -43,10 +43,10 @@ namespace Deltin.Deltinteger.Parse
 
     class ReferenceCodeLensRange : CodeLensRange
     {
-        public ICallable Callable { get; }
+        public ISymbolLink Callable { get; }
         private readonly ParseInfo _parseInfo;
 
-        public ReferenceCodeLensRange(ICallable callable, ParseInfo parseInfo, CodeLensSourceType sourceType, DocRange range) : base(sourceType, range, "ostw.showReferences")
+        public ReferenceCodeLensRange(ISymbolLink callable, ParseInfo parseInfo, CodeLensSourceType sourceType, DocRange range) : base(sourceType, range, "ostw.showReferences")
         {
             Callable = callable;
             _parseInfo = parseInfo;

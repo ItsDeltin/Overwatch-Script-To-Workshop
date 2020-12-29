@@ -24,13 +24,13 @@ namespace Deltin.Deltinteger.Parse
                         resolve = definedMethod.Provider.SingleReturnValue;
                     
                     // If the expression is a parametered macro, resolve the value.
-                    else if (callMethod.CallingMethod is DefinedMacro definedMacro)
-                        resolve = definedMacro.Expression;
+                    else if (callMethod.CallingMethod is DefinedMacroInstance definedMacro)
+                        resolve = definedMacro.Provider.Expression;
                 }
 
                 // If the expression is a macro variable, resolve the value.
-                else if (start is MacroVar macroVar)
-                    resolve = macroVar.Expression;
+                else if (start is MacroVarInstance macroVar)
+                    resolve = macroVar.Provider.Value;
                 
                 // If the expression is an ExpressionTree, resolve the last value.
                 else if (start is ExpressionTree expressionTree)

@@ -105,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
             newClassInfo.Constructor.Parse(actionSet, newClassInfo.ConstructorValues, newClassInfo.AdditionalParameterData);
         }
 
-        protected virtual ObjectVariable AddObjectVariable(IIndexReferencer variable)
+        protected virtual ObjectVariable AddObjectVariable(IVariable variable)
         {
             // Create an ObjectVariable
             ObjectVariable createdObjectVariable = new ObjectVariable(variable);

@@ -10,14 +10,14 @@ namespace Deltin.Deltinteger.Parse
 {
     abstract class AbstractMacroBuilder
     {
-        public static IWorkshopTree Call(ActionSet actionSet, MacroVar macro)
+        public static IWorkshopTree Call(ActionSet actionSet, MacroVarInstance macro)
         {
             MacroVarBuilder builder = new MacroVarBuilder(actionSet, macro);
             builder.AssignParameters();
             return builder.ParseInner();
         }
 
-        public static IWorkshopTree Call(ActionSet actionSet, DefinedMacro macro, MethodCall call)
+        public static IWorkshopTree Call(ActionSet actionSet, DefinedMacroInstance macro, MethodCall call)
         {
             MacroBuilder builder = new MacroBuilder(actionSet, macro, call);
             builder.AssignParameters();
@@ -130,10 +130,10 @@ namespace Deltin.Deltinteger.Parse
 
     class MacroBuilder : AbstractMacroBuilder
     {
-        private readonly DefinedMacro _macro;
+        private readonly DefinedMacroInstance _macro;
         private readonly MethodCall _call;
 
-        public MacroBuilder(ActionSet actionSet, DefinedMacro macro, MethodCall call) : base(actionSet)
+        public MacroBuilder(ActionSet actionSet, DefinedMacroInstance macro, MethodCall call) : base(actionSet)
         {
             _macro = macro;
             _call = call;
@@ -141,36 +141,46 @@ namespace Deltin.Deltinteger.Parse
 
         public override void AssignParameters()
         {
-            _macro.AssignParameters(ActionSet, _call.ParameterValues);
+            for (int i = 0; i < _macro.Parameters.Length; i++)
+            {
+                IGettable result = ActionSet.IndexAssigner.Add(_macro.Provider.ParameterProviders[i].Var, _call.ParameterValues[i]);
+
+                // TODO: Virtual var group
+                // foreach (Var virtualParameterOption in VirtualVarGroup(i))
+                //     actionSet.IndexAssigner.Add(virtualParameterOption, result);
+            }
             base.AssignParameters();
         }
 
-        protected override IWorkshopTree ParseDefault() => _macro.Expression.Parse(ActionSet);
+        protected override IWorkshopTree ParseDefault() => _macro.Provider.Expression.Parse(ActionSet);
         protected override bool WasOverriden => _macro.Attributes.WasOverriden;
         protected override IMacroOption[] AllOptions()
         {
             List<IMacroOption> options = new List<IMacroOption>();
             options.Add(new ParameterMacroOption(_macro, _call));
-            options.AddRange(_macro.Attributes.AllOverrideOptions().Select(option => new ParameterMacroOption((DefinedMacro)option, _call)));
+            options.AddRange(_macro.Attributes.AllOverrideOptions().Select(option => new ParameterMacroOption((DefinedMacroInstance)option, _call)));
             return options.ToArray();
         }
     }
 
     class MacroVarBuilder : AbstractMacroBuilder
     {
-        private readonly MacroVar _macro;
+        private readonly MacroVarInstance _macro;
 
-        public MacroVarBuilder(ActionSet builderSet, MacroVar macro) : base(builderSet)
+        public MacroVarBuilder(ActionSet builderSet, MacroVarInstance macro) : base(builderSet)
         {
             _macro = macro;
         }
-        protected override IWorkshopTree ParseDefault() => _macro.Expression.Parse(ActionSet);
-        protected override bool WasOverriden => _macro.Overriders.Count > 0;
+        protected override IWorkshopTree ParseDefault() => _macro.Provider.Value.Parse(ActionSet);
+        // TODO
+        protected override bool WasOverriden => false;
+        // protected override bool WasOverriden => _macro.Overriders.Count > 0;
         protected override IMacroOption[] AllOptions()
         {
             List<IMacroOption> options = new List<IMacroOption>();
             options.Add(new MacroVarOption(_macro));
-            options.AddRange(_macro.AllMacroOverrideOptions().Select(option => new MacroVarOption(option)));
+            // TODO
+            // options.AddRange(_macro.AllMacroOverrideOptions().Select(option => new MacroVarOption(option)));
             return options.ToArray();
         }
     }
@@ -184,29 +194,29 @@ namespace Deltin.Deltinteger.Parse
 
     class ParameterMacroOption : IMacroOption
     {
-        private readonly DefinedMacro _macro;
+        private readonly DefinedMacroInstance _macro;
         private readonly MethodCall _methodCall;
 
-        public ParameterMacroOption(DefinedMacro macro, MethodCall methodCall)
+        public ParameterMacroOption(DefinedMacroInstance macro, MethodCall methodCall)
         {
             _macro = macro;
             _methodCall = methodCall;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet) => _macro.Expression.Parse(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet) => _macro.Provider.Expression.Parse(actionSet);
         public CodeType Type() => _macro.Attributes.ContainingType;
     }
 
     class MacroVarOption : IMacroOption
     {
-        private readonly MacroVar _macroVar;
+        private readonly MacroVarInstance _macroVar;
         
-        public MacroVarOption(MacroVar macroVar)
+        public MacroVarOption(MacroVarInstance macroVar)
         {
             _macroVar = macroVar;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet) => _macroVar.Expression.Parse(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet) => _macroVar.Provider.Value.Parse(actionSet);
         public CodeType Type() => _macroVar.ContainingType;
     }
 }

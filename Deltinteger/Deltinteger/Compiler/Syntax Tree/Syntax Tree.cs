@@ -184,6 +184,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class ClassContext : Node
     {
+        public Token DeclaringToken { get; }
         public Token Identifier { get; }
         public List<Token> Generics { get; }
         public Token InheritToken { get; }
@@ -191,8 +192,9 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
         public List<ConstructorContext> Constructors { get; } = new List<ConstructorContext>();
 
-        public ClassContext(Token identifier, List<Token> generics, Token inheritToken, List<IParseType> inheriting)
+        public ClassContext(Token declaringToken, Token identifier, List<Token> generics, Token inheritToken, List<IParseType> inheriting)
         {
+            DeclaringToken = declaringToken;
             Identifier = identifier;
             Generics = generics;
             InheritToken = inheritToken;
@@ -255,14 +257,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public AttributeTokens Attributes { get; }
         public IParseType Type { get; }
         public Token Identifier { get; }
+        public List<Token> TypeArguments { get; }
         public List<VariableDeclaration> Parameters { get; }
         public IParseExpression Expression { get; }
 
-        public MacroFunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<VariableDeclaration> parameters, IParseExpression expression)
+        public MacroFunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<Token> typeArgs, List<VariableDeclaration> parameters, IParseExpression expression)
         {
             Attributes = attributes;
             Type = type;
             Identifier = identifier;
+            TypeArguments = typeArgs;
             Parameters = parameters;
             Expression = expression;
         }
@@ -299,7 +303,9 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token PlayerVar { get; set; }
         public Token Ref { get; set; }
         public List<Token> AllAttributes { get; } = new List<Token>();
-        public AccessLevel GetAccessLevel() => Public != null ? AccessLevel.Public : Protected != null ? AccessLevel.Protected : AccessLevel.Private;
+        public Deltin.Deltinteger.Parse.AccessLevel GetAccessLevel() =>
+            Public != null ? Deltin.Deltinteger.Parse.AccessLevel.Public :
+                Protected != null ? Deltin.Deltinteger.Parse.AccessLevel.Protected : Deltin.Deltinteger.Parse.AccessLevel.Private;
     }
 
     public class IfCondition
@@ -806,8 +812,9 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseExpression InitialValue { get; }
         public Token Extended { get; }
         public Token ID { get; }
+        public Token MacroSymbol { get; }
 
-        public VariableDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id)
+        public VariableDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id, Token macroSymbol)
         {
             Attributes = attributes;
             Type = type;
@@ -815,6 +822,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             InitialValue = initialValue;
             Extended = ext;
             ID = id;
+            MacroSymbol = macroSymbol;
         }
     }
 

@@ -25,14 +25,16 @@ namespace Deltin.Deltinteger.Parse
         public Element Get(Element targetPlayer = null) => (Element)GetVariable(targetPlayer);
 
         public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
-        {
-            return WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer, WorkshopVariable, false, ArrayBuilder<Element>.Build(Index, index));
-        }
+            => WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer, WorkshopVariable, false, ArrayBuilder<Element>.Build(Index, index));
 
         public virtual Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] index)
-        {
-            return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
-        }
+            => WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
+        
+        public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
+            => actionSet.AddAction(ModifyVariable(operation, (Element)value, target, index));
+        
+        public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
+            => actionSet.AddAction(SetVariable((Element)value, target, index));
 
         public IndexReference CreateChild(params Element[] index)
         {
@@ -107,5 +109,11 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IWorkshopTree GetVariable(Element targetPlayer) => WorkshopElement;
+
+        public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
+            => throw new NotImplementedException();
+
+        public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
+            => throw new NotImplementedException();
     }
 }

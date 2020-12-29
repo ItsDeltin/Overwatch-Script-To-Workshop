@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var typeContext in script.Context.Classes)
             {
-                var newType = new DefinedClassInitializer(new ParseInfo(script, this), GlobalScope, typeContext);
+                var newType = IDefinedTypeInitializer.GetInitializer(new ParseInfo(script, this), GlobalScope, typeContext);
                 RulesetScope.AddType(newType);
                 Types.AllTypes.Add(newType);
                 Types.DefinedTypes.Add(newType);
@@ -164,20 +164,17 @@ namespace Deltin.Deltinteger.Parse
                     }
                     // Macro function
                     else if (declaration is MacroFunctionContext macroFunction)
-                        parseInfo.GetMacro(RulesetScope, RulesetScope, macroFunction);
-                    // Macro var
-                    else if (declaration is MacroVarDeclaration macroVar)
-                        parseInfo.GetMacro(RulesetScope, RulesetScope, macroVar);
+                        parseInfo.GetMacro(this, macroFunction);
                     // Variables
                     else if (declaration is VariableDeclaration variable)
-                    {
-                        Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable));
-                        rulesetVariables.Add(newVar);
+                        new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable))
+                            .GetVar(var => {
+                                rulesetVariables.Add(var);
 
-                        // Add the variable to the player variables scope if it is a player variable.
-                        if (newVar.VariableType == VariableType.Player)
-                            PlayerVariableScope.CopyVariable(newVar);
-                    }
+                                // Add the variable to the player variables scope if it is a player variable.
+                                if (var.VariableType == VariableType.Player)
+                                    PlayerVariableScope.CopyVariable(var.GetDefaultInstance());
+                            }, macroVarProvider => {});
                 }
             }
 
@@ -217,23 +214,13 @@ namespace Deltin.Deltinteger.Parse
              // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
             {
+                var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
+
                 // Assign the variable an index.
-                var assigner = DefaultIndexAssigner.Add(VarCollection, variable, true, null) as IndexReference;
-
-                // Assigner will be non-null if it is an IndexReference.
-                if (assigner != null)
-                {
-                    DebugVariables.Add(variable, assigner);
-                    // Initial value.
-                    if (variable.InitialValue != null)
-                    {
-                        var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
-
-                        addToInitialRule.ActionSet.AddAction(assigner.SetVariable(
-                            (Element)variable.InitialValue.Parse(addToInitialRule.ActionSet)
-                        ));
-                    }
-                }
+                IGettable value = variable.GetDefaultInstance().GetAssigner().GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet, VarCollection, DefaultIndexAssigner));
+                
+                // TODO: Don't cast to IndexReference
+                DebugVariables.Add(variable, (IndexReference)value);
             }
 
             // Parse the rules.
@@ -334,7 +321,10 @@ namespace Deltin.Deltinteger.Parse
         Scope IScopeProvider.GetStaticBasedScope() => RulesetScope;
         void IScopeAppender.AddObjectBasedScope(IMethod function) => RulesetScope.CopyMethod(function);
         void IScopeAppender.AddStaticBasedScope(IMethod function) => RulesetScope.CopyMethod(function);
+        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => RulesetScope.CopyVariable(variable);
+        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => RulesetScope.CopyVariable(variable);
         IMethod IScopeProvider.GetOverridenFunction(IMethodProvider provider) => throw new NotImplementedException();
+        IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => throw new NotImplementedException();
     }
 
     public class ScriptTypes : ITypeSupplier

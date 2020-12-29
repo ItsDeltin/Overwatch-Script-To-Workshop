@@ -189,7 +189,7 @@ namespace Deltin.Deltinteger.Parse
                 if (Tree[i] is CallVariableAction callVariableAction)
                 {
                     // Get the reference.
-                    var reference = currentAssigner[callVariableAction.Calling];
+                    var reference = currentAssigner.Get(callVariableAction.Calling.Provider);
                     current = reference.GetVariable((Element)target);
 
                     // Get the index.
@@ -363,7 +363,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the potential variable.
             if (tcParseInfo.Scope.IsVariable(_name))
             {
-                IVariable[] variables = tcParseInfo.Scope.GetAllVariables(_name);
+                IVariableInstance[] variables = tcParseInfo.Scope.GetAllVariables(_name);
                 foreach (var variable in variables)
                 {
                     // Variable handler.
@@ -505,11 +505,11 @@ namespace Deltin.Deltinteger.Parse
             private readonly ITreeContextPart _parent;
             private readonly PotentialVariableApply _apply;
             private readonly IExpression _expression;
-            private readonly IVariable _variable;
+            private readonly IVariableInstance _variable;
             private readonly ParseInfo _parseInfo;
             private readonly DocRange _callRange;
 
-            public VariableOption(ITreeContextPart parent, PotentialVariableApply apply, IExpression expression, IVariable variable, ParseInfo parseInfo, DocRange callRange) {
+            public VariableOption(ITreeContextPart parent, PotentialVariableApply apply, IExpression expression, IVariableInstance variable, ParseInfo parseInfo, DocRange callRange) {
                 _parent = parent;
                 _apply = apply;
                 _expression = expression;
@@ -523,11 +523,11 @@ namespace Deltin.Deltinteger.Parse
             public void Accept()
             {
                 // Call.
-                if (_variable is ICallable callable) callable.Call(_parseInfo, _callRange);
+                _variable.Call(_parseInfo, _callRange);
 
                 // Restricted value type check.
-                if (_variable is IIndexReferencer referencer && RestrictedCall.EventPlayerDefaultCall(referencer, _parent?.GetExpression(), _parseInfo))
-                    _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
+                if (RestrictedCall.EventPlayerDefaultCall(_variable.Provider, _parent?.GetExpression(), _parseInfo))
+                    _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), RestrictedCall.Message_EventPlayerDefault(_variable.Name)));
                 
                 // Accept method group.
                 if (_expression is CallMethodGroup group)
@@ -559,7 +559,7 @@ namespace Deltin.Deltinteger.Parse
 
             public PotentialVariableApply(ParseInfo parseInfo) : base(parseInfo) {}
 
-            protected override void Call(ICallable callable, DocRange range) {}
+            protected override void Call(IVariableInstance variable, DocRange range) {}
             protected override void EventPlayerRestrictedCall(RestrictedCall restrictedCall) {}
             public override void Error(string message, DocRange range) => Errors.Add(new Diagnostic(message, range, Diagnostic.Error));
         }

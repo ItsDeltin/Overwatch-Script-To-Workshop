@@ -92,5 +92,7 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual void AddObjectBasedScope(IMethod function) => ServeObjectScope.CopyMethod(function);
         public virtual void AddStaticBasedScope(IMethod function) => StaticScope.CopyMethod(function);
+        public virtual void AddObjectBasedScope(IVariableInstance variable) => ServeObjectScope.CopyVariable(variable);
+        public virtual void AddStaticBasedScope(IVariableInstance variable) => StaticScope.CopyVariable(variable);
     }
 }

@@ -481,6 +481,7 @@ namespace Deltin.Deltinteger.Compiler
         Case,
         Default,
         Class,
+        Struct,
         Enum,
         Void,
         New,

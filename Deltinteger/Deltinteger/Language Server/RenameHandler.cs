@@ -139,7 +139,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public Location[] Links { get; }
         public DocRange Range { get; }
 
-        public RenameLink(KeyValuePair<ICallable, SymbolLinkCollection> link, DocRange range)
+        public RenameLink(KeyValuePair<ISymbolLink, SymbolLinkCollection> link, DocRange range)
         {
             Name = link.Key.Name;
             Links = link.Value.Select(sl => sl.Location).ToArray();

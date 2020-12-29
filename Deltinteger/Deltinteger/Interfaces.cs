@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger
     public interface IElementProvider
     {
         IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker);
+        void AddDefaultInstance(IScopeAppender scopeAppender);
     }
 
     public interface IMethodProvider
@@ -122,14 +123,8 @@ namespace Deltin.Deltinteger
     public interface IScopeable : INamed, IAccessable
     {
         CodeType CodeType { get; }
-        bool Static { get; }
         bool WholeContext { get; }
         CompletionItem GetCompletion();
-    }
-
-    public interface IVariable : IScopeable
-    {
-        bool CanBeIndexed => true;
     }
 
     public interface ICallable : INamed
@@ -153,6 +148,9 @@ namespace Deltin.Deltinteger
     public interface IGettable
     {
         IWorkshopTree GetVariable(Element eventPlayer = null);
+        void Set(ActionSet actionSet, IWorkshopTree value) => Set(actionSet, value, null, null);
+        void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index);
+        void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index);
     }
 
     public interface ILabeled
@@ -162,7 +160,7 @@ namespace Deltin.Deltinteger
 
     public interface IApplyBlock : IBlockListener, ILabeled
     {
-        void SetupParameters();
+        void SetupParameters() {}
         void SetupBlock();        
         CallInfo CallInfo { get; }
     }

@@ -7,11 +7,11 @@ namespace Deltin.Deltinteger.Parse
     {
         public Subroutine Subroutine { get; }
         public FunctionBuildController FunctionBuilder { get; }
-        public IndexReference[] ParameterStores { get; }
+        public IGettable[] ParameterStores { get; }
         public IndexReference ObjectStore { get; }
         public ReturnHandler ReturnHandler => FunctionBuilder.ReturnHandler;
 
-        public SubroutineInfo(Subroutine routine, FunctionBuildController functionBuilder, IndexReference[] parameterStores, IndexReference objectStore)
+        public SubroutineInfo(Subroutine routine, FunctionBuildController functionBuilder, IGettable[] parameterStores, IndexReference objectStore)
         {
             Subroutine = routine;
             FunctionBuilder = functionBuilder;

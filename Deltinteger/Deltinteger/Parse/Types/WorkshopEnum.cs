@@ -94,22 +94,18 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = new MarkupBuilder()
                     .Add("The opposite team of the value. If the team value is ").Code("Team 1").Add(", Opposite will be ").Code("Team 2").Add(" and vice versa. If the value is ")
                     .Code("All").Add(", Opposite will still be ").Code("All").Add(".")
-                    .ToString()
             };
             Score = new InternalVar("Score", typeSupplier.Number(), CompletionItemKind.Property) {
                 Documentation = new MarkupBuilder()
                     .Add("The current score for the team. Results in 0 in free-for-all modes.")
-                    .ToString()
             };
             OnDefense = new InternalVar("OnDefense", typeSupplier.Boolean(), CompletionItemKind.Property) {
                 Documentation = new MarkupBuilder()
                     .Add("Whether the specified team is currently on defense. Results in False if the game mode is not Assault, Escort, or Assault/Escort.")
-                    .ToString()
             };
             OnOffense = new InternalVar("OnOffense", typeSupplier.Boolean(), CompletionItemKind.Property) {
                 Documentation = new MarkupBuilder()
                     .Add("Whether the specified team is currently on offense. Results in False if the game mode is not Assault, Escort, or Assault/Escort.")
-                    .ToString()
             };
 
             _objectScope.AddNativeVariable(Opposite);
@@ -135,7 +131,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Member = member;
             CodeType = type;
-            TokenType = Deltin.Deltinteger.Parse.TokenType.EnumMember;
+            // TokenType = Deltin.Deltinteger.Parse.TokenType.EnumMember;
         }
     }
 }

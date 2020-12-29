@@ -9,7 +9,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Constructor : IParameterCallable, ICallable
+    public class Constructor : IParameterCallable, ICallable, ISymbolLink
     {
         public string Name => Type.Name;
         public AccessLevel AccessLevel { get; }
@@ -172,7 +172,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsObject() => false;
         public bool IsRecursive() => false;
         public bool MultiplePaths() => false;
-        public IIndexReferencer GetParameterVar(int index) => _constructor.ParameterVars[index];
+        public IVariable GetParameterVar(int index) => _constructor.ParameterVars[index];
         public int ParameterCount() => _constructor.Parameters.Length;
         public void SetSubroutineInfo(SubroutineInfo subroutineInfo) => _constructor.SubroutineInfo = subroutineInfo;
 

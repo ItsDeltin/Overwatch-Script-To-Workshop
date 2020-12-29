@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.ClassIdentifier == null) return;
 
             // Get the type. Syntax error if there is no type name.
-            CreatingObjectOf = scope.GetInitializer(context.ClassIdentifier.Text, parseInfo.Script.Diagnostics, context.ClassIdentifier.Range).GetInstance();
+            CreatingObjectOf = scope.GetInitializer(context.ClassIdentifier.Text, parseInfo.Script.Diagnostics, context.ClassIdentifier.Range)?.GetInstance();
             
             if (CreatingObjectOf != null)
             {

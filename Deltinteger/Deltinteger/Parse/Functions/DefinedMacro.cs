@@ -1,97 +1,130 @@
+using System;
 using System.Linq;
-using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Compiler;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedMacro : DefinedFunction
+    public class DefinedMacroProvider : IElementProvider, IMethodProvider, IApplyBlock
     {
+        public string Name => Context.Identifier.Text;
+        public AnonymousType[] GenericTypes { get; }
+        public CodeType[] ParameterTypes { get; }
+        public ParameterProvider[] ParameterProviders { get; }
+        public CodeType ReturnType { get; }
+
         public IExpression Expression { get; private set; }
-        private readonly MacroFunctionContext _context;
 
-        public DefinedMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, MacroFunctionContext context)
-            : base(parseInfo, context.Identifier.Text, new LanguageServer.Location(parseInfo.Script.Uri, context.Identifier.Range))
+        public MacroFunctionContext Context { get; }
+        public GenericAttributeAppender Attributes { get; } = new GenericAttributeAppender();
+        public IMethod Overriding { get; }
+
+        public CallInfo CallInfo { get; }
+        private readonly RecursiveCallHandler _recursiveHandler;
+        private readonly ApplyBlock _applyBlock = new ApplyBlock();
+
+        private readonly ParseInfo _parseInfo;
+        private readonly Scope _containingScope;
+        private readonly Scope _methodScope;
+
+        public DefinedMacroProvider(ParseInfo parseInfo, IScopeProvider scopeProvider, MacroFunctionContext context)
         {
-            _context = context;
-            DocRange nameRange = context.Identifier.Range;
-            Attributes.ContainingType = (Static ? staticScope: objectScope).This;
-            
+            _parseInfo = parseInfo;
+            Context = context;
+            _recursiveHandler = new RecursiveCallHandler(this);
+            CallInfo = new CallInfo(_recursiveHandler, parseInfo.Script);
+
             // Get the attributes.
-            MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
-            FunctionAttributesGetter attributeInfo = new MacroAttributesGetter(context, attributeResult);
-            attributeInfo.GetAttributes(parseInfo.Script.Diagnostics);
+            var attributeGetter = new AttributesGetter(context.Attributes, Attributes);
+            attributeGetter.GetAttributes(parseInfo.Script.Diagnostics);
 
-            // Copy attribute results
-            Static = attributeResult.Static;
-            AccessLevel = attributeResult.AccessLevel;
+            // Setup the scope.
+            _containingScope = Attributes.IsStatic ? scopeProvider.GetStaticBasedScope() : scopeProvider.GetObjectBasedScope();
+            _methodScope = _containingScope.Child();
             
-            SetupScope(Static ? staticScope : objectScope);
-            CodeType = TypeFromContext.GetCodeTypeFromContext(parseInfo, methodScope, _context.Type);
-            SetupParameters(context.Parameters, false);
+            // Get the generics.
+            GenericTypes = AnonymousType.GetGenerics(context.TypeArguments);
 
-            if (Attributes.Override)
+            foreach (var type in GenericTypes)
+                _methodScope.AddType(new GenericCodeTypeInitializer(type));
+            
+            // Get the type.
+            ReturnType = TypeFromContext.GetCodeTypeFromContext(parseInfo, _methodScope, context.Type);
+
+            // Setup the parameters.
+            ParameterProviders = ParameterProvider.GetParameterProviders(parseInfo, _methodScope, context.Parameters, false);
+            ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
+
+            // Override
+            if (Attributes.IsOverride)
+                Overriding = scopeProvider.GetOverridenFunction(this);
+            
+            // TODO: add hover info
+            parseInfo.TranslateInfo.ApplyBlock(this);
+        }
+
+        public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
+        {
+            var instance = new DefinedMacroInstance(this, genericsLinker);
+            scopeHandler.Add(instance, Attributes.IsStatic);
+            return instance;
+        }
+
+        public void AddDefaultInstance(IScopeAppender scopeAppender) => new DefinedMacroInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes));
+
+        public void SetupBlock()
+        {
+            Expression = _parseInfo.SetCallInfo(CallInfo).SetExpectingLambda(ReturnType).GetExpression(_methodScope, Context.Expression);
+            _applyBlock.Apply();
+        }
+
+        public void OnBlockApply(IOnBlockApplied onBlockApplied) => _applyBlock.OnBlockApply(onBlockApplied);
+
+        public string GetLabel(bool markdown)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class DefinedMacroInstance : IMethod
+    {
+        public string Name => Provider.Name;
+        public CodeParameter[] Parameters { get; }
+        public IVariableInstance[] ParameterVars { get; }
+        public string Documentation => throw new NotImplementedException();
+        public CodeType CodeType { get; }
+        public MethodAttributes Attributes { get; } = new MethodAttributes();
+        public bool WholeContext => true;
+        public DefinedMacroProvider Provider { get; }
+
+        public DefinedMacroInstance(DefinedMacroProvider provider, InstanceAnonymousTypeLinker genericsLinker)
+        {
+            Provider = provider;
+            CodeType = provider.ReturnType.GetRealType(genericsLinker);
+
+            Parameters = new CodeParameter[provider.ParameterProviders.Length];
+            ParameterVars = new IVariableInstance[provider.ParameterProviders.Length];
+            for (int i = 0; i < Parameters.Length; i++)
             {
-                IMethod overriding = objectScope.GetMethodOverload(this);
-
-                // No method with the name and parameters found.
-                if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a macro to override.", nameRange);
-                else if (!overriding.Attributes.IsOverrideable) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", nameRange);
-                else overriding.Attributes.AddOverride(this);
-
-                if (overriding != null && overriding.DefinedAt != null)
-                {
-                    // Make the override keyword go to the base method.
-                    parseInfo.Script.AddDefinitionLink(
-                        attributeInfo.ObtainedAttributes.First(at => at.Type == MethodAttributeType.Override).Range,
-                        overriding.DefinedAt
-                    );
-                }
+                var parameterInstance = provider.ParameterProviders[i].GetInstance(genericsLinker);
+                Parameters[i] = parameterInstance.Parameter;
+                ParameterVars[i] = parameterInstance.Variable;
             }
-
-            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range, !Attributes.Override);
-
-            if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
-                parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
-
-            if (Attributes.IsOverrideable)
-                parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
-
         }
 
-        public override void SetupParameters()
-        {
-            parseInfo.Script.AddHover(_context.Identifier.Range, GetLabel(true));
-        }
+        public LanguageServer.Location DefinedAt => throw new NotImplementedException();
 
-        override public void SetupBlock()
-        {
-            Expression = parseInfo.SetCallInfo(CallInfo).SetExpectingLambda(CodeType).GetExpression(methodScope, _context.Expression);
-            WasApplied = true;
-            foreach (var listener in listeners) listener.Applied();
-        }
+        public AccessLevel AccessLevel => Provider.Attributes.Accessor;
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public IMethodProvider GetProvider() => Provider;
+        public string GetLabel(bool markdown) => IMethod.GetLabel(this, true);
 
-        override public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
+        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             // Assign the parameters.
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-
             return AbstractMacroBuilder.Call(actionSet, this, methodCall);
-        }
-
-        public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues)
-        {
-            for (int i = 0; i < ParameterVars.Length; i++)
-            {
-                IGettable result = actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
-
-                //if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
-                    //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
-
-                foreach (Var virtualParameterOption in VirtualVarGroup(i))
-                    actionSet.IndexAssigner.Add(virtualParameterOption, result);
-            }
         }
     }
 }

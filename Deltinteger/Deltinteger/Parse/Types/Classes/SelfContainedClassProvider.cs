@@ -14,10 +14,10 @@ namespace Deltin.Deltinteger.Parse
             ObjectScope = new Scope(name);
         }
 
-        protected override ObjectVariable AddObjectVariable(IIndexReferencer variable)
+        protected ObjectVariable AddObjectVariable(IVariableInstance variable)
         {
             ObjectScope.AddNativeVariable(variable);
-            return base.AddObjectVariable(variable);
+            return base.AddObjectVariable(variable.Provider);
         }
 
         public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new ClassType(this) {

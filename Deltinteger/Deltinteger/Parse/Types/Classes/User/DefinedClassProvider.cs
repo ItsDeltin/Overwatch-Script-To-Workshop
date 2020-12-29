@@ -6,7 +6,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedClassInitializer : ClassInitializer, IResolveElements, IScopeProvider, IScopeAppender
+    public class DefinedClassInitializer : ClassInitializer, IResolveElements, IDefinedTypeInitializer
     {
         public override int GenericsCount => AnonymousTypes?.Length ?? 0;
         public List<IElementProvider> DeclaredElements { get; } = new List<IElementProvider>();
@@ -102,7 +102,12 @@ namespace Deltin.Deltinteger.Parse
                 _operationalObjectScope.AddType(new GenericCodeTypeInitializer(type));
             }
 
+            // Get declarations.
+            foreach (var declaration in _typeContext.Declarations)
+                DeclaredElements.Add(((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo));
+
             // Get the declarations.
+            /*
             foreach (var declaration in _typeContext.Declarations)
             {
                 // Function
@@ -147,6 +152,7 @@ namespace Deltin.Deltinteger.Parse
                 //     else throw new NotImplementedException();
                 // }
             }
+            */
 
             WorkingInstance = GetInstance();
 
@@ -189,5 +195,14 @@ namespace Deltin.Deltinteger.Parse
         Scope IScopeProvider.GetStaticBasedScope() => _operationalStaticScope;
         void IScopeAppender.AddObjectBasedScope(IMethod function) => _operationalObjectScope.CopyMethod(function);
         void IScopeAppender.AddStaticBasedScope(IMethod function) => _operationalStaticScope.CopyMethod(function);
+        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => _operationalObjectScope.CopyVariable(variable);
+        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => _operationalStaticScope.CopyVariable(variable);
+
+        public IVariableInstance GetOverridenVariable(string variableName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddVariable(Var var) => AddObjectVariable(var);
     }
 }

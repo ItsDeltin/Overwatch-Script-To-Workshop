@@ -5,10 +5,10 @@ namespace Deltin.Deltinteger.Parse
 {
     public class CallVariableAction : IExpression
     {
-        public IIndexReferencer Calling { get; }
+        public IVariableInstance Calling { get; }
         public IExpression[] Index { get; }
 
-        public CallVariableAction(IIndexReferencer calling, IExpression[] index)
+        public CallVariableAction(IVariableInstance calling, IExpression[] index)
         {
             Calling = calling;
             Index = index ?? new IExpression[0];
@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            IWorkshopTree result = Calling.Parse(actionSet);
+            IWorkshopTree result = Calling.ToWorkshop(actionSet);
 
             for (int i = 0; i < Index.Length; i++)
                 result = Element.ValueInArray(result, Index[i].Parse(actionSet));
@@ -24,15 +24,9 @@ namespace Deltin.Deltinteger.Parse
             return result;
         }
 
-        public Scope ReturningScope()
-        {
-            if (Calling.Type() == null) return Calling.ReturningScope();
-            else return Type()?.GetObjectScope();
-        }
-
         public CodeType Type()
         {
-            var type = Calling.Type();
+            var type = Calling.CodeType;
             for (int i = 0; i < Index.Length; i++)
             {
                 if (type is ArrayType)

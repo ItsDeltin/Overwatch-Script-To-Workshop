@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public PortableLambdaType LambdaType { get; private set; }
 
         /// <summary>The parameters of the lambda.</summary>
-        public Var[] Parameters { get; private set; }
+        public IVariable[] Parameters { get; private set; }
 
         /// <summary>The invocation status of the lambda parameters/</summary>
         public IBridgeInvocable[] InvokedState { get; private set; }
@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public IExpression Expression { get; private set; }
 
         /// <summary>The captured local variables.</summary>
-        public List<IIndexReferencer> CapturedVariables { get; } = new List<IIndexReferencer>();
+        public List<IVariable> CapturedVariables { get; } = new List<IVariable>();
 
         /// <summary>The lambda's identifier.</summary>
         public int Identifier { get; set; }
@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                     _parseInfo.Script.Diagnostics.Error("Inconsistent lambda parameter usage; parameter types must be all explicit or all implicit", _context.Parameters[i].Range);
 
                 InvokedState[i] = new SubLambdaInvoke();
-                Parameters[i] = new LambdaVariable(i, expectingType, _lambdaScope, new LambdaContextHandler(_parseInfo, _context.Parameters[i]), InvokedState[i]);
+                Parameters[i] = new LambdaVariable(i, expectingType, _lambdaScope, new LambdaContextHandler(_parseInfo, _context.Parameters[i]), InvokedState[i]).GetVar();
                 _argumentTypes[i] = Parameters[i].CodeType;
             }
 
@@ -245,22 +245,18 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             string label = "";
 
-            if (Parameters.Length == 1) label += Parameters[0].GetLabel(false);
+            if (Parameters.Length == 1) label += Parameters[0].CodeType.GetName() + " " + Parameters[0].Name;
             else
             {
                 label += "(";
                 for (int i = 0; i < Parameters.Length; i++)
                 {
                     if (i != 0) label += ", ";
-                    label += Parameters[i].GetLabel(false);
+                    label += Parameters[i].CodeType.GetName() + " " + Parameters[i].Name;
                 }
                 label += ")";
             }
             label += " => ";
-
-            // if (LambdaType is MacroLambda macroLambda) label += macroLambda.ReturnType?.GetName() ?? "define";
-            // else if (LambdaType is ValueBlockLambda vbl) label += "{" + (vbl.ReturnType?.GetName() ?? "define") + "}";
-            // else if (LambdaType is BlockLambda) label += "{}";
 
             return label;
         }
@@ -269,7 +265,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public void SetupBlock() {}
         public void OnBlockApply(IOnBlockApplied onBlockApplied) => onBlockApplied.Applied();
 
-        public void LocalVariableAccessed(IIndexReferencer variable)
+        public void LocalVariableAccessed(IVariable variable)
         {
             if (!CapturedVariables.Contains(variable) && _lambdaScope.Parent.ScopeContains(variable))
                 CapturedVariables.Add(variable);

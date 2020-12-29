@@ -7,7 +7,7 @@ using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.Compl
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class DefinedFunction : IMethod, ICallable, IApplyBlock
+    public abstract class DefinedFunction : IMethod, ICallable, IApplyBlock, ISymbolLink
     {
         public string Name { get; }
         public CodeType CodeType { get; protected set; }

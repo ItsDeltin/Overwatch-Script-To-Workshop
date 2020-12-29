@@ -10,16 +10,21 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class MethodGroup : IVariable
+    public class MethodGroup : IVariableInstance, IVariable
     {
         public string Name { get; }
         public bool WholeContext => true;
-        public bool CanBeIndexed => false;
-        public bool Static => false; // Doesn't matter.
         public Location DefinedAt => null; // Doesn't matter.
         public AccessLevel AccessLevel => AccessLevel.Public; // Doesn't matter.
         public CodeType CodeType => null;
         public List<IMethod> Functions { get; } = new List<IMethod>();
+        IVariable IVariableInstance.Provider => this;
+        VariableType IVariable.VariableType => VariableType.ElementReference;
+        public MarkupBuilder Documentation { get; set; }
+
+        string IVariable.Name => throw new NotImplementedException();
+
+        CodeType IVariable.CodeType => throw new NotImplementedException();
 
         public MethodGroup(string name)
         {
@@ -39,6 +44,15 @@ namespace Deltin.Deltinteger.Parse
                     Functions[0].GetLabel(false) + (Functions.Count == 1 ? "" : " (+" + (Functions.Count - 1) + " overloads)")
                 ).EndCodeLine().ToMarkup()
         };
+
+        public IGettableAssigner GetAssigner() => throw new NotImplementedException();
+
+        IExpression GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallMethodGroup(parseInfo, callRange, this, typeArgs);
+
+        IVariableInstance IVariable.GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
+        IVariableInstance IVariable.GetDefaultInstance() => this;
+        IScopeable IElementProvider.AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
+        void IElementProvider.AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
     }
 
     public class CallMethodGroup : IExpression, ILambdaApplier, ILambdaInvocable, IWorkshopTree
@@ -125,7 +139,7 @@ namespace Deltin.Deltinteger.Parse
                 return new FunctionMethodGroupInvoker(new DefinedFunctionHandler(definedMethod.Provider, false));
             
             // If the chosen function is a macro.
-            if (function is DefinedMacro definedMacro)
+            if (function is DefinedMacroInstance definedMacro)
                 return new MacroMethodGroupInvoker(definedMacro);
             
             // Otherwise, use the generic function handler.
@@ -152,7 +166,7 @@ namespace Deltin.Deltinteger.Parse
     interface IMethodGroupInvoker
     {
         int ParameterCount();
-        IIndexReferencer GetParameterVar(int index);
+        IVariable GetParameterVar(int index);
         int GetIdentifier(ParseInfo parseInfo) => -1;
         IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues);
     }
@@ -167,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public int GetIdentifier(ParseInfo parseInfo) => parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(_functionHandler);
-        public IIndexReferencer GetParameterVar(int index) => _functionHandler.GetParameterVar(index);
+        public IVariable GetParameterVar(int index) => _functionHandler.GetParameterVar(index);
         public int ParameterCount() => _functionHandler.ParameterCount();
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
@@ -179,14 +193,14 @@ namespace Deltin.Deltinteger.Parse
 
     class MacroMethodGroupInvoker : IMethodGroupInvoker
     {
-        private readonly DefinedMacro _macro;
+        private readonly DefinedMacroInstance _macro;
 
-        public MacroMethodGroupInvoker(DefinedMacro macro)
+        public MacroMethodGroupInvoker(DefinedMacroInstance macro)
         {
             _macro = macro;
         }
 
-        public IIndexReferencer GetParameterVar(int index) => _macro.ParameterVars[index];
+        public IVariable GetParameterVar(int index) => _macro.ParameterVars[index].Provider;
         public int ParameterCount() => _macro.Parameters.Length;
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _macro.Parse(actionSet, new MethodCall(parameterValues));
     }
@@ -195,20 +209,20 @@ namespace Deltin.Deltinteger.Parse
     {
         public CodeType ContainingType => null;
         private readonly IMethod _method;
-        private readonly IIndexReferencer[] _parameterSavers;
+        private readonly IVariableInstance[] _parameterSavers;
 
         public GenericMethodHandler(IMethod method)
         {
             _method = method;
 
-            _parameterSavers = new IIndexReferencer[_method.Parameters.Length];
+            _parameterSavers = new IVariableInstance[_method.Parameters.Length];
             for (int i = 0; i < _parameterSavers.Length; i++)
-                _parameterSavers[i] = new IndexReferencer(_method.Parameters[i].Name);
+                _parameterSavers[i] = new InternalVar(_method.Parameters[i].Name);
         }
 
         public string GetName() => _method.Name;
         public bool DoesReturnValue() => _method.DoesReturnValue;
-        public IIndexReferencer GetParameterVar(int index) => _parameterSavers[index];
+        public IVariable GetParameterVar(int index) => _parameterSavers[index].Provider;
         public SubroutineInfo GetSubroutineInfo() => throw new NotImplementedException();
         public bool IsObject() => false;
         public bool IsRecursive() => false;
@@ -220,7 +234,7 @@ namespace Deltin.Deltinteger.Parse
         {
             var parameterValues = new IWorkshopTree[_parameterSavers.Length];
             for (int i = 0; i < _parameterSavers.Length; i++)   
-                parameterValues[i] = actionSet.IndexAssigner[_parameterSavers[i]].GetVariable();
+                parameterValues[i] = actionSet.IndexAssigner[_parameterSavers[i].Provider].GetVariable();
 
             var result = _method.Parse(actionSet, new MethodCall(parameterValues, new object[parameterValues.Length]));
             if (_method.DoesReturnValue)

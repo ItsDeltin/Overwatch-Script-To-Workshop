@@ -2,17 +2,27 @@ using System;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class HookVar : IndexReferencer
+    public class HookVar : IVariable, IVariableInstance
     {
+        public string Name { get; }
+        public CodeType CodeType { get; }
         public bool WasSet { get; private set; }
         public IExpression HookValue { get; private set; }
         public Action<IExpression> SetHook { get; } = null;
+        public VariableType VariableType => VariableType.ElementReference;
+        public IVariable Provider => this;
+        public bool WholeContext => true;
+        public LanguageServer.Location DefinedAt => null;
+        public AccessLevel AccessLevel => AccessLevel.Public;
+        public MarkupBuilder Documentation { get; set; }
 
-        public HookVar(string name, CodeType type, Action<IExpression> setHook) : base(name)
+        public HookVar(string name, CodeType type, Action<IExpression> setHook)
         {
+            Name = name;
             CodeType = type;
             SetHook = setHook;
         }
@@ -35,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
             WasSet = true;
         }
 
-        public override bool Settable() => false;
+        public bool Settable() => false;
 
         public static void GetHook(ParseInfo parseInfo, Scope scope, Hook context)
         {
@@ -65,5 +75,12 @@ namespace Deltin.Deltinteger.Parse
                 // Not a hook variable.
                 parseInfo.Script.Diagnostics.Error("Expected a hook variable.", context.Variable.Range);
         }
+
+        public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
+        public IGettableAssigner GetAssigner() => throw new NotImplementedException();
+        public CompletionItem GetCompletion() => IVariableInstance.GetCompletion(this, CompletionItemKind.Constant);
+        public IVariableInstance GetDefaultInstance() => this;
+        public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
+        public void AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
     }
 }

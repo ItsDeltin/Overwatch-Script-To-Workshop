@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
             Kind = "struct";
         }
 
-        public void ResolveElements()
+        public override void ResolveElements()
         {
             Operations = new ITypeOperation[] {
                 new StringAddOperation(_typeSupplier)

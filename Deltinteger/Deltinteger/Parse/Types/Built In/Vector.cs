@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.Parse
             InternalVar newInternalVar = new InternalVar(name, CompletionItemKind.Property);
 
             // Make the variable unsettable.
-            newInternalVar.IsSettable = false;
+            // newInternalVar.IsSettable = false;
 
             // Set the documentation.
             newInternalVar.Documentation = documentation;

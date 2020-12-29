@@ -7,47 +7,83 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger
 {
-    public interface IIndexReferencer : IVariable, IExpression, ICallable, ILabeled
+    public interface IVariable : IElementProvider
     {
-        bool Settable();
-        bool RequiresCapture { get; }
+        string Name { get; }
+        CodeType CodeType { get; }
+        bool RequiresCapture => false;
         VariableType VariableType { get; }
-        bool InExtendedCollection => false;
-        int ID => -1;
-        bool Recursive => false;
+        IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker);
+        IVariableInstance GetDefaultInstance();
     }
 
-    public class IndexReferencer : IIndexReferencer
+    public interface IVariableInstance : IScopeable
+    {
+        bool CanBeIndexed => true;
+        IVariable Provider { get; }
+        MarkupBuilder Documentation { get; }
+        IGettableAssigner GetAssigner();
+        IWorkshopTree ToWorkshop(ActionSet actionSet) => actionSet.IndexAssigner.Get(Provider).GetVariable();
+        IExpression GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(this, index);
+        void Call(ParseInfo parseInfo, DocRange callRange) => Call(this, parseInfo, callRange);
+        MarkupBuilder GetLabel() => new MarkupBuilder().StartCodeLine().Add(CodeType.GetName() + " " + Name).EndCodeLine();
+
+        static CompletionItem GetCompletion(IVariableInstance variable, CompletionItemKind kind) => new CompletionItem()
+        {
+            Label = variable.Name,
+            Kind = CompletionItemKind.Variable,
+            Detail = variable.CodeType.GetName() + " " + variable.Name,
+            Documentation = variable.Documentation == null ? null : variable.Documentation.ToMarkup()
+        };
+        
+        static void Call(IVariableInstance variable, ParseInfo parseInfo, DocRange callRange)
+        {
+            parseInfo.Script.AddHover(callRange, variable.GetLabel().ToString());
+        }
+    }
+
+    public class InternalVar : IVariable, IVariableInstance, IAmbiguityCheck
     {
         public string Name { get; }
-        public VariableType VariableType { get; protected set; }
-        public bool Static { get; protected set; }
-        public bool WholeContext { get; protected set; } = true;
-        public LanguageServer.Location DefinedAt { get; protected set; }
-        public AccessLevel AccessLevel { get; protected set; } = AccessLevel.Public;
-        public CodeType CodeType { get; protected set; }
+        public VariableType VariableType { get; set; }
+        public bool Static { get; set; }
+        public bool WholeContext { get; set; } = true;
+        public LanguageServer.Location DefinedAt { get; set; }
+        public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
+        public CodeType CodeType { get; set; }
         public MarkupBuilder Documentation { get; set; }
+        public IGettableAssigner Assigner { get; set; }
+        public bool Ambiguous { get; set; } = true;
         public bool RequiresCapture => false;
+        public IVariable Provider => this;
+        public CompletionItemKind CompletionItemKind { get; set; } = CompletionItemKind.Property;
 
-        public IndexReferencer(string name)
+        public InternalVar(string name)
         {
             Name = name;
         }
 
-        public void Call(ParseInfo parseInfo, DocRange callRange)
+        public InternalVar(string name, CompletionItemKind kind)
         {
-            if (DefinedAt != null) parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.Script.AddHover(callRange, GetLabel(true));
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+            Name = name;
+            CompletionItemKind = kind;
         }
 
-        public CompletionItem GetCompletion() => new CompletionItem()
+        public InternalVar(string name, CodeType type, CompletionItemKind kind)
         {
-            Label = Name,
-            Kind = CompletionItemKind.Variable,
-            Detail = (CodeType?.GetName() ?? "define") + " " + Name,
-            Documentation = Documentation == null ? null : Extras.GetMarkupContent(Documentation.ToString())
-        };
+            Name = name;
+            CodeType = type;
+            CompletionItemKind = kind;
+        }
+
+        // public void Call(ParseInfo parseInfo, DocRange callRange)
+        // {
+        //     if (DefinedAt != null) parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+        //     parseInfo.Script.AddHover(callRange, GetLabel(true));
+        //     parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+        // }
+
+        public CompletionItem GetCompletion() => IVariableInstance.GetCompletion(this, CompletionItemKind);
 
         public string GetLabel(bool markdown)
         {
@@ -57,9 +93,15 @@ namespace Deltin.Deltinteger
             else return typeName + " " + Name;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
-        public virtual bool Settable() => true;
-        public Scope ReturningScope() => CodeType.GetObjectScope();
-        public CodeType Type() => CodeType;
+        public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
+        public IVariableInstance GetDefaultInstance() => this;
+        public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
+        {
+            scopeHandler.Add(this, Static);
+            return this;
+        }
+        public void AddDefaultInstance(IScopeAppender scopeAppender) => scopeAppender.Add(this, Static);
+        public IGettableAssigner GetAssigner() => Assigner;
+        public bool CanBeAmbiguous() => Ambiguous;
     }
 }

@@ -9,11 +9,11 @@ namespace Deltin.Deltinteger.Parse
     {
         public DeltinScript DeltinScript { get; set; }
 
-        private Dictionary<ICallable, SymbolLinkCollection> callRanges { get; } = new Dictionary<ICallable, SymbolLinkCollection>();
+        private Dictionary<ISymbolLink, SymbolLinkCollection> callRanges { get; } = new Dictionary<ISymbolLink, SymbolLinkCollection>();
 
         public void Init() {}
 
-        public void AddSymbolLink(ICallable callable, Location calledFrom, bool isDeclarer = false)
+        public void AddSymbolLink(ISymbolLink callable, Location calledFrom, bool isDeclarer = false)
         {
             if (callable == null) throw new ArgumentNullException(nameof(callable));
             if (calledFrom == null) throw new ArgumentNullException(nameof(calledFrom));
@@ -22,9 +22,14 @@ namespace Deltin.Deltinteger.Parse
             callRanges[callable].Add(new SymbolLink(calledFrom, isDeclarer));
         }
 
-        public Dictionary<ICallable, SymbolLinkCollection> GetSymbolLinks() => callRanges;
+        public Dictionary<ISymbolLink, SymbolLinkCollection> GetSymbolLinks() => callRanges;
         
-        public SymbolLinkCollection GetSymbolLinks(ICallable callable) => callRanges[callable];
+        public SymbolLinkCollection GetSymbolLinks(ISymbolLink callable) => callRanges[callable];
+    }
+
+    public interface ISymbolLink
+    {
+        string Name { get; }
     }
 
     public class SymbolLinkCollection : List<SymbolLink>

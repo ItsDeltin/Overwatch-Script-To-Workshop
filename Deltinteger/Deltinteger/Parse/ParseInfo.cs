@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger.Parse
             switch (statementContext)
             {
                 case VariableDeclaration declare: {
-                    var newVar = new ScopedVariable(scope, new DefineContextHandler(this, declare));
+                    var newVar = new ScopedVariable(true, scope, new DefineContextHandler(this, declare)).GetVar();
                     return new DefineAction(newVar);
                 }
                 case Assignment assignment: return new SetVariableAction(this, scope, assignment);
@@ -187,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
             DocRange variableRange = variableContext.Token.Range;
 
             // Get the variable.
-            IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange, ResolveInvokeInfo != null);
+            IVariableInstance element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange, ResolveInvokeInfo != null);
             if (element == null) return new MissingVariable(TranslateInfo, variableName);
             
             // Additional syntax checking.
@@ -233,27 +233,14 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="staticScope">The scope of the macro if there is a static attribute.</param>
         /// <param name="macroContext">The context of the macro.</param>
         /// <returns>A DefinedMacro if the macro has parameters, a MacroVar if there are no parameters.</returns>
-        public DefinedMacro GetMacro(Scope objectScope, Scope staticScope, MacroFunctionContext macroContext)
-        {
-            DefinedMacro newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext);
+        public void GetMacro(IScopeProvider scopeProvider, MacroFunctionContext macroContext)
+            => new DefinedMacroProvider(this, scopeProvider, macroContext);
 
-            TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
-            return newMacro;
-        }
-
-        public MacroVar GetMacro(Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext)
-        {
-            MacroVar newMacro = new MacroVar(this, objectScope, staticScope, macroContext);
-
-            TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
-            return newMacro;
-        }
-
-        public void LocalVariableAccessed(IIndexReferencer referencer)
+        public void LocalVariableAccessed(IVariable variable)
         {
             if (LocalVariableTracker != null)
                 foreach (var tracker in LocalVariableTracker)
-                    tracker.LocalVariableAccessed(referencer);
+                    tracker.LocalVariableAccessed(variable);
         }
 
         public ParseInfo ClearTail() => new ParseInfo(this) {
@@ -277,44 +264,40 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
         }
 
-        public IExpression Apply(IVariable variable, IExpression[] index, CodeType[] typeArgs, DocRange variableRange)
+        public IExpression Apply(IVariableInstance variable, IExpression[] index, CodeType[] typeArgs, DocRange variableRange)
         {
             // Callable
-            if (variable is ICallable callable) Call(callable, variableRange);
+            Call(variable, variableRange);
             
-            // IIndexReferencers are wrapped by CallVariableActions.
-            if (variable is IIndexReferencer referencer)
-            {
-                // If the type of the variable being called is Player, check if the variable is calling Event Player.
-                // If the source expression is null, Event Player is used by default.
-                // Otherwise, confirm that the source expression is returning the player variable scope.
-                if (referencer.VariableType == VariableType.Player)
-                    EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
+            // If the type of the variable being called is Player, check if the variable is calling Event Player.
+            // If the source expression is null, Event Player is used by default.
+            // Otherwise, confirm that the source expression is returning the player variable scope.
+            if (variable.Provider.VariableType == VariableType.Player)
+                EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), RestrictedCall.Message_EventPlayerDefault(variable.Name)));
                 
-                // If there is a local variable tracker and the variable requires capture.
-                if (referencer.RequiresCapture)
-                    _parseInfo.LocalVariableAccessed(referencer);
-
-                return new CallVariableAction(referencer, index);
-            }
+            // If there is a local variable tracker and the variable requires capture.
+            if (variable.Provider.RequiresCapture)
+                _parseInfo.LocalVariableAccessed(variable.Provider);
+            
+            return variable.GetExpression(_parseInfo, variableRange, index, typeArgs);
 
             // Check value in array.
-            if (index != null && index.Length > 0)
-            {
-                if (!variable.CanBeIndexed)
-                    Error("This variable type cannot be indexed.", variableRange);
-                else
-                    return new ValueInArrayAction(_parseInfo, (IExpression)variable, index);
-            }
+            // if (index != null && index.Length > 0)
+            // {
+            //     if (!variable.CanBeIndexed)
+            //         Error("This variable type cannot be indexed.", variableRange);
+            //     else
+            //         return new ValueInArrayAction(_parseInfo, (IExpression)variable, index);
+            // }
 
-            // Function group.
-            if (variable is MethodGroup methodGroup)
-                return new CallMethodGroup(_parseInfo, variableRange, methodGroup, typeArgs);
+            // // Function group.
+            // if (variable is MethodGroup methodGroup)
+            //     return new CallMethodGroup(_parseInfo, variableRange, methodGroup, typeArgs);
 
-            return (IExpression)variable;
+            // return (IExpression)variable;
         }
 
-        protected virtual void Call(ICallable callable, DocRange range) => callable.Call(_parseInfo, range);
+        protected virtual void Call(IVariableInstance variable, DocRange range) => variable.Call(_parseInfo, range);
         protected virtual void EventPlayerRestrictedCall(RestrictedCall restrictedCall) => _parseInfo.RestrictedCallHandler.RestrictedCall(restrictedCall);
         public virtual void Error(string message, DocRange range) => _parseInfo.Script.Diagnostics.Error(message, range);
     }

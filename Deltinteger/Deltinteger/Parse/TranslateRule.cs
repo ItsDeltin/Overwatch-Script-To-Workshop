@@ -146,6 +146,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
+        public InstanceAnonymousTypeLinker ThisTypeLinker { get; }
 
         public int ActionCount => ActionList.Count;
 

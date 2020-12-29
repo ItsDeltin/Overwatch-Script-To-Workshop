@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
             if (!resolvedVariable.DoesResolveToVariable)
                 parseInfo.Script.Diagnostics.Error("Expected a variable.", valueRange);
                         
-            else if (VariableType != VariableType.Dynamic && resolvedVariable.SetVariable.Calling.VariableType != VariableType)
+            else if (VariableType != VariableType.Dynamic && resolvedVariable.SetVariable.Calling.Provider.VariableType != VariableType)
             {
                 if (VariableType == VariableType.Global)
                     parseInfo.Script.Diagnostics.Error($"Expected a global variable.", valueRange);

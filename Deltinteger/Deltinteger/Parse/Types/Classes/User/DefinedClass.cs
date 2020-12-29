@@ -57,6 +57,20 @@ namespace Deltin.Deltinteger.Parse
             StaticScope.CopyMethod(function);
         }
 
+        public override void AddObjectBasedScope(IVariableInstance variable)
+        {
+            base.AddObjectBasedScope(variable);
+            OperationalScope.CopyVariable(variable);
+            ServeObjectScope.CopyVariable(variable);
+        }
+
+        public override void AddStaticBasedScope(IVariableInstance variable)
+        {
+            base.AddStaticBasedScope(variable);
+            OperationalScope.CopyVariable(variable);
+            StaticScope.CopyVariable(variable);
+        }
+
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
         {
             var newGenerics = new CodeType[Generics.Length];

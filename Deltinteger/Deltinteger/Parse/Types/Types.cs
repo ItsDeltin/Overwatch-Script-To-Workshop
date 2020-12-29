@@ -32,7 +32,8 @@ namespace Deltin.Deltinteger.Parse
         public bool CanBeExtended { get; protected set; } = false;
 
         public ITypeOperation[] Operations { get; protected set; }
-        public List<IMethod> VirtualFunctions { get; } = new List<IMethod>();
+        protected List<IMethod> VirtualFunctions { get; } = new List<IMethod>();
+        protected List<IVariableInstance> VirtualVariables { get; } = new List<IVariableInstance>();
 
         public CodeType(string name)
         {
@@ -126,6 +127,8 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="reference">The object reference.</param>
         public virtual void Delete(ActionSet actionSet, Element reference) {}
 
+        public virtual IGettableAssigner GetGettableAssigner(IVariable variable) => new DataTypeAssigner((Var)variable);
+
         /// <summary>Gets an operation.</summary>
         /// <param name="op">The operation's operator type.</param>
         /// <param name="right">The right object's type.</param>
@@ -159,7 +162,15 @@ namespace Deltin.Deltinteger.Parse
         public abstract CompletionItem GetCompletion();
 
         /// <summary>Gets the full name of the type.</summary>
-        public virtual string GetName() => Name;
+        public virtual string GetName()
+        {
+            string result = Name;
+
+            if (Generics != null && Generics.Length > 0)
+                result += "<" + string.Join(", ", Generics.Select(g => g.GetName())) + ">";
+
+            return result;
+        }
 
         public virtual void AddLink(Location location) {}
 
@@ -188,7 +199,18 @@ namespace Deltin.Deltinteger.Parse
                         return virtualFunction;
                 }
             
-            if (Extends != null) Extends.GetVirtualFunction(name, parameterTypes);
+            if (Extends != null) return Extends.GetVirtualFunction(name, parameterTypes);
+            return null;
+        }
+
+        public IVariableInstance GetVirtualVariable(string name)
+        {
+            // Loop through each virtual variable.
+            foreach (var virtualVariable in VirtualVariables)
+                if (virtualVariable.Name == name)
+                    return virtualVariable;
+            
+            if (Extends != null) return Extends.GetVirtualVariable(name);
             return null;
         }
     }

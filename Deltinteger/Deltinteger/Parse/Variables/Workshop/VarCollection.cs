@@ -131,18 +131,17 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public IndexReference Assign(IIndexReferencer var, bool isGlobal)
+        public IndexReference Assign(string name, VariableType variableType, bool isGlobal, bool extended, int id)
         {
-            // variableIsGlobal will equal isGlobal if var.VariableType is dynamic. Otherwise, it will equal is var.VariableType global.
-            bool variableIsGlobal = var.VariableType == VariableType.Dynamic ? isGlobal : var.VariableType == VariableType.Global;
+            bool variableIsGlobal = variableType == VariableType.Dynamic ? isGlobal : variableType == VariableType.Global;
 
-            if (!var.InExtendedCollection)
+            if (!extended)
             {
-                if (var.ID == -1)
-                    return new IndexReference(ArrayBuilder, AssignWorkshopVariable(var.Name, variableIsGlobal));
+                if (id == -1)
+                    return new IndexReference(ArrayBuilder, AssignWorkshopVariable(name, variableIsGlobal));
                 else
                 {
-                    WorkshopVariable workshopVariable = new WorkshopVariable(variableIsGlobal, var.ID, MetaElement.WorkshopNameFromCodeName(var.Name, NamesTaken(variableIsGlobal)));
+                    WorkshopVariable workshopVariable = new WorkshopVariable(variableIsGlobal, id, MetaElement.WorkshopNameFromCodeName(name, NamesTaken(variableIsGlobal)));
                     variableList(variableIsGlobal).Add(workshopVariable);
                     return new IndexReference(ArrayBuilder, workshopVariable);
                 }
@@ -151,7 +150,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 int index = NextFreeExtended(variableIsGlobal);
                 IndexReference reference = new IndexReference(ArrayBuilder, variableIsGlobal ? global : player, Element.Num(index));
-                ExtendedVariableList(variableIsGlobal).Add(new ExtendedVariable(var.Name, reference, index));
+                ExtendedVariableList(variableIsGlobal).Add(new ExtendedVariable(name, reference, index));
                 return reference;
             }
         }

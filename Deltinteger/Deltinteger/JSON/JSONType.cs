@@ -76,8 +76,8 @@ namespace Deltin.Deltinteger.Json
         public JsonProperty(JProperty property)
         {
             Name = property.Name;
-            Var = new JsonVar(property.Name);
-            Var.IsSettable = false;
+            Var = new InternalVar(property.Name);
+            // Var.IsSettable = false;
             Value = IJsonValue.GetValue(property.Value);
             Var.Documentation = Value.Documentation;
             Var.CodeType = Value.Type;
@@ -186,7 +186,7 @@ namespace Deltin.Deltinteger.Json
         public string Documentation { get; }
         public CodeType Type { get; }
 
-        public JsonVar Var { get; }
+        public InternalVar Var { get; }
 
         public JsonObject(JToken token)
         {
@@ -195,16 +195,6 @@ namespace Deltin.Deltinteger.Json
         }
 
         public bool ContainsDeepArrays() => ((JsonType)Type).Properties.Any(p => p.Value.ContainsDeepArrays());
-    }
-
-    class JsonVar : InternalVar
-    {
-        public JsonVar(string name) : base(name, CompletionItemKind.Property) {}
-        public override string GetLabel(bool markdown)
-        {
-            if (!markdown) return base.GetLabel(false);
-            return Documentation;
-        }
     }
 
     class GetJsonPropertyFunction : IMethod
@@ -267,7 +257,7 @@ namespace Deltin.Deltinteger.Json
                     completion.Add(new CompletionItem() {
                         Label = prop.Name,
                         Detail = prop.Name,
-                        Documentation = Extras.GetMarkupContent(prop.Var.Documentation),
+                        Documentation = prop.Var.Documentation.ToMarkup(),
                         Kind = CompletionItemKind.Property
                     });
                 parseInfo.Script.AddCompletionRange(new CompletionRange(completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));

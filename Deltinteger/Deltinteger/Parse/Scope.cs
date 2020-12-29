@@ -9,9 +9,9 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Scope
+    public class Scope : IScopeHandler
     {
-        private readonly List<IVariable> _variables = new List<IVariable>();
+        private readonly List<IVariableInstance> _variables = new List<IVariableInstance>();
         private readonly List<MethodGroup> _methodGroups = new List<MethodGroup>();
         public List<ICodeTypeInitializer> Types { get; } = new List<ICodeTypeInitializer>();
         public Scope Parent { get; }
@@ -115,7 +115,7 @@ namespace Deltin.Deltinteger.Parse
 
             other.IterateElements(true, true, iterate => {
                 // Add the element.
-                if (iterate.Element is IVariable variable) _variables.Add(variable);
+                if (iterate.Element is IVariableInstance variable) _variables.Add(variable);
 
                 if (iterate.Container.PrivateCatch || iterate.Container.CompletionCatch) return ScopeIterateAction.StopAfterScope;
                 return ScopeIterateAction.Continue;
@@ -134,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="variable">The variable that will be added to the current scope. If the object reference is already in the direct scope, an exception will be thrown.</param>
         /// <param name="diagnostics">The file diagnostics to throw errors with. Should be null when adding variables internally.</param>
         /// <param name="range">The document range to throw errors at. Should be null when adding variables internally.</param>
-        public void AddVariable(IVariable variable, FileDiagnostics diagnostics, DocRange range)
+        public void AddVariable(IVariableInstance variable, FileDiagnostics diagnostics, DocRange range)
         {
             if (variable == null) throw new ArgumentNullException(nameof(variable));
             if (_variables.Contains(variable)) throw new Exception("variable reference is already in scope.");
@@ -145,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
                 _variables.Add(variable);
         }
 
-        public void AddNativeVariable(IVariable variable)
+        public void AddNativeVariable(IVariableInstance variable)
         {
             if (variable == null) throw new ArgumentNullException(nameof(variable));
             if (_variables.Contains(variable)) throw new Exception("variable reference is already in scope.");
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         /// <summary>Adds a variable to the scope that already belongs to another scope.</summary>
-        public void CopyVariable(IVariable variable)
+        public void CopyVariable(IVariableInstance variable)
         {
             if (variable == null) throw new ArgumentNullException(nameof(variable));
             if (!_variables.Contains(variable))
@@ -162,9 +162,9 @@ namespace Deltin.Deltinteger.Parse
 
         public bool IsVariable(string name) => GetVariable(name, false) != null;
 
-        public IVariable GetVariable(string name, bool methodGroupsOnly)
+        public IVariableInstance GetVariable(string name, bool methodGroupsOnly)
         {
-            IVariable element = null;
+            IVariableInstance element = null;
             Scope current = this;
 
             while (current != null && element == null)
@@ -176,9 +176,9 @@ namespace Deltin.Deltinteger.Parse
             return element;
         }
 
-        public IVariable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range, bool methodGroupsOnly)
+        public IVariableInstance GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range, bool methodGroupsOnly)
         {
-            IVariable element = GetVariable(name, methodGroupsOnly);
+            IVariableInstance element = GetVariable(name, methodGroupsOnly);
 
             if (range != null && element == null)
                 diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
@@ -192,11 +192,11 @@ namespace Deltin.Deltinteger.Parse
             return element;
         }
 
-        public IVariable[] GetAllVariables(string name)
+        public IVariableInstance[] GetAllVariables(string name)
         {
-            List<IVariable> variables = new List<IVariable>();
+            List<IVariableInstance> variables = new List<IVariableInstance>();
             IterateElements(true, false, it => {
-                if (it.Element.Name == name) variables.Add((IVariable)it.Element);
+                if (it.Element.Name == name) variables.Add((IVariableInstance)it.Element);
                 return ScopeIterateAction.Continue;
             });
             return variables.ToArray();
@@ -249,27 +249,6 @@ namespace Deltin.Deltinteger.Parse
             AddNativeMethod(method);
         }
 
-        public void AddMacro(MacroVar macro, FileDiagnostics diagnostics, DocRange range, bool checkConflicts = true)
-        {
-            if (macro == null) throw new ArgumentNullException(nameof(macro));
-            if (_variables.Contains(macro)) throw new Exception("macro reference is already in scope.");
-
-            if (checkConflicts && HasConflict(macro))
-            {
-                string message = "A macro with the same name and parameter types was already defined in this scope.";
-
-                if (diagnostics != null && range != null)
-                {
-                    diagnostics.Error(message, range);
-                    return;
-                }
-                else
-                    throw new Exception(message);
-            }
-
-            _variables.Add(macro);
-        }
-
         public void AddNativeMethod(IMethod method)
         {
             foreach (var group in _methodGroups)
@@ -300,8 +279,6 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="method">The method to check.</param>
         /// <returns>Returns true if the current scope already has the same name and parameters as the input method.</returns>
         public bool HasConflict(IMethod method) => Conflicts(method, functions: false) || GetMethodOverload(method) != null;
-
-        public bool HasConflict(MacroVar macro) => GetMacroOverload(macro.Name, macro.DefinedAt) != null;
 
         /// <summary>Gets a method in the scope that has the same name and parameter types. Can potentially resolve to itself if the method being tested is in the scope.</summary>
         /// <param name="method">The method to get a matching overload.</param>
@@ -342,29 +319,6 @@ namespace Deltin.Deltinteger.Parse
             });
 
             return method;
-        }
-
-        public IVariable GetMacroOverload(string name, Location definedAt)
-        {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            IVariable variable = null;
-
-            IterateElements(true, false, itElement => {
-                // Convert the current element to an IMethod for checking.
-                IVariable checking = (IVariable)itElement.Element;
-
-                // If the name does not match or the number of parameters are not equal, continue.
-                if (checking.Name != name || checking.DefinedAt == definedAt) return ScopeIterateAction.Continue;
-
-                // Loop through all parameters.
-               
-                // Parameter overload matches.
-                variable = checking;
-                return ScopeIterateAction.Stop;
-            });
-
-            return variable;
-
         }
 
         /// <summary>Gets all methods in the scope with the provided name.</summary>
@@ -483,7 +437,7 @@ namespace Deltin.Deltinteger.Parse
                     // Make sure the variable is not a method group and it is scoped at the current position.
                     if (variable is MethodGroup == false && scope.WasScopedAtPosition(variable, pos, getter))
                         // If TagPlayerVariables is true and the variable is a player variable, use a new completion item that highlights the variable.
-                        if (TagPlayerVariables && variable is IIndexReferencer referencer && referencer.VariableType == VariableType.Player)
+                        if (TagPlayerVariables && variable.Provider.VariableType == VariableType.Player)
                             completions.Add(new CompletionItem() {
                                 Label = "★ " + variable.Name,
                                 SortText = "!" + variable.Name, // Prepend '!' to the variable name so it shows up at the top of the completion list.
@@ -547,13 +501,27 @@ namespace Deltin.Deltinteger.Parse
         public bool ScopeContains(IScopeable element)
         {
             // Variable
-            if (element is IVariable variable) return ScopeContains(variable);
+            if (element is IVariableInstance variable) return ScopeContains(variable);
             // Function
             else if (element is IMethod function) return ScopeContains(function);
             else throw new NotImplementedException();
         }
 
-        public bool ScopeContains(IVariable variable)
+        public bool ScopeContains(IVariable provider)
+        {
+            bool found = false;
+            IterateElements(true, true, iterate => {
+                if ((iterate.Element is IVariableInstance instance) && instance.Provider == provider)
+                {
+                    found = true;
+                    return ScopeIterateAction.Stop;
+                }
+                return ScopeIterateAction.Continue;
+            });
+            return found;
+        }
+
+        public bool ScopeContains(IVariableInstance variable)
         {
             bool found = false;
             IterateElements(true, true, iterate => {
@@ -581,9 +549,8 @@ namespace Deltin.Deltinteger.Parse
         {
             if (MethodContainer) return;
 
-            foreach (IScopeable variable in _variables)
-                if (variable is IIndexReferencer referencer && // If the current scopeable is an IIndexReferencer,
-                    actionSet.IndexAssigner.TryGet(referencer, out IGettable gettable) && // and the current scopeable is assigned to an index,
+            foreach (IVariableInstance variable in _variables)
+                if (actionSet.IndexAssigner.TryGet(variable.Provider, out IGettable gettable) && // and the current scopeable is assigned to an index,
                     gettable is RecursiveIndexReference recursiveIndexReference) // and the assigned index is a RecursiveIndexReference,
                     // Pop the variable stack.
                     actionSet.AddAction(recursiveIndexReference.Pop());
@@ -591,6 +558,15 @@ namespace Deltin.Deltinteger.Parse
             if (includeParents && Parent != null)
                 Parent.EndScope(actionSet, true);
         }
+
+        Scope IScopeProvider.GetObjectBasedScope() => this;
+        Scope IScopeProvider.GetStaticBasedScope() => this;
+        IMethod IScopeProvider.GetOverridenFunction(IMethodProvider provider) => throw new NotImplementedException();
+        IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => throw new NotImplementedException();
+        void IScopeAppender.AddObjectBasedScope(IMethod function) => CopyMethod(function);
+        void IScopeAppender.AddStaticBasedScope(IMethod function) => CopyMethod(function);
+        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => CopyVariable(variable);
+        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => CopyVariable(variable);
     }
 
     class ScopeIterate

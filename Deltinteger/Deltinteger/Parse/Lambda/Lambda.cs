@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
-using Deltin.Deltinteger.Parse.Lambda;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Parse.Variables.Build;
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
     public interface IVariableTracker
     {
-        void LocalVariableAccessed(IIndexReferencer variable);
+        void LocalVariableAccessed(IVariable variable);
     }
 
     public interface ILambdaApplier : ILabeled
@@ -55,7 +54,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _parameter = parameter;
         }
 
-        public VarBuilderAttribute[] GetAttributes() => new VarBuilderAttribute[0];
+        public IVariableComponent[] GetComponents() => new IVariableComponent[0];
         public IParseType GetCodeType() => _parameter.Type;
         public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
         public string GetName() => _parameter.Identifier.GetText();

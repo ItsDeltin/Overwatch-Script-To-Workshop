@@ -9,7 +9,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedEnum : CodeType
+    public class DefinedEnum : CodeType, ISymbolLink
     {
         public LanguageServer.Location DefinedAt { get; }
         private Scope Scope { get; }
@@ -61,21 +61,23 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
-    class DefinedEnumMember : IVariable, IExpression, ICallable
+    class DefinedEnumMember : IVariable, IVariableInstance, IExpression, ICallable, ISymbolLink
     {
         public string Name { get; }
         public LanguageServer.Location DefinedAt { get; }
         public DefinedEnum Enum { get; }
 
         public AccessLevel AccessLevel => AccessLevel.Public;
-        public bool Static => true;
         public bool WholeContext => true;
         public bool CanBeIndexed => false;
-        public CodeType CodeType => null;
+        public CodeType CodeType => Enum;
+        public MarkupBuilder Documentation { get; }
 
         public ExpressionOrWorkshopValue ValueExpression { get; private set; }
 
         private DeltinScript _translateInfo { get; }
+        public VariableType VariableType => VariableType.Dynamic;
+        public IVariable Provider => this;
 
         public DefinedEnumMember(ParseInfo parseInfo, DefinedEnum type, string name, LanguageServer.Location definedAt, ExpressionOrWorkshopValue value)
         {
@@ -105,5 +107,12 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Scope ReturningScope() => null;
+
+        public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
+        public IGettableAssigner GetAssigner() => throw new NotImplementedException();
+        public IExpression GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => this;
+        public IVariableInstance GetDefaultInstance() => this;
+        public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
+        public void AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
     }
 }

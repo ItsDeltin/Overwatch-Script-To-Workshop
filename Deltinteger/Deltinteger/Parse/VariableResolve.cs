@@ -53,8 +53,8 @@ namespace Deltin.Deltinteger.Parse
             if (SetVariable != null)
             {
                 // Check if the variable is settable.
-                if (options.ShouldBeSettable && !SetVariable.Calling.Settable())
-                    diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", VariableRange);
+                // if (options.ShouldBeSettable && !SetVariable.Calling.Provider.Settable())
+                //     diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", VariableRange);
                 
                 // Check if the variable is a whole workshop variable.
                 if (options.FullVariable)
@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Parse
 
         public VariableElements ParseElements(ActionSet actionSet)
         {
-            IndexReference var;
+            IGettable var;
             Element target = null;
             Element[] index;
 
@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
                 // Parse the tree.
                 ExpressionTreeParseResult treeParseResult = Tree.ParseTree(actionSet, true);
                 // Get the variable.
-                var = (IndexReference)treeParseResult.ResultingVariable;
+                var = treeParseResult.ResultingVariable;
                 // Get the target.
                 target = (Element)treeParseResult.Target;
                 // Get the index.
@@ -92,7 +92,7 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 // Get the variable.
-                var = (IndexReference)actionSet.IndexAssigner[SetVariable.Calling];
+                var = actionSet.IndexAssigner[SetVariable.Calling.Provider];
                 // Get the index.
                 index = Array.ConvertAll(SetVariable.Index, index => (Element)index.Parse(actionSet));
             }
@@ -103,11 +103,11 @@ namespace Deltin.Deltinteger.Parse
 
     public class VariableElements
     {
-        public IndexReference IndexReference { get; }
+        public IGettable IndexReference { get; }
         public Element Target { get; }
         public Element[] Index { get; }
 
-        public VariableElements(IndexReference indexReference, Element target, Element[] index)
+        public VariableElements(IGettable indexReference, Element target, Element[] index)
         {
             IndexReference = indexReference;
             Target = target;

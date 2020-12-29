@@ -224,7 +224,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             for (int i = 0; i < parameters.Length; i++)
             {
                 // Get all vars in each function.
-                var vars = new IIndexReferencer[VirtualOptions.Length];
+                var vars = new IVariable[VirtualOptions.Length];
                 for (int v = 0; v < vars.Length; v++) vars[v] = VirtualOptions[v].GetParameterVar(i);
 
                 parameters[i] = new DefinedParameterHandler(vars, IsRecursive());
@@ -254,7 +254,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         bool DoesReturnValue();
         int ParameterCount();
         SubroutineInfo GetSubroutineInfo();
-        IIndexReferencer GetParameterVar(int index);
+        IVariable GetParameterVar(int index);
         void ParseInner(ActionSet actionSet);
         void Subcall(FunctionBuildController builder, ActionSet actionSet) => builder.Subcall(builder.ActionSet, this);
         object UniqueIdentifier();
@@ -279,7 +279,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public bool MultiplePaths() => _method.MultiplePaths;
         public bool DoesReturnValue() => _method.ReturnType != null;
         public SubroutineInfo GetSubroutineInfo() => _method.GetSubroutineInfo();
-        public IIndexReferencer GetParameterVar(int index) => index < ParameterCount() ? _method.ParameterProviders[index].Var : null;
+        public IVariable GetParameterVar(int index) => index < ParameterCount() ? _method.ParameterProviders[index].Var : null;
         public void ParseInner(ActionSet actionSet) => _method.Block.Translate(actionSet);
         public object UniqueIdentifier() => _method;
         public void Subcall(FunctionBuildController builder, ActionSet actionSet)
@@ -296,19 +296,20 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     public interface IParameterHandler
     {
         void Set(ActionSet actionSet, IWorkshopTree value);
-        void SetSubroutine(ActionSet actionSet, IndexReference parameterStore, IWorkshopTree value);
+        void SetSubroutine(ActionSet actionSet, IGettable parameterStore, IWorkshopTree value);
         void Push(ActionSet actionSet, IWorkshopTree value);
         void Pop(ActionSet actionSet);
-        IndexReference GetSubroutineStack(ActionSet actionSet, bool defaultGlobal);
+        IGettable GetSubroutineStack(ActionSet actionSet, bool defaultGlobal);
         void Apply(ActionSet actionSet, IGettable gettable);
     }
 
     public class DefinedParameterHandler : IParameterHandler
     {
-        private readonly IIndexReferencer[] _variables;
+        private readonly IVariable[] _variables;
         private readonly bool _recursive;
+        private readonly IGettableAssigner _assigner;
 
-        public DefinedParameterHandler(IIndexReferencer[] variables, bool recursive)
+        public DefinedParameterHandler(IVariable[] variables, bool recursive)
         {
             _variables = variables;
             _recursive = recursive;
@@ -316,24 +317,18 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
         public void Set(ActionSet actionSet, IWorkshopTree value)
         {
-            IGettable indexResult = actionSet.IndexAssigner.Add(actionSet.VarCollection, _variables[0], actionSet.IsGlobal, value, _recursive);
+            IGettable indexResult = _assigner.GetValue(actionSet);
             CopyToAll(actionSet, indexResult);
-
-            if (indexResult is IndexReference indexReference && value != null)
-                actionSet.AddAction(indexReference.SetVariable((Element)value));
+            indexResult.Set(actionSet, value, null, null);
         }
 
-        public void SetSubroutine(ActionSet actionSet, IndexReference parameterStore, IWorkshopTree value)
-        {
-            actionSet.AddAction(parameterStore.SetVariable((Element)value));
-        }
+        public void SetSubroutine(ActionSet actionSet, IGettable parameterStore, IWorkshopTree value) => parameterStore.Set(actionSet, value);
 
-        public IndexReference GetSubroutineStack(ActionSet actionSet, bool defaultGlobal)
+        public IGettable GetSubroutineStack(ActionSet actionSet, bool defaultGlobal)
         {
             // Create the workshop variable the parameter will be stored as.
-            IndexReference indexResult = actionSet.IndexAssigner.AddIndexReference(actionSet.VarCollection, _variables[0], defaultGlobal, _recursive);
+            IGettable indexResult = _assigner.GetValue(actionSet);
             CopyToAll(actionSet, indexResult);
-        
             return indexResult;
         }
 
@@ -368,7 +363,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             for (int i = 0; i < parameters.Length; i++)
             {
                 // Get all vars in each function.
-                var vars = new List<IIndexReferencer>();
+                var vars = new List<IVariable>();
                 for (int v = 0; v < handlers.Length; v++)
                 {
                     var result = handlers[v].GetParameterVar(i);
@@ -437,7 +432,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             var determiner = _context.GetDeterminer();
 
             // Get the variables that will be used to store the parameters.
-            IndexReference[] parameterStores = _context.GetParameterStacks(actionSet);
+            IGettable[] parameterStores = _context.GetParameterStacks(actionSet);
             
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             IndexReference objectStore = null;
@@ -491,10 +486,10 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         CodeType ContainingType();
         void SetSubroutineInfo(SubroutineInfo subroutineInfo);
         void Finish(Rule rule);
-        IndexReference[] GetParameterStacks(ActionSet actionSet) => DefaultGetParameterStacks(actionSet);
-        public IndexReference[] DefaultGetParameterStacks(ActionSet actionSet)
+        IGettable[] GetParameterStacks(ActionSet actionSet) => DefaultGetParameterStacks(actionSet);
+        public IGettable[] DefaultGetParameterStacks(ActionSet actionSet)
         {
-            IndexReference[] parameterStores = new IndexReference[Parameters().Length];
+            IGettable[] parameterStores = new IGettable[Parameters().Length];
             for (int i = 0; i < parameterStores.Length; i++)
                 parameterStores[i] = Parameters()[i].GetSubroutineStack(actionSet, VariableGlobalDefault());
             return parameterStores;
@@ -529,7 +524,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             codeLens.RuleParsed(rule);
         }
 
-        public IndexReference[] GetParameterStacks(ActionSet actionSet)
+        public IGettable[] GetParameterStacks(ActionSet actionSet)
         {
             // If any of the parent overriden functions are a subroutine,
             // inherit the variables used to store the parameters.

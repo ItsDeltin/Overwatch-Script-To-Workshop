@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.LanguageServer
             var allSymbolLinks = _languageServer.LastParse?.GetComponent<SymbolLinkComponent>().GetSymbolLinks();
             if (allSymbolLinks == null) return new LocationContainer();
 
-            ICallable use = null;
+            ISymbolLink use = null;
             Location declaredAt = null;
 
             foreach (var pair in allSymbolLinks)

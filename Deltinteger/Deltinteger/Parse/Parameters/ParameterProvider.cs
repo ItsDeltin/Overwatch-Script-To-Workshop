@@ -7,7 +7,19 @@ namespace Deltin.Deltinteger.Parse
 {
     public interface IParameterProvider
     {
-        CodeParameter GetInstance(InstanceAnonymousTypeLinker instanceInfo);
+        ParameterInstance GetInstance(InstanceAnonymousTypeLinker instanceInfo);
+    }
+
+    public class ParameterInstance
+    {
+        public CodeParameter Parameter { get; }
+        public IVariableInstance Variable { get; }
+
+        public ParameterInstance(CodeParameter parameter, IVariableInstance variableInstance)
+        {
+            Parameter = parameter;
+            Variable = variableInstance;
+        }
     }
 
     public class ParameterProvider : IParameterProvider, IRestrictedCallHandler
@@ -24,10 +36,10 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
         }
 
-        public CodeParameter GetInstance(InstanceAnonymousTypeLinker instanceInfo) => new CodeParameter(Name, Type.GetRealType(instanceInfo), DefaultValue) {
+        public ParameterInstance GetInstance(InstanceAnonymousTypeLinker instanceInfo) => new ParameterInstance(new CodeParameter(Name, Type.GetRealType(instanceInfo), DefaultValue) {
             Invoked = _invoked,
             RestrictedCalls = _restrictedCalls
-        };
+        }, Var.GetInstance(instanceInfo));
 
         public void RestrictedCall(RestrictedCall restrictedCall)
         {
@@ -51,10 +63,10 @@ namespace Deltin.Deltinteger.Parse
 
                 // Normal parameter
                 if (!subroutineParameter)
-                    newVar = new ParameterVariable(methodScope, contextHandler, parameter._invoked);
+                    newVar = (Var)new ParameterVariable(methodScope, contextHandler, parameter._invoked).GetVar();
                 // Subroutine parameter.
                 else
-                    newVar = new SubroutineParameterVariable(methodScope, contextHandler);
+                    newVar = (Var)new SubroutineParameterVariable(methodScope, contextHandler).GetVar();
 
                 parameter.Var = newVar;
                 parameter.Type = newVar.CodeType;

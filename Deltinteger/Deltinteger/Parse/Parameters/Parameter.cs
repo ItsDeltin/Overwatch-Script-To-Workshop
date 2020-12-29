@@ -118,10 +118,10 @@ namespace Deltin.Deltinteger.Parse
 
                 // Normal parameter
                 if (!subroutineParameter)
-                    newVar = new ParameterVariable(methodScope, contextHandler, parameter.Invoked);
+                    newVar = (Var)new ParameterVariable(methodScope, contextHandler, parameter.Invoked).GetVar();
                 // Subroutine parameter.
                 else
-                    newVar = new SubroutineParameterVariable(methodScope, contextHandler);
+                    newVar = (Var)new SubroutineParameterVariable(methodScope, contextHandler).GetVar();
 
                 vars[i] = newVar;
                 parameter.Type = newVar.CodeType;

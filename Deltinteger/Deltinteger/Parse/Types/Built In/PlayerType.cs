@@ -114,6 +114,7 @@ namespace Deltin.Deltinteger.Parse
             AddSharedFunctionsToScope(array.Scope);
             array.Scope.TagPlayerVariables = true;
         }
+        public IGettableAssigner GetArrayAssigner(IVariable variable) => null;
         void AddSharedFunctionsToScope(Scope scope)
         {
             scope.AddNativeMethod(Teleport);

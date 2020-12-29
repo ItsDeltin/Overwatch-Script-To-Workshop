@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
@@ -8,7 +7,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Var : IIndexReferencer, IApplyBlock
+    public class Var : IVariable, IApplyBlock, ISymbolLink, IElementProvider
     {
         private ParseInfo parseInfo { get; }
 
@@ -17,7 +16,6 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; }
-
 
         // Attributes
         public CodeType CodeType { get; }
@@ -71,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
             _handleRestrictedCalls = varInfo.HandleRestrictedCalls;
             _initalValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
-            _operationalScope = varInfo.OperationalScope;
+            _operationalScope = varInfo.Scope;
 
             if (ID != -1)
             {
@@ -88,11 +86,13 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             }
 
+            // Get the initial value.
             if (_initialValueResolve == InitialValueResolve.Instant)
                 GetInitialValue();
             else
                 parseInfo.TranslateInfo.ApplyBlock(this);
             
+            // Add the code lens.
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, varInfo.CodeLensType, DefinedAt.range));
         }
 
@@ -156,11 +156,6 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
     
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            return actionSet.IndexAssigner[this].GetVariable();
-        }
-    
         public CompletionItem GetCompletion() => new CompletionItem()
         {
             Label = Name,
@@ -194,40 +189,16 @@ namespace Deltin.Deltinteger.Parse
             name += "]";
             return name;
         }
-    }
 
-    public class VarInfo
-    {
-        public string Name { get; }
-        public Location DefinedAt { get; }
-        public ParseInfo ParseInfo { get; }
-
-        public CodeType Type = null;
-        public bool WholeContext = true;
-        public bool Static = false;
-        public bool InExtendedCollection = false;
-        public int ID = -1;
-        public IParseExpression InitialValueContext = null;
-        public AccessLevel AccessLevel = AccessLevel.Private;
-        public bool IsWorkshopReference = false;
-        public VariableType VariableType = VariableType.Dynamic;
-        public StoreType StoreType;
-        public InitialValueResolve InitialValueResolve = InitialValueResolve.Instant;
-        public Scope OperationalScope;
-        public bool Recursive;
-        public TokenType TokenType = TokenType.Variable;
-        public List<TokenModifier> TokenModifiers = new List<TokenModifier>();
-        public bool HandleRestrictedCalls;
-        public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
-        public Lambda.IBridgeInvocable BridgeInvocable;
-        public bool RequiresCapture;
-
-        public VarInfo(string name, Location definedAt, ParseInfo parseInfo)
+        public IVariableInstance GetDefaultInstance() => new VariableInstance(this, InstanceAnonymousTypeLinker.Empty);
+        public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
-            Name = name;
-            DefinedAt = definedAt;
-            ParseInfo = parseInfo;
+            var instance = new VariableInstance(this, genericsLinker);
+            scopeHandler.Add(instance, Static);
+            return instance;
         }
+        public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(), Static);
+        public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => new VariableInstance(this, genericsLinker);
     }
 
     public enum VariableType

@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet)
         {
             VariableElements elements = VariableResolve.ParseElements(actionSet);
-            Element value = (Element)Value.Parse(actionSet);
+            IWorkshopTree value = Value.Parse(actionSet);
 
             Elements.Operation? modifyOperation = null;
             switch (Operation.Text)
@@ -45,12 +45,13 @@ namespace Deltin.Deltinteger.Parse
                 default: throw new Exception($"Unknown operation {Operation}.");
             }
 
+            // TODO: update comment
             // Set Variable actions
             if (modifyOperation == null)
-                actionSet.AddAction(CommentAll(Comment, elements.IndexReference.SetVariable(value, elements.Target, elements.Index)));
+                elements.IndexReference.Set(actionSet, value, elements.Target, elements.Index);
             // Modify Variable actions
             else
-                actionSet.AddAction(CommentAll(Comment, elements.IndexReference.ModifyVariable((Elements.Operation)modifyOperation, value, elements.Target, elements.Index)));
+                elements.IndexReference.Modify(actionSet, (Elements.Operation)modifyOperation, value, elements.Target, elements.Index);
         }
 
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
@@ -95,10 +96,10 @@ namespace Deltin.Deltinteger.Parse
 
             // Increment
             if (!_decrement)
-                actionSet.AddAction(SetVariableAction.CommentAll(_comment, elements.IndexReference.ModifyVariable(Operation.Add, 1, elements.Target, elements.Index)));
+                elements.IndexReference.Modify(actionSet, Operation.Add, (Element)1, elements.Target, elements.Index);
             // Decrement
             else
-                actionSet.AddAction(SetVariableAction.CommentAll(_comment, elements.IndexReference.ModifyVariable(Operation.Subtract, 1, elements.Target, elements.Index)));
+                elements.IndexReference.Modify(actionSet, Operation.Subtract, (Element)1, elements.Target, elements.Index);
         }
 
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)

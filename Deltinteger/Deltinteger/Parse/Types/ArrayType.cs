@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
             ArrayOfType = arrayOfType;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
 
-            _length = new InternalVar("Length", CompletionItemKind.Property) { Ambiguous = false };
+            _length = new InternalVar("Length", supplier.Number(), CompletionItemKind.Property) { Ambiguous = false };
             _last = new InternalVar("Last", ArrayOfType, CompletionItemKind.Property) { Ambiguous = false };
             _first = new InternalVar("First", ArrayOfType, CompletionItemKind.Property) { Ambiguous = false };
 
@@ -189,6 +189,17 @@ namespace Deltin.Deltinteger.Parse
             Scope.AddNativeMethod(new FuncMethod(builder));
         }
 
+        public override IGettableAssigner GetGettableAssigner(IVariable variable)
+        {
+            if (ArrayOfType is IAdditionalArray addition)
+            {
+                var overrideAssigner = addition.GetArrayAssigner(variable);
+                if (overrideAssigner != null)
+                    return overrideAssigner;
+            }
+            return new DataTypeAssigner((Var)variable);
+        }
+
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
             assigner.Add(_length, Element.CountOf(reference));
@@ -251,18 +262,19 @@ namespace Deltin.Deltinteger.Parse
     interface IAdditionalArray
     {
         void OverrideArray(ArrayType array);
+        IGettableAssigner GetArrayAssigner(IVariable variable);
     }
 
     class SourceVariableResolver
     {
-        public IIndexReferencer Calling { get; private set; }
+        public IVariableInstance Calling { get; private set; }
 
         public static object GetSourceVariable(ParseInfo parseInfo, DocRange range)
         {
             var resolver = new SourceVariableResolver();
             parseInfo.SourceExpression.OnResolve(expr => {
                 // Make sure the expression is a variable call.
-                if (expr is CallVariableAction variableCall && variableCall.Calling.VariableType != VariableType.ElementReference)
+                if (expr is CallVariableAction variableCall && variableCall.Calling.Provider.VariableType != VariableType.ElementReference)
                     resolver.Calling = variableCall.Calling;
                 // Otherwise, add an error.
                 else
@@ -271,7 +283,7 @@ namespace Deltin.Deltinteger.Parse
             return resolver;
         }
 
-        public static IndexReference GetIndexReference(ActionSet actionSet, MethodCall methodCall) => (IndexReference)actionSet.IndexAssigner[((SourceVariableResolver)methodCall.AdditionalData).Calling];
+        public static IndexReference GetIndexReference(ActionSet actionSet, MethodCall methodCall) => (IndexReference)actionSet.IndexAssigner[((SourceVariableResolver)methodCall.AdditionalData).Calling.Provider];
 
         public static IWorkshopTree Modify(ActionSet actionSet, MethodCall methodCall, Operation operation)
         {

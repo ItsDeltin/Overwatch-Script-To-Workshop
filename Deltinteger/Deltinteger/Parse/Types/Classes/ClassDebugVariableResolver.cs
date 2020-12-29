@@ -62,13 +62,13 @@ namespace Deltin.Deltinteger.Parse
 
                 variables[i] = new ChildDebugVariable(
                     // Child variable resolver
-                    Class.ObjectVariables[i].Variable.Type()?.DebugVariableResolver ?? new DefaultResolver(),
+                    Class.ObjectVariables[i].Variable.CodeType.DebugVariableResolver ?? new DefaultResolver(),
                     // Value
                     value,
                     // Name
                     Class.ObjectVariables[i].Variable.Name,
                     // Type
-                    Class.ObjectVariables[i].Variable.Type()?.GetName() ?? "define"
+                    Class.ObjectVariables[i].Variable.CodeType.GetName()
                 );
                 collection.Add(variables[i]);
             }

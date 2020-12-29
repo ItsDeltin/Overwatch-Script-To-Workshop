@@ -4,10 +4,10 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ObjectVariable
     {
-        public IIndexReferencer Variable { get; }
+        public IVariable Variable { get; }
         public IndexReference ArrayStore { get; private set; }
 
-        public ObjectVariable(IIndexReferencer variable)
+        public ObjectVariable(IVariable variable)
         {
             Variable = variable;
         }

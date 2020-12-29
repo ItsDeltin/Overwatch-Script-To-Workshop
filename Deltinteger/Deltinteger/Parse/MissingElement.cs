@@ -23,14 +23,16 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet) => throw new NotImplementedException();
     }
 
-    public class MissingVariable : IVariable, IExpression
+    public class MissingVariable : IVariable, IVariableInstance, IExpression
     {
         public string Name { get; }
-        public bool Static => true;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public CodeType CodeType { get; }
+        public VariableType VariableType => VariableType.Dynamic;
+        public IVariable Provider => this;
+        public MarkupBuilder Documentation { get; set; }
 
         public MissingVariable(DeltinScript deltinScript, string name)
         {
@@ -43,5 +45,10 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => CodeType;
         public CompletionItem GetCompletion() => throw new NotImplementedException();
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
+        public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
+        public IVariableInstance GetDefaultInstance() => this;
+        public IGettableAssigner GetAssigner() => throw new NotImplementedException();
+        public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
+        public void AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
     }
 }

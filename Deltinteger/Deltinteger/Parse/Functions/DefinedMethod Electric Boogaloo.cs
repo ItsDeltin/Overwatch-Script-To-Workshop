@@ -15,13 +15,30 @@ namespace Deltin.Deltinteger.Parse
         Scope GetObjectBasedScope();
         Scope GetStaticBasedScope();
         IMethod GetOverridenFunction(IMethodProvider provider);
+        IVariableInstance GetOverridenVariable(string variableName);
+        Scope GetScope(bool isStatic) => isStatic ? GetStaticBasedScope() : GetObjectBasedScope();
     }
 
     public interface IScopeAppender
     {
         void AddObjectBasedScope(IMethod function);
         void AddStaticBasedScope(IMethod function);
+        void AddObjectBasedScope(IVariableInstance variable);
+        void AddStaticBasedScope(IVariableInstance variable);
+
+        void Add(IMethod function, bool isStatic)
+        {
+            if (isStatic) AddStaticBasedScope(function);
+            else AddObjectBasedScope(function);
+        }
+        void Add(IVariableInstance variable, bool isStatic)
+        {
+            if (isStatic) AddStaticBasedScope(variable);
+            else AddObjectBasedScope(variable);
+        }
     }
+
+    public interface IScopeHandler : IScopeProvider, IScopeAppender {}
 
     public class DefinedMethodProvider : IElementProvider, IMethodProvider, IApplyBlock
     {
@@ -69,18 +86,23 @@ namespace Deltin.Deltinteger.Parse
             DocRange nameRange = context.Identifier.Range;
 
             // Get the attributes.
-            var attributeResult = new GenericAttributeAppender();
-            var attributeGetter = new MethodAttributesGetter(context, attributeResult);
+            var attributeResult = new GenericAttributeAppender(AttributeType.Ref, AttributeType.GlobalVar, AttributeType.PlayerVar);
+            var attributeGetter = new AttributesGetter(context.Attributes, attributeResult);
             attributeGetter.GetAttributes(parseInfo.Script.Diagnostics);
 
             // Set the attributes.
             Static = attributeResult.IsStatic;            
-            IsSubroutine = attributeResult.IsSubroutine;            
-            SubroutineName = attributeResult.SubroutineName;
-            AccessLevel = attributeResult.AccessLevel;
             Recursive = attributeResult.IsRecursive;
             Virtual = attributeResult.IsVirtual;
-            SubroutineDefaultGlobal = attributeResult.DefaultVariableType;
+            AccessLevel = attributeResult.Accessor;
+
+            // Get subroutine info.
+            if (context.Subroutine)
+            {
+                IsSubroutine = true;
+                SubroutineName = context.Subroutine.Text;
+                SubroutineDefaultGlobal = !context.PlayerVar;
+            }
 
             // Setup the scope.
             _containingScope = Static ? scopeProvider.GetStaticBasedScope() : scopeProvider.GetObjectBasedScope();
@@ -149,18 +171,7 @@ namespace Deltin.Deltinteger.Parse
         public string GetLabel(bool markdown) => throw new NotImplementedException();
     
         public IMethod GetDefaultInstance() => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes));
-        public void AddDefaultInstance(IScopeAppender scopeHandler)
-        {
-            // Get the instance.
-            IMethod instance = GetDefaultInstance();
-            
-            // Add the function to the scope.
-            if (Static)
-                scopeHandler.AddStaticBasedScope(instance);
-            else
-                scopeHandler.AddObjectBasedScope(instance);
-        }
-        public IMethod GetInstance(GetInstanceInfo instanceInfo) => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));
+        public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(), Static);
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
             // Get the instance.
@@ -220,7 +231,7 @@ namespace Deltin.Deltinteger.Parse
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             for (int i = 0; i < Parameters.Length; i++)
-                Parameters[i] = provider.ParameterProviders[i].GetInstance(instanceInfo);
+                Parameters[i] = provider.ParameterProviders[i].GetInstance(instanceInfo).Parameter;
         }
 
         IMethodProvider IMethod.GetProvider() => Provider;
