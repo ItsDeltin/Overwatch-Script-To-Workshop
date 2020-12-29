@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Create the variable.
             DBPVariable variable = new DBPVariable(debugVariable, Class.Name);
-            variable.namedVariables = Class.ObjectVariables.Count;
+            variable.namedVariables = Class.ObjectVariables.Length;
             variable.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
 
             return variable;
@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
             // Create the evaluation response.
             IDebugVariable.ApplyReference(collection, debugVariable);
             EvaluateResponse response = new EvaluateResponse(collection, debugVariable);
-            response.namedVariables = Class.ObjectVariables.Count;
+            response.namedVariables = Class.ObjectVariables.Length;
             
             return response;
         }
@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
             // The class reference of the parent variable.
             int reference = (int)((CsvNumber)parent.Value).Value;
 
-            IDebugVariable[] variables = new IDebugVariable[Class.ObjectVariables.Count];
+            IDebugVariable[] variables = new IDebugVariable[Class.ObjectVariables.Length];
             for (int i = 0; i < variables.Length; i++)
             {
                 CsvPart value = new CsvNull();

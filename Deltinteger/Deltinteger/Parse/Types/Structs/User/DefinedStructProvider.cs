@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
                 ((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo);
         }
 
-        public void AddVariable(Var var) => base.Variables.Add(var);
+        public void AddVariable(IVariable var) => base.Variables.Add(var);
 
         public override CodeType GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
         // TODO: generics support for structs.

@@ -27,13 +27,24 @@ namespace Deltin.Deltinteger.Parse
             StaticScope = new Scope();
 
             // Add elements to scope.
+            ObjectVariables = new ObjectVariable[initializer.ObjectVariables.Count];            
             foreach (var element in initializer.DeclaredElements)
             {
                 var instance = element.AddInstance(this, anonymousTypeLinker);
 
+                // Function
                 if (instance is IMethod method && method.Attributes.Virtual)
                     VirtualFunctions.Add(method);
+                
+                // Variable
+                else if (instance is IVariableInstance variableInstance)
+                {
+                    int objectVariableIndex = Array.IndexOf(initializer.ObjectVariables.ToArray(), variableInstance.Provider);
+                    ObjectVariables[objectVariableIndex] = new ObjectVariable(variableInstance);
+                }
             }
+
+            parseInfo.TranslateInfo.AddWorkshopInit(this);
         }
 
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)

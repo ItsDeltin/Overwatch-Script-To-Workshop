@@ -30,6 +30,8 @@ namespace Deltin.Deltinteger.Parse
     {
         GettableAssignerResult GetResult(GettableAssignerValueInfo info);
         IGettable GetValue(GettableAssignerValueInfo info) => GetResult(info).Gettable;
+        IGettable AssignClassStacks(GetClassStacks info);
+        int StackDelta();
     }
 
     /// <summary>Assigner for normal variables.</summary>
@@ -68,6 +70,11 @@ namespace Deltin.Deltinteger.Parse
 
             return new GettableAssignerResult(value, initialValue);
         }
+    
+        public IGettable AssignClassStacks(GetClassStacks info) =>
+            info.ClassData.GetClassVariableStack(info.VarCollection, info.StackOffset);
+
+        public int StackDelta() => 1;
     }
 
     /// <summary>Assigner for constant workshop values.</summary>
@@ -84,6 +91,10 @@ namespace Deltin.Deltinteger.Parse
             var value = _value.Parse(info.ActionSet);
             return new GettableAssignerResult(new WorkshopElementReference(value), value);
         }
+
+        public IGettable AssignClassStacks(GetClassStacks info) => throw new System.NotImplementedException();
+
+        public int StackDelta() => 0;
     }
 
     public class GettableAssignerResult
@@ -95,6 +106,33 @@ namespace Deltin.Deltinteger.Parse
         {
             Gettable = gettable;
             InitialValue = initialValue;
+        }
+    }
+
+    public class GetClassStacks
+    {
+        public DeltinScript DeltinScript { get; }
+        public int StackOffset { get; }
+        public ClassData ClassData { get; }
+        public VarCollection VarCollection => DeltinScript.VarCollection;
+
+        public GetClassStacks(DeltinScript deltinScript, int stackOffset)
+        {
+            DeltinScript = deltinScript;
+            StackOffset = stackOffset;
+            ClassData = DeltinScript.GetComponent<ClassData>();
+        }
+    }
+
+    public class AssignClassStacksResult
+    {
+        public IGettable Stack { get; }
+        public int StackOffsetDelta { get; }
+
+        public AssignClassStacksResult(IGettable stack, int stackOffsetDelta)
+        {
+            Stack = stack;
+            StackOffsetDelta = stackOffsetDelta;
         }
     }
 }

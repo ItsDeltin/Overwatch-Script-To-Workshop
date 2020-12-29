@@ -149,8 +149,9 @@ namespace Deltin.Deltinteger
     {
         IWorkshopTree GetVariable(Element eventPlayer = null);
         void Set(ActionSet actionSet, IWorkshopTree value) => Set(actionSet, value, null, null);
-        void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index);
+        void Set(ActionSet actionSet, IWorkshopTree value, Element target, params Element[] index);
         void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index);
+        IGettable ChildFromClassReference(IWorkshopTree reference);
     }
 
     public interface ILabeled

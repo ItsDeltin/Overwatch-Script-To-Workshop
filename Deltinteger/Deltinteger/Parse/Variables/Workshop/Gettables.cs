@@ -41,6 +41,8 @@ namespace Deltin.Deltinteger.Parse
             // Note: `ArrayBuilder` and `ArrayBuilder<Element>` are 2 very different things.
             return new IndexReference(ArrayBuilder, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
         }
+
+        IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => CreateChild((Element)reference);
     }
 
     public class RecursiveIndexReference : IndexReference
@@ -114,6 +116,9 @@ namespace Deltin.Deltinteger.Parse
             => throw new NotImplementedException();
 
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
+            => throw new NotImplementedException();
+
+        IGettable IGettable.ChildFromClassReference(IWorkshopTree reference)
             => throw new NotImplementedException();
     }
 }

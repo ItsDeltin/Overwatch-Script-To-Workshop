@@ -5,7 +5,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public interface IDefinedTypeInitializer : ICodeTypeInitializer, IScopeHandler
     {
-        void AddVariable(Var var);
+        void AddVariable(IVariable var);
 
         public static ICodeTypeInitializer GetInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext)
         {

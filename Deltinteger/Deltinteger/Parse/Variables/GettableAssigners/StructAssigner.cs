@@ -1,3 +1,4 @@
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
@@ -23,6 +24,28 @@ namespace Deltin.Deltinteger.Parse
                 children[i] = _variables[i].GetAssigner().GetValue(info);
             
             return new GettableAssignerResult(new StructAssignerValue(children), null);
+        }
+
+        public IGettable AssignClassStacks(GetClassStacks info)
+        {
+            int offset = 0;
+            IGettable[] children = new IGettable[_variables.Length];
+            for (int i = 0; i < children.Length; i++)
+            {
+                var assigner = _variables[i].GetAssigner();
+                children[i] = assigner.AssignClassStacks(new GetClassStacks(info.DeltinScript, offset));
+                offset += assigner.StackDelta();
+            }
+            
+            return new StructAssignerValue(children);
+        }
+
+        public int StackDelta()
+        {
+            int delta = 0;
+            for (int i = 0; i < _variables.Length; i++)
+                delta += _variables[i].GetAssigner().StackDelta();
+            return delta;
         }
     }
 
@@ -51,6 +74,16 @@ namespace Deltin.Deltinteger.Parse
             
             for (int i = 0; i < _children.Length; i++)
                 _children[i].Modify(actionSet, operation, structValue.Children[i].GetVariable(target), target, index);
+        }
+
+        public IGettable ChildFromClassReference(IWorkshopTree reference)
+        {
+            var newChildren = new IGettable[_children.Length];
+
+            for (int i = 0; i < newChildren.Length; i++)
+                newChildren[i] = _children[i].ChildFromClassReference(reference);
+            
+            return new StructAssignerValue(newChildren);
         }
     }
 

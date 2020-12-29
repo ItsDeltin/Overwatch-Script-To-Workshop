@@ -13,9 +13,9 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
         public Scope ServeObjectScope { get; set; }
 
-        public int Identifier => Initializer.Identifier;
+        public int Identifier { get; set; }
 
-        public List<ObjectVariable> ObjectVariables { get; } = new List<ObjectVariable>();
+        public ObjectVariable[] ObjectVariables { get; protected set; }
 
         public ClassType(ClassInitializer initializer) : base(initializer.Name)
         {
@@ -23,7 +23,39 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override void ResolveElements() => Initializer.ResolveElements();
-        public override void WorkshopInit(DeltinScript translateInfo) => Initializer.WorkshopInit(translateInfo);
+
+        public override void WorkshopInit(DeltinScript translateInfo)
+        {
+            ClassData classData = translateInfo.GetComponent<ClassData>();
+            Identifier = classData.AssignID();
+
+            int stackOffset = StackStart(false);
+            Extends?.WorkshopInit(translateInfo);
+
+            foreach (var objectVariable in ObjectVariables)
+            {
+                objectVariable.SetArrayStore(translateInfo, stackOffset);
+                stackOffset += objectVariable.StackCount;
+            }
+        }
+
+        private int StackStart(bool inclusive)
+        {
+            int extStack = 0;
+            if (Extends != null) extStack = ((ClassType)Extends).StackStart(true);
+            if (inclusive) foreach (var variable in ObjectVariables) extStack += variable.StackCount;
+            return extStack;
+        }
+
+        public override void BaseSetup(ActionSet actionSet, Element reference)
+        {
+            if (Extends != null)
+                Extends.BaseSetup(actionSet, reference);
+
+            foreach (ObjectVariable variable in ObjectVariables)
+                variable.Init(actionSet, reference);
+        }
+
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
@@ -53,15 +85,6 @@ namespace Deltin.Deltinteger.Parse
             return classReference;
         }
 
-        public override void BaseSetup(ActionSet actionSet, Element reference)
-        {
-            if (Extends != null)
-                Extends.BaseSetup(actionSet, reference);
-
-            foreach (ObjectVariable variable in ObjectVariables)
-                variable.Init(actionSet, reference);
-        }
-
         protected virtual void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
             // Parse the constructor.
@@ -73,14 +96,20 @@ namespace Deltin.Deltinteger.Parse
             if (Extends != null && Extends.CanBeDeleted)
                 Extends.Delete(actionSet, reference);
 
-            foreach (ObjectVariable objectVariable in ObjectVariables)
-                actionSet.AddAction(objectVariable.ArrayStore.SetVariable(
-                    value: 0,
-                    index: reference
-                ));
+            // TODO: delete
+            // foreach (ObjectVariable objectVariable in ObjectVariables)
+            //     actionSet.AddAction(objectVariable.ArrayStore.SetVariable(
+            //         value: 0,
+            //         index: reference
+            //     ));
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) => Initializer.AddObjectVariablesToAssigner(reference, assigner);
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        {
+            Extends?.AddObjectVariablesToAssigner(reference, assigner);
+            foreach (var objectVariable in ObjectVariables)
+                objectVariable.AddToAssigner(reference, assigner);
+        }
 
         public override Scope GetObjectScope() => ServeObjectScope;
         public override Scope ReturningScope() => StaticScope;

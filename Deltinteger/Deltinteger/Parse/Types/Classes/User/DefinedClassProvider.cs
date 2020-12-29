@@ -27,7 +27,6 @@ namespace Deltin.Deltinteger.Parse
             _definedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
             _scope = scope;
 
-            parseInfo.TranslateInfo.AddWorkshopInit(this);
             parseInfo.TranslateInfo.AddResolve(this);
 
             // Get the generics.
@@ -106,54 +105,6 @@ namespace Deltin.Deltinteger.Parse
             foreach (var declaration in _typeContext.Declarations)
                 DeclaredElements.Add(((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo));
 
-            // Get the declarations.
-            /*
-            foreach (var declaration in _typeContext.Declarations)
-            {
-                // Function
-                if (declaration is FunctionContext function)
-                {
-                    var result = DefinedMethodProvider.GetDefinedMethod(_parseInfo, this, function, this);
-                    result.AddDefaultInstance(this);
-                    DeclaredElements.Add(result);
-                }
-                // else
-                // {
-                //     IScopeable scopeable;
-
-                //     if (declaration is MacroFunctionContext macroFunction)
-                //         scopeable = _parseInfo.GetMacro(OperationalScope, StaticScope, macroFunction);
-                //     // Variable
-                //     else if (declaration is VariableDeclaration variable)
-                //         scopeable = new ClassVariable(OperationalScope, StaticScope, new DefineContextHandler(_parseInfo, variable)).GetVar();
-                //     // Macro variable
-                //     else if (declaration is MacroVarDeclaration macroVar)
-                //         scopeable = _parseInfo.GetMacro(OperationalScope, StaticScope, macroVar);
-                //     // Unknown
-                //     else throw new NotImplementedException(declaration.GetType().ToString());
-
-                //     // Add the object variable if it is an IIndexReferencer.
-                //     if (scopeable is IIndexReferencer referencer)
-                //         AddObjectVariable(referencer);
-                    
-                //     // Copy to scopes.
-                //     // Method copy
-                //     if (scopeable is IMethod method)
-                //     {
-                //         if (method.Static) OperationalScope.CopyMethod(method);
-                //         else ServeObjectScope.CopyMethod(method);
-                //     }
-                //     // Variable copy
-                //     else if (scopeable is IVariable variable)
-                //     {
-                //         if (scopeable.Static) OperationalScope.CopyVariable(variable);
-                //         else ServeObjectScope.CopyVariable(variable);
-                //     }
-                //     else throw new NotImplementedException();
-                // }
-            }
-            */
-
             WorkingInstance = GetInstance();
 
             // Get the constructors.
@@ -202,7 +153,5 @@ namespace Deltin.Deltinteger.Parse
         {
             throw new NotImplementedException();
         }
-
-        public void AddVariable(Var var) => AddObjectVariable(var);
     }
 }
