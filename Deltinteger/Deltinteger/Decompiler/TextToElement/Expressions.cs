@@ -68,6 +68,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             else
             {
                 decompiler.Append("<" + str + ", ");
+                count = System.Math.Min(count, Formats.Length);
                 for (int i = 0; i < count; i++)
                 {
                     Formats[i].Decompile(decompiler);
