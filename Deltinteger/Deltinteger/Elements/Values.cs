@@ -1041,7 +1041,7 @@ namespace Deltin.Deltinteger.Elements
         {
             return OptimizeMultiplyOperation(
                 op: (a, b) => a * b,
-                areEqual: (a, b) => Element.Part<V_RaiseToPower>(a, new V_Number(2)),
+                areEqual: (a, b) => a*b,
                 true
             );
         }

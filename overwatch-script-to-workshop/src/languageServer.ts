@@ -65,7 +65,7 @@ async function checkServerModule()
 	}
 
 	// Make sure dotnet is installed.
-	let version = await getVersionInfo(serverModule);
+	let version = await getVersionInfo(serverModule, ex => window.showErrorMessage('Failed to retrieve version info: ' + ex));
 
 	if (version.version != 'unprovided')
 		gotVersion(version.version);
