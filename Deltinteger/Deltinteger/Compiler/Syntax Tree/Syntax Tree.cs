@@ -603,9 +603,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public List<IParseStatement> Statements { get; }
         public MetaComment Comment { get; set; }
+        public MetaComment EndComment { get; set; }
 
-        public Block(List<IParseStatement> statements)
+        public Block(List<IParseStatement> statements, MetaComment endComment)
         {
+            EndComment = endComment;
             Statements = statements;
         }
 

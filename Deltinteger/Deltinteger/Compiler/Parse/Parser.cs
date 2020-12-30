@@ -638,11 +638,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             return values;
         }
+        
 
-        List<T> ParseList<T>(TokenType terminator, Func<bool> isElement, Func<T> parseElement)
+        List<T> ParseList<T>(TokenType terminator, Func<bool> isElement, Func<T> parseElement) => ParseList(() => Is(terminator), isElement, parseElement);
+
+        List<T> ParseList<T>(Func<bool> isTerminator, Func<bool> isElement, Func<T> parseElement)
         {
             var elements = new List<T>();
-            while (!Is(terminator))
+            while (!isTerminator.Invoke())
             {
                 if (isElement())
                 {
@@ -676,7 +679,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Parses a block.</summary>
-        /// <returns>The resulting block.</returns>
+        /// <returns>The resulting block.</returns
         Block ParseBlock()
         {
             StartTokenCapture();
@@ -686,13 +689,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Open);
 
             // List of statements in the block
-            var statements = ParseList(TokenType.CurlyBracket_Close, () => Kind.IsStartOfStatement(), () => ParseStatement());
+            var statements = ParseList(() => Is(TokenType.CurlyBracket_Close) || (Is(TokenType.ActionComment) && Is(TokenType.CurlyBracket_Close, 1)), () => Kind.IsStartOfStatement(), () => ParseStatement());
 
+
+            //End Comment
+            MetaComment metaComment = Is(TokenType.ActionComment) ? ParseMetaComment() : null;
             // Close block
             ParseExpected(TokenType.CurlyBracket_Close);
 
             // Create the block
-            var result = new Block(statements);
+            var result = new Block(statements, metaComment);
 
             EndTokenCapture(result);
 

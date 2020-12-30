@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public IStatement ElseBlock { get; }
         private PathInfo[] Paths { get; }
         private string Comment;
+        private string EndComment;
 
         public IfAction(ParseInfo parseInfo, Scope scope, If ifContext)
         {
@@ -47,6 +48,9 @@ namespace Deltin.Deltinteger.Parse
                 paths.Add(new PathInfo(ElseBlock, ifContext.Range, true));
             }
             Paths = paths.ToArray();
+            if(Block is BlockAction block) {
+                EndComment = block.EndComment;
+            }
         }
 
         public PathInfo[] GetPaths() => Paths;
@@ -151,7 +155,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Add the end of the if.
-            actionSet.AddAction(new A_End());
+            var end = new A_End();
+            end.Comment = EndComment;
+            actionSet.AddAction(end);
         }
     }
 
