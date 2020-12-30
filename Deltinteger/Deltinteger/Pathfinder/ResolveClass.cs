@@ -26,19 +26,22 @@ namespace Deltin.Deltinteger.Pathfinder
             base.ResolveElements();
 
             // Set ParentArray
-            ParentArray = AddObjectVariable(new InternalVar("ParentArray"));
-            
+            // ParentArray = AddObjectVariable(new InternalVar("ParentArray"));
+
             // Set Pathmap
-            Pathmap = AddObjectVariable(new InternalVar("OriginMap"));
+            // Pathmap = AddObjectVariable(new InternalVar("OriginMap"));
 
             // Set Destination
-            Destination = AddObjectVariable(new InternalVar("Destination"));
+            // Destination = AddObjectVariable(new InternalVar("Destination"));
 
             ObjectScope.AddNativeMethod(PathfindFunction);
             ObjectScope.AddNativeMethod(Next);
         }
 
         public override bool BuiltInTypeMatches(Type type) => false;
+        public override void WorkshopInit(DeltinScript translateInfo) => throw new NotImplementedException();
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) => throw new NotImplementedException();
+        public override void New(ActionSet actionSet, NewClassInfo newClassInfo) => throw new NotImplementedException();
 
         private FuncMethod PathfindFunction => new FuncMethodBuilder() {
             Name = "Pathfind",
@@ -46,7 +49,8 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The players to pathfind.")
             },
-            Action = (actionSet, call) => {
+            Action = (actionSet, call) =>
+            {
                 // Get the ResolveInfoComponent.
                 ResolveInfoComponent resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
 
@@ -57,7 +61,8 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
-        private FuncMethod Next => new FuncMethodBuilder() {
+        private FuncMethod Next => new FuncMethodBuilder()
+        {
             Name = "Next",
             Documentation = new MarkupBuilder().Add("Gets a node's parent index from a node index. Continuously feeding the result back into this function will eventually lead to the source of the resolved path. The node's actual position can be obtained by calling ").Code("PathResolve.OriginMap.Nodes[node_index]").Add(".")
                 .NewLine().Add("Identical to doing ").Code("parent_node_index = PathResolve.ParentArray[node_index] - 1").ToString(),

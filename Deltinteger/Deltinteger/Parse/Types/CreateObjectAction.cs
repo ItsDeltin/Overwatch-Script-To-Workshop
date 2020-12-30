@@ -17,30 +17,32 @@ namespace Deltin.Deltinteger.Parse
 
         public CreateObjectAction(ParseInfo parseInfo, Scope scope, NewExpression context)
         {
-            if (context.ClassIdentifier == null) return;
-
             // Get the type. Syntax error if there is no type name.
-            CreatingObjectOf = scope.GetInitializer(context.ClassIdentifier.Text, parseInfo.Script.Diagnostics, context.ClassIdentifier.Range)?.GetInstance();
+            CreatingObjectOf = TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, context.Type);
             
-            if (CreatingObjectOf != null)
+            DocRange nameRange = context.Type.Range;
+
+            // Get the constructor to use.
+            OverloadChooser = new OverloadChooser(
+                CreatingObjectOf.Constructors.Select(c => new ConstructorOverload(c)).ToArray(),
+                parseInfo,
+                CreatingObjectOf.ReturningScope(),
+                scope,
+                nameRange,
+                context.Range,
+                context.Range,
+                new OverloadError("type " + CreatingObjectOf.Name)
+            );
+            OverloadChooser.Apply(context.Parameters, false, null);
+
+            Constructor = (Constructor)OverloadChooser.Overload;
+            ConstructorValues = OverloadChooser.Values ?? new IExpression[0];
+
+            if (Constructor != null)
             {
-                DocRange nameRange = context.ClassIdentifier.Range;
-
-                // Get the constructor to use.
-                OverloadChooser = new OverloadChooser(
-                    CreatingObjectOf.Constructors.Select(c => new ConstructorOverload(c)).ToArray(), parseInfo, CreatingObjectOf.ReturningScope(), scope, nameRange, context.Range, new OverloadError("type " + CreatingObjectOf.Name)
-                );
-                OverloadChooser.Apply(context.Parameters, false, null);
-
-                Constructor = (Constructor)OverloadChooser.Overload;
-                ConstructorValues = OverloadChooser.Values ?? new IExpression[0];
-
-                if (Constructor != null)
-                {
-                    parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(Constructor, new Location(parseInfo.Script.Uri, nameRange));
-                    Constructor.Call(parseInfo, nameRange);
-                    parseInfo.Script.AddHover(context.Range, Constructor.GetLabel(true));
-                }
+                parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(Constructor, new Location(parseInfo.Script.Uri, nameRange));
+                Constructor.Call(parseInfo, nameRange);
+                parseInfo.Script.AddHover(context.Range, Constructor.GetLabel(true));
             }
         }
 

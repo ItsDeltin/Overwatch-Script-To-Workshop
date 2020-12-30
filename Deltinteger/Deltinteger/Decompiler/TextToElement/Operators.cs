@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Operator = op;
             Type = type;
         }
-        
+
         public TTEOperator(int precedence, string op, ContainGroup contain)
         {
             Precedence = precedence;
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         {
             if ((op1 == Ternary || op1 == RhsTernary) && (op2 == Ternary || op2 == RhsTernary))
                 return op1 == RhsTernary && op2 == RhsTernary;
-            
+
             if (op1 == Sentinel || op2 == Sentinel) return false;
             return op1.Precedence > op2.Precedence;
         }

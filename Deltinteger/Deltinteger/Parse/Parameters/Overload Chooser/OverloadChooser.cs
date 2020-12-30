@@ -21,8 +21,9 @@ namespace Deltin.Deltinteger.Parse.Overload
         private readonly ParseInfo _parseInfo;
         private readonly Scope _scope;
         private readonly Scope _getter;
-        private readonly DocRange _genericErrorRange;
         private readonly OverloadError _errorMessages;
+        private readonly DocRange _targetRange;
+        private readonly DocRange _fullRange;
 
         private readonly IOverload[] _overloads;
         private CodeType[] _generics;
@@ -34,17 +35,19 @@ namespace Deltin.Deltinteger.Parse.Overload
         public DocRange[] ParameterRanges { get; private set; }
         public object AdditionalData { get; private set; }
         public object[] AdditionalParameterData { get; private set; }
+        private int _providedParameterCount;
+        private DocRange _extraneousParameterRange;
 
-        public OverloadChooser(IOverload[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
+        public OverloadChooser(IOverload[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange targetRange, DocRange callRange, DocRange fullRange, OverloadError errorMessages)
         {
             _overloads = overloads;
             _parseInfo = parseInfo;
             _scope = elementScope;
             _getter = getter;
-            _genericErrorRange = genericErrorRange;
-            _errorMessages = errorMessages;
+            _targetRange = targetRange;
             CallRange = callRange;
-
+            _fullRange = fullRange;
+            _errorMessages = errorMessages;
             parseInfo.Script.AddOverloadData(this);
         }
 
@@ -71,10 +74,16 @@ namespace Deltin.Deltinteger.Parse.Overload
             // Return empty if context is null.
             if (context == null) return new PickyParameter[0];
 
+            _providedParameterCount = context.Count;
+
             // Create the parameters array with the same length as the number of input parameters.
             PickyParameter[] parameters = new PickyParameter[context.Count];
             for (int i = 0; i < parameters.Length; i++)
             {
+                // If this is the last parameter and there is a proceeding comma, set the extraneous comma range.
+                if (i == parameters.Length - 1 && context[i].NextComma != null)
+                    _extraneousParameterRange = context[i].NextComma.Range;
+
                 PickyParameter parameter = new PickyParameter(false);
                 parameters[i] = parameter;
 
@@ -114,7 +123,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
             // Check type arg count.
             if (_genericsProvided && _generics.Length != option.TypeArgCount)
-                match.IncorrectTypeArgCount(_genericErrorRange);
+                match.IncorrectTypeArgCount(_targetRange);
             
             // Iterate through the option's parameters.
             for (int i = 0; i < inputParameters.Length; i++)
@@ -155,7 +164,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                             if (!_genericsProvided)
                                 ExtractInferredGenerics(match, match.TypeArgLinker, option.Parameters[p].Type, inputParameters[i].Value.Type());
                         }
-                    
+
                     // If the named argument's name is not found, throw an error.
                     if (!nameFound)
                         match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.Label}'.", inputParameters[i].NameRange);
@@ -166,7 +175,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(i);
 
             // Get the missing parameters.
-            match.GetMissingParameters(_genericErrorRange, _errorMessages, context, CallRange);
+            match.GetMissingParameters(_errorMessages, context, _targetRange, CallRange);
 
             return match;
         }
@@ -183,7 +192,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                     typeLinker.Links.Add(pat, expressionType);
                 // Otherwise, the link exists. If the expression type is not equal to the link type, add an error.
                 else if (!expressionType.Is(typeLinker.Links[pat]))
-                    match.Error(couldNotInfer, _genericErrorRange);
+                    match.Error(couldNotInfer, _targetRange);
             }
             
             // Recursively match generics.
@@ -194,7 +203,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                         // Recursively check the generics.
                         ExtractInferredGenerics(match, typeLinker, parameterType, expressionType);
                     else
-                        match.Error(couldNotInfer, _genericErrorRange);
+                        match.Error(couldNotInfer, _targetRange);
         }
 
         private OverloadMatch BestOption(OverloadMatch[] matches)
@@ -234,12 +243,12 @@ namespace Deltin.Deltinteger.Parse.Overload
             else if (!_getter.AccessorMatches(_scope, Overload.AccessLevel)) accessable = false;
 
             if (!accessable)
-                _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), _genericErrorRange);
+                _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), _targetRange);
         }
-    
+
         private void GetAdditionalData()
         {
-            AdditionalData = Overload.Call(_parseInfo, CallRange);
+            AdditionalData = Overload.Call(_parseInfo, _fullRange);
             AdditionalParameterData = new object[Overload.Parameters.Length];
             for (int i = 0; i < Overload.Parameters.Length; i++)
                 AdditionalParameterData[i] = Overload.Parameters[i].Validate(_parseInfo, Values[i], ParameterRanges.ElementAtOrDefault(i), AdditionalData);
@@ -249,23 +258,33 @@ namespace Deltin.Deltinteger.Parse.Overload
         {
             // Get the active parameter.
             int activeParameter = -1;
-            if (ParameterRanges != null)
+
+            // Comma with no proceeding value.
+            if (_extraneousParameterRange != null && (_extraneousParameterRange.Start + CallRange.End).IsInside(caretPos))
+                activeParameter = _providedParameterCount;
+            // Parameter
+            else if (ParameterRanges != null)
                 // Loop through parameter ranges while activeParameter is -1.
                 for (int i = 0; i < ParameterRanges.Length && activeParameter == -1; i++)
                     // If the proved caret position is inside the parameter range, set it as the active parameter.
                     if (ParameterRanges[i] != null && ParameterRanges[i].IsInside(caretPos))
                         activeParameter = i;
-            
+
             // Get the signature information.
             SignatureInformation[] overloads = new SignatureInformation[_overloads.Length];
+            int activeSignature = -1;
             for (int i = 0; i < overloads.Length; i++)
             {
+                if (Overload == _overloads[i].Value)
+                    activeSignature = i;
+
                 // Get the parameter information for the signature.
                 var parameters = new ParameterInformation[_overloads[i].Parameters.Length];
 
                 // Convert parameters to parameter information.
                 for (int p = 0; p < parameters.Length; p++)
-                    parameters[p] = new ParameterInformation() {
+                    parameters[p] = new ParameterInformation()
+                    {
                         // Get the label to show in the signature.
                         Label = _overloads[i].Parameters[p].GetLabel(),
                         // Get the documentation.
@@ -283,7 +302,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             return new SignatureHelp()
             {
                 ActiveParameter = activeParameter,
-                ActiveSignature = Array.IndexOf(_overloads, Overload),
+                ActiveSignature = activeSignature,
                 Signatures = overloads
             };
         }
@@ -357,13 +376,13 @@ namespace Deltin.Deltinteger.Parse.Overload
         }
 
         /// <summary>Determines if there are any missing parameters.</summary>
-        public void GetMissingParameters(DocRange genericErrorRange, OverloadError messageHandler, List<ParameterValue> context, DocRange functionCallRange)
+        public void GetMissingParameters(OverloadError messageHandler, List<ParameterValue> context, DocRange targetRange, DocRange signatureRange)
         {
             for (int i = 0; i < OrderedParameters.Length; i++)
                 if (OrderedParameters[i]?.Value == null)
                 {
                     if (OrderedParameters[i] == null) OrderedParameters[i] = new PickyParameter(true);
-                    AddContextualParameter(context, functionCallRange, i);
+                    AddContextualParameter(context, signatureRange, targetRange, i);
 
                     // Default value
                     if (Option.Parameters[i].DefaultValue != null)
@@ -371,26 +390,26 @@ namespace Deltin.Deltinteger.Parse.Overload
                         OrderedParameters[i].Value = Option.Parameters[i].DefaultValue;
                     else
                         // Parameter is missing.
-                        Error(string.Format(messageHandler.MissingParameter, Option.Parameters[i].Name), genericErrorRange);
+                        Error(string.Format(messageHandler.MissingParameter, Option.Parameters[i].Name), targetRange);
                 }
         }
 
-        private void AddContextualParameter(List<ParameterValue> context, DocRange functionCallRange, int parameter)
+        private void AddContextualParameter(List<ParameterValue> context, DocRange targetRange, DocRange signatureRange, int parameter)
         {
             // No parameters set, set range for first parameter to callRange.
             if (parameter == 0 && OrderedParameters.All(p => p?.Value == null))
-                OrderedParameters[0].ExpressionRange = functionCallRange;
+                OrderedParameters[0].ExpressionRange = targetRange;
             // If this is the last contextual parameter and the context contains comma, set the expression range so signature help works with the last comma when there is no set expression.
             else if (LastContextualParameterIndex == parameter && parameter < context.Count && context[parameter].NextComma != null)
                 // Set the range to be the end of the comma to the start of the call range.
-                OrderedParameters[parameter].ExpressionRange = context[parameter].NextComma.Range.End + functionCallRange.End;
+                OrderedParameters[parameter].ExpressionRange = context[parameter].NextComma.Range.End + signatureRange.End;
         }
 
         public void AddDiagnostics(FileDiagnostics diagnostics)
         {
             foreach (OverloadMatchError error in Errors) diagnostics.Error(error.Message, error.Range);
         }
-    
+
         ///<summary>Gets the restricted calls from the unfilled optional parameters.</summary>
         public void CheckOptionalsRestrictedCalls(ParseInfo parseInfo, DocRange callRange)
         {
@@ -430,9 +449,9 @@ namespace Deltin.Deltinteger.Parse.Overload
 
         public OverloadError(string errorName)
         {
-            BadParameterCount    = $"No overloads for the {errorName} has {{0}} parameters.";
+            BadParameterCount = $"No overloads for the {errorName} has {{0}} parameters.";
             ParameterDoesntExist = $"The parameter '{{0}}' does not exist in the {errorName}.";
-            MissingParameter     = $"The {{0}} parameter is missing in the {errorName}.";
+            MissingParameter = $"The {{0}} parameter is missing in the {errorName}.";
         }
     }
 }

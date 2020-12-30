@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public DeltinScript DeltinScript { get; }
         public bool IsGlobal { get; }
         public List<RecursiveStack> MethodStack { get; } = new List<RecursiveStack>();
-        
+
         public List<Condition> Conditions { get; } = new List<Condition>();
 
         private string Name { get; }
@@ -62,13 +62,13 @@ namespace Deltin.Deltinteger.Parse
             Subroutine = subroutine;
             ActionSet = new ActionSet(this, null, Actions);
         }
-        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) {}
+        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) { }
 
         private void GetConditions(RuleAction ruleAction)
         {
             foreach (var condition in ruleAction.Conditions)
             {
-                var conditionParse = condition.Parse(ActionSet);
+                var conditionParse = condition.Expression.Parse(ActionSet);
 
                 Element value1;
                 Operator compareOperator;
@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
                     value2 = Element.True();
                 }
 
-                Conditions.Add(new Condition(value1, compareOperator, value2));
+                Conditions.Add(new Condition(value1, compareOperator, value2) { Comment = condition.Comment?.GetContents() });
             }
         }
 
@@ -120,7 +120,7 @@ namespace Deltin.Deltinteger.Parse
                         Actions.RemoveAt(i);
                         anyRemoved = true;
                     }
-                
+
                 doLoop = anyRemoved;
             }
             while (doLoop);
@@ -143,6 +143,7 @@ namespace Deltin.Deltinteger.Parse
         public SourceIndexReference CurrentObjectRelatedIndex { get; private set; }
         public IWorkshopTree This { get; private set; }
         public bool IsRecursive { get; private set; }
+        public ActionComment CommentNext { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
@@ -178,40 +179,50 @@ namespace Deltin.Deltinteger.Parse
             CurrentObjectRelatedIndex = other.CurrentObjectRelatedIndex;
             This = other.This;
             IsRecursive = other.IsRecursive;
+            CommentNext = other.CommentNext;
         }
         private ActionSet Clone()
         {
             return new ActionSet(this);
         }
 
-        public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this) {
+        public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this)
+        {
             IndexAssigner = indexAssigner ?? throw new ArgumentNullException(nameof(indexAssigner))
         };
-        public ActionSet New(ReturnHandler returnHandler) => new ActionSet(this) {
+        public ActionSet New(ReturnHandler returnHandler) => new ActionSet(this)
+        {
             ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler))
         };
         public ActionSet New(IWorkshopTree currentObject) => new ActionSet(this) { CurrentObject = currentObject };
-        public ActionSet New(IndexReference relatedIndex, Element target = null) => new ActionSet(this) { CurrentObjectRelatedIndex = new SourceIndexReference(relatedIndex, target) };
+        public ActionSet New(IGettable relatedIndex, Element target = null) => new ActionSet(this) { CurrentObjectRelatedIndex = new SourceIndexReference(relatedIndex, target) };
         public ActionSet New(bool isRecursive) => new ActionSet(this) { IsRecursive = isRecursive };
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
+        public ActionSet SetNextComment(string comment) => new ActionSet(this) { CommentNext = new ActionComment(comment) };
 
         public void AddAction(IWorkshopTree action)
         {
-            ActionList.Add(new ALAction(action));
+            AddAction(new ALAction(action));
         }
         public void AddAction(IWorkshopTree[] actions)
         {
             foreach (var action in actions)
-                ActionList.Add(new ALAction(action));
+                AddAction(new ALAction(action));
         }
         public void AddAction(IActionList action)
         {
             ActionList.Add(action);
+            if (CommentNext != null && !CommentNext.Used && action is ALAction alaction && alaction.Calling is Element element)
+            {
+                element.Comment = CommentNext.GetValue();
+                CommentNext = null;
+            }
         }
         public void AddAction(IActionList[] actions)
         {
-            ActionList.AddRange(actions);
+            foreach (var action in actions)
+                AddAction(action);
         }
 
         public ActionSet InitialSet()
@@ -348,13 +359,25 @@ namespace Deltin.Deltinteger.Parse
 
     public struct SourceIndexReference
     {
-        public IndexReference Reference { get; }
+        public IGettable Reference { get; }
         public Element Target { get; }
 
-        public SourceIndexReference(IndexReference reference, Element target)
+        public SourceIndexReference(IGettable reference, Element target)
         {
             Reference = reference;
             Target = target;
+        }
+    }
+
+    public class ActionComment
+    {
+        private readonly string _value;
+        public bool Used { get; private set; }
+        public ActionComment(string value) => _value = value;
+        public string GetValue()
+        {
+            Used = true;
+            return _value;
         }
     }
 }

@@ -15,13 +15,13 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            var a      = actionSet.VarCollection.Assign("_angleOfVectors_a"     , actionSet.IsGlobal, true);
-            var b      = actionSet.VarCollection.Assign("_angleOfVectors_b"     , actionSet.IsGlobal, true);
-            var c      = actionSet.VarCollection.Assign("_angleOfVectors_c"     , actionSet.IsGlobal, true);
-            var ab     = actionSet.VarCollection.Assign("_angleOfVectors_ab"    , actionSet.IsGlobal, true);
-            var bc     = actionSet.VarCollection.Assign("_angleOfVectors_bc"    , actionSet.IsGlobal, true);
-            var abVec  = actionSet.VarCollection.Assign("_angleOfVectors_abVec" , actionSet.IsGlobal, true);
-            var bcVec  = actionSet.VarCollection.Assign("_angleOfVectors_bcVec" , actionSet.IsGlobal, true);
+            var a = actionSet.VarCollection.Assign("_angleOfVectors_a", actionSet.IsGlobal, true);
+            var b = actionSet.VarCollection.Assign("_angleOfVectors_b", actionSet.IsGlobal, true);
+            var c = actionSet.VarCollection.Assign("_angleOfVectors_c", actionSet.IsGlobal, true);
+            var ab = actionSet.VarCollection.Assign("_angleOfVectors_ab", actionSet.IsGlobal, true);
+            var bc = actionSet.VarCollection.Assign("_angleOfVectors_bc", actionSet.IsGlobal, true);
+            var abVec = actionSet.VarCollection.Assign("_angleOfVectors_abVec", actionSet.IsGlobal, true);
+            var bcVec = actionSet.VarCollection.Assign("_angleOfVectors_bcVec", actionSet.IsGlobal, true);
             var abNorm = actionSet.VarCollection.Assign("_angleOfVectors_abNorm", actionSet.IsGlobal, true);
             var bcNorm = actionSet.VarCollection.Assign("_angleOfVectors_bcNorm", actionSet.IsGlobal, true);
 

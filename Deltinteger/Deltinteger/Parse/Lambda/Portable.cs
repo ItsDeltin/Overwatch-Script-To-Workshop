@@ -1,4 +1,4 @@
-using System;   
+using System;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse.Lambda
@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             AddInvokeFunction();
         }
 
-        public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], false, null, false) {}
+        public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], false, null, false) { }
 
         protected PortableLambdaType(string name, LambdaKind lambdaKind, CodeType[] parameters) : base(name)
         {

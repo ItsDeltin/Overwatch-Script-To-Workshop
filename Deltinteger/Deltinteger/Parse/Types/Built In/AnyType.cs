@@ -7,7 +7,9 @@ namespace Deltin.Deltinteger.Parse
     {
         private readonly DeltinScript _deltinScript;
 
-        public AnyType(DeltinScript deltinScript) : base("Any")
+        public AnyType(DeltinScript deltinScript) : this("Any", deltinScript) {}
+
+        public AnyType(string name, DeltinScript deltinScript) : base(name)
         {
             CanBeDeleted = true;
             CanBeExtended = false;
@@ -16,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
-            Operations = new TypeOperation[] {
+            Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(_deltinScript.Types, TypeOperator.Equal, this),
                 new TypeOperation(_deltinScript.Types, TypeOperator.NotEqual, this),
                 new TypeOperation(_deltinScript.Types, TypeOperator.GreaterThan, this),
@@ -32,12 +34,13 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.Multiply, this, this),
                 new TypeOperation(TypeOperator.Pow, this, this),
                 new TypeOperation(TypeOperator.Subtract, this, this)
-            };
+            });
         }
 
         public override bool Implements(CodeType type) => !type.IsConstant();
         public override bool Is(CodeType type) => !type.IsConstant();
-        public override CompletionItem GetCompletion() => null;
-        public override Scope ReturningScope() => _deltinScript.PlayerVariableScope;
+        public override CompletionItem GetCompletion() => GetTypeCompletion(this);
+        public override Scope GetObjectScope() => _deltinScript.PlayerVariableScope;
+        public override Scope ReturningScope() => null;
     }
 }

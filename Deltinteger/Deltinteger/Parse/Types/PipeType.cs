@@ -57,6 +57,6 @@ namespace Deltin.Deltinteger.Parse
         }
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
         public override Scope ReturningScope() => throw new NotImplementedException();
-        private static string GetName(CodeType[] types) => string.Join(" | ", types?.Select(t => t.GetName()));
+        private static string GetName(CodeType[] types) => string.Join(" | ", types?.Select(t => t.GetNameOrAny()));
     }
 }

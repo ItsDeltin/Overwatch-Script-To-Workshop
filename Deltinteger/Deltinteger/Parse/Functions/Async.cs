@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public void Accept() => _canBeCalledInParallel = true;
-        public void Reject(string message) => _message = message; 
+        public void Reject(string message) => _message = message;
 
         public static IExpression ParseAsync(ParseInfo parseInfo, Scope scope, AsyncContext context, bool usedAsValue)
         {
@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (!asyncInfo._canBeCalledInParallel)
                 parseInfo.Script.Diagnostics.Error(asyncInfo._message ?? "This expression cannot be executed asynchronously", context.AsyncToken.Range);
-                        
+
             return result;
         }
     }

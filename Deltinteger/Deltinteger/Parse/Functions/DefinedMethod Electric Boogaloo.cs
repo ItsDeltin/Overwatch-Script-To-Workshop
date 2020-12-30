@@ -191,7 +191,14 @@ namespace Deltin.Deltinteger.Parse
             if (!IsSubroutine) return null;
             if (SubroutineInfo == null)
             {
-                var builder = new SubroutineBuilder(_parseInfo.TranslateInfo, new DefinedSubroutineContext(_parseInfo, this, GetOverrideFunctionHandlers()));
+                var builder = new SubroutineBuilder(
+                    _parseInfo.TranslateInfo,
+                    new DefinedSubroutineContext(
+                        _parseInfo,
+                        this,
+                        ((DefinedMethodInstance)GetDefaultInstance()).GetOverrideFunctionHandlers()
+                    )
+                );
                 builder.SetupSubroutine();
             }
             return SubroutineInfo;
@@ -203,9 +210,6 @@ namespace Deltin.Deltinteger.Parse
             _overriders.Add(overridenBy);
         }
 
-        public DefinedFunctionHandler[] GetOverrideFunctionHandlers()
-            => _overriders.Select(op => new DefinedFunctionHandler((DefinedMethodProvider)op, false)).Prepend(new DefinedFunctionHandler(this, true)).ToArray();
-
         public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeProvider scopeHandler, FunctionContext context, ICodeTypeInitializer containingType)
             => new DefinedMethodProvider(parseInfo, scopeHandler, context, containingType);
     }
@@ -213,8 +217,9 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedMethodInstance : IMethod
     {
         public string Name { get; }
-        public string Documentation => null;
+        public MarkupBuilder Documentation => null;
         public CodeType CodeType { get; }
+        public IVariableInstance[] ParameterVars { get; }
         public CodeParameter[] Parameters { get; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public bool Static => Provider.Static;
@@ -230,19 +235,29 @@ namespace Deltin.Deltinteger.Parse
             CodeType = provider.ReturnType?.GetRealType(instanceInfo);
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
+            ParameterVars = new IVariableInstance[Parameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
-                Parameters[i] = provider.ParameterProviders[i].GetInstance(instanceInfo).Parameter;
+            {
+                var parameterInstance = provider.ParameterProviders[i].GetInstance(instanceInfo);
+                ParameterVars[i] = parameterInstance.Variable;
+                Parameters[i] = parameterInstance.Parameter;
+            }
         }
 
         IMethodProvider IMethod.GetProvider() => Provider;
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => IMethod.GetLabel(this, true);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
+        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-            var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(Provider.GetOverrideFunctionHandlers()));
+            var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(GetOverrideFunctionHandlers()));
             return controller.Call();
         }
+
+        public DefinedFunctionHandler[] GetOverrideFunctionHandlers()
+            => new DefinedFunctionHandler[] { new DefinedFunctionHandler(this, true) };
+            // TODO: overriders
+            // => _overriders.Select(op => new DefinedFunctionHandler((DefinedMethodProvider)op, false)).Prepend(new DefinedFunctionHandler(this, true)).ToArray();
     }
 }

@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.CustomMethods
 
     class MapParameter : CodeParameter
     {
-        public MapParameter() : base("map", "The map to compare.") {}
+        public MapParameter() : base("map", "The map to compare.") { }
 
         public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData)
         {

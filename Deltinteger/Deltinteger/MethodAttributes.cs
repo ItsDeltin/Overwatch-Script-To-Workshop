@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger
 
         private readonly List<IMethod> _overriders = new List<IMethod>();
 
-        public MethodAttributes() {}
+        public MethodAttributes() { }
 
         public MethodAttributes(bool isParallelable, bool isVirtual, bool isAbstract)
         {
@@ -65,35 +65,8 @@ namespace Deltin.Deltinteger
 
             foreach (var overrider in _overriders)
                 options.AddRange(overrider.Attributes.AllOverrideOptions());
-            
+
             return options.ToArray();
-        }
-
-        public static CompletionItem GetFunctionCompletion(IMethod function) => new CompletionItem()
-        {
-            Label = function.Name,
-            Kind = CompletionItemKind.Method,
-            Detail = function.CodeType.GetNameOrVoid() + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
-            Documentation = Extras.GetMarkupContent(function.Documentation)
-        };
-
-        public static MarkupBuilder DefaultLabel(IMethod function)
-        {
-            MarkupBuilder markup = new MarkupBuilder()
-                .StartCodeLine()
-                .Add(function.CodeType.GetNameOrVoid())
-                .Add(" ")
-                .Add(function.Name + CodeParameter.GetLabels(function.Parameters))
-                .EndCodeLine();
-            
-            if (function.Documentation != null)
-            {
-                markup
-                    .NewSection()
-                    .Add(function.Documentation);
-            }
-            
-            return markup;
         }
     }
 

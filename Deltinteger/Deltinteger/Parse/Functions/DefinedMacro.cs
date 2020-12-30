@@ -90,13 +90,15 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedMacroInstance : IMethod
     {
         public string Name => Provider.Name;
+        public DefinedMacroProvider Provider { get; }
         public CodeParameter[] Parameters { get; }
         public IVariableInstance[] ParameterVars { get; }
-        public string Documentation => throw new NotImplementedException();
+        public MarkupBuilder Documentation { get; }
         public CodeType CodeType { get; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
+        public AccessLevel AccessLevel => Provider.Attributes.Accessor;
         public bool WholeContext => true;
-        public DefinedMacroProvider Provider { get; }
+        public LanguageServer.Location DefinedAt => throw new NotImplementedException();
 
         public DefinedMacroInstance(DefinedMacroProvider provider, InstanceAnonymousTypeLinker genericsLinker)
         {
@@ -112,13 +114,10 @@ namespace Deltin.Deltinteger.Parse
                 ParameterVars[i] = parameterInstance.Variable;
             }
         }
-
-        public LanguageServer.Location DefinedAt => throw new NotImplementedException();
-
-        public AccessLevel AccessLevel => Provider.Attributes.Accessor;
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
         public IMethodProvider GetProvider() => Provider;
-        public string GetLabel(bool markdown) => IMethod.GetLabel(this, true);
+        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {

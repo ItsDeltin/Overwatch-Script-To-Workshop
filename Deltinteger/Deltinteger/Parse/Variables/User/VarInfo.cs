@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Variables.Build;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -25,18 +26,17 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public Location DefinedAt { get; }
         public ParseInfo ParseInfo { get; }
+        public VariableTypeHandler VariableTypeHandler { get; }
 
         public CodeType Type { get; set; } = null;
         public CodeType BelongsTo { get; set; } = null;
+        public bool InferType { get; set; }
         public bool WholeContext { get; set; } = true;
         public bool Static { get; set; } = false;
         public bool InExtendedCollection { get; set; } = false;
         public int ID { get; set; } = -1;
         public IParseExpression InitialValueContext { get; set; } = null;
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Private;
-        public bool IsWorkshopReference { get; set; } = false;
-        public VariableType VariableType { get; set; } = VariableType.Dynamic;
-        public StoreType StoreType { get; set; }
         public InitialValueResolve InitialValueResolve { get; set; } = InitialValueResolve.Instant;
         public Scope Scope { get; set; }
         public bool Recursive { get; set; }
@@ -53,6 +53,7 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
             DefinedAt = definedAt;
             ParseInfo = parseInfo;
+            VariableTypeHandler = new VariableTypeHandler(this);
         }
     }
 }

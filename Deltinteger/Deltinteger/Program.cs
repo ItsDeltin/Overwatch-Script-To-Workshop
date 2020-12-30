@@ -36,10 +36,14 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
-            if (args.ElementAtOrDefault(0) == "--ping") {
+            if (args.ElementAtOrDefault(0) == "--ping")
+            {
                 Console.Write("Hello!");
                 return;
             }
+
+            if (args.Contains("--waitfordebugger") && !WaitForDebugger())
+                return;
 
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
@@ -51,7 +55,7 @@ namespace Deltin.Deltinteger
                 Log.LogLevel = LogLevel.Verbose;
             if (args.Contains("-quiet"))
                 Log.LogLevel = LogLevel.Quiet;
-            
+
             foreach (var runner in ArgRunners)
             {
                 runner.Args = args;
@@ -60,9 +64,19 @@ namespace Deltin.Deltinteger
             }
         }
 
-        static void WaitForDebugger()
+        static bool WaitForDebugger()
         {
-            while (!System.Diagnostics.Debugger.IsAttached) Thread.Sleep(100);
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+
+            while (!System.Diagnostics.Debugger.IsAttached)
+            {
+                Thread.Sleep(100);
+
+                if (stopwatch.ElapsedMilliseconds > 30000)
+                    return false;
+            }
+            return true;
         }
 
         public static void Script(string parseFile)
@@ -96,7 +110,8 @@ namespace Deltin.Deltinteger
         protected int CurrentArg { get; private set; }
         public abstract bool Run();
         protected bool IsArg(string arg) => Args.ElementAtOrDefault(CurrentArg) == arg;
-        protected void NextArg() {
+        protected void NextArg()
+        {
             CurrentArg++;
         }
         protected string GetCurrentArg() => Args.ElementAtOrDefault(CurrentArg);
@@ -106,7 +121,8 @@ namespace Deltin.Deltinteger
     {
         public override bool Run()
         {
-            if (IsArg("--ping")) {
+            if (IsArg("--ping"))
+            {
                 Console.Write("Hello!");
                 return true;
             }
@@ -133,8 +149,8 @@ namespace Deltin.Deltinteger
         {
             if (IsArg("--schema"))
             {
-               Deltin.Deltinteger.Lobby.Ruleset.GenerateSchema();
-               return true;
+                Deltin.Deltinteger.Lobby.Ruleset.GenerateSchema();
+                return true;
             }
             return false;
         }
@@ -180,7 +196,7 @@ namespace Deltin.Deltinteger
                 using (var writer = File.CreateText(file))
                     // Write the code to the file.
                     writer.Write(result);
-                
+
                 Console.Write("Success");
 
                 // Warning if the end of the file was not reached.
@@ -207,21 +223,21 @@ namespace Deltin.Deltinteger
 
             if (script != null && File.Exists(script))
             {
-                #if DEBUG == false
+#if DEBUG == false
                 try
                 {
-                #endif
+#endif
 
                 RunFile(script);
-                
-                #if DEBUG == false
+
+#if DEBUG == false
                 }
                 catch (Exception ex)
                 {
                     Program.Log.Write(LogLevel.Normal, "Internal exception.");
                     Program.Log.Write(LogLevel.Normal, ex.ToString());
                 }
-                #endif
+#endif
                 return true;
             }
             return false;

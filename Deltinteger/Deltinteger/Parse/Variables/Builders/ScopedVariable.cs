@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _operationalScope = operationalScope;
             _canBeMacro = canBeMacro;
+            _canInferType = true;
         }
 
         protected override void CheckComponents()
@@ -35,9 +36,6 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.WholeContext = false;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
             _varInfo.RequiresCapture = true;
-
-            if (_varInfo.IsWorkshopReference && _varInfo.InitialValueContext == null)
-                _diagnostics.Error("Variables with the 'ref' attribute must have an initial value.", _nameRange);
         }
     }
 }

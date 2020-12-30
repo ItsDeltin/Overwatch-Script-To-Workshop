@@ -16,6 +16,11 @@ namespace Deltin.Deltinteger.Parse
         private VariableType VariableType { get; }
         private VariableResolveOptions Options { get; }
 
+        public VariableParameter(string name, string documentation, CodeType type, VariableResolveOptions options = null) : base(name, documentation, type)
+        {
+            VariableType = VariableType.Dynamic;
+            Options = options ?? new VariableResolveOptions();
+        }
         public VariableParameter(string name, string documentation, VariableResolveOptions options = null) : base(name, documentation)
         {
             VariableType = VariableType.Dynamic;
@@ -43,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
                 else
                     parseInfo.Script.Diagnostics.Error($"Expected a player variable.", valueRange);
             }
-            
+
             else return resolvedVariable;
             return null;
         }
@@ -55,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private bool DefaultConstValue { get; }
 
-        public ConstBoolParameter(string name, string documentation) : base(name, documentation) {}
+        public ConstBoolParameter(string name, string documentation) : base(name, documentation) { }
         public ConstBoolParameter(string name, string documentation, bool defaultValue)
             : base(name, documentation, new ExpressionOrWorkshopValue(defaultValue ? Element.True() : Element.False()))
         {
@@ -103,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstStringParameter : CodeParameter
     {
-        public ConstStringParameter(string name, string documentation) : base(name, documentation) {}
+        public ConstStringParameter(string name, string documentation) : base(name, documentation) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
@@ -117,7 +122,7 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstHeroParameter : CodeParameter
     {
-        public ConstHeroParameter(string name, string documentation) : base(name, documentation) {}
+        public ConstHeroParameter(string name, string documentation) : base(name, documentation) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
@@ -126,7 +131,8 @@ namespace Deltin.Deltinteger.Parse
             var promise = new ConstHeroValueResolver();
 
             // Resolve the expression.
-            ConstantExpressionResolver.Resolve(value, expr => {
+            ConstantExpressionResolver.Resolve(value, expr =>
+            {
                 // If the resulting expression is an EnumValuePair and the EnumValuePair's enum is Hero,
                 if (expr is CallVariableAction call && call.Calling is EnumValuePair pair && pair.Member.Enum.Name == "Hero")
                     // Resolve the value.
@@ -178,8 +184,8 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
 
-            string resultingPath = Extras.CombinePathWithDotNotation(parseInfo.Script.Uri.FilePath(), str.Value);
-            
+            string resultingPath = Extras.CombinePathWithDotNotation(parseInfo.Script.Uri.LocalPath, str.Value);
+
             if (resultingPath == null)
             {
                 parseInfo.Script.Diagnostics.Error("File path contains invalid characters.", valueRange);
@@ -202,7 +208,7 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
 
-            parseInfo.Script.AddDefinitionLink(valueRange, new Location(Extras.Definition(resultingPath), DocRange.Zero));
+            parseInfo.Script.AddDefinitionLink(valueRange, new Location(new Uri(resultingPath), DocRange.Zero));
             parseInfo.Script.AddHover(valueRange, resultingPath);
 
             return resultingPath;

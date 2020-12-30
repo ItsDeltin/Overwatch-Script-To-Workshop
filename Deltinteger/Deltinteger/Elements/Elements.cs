@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Elements
             if (action != null && action.Indentation == "outdent") b.Outdent();
 
             // Add a comment and newline
-            if (Comment != null) b.Append($"\"{Comment}\"");
+            if (Comment != null) b.AppendLine($"\"{Comment}\"");
 
             // Add the disabled tag if the element is disabled.
             if (Function is ElementJsonAction && Disabled) b.AppendKeyword("disabled").Append(" ");

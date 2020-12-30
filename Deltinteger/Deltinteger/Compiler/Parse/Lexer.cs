@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public VersionInstance Content { get; private set; }
         public List<int> Newlines { get; } = new List<int>();
 
-        public Lexer() {}
+        public Lexer() { }
 
         public void Init(VersionInstance content)
         {
@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             int lastTokenCount = Tokens.Count;
             AffectedAreaInfo affectedArea = GetAffectedArea(updateRange);
-            
+
             // The number of lines
             int lineDelta = NumberOfNewLines(updateRange.Text) - updateRange.Range.LineSpan();
             int columnDelta = NumberOfCharactersInLastLine(updateRange.Text) - updateRange.Range.ColumnSpan();
@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Use the old content for getting the update range index.
                     int s = Content.IndexOf(Tokens[i].Range.Start) + indexOffset,
                         e = Content.IndexOf(Tokens[i].Range.End) + indexOffset;
-                    
+
                     // Use the new content to update the positions.
                     newContent.UpdatePosition(Tokens[i].Range.Start, s);
                     newContent.UpdatePosition(Tokens[i].Range.End, e);
@@ -269,7 +269,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("as", TokenType.As) ||
                     MatchIdentifier() ||
                     MatchString();
-                
+
                 if (!matched)
                     Unknown();
             }
@@ -284,7 +284,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Line = scanner.Line;
             Column = scanner.Column;
         }
-        
+
         // * Matchers *
 
         /// <summary>Matches a keyword.</summary>
@@ -336,7 +336,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public bool MatchIdentifier()
         {
             LexScanner scanner = MakeScanner();
-            
+
             // Advance while the current character is an identifier.
             while (!scanner.ReachedEnd && scanner.AtIdentifierChar()) scanner.Advance();
 
@@ -430,8 +430,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Match every character to the end of the line.
             scanner.Advance();
-            while(!scanner.ReachedEnd && !scanner.At('\n')) scanner.Advance();
-            
+            while (!scanner.ReachedEnd && !scanner.At('\n')) scanner.Advance();
+
             // Done.
             PushToken(scanner, TokenType.ActionComment);
             return true;
@@ -446,8 +446,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             scanner.Advance();
 
             // Match every character to the end of the line.
-            while(!scanner.ReachedEnd && !scanner.At('\n')) scanner.Advance();
-            
+            while (!scanner.ReachedEnd && !scanner.At('\n')) scanner.Advance();
+
             // Done.
             Accept(scanner);
             return true;
@@ -462,7 +462,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             scanner.Advance();
 
             // Match every character to the end of the line.
-            while(!scanner.ReachedEnd)
+            while (!scanner.ReachedEnd)
             {
                 if (scanner.At('*') && scanner.At('/', 1))
                 {
@@ -472,7 +472,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
                 scanner.Advance();
             }
-            
+
             // Done.
             Accept(scanner);
             return true;
@@ -528,7 +528,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         private readonly string _content;
         private readonly StringBuilder _captured = new StringBuilder();
         private readonly DocPos _startPos;
-        
+
         public LexScanner(LexController controller)
         {
             Line = controller.Line;
@@ -600,7 +600,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public void PushToken(Token token) => _tokens.Add(token);
         public bool IncrementalStop() => false;
-        public void EndReached() {}
+        public void EndReached() { }
     }
 
     /// <summary>Every subsequent lex after the first will use this for the ITokenPush.
@@ -632,7 +632,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Check if we have reached the end of the changed token range.
             // If *all* of these conditions are met, '_lastInsertWasEqual' will be set to true, the block will be skipped and lexing will stop.
-            if(!(_lastInsertWasEqual =
+            if (!(_lastInsertWasEqual =
                 // First, check if _lexUntilEnd is false. _lexUntilEnd may be true when adding characters to the end of the file.
                 // If it is true, we don't need to worry about stopping early since we are lexing until the end of the file.
                 !_lexUntilEnd &&
@@ -686,8 +686,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public void EndReached()
         {
-            while (_tokens.Count > Current)
-                _tokens.RemoveAt(Current);
+            if (Current != -1)
+                while (_tokens.Count > Current)
+                    _tokens.RemoveAt(Current);
         }
     }
 

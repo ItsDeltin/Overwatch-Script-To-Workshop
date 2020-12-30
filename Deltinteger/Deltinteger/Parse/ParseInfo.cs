@@ -84,12 +84,8 @@ namespace Deltin.Deltinteger.Parse
             IStatement statement = StatementFromContext(scope, statementContext);
 
             // Apply related output comment.
-            if (statementContext is ICommentableStatement comment && comment.ActionComment != null)
-            {
-                string text = comment.ActionComment.Text.Substring(1).Trim();
-                DocRange range = comment.ActionComment.Range;
-                statement.OutputComment(Script.Diagnostics, range, text);
-            }
+            if (statementContext.Comment != null)
+                statement.OutputComment(Script.Diagnostics, statementContext.Comment.Range, statementContext.Comment.GetContents());
 
             return statement;
         }
@@ -103,17 +99,17 @@ namespace Deltin.Deltinteger.Parse
                     return new DefineAction(newVar);
                 }
                 case Assignment assignment: return new SetVariableAction(this, scope, assignment);
-                case Increment increment  : return new IncrementAction(this, scope, increment);
-                case If @if            : return new IfAction(this, scope, @if);
-                case While @while      : return new WhileAction(this, scope, @while);
-                case For @for          : return new ForAction(this, scope, @for);
-                case Foreach @foreach  : return new ForeachAction(this, scope, @foreach);
-                case Return @return    : return new ReturnAction(this, scope, @return);
-                case Delete delete     : return new DeleteAction(this, scope, delete);
+                case Increment increment: return new IncrementAction(this, scope, increment);
+                case If @if: return new IfAction(this, scope, @if);
+                case While @while: return new WhileAction(this, scope, @while);
+                case For @for: return new ForAction(this, scope, @for);
+                case Foreach @foreach: return new ForeachAction(this, scope, @foreach);
+                case Return @return: return new ReturnAction(this, scope, @return);
+                case Delete delete: return new DeleteAction(this, scope, delete);
                 case Continue @continue: return new ContinueAction(this, @continue.Range);
-                case Break @break      : return new BreakAction(this, @break.Range);
-                case Switch @switch    : return new SwitchAction(this, scope, @switch);
-                case Block @block      : return new BlockAction(this, scope, @block);
+                case Break @break: return new BreakAction(this, @break.Range);
+                case Switch @switch: return new SwitchAction(this, scope, @switch);
+                case Block @block: return new BlockAction(this, scope, @block);
                 case FunctionExpression func: return new CallMethodAction(this, scope, func, false, scope);
                 // Expression statements (functions, new)
                 case ExpressionStatement exprStatement:
@@ -148,7 +144,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 case NumberExpression number: return new NumberAction(this, number);
                 case BooleanExpression boolean: return new BoolAction(this, boolean.Value);
-                case NullExpression @null: return new NullAction();
+                case NullExpression @null: return new NullAction(this);
                 case StringExpression @string: return new StringAction(this, scope, @string);
                 case Identifier identifier: return GetVariable(scope, getter, identifier, selfContained);
                 case FunctionExpression method: return new CallMethodAction(this, scope, method, usedAsValue, getter);
@@ -191,13 +187,7 @@ namespace Deltin.Deltinteger.Parse
             if (element == null) return new MissingVariable(TranslateInfo, variableName);
             
             // Additional syntax checking.
-            var expression = new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), GetGenerics(getter, variableContext.TypeArgs), variableRange);
-
-            // Accept the method group.
-            if (expression is CallMethodGroup methodGroup)
-                methodGroup.Accept();
-
-            return expression;
+            return new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), GetGenerics(getter, variableContext.TypeArgs), variableRange);
         }
 
         /// <summary>Gets an IExpression[] from a DeltinScriptParser.ArrayContext.</summary>
@@ -243,11 +233,13 @@ namespace Deltin.Deltinteger.Parse
                     tracker.LocalVariableAccessed(variable);
         }
 
-        public ParseInfo ClearTail() => new ParseInfo(this) {
+        public ParseInfo ClearTail() => new ParseInfo(this)
+        {
             LocalVariableTracker = null
         };
 
-        public ParseInfo ClearHead() => new ParseInfo(this) {
+        public ParseInfo ClearHead() => new ParseInfo(this)
+        {
             ResolveInvokeInfo = null,
             AsyncInfo = null
         };
@@ -280,21 +272,6 @@ namespace Deltin.Deltinteger.Parse
                 _parseInfo.LocalVariableAccessed(variable.Provider);
             
             return variable.GetExpression(_parseInfo, variableRange, index, typeArgs);
-
-            // Check value in array.
-            // if (index != null && index.Length > 0)
-            // {
-            //     if (!variable.CanBeIndexed)
-            //         Error("This variable type cannot be indexed.", variableRange);
-            //     else
-            //         return new ValueInArrayAction(_parseInfo, (IExpression)variable, index);
-            // }
-
-            // // Function group.
-            // if (variable is MethodGroup methodGroup)
-            //     return new CallMethodGroup(_parseInfo, variableRange, methodGroup, typeArgs);
-
-            // return (IExpression)variable;
         }
 
         protected virtual void Call(IVariableInstance variable, DocRange range) => variable.Call(_parseInfo, range);

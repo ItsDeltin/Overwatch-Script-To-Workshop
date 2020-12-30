@@ -17,12 +17,12 @@ namespace Deltin.Deltinteger.Elements
         CodeType Vector();
         CodeType VectorArray();
         CodeType PlayerOrVector();
-        CodeType Button();
         CodeType Hero() => EnumType("Hero");
         CodeType Map() => EnumType("Map");
         CodeType GameMode() => EnumType("GameMode");
         CodeType Team() => EnumType("Team");
         CodeType EnumType(string typeName);
+        CodeType Unknown();
 
         public CodeType FromString(string value)
         {
@@ -38,13 +38,15 @@ namespace Deltin.Deltinteger.Elements
                 case "players": return Players();
                 case "vector": return Vector();
                 case "vector[]": return VectorArray();
+                case "vector | player":
                 case "player | vector": return PlayerOrVector();
-                case "button": return Button();
+                case "button": return EnumType("Button");
                 case "hero": return Hero();
                 case "map": return Map();
                 case "team": return Team();
                 case "gamemode": return GameMode();
                 case "color": return EnumType("Color");
+                case "hero[]": return new ArrayType(this, Hero());
                 default: return EnumType(value) ?? throw new NotImplementedException("Type '" + value + "' not handled.");
             }
         }

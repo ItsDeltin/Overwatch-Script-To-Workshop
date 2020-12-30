@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Elements
         public string Name { get; }
         public CodeParameter[] Parameters { get; private set; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
-        public string Documentation { get; }
+        public MarkupBuilder Documentation { get; }
         public CodeType CodeType { get; private set; }
         private readonly RestrictedCallType? _restricted;
         private readonly ElementBaseJson _function;
@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Elements
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, Documentation);
 
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
 
         public object Call(ParseInfo parseInfo, DocRange callRange)
         {

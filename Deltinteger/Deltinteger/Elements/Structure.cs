@@ -239,7 +239,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override string ToString() => Name + (Parameters == null ? "" : "(" + string.Join(", ", Parameters.Select(v => v.ToString())) + ")");
 
-        public string CodeName() => Alias ?? Name.Replace(" ", "");
+        public string CodeName() => Alias ?? Name.Replace(" ", "").Replace("-", "");
     }
 
     public class ElementJsonValue : ElementBaseJson

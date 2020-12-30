@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             if (RequiresContainment()) decompiler.Append("(");
             Decompile(decompiler);
             if (RequiresContainment()) decompiler.Append(")");
-            
+
             decompiler.Append(".");
         }
     }
@@ -56,14 +56,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             //A potential future solution could descend the tree and replace nested format parameters with one long list.
             var pattern = new Regex(@"\{[012]\}");
             var count = 0;
-            if(str.Contains("{0}")) count++;
-            if(str.Contains("{1}")) count++;
-            if(str.Contains("{2}")) count++;
+            if (str.Contains("{0}")) count++;
+            if (str.Contains("{1}")) count++;
+            if (str.Contains("{2}")) count++;
             str = str.Replace("{0}", "<0>")
                      .Replace("{1}", "<1>")
                      .Replace("{2}", "<2>");
 
-            if (Formats == null || Formats.Length == 0)
+            if (Formats == null || Formats.Length == 0 || count == 0)
                 decompiler.Append(str);
             else
             {

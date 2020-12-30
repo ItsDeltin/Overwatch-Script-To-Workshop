@@ -131,12 +131,12 @@ namespace Deltin.Deltinteger.Parse
             // Update switch skips to skip to the end of the switch.
             foreach (SkipStartMarker skipToEnd in SkipToEnd)
                 skipToEnd.SetEndMarker(switchEnd);
-            
+
             // Default insert.
             // TODO: Default case
             if (!defaultAdded)
                 skipCounts.Insert(0, Skipper.GetSkipCount(switchEnd));
-            
+
             // Skip to the case.
             Skipper.SetSkipCount(
                 // Create an array of all skip counts.

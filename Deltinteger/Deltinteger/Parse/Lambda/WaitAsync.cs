@@ -53,8 +53,21 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
     class WaitAsyncFunction : IMethod
     {
+        private static string _documentation = new MarkupBuilder().Add("Waits without blocking the current rule, executing the provided action when the wait completes.").NewLine()
+            .Add("Using ").Code("Wait").Add(" inside a subroutine that interacts with variables may result in weird and unexpected behaviours when executed from multiples places at once due to race conditions. ")
+                .Code("WaitAsync").Add(" will not have this issue.")
+            .NewLine().Add("You can not run the rule below multiple times simultaneously because the ").Code("Wait").Add(" will block the rule.").NewLine()
+                .StartCodeLine().Add("rule: \"My Rule\"").NewLine().Add("if(IsButtonHeld(HostPlayer(), Button.Interact))").NewLine().Add("{").NewLine()
+                .Add("    x = RandomInteger(0, 10);").NewLine().NewLine().Add("    SmallMessage(AllPlayers(), x);").NewLine().Add("    Wait(3)").NewLine().Add("    SmallMessage(AllPlayers(), x);")
+                .NewLine().Add("}").EndCodeLine().NewLine()
+            .Add("However, using ").Code("WaitAsync").Add(", the rule can be executed multiple times simultaneously.").NewLine()
+                .StartCodeLine().Add("rule: \"My Rule\"").NewLine().Add("if(IsButtonHeld(HostPlayer(), Button.Interact))").NewLine().Add("{").NewLine()
+                .Add("    x = RandomInteger(0, 10);").NewLine().NewLine().Add("    SmallMessage(AllPlayers(), x);").NewLine().Add("    WaitAsync(3, () => {").NewLine().Add("        SmallMessage(AllPlayers(), x);")
+                .NewLine().Add("    });").NewLine().Add("}").EndCodeLine()
+            .ToString();
+
         public string Name => "WaitAsync";
-        public string Documentation => "Asynchronously waits.";
+        public MarkupBuilder Documentation => _documentation;
         public CodeType CodeType => null;
         public bool Static => true;
         public bool DoesReturnValue => false;
@@ -63,10 +76,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public AccessLevel AccessLevel => AccessLevel.Public;
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public CodeParameter[] Parameters { get; } = new CodeParameter[] {
-            new CodeParameter("duration"),
-            new CodeParameter("action", new PortableLambdaType(LambdaKind.Portable))
+            new CodeParameter("duration", "The duration to wait in seconds before the action gets execute."),
+            new CodeParameter("action", "The action that is executed when the wait completes.", new PortableLambdaType(LambdaKind.Portable))
         };
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
         public string GetLabel(bool markdown) => LanguageServer.HoverHandler.GetLabel("void", Name, Parameters, markdown, null);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)

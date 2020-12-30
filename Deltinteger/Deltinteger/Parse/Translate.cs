@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
 
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
             Importer.CollectScriptFiles(translateSettings.Root);
-            
+
             Translate();
             if (!Diagnostics.ContainsErrors())
                 try
@@ -60,18 +60,18 @@ namespace Deltin.Deltinteger.Parse
                 {
                     WorkshopCode = "An exception was thrown while translating to workshop.\r\n" + ex.ToString();
                 }
-            
+
             foreach (IComponent component in Components)
                 if (component is IDisposable disposable)
                     disposable.Dispose();
         }
 
-        public T GetComponent<T>() where T: IComponent, new()
+        public T GetComponent<T>() where T : IComponent, new()
         {
             foreach (IComponent component in Components)
                 if (component is T t)
                     return t;
-            
+
             T newT = new T();
             newT.DeltinScript = this;
 
@@ -81,15 +81,15 @@ namespace Deltin.Deltinteger.Parse
                     InitComponent[i].Apply(newT);
                     InitComponent.RemoveAt(i);
                 }
-            
+
             Components.Add(newT);
             newT.Init();
 
             return newT;
         }
 
-        public bool IsComponent<T>() where T: IComponent => Components.Any(component => component is T);
-        public bool IsComponent<T>(out T component) where T: IComponent
+        public bool IsComponent<T>() where T : IComponent => Components.Any(component => component is T);
+        public bool IsComponent<T>(out T component) where T : IComponent
         {
             foreach (IComponent iterateComponent in Components)
                 if (iterateComponent is T t)
@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public void ExecOnComponent<T>(Action<T> apply) where T: IComponent
+        public void ExecOnComponent<T>(Action<T> apply) where T : IComponent
         {
             if (IsComponent<T>(out T existing))
                 apply.Invoke(existing);
@@ -185,13 +185,13 @@ namespace Deltin.Deltinteger.Parse
 
             // Get hooks
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var hookContext in script.Context.Hooks)
-                HookVar.GetHook(new ParseInfo(script, this), RulesetScope, hookContext);
+                foreach (var hookContext in script.Context.Hooks)
+                    HookVar.GetHook(new ParseInfo(script, this), RulesetScope, hookContext);
 
             // Get the rules
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var ruleContext in script.Context.Rules)
-                rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
+                foreach (var ruleContext in script.Context.Rules)
+                    rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
         }
 
         public string WorkshopCode { get; private set; }
@@ -211,7 +211,7 @@ namespace Deltin.Deltinteger.Parse
             // Init called types.
             foreach (var workshopInit in _workshopInit) workshopInit.WorkshopInit(this);
 
-             // Assign variables at the rule-set level.
+            // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
             {
                 var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
@@ -240,11 +240,11 @@ namespace Deltin.Deltinteger.Parse
             // Initial global
             if (InitialGlobal.Actions.Count > 0)
                 WorkshopRules.Insert(0, InitialGlobal.GetRule());
-            
+
             // Additional
             if (addRules != null)
                 WorkshopRules.AddRange(addRules.Invoke(VarCollection).Where(rule => rule != null));
-                        
+
             // Order the workshop rules by priority.
             WorkshopRules = WorkshopRules.OrderBy(wr => wr.Priority).ToList();
 
@@ -337,6 +337,8 @@ namespace Deltin.Deltinteger.Parse
         private readonly NumberType _numberType;
         private readonly StringType _stringType;
         private readonly BooleanType _booleanType;
+        private AnyType _anyType;
+        private AnyType _unknownType;
 
         public ScriptTypes(DeltinScript deltinScript)
         {
@@ -350,8 +352,9 @@ namespace Deltin.Deltinteger.Parse
 
         public void GetDefaults()
         {
-            var dynamicType = new AnyType(_deltinScript);
-            AddType(dynamicType);
+            _anyType = new AnyType(_deltinScript);
+            _unknownType = new AnyType("?", _deltinScript);
+            AddType(_anyType);
             AddType(_playerType);
             AddType(_vectorType);
             AddType(_numberType);
@@ -363,9 +366,11 @@ namespace Deltin.Deltinteger.Parse
             AddType(new Pathfinder.PathmapClass(_deltinScript));
             AddType(new Pathfinder.PathResolveClass(this));
             // Constant lambda types.
-            AddType(new Lambda.BlockLambda(dynamicType));
-            AddType(new Lambda.ValueBlockLambda(dynamicType));
-            AddType(new Lambda.MacroLambda(dynamicType));
+            AddType(new Lambda.BlockLambda(_anyType));
+            AddType(new Lambda.ValueBlockLambda(_anyType));
+            AddType(new Lambda.MacroLambda(_anyType));
+            // Model static class.
+            // AddType(new Models.AssetClass());
             // Enums
             foreach (var type in ValueGroupType.GetEnumTypes(this))
                 AddType(type);
@@ -395,7 +400,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (CodeType type in AllTypes)
                 if (type is ClassType classType && classType.Identifier > 0)
                     builder.AppendLine("// " + classType.Name + ": " + classType.Identifier);
-            
+
             builder.AppendLine();
         }
 
@@ -404,18 +409,18 @@ namespace Deltin.Deltinteger.Parse
         public T GetInitializer<T>() where T: ICodeTypeInitializer => (T)AllTypes.First(type => type.GetType() == typeof(T));
 
         public CodeType Default() => Any();
-        public CodeType Any() => GetInstance<AnyType>();
+        public CodeType Any() => _anyType;
         public CodeType AnyArray() => new ArrayType(this, Any());
-        public CodeType Boolean() => GetInstance<BooleanType>();
-        public CodeType Number() => GetInstance<NumberType>();
-        public CodeType String() => GetInstance<StringType>();
+        public CodeType Boolean() => _booleanType;
+        public CodeType Number() => _numberType;
+        public CodeType String() => _stringType;
         public CodeType Player() => _playerType;
         public CodeType Players() => new PipeType(_playerType, PlayerArray());
         public CodeType PlayerArray() => new ArrayType(this, _playerType);
         public CodeType Vector() => _vectorType;
         public CodeType VectorArray() => new ArrayType(this, _vectorType);
         public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
-        public CodeType Button() => Any(); // TODO
+        public CodeType Unknown() => _unknownType;
 
         public CodeType EnumType(string typeName)
         {

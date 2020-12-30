@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public CodeParameter[] Parameters => _function.Parameters;
         public int TypeArgCount => _function.GetProvider().TypeArgCount;
         public StringOrMarkupContent Documentation => _function.Documentation;
-        public string Label => _function.GetLabel(true);
+        public string Label => _function.GetLabel(false);
         public IParameterCallable Value => _function;
         private readonly IMethod _function;
 
@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public CodeParameter[] Parameters => _constructor.Parameters;
         public int TypeArgCount => 0;
         public StringOrMarkupContent Documentation => _constructor.Documentation;
-        public string Label => _constructor.GetLabel(true);
+        public string Label => _constructor.GetLabel(false);
         public IParameterCallable Value => _constructor;
         private readonly Constructor _constructor;
 

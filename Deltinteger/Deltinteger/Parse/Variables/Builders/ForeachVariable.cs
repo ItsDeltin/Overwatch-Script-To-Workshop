@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = false;
-            _varInfo.IsWorkshopReference = true;
+            _varInfo.VariableTypeHandler.SetWorkshopReference();
             _varInfo.RequiresCapture = true;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
 

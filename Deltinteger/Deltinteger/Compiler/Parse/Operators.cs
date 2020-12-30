@@ -73,9 +73,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             if ((op1 == Ternary || op1 == RhsTernary) && (op2 == Ternary || op2 == RhsTernary))
                 return op1 == RhsTernary && op2 == RhsTernary;
-            
+
             if (op1 == Sentinel || op2 == Sentinel) return false;
-            
+
             return op1.Precedence >= op2.Precedence;
         }
     }
@@ -189,7 +189,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Range = op.Token.Range.Start + value.Range.End;
         }
 
-        public override string ToString() => Operator.ToString() + Value.ToString(); 
+        public override string ToString() => Operator.ToString() + Value.ToString();
     }
 
     public class TernaryExpression : Node, IParseExpression

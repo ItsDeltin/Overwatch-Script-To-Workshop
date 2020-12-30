@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; protected set; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; } = true;
-        public string Documentation { get; } = null;
+        public MarkupBuilder Documentation { get; } = null;
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public bool Static { get; protected set; }
 
@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // IApplyBlock
-        public virtual void SetupParameters() {}
+        public virtual void SetupParameters() { }
         public abstract void SetupBlock();
 
         protected void SetupParameters(List<VariableDeclaration> context, bool subroutineParameter)
@@ -67,11 +67,11 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
         }
         
-        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
+        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this).ToString(markdown);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
 
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
 
         protected List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)

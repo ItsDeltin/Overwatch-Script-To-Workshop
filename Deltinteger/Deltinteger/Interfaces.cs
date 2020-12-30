@@ -5,6 +5,7 @@ using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger
 {
@@ -60,24 +61,23 @@ namespace Deltin.Deltinteger
             else return new DefaultProvider(this);
         }
 
-        public static string GetLabel(IMethod function, bool includeReturnType)
+        public static MarkupBuilder DefaultLabel(bool includeDescription, IMethod function)
         {
-            // Get the return type.
-            string result = "";
-            if (includeReturnType)
-                result += (function.DoesReturnValue ? function.CodeType?.GetName() ?? "define" : "void") + " ";
+            MarkupBuilder markup = new MarkupBuilder()
+                .StartCodeLine()
+                .Add(function.CodeType.GetNameOrVoid())
+                .Add(" ")
+                .Add(function.Name + CodeParameter.GetLabels(function.Parameters))
+                .EndCodeLine();
             
-            result += function.Name + "(";
-
-            // Get the parameters.
-            for (int i = 0; i < function.Parameters.Length; i++)
+            if (includeDescription && function.Documentation != null)
             {
-                result += function.Parameters[i].GetLabel();
-                if (i < function.Parameters.Length - 1) result += ", ";
+                markup
+                    .NewSection()
+                    .Add(function.Documentation);
             }
             
-            result += ")";
-            return result;
+            return markup;
         }
 
         public static MarkupBuilder Hover(InstanceAnonymousTypeLinker typeLinker, string name, CodeType returnType, CodeType[] typeArgs, CodeParameter[] parameters)
@@ -108,6 +108,13 @@ namespace Deltin.Deltinteger
 
             return builder.EndCodeLine();
         }
+        public static CompletionItem GetFunctionCompletion(IMethod function) => new CompletionItem()
+        {
+            Label = function.Name,
+            Kind = CompletionItemKind.Method,
+            Detail = function.CodeType.GetNameOrVoid() + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
+            Documentation = Extras.GetMarkupContent(function.Documentation)
+        };
     }
 
     public interface ISkip
@@ -135,7 +142,7 @@ namespace Deltin.Deltinteger
     public interface IParameterCallable : ILabeled, IAccessable
     {
         CodeParameter[] Parameters { get; }
-        string Documentation { get; }
+        MarkupBuilder Documentation { get; }
         object Call(ParseInfo parseInfo, DocRange callRange) => null;
     }
 
@@ -150,7 +157,7 @@ namespace Deltin.Deltinteger
         IWorkshopTree GetVariable(Element eventPlayer = null);
         void Set(ActionSet actionSet, IWorkshopTree value) => Set(actionSet, value, null, null);
         void Set(ActionSet actionSet, IWorkshopTree value, Element target, params Element[] index);
-        void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index);
+        void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, params Element[] index);
         IGettable ChildFromClassReference(IWorkshopTree reference);
     }
 

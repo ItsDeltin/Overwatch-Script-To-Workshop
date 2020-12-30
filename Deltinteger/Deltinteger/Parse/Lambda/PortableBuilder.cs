@@ -14,8 +14,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         private int _functionIdentifier = 0;
         private SubroutineInfo _subroutineInfo = null;
 
-        public LambdaGroup() {}
-        public void Init() {}
+        public LambdaGroup() { }
+        public void Init() { }
 
         public int Add(IFunctionHandler lambda)
         {
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         bool ISubroutineContext.VariableGlobalDefault() => true;
         IParameterHandler[] ISubroutineContext.Parameters() => Parameters();
         CodeType ISubroutineContext.ContainingType() => null;
-        void ISubroutineContext.Finish(Rule rule) {}
+        void ISubroutineContext.Finish(Rule rule) { }
         IGroupDeterminer ISubroutineContext.GetDeterminer() => this;
         void ISubroutineContext.SetSubroutineInfo(SubroutineInfo subroutineInfo) => _subroutineInfo = subroutineInfo;
     }
@@ -113,7 +113,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
 
         public bool DoesReturnValue() => _lambda.LambdaType.ReturnsValue;
-        public IVariable GetParameterVar(int index) => index < _lambda.Parameters.Length ? _lambda.Parameters[index] : null;
+        public IVariableInstance GetParameterVar(int index) => index < _lambda.Parameters.Length ? _lambda.Parameters[index].GetDefaultInstance() : null;
         public int ParameterCount() => _lambda.Parameters.Length;
 
         public SubroutineInfo GetSubroutineInfo() => throw new NotImplementedException();
@@ -138,7 +138,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             // Add the contained variables.
             for (int i = 0; i < _lambda.CapturedVariables.Count; i++)
                 actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 2));
-            
+
             if (_lambda.Expression != null)
                 actionSet.ReturnHandler.ReturnValue(_lambda.Expression.Parse(actionSet));
             else

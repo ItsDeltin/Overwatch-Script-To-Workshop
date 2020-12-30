@@ -17,14 +17,13 @@ namespace Deltin.Deltinteger.Parse
         {
             _typeSupplier = typeSupplier;
             CanBeExtended = false;
-            Kind = "struct";
         }
 
         public override void ResolveElements()
         {
-            Operations = new ITypeOperation[] {
+            Operations.AddTypeOperation(new ITypeOperation[] {
                 new StringAddOperation(_typeSupplier)
-            };
+            });
 
             _length.CodeType = _typeSupplier.Number();
 

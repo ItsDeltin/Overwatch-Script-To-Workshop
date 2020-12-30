@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
             // NotAVariableRange will not be null if the resulting expression is a variable.
             if (NotAVariableRange != null)
                 diagnostics.Error("Expected a variable.", NotAVariableRange);
-            
+
             // Make sure the variable can be set to.
             if (SetVariable != null)
             {
@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
                 if (!options.CanBeIndexed && SetVariable.Index.Length != 0)
                     diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
             }
-            
+
             DoesResolveToVariable = SetVariable != null;
         }
 

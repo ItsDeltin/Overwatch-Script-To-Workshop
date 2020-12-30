@@ -41,15 +41,5 @@ namespace Deltin.Deltinteger.Parse
             });
             return types.ToArray();
         }
-        
-        public static ICodeTypeInitializer GetInitializer(this Scope scope, string name) => scope.Types.FirstOrDefault(type => type.Name == name);
-
-        public static ICodeTypeInitializer GetInitializer(this Scope scope, string name, FileDiagnostics diagnostics, DocRange range)
-        {
-            var initializer = scope.Types.FirstOrDefault(type => type.Name == name);
-            if (initializer == null)
-                diagnostics.Error("No type by the name of '" + name + "' exists in the current context", range);
-            return initializer;
-        }
     }
 }

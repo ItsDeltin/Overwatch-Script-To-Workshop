@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
         public string Description { get; protected set; }
         public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
-        protected string Kind = "class";
+        protected TypeKind Kind = TypeKind.Struct;
         protected TokenType TokenType { get; set; } = TokenType.Type;
         protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
@@ -31,13 +31,14 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
-        public ITypeOperation[] Operations { get; protected set; }
         protected List<IMethod> VirtualFunctions { get; } = new List<IMethod>();
         protected List<IVariableInstance> VirtualVariables { get; } = new List<IVariableInstance>();
+        public TypeOperatorInfo Operations { get; }
 
         public CodeType(string name)
         {
             Name = name;
+            Operations = new TypeOperatorInfo(this);
         }
 
         protected void Inherit(CodeType extend, FileDiagnostics diagnostics, DocRange range)
@@ -48,10 +49,10 @@ namespace Deltin.Deltinteger.Parse
 
             if (!extend.CanBeExtended)
                 errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
-            
+
             else if (extend == this)
                 errorMessage = "Cannot extend self.";
-            
+
             else if (extend.Implements(this))
                 errorMessage = $"The class {extend.Name} extends this class.";
 
@@ -76,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
             CodeType checkType = this;
             while (checkType != null)
             {
-                if (type.Is(checkType)) return true;
+                if (type.Is(checkType) || (!checkType.IsConstant() && type is AnyType)) return true;
                 checkType = checkType.Extends;
             }
 
@@ -106,7 +107,7 @@ namespace Deltin.Deltinteger.Parse
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();
         }
-        
+
         /// <summary>Sets up an object reference when a new object is created. Is also called when a new object of a class extending this type is created.</summary>
         /// <param name="actionSet">The actionset to use.</param>
         /// <param name="reference">The reference of the object.</param>
@@ -115,12 +116,12 @@ namespace Deltin.Deltinteger.Parse
         public virtual void ResolveElements() {}
 
         /// <summary>Assigns workshop elements so the class can function. Implementers should check if `wasCalled` is true.</summary>
-        public virtual void WorkshopInit(DeltinScript translateInfo) {}
+        public virtual void WorkshopInit(DeltinScript translateInfo) { }
 
         /// <summary>Adds the class objects to the index assigner.</summary>
         /// <param name="source">The source of the type.</param>
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
-        public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
+        public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) { }
 
         /// <summary>Deletes a variable from memory.</summary>
         /// <param name="actionSet">The action set to add the actions to.</param>
@@ -129,37 +130,23 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual IGettableAssigner GetGettableAssigner(IVariable variable) => new DataTypeAssigner((Var)variable);
 
-        /// <summary>Gets an operation.</summary>
-        /// <param name="op">The operation's operator type.</param>
-        /// <param name="right">The right object's type.</param>
-        /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>
-        public ITypeOperation GetOperation(TypeOperator op, CodeType right)
-        {
-            CodeType current = this;
-            while (current != null)
-            {
-                if (current.Operations != null)
-                    foreach (ITypeOperation operation in current.Operations)
-                        if (operation.Operator == op && right != null && right.Implements(operation.Right))
-                            return operation;
-                
-                current = current.Extends;
-            }
-            return null;
-        }
-
         /// <summary>Calls a type from the specified document range.</summary>
         /// <param name="parseInfo">The script that the type was called from.</param>
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.TranslateInfo.AddWorkshopInit(this);
-            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind.ToString().ToLower() + " " + Name, Description));
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
+
+        public static CompletionItem GetTypeCompletion(CodeType type) => new CompletionItem() {
+            Label = type.GetName(),
+            Kind = type.Kind == TypeKind.Class ? CompletionItemKind.Class : type.Kind == TypeKind.Constant ? CompletionItemKind.Constant : type.Kind == TypeKind.Enum ? CompletionItemKind.Enum : CompletionItemKind.Struct
+        };
 
         /// <summary>Gets the full name of the type.</summary>
         public virtual string GetName()

@@ -72,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
                         && type.Implements(option.Type())
                         // ...and 'type' does not have their own function implementation...
                         && Deltin.Deltinteger.Parse.FunctionBuilder.VirtualLookupTable.AutoImplemented(option.Type(), options.Select(option => option.Type()).ToArray(), type))
-                        // ...then add an additional case for 'type's class identifier.
+                    // ...then add an additional case for 'type's class identifier.
                     {
                         needsResolve = true;
                         resolves.Add(currentIndex);
@@ -189,7 +189,7 @@ namespace Deltin.Deltinteger.Parse
     interface IMacroOption
     {
         IWorkshopTree Parse(ActionSet actionSet);
-        CodeType Type(); 
+        CodeType Type();
     }
 
     class ParameterMacroOption : IMacroOption

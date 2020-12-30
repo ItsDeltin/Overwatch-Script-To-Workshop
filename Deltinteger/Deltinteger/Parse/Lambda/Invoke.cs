@@ -14,11 +14,11 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public MethodAttributes Attributes => new MethodAttributes();
         public bool Static => false;
         public bool WholeContext => true;
-        public string Documentation => "Invokes the lambda expression.";
+        public MarkupBuilder Documentation => "Invokes the lambda expression.";
         public Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool DoesReturnValue => LambdaType.ReturnsValue;
-        
+
         public PortableLambdaType LambdaType { get; }
 
         public LambdaInvoke(PortableLambdaType lambdaType)
@@ -40,7 +40,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             if (LambdaType.LambdaKind != LambdaKind.Anonymous && LambdaType.LambdaKind != LambdaKind.Portable && parseInfo.SourceExpression != null)
-                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr => {
+                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr =>
+                {
                     // Get the lambda that is being invoked.
                     if (expr is ILambdaApplier source)
                     {
@@ -48,7 +49,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
                         // Recursion and error check.
                         LambdaInvokeApply(parseInfo, source, callRange);
-                        
+
                         // Parameter invocation states.
                         for (int i = 0; i < source.InvokedState.Length; i++)
                             if (source.InvokedState[i].Invoked)
@@ -97,7 +98,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return false;
         }
 
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue ? CodeType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
 
         /// <summary>Gets the 'Invoke' parameters from an array of CodeTypes.</summary>

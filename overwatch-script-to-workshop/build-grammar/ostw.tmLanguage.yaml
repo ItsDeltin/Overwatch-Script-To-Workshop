@@ -209,7 +209,7 @@ repository:
   
   # Class declaration
   declare-class:
-    begin: '(class)\b\s*{{part}}(\s*(:)\s*((\s*,?\s*{{groupless-part}})*))?'
+    begin: '(class|struct)\b\s*{{part}}(\s*(:)\s*((\s*,?\s*{{groupless-part}})*))?'
     end: '{{encapsulated-block-end}}'
     beginCaptures:
       1:

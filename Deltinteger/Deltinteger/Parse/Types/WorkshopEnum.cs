@@ -7,7 +7,7 @@ using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.Compl
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
-{    
+{
     class ValueGroupType : CodeType
     {
         public ElementEnum EnumData { get; }

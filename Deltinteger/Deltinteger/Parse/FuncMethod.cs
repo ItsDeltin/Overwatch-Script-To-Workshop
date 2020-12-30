@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public MethodAttributes Attributes { get; set; } = new MethodAttributes();
         public bool Static { get; set; }
         public bool WholeContext { get; set; } = true;
-        public string Documentation { get; set; }
+        public MarkupBuilder Documentation { get; set; }
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
 
@@ -43,8 +43,8 @@ namespace Deltin.Deltinteger.Parse
             _onCall = builder.OnCall;
         }
 
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
+        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
+        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this).ToString(markdown);
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => _action.Invoke(actionSet, methodCall);
         public object Call(ParseInfo parseInfo, DocRange callRange) => _onCall?.Invoke(parseInfo, callRange);
     }

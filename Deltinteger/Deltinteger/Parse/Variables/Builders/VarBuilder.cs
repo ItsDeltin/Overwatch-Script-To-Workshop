@@ -21,6 +21,7 @@ namespace Deltin.Deltinteger.Parse
         protected VariableComponentsCollection _components;
         protected VarInfo _varInfo;
         protected Scope _scope;
+        protected bool _canInferType = false;
 
         protected IVariableFactory _variableFactory = new VariableFactory();
 
@@ -65,7 +66,6 @@ namespace Deltin.Deltinteger.Parse
                 component.Apply(_varInfo);
             
             Apply();
-            SetVariableType();
             TypeCheck();
             _varInfo.Recursive = IsRecursive();
 
@@ -83,20 +83,25 @@ namespace Deltin.Deltinteger.Parse
         {
             if (_contextHandler.GetCodeType() == null) return;
 
-            // Get the type.
-            CodeType type = TypeFromContext.GetCodeTypeFromContext(
-                _parseInfo,
-                _scope,
-                _contextHandler.GetCodeType()
-            );
-            ApplyCodeType(type);
+            if (_canInferType && _contextHandler.GetCodeType().Infer && _components.IsComponent<InitialValueComponent>())
+            {
+                _varInfo.InferType = true;
+            }
+            else
+            {
+                // Get the type.
+                CodeType type = TypeFromContext.GetCodeTypeFromContext(
+                    _parseInfo,
+                    _scope,
+                    _contextHandler.GetCodeType()
+                );
+                ApplyCodeType(type);
+            }
         }
 
         protected virtual void ApplyCodeType(CodeType type)
         {
-            if (type != null && type.IsConstant())
-                _varInfo.IsWorkshopReference = true;
-            
+            _varInfo.VariableTypeHandler.SetType(type);
             _varInfo.Type = type;
         }
 
@@ -108,27 +113,6 @@ namespace Deltin.Deltinteger.Parse
             // If the type of the variable is a constant workshop value and there is no initial value, throw a syntax error.
             if (_varInfo.Type != null && _varInfo.Type.IsConstant() && _varInfo.InitialValueContext == null)
                 _diagnostics.Error("Variables with constant workshop types must have an initial value.", _nameRange);
-        }
-
-        void SetVariableType()
-        {
-            // Set the variable and store types.
-            if (_varInfo.IsWorkshopReference)
-            {
-                // If the variable is a workshop reference, set the variable type to ElementReference.
-                _varInfo.VariableType = VariableType.ElementReference;
-                _varInfo.StoreType = StoreType.None;
-            }
-            // In extended collection.
-            else if (_varInfo.InExtendedCollection)
-            {
-                _varInfo.StoreType = StoreType.Indexed;
-            }
-            // Full workshop variable.
-            else
-            {
-                _varInfo.StoreType = StoreType.FullVariable;
-            }
         }
 
         private void GetOverridenVariable()

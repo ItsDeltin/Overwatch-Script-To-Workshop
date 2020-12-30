@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Elements
         public Element Value1 { get; private set; }
         public OperatorElement CompareOperator { get; private set; }
         public Element Value2 { get; private set; }
+        public string Comment { get; set; }
 
         public Condition(Element value1, Operator op, Element value2)
         {
@@ -24,6 +25,11 @@ namespace Deltin.Deltinteger.Elements
 
         public void ToWorkshop(WorkshopBuilder builder, bool optimize)
         {
+            string result = string.Empty;
+
+            // Add a comment and newline
+            if (Comment != null) builder.AppendLine($"\"{Comment}\"\n");
+
             Element a = Value1;
             Element b = Value2;
             if (optimize)

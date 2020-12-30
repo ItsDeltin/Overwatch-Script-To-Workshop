@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Models
         {
             string[] files = Directory.GetFiles(folder).Where(file => Path.GetExtension(file) == ".obj").ToArray();
             List<Letter> letters = new List<Letter>();
-            foreach(string file in files)
+            foreach (string file in files)
             {
                 string name = Path.GetFileNameWithoutExtension(file);
                 string[] split = name.Split('_');
@@ -56,10 +56,10 @@ namespace Deltin.Deltinteger.Models
                 letters.Add(letter);
             }
 
-            foreach(Letter letter in letters)
-                Console.WriteLine( 
-                    "new Letter('" + letter.Character + "', " + 
-                    string.Join(", ", 
+            foreach (Letter letter in letters)
+                Console.WriteLine(
+                    "new Letter('" + letter.Character + "', " +
+                    string.Join(", ",
                         letter.Lines.Select(line => "new Line(new Vertex(" + line.Vertex1.X + ", " + line.Vertex1.Y + "), new Vertex(" + line.Vertex2.X + ", " + line.Vertex2.Y + "))")
                     )
                     + "),"
@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.Models
                 line.Vertex1 = line.Vertex1;
                 line.Vertex2 = line.Vertex2;
             }
-            
+
             return result.ToArray();
         }
 
@@ -110,12 +110,12 @@ namespace Deltin.Deltinteger.Models
             foreach (Letter letter in Alphabet)
                 if (character == letter.Character)
                     return letter;
-                
+
             if (!exactLetter)
                 foreach (Letter letter in Alphabet)
                     if (Char.ToLower(character) == char.ToLower(letter.Character))
                         return letter;
-            
+
             script.Diagnostics.Error(character + " is not a valid character.", range);
             return null;
         }

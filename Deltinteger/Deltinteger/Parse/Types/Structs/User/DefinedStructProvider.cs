@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly ParseInfo _parseInfo;
         private readonly ClassContext _context;
         private readonly Scope _scope;
-        private readonly Location _definedAt;
+        public Location DefinedAt { get; }
         public Scope StaticScope { get; private set; }
         public Scope ObjectScope { get; private set; }
 
@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             _context = typeContext;
             _scope = scope;
-            _definedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
+            DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
             parseInfo.TranslateInfo.AddResolve(this);
         }
 

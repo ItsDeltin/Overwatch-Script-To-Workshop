@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Debugger
         {
             if (!collection.References.ContainsKey(debugVariable))
                 collection.References.Add(debugVariable, collection.GetReference());
-            
+
             return collection.References[debugVariable];
         }
     }

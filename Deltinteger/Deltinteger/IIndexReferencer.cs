@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger
         IWorkshopTree ToWorkshop(ActionSet actionSet) => actionSet.IndexAssigner.Get(Provider).GetVariable();
         IExpression GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(this, index);
         void Call(ParseInfo parseInfo, DocRange callRange) => Call(this, parseInfo, callRange);
-        MarkupBuilder GetLabel() => new MarkupBuilder().StartCodeLine().Add(CodeType.GetName() + " " + Name).EndCodeLine();
+        MarkupBuilder GetLabel() => new MarkupBuilder().StartCodeLine().Add(CodeType.GetNameOrAny() + " " + Name).EndCodeLine();
 
         static CompletionItem GetCompletion(IVariableInstance variable, CompletionItemKind kind) => new CompletionItem()
         {

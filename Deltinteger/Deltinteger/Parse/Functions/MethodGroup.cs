@@ -34,7 +34,8 @@ namespace Deltin.Deltinteger.Parse
         public bool MethodIsValid(IMethod method) => method.Name == Name;
         public void AddMethod(IMethod method) => Functions.Add(method);
 
-        public CompletionItem GetCompletion() => new CompletionItem() {
+        public CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Function,
             Documentation = new MarkupBuilder()
@@ -47,7 +48,12 @@ namespace Deltin.Deltinteger.Parse
 
         public IGettableAssigner GetAssigner() => throw new NotImplementedException();
 
-        IExpression GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallMethodGroup(parseInfo, callRange, this, typeArgs);
+        IExpression IVariableInstance.GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs)
+        {
+            var call = new CallMethodGroup(parseInfo, callRange, this, typeArgs);
+            call.Accept();
+            return call;
+        }
 
         IVariableInstance IVariable.GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
         IVariableInstance IVariable.GetDefaultInstance() => this;
@@ -106,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
                     for (int i = 0; i < func.Parameters.Length; i++)
                         if (func.Parameters[i].Type != null && !func.Parameters[i].Type.Implements(expecting.Parameters[i]))
                             continue;
-                    
+
                     _chosenFunction = func;
                     found = true;
                     break;
@@ -136,12 +142,12 @@ namespace Deltin.Deltinteger.Parse
         {
             // If the chosen function is a DefinedMethod, use the DefinedFunctionHandler.
             if (function is DefinedMethodInstance definedMethod)
-                return new FunctionMethodGroupInvoker(new DefinedFunctionHandler(definedMethod.Provider, false));
+                return new FunctionMethodGroupInvoker(new DefinedFunctionHandler(definedMethod, false));
             
             // If the chosen function is a macro.
             if (function is DefinedMacroInstance definedMacro)
                 return new MacroMethodGroupInvoker(definedMacro);
-            
+
             // Otherwise, use the generic function handler.
             return new FunctionMethodGroupInvoker(new GenericMethodHandler(function));
         }
@@ -181,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public int GetIdentifier(ParseInfo parseInfo) => parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(_functionHandler);
-        public IVariable GetParameterVar(int index) => _functionHandler.GetParameterVar(index);
+        public IVariable GetParameterVar(int index) => _functionHandler.GetParameterVar(index).Provider;
         public int ParameterCount() => _functionHandler.ParameterCount();
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
@@ -222,7 +228,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetName() => _method.Name;
         public bool DoesReturnValue() => _method.DoesReturnValue;
-        public IVariable GetParameterVar(int index) => _parameterSavers[index].Provider;
+        public IVariableInstance GetParameterVar(int index) => _parameterSavers[index];
         public SubroutineInfo GetSubroutineInfo() => throw new NotImplementedException();
         public bool IsObject() => false;
         public bool IsRecursive() => false;

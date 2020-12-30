@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     - (recursive) pop this
     - (recursive) pop parameters
     */
-            
+
     public class FunctionBuildController
     {
         public ActionSet ActionSet { get; private set; }
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                     else
                         ActionSet.AddAction(subroutineInfo.ObjectStore.ModifyVariable(Operation.AppendToArray, Element.CreateArray(ActionSet.CurrentObject)));
                 }
-                
+
                 ExecuteSubroutine(subroutineInfo.Subroutine, CallHandler.ParallelMode);
                 return subroutineInfo.ReturnHandler.GetReturnedValue();
             }
@@ -154,11 +154,11 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 case CallParallel.NoParallel:
                     ActionSet.AddAction(Element.CallSubroutine(subroutine));
                     break;
-                
+
                 case CallParallel.AlreadyRunning_DoNothing:
                     ActionSet.AddAction(Element.StartRule(subroutine, false));
                     break;
-                
+
                 case CallParallel.AlreadyRunning_RestartRule:
                     ActionSet.AddAction(Element.StartRule(subroutine, true));
                     break;
@@ -224,7 +224,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             for (int i = 0; i < parameters.Length; i++)
             {
                 // Get all vars in each function.
-                var vars = new IVariable[VirtualOptions.Length];
+                var vars = new IVariableInstance[VirtualOptions.Length];
                 for (int v = 0; v < vars.Length; v++) vars[v] = VirtualOptions[v].GetParameterVar(i);
 
                 parameters[i] = new DefinedParameterHandler(vars, IsRecursive());
@@ -254,7 +254,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         bool DoesReturnValue();
         int ParameterCount();
         SubroutineInfo GetSubroutineInfo();
-        IVariable GetParameterVar(int index);
+        IVariableInstance GetParameterVar(int index);
         void ParseInner(ActionSet actionSet);
         void Subcall(FunctionBuildController builder, ActionSet actionSet) => builder.Subcall(builder.ActionSet, this);
         object UniqueIdentifier();
@@ -262,25 +262,25 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
     public class DefinedFunctionHandler : IFunctionHandler
     {
-        private readonly DefinedMethodProvider _method;
+        private readonly DefinedMethodInstance _method;
         private readonly bool _primarySubroutineFunction;
 
-        public DefinedFunctionHandler(DefinedMethodProvider method, bool primarySubroutineFunction)
+        public DefinedFunctionHandler(DefinedMethodInstance method, bool primarySubroutineFunction)
         {
             _method = method;
             _primarySubroutineFunction = primarySubroutineFunction;
         }
 
         public string GetName() => _method.Name;
-        public bool IsObject() => _method.ContainingType != null && !_method.Static;
-        public bool IsRecursive() => _method.Recursive;
-        public bool IsSubroutine() => _method.IsSubroutine;
-        public int ParameterCount() => _method.ParameterProviders.Length;
-        public bool MultiplePaths() => _method.MultiplePaths;
-        public bool DoesReturnValue() => _method.ReturnType != null;
-        public SubroutineInfo GetSubroutineInfo() => _method.GetSubroutineInfo();
-        public IVariable GetParameterVar(int index) => index < ParameterCount() ? _method.ParameterProviders[index].Var : null;
-        public void ParseInner(ActionSet actionSet) => _method.Block.Translate(actionSet);
+        public bool IsObject() => _method.Provider.ContainingType != null && !_method.Static;
+        public bool IsRecursive() => _method.Provider.Recursive;
+        public bool IsSubroutine() => _method.Provider.IsSubroutine;
+        public int ParameterCount() => _method.Parameters.Length;
+        public bool MultiplePaths() => _method.Provider.MultiplePaths;
+        public bool DoesReturnValue() => _method.CodeType != null;
+        public SubroutineInfo GetSubroutineInfo() => _method.Provider.GetSubroutineInfo();
+        public IVariableInstance GetParameterVar(int index) => index < ParameterCount() ? _method.ParameterVars[index] : null;
+        public void ParseInner(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet);
         public object UniqueIdentifier() => _method;
         public void Subcall(FunctionBuildController builder, ActionSet actionSet)
         {
@@ -290,7 +290,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 builder.Subcall(actionSet, this);
         }
 
-        public CodeType ContainingType => _method.ContainingType?.GetInstance();
+        public CodeType ContainingType => _method.Provider.ContainingType?.GetInstance();
     }
 
     public interface IParameterHandler
@@ -305,14 +305,15 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
     public class DefinedParameterHandler : IParameterHandler
     {
-        private readonly IVariable[] _variables;
+        private readonly IVariableInstance[] _variables;
         private readonly bool _recursive;
         private readonly IGettableAssigner _assigner;
 
-        public DefinedParameterHandler(IVariable[] variables, bool recursive)
+        public DefinedParameterHandler(IVariableInstance[] variables, bool recursive)
         {
             _variables = variables;
             _recursive = recursive;
+            _assigner = variables[0].GetAssigner();
         }
 
         public void Set(ActionSet actionSet, IWorkshopTree value)
@@ -335,25 +336,25 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public void Apply(ActionSet actionSet, IGettable gettable)
         {
             for (int i = 0; i < _variables.Length; i++)
-                actionSet.IndexAssigner.Add(_variables[i], gettable);
+                actionSet.IndexAssigner.Add(_variables[i].Provider, gettable);
         }
 
         private void CopyToAll(ActionSet actionSet, IGettable gettable)
         {
             for (int i = 1; i < _variables.Length; i++)
-                actionSet.IndexAssigner.Add(_variables[i], gettable);
+                actionSet.IndexAssigner.Add(_variables[i].Provider, gettable);
         }
 
         public void Push(ActionSet actionSet, IWorkshopTree value)
         {
-            var varReference = actionSet.IndexAssigner[_variables[0]];
+            var varReference = actionSet.IndexAssigner[_variables[0].Provider];
             if (varReference is RecursiveIndexReference recursive)
                 actionSet.AddAction(recursive.Push((Element)value));
         }
 
         public void Pop(ActionSet actionSet)
         {
-            var pop = (actionSet.IndexAssigner[_variables[0]] as RecursiveIndexReference)?.Pop();
+            var pop = (actionSet.IndexAssigner[_variables[0].Provider] as RecursiveIndexReference)?.Pop();
             if (pop != null) actionSet.AddAction(pop);
         }
 
@@ -363,7 +364,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
             for (int i = 0; i < parameters.Length; i++)
             {
                 // Get all vars in each function.
-                var vars = new List<IVariable>();
+                var vars = new List<IVariableInstance>();
                 for (int v = 0; v < handlers.Length; v++)
                 {
                     var result = handlers[v].GetParameterVar(i);
@@ -427,7 +428,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
             // Setup the return handler.
             ActionSet actionSet = subroutineRule.ActionSet.New(subroutineRule.ActionSet.IndexAssigner.CreateContained());
-            
+
             // Create the function builder.
             var determiner = _context.GetDeterminer();
 
@@ -453,7 +454,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                     actionSet = actionSet.New(objectStore.Get()).PackThis().New(objectStore);
                 }
             }
-            
+
             var functionBuilder = new FunctionBuildController(actionSet, null, determiner);
 
             // Set the subroutine info.
@@ -541,7 +542,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                     // Iterate through each parameter handler and apply the stack. 
                     for (int i = 0; i < Parameters().Length; i++)
                         Parameters()[i].Apply(actionSet, parameters[i]);
-                    
+
                     // Return the parameter stacks.
                     return parameters;
                 }
@@ -573,7 +574,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
         /// <summary>The skip used to return the executing position after a recursive call.</summary>
         private SkipStartMarker continueAt;
-        
+
         /// <summary>Marks the end of the method.</summary>
         private readonly SkipEndMarker endOfMethod = new SkipEndMarker();
 

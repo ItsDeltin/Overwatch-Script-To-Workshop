@@ -23,41 +23,52 @@ namespace Deltin.Deltinteger.Parse
 
         public static CodeType GetCodeTypeFromContext(ITypeContextError errorHandler, ParseInfo parseInfo, Scope scope, ITypeContextHandler typeContext)
         {
-            if (typeContext?.Identifier == null) return parseInfo.TranslateInfo.Types.Any();
-            // if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
-            
+            if (typeContext == null) return parseInfo.TranslateInfo.Types.Any();
+
             // Get the type arguments.
             var typeArgs = new CodeType[typeContext.TypeArgs?.Count ?? 0];
             for (int i = 0; i < typeArgs.Length; i++)
                 typeArgs[i] = GetCodeTypeFromContext(parseInfo, scope, typeContext.TypeArgs[i]);
             
             var instanceInfo = new GetInstanceInfo(typeArgs);
-            
-            ICodeTypeInitializer[] types = scope.TypesFromName(typeContext.Identifier.GetText());
 
-            if (types.Length == 0)
+            CodeType type;
+            if (typeContext.IsDefault)
             {
-                errorHandler.Nonexistent();
-                return parseInfo.TranslateInfo.Types.GetInstance<AnyType>();
+                if (typeContext.Infer)
+                    parseInfo.Script.Diagnostics.Hint("Unable to infer type", typeContext.Identifier.Range);
+
+                type = parseInfo.TranslateInfo.Types.Any();
+            }
+            else
+            {
+                var providers = scope.TypesFromName(typeContext.Identifier.GetText());
+
+                // No types found.
+                if (providers.Length == 0)
+                {
+                    errorHandler.Nonexistent();
+                    return parseInfo.TranslateInfo.Types.GetInstance<AnyType>();
+                }
+
+                var fallback = providers[0]; // Used when no types match.
+
+                // Match generics.
+                providers = providers.Where(t => t.GenericsCount == typeContext.TypeArgs.Count).ToArray();
+                if (providers.Length == 0) // No types match the generics count.
+                {
+                    // Add the error.
+                    errorHandler.IncorrectTypeArgsCount(fallback);
+                    
+                    // Return the fallback.
+                    return fallback.GetInstance();
+                }
+
+                // TODO: Check ambiguities
+                type = providers[0].GetInstance(instanceInfo);
+                type.Call(parseInfo, typeContext.Identifier.Range);
             }
             
-            var fallback = types[0];
-
-            types = types.Where(t => t.GenericsCount == typeContext.TypeArgs.Count).ToArray();
-            if (types.Length == 0) // No types match the generics count.
-            {
-                // Add the error.
-                errorHandler.IncorrectTypeArgsCount(fallback);
-                
-                // Return the fallback.
-                return fallback.GetInstance();
-            }
-
-            // TODO: Check ambiguities
-
-            CodeType type = types[0].GetInstance(instanceInfo);
-            type.Call(parseInfo, typeContext.Identifier.Range);
-
             for (int i = 0; i < typeContext.ArrayCount; i++)
                 type = new ArrayType(parseInfo.TranslateInfo.Types, type);
             
@@ -104,6 +115,10 @@ namespace Deltin.Deltinteger.Parse
         {
             var left = GetCodeTypeFromContext(parseInfo, scope, type.Left);
             var right = GetCodeTypeFromContext(parseInfo, scope, type.Right);
+
+            if (left.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Left.Range);
+            if (right.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Right.Range);
+
             return new PipeType(left, right);
         }
     }

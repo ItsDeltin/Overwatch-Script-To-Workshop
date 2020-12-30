@@ -6,7 +6,8 @@ namespace Deltin.Deltinteger.Parse
     {
         public static void Resolve(IExpression start, Action<IExpression> callback)
         {
-            Action resolver = () => {
+            Action resolver = () =>
+            {
                 IExpression resolve = null;
 
                 // If the expression is a CallvariableAction, resolve the initial value.
@@ -35,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
                 // If the expression is an ExpressionTree, resolve the last value.
                 else if (start is ExpressionTree expressionTree)
                     resolve = expressionTree.Result;
-                
+
                 if (resolve == null) callback.Invoke(start);
                 else Resolve(resolve, callback);
             };

@@ -14,9 +14,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public bool Disabled { get; }
-        public IExpression[] Conditions { get; }
+        public ConditionAction[] Conditions { get; }
         public IStatement Block { get; }
-        
+
         public RuleEvent EventType { get; private set; }
         public Team Team { get; private set; }
         public PlayerSelector Player { get; private set; }
@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
             CallInfo callInfo = new CallInfo(parseInfo.Script);
 
             // Get the conditions.
-            Conditions = new IExpression[ruleContext.Conditions.Count];
+            Conditions = new ConditionAction[ruleContext.Conditions.Count];
             for (int i = 0; i < Conditions.Length; i++)
             {
                 // Make sure both left and right parentheses exists.
@@ -47,19 +47,22 @@ namespace Deltin.Deltinteger.Parse
                         CompletionRangeKind.Catch
                     ));
 
-                Conditions[i] = parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression);
+                Conditions[i] = new ConditionAction(
+                    parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression),
+                    ruleContext.Conditions[i].Comment
+                );
             }
 
             // Get the block.
             Block = parseInfo.SetCallInfo(callInfo).GetStatement(scope, ruleContext.Statement);
-            
+
             // Check restricted calls.
             callInfo.CheckRestrictedCalls(EventType);
-            
+
             // Get the rule order priority.
             if (ruleContext.Order != null)
                 Priority = ruleContext.Order.Value;
-            
+
             ElementCountLens = new ElementCountCodeLens(ruleInfoRange, parseInfo.TranslateInfo.OptimizeOutput);
             parseInfo.Script.AddCodeLensRange(ElementCountLens);
         }
@@ -86,28 +89,28 @@ namespace Deltin.Deltinteger.Parse
                     string name = setting.Value.Text;
                     DocRange range = setting.Value.Range;
 
-                    switch(setting.Setting.Text)
+                    switch (setting.Setting.Text)
                     {
                         case "Event":
                             if (setEventType) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
                             EventType = GetMember<RuleEvent>("Event", name, parseInfo.Script.Diagnostics, range);
                             setEventType = true;
                             break;
-                        
+
                         case "Team":
                             if (setTeam) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
                             Team = GetMember<Team>("Team", name, parseInfo.Script.Diagnostics, range);
                             setTeam = true;
                             teamContext = setting;
                             break;
-                        
+
                         case "Player":
                             if (setPlayer) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
                             Player = GetMember<PlayerSelector>("Player", name, parseInfo.Script.Diagnostics, range);
                             setPlayer = true;
                             playerContext = setting;
                             break;
-                        
+
                         default:
                             parseInfo.Script.Diagnostics.Error("Expected an enumerator of type 'Event', 'Team', or 'Player'.", setting.Setting.Range);
                             break;
@@ -164,8 +167,19 @@ namespace Deltin.Deltinteger.Parse
         private static CompletionItem[] GetItems(ElementEnum elementEnum) => elementEnum.Members.Select(m => new CompletionItem() {
                 Label = m.CodeName(),
                 Detail = m.CodeName(),
-                //Detail = new MarkupBuilder().StartCodeLine().Add(tag + "." + m.CodeName).ToString(),
                 Kind = CompletionItemKind.Constant
             }).ToArray();
+    }
+
+    public class ConditionAction
+    {
+        public IExpression Expression { get; }
+        public MetaComment Comment { get; }
+
+        public ConditionAction(IExpression expression, MetaComment comment)
+        {
+            Expression = expression;
+            Comment = comment;
+        }
     }
 }

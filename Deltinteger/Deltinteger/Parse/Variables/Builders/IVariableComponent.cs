@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
         /// <typeparam name="T">The type of the component. Must be an IVariableComponent.</typeparam>
         /// <returns>True if the component exists, false otherwise.</returns>
         public bool IsComponent<T>() where T: IVariableComponent
-            => this.Any(component => component.GetType().IsSubclassOf(typeof(T)));
+            => this.Any(component => component is T);
         
         public VariableComponentsCollection(IVariableComponent[] components) : base(components) {}
     }
@@ -75,17 +75,17 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 
                 // globalvar
                 case AttributeType.GlobalVar:
-                    varInfo.VariableType = VariableType.Global;
+                    varInfo.VariableTypeHandler.SetAttribute(true);
                     break;
                 
                 // playervar
                 case AttributeType.PlayerVar:
-                    varInfo.VariableType = VariableType.Player;
+                    varInfo.VariableTypeHandler.SetAttribute(false);
                     break;
                 
                 // ref
                 case AttributeType.Ref:
-                    varInfo.IsWorkshopReference = true;
+                    varInfo.VariableTypeHandler.SetWorkshopReference();
                     break;
                 
                 // Static
@@ -201,7 +201,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
     {
         public void Reject(FileDiagnostics diagnostics, IVariableComponent component)
         {
-            if (!component.WasRejected && component.GetType().IsSubclassOf(typeof(T)))
+            if (!component.WasRejected && component is T)
             {
                 component.WasRejected = true;
                 diagnostics.Error(component.RejectMessage(), component.Range);

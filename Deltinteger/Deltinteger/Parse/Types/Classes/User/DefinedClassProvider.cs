@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Deltin.Deltinteger.Parse.Types.Constructors;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.LanguageServer;
@@ -9,13 +10,13 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedClassInitializer : ClassInitializer, IResolveElements, IDefinedTypeInitializer
     {
         public override int GenericsCount => AnonymousTypes?.Length ?? 0;
+        public Location DefinedAt { get; }
         public List<IElementProvider> DeclaredElements { get; } = new List<IElementProvider>();
         private readonly ParseInfo _parseInfo;
         private readonly ClassContext _typeContext;
-        private readonly Location _definedAt;
         private readonly List<Var> _staticVariables = new List<Var>();
         private readonly Scope _scope;
-        private Constructor[] _constructors;
+        private IConstructorProvider<Constructor>[] _constructors;
         public AnonymousType[] AnonymousTypes { get; private set; }
         private Scope _operationalObjectScope;
         private Scope _operationalStaticScope;
@@ -24,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _parseInfo = parseInfo;
             _typeContext = typeContext;
-            _definedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
+            DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
             _scope = scope;
 
             parseInfo.TranslateInfo.AddResolve(this);
@@ -110,15 +111,15 @@ namespace Deltin.Deltinteger.Parse
             // Get the constructors.
             if (_typeContext.Constructors.Count > 0)
             {
-                _constructors = new Constructor[_typeContext.Constructors.Count];
+                _constructors = new IConstructorProvider<Constructor>[_typeContext.Constructors.Count];
                 for (int i = 0; i < _constructors.Length; i++)
-                    _constructors[i] = new DefinedConstructor(_parseInfo, _operationalObjectScope, WorkingInstance, _typeContext.Constructors[i]);
+                    _constructors[i] = new DefinedConstructorProvider(_parseInfo, _operationalObjectScope, WorkingInstance, _typeContext.Constructors[i]);
             }
             else
             {
                 // If there are no constructors, create a default constructor.
-                _constructors = new Constructor[] {
-                    new Constructor(WorkingInstance, _definedAt, AccessLevel.Public)
+                _constructors = new IConstructorProvider<Constructor>[] {
+                    new EmptyConstructorProvider(WorkingInstance, DefinedAt)
                 };
             }
 

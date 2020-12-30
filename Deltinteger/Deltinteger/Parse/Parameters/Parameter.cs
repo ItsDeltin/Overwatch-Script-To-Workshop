@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; set; }
         public CodeType Type { get; set; }
-        public string Documentation { get; set; }
+        public MarkupBuilder Documentation { get; set; }
         public ExpressionOrWorkshopValue DefaultValue { get; set; }
         public List<RestrictedCallType> RestrictedCalls { get; set; } = new List<RestrictedCallType>();
         public ParameterInvokedInfo Invoked { get; set; } = new ParameterInvokedInfo();
@@ -35,27 +35,27 @@ namespace Deltin.Deltinteger.Parse
             DefaultValue = defaultValue;
         }
 
-        public CodeParameter(string name, string documentation)
+        public CodeParameter(string name, MarkupBuilder documentation)
         {
             Name = name;
             Documentation = documentation;
         }
 
-        public CodeParameter(string name, string documentation, CodeType type)
+        public CodeParameter(string name, MarkupBuilder documentation, CodeType type)
         {
             Name = name;
             Type = type;
             Documentation = documentation;
         }
 
-        public CodeParameter(string name, string documentation, ExpressionOrWorkshopValue defaultValue)
+        public CodeParameter(string name, MarkupBuilder documentation, ExpressionOrWorkshopValue defaultValue)
         {
             Name = name;
             Documentation = documentation;
             DefaultValue = defaultValue;
         }
 
-        public CodeParameter(string name, string documentation, CodeType type, ExpressionOrWorkshopValue defaultValue)
+        public CodeParameter(string name, MarkupBuilder documentation, CodeType type, ExpressionOrWorkshopValue defaultValue)
         {
             Name = name;
             Type = type;
@@ -66,11 +66,13 @@ namespace Deltin.Deltinteger.Parse
         public virtual object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             // If the type of the parameter is a lambda, then resolve the expression.
-            if (Type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr => {
+            if (Type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr =>
+            {
                 // If the expression is a lambda...
                 if (expr is Lambda.LambdaAction lambda)
                     // ...then if this parameter is invoked, apply the restricted calls and recursion info.
-                    Invoked.OnInvoke(() => {
+                    Invoked.OnInvoke(() =>
+                    {
                         LambdaInvoke.LambdaInvokeApply(parseInfo, lambda, valueRange);
                     });
                 // Otherwise, if the expression resolves to an IBridgeInvocable...
@@ -84,7 +86,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel()
         {
-            string result = (Type == null ? "define" : Type.GetName()) + " " + Name;
+            string result = Type.GetNameOrAny() + " " + Name;
             if (DefaultValue != null) result = "[" + result + "]";
             return result;
         }
@@ -186,7 +188,7 @@ namespace Deltin.Deltinteger.Parse
         {
             WorkshopValue = workshopValue;
         }
-        public ExpressionOrWorkshopValue() {}
+        public ExpressionOrWorkshopValue() { }
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {

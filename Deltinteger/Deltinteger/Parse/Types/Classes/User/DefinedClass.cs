@@ -43,6 +43,10 @@ namespace Deltin.Deltinteger.Parse
                     ObjectVariables[objectVariableIndex] = new ObjectVariable(variableInstance);
                 }
             }
+            
+            Constructors = new[] {
+                new Constructor(this, initializer.DefinedAt, AccessLevel.Public)
+            };
 
             parseInfo.TranslateInfo.AddWorkshopInit(this);
         }

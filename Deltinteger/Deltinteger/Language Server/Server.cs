@@ -38,11 +38,14 @@ namespace Deltin.Deltinteger.LanguageServer
 
         private DeltinScript _lastParse = null;
         private object _lastParseLock = new object();
-        public DeltinScript LastParse {
-            get {
+        public DeltinScript LastParse
+        {
+            get
+            {
                 lock (_lastParseLock) return _lastParse;
             }
-            set {
+            set
+            {
                 lock (_lastParseLock) _lastParse = value;
             }
         }
@@ -62,9 +65,9 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             Serilog.Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
-                .WriteTo.File(LogFile(), rollingInterval: RollingInterval.Day, flushToDiskInterval:new TimeSpan(0, 0, 10))
+                .WriteTo.File(LogFile(), rollingInterval: RollingInterval.Day, flushToDiskInterval: new TimeSpan(0, 0, 10))
                 .CreateLogger();
-            
+
             Serilog.Log.Information("Deltinteger Language Server");
 
             DocumentHandler = new DocumentHandler(this);
@@ -77,7 +80,7 @@ namespace Deltin.Deltinteger.LanguageServer
             ReferenceHandler referenceHandler = new ReferenceHandler(this);
             CodeLensHandler codeLensHandler = new CodeLensHandler(this);
             DoRenameHandler renameHandler = new DoRenameHandler(this);
-            PrepareRenameHandler prepareRenameHandler = new PrepareRenameHandler(this);
+            ColorHandler colorHandler = new ColorHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => AddRequests(options
                 .WithInput(Console.OpenStandardInput())
@@ -86,19 +89,19 @@ namespace Deltin.Deltinteger.LanguageServer
                     .AddSerilog()
                     .AddLanguageProtocolLogging()
                     .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
-                .WithHandler<DocumentHandler>(DocumentHandler)
-                .WithHandler<CompletionHandler>(completionHandler)
-                .WithHandler<SignatureHandler>(signatureHandler)
-                .WithHandler<ConfigurationHandler>(ConfigurationHandler)
-                .WithHandler<DefinitionHandler>(definitionHandler)
-                .WithHandler<HoverHandler>(hoverHandler)
-                .WithHandler<ReferenceHandler>(referenceHandler)
-                .WithHandler<CodeLensHandler>(codeLensHandler)
-                .WithHandler<DoRenameHandler>(renameHandler)
-                .WithHandler<PrepareRenameHandler>(prepareRenameHandler)                
+                .AddHandler(DocumentHandler)
+                .AddHandler(completionHandler)
+                .AddHandler(signatureHandler)
+                .AddHandler(ConfigurationHandler)
+                .AddHandler(definitionHandler)
+                .AddHandler(hoverHandler)
+                .AddHandler(referenceHandler)
+                .AddHandler(codeLensHandler)
+                .AddHandler(renameHandler)
+                .AddHandler(colorHandler)
             ));
-            
-            Server.SendNotification(Version, Program.VERSION);            
+
+            Server.SendNotification(Version, Program.VERSION);
             await Server.WaitForExit;
         }
 
@@ -106,7 +109,8 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             // Pathmap creation is seperated into 2 requests, 'pathmapFromClipboard' and 'pathmapApply'.
             // Pathmap generation request.
-            options.OnRequest<object, string>("pathmapFromClipboard", _=> Task<string>.Run(() => {
+            options.OnRequest<object, string>("pathmapFromClipboard", _ => Task<string>.Run(() =>
+            {
                 // Create the error handler for pathmap parser.
                 ServerPathmapHandler error = new ServerPathmapHandler();
 
@@ -129,8 +133,8 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // Pathmap save request.
-            options.OnRequest<Newtonsoft.Json.Linq.JToken>("pathmapApply", uriToken => Task.Run(() => {
-                
+            options.OnRequest<Newtonsoft.Json.Linq.JToken>("pathmapApply", uriToken => Task.Run(() =>
+            {
                 // Save 'lastMap' to a file.
                 string result = lastMap.ExportAsJSON();
                 string output = uriToken["path"].ToObject<string>().Trim('/');
@@ -139,13 +143,15 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // Pathmap editor request.
-            options.OnRequest<PathmapDocument, bool>("pathmapEditor", (editFileToken) => Task<bool>.Run(() => {
+            options.OnRequest<PathmapDocument, bool>("pathmapEditor", (editFileToken) => Task<bool>.Run(() =>
+            {
 
                 DeltinScript compile;
                 if (editFileToken.Text == null)
                 {
                     string editor = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
-                    compile = new DeltinScript(new TranslateSettings(editor) {
+                    compile = new DeltinScript(new TranslateSettings(editor)
+                    {
                         OutputLanguage = ConfigurationHandler.OutputLanguage
                     });
                 }
@@ -160,7 +166,7 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // semantic tokens
-            options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(async () => 
+            options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(async () =>
             {
                 await DocumentHandler.WaitForParse();
                 SemanticToken[] tokens = LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
@@ -168,19 +174,22 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // debugger start
-            options.OnRequest<object>("debugger.start", args => Task.Run(() => {
+            options.OnRequest<object>("debugger.start", args => Task.Run(() =>
+            {
                 _debugger.Start();
                 return new object();
             }));
 
             // debugger stop
-            options.OnRequest<object>("debugger.stop", args => Task.Run(() => {
+            options.OnRequest<object>("debugger.stop", args => Task.Run(() =>
+            {
                 _debugger.Stop();
                 return new object();
             }));
 
             // debugger scopes
-            options.OnRequest<ScopesArgs, DBPScope[]>("debugger.scopes", args => Task<DBPScope[]>.Run(() => {
+            options.OnRequest<ScopesArgs, DBPScope[]>("debugger.scopes", args => Task<DBPScope[]>.Run(() =>
+            {
                 try
                 {
                     if (_debugger.VariableCollection != null)
@@ -194,7 +203,8 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // debugger variables
-            options.OnRequest<VariablesArgs, DBPVariable[]>("debugger.variables", args => Task<DBPVariable[]>.Run(() => {
+            options.OnRequest<VariablesArgs, DBPVariable[]>("debugger.variables", args => Task<DBPVariable[]>.Run(() =>
+            {
                 try
                 {
                     if (_debugger.VariableCollection != null)
@@ -208,7 +218,8 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // debugger evaluate
-            options.OnRequest<EvaluateArgs, EvaluateResponse>("debugger.evaluate", args => Task<EvaluateResponse>.Run(() => {
+            options.OnRequest<EvaluateArgs, EvaluateResponse>("debugger.evaluate", args => Task<EvaluateResponse>.Run(() =>
+            {
                 try
                 {
                     return _debugger.VariableCollection?.Evaluate(args);
@@ -219,26 +230,26 @@ namespace Deltin.Deltinteger.LanguageServer
                     return EvaluateResponse.Empty;
                 }
             }));
-            
+
             // Decompile insert
-            options.OnRequest<object>("decompile.insert", () => Task.Run(() =>
+            options.OnRequest<DecompileResult>("decompile.insert", () => Task<DecompileResult>.Run(() =>
             {
                 try
                 {
-                    var workshop = new ConvertTextToElement(Clipboard.GetText()).Get();
+                    var tte = new ConvertTextToElement(Clipboard.GetText());
+                    var workshop = tte.Get();
                     var code = new WorkshopDecompiler(workshop, new OmitLobbySettingsResolver(), new CodeFormattingOptions()).Decompile();
-                    object result = new {success = true, code = code};
-                    return result;
+                    return new DecompileResult(tte, code);
                 }
                 catch (Exception ex)
                 {
-                    object result = new {success = false, code = ex.ToString()};
-                    return result;
+                    return new DecompileResult(ex);
                 }
             }));
 
             // Decompile file
-            options.OnRequest<DecompileFileArgs, object>("decompile.file", args => Task.Run<object>(() => {
+            options.OnRequest<DecompileFileArgs, DecompileResult>("decompile.file", args => Task.Run<DecompileResult>(() =>
+            {
                 try
                 {
                     // Parse the workshop code.
@@ -247,22 +258,22 @@ namespace Deltin.Deltinteger.LanguageServer
 
                     // Decompile the parsed workshop code.
                     var workshopToCode = new WorkshopDecompiler(workshop, new FileLobbySettingsResolver(args.File, workshop.LobbySettings), new CodeFormattingOptions());
-                    string result = workshopToCode.Decompile();
+                    var code = workshopToCode.Decompile();
 
-                    // Create the file.
-                    using (var writer = File.CreateText(args.File))
-                        // Write the code to the file.
-                        writer.Write(result);
-                    
-                    // Warning if the end of the file was not reached.
-                    if (!tte.ReachedEnd)
-                        return new {success = false, msg = "End of file not reached, stuck at: '" + tte.LocalStream.Substring(0, Math.Min(tte.LocalStream.Length, 50)) + "'" };
-                    else
-                        return new {success = true};
+                    var result = new DecompileResult(tte, code);
+
+                    // Only create the decompile was successful.
+                    if (result.Success)
+                        // Create the file.
+                        using (var writer = File.CreateText(args.File))
+                            // Write the code to the file.
+                            writer.Write(code);
+
+                    return result;
                 }
                 catch (Exception ex)
                 {
-                    return new {success = false, msg = ex.ToString()};
+                    return new DecompileResult(ex);
                 }
             }));
 
@@ -279,7 +290,7 @@ namespace Deltin.Deltinteger.LanguageServer
             public string Text;
             public string File;
 
-            public PathmapDocument() {}
+            public PathmapDocument() { }
         }
 
         class DecompileFileArgs
@@ -289,15 +300,18 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         public static readonly DocumentSelector DocumentSelector = new DocumentSelector(
-            new DocumentFilter() {
+            new DocumentFilter()
+            {
                 Language = "ostw",
                 Pattern = "**/*.del"
             },
-            new DocumentFilter() {
+            new DocumentFilter()
+            {
                 Language = "ostw",
                 Pattern = "**/*.ostw"
             },
-            new DocumentFilter() {
+            new DocumentFilter()
+            {
                 Language = "ostw",
                 Pattern = "**/*.workshop"
             }

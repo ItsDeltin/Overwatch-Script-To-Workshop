@@ -281,7 +281,7 @@
       ]
     },
     "declare-class": {
-      "begin": "(class)\\b\\s*([_[:alnum:]]+)(\\s*(:)\\s*((\\s*,?\\s*[_[:alnum:]]+)*))?",
+      "begin": "(class|struct)\\b\\s*([_[:alnum:]]+)(\\s*(:)\\s*((\\s*,?\\s*[_[:alnum:]]+)*))?",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "1": {

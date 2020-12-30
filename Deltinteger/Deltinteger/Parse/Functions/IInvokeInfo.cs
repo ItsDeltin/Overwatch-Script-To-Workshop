@@ -20,7 +20,16 @@ namespace Deltin.Deltinteger.Parse
             var group = groupCall.Group;
 
             // Make an OverloadChooser to choose an Overload.
-            var overloadChooser = new OverloadChooser(group.Functions.Select(f => new MethodOverload(f)).ToArray(), parseInfo, invokeInfo.Scope, invokeInfo.Getter, invokeInfo.TargetRange, invokeInfo.CallRange, new OverloadError("method '" + group.Name + "'"));
+            var overloadChooser = new OverloadChooser(
+                group.Functions.Select(f => new MethodOverload(f)).ToArray(),
+                parseInfo,
+                invokeInfo.Scope,
+                invokeInfo.Getter,
+                invokeInfo.TargetRange,
+                invokeInfo.CallRange,
+                invokeInfo.FullRange,
+                new OverloadError("method '" + group.Name + "'")
+            );
             // Apply the parameters.
             overloadChooser.Apply(invokeInfo.Context.Parameters, groupCall.TypeArgs.Length > 0, groupCall.TypeArgs);
         
@@ -51,8 +60,8 @@ namespace Deltin.Deltinteger.Parse
                     else
                         parseInfo.AsyncInfo.Accept();
                 }
-                
-                parseInfo.Script.AddHover(invokeInfo.Context.Range, IMethod.Hover(typeArgLinker, callingMethod.Name, callingMethod.CodeType, groupCall.TypeArgs, callingMethod.Parameters).ToString(true));
+
+                parseInfo.Script.AddHover(invokeInfo.Context.Range, callingMethod.GetLabel(true));
             }
 
             return result;
@@ -71,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
         public IInvokeResult Invoke(InvokeData invokeInfo)
         {
             var parseInfo = invokeInfo.ParseInfo;
-            
+
             // Create the overload chooser for the invoke function.
             var overloadChooser = new OverloadChooser(
                 new MethodOverload[] { new MethodOverload(_lambdaType.InvokeFunction) },
@@ -80,6 +89,7 @@ namespace Deltin.Deltinteger.Parse
                 invokeInfo.Getter,
                 invokeInfo.TargetRange,
                 invokeInfo.CallRange,
+                invokeInfo.FullRange,
                 new OverloadError("lambda '" + _lambdaType.GetName() + "'")
             );
             // Apply the parameters.
@@ -102,6 +112,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope Getter { get; }
         public DocRange TargetRange { get; }
         public DocRange CallRange { get; }
+        public DocRange FullRange { get; }
         public bool UsedAsExpression { get; }
 
         public InvokeData(ParseInfo parseInfo, FunctionExpression context, IExpression target, Scope scope, Scope getter, bool usedAsExpression)
@@ -109,7 +120,8 @@ namespace Deltin.Deltinteger.Parse
             ParseInfo = parseInfo;
             Context = context;
             TargetRange = context.Target.Range;
-            CallRange = context.Range;
+            CallRange = context.LeftParentheses.Range.Start + (context.RightParentheses?.Range.Start ?? context.Range.End);
+            FullRange = context.Range;
             Target = target;
             Scope = scope;
             Getter = getter;
@@ -164,11 +176,16 @@ namespace Deltin.Deltinteger.Parse
             _asyncInfo = parseInfo.AsyncInfo;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet) => Function.Parse(actionSet, new MethodCall(((IInvokeResult)this).GetParameterValuesAsWorkshop(actionSet), AdditionalParameterData) {
-            ParallelMode = _asyncInfo?.ParallelMode ?? CallParallel.NoParallel,
-            ActionComment = _comment,
-            AdditionalData = _additionalData
-        });
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            actionSet = actionSet.SetNextComment(_comment);
+            return Function.Parse(actionSet, new MethodCall(((IInvokeResult)this).GetParameterValuesAsWorkshop(actionSet), AdditionalParameterData)
+            {
+                ParallelMode = _asyncInfo?.ParallelMode ?? CallParallel.NoParallel,
+                ActionComment = _comment,
+                AdditionalData = _additionalData
+            });
+        }
 
         public void OnBlockApply(IOnBlockApplied onBlockApplied)
         {
@@ -184,10 +201,10 @@ namespace Deltin.Deltinteger.Parse
         {
             if (_usedAsExpression && !Function.DoesReturnValue)
                 _parseInfo.Script.Diagnostics.Error("The chosen overload for " + Function.Name + " does not return a value.", _targetRange);
-            
+
             // Get optional parameter's restricted calls.
             _match?.CheckOptionalsRestrictedCalls(_parseInfo, _targetRange);
-            
+
             // Check callinfo :)
             foreach (RestrictedCallType type in ((IApplyBlock)Function).CallInfo.GetRestrictedCallTypes())
                 _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(type, _parseInfo.GetLocation(_targetRange), RestrictedCall.Message_FunctionCallsRestricted(Function.Name, type)));

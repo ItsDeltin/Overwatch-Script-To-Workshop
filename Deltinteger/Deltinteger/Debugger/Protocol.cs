@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Debugger.Protocol
         /// </summary>
         public int indexedVariables;
 
-        public EvaluateResponse() {}
+        public EvaluateResponse() { }
         public EvaluateResponse(DebugVariableLinkCollection collection, IDebugVariable variable)
         {
             type = variable.Type;
@@ -139,7 +139,7 @@ namespace Deltin.Deltinteger.Debugger.Protocol
         /// This attribute is only required if the client has passed the value true for the 'supportsMemoryReferences' capability of the 'initialize' request.</summary>
         public string memoryReference;
 
-        public DBPVariable() {}
+        public DBPVariable() { }
         public DBPVariable(IDebugVariable variable, string typeString = null)
         {
             name = variable.Name;

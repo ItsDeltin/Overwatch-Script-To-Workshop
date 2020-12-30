@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Lobby
         [JsonProperty("additionalProperties")]
         public bool? AdditionalProperties;
 
-        public RootSchema() {}
+        public RootSchema() { }
 
         public RootSchema(string description)
         {
