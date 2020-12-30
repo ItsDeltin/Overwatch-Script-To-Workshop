@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
         // IExpression
         public IWorkshopTree Parse(ActionSet actionSet) => Result.Parse(actionSet);
 
-        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => Result.SetComment(comment);
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => Result?.SetComment(comment);
 
         public bool IsStatement() => true;
     }
