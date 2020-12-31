@@ -787,6 +787,11 @@
       "minimum": 10.0,
       "maximum": 500.0
     },
+    "Ability Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Ultimate Ability (Nano Boost)": {
       "default": true,
       "type": "boolean"
@@ -2537,6 +2542,9 @@
             },
             "Healing Dealt": {
               "$ref": "#/definitions/Healing Dealt"
+            },
+            "Ability Cooldown Time": {
+              "$ref": "#/definitions/Ability Cooldown Time"
             }
           },
           "additionalProperties": false
