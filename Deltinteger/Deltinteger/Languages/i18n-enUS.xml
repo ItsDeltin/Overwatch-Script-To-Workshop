@@ -1140,8 +1140,8 @@
     <method name="Singapore" alt="Singapore" />
     <method name="USA - West" alt="USA - West" />
     <method name="Australia 3" alt="Australia 3" />
-    <method name="Max Team 1 Players" alt="Max %1$s Players" />
-    <method name="Max Team 2 Players" alt="Max %1$s Players" />
+    <method name="Max Team 1 Players" alt="Max Team 1 Players" />
+    <method name="Max Team 2 Players" alt="Max Team 2 Players" />
     <method name="Pause Game On Player Disconnect" alt="Pause Game On Player Disconnect" />
     <method name="Disabled" alt="Disabled" />
     <method name="Enabled" alt="Enabled" />

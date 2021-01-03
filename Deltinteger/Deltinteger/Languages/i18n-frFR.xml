@@ -521,12 +521,12 @@
     <method name="Echo" alt="Écho" />
     <method name="Baptiste" alt="Baptiste" />
     <method name="Sigma" alt="Sigma" />
-    <method name="==" alt="== (égal à)" />
-    <method name="!=" alt="!= (différent de)" />
-    <method name="&lt;" alt="&lt; (inférieur à)" />
-    <method name="&lt;=" alt="&lt;= (inférieur ou égal à)" />
-    <method name="&gt;" alt="&gt; (supérieur à)" />
-    <method name="&gt;=" alt="&gt;= (supérieur ou égal à)" />
+    <method name="==" alt="==" />
+    <method name="!=" alt="!=" />
+    <method name="&lt;" alt="&lt;" />
+    <method name="&lt;=" alt="&lt;=" />
+    <method name="&gt;" alt="&gt;" />
+    <method name="&gt;=" alt="&gt;=" />
     <method name="Remove From Array By Value" alt="Supprimer du tableau par valeur" />
     <method name="Remove From Array By Index" alt="Supprimer du tableau par index" />
     <method name="Primary Fire" alt="Tir principal" />
@@ -1140,8 +1140,8 @@
     <method name="Singapore" alt="Singapour" />
     <method name="USA - West" alt="États-Unis - Ouest" />
     <method name="Australia 3" alt="Australie 3" />
-    <method name="Max Team 1 Players" alt="Joueurs max. dans %1$s." />
-    <method name="Max Team 2 Players" alt="Joueurs max. dans %1$s." />
+    <method name="Max Team 1 Players" alt="Joueurs max. dans Équipe 1." />
+    <method name="Max Team 2 Players" alt="Joueurs max. dans Équipe 2." />
     <method name="Pause Game On Player Disconnect" alt="Mettre le jeu en pause en cas de déconnexion d’un joueur" />
     <method name="Disabled" alt="Désactivé" />
     <method name="Enabled" alt="Activé" />
