@@ -27,8 +27,12 @@ namespace Deltin.Deltinteger.Parse
             if (invokeInfo != null)
                 Result = invokeInfo.Invoke(new InvokeData(parseInfo, methodContext, target, scope, getter, usedAsExpression));
             // If the target is not invocable and the target is not a missing element, add error.
-            else if (target is MissingElementAction == false)
-                parseInfo.Script.Diagnostics.Error("Method name expected", methodContext.Target.Range);
+            else
+            {
+                DiscardParameters(parseInfo, getter, methodContext.Parameters);
+                if (target is MissingElementAction == false)
+                    parseInfo.Script.Diagnostics.Error("Method name expected", methodContext.Target.Range);
+            }
         }
 
         public Scope ReturningScope()
@@ -51,6 +55,13 @@ namespace Deltin.Deltinteger.Parse
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => Result?.SetComment(comment);
 
         public bool IsStatement() => true;
+
+        /// <summary>Parses the function's parameter values without using them for anything.</summary>
+        public static void DiscardParameters(ParseInfo parseInfo, Scope scope, List<ParameterValue> values)
+        {
+            foreach (var value in values)
+                parseInfo.GetExpression(scope, value.Expression);
+        }
     }
 
     public enum CallParallel

@@ -339,6 +339,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             LeftParentheses = leftParentheses;
             RightParentheses = rightParentheses;
             Parameters = parameters;
+            Range = target.Range.Start + rightParentheses.Range.End;
         }
 
         public override string ToString() => Target.ToString() + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
@@ -459,11 +460,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseExpression Array { get; }
         public IParseExpression Index { get; }
 
-        public ValueInArray(IParseExpression array, IParseExpression index, Token closingToken)
+        public ValueInArray(IParseExpression array, IParseExpression index, DocPos endPosition)
         {
             Array = array;
             Index = index;
-            Range = new DocRange(Array.Range.Start, closingToken.Range.End);
+            Range = new DocRange(Array.Range.Start, endPosition);
         }
 
         public override string ToString() => Array.ToString() + "[" + Index.ToString() + "]";
