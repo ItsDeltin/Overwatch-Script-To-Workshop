@@ -96,6 +96,19 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
     }
 
+    class UnknownLambdaType : CodeType
+    {
+        public int ArgumentCount { get; }
+
+        public UnknownLambdaType(int argumentCount) : base(null)
+        {
+            ArgumentCount = argumentCount;
+        }
+
+        public override CompletionItem GetCompletion() => throw new NotImplementedException();
+        public override Scope ReturningScope() => throw new NotImplementedException();
+    }
+
     public enum LambdaKind
     {
         Anonymous,

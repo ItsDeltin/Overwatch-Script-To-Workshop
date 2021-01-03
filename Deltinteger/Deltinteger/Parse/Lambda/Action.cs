@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         private readonly ParseInfo _parseInfo;
         private CodeType[] _argumentTypes;
         private readonly bool _isExplicit;
+        private bool _resolved;
 
         /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
         public PortableLambdaType LambdaType { get; private set; }
@@ -84,6 +85,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         private void _getLambdaStatement(PortableLambdaType expectingType)
         {
+            _resolved = true;
+
             // Get the lambda parameters.
             Parameters = new Var[_context.Parameters.Count];
             InvokedState = new SubLambdaInvoke[Parameters.Length];
@@ -172,7 +175,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return Element.CreateArray(lambdaMeta.ToArray());
         }
         public Scope ReturningScope() => LambdaType.GetObjectScope();
-        public CodeType Type() => LambdaType;
+        public CodeType Type() => _resolved ? (CodeType)LambdaType : new UnknownLambdaType(_context.Parameters.Count);
 
         public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
