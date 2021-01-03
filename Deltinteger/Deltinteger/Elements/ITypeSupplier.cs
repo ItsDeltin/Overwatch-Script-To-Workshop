@@ -47,6 +47,7 @@ namespace Deltin.Deltinteger.Elements
                 case "gamemode": return GameMode();
                 case "color": return EnumType("Color");
                 case "hero[]": return new ArrayType(this, Hero());
+                case "string[]": return new ArrayType(this, String());
                 default: return EnumType(value) ?? throw new NotImplementedException("Type '" + value + "' not handled.");
             }
         }

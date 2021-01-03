@@ -75,29 +75,29 @@ namespace Deltin.Deltinteger.Parse
                 Action = (set, call) => Element.Part("Is Communicating", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is communicating."
             });
-            AddFunc("Position", _supplier.Vector(), (set, call) => Element.PositionOf(set.CurrentObject), "The position of the player.");
-            AddFunc("Team", _supplier.Any(), (set, call) => Element.Part("Team Of", set.CurrentObject), "The team of the player.");
-            AddFunc("Health", _supplier.Number(), (set, call) => Element.Part("Health", set.CurrentObject), "The health of the player.");
-            AddFunc("MaxHealth", _supplier.Number(), (set, call) => Element.Part("Max Health", set.CurrentObject), "The maximum health of the player.");
-            AddFunc("FacingDirection", _supplier.Vector(), (set, call) => Element.FacingDirectionOf(set.CurrentObject), "The facing direction of the player.");
-            AddFunc("Hero", _supplier.Any(), (set, call) => Element.Part("Hero Of", set.CurrentObject), "The hero of the player.");
-            AddFunc("IsHost", _supplier.Boolean(), (set, call) => Element.Compare(set.CurrentObject, Operator.Equal, Element.Part("Host Player")), "Determines if the player is the host.");
-            AddFunc("IsAlive", _supplier.Boolean(), (set, call) => Element.Part("Is Alive", set.CurrentObject), "Determines if the player is alive.");
-            AddFunc("IsDead", _supplier.Boolean(), (set, call) => Element.Part("Is Dead", set.CurrentObject), "Determines if the player is dead.");
-            AddFunc("IsCrouching", _supplier.Boolean(), (set, call) => Element.Part("Is Crouching", set.CurrentObject), "Determines if the player is crouching.");
-            AddFunc("IsDummy", _supplier.Boolean(), (set, call) => Element.Part("Is Dummy Bot", set.CurrentObject), "Determines if the player is a dummy bot.");
-            AddFunc("IsFiringPrimary", _supplier.Boolean(), (set, call) => Element.Part("Is Firing Primary", set.CurrentObject), "Determines if the player is firing their primary weapon.");
-            AddFunc("IsFiringSecondary", _supplier.Boolean(), (set, call) => Element.Part("Is Firing Secondary", set.CurrentObject), "Determines if the player is using their secondary attack.");
-            AddFunc("IsInAir", _supplier.Boolean(), (set, call) => Element.Part("Is In Air", set.CurrentObject), "Determines if the player is in the air.");
-            AddFunc("IsOnGround", _supplier.Boolean(), (set, call) => Element.Part("Is On Ground", set.CurrentObject), "Determines if the player is on the ground.");
-            AddFunc("IsInSpawnRoom", _supplier.Boolean(), (set, call) => Element.Part("Is In Spawn Room", set.CurrentObject), "Determines if the player is in the spawn room.");
-            AddFunc("IsMoving", _supplier.Boolean(), (set, call) => Element.Part("Is Moving", set.CurrentObject), "Determines if the player is moving.");
-            AddFunc("IsOnObjective", _supplier.Boolean(), (set, call) => Element.Part("Is On Objective", set.CurrentObject), "Determines if the player is on the objective.");
-            AddFunc("IsOnWall", _supplier.Boolean(), (set, call) => Element.Part("Is On Wall", set.CurrentObject), "Determines if the player is on a wall.");
-            AddFunc("IsPortraitOnFire", _supplier.Boolean(), (set, call) => Element.Part("Is Portrait On Fire", set.CurrentObject), "Determines if the player's portrait is on fire.");
-            AddFunc("IsStanding", _supplier.Boolean(), (set, call) => Element.Part("Is Standing", set.CurrentObject), "Determines if the player is standing.");
-            AddFunc("IsUsingAbility1", _supplier.Boolean(), (set, call) => Element.Part("Is Using Ability 1", set.CurrentObject), "Determines if the player is using their ability 1.");
-            AddFunc("IsUsingAbility2", _supplier.Boolean(), (set, call) => Element.Part("Is Using Ability 2", set.CurrentObject), "Determines if the player is using their ability 2.");
+            AddFunc("Position", _supplier.Vector(), set => Element.PositionOf(set.CurrentObject), "The position of the player.");
+            AddFunc("Team", _supplier.Any(), set => Element.Part("Team Of", set.CurrentObject), "The team of the player.");
+            AddFunc("Health", _supplier.Number(), set => Element.Part("Health", set.CurrentObject), "The health of the player.");
+            AddFunc("MaxHealth", _supplier.Number(), set => Element.Part("Max Health", set.CurrentObject), "The maximum health of the player.");
+            AddFunc("FacingDirection", _supplier.Vector(), set => Element.FacingDirectionOf(set.CurrentObject), "The facing direction of the player.");
+            AddFunc("Hero", _supplier.Any(), set => Element.Part("Hero Of", set.CurrentObject), "The hero of the player.");
+            AddFunc("IsHost", _supplier.Boolean(), set => Element.Compare(set.CurrentObject, Operator.Equal, Element.Part("Host Player")), "Determines if the player is the host.");
+            AddFunc("IsAlive", _supplier.Boolean(), set => Element.Part("Is Alive", set.CurrentObject), "Determines if the player is alive.");
+            AddFunc("IsDead", _supplier.Boolean(), set => Element.Part("Is Dead", set.CurrentObject), "Determines if the player is dead.");
+            AddFunc("IsCrouching", _supplier.Boolean(), set => Element.Part("Is Crouching", set.CurrentObject), "Determines if the player is crouching.");
+            AddFunc("IsDummy", _supplier.Boolean(), set => Element.Part("Is Dummy Bot", set.CurrentObject), "Determines if the player is a dummy bot.");
+            AddFunc("IsFiringPrimary", _supplier.Boolean(), set => Element.Part("Is Firing Primary", set.CurrentObject), "Determines if the player is firing their primary weapon.");
+            AddFunc("IsFiringSecondary", _supplier.Boolean(), set => Element.Part("Is Firing Secondary", set.CurrentObject), "Determines if the player is using their secondary attack.");
+            AddFunc("IsInAir", _supplier.Boolean(), set => Element.Part("Is In Air", set.CurrentObject), "Determines if the player is in the air.");
+            AddFunc("IsOnGround", _supplier.Boolean(), set => Element.Part("Is On Ground", set.CurrentObject), "Determines if the player is on the ground.");
+            AddFunc("IsInSpawnRoom", _supplier.Boolean(), set => Element.Part("Is In Spawn Room", set.CurrentObject), "Determines if the player is in the spawn room.");
+            AddFunc("IsMoving", _supplier.Boolean(), set => Element.Part("Is Moving", set.CurrentObject), "Determines if the player is moving.");
+            AddFunc("IsOnObjective", _supplier.Boolean(), set => Element.Part("Is On Objective", set.CurrentObject), "Determines if the player is on the objective.");
+            AddFunc("IsOnWall", _supplier.Boolean(), set => Element.Part("Is On Wall", set.CurrentObject), "Determines if the player is on a wall.");
+            AddFunc("IsPortraitOnFire", _supplier.Boolean(), set => Element.Part("Is Portrait On Fire", set.CurrentObject), "Determines if the player's portrait is on fire.");
+            AddFunc("IsStanding", _supplier.Boolean(), set => Element.Part("Is Standing", set.CurrentObject), "Determines if the player is standing.");
+            AddFunc("IsUsingAbility1", _supplier.Boolean(), set => Element.Part("Is Using Ability 1", set.CurrentObject), "Determines if the player is using their ability 1.");
+            AddFunc("IsUsingAbility2", _supplier.Boolean(), set => Element.Part("Is Using Ability 2", set.CurrentObject), "Determines if the player is using their ability 2.");
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -107,7 +107,13 @@ namespace Deltin.Deltinteger.Parse
         public override Scope GetObjectScope() => _objectScope;
         public override Scope ReturningScope() => null;
         private void AddFunc(FuncMethodBuilder builder) => _objectScope.AddNativeMethod(new FuncMethod(builder));
-        private void AddFunc(string name, CodeType returnType, Func<ActionSet, MethodCall, IWorkshopTree> action, string documentation) => AddFunc(new FuncMethodBuilder() { Name = name, ReturnType = returnType, Action = action, Documentation = documentation });
+        private void AddFunc(string name, CodeType returnType, Func<ActionSet, IWorkshopTree> action, string documentation)
+            => AddFunc(new FuncMethodBuilder() {
+                Name = name,
+                ReturnType = returnType,
+                Action = (actionSet, methodCall) => action(actionSet),
+                Documentation = documentation
+            });
         public void OverrideArray(ArrayType array)
         {
             AddSharedFunctionsToScope(array.Scope);
