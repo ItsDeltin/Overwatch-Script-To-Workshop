@@ -177,7 +177,7 @@ namespace Deltin.Deltinteger.Parse
             DocRange variableRange = variableContext.Token.Range;
 
             // Get the variable.
-            IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
+            IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange, ResolveInvokeInfo != null);
             if (element == null) return new MissingVariable(variableName);
 
             // Additional syntax checking.
@@ -196,14 +196,12 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>An IExpression[] of each indexer in the chain. Will return null if arrayContext is null.</returns>
         public IExpression[] ExpressionIndexArray(Scope scope, List<ArrayIndex> arrayContext)
         {
-            if (arrayContext == null) return null;
-
             IExpression[] index = null;
             if (arrayContext != null)
             {
                 index = new IExpression[arrayContext.Count];
                 for (int i = 0; i < index.Length; i++)
-                    index[i] = GetExpression(scope, arrayContext[i].Expression);
+                    index[i] = ClearContextual().GetExpression(scope, arrayContext[i].Expression);
             }
             return index;
         }
@@ -252,6 +250,10 @@ namespace Deltin.Deltinteger.Parse
             ResolveInvokeInfo = null,
             AsyncInfo = null
         };
+
+        public ParseInfo ClearContextual() => new ParseInfo(this) {
+            SourceExpression = null
+        }.ClearTail().ClearHead();
 
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
     }

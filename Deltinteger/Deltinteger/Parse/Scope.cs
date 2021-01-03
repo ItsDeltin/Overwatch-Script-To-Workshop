@@ -162,25 +162,25 @@ namespace Deltin.Deltinteger.Parse
                 _variables.Add(variable);
         }
 
-        public bool IsVariable(string name) => GetVariable(name) != null;
+        public bool IsVariable(string name) => GetVariable(name, false) != null;
 
-        public IVariable GetVariable(string name)
+        public IVariable GetVariable(string name, bool methodGroupsOnly)
         {
             IVariable element = null;
             Scope current = this;
 
             while (current != null && element == null)
             {
-                element = current._variables.FirstOrDefault(element => element.Name == name);
+                element = current._variables.Where(v => !methodGroupsOnly || v is MethodGroup || v.CodeType is Lambda.PortableLambdaType).FirstOrDefault(element => element.Name == name);
                 current = current.Parent;
             }
 
             return element;
         }
 
-        public IVariable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range)
+        public IVariable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range, bool methodGroupsOnly)
         {
-            IVariable element = GetVariable(name);
+            IVariable element = GetVariable(name, methodGroupsOnly);
 
             if (range != null && element == null)
                 diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
