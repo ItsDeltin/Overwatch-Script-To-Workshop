@@ -251,7 +251,7 @@ namespace Deltin.Deltinteger
             // Run .csv file
             if (ext == ".csv")
             {
-                Pathmap map = Pathmap.ImportFromCSVFile(script, new ConsolePathmapErrorHandler(new Log("Pathmap")));
+                Pathmap map = Pathmap.ImportFromActionSetFile(script, new ConsolePathmapErrorHandler(new Log("Pathmap")));
                 if (map != null)
                 {
                     string result = map.ExportAsJSON();
