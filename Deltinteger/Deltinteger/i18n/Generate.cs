@@ -191,10 +191,16 @@ namespace Deltin.Deltinteger.I18n
 
         public static void GenerateKeyLink()
         {
+            /* MarbasFR paths
             string datatoolPath = "D:/DEV/overwatch/tools/datatool/DataTool.exe";
             string overwatchPath = "C:/Program Files (x86)/Overwatch";
             string previous = null;// "D:/DEV/overwatch/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.1/Languages/key_links.xml";
             string saveAt = "D:/DEV/overwatch/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.1/Languages/key_links.xml";
+            */
+            string datatoolPath = "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe";
+            string overwatchPath = "C:/Program Files (x86)/Overwatch";
+            string previous = "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.0/Languages/key_links.xml";
+            string saveAt = previous;
 
             Console.OutputEncoding = System.Text.Encoding.Unicode;
 
@@ -271,7 +277,7 @@ namespace Deltin.Deltinteger.I18n
             else if (pairs.Length == 0)
             {
                 Console.WriteLine($"Error: no pairs found for '{name}'.");
-                // links.Add(new KeyLink(name, "")); // auto add in the keylink file to fill it later
+                // links.Add(new KeyLink(name, "")); // auto add in the keylink file to fill it later by hand
                 Console.ReadLine();
                 return;
             }

@@ -145,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
                     Types.DefinedTypes.Add(newType);
                     Types.CalledTypes.Add(newType);
                 }
-            
+
             // Get the declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
