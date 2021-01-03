@@ -177,7 +177,7 @@ namespace Deltin.Deltinteger.Parse
             DocRange variableRange = variableContext.Token.Range;
 
             // Get the variable.
-            IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange, ResolveInvokeInfo != null);
+            IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
             if (element == null) return new MissingVariable(variableName);
 
             // Additional syntax checking.

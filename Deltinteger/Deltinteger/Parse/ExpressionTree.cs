@@ -358,7 +358,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the potential variable.
             if (tcParseInfo.Scope.IsVariable(_name))
             {
-                IVariable variable = tcParseInfo.Scope.GetVariable(_name, false);
+                IVariable variable = tcParseInfo.Scope.GetVariable(_name);
 
                 // Variable handler.
                 var apply = new PotentialVariableApply(tcParseInfo.ParseInfo);
