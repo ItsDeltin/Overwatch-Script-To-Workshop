@@ -19,6 +19,7 @@ namespace Deltin.Deltinteger.Parse
             if (invokeInfo.Target is CallMethodGroup == false)
             {
                 parseInfo.Script.Diagnostics.Error("Method name expected", invokeInfo.TargetRange);
+                CallMethodAction.DiscardParameters(parseInfo, invokeInfo.Getter, invokeInfo.Context.Parameters);
                 return null;
             }
 
