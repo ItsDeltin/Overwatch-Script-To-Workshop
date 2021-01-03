@@ -229,6 +229,15 @@ namespace Deltin.Deltinteger
                 try
                 {
 #endif
+                //WorkshopWiki.Wiki.GenerateWiki().ToXML("D:/DEV/overwatch/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.1/wiki.xml");
+                // I18n.GenerateI18n.GenerateKeyLink();
+                /*string[] args = new string[5];
+                args[1] = "D:/DEV/overwatch/tools/datatool/DataTool.exe";
+                args[2] = "D:/DEV/overwatch/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.1/Languages/key_links.xml";
+                args[3] = "D:/DEV/overwatch/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.1/Languages/";
+                args[4] = "C:/Program Files (x86)/Overwatch";
+                I18n.GenerateI18n.GenerateEx(args);
+                */
 
                 RunFile(script);
 

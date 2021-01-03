@@ -404,6 +404,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum Team
     {
+        [EnumOverride(null, "Both")]
         All,
         Team1,
         Team2,
@@ -466,9 +467,9 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum EffectRev
     {
-        [EnumOverride(null, "Visible To Position Radius and Color")]
+        [EnumOverride(null, "Visible To, Position, Radius, and Color")]
         VisibleToPositionRadiusAndColor,
-        [EnumOverride(null, "Visible To Position and Radius")]
+        [EnumOverride(null, "Visible To, Position, and Radius")]
         VisibleToPositionAndRadius,
         PositionRadiusAndColor,
         PositionAndRadius,
@@ -544,11 +545,11 @@ namespace Deltin.Deltinteger.Elements
         VisibleToAndString,
         String,
         StringAndColor,
-        [EnumOverride(null, "Visible To Sort Order String and Color")]
+        [EnumOverride(null, "Visible To, Sort Order, String, and Color")]
         VisibleToSortOrderStringAndColor,
-        [EnumOverride(null, "Visible To Sort Order and String")]
+        [EnumOverride(null, "Visible To, Sort Order, and String")]
         VisibleToSortOrderAndString,
-        [EnumOverride(null, "Visible To String and Color")]
+        [EnumOverride(null, "Visible To, String, and Color")]
         VisibleToStringAndColor,
         SortOrderAndString,
         VisibleToAndSortOrder,
@@ -644,7 +645,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum AccelerateRev
     {
-        [EnumOverride(null, "Direction Rate and Max Speed")]
+        [EnumOverride(null, "Direction, Rate, and Max Speed")]
         DirectionRateAndMaxSpeed,
         None
     }
@@ -652,7 +653,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum DamageModificationRev
     {
-        [EnumOverride(null, "Receivers Damagers and Damage Percent")]
+        [EnumOverride(null, "Receivers, Damagers, and Damage Percent")]
         ReceiversDamagersAndDamagePercent,
         ReceiversAndDamagers,
         None
@@ -661,7 +662,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum HealingModificationRev
     {
-        [EnumOverride(null, "Receivers Healers and Healing Percent")]
+        [EnumOverride(null, "Receivers, Healers, and Healing Percent")]
         ReceiversDamagersAndDamagePercent,
         ReceiversAndHealers,
         None
@@ -732,7 +733,7 @@ namespace Deltin.Deltinteger.Elements
         VisibleToStringAndColor,
         [EnumOverride(null, "Visible To, Position, and Color")]
         VisibleToPositionAndColor,
-        [EnumOverride(null, "Visible To Position and String")]
+        [EnumOverride(null, "Visible To, Position, and String")]
         VisibleToPositionAndString,
         [EnumOverride(null, "Visible To and String")]
         VisibleToAndString,
@@ -885,6 +886,7 @@ namespace Deltin.Deltinteger.Elements
         MeisSnowballOffensive,
         PracticeRange,
         Skirmish,
+        [EnumOverride(null, "Team Deathmatch")]
         TeamDeathmatch,
         YetiHunter,
         SnowballDeathmatch,
@@ -917,6 +919,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum ProgressBarEvaluation
     {
+        [EnumOverride(null, "Visible To, Values, And Color")]
         VisibleToValuesAndColor,
         VisibleToAndValues,
         VisibleToAndColor,
