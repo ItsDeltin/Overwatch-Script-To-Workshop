@@ -202,9 +202,9 @@ namespace Deltin.Deltinteger.I18n
             StringKeyGroup strings = new StringKeyGroup();
 
             strings.DumpStrings(datatool, "enUS", true, Log);
-            strings.DumpStrings(datatool, "frFR", true, Log);
-            //strings.DumpStrings(datatool, "esES", false, Log);
-            //strings.DumpStrings(datatool, "itIT", false, Log);
+            strings.DumpStrings(datatool, "esES", false, Log);
+            strings.DumpStrings(datatool, "itIT", false, Log);
+            strings.DumpStrings(datatool, "frFR", false, Log);
 
             List<KeyLink> links = new List<KeyLink>();
             var serializer = new XmlSerializer(typeof(KeyLinkList));
@@ -271,8 +271,8 @@ namespace Deltin.Deltinteger.I18n
             else if (pairs.Length == 0)
             {
                 Console.WriteLine($"Error: no pairs found for '{name}'.");
-                links.Add(new KeyLink(name, "")); // on l'ajoute tout de même pour remplir le fichier manuellement
-                //Console.ReadLine();
+                // links.Add(new KeyLink(name, "")); // auto add in the keylink file to fill it later
+                Console.ReadLine();
                 return;
             }
             links.Add(new KeyLink(name, pairs[chosen].Key));

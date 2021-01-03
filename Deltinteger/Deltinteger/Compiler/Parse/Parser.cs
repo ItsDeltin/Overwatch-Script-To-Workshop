@@ -1548,10 +1548,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     context.Imports.Add(ParseImport());
                     break;
 
-                case TokenType.Type:
-                    context.TypeAliases.Add(ParseTypeAlias());
-                    break;
-
                 // Others
                 default:
                     // Variable declaration
@@ -1601,20 +1597,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var statement = ParseStatement();
 
             return EndTokenCapture(new RuleContext(ruleToken, name, disabled, order, settings, conditions, statement));
-        }
-
-        TypeAliasContext ParseTypeAlias() 
-        {
-            StartTokenCapture();
-            if (GetIncrementalNode(out TypeAliasContext type)) return EndTokenCapture(type);
-
-            ParseExpected(TokenType.Type);
-            Token nameToken = ParseExpected(TokenType.Identifier);
-            ParseExpected(TokenType.Equal);
-            var parseType = ParseType();
-            ParseExpected(TokenType.Semicolon);
-
-            return EndTokenCapture(new TypeAliasContext(nameToken, parseType));
         }
 
         /// <summary>Parses a class.</summary>

@@ -265,7 +265,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("root", TokenType.Root) ||
                     MatchKeyword("async", TokenType.Async) ||
                     MatchKeyword("as", TokenType.As) ||
-                    MatchKeyword("type", TokenType.Type) ||
                     MatchIdentifier() ||
                     MatchString();
 

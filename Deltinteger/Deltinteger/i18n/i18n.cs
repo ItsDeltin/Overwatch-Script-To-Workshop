@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.I18n
 
             lock (LanguageLock)
             {
+                // Auto load language file
                 if (Language == null)
                     LanguageInfo.LoadLanguage(language);
                 if (CurrentLanguage != language)
