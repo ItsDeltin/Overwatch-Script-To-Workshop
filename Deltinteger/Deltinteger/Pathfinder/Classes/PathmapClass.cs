@@ -61,6 +61,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(DeleteAllAttributes);
             serveObjectScope.AddNativeMethod(DeleteAllAttributesConnectedToNode);
             serveObjectScope.AddNativeMethod(SegmentFromNodes);
+            serveObjectScope.AddNativeMethod(Bake);
 
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CurrentSegmentAttribute);
@@ -615,6 +616,22 @@ namespace Deltin.Deltinteger.Pathfinder
             DoesReturnValue = true,
             ReturnType = SegmentsStruct.Instance,
             Action = (actionSet, methodCall) => SegmentsFromNodes(actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
+        };
+
+        // Bake()
+        private FuncMethod Bake => new FuncMethodBuilder()
+        {
+            Name = "Bake",
+            Documentation = "Bakes the pathmap for instant pathfinding.",
+            DoesReturnValue = true,
+            ReturnType = DeltinScript.Types.GetInstance<BakemapClass>(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("printProgress", new BlockLambda(new CodeType[] {null}))
+            },
+            Action = (actionSet, methodCall) => {
+                PathmapBake bake = new PathmapBake(actionSet, (Element)actionSet.CurrentObject);
+                return bake.Bake(p => ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, p));
+            }
         };
 
         // Static functions

@@ -205,24 +205,26 @@ namespace Deltin.Deltinteger.Parse
             return newActionSet;
         }
 
-        public void AddAction(IWorkshopTree action)
-        {
-            if (action is Element element) element.Indent = IndentCount;
-            ActionList.Add(new ALAction(action));
-        }
-        public void AddAction(IWorkshopTree[] actions)
+        public void AddAction(string comment, params IWorkshopTree[] actions)
         {
             foreach (var action in actions)
             {
-                if (action is Element element) element.Indent = IndentCount;
+                if (action is Element element)
+                {
+                    element.Indent = IndentCount;
+                    if (comment != null)
+                    {
+                        element.Comment = comment;
+                        comment = null;
+                    }
+                }
                 ActionList.Add(new ALAction(action));
             }
         }
-        public void AddAction(IActionList action)
-        {
-            ActionList.Add(action);
-        }
-        public void AddAction(IActionList[] actions)
+
+        public void AddAction(params IWorkshopTree[] actions) => AddAction(null, actions);
+
+        public void AddAction(params IActionList[] actions)
         {
             ActionList.AddRange(actions);
         }

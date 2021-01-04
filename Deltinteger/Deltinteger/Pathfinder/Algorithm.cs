@@ -110,9 +110,9 @@ namespace Deltin.Deltinteger.Pathfinder
                 // Get the distance between the current and the neighbor index.
                 neighborDistance.SetVariable(
                     Element.Part<V_DistanceBetween>(
-                        Nodes[(Element)neighborIndex.GetVariable()],
-                        Nodes[(Element)current.GetVariable()]
-                    ) + ((Element)distances.GetVariable())[(Element)current.GetVariable()]
+                        Nodes[neighborIndex.Get()],
+                        Nodes[current.Get()]
+                    ) + distances.Get()[current.Get()]
                 )
             ));
 
@@ -132,15 +132,19 @@ namespace Deltin.Deltinteger.Pathfinder
                 )
             )));
 
+            string ifComment =
+@"If the distance between this node and the neighbor node is lower than the node's current parent,
+then the current node is closer and should be set as the neighbor's parent.
+Alternatively, if the neighbor's distance is 0, that means it was not set so this should
+be set as the parent regardless.
+
+Additionally, make sure that any of the neighbor's attributes is in the attribute array.";
+
             // Set the current neighbor's distance if the new distance is less than what it is now.
-            actionSet.AddAction(Element.Part<A_If>(Element.Part<V_And>(
+            actionSet.AddAction(ifComment, Element.Part<A_If>(Element.Part<V_And>(
                 Element.Part<V_Or>(
-                    new V_Compare(
-                        ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()],
-                        Operators.Equal,
-                        new V_Number(0)
-                    ),
-                    (Element)neighborDistance.GetVariable() < ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()]
+                    Element.Part<V_Not>(distances.Get()[neighborIndex.Get()]),
+                    neighborDistance.Get() < distances.Get()[neighborIndex.Get()]
                 ),
                 Element.Part<V_Or>(
                     // There are no attributes.
@@ -153,8 +157,16 @@ namespace Deltin.Deltinteger.Pathfinder
                 )
             )));
 
-            actionSet.AddAction(distances.SetVariable((Element)neighborDistance.GetVariable(), null, (Element)neighborIndex.GetVariable()));
-            actionSet.AddAction(parentArray.SetVariable((Element)current.GetVariable() + 1, null, (Element)neighborIndex.GetVariable()));
+            actionSet.AddAction(
+                "Set the neighbor's distance to be the distance between the current node and neighbor node.",
+                distances.SetVariable(neighborDistance.Get(), index: neighborIndex.Get())
+            );
+            actionSet.AddAction(
+@"Set the neighbor's parent ('parentArray[neighborIndex]') to be current. 1 is added to current because
+0 means no parent was set yet (the first node will have current equal 0). This value will be subtracted
+back by 1 when used.",
+                parentArray.SetVariable(current.Get() + 1, index: neighborIndex.Get())
+            );
 
             // End the if.
             actionSet.AddAction(new A_End());
@@ -162,9 +174,9 @@ namespace Deltin.Deltinteger.Pathfinder
             forBuilder.Finish();
 
             // Remove the current node from the unvisited array.
-            actionSet.AddAction(unvisited.ModifyVariable(Operation.RemoveFromArrayByValue, (Element)current.GetVariable()));
+            actionSet.AddAction(unvisited.ModifyVariable(Operation.RemoveFromArrayByValue, current.Get()));
             EndLoop();
-            actionSet.AddAction(current.SetVariable(LowestUnvisited(Nodes, (Element)distances.GetVariable(), (Element)unvisited.GetVariable())));
+            actionSet.AddAction(current.SetVariable(LowestUnvisited(Nodes, distances.Get(), unvisited.Get())));
 
             actionSet.AddAction(new A_End());
 

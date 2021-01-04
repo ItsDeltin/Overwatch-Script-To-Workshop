@@ -158,7 +158,7 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <summary>The position of the current player: `Position Of(Event Player)`</summary>
         private Element PlayerPosition() => Element.Part<V_PositionOf>(Element.Part<V_EventPlayer>());
 
-        /// <summary>Starts pathfinding for the specified players/</summary>
+        /// <summary>Starts pathfinding for the specified players.</summary>
         /// <param name="actionSet">The actionset of the current rule.</param>
         /// <param name="players">The players that will start pathfinding.</param>
         /// <param name="pathmapReference">A reference to the pathmap the players are pathfinding with.</param>
