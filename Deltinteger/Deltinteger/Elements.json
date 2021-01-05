@@ -5961,7 +5961,7 @@
         },
         "Reevaluation": {
           "type": "Assist",
-          "defaultValue": "AssistersAndTargets"
+          "defaultValue": "Assisters And Targets"
         }
       },
       "return-value": "Last Assist ID"
@@ -5979,6 +5979,7 @@
     },
     {
       "name": "Create Progress Bar HUD Text",
+      "alias": "CreateProgressBarHudText",
       "parameters": {
         "Visible To": {
           "type": "players",
@@ -6020,6 +6021,7 @@
     },
     {
       "name": "Destroy Progress Bar HUD Text",
+      "alias": "DestroyProgressBarHudText",
       "parameters": {
         "Text ID": {
           "type": "any"
@@ -6027,7 +6029,8 @@
       }
     },
     {
-      "name": "Destroy All Progress Bar HUD Text"
+      "name": "Destroy All Progress Bar HUD Text",
+      "alias": "DestroyAllProgressBarHudText"
     },
     {
       "name": "Create Progress Bar In-World Text",
@@ -6392,11 +6395,18 @@
     ],
     "EffectRev": [
       {
+        "name": "Visible To Position Radius and Color",
+        "alias": "VisibleToPositionRadiusAndColor"
+      },
+      {
         "name": "Visible To Position and Radius",
         "alias": "VisibleToPositionAndRadius"
       },
+      "Position Radius And Color",
       "Position And Radius",
+      "Visible To And Color",
       "Visible To",
+      "Color",
       "None"
     ],
     "Rounding": [
@@ -6453,14 +6463,25 @@
     "HudTextRev": [
       "Visible To And String",
       "String",
+      "String And Color",
+      {
+        "name": "Visible To Sort Order String and Color",
+        "alias": "VisibleToSortOrderStringAndColor"
+      },
       {
         "name": "Visible To Sort Order and String",
         "alias": "VisibleToSortOrderAndString"
       },
+      {
+        "name": "Visible To String and Color",
+        "alias": "VisibleToStringAndColor"
+      },
       "Sort Order And String",
       "Visible To And Sort Order",
+      "Visible To And Color",
       "Visible To",
       "Sort Order",
+      "Sort Order And Color",
       "None"
     ],
     "Icon": [
@@ -6514,9 +6535,15 @@
       "X"
     ],
     "IconRev": [
+      {
+        "name": "Visible To, Position, and Color",
+        "alias": "VisibleToPositionAndColor"
+      },
       "Visible To And Position",
       "Position",
+      "Position And Color",
       "Visible To",
+      "Visible To And Color",
       "None"
     ],
     "PlayEffect": [
@@ -6601,10 +6628,23 @@
     ],
     "InworldTextRev": [
       {
+        "name": "Visible To, Position, String, and Color",
+        "alias": "VisibleToPositionStringAndColor"
+      },
+      {
+        "name": "Visible To, String, and Color",
+        "alias": "VisibleToStringAndColor"
+      },
+      {
+        "name": "Visible To, Position, and Color",
+        "alias": "VisibleToPositionAndColor"
+      },
+      {
         "name": "Visible To Position and String",
         "alias": "VisibleToPositionAndString"
       },
       "Visible To And String",
+      "Visible To And Color",
       "String",
       "Visible To And Position",
       "Visible To",
@@ -6854,7 +6894,9 @@
       "Practice Range",
       "Skirmish",
       "Team Deathmatch",
-      "Yeti Hunter"
+      "Yeti Hunter",
+      "Snowball Deathmatch",
+      "Freezethaw Elimination"
     ],
     "HealthType": [
       "Health",
@@ -6867,7 +6909,7 @@
       "Always"
     ],
     "Assist": [
-      "AssistersAndTargets",
+      "Assisters And Targets",
       "None"
     ],
     "ProgressBarEvaluation": [
