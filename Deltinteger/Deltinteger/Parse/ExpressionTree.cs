@@ -428,7 +428,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Add all potential path's scopes to the scope batch.
             foreach (var path in _potentialPaths)
-                scopeBatch.CopyAll(path.GetScope(), _tcParseInfo.Getter);
+                scopeBatch.CopyAll(path.GetScope());
 
             // Finished.
             return scopeBatch;

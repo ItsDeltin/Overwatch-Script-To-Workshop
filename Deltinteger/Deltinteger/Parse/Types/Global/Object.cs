@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Boolean());
+        protected override bool DoesImplement(CodeType type) => base.DoesImplement(type) || type.Implements(_supplier.Boolean());
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
@@ -73,7 +73,7 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Number());
+        protected override bool DoesImplement(CodeType type) => base.DoesImplement(type) || type.Implements(_supplier.Number());
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,

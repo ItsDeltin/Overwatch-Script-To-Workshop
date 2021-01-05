@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public override bool IsConstant() => LambdaKind == LambdaKind.ConstantBlock || LambdaKind == LambdaKind.ConstantMacro || LambdaKind == LambdaKind.ConstantValue;
         public override Scope GetObjectScope() => _scope;
 
-        public override bool Implements(CodeType type)
+        protected override bool DoesImplement(CodeType type)
         {
             var other = type as PortableLambdaType;
             if (other == null || Parameters.Length != other.Parameters.Length) return false;

@@ -260,7 +260,7 @@ namespace Deltin.Deltinteger.Elements
             {"Multiply", element => OptimizeMultiplyOperation(
                 element,
                 op      : (a, b) => a * b,
-                areEqual: (a, b) => Element.Pow(a, 2),
+                areEqual: (a, b) => a * b,
                 true
             )},
             {"Normalize", element => {
@@ -338,11 +338,8 @@ namespace Deltin.Deltinteger.Elements
 
                 if (a != null)
                 {
-                    if (a.Value == 0) return 0;
+                    if (a.Value <= 0) return 0;
                     if (a.Value == 1) return 1;
-                    
-                    // ! Workshop Bug: Pow on values less than 0 always equals 0.
-                    if (a.Value < 0) return 0;
                 }
 
                 if (b != null)

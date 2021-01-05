@@ -44,6 +44,18 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
         };
+        // * AllowButton *
+        FuncMethod AllowButton => new FuncMethodBuilder() {
+            Name = "AllowButton",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("button", "The logical button that is being reenabled.", _supplier.Button())
+            },
+            Documentation = "Undoes the effect of the disallow button action for one or more players.",
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Element.Part("Allow Button", actionSet.CurrentObject, methodCall.ParameterValues[0]));
+                return null;
+            }
+        };
 
         public Scope PlayerVariableScope { get; } = new Scope("player variables") { TagPlayerVariables = true };
         private Scope _objectScope;
@@ -76,6 +88,7 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "Determines if the target player is communicating."
             });
             AddFunc("Position", _supplier.Vector(), set => Element.PositionOf(set.CurrentObject), "The position of the player.");
+            AddFunc("EyePosition", _supplier.Vector(), set => Element.EyePosition(set.CurrentObject), "The position of the player's head.");
             AddFunc("Team", _supplier.Any(), set => Element.Part("Team Of", set.CurrentObject), "The team of the player.");
             AddFunc("Health", _supplier.Number(), set => Element.Part("Health", set.CurrentObject), "The health of the player.");
             AddFunc("MaxHealth", _supplier.Number(), set => Element.Part("Max Health", set.CurrentObject), "The maximum health of the player.");
@@ -106,6 +119,29 @@ namespace Deltin.Deltinteger.Parse
         };
         public override Scope GetObjectScope() => _objectScope;
         public override Scope ReturningScope() => null;
+        public void OverrideArray(ArrayType array)
+        {
+            AddSharedFunctionsToScope(array.Scope);
+            array.Scope.TagPlayerVariables = true;
+            array.Scope.CopyAll(PlayerVariableScope);
+        }
+        void AddSharedFunctionsToScope(Scope scope)
+        {
+            scope.AddNativeMethod(Teleport);
+            scope.AddNativeMethod(SetMoveSpeed);
+            scope.AddNativeMethod(SetMaxHealth);
+            scope.AddNativeMethod(AllowButton);
+            scope.AddNativeMethod(SetAbilityEnabled("Ability 1"));
+            scope.AddNativeMethod(SetAbilityEnabled("Ability 2"));
+            scope.AddNativeMethod(SetAbilityEnabled("Primary Fire"));
+            scope.AddNativeMethod(SetAbilityEnabled("Secondary Fire"));
+            scope.AddNativeMethod(SetAbilityEnabled("Ultimate Ability"));
+            scope.AddNativeMethod(SetAbilityEnabled("Crouch"));
+            scope.AddNativeMethod(SetAbilityEnabled("Melee"));
+            scope.AddNativeMethod(SetAbilityEnabled("Jump"));
+            scope.AddNativeMethod(SetAbilityEnabled("Reload"));
+        }
+
         private void AddFunc(FuncMethodBuilder builder) => _objectScope.AddNativeMethod(new FuncMethod(builder));
         private void AddFunc(string name, CodeType returnType, Func<ActionSet, IWorkshopTree> action, string documentation)
             => AddFunc(new FuncMethodBuilder() {
@@ -114,16 +150,12 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => action(actionSet),
                 Documentation = documentation
             });
-        public void OverrideArray(ArrayType array)
-        {
-            AddSharedFunctionsToScope(array.Scope);
-            array.Scope.TagPlayerVariables = true;
-        }
-        void AddSharedFunctionsToScope(Scope scope)
-        {
-            scope.AddNativeMethod(Teleport);
-            scope.AddNativeMethod(SetMoveSpeed);
-            scope.AddNativeMethod(SetMaxHealth);
-        }
+        
+        private FuncMethod SetAbilityEnabled(string abilityName) => new FuncMethodBuilder() {
+            Name = "Set" + abilityName.Replace(" ", "") + "Enabled",
+            Documentation = $"Enables or disables the {abilityName.ToLower()} for one or more players.",
+            Parameters = new[] { new CodeParameter("enabled", $"Specifies whether the player or players are able to use their {abilityName.ToLower()}.") },
+            Action = (actionSet, methodCall) => Element.Part("Set " + abilityName + " Enabled", actionSet.CurrentObject, methodCall.Get(0))
+        };
     }
 }

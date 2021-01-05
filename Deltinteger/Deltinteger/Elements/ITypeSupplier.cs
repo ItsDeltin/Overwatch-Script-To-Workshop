@@ -23,6 +23,8 @@ namespace Deltin.Deltinteger.Elements
         CodeType Team() => EnumType("Team");
         CodeType EnumType(string typeName);
         CodeType Unknown();
+        CodeType Button() => EnumType("Button");
+        CodeType Color() => EnumType("Color");
 
         public CodeType FromString(string value)
         {

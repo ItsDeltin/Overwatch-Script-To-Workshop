@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public void CopyAll(Scope other, Scope getter)
+        public void CopyAll(Scope other)
         {
             other.IterateParents(scope =>
             {
