@@ -11,6 +11,8 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class PathmapClass : ClassType
     {
+        static readonly MarkupBuilder AttributesDocumentation = "The attributes to pathfind with. Paths will only be taken if they contain an attribute in the provided array.";
+
         private DeltinScript DeltinScript { get; }
         public IndexReference Nodes { get; private set; }
         public IndexReference Segments { get; private set; }
@@ -626,11 +628,13 @@ namespace Deltin.Deltinteger.Pathfinder
             DoesReturnValue = true,
             ReturnType = DeltinScript.Types.GetInstance<BakemapClass>(),
             Parameters = new CodeParameter[] {
-                new CodeParameter("printProgress", new BlockLambda(new CodeType[] {null}))
+                new CodeParameter("attributes", AttributesDocumentation, new V_EmptyArray()),
+                new CodeParameter("printProgress", "Returns a value that can be used to display bake progress.",
+                    new BlockLambda(new CodeType[] {null}), new ExpressionOrWorkshopValue(new EmptyLambda()))
             },
             Action = (actionSet, methodCall) => {
-                PathmapBake bake = new PathmapBake(actionSet, (Element)actionSet.CurrentObject);
-                return bake.Bake(p => ((ILambdaInvocable)methodCall.ParameterValues[0]).Invoke(actionSet, p));
+                PathmapBake bake = new PathmapBake(actionSet, (Element)actionSet.CurrentObject, methodCall.Get(0));
+                return bake.Bake(p => ((ILambdaInvocable)methodCall.ParameterValues[1]).Invoke(actionSet, p));
             }
         };
 

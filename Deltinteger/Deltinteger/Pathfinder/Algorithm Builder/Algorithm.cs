@@ -117,7 +117,7 @@ Additionally, make sure that any of the neighbor's attributes is in the attribut
                     // There are attributes and the attribute array contains one of the attributes.
                     Element.Part<V_IsTrueForAny>(
                         neighborSegmentAttributes.Get(),
-                        Element.Part<V_ArrayContains>(attributes, Element.Part<V_ZOf>(new V_ArrayElement()))
+                        Element.Part<V_ArrayContains>(Info.EnabledAttributes, Element.Part<V_ZOf>(new V_ArrayElement()))
                     )
                 )
             )));

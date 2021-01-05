@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Pathfinder
         Element SegmentArray { get; }
         Element AttributeArray { get; }
         Element LoopCondition { get; }
+        Element EnabledAttributes { get; }
         void OnLoop();
         void OnConnectLoop();
         void OnLoopEnd();

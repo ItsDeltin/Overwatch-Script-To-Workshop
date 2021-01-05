@@ -15,12 +15,13 @@ namespace Deltin.Deltinteger.Pathfinder
         private PathfindAlgorithmBuilder _builder;
         private IndexReference _bakeWait;
 
-        public PathmapBake(ActionSet actionSet, Element pathmapObject)
+        public PathmapBake(ActionSet actionSet, Element pathmapObject, Element attributes)
         {
             ActionSet = actionSet;
             _pathmapClass = actionSet.Translate.DeltinScript.Types.GetInstance<PathmapClass>();
             _bakemapClass = actionSet.Translate.DeltinScript.Types.GetInstance<BakemapClass>();
             _pathmapObject = pathmapObject;
+            EnabledAttributes = attributes;
         }
 
         public Element Bake(Action<Element> progress)
@@ -72,5 +73,6 @@ namespace Deltin.Deltinteger.Pathfinder
         Element IPathfinderInfo.SegmentArray => _pathmapClass.Segments.Get()[_pathmapObject];
         Element IPathfinderInfo.AttributeArray => _pathmapClass.Attributes.Get()[_pathmapObject];
         Element IPathfinderInfo.LoopCondition => _builder.AnyAccessableUnvisited();
+        public Element EnabledAttributes { get; }
     }
 }
