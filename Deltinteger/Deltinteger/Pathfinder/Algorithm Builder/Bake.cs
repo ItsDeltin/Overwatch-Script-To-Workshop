@@ -1,6 +1,7 @@
 using System;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Parse.Lambda;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
@@ -10,24 +11,29 @@ namespace Deltin.Deltinteger.Pathfinder
         private readonly PathmapClass _pathmapClass;
         private readonly BakemapClass _bakemapClass;
         private readonly Element _pathmapObject;
+        private readonly ILambdaInvocable _onLoop;
         private IndexReference _bakemap;
         private ForBuilder _nodeLoop;
         private PathfindAlgorithmBuilder _builder;
         private IndexReference _bakeWait;
 
-        public PathmapBake(ActionSet actionSet, Element pathmapObject, Element attributes)
+        public PathmapBake(ActionSet actionSet, Element pathmapObject, Element attributes, ILambdaInvocable onLoop)
         {
             ActionSet = actionSet;
             _pathmapClass = actionSet.Translate.DeltinScript.Types.GetInstance<PathmapClass>();
             _bakemapClass = actionSet.Translate.DeltinScript.Types.GetInstance<BakemapClass>();
             _pathmapObject = pathmapObject;
             EnabledAttributes = attributes;
+            _onLoop = onLoop;
         }
 
         public Element Bake(Action<Element> progress)
         {
-            _bakeWait = ActionSet.VarCollection.Assign("bakeWait", ActionSet.IsGlobal, false);
-            _bakeWait.Set(ActionSet, 0);
+            if (_onLoop == null)
+            {
+                _bakeWait = ActionSet.VarCollection.Assign("bakeWait", ActionSet.IsGlobal, false);
+                _bakeWait.Set(ActionSet, 0);
+            }
 
             // Assign bakemap then set it to an empty array.
             _bakemap = ActionSet.VarCollection.Assign("bakemap", ActionSet.IsGlobal, false);
@@ -49,9 +55,9 @@ namespace Deltin.Deltinteger.Pathfinder
             return newBakemap.Get();
         }
 
-        public Element Progress => (_nodeLoop.Value / NodeArrayLength)
+        public Element Progress => Element.Part<V_Min>((Element)1, (_nodeLoop.Value / NodeArrayLength)
             + ((NodeArrayLength - Element.Part<V_CountOf>(_builder.Unvisited.Get()))
-                / Element.Part<V_RaiseToPower>(NodeArrayLength, (Element)2));
+                / Element.Part<V_RaiseToPower>(NodeArrayLength, (Element)2)));
 
         // When the dijkstra is finished, set the bakemap's node to the parent array.
         void IPathfinderInfo.Finished() => _bakemap.Set(ActionSet, _builder.ParentArray.Get(), index: _nodeLoop.Value);
@@ -60,9 +66,14 @@ namespace Deltin.Deltinteger.Pathfinder
         void IPathfinderInfo.OnConnectLoop() {} //=> ActionSet.AddAction(A_Wait.MinimumWait);
         void IPathfinderInfo.OnLoop()
         {
-            ActionSet.AddAction(_bakeWait.ModifyVariable(Operation.Add, 1));
-            ActionSet.AddAction(Element.Part<A_SkipIf>(_bakeWait.Get() % 6, (Element)1));
-            ActionSet.AddAction(A_Wait.MinimumWait);
+            if (_onLoop == null)
+            {
+                ActionSet.AddAction(_bakeWait.ModifyVariable(Operation.Add, 1));
+                ActionSet.AddAction(Element.Part<A_SkipIf>(_bakeWait.Get() % 6, (Element)1));
+                ActionSet.AddAction(A_Wait.MinimumWait);
+            }
+            else
+                _onLoop.Invoke(ActionSet);
         }
 
         void IPathfinderInfo.OnLoopEnd() {}

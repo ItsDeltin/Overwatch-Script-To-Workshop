@@ -624,16 +624,25 @@ namespace Deltin.Deltinteger.Pathfinder
         private FuncMethod Bake => new FuncMethodBuilder()
         {
             Name = "Bake",
-            Documentation = "Bakes the pathmap for instant pathfinding.",
+            Documentation = new MarkupBuilder().Add("Bakes the pathmap for instant pathfinding. This will block the current rule until the bake is complete.")
+                .NewLine().Add("It is recommended to run ").Code("DisableInspectorRecording();").Add(" before baking since it can break the inspector."),
             DoesReturnValue = true,
             ReturnType = DeltinScript.Types.GetInstance<BakemapClass>(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("attributes", AttributesDocumentation, new V_EmptyArray()),
-                new CodeParameter("printProgress", "Returns a value that can be used to display bake progress.",
-                    new BlockLambda(new CodeType[] {null}), new ExpressionOrWorkshopValue(new EmptyLambda()))
+                new CodeParameter("printProgress",
+                    new MarkupBuilder().Add("An action that is invoked with the progress of the bake. The value will be between 0 and 1, and will equal 1 when completed.")
+                        .NewLine().Add("Example usage:").NewLine().StartCodeLine()
+                        .Add("Pathmap map;").NewLine()
+                        .Add("map.Bake(printProgress: p => {").NewLine()
+                        .Indent().Add("// Create a hud text of the baking process.").NewLine()
+                        .Indent().Add("CreateHudText(AllPlayers(), Header: <\"Baking: <0>\"%, p * 100>, Location: Location.Top);").NewLine()
+                        .Add("});").EndCodeLine(),
+                    new BlockLambda(new CodeType[] {null}), new ExpressionOrWorkshopValue(new EmptyLambda())),
+                OnLoopStartParameter
             },
             Action = (actionSet, methodCall) => {
-                PathmapBake bake = new PathmapBake(actionSet, (Element)actionSet.CurrentObject, methodCall.Get(0));
+                PathmapBake bake = new PathmapBake(actionSet, (Element)actionSet.CurrentObject, methodCall.Get(0), methodCall.ParameterValues[2] as ILambdaInvocable);
                 return bake.Bake(p => ((ILambdaInvocable)methodCall.ParameterValues[1]).Invoke(actionSet, p));
             }
         };

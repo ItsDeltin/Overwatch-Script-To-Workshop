@@ -53,13 +53,8 @@ namespace Deltin.Deltinteger.Pathfinder
                     ))
                 );
 
-                // ! debug: save targetNode
-                var dbTarget = actionSet.VarCollection.Assign("dbTarget", actionSet.IsGlobal, false);
-                dbTarget.Set(actionSet, targetNode);
-                actionSet.AddAction(Element.Part<A_SmallMessage>(new V_AllPlayers(), dbTarget.Get()));
-
                 // For each of the players, get the current.
-                resolveInfo.Pathfind(actionSet, call.Get(0), Pathmap.Get(actionSet), NodeBake.Get(actionSet)[dbTarget.Get()], destination);
+                resolveInfo.Pathfind(actionSet, call.Get(0), Pathmap.Get(actionSet), NodeBake.Get(actionSet)[targetNode], destination);
                 return null;
             }
         };

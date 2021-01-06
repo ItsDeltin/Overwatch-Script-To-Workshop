@@ -193,6 +193,7 @@ namespace Deltin.Deltinteger
             noMarkup.Append("\n\r");
             return this;
         }
+        public MarkupBuilder Indent() => Add("    ");
 
         public override string ToString() => result.ToString();
         public string ToString(bool markup) => markup ? result.ToString() : noMarkup.ToString();
