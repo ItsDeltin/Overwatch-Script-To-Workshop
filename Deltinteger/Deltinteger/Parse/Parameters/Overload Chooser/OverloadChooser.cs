@@ -196,14 +196,13 @@ namespace Deltin.Deltinteger.Parse.Overload
             }
             
             // Recursively match generics.
-            if (parameterType.Generics != null)
-                for (int i = 0; i < parameterType.Generics.Length; i++)
-                    // Make sure the expression's type's structure is usable.
-                    if (expressionType.Generics != null && i < expressionType.Generics.Length)
-                        // Recursively check the generics.
-                        ExtractInferredGenerics(match, typeLinker, parameterType, expressionType);
-                    else
-                        match.Error(couldNotInfer, _targetRange);
+            for (int i = 0; i < parameterType.Generics.Length; i++)
+                // Make sure the expression's type's structure is usable.
+                if (i < expressionType.Generics.Length)
+                    // Recursively check the generics.
+                    ExtractInferredGenerics(match, typeLinker, parameterType, expressionType);
+                else
+                    match.Error(couldNotInfer, _targetRange);
         }
 
         private OverloadMatch BestOption(OverloadMatch[] matches)

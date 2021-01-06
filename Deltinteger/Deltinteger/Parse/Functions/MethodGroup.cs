@@ -48,12 +48,8 @@ namespace Deltin.Deltinteger.Parse
 
         public IGettableAssigner GetAssigner() => throw new NotImplementedException();
 
-        IExpression IVariableInstance.GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs)
-        {
-            var call = new CallMethodGroup(parseInfo, callRange, this, typeArgs);
-            call.Accept();
-            return call;
-        }
+        ICallVariable IVariableInstance.GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs)
+            => new CallMethodGroup(parseInfo, callRange, this, typeArgs);
 
         IVariableInstance IVariable.GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
         IVariableInstance IVariable.GetDefaultInstance() => this;
@@ -61,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
         void IElementProvider.AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
     }
 
-    public class CallMethodGroup : IExpression, ILambdaApplier, ILambdaInvocable, IWorkshopTree
+    public class CallMethodGroup : ICallVariable, IExpression, ILambdaApplier, ILambdaInvocable, IWorkshopTree
     {
         public MethodGroup Group { get; }
         public CodeType[] TypeArgs { get; }

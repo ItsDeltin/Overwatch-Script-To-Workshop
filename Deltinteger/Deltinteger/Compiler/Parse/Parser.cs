@@ -484,6 +484,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.SquareBracket_Open: return ParseCreateArray();
                 // Async
                 case TokenType.Async: return ParseAsync();
+                // Struct declaration
+                case TokenType.CurlyBracket_Open: return ParseStructDeclaration();
                 // Formatted string
                 case TokenType.LessThan:
                     // Make sure that the following token is a string.
@@ -1553,6 +1555,41 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var ignoreIfRunning = ParseOptional(TokenType.Exclamation);
             var expression = GetContainExpression();
             return EndNode(new AsyncContext(asyncToken, ignoreIfRunning, expression));
+        }
+
+        StructDeclarationContext ParseStructDeclaration()
+        {
+            // Get the incremental data
+            StartTokenCapture();
+            if (GetIncrementalNode(out StructDeclarationContext rule)) return EndTokenCapture(rule);
+
+            // Start the struct declaration.
+            ParseExpected(TokenType.CurlyBracket_Open);
+
+            // Parse the struct values.
+            // Both of these are accepted:
+            // {XYZ: Vector.Up, W: 0}
+            // {Vector XYZ: Vector.Up, Number W: 0}
+            var values = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Lookahead(() => ParseType().LookaheadValid), () => {
+                StartNode();
+                var typeOrIdentifier = ParseType(); // Parse the variable type.
+                var identifier = ParseOptional(TokenType.Identifier); // Parse the identifier.
+                ParseExpected(TokenType.Colon); // Parse the struct value seperator.
+                var value = GetContainExpression(); // Parse the value.
+
+                if (!identifier && typeOrIdentifier is ITypeContextHandler typeContextHandler)
+                {
+                    identifier = typeContextHandler.Identifier;
+                    typeOrIdentifier = null;
+                }
+
+                return EndNode(new StructDeclarationVariableContext(typeOrIdentifier, identifier, value));
+            });
+
+            // End the struct declaration.
+            ParseExpected(TokenType.CurlyBracket_Close);
+
+            return EndTokenCapture(new StructDeclarationContext(values));
         }
 
         /// <summary>Parses the root of a file.</summary>

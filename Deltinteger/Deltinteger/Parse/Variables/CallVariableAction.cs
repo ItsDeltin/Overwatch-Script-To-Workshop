@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class CallVariableAction : IExpression
+    public class CallVariableAction : ICallVariable, IExpression
     {
         public IVariableInstance Calling { get; }
         public IExpression[] Index { get; }
@@ -39,5 +39,7 @@ namespace Deltin.Deltinteger.Parse
             }
             return type;
         }
+
+        public void Accept() {}
     }
 }

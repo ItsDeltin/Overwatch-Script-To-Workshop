@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var typeContext in script.Context.Classes)
             {
-                var newType = IDefinedTypeInitializer.GetInitializer(new ParseInfo(script, this), GlobalScope, typeContext);
+                var newType = IDefinedTypeInitializer.GetInitializer(new ParseInfo(script, this), RulesetScope, typeContext);
                 RulesetScope.AddType(newType);
                 Types.AllTypes.Add(newType);
                 Types.DefinedTypes.Add(newType);

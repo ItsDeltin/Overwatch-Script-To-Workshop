@@ -81,14 +81,14 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual void GetCodeType()
         {
-            if (_contextHandler.GetCodeType() == null) return;
-
-            if (_canInferType && _contextHandler.GetCodeType().Infer && _components.IsComponent<InitialValueComponent>())
+            if (_canInferType && (_contextHandler.GetCodeType() == null || _contextHandler.GetCodeType().Infer) && _components.IsComponent<InitialValueComponent>())
             {
                 _varInfo.InferType = true;
             }
             else
             {
+                if (_contextHandler.GetCodeType() == null) return;
+
                 // Get the type.
                 CodeType type = TypeFromContext.GetCodeTypeFromContext(
                     _parseInfo,

@@ -304,6 +304,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.String:
                 case TokenType.Parentheses_Open:
                 case TokenType.SquareBracket_Open:
+                case TokenType.CurlyBracket_Open:
                 case TokenType.Async:
                 // Unary
                 case TokenType.Subtract:

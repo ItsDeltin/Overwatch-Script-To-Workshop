@@ -373,22 +373,13 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var variable in variables)
                 {
                     // Variable handler.
-                    var apply = new PotentialVariableApply(tcParseInfo.ParseInfo);
+                    var apply = new VariableApply(tcParseInfo.ParseInfo, tcParseInfo.Getter, variable, _variable);
 
                     // Check accessor.
-                    if (!tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel))
-                        apply.Error(string.Format("'{0}' is inaccessable due to its access level.", _name), _range);
-
-                    // Get the wrapped expression.
-                    IExpression expression = apply.Apply(
-                        variable,
-                        tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.Index),
-                        tcParseInfo.ParseInfo.GetGenerics(tcParseInfo.Getter, _variable.TypeArgs),
-                        _range
-                    );
+                    bool accessorMatches = tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel);
 
                     // Add the potential path.
-                    potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, expression, variable, tcParseInfo.ParseInfo, _range));
+                    potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, tcParseInfo.ParseInfo, accessorMatches));
                 }
             }
 
@@ -510,38 +501,32 @@ namespace Deltin.Deltinteger.Parse
         class VariableOption : IPotentialPathOption
         {
             private readonly ITreeContextPart _parent;
-            private readonly PotentialVariableApply _apply;
-            private readonly IExpression _expression;
+            private readonly VariableApply _apply;
             private readonly IVariableInstance _variable;
             private readonly ParseInfo _parseInfo;
             private readonly DocRange _callRange;
+            private readonly bool _accessorMatches;
+            private readonly IExpression _expression;
 
-            public VariableOption(ITreeContextPart parent, PotentialVariableApply apply, IExpression expression, IVariableInstance variable, ParseInfo parseInfo, DocRange callRange) {
+            public VariableOption(ITreeContextPart parent, VariableApply apply, ParseInfo parseInfo, bool accessorMatches) {
                 _parent = parent;
                 _apply = apply;
-                _expression = expression;
-                _variable = variable;
+                _variable = apply.Variable;
                 _parseInfo = parseInfo;
-                _callRange = callRange;
+                _callRange = apply.CallRange;
+                _accessorMatches = accessorMatches;
+                _expression = apply.VariableCall;
             }
 
             public Scope GetScope() => _expression.Type()?.GetObjectScope() ?? _parseInfo.TranslateInfo.PlayerVariableScope;
             public IExpression GetExpression() => _expression;
             public void Accept()
             {
-                // Call.
-                _variable.Call(_parseInfo, _callRange);
+                _apply.Accept();
 
-                // Restricted value type check.
-                if (RestrictedCall.EventPlayerDefaultCall(_variable.Provider, _parent?.GetExpression(), _parseInfo))
-                    _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), RestrictedCall.Message_EventPlayerDefault(_variable.Name)));
-                
-                // Accept method group.
-                if (_expression is CallMethodGroup group)
-                    group.Accept();
-
-                // Add diagnostics.
-                _parseInfo.Script.Diagnostics.AddDiagnostics(_apply.Errors.ToArray());
+                // Check accessor.
+                if (!_accessorMatches)
+                    _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", _variable.Name), _callRange);
 
                 // Notify parent about which element was retrived with it's scope.
                 _parent?.RetrievedScopeable(_variable);
@@ -558,17 +543,6 @@ namespace Deltin.Deltinteger.Parse
                 }
                 return false;
             }
-        }
-
-        class PotentialVariableApply : VariableApply
-        {
-            public List<Diagnostic> Errors { get; } = new List<Diagnostic>();
-
-            public PotentialVariableApply(ParseInfo parseInfo) : base(parseInfo) { }
-
-            protected override void Call(IVariableInstance variable, DocRange range) {}
-            protected override void EventPlayerRestrictedCall(RestrictedCall restrictedCall) {}
-            public override void Error(string message, DocRange range) => Errors.Add(new Diagnostic(message, range, Diagnostic.Error));
         }
     }
 

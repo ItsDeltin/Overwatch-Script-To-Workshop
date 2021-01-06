@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger
         MarkupBuilder Documentation { get; }
         IGettableAssigner GetAssigner();
         IWorkshopTree ToWorkshop(ActionSet actionSet) => actionSet.IndexAssigner.Get(Provider).GetVariable();
-        IExpression GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(this, index);
+        ICallVariable GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(this, index);
         void Call(ParseInfo parseInfo, DocRange callRange) => Call(this, parseInfo, callRange);
         MarkupBuilder GetLabel() => new MarkupBuilder().StartCodeLine().Add(CodeType.GetNameOrAny() + " " + Name).EndCodeLine();
 
@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger
         {
             Label = variable.Name,
             Kind = CompletionItemKind.Variable,
-            Detail = variable.CodeType.GetName() + " " + variable.Name,
+            Detail = variable.CodeType.GetNameOrAny() + " " + variable.Name,
             Documentation = variable.Documentation == null ? null : variable.Documentation.ToMarkup()
         };
         
@@ -40,6 +40,11 @@ namespace Deltin.Deltinteger
         {
             parseInfo.Script.AddHover(callRange, variable.GetLabel().ToString());
         }
+    }
+
+    public interface ICallVariable : IExpression
+    {
+        void Accept();
     }
 
     public class InternalVar : IVariable, IVariableInstance, IAmbiguityCheck

@@ -424,7 +424,6 @@ namespace Deltin.Deltinteger.Parse
 
             public DocRange GetNameRange() => _foreachContext.Identifier.Range;
             public DocRange GetTypeRange() => _foreachContext.Type.Range;
-            public bool CheckName() => _foreachContext.Identifier;
         }
     }
 }

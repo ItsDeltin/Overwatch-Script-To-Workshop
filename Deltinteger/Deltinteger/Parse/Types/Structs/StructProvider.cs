@@ -4,11 +4,18 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class StructInitializer : ICodeTypeInitializer
+    public interface IStructProvider
+    {
+        string Name { get; }
+        IVariable[] Variables { get; }
+    }
+
+    public abstract class StructInitializer : ICodeTypeInitializer, IStructProvider
     {
         public string Name { get; }
         public int GenericsCount { get; }
         public List<IVariable> Variables { get; } = new List<IVariable>();
+        IVariable[] IStructProvider.Variables => Variables.ToArray();
 
         public StructInitializer(string name)
         {

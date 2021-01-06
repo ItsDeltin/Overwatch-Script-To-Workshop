@@ -115,7 +115,7 @@ namespace Deltin.Deltinteger.Parse
                 case ExpressionStatement exprStatement:
 
                     // Parse the expression
-                    var expr = GetExpression(scope, exprStatement.Expression, true, false);
+                    var expr = GetExpression(scope, exprStatement.Expression, false);
 
                     if (!expr.IsStatement())
                     {
@@ -136,7 +136,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="usedAsValue">Determines if the expression is being used as a value.</param>
         /// <param name="getter">The getter scope. Used for preserving scope through parameters.</param>
         /// <returns>An IExpression created from the ExprContext.</returns>
-        public IExpression GetExpression(Scope scope, IParseExpression exprContext, bool selfContained = true, bool usedAsValue = true, Scope getter = null)
+        public IExpression GetExpression(Scope scope, IParseExpression exprContext, bool usedAsValue = true, Scope getter = null)
         {
             if (getter == null) getter = scope;
 
@@ -146,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
                 case BooleanExpression boolean: return new BoolAction(this, boolean.Value);
                 case NullExpression @null: return new NullAction(this);
                 case StringExpression @string: return new StringAction(this, scope, @string);
-                case Identifier identifier: return GetVariable(scope, getter, identifier, selfContained);
+                case Identifier identifier: return GetVariable(scope, getter, identifier);
                 case FunctionExpression method: return new CallMethodAction(this, scope, method, usedAsValue, getter);
                 case NewExpression newObject: return new CreateObjectAction(this, scope, newObject);
                 case BinaryOperatorExpression op:
@@ -166,6 +166,7 @@ namespace Deltin.Deltinteger.Parse
                 case AsyncContext asyncContext: return AsyncInfo.ParseAsync(this, scope, asyncContext, usedAsValue);
                 // Missing
                 case MissingElement missing: return new MissingElementAction(TranslateInfo);
+                case StructDeclarationContext structDeclaration: return new StructDeclarationExpression(this, scope, structDeclaration);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }
@@ -176,46 +177,16 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="variableContext">The context of the variable.</param>
         /// <param name="selfContained">Wether the variable was not called in an expression tree.</param>
         /// <returns>An IExpression created from the context.</returns>
-        public IExpression GetVariable(Scope scope, Scope getter, Identifier variableContext, bool selfContained)
+        public IExpression GetVariable(Scope scope, Scope getter, Identifier variableContext)
         {
-            // Get the variable name and range.
-            string variableName = variableContext.Token.Text;
-            DocRange variableRange = variableContext.Token.Range;
-
             // Get the variable.
-            IVariableInstance element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange, ResolveInvokeInfo != null);
-            if (element == null) return new MissingVariable(TranslateInfo, variableName);
-            
-            // Additional syntax checking.
-            return new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), GetGenerics(getter, variableContext.TypeArgs), variableRange);
-        }
+            var variable = scope.GetVariable(variableContext.Token.Text, getter, Script.Diagnostics, variableContext.Token.Range, ResolveInvokeInfo != null);
+            if (variable == null)
+                variable = new MissingVariable(TranslateInfo, variableContext.Token.Text);
 
-        /// <summary>Gets an IExpression[] from a DeltinScriptParser.ArrayContext.</summary>
-        /// <param name="scope">The scope used to parse the index values.</param>
-        /// <param name="arrayContext">The context of the array.</param>
-        /// <returns>An IExpression[] of each indexer in the chain. Will return null if arrayContext is null.</returns>
-        public IExpression[] ExpressionIndexArray(Scope scope, List<ArrayIndex> arrayContext)
-        {
-            IExpression[] index = null;
-            if (arrayContext != null)
-            {
-                index = new IExpression[arrayContext.Count];
-                for (int i = 0; i < index.Length; i++)
-                    index[i] = GetExpression(scope, arrayContext[i].Expression);
-            }
-            return index;
-        }
-
-        public CodeType[] GetGenerics(Scope scope, List<IParseType> genericsContext)
-        {
-            CodeType[] types = null;
-            if (genericsContext != null)
-            {
-                types = new CodeType[genericsContext.Count];
-                for (int i = 0; i < types.Length; i++)
-                    types[i] = TypeFromContext.GetCodeTypeFromContext(this, scope, genericsContext[i]);
-            }
-            return types;
+            var apply = new VariableApply(this, scope, variable, variableContext);
+            apply.Accept();
+            return apply.VariableCall;
         }
 
         /// <summary>Creates a macro from a Define_macroContext.</summary>
@@ -249,33 +220,58 @@ namespace Deltin.Deltinteger.Parse
 
     public class VariableApply
     {
+        public ICallVariable VariableCall { get; }
+        public IVariableInstance Variable { get; }
+        public DocRange CallRange { get; }
         private readonly ParseInfo _parseInfo;
+        private readonly string _name;
+        private readonly IExpression[] _index;
+        private readonly CodeType[] _generics;
 
-        public VariableApply(ParseInfo parseInfo)
+        public VariableApply(ParseInfo parseInfo, Scope scope, IVariableInstance variable, Identifier variableContext)
         {
+            Variable = variable;
             _parseInfo = parseInfo;
+            _name = variableContext.Token.Text;
+            CallRange = variableContext.Token.Range;
+
+            // Get the index.
+            if (variableContext.Index != null)
+            {
+                _index = new IExpression[variableContext.Index.Count];
+                for (int i = 0; i < _index.Length; i++)
+                    _index[i] = parseInfo.GetExpression(scope, variableContext.Index[i].Expression);
+            }
+
+            // Get the generics.
+            if (variableContext.TypeArgs != null)
+            {
+                _generics = new CodeType[variableContext.TypeArgs.Count];
+                for (int i = 0; i < _generics.Length; i++)
+                    _generics[i] = TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, variableContext.TypeArgs[i]);
+            }
+
+            VariableCall = Variable.GetExpression(_parseInfo, CallRange, _index, _generics);
         }
 
-        public IExpression Apply(IVariableInstance variable, IExpression[] index, CodeType[] typeArgs, DocRange variableRange)
+        public void Accept()
         {
             // Callable
-            Call(variable, variableRange);
+            Variable.Call(_parseInfo, CallRange);
             
             // If the type of the variable being called is Player, check if the variable is calling Event Player.
             // If the source expression is null, Event Player is used by default.
             // Otherwise, confirm that the source expression is returning the player variable scope.
-            if (variable.Provider.VariableType == VariableType.Player)
-                EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), RestrictedCall.Message_EventPlayerDefault(variable.Name)));
+            if (Variable.Provider.VariableType == VariableType.Player)
+                _parseInfo.RestrictedCallHandler.RestrictedCall(
+                    new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(CallRange), RestrictedCall.Message_EventPlayerDefault(_name))
+                );
                 
             // If there is a local variable tracker and the variable requires capture.
-            if (variable.Provider.RequiresCapture)
-                _parseInfo.LocalVariableAccessed(variable.Provider);
+            if (Variable.Provider.RequiresCapture)
+                _parseInfo.LocalVariableAccessed(Variable.Provider);
             
-            return variable.GetExpression(_parseInfo, variableRange, index, typeArgs);
+            VariableCall.Accept();
         }
-
-        protected virtual void Call(IVariableInstance variable, DocRange range) => variable.Call(_parseInfo, range);
-        protected virtual void EventPlayerRestrictedCall(RestrictedCall restrictedCall) => _parseInfo.RestrictedCallHandler.RestrictedCall(restrictedCall);
-        public virtual void Error(string message, DocRange range) => _parseInfo.Script.Diagnostics.Error(message, range);
     }
 }

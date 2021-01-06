@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
     public abstract class CodeType : IExpression, ICallable, IWorkshopInit
     {
         public string Name { get; }
-        public CodeType[] Generics { get; protected set; }
+        public CodeType[] Generics { get; protected set; } = new CodeType[0];
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
         {
             string result = Name;
 
-            if (Generics != null && Generics.Length > 0)
+            if (Generics.Length > 0)
                 result += "<" + string.Join(", ", Generics.Select(g => g.GetName())) + ">";
 
             return result;

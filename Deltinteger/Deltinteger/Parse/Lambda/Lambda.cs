@@ -60,7 +60,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public string GetName() => _parameter.Identifier.GetText();
         public DocRange GetNameRange() => _parameter.Identifier.GetRange(_parameter.Range);
         public DocRange GetTypeRange() => _parameter.Type?.Range;
-        public bool CheckName() => _parameter.Identifier;
     }
 
     public class ExpectingLambdaInfo

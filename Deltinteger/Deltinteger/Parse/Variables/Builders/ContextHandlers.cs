@@ -15,7 +15,6 @@ namespace Deltin.Deltinteger.Parse
         IVariableComponent[] GetComponents();
         IParseType GetCodeType();
         DocRange GetTypeRange();
-        bool CheckName();
     }
 
     class DefineContextHandler : IVarContextHandler
@@ -34,7 +33,6 @@ namespace Deltin.Deltinteger.Parse
         public DocRange GetNameRange() => _defineContext.Identifier.GetRange(_defineContext.Range);
         public IParseType GetCodeType() => _defineContext.Type;
         public DocRange GetTypeRange() => _defineContext.Type.Range;
-        public bool CheckName() => _defineContext.Identifier;
 
         public IVariableComponent[] GetComponents()
         {
