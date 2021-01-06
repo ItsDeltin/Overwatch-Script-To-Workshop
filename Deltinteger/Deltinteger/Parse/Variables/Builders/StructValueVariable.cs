@@ -27,6 +27,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
             _varInfo.WholeContext = false;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
             _varInfo.AccessLevel = AccessLevel.Public;
+            _varInfo.TokenType = TokenType.Parameter;
             // todo _varInfo.RequiresCapture = true;
         }
     }

@@ -796,6 +796,9 @@
           "include": "#lambda"
         },
         {
+          "include": "#struct-declaration"
+        },
+        {
           "match": "(<)\\s*(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*(>)",
           "captures": {
             "1": {
@@ -1018,6 +1021,51 @@
               "match": ",",
               "name": "punctuation.separator.comma"
             },
+            {
+              "include": "#expression"
+            }
+          ]
+        }
+      ]
+    },
+    "struct-declaration": {
+      "begin": "{",
+      "end": "}",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.block"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.block"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "(((?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?))\\s+)?(([_[:alnum:]]+))\\s*(:)",
+          "beginCaptures": {
+            "1": {
+              "patterns": [
+                {
+                  "include": "#type-matcher"
+                }
+              ]
+            },
+            "11": {
+              "name": "variable.parameter"
+            },
+            "12": {
+              "name": "punctuation.separator.key-value"
+            }
+          },
+          "end": "(,)|(?=})",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.separator.comma"
+            }
+          },
+          "patterns": [
             {
               "include": "#expression"
             }

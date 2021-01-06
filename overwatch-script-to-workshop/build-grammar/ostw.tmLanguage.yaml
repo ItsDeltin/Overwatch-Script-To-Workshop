@@ -546,6 +546,7 @@ repository:
       - include: '#create-array'
       - include: '#ternary-conditional'
       - include: '#lambda'
+      - include: '#struct-declaration'
       # type cast
       - match: (<)\s*{{type}}\s*(>)
         captures:
@@ -693,6 +694,32 @@ repository:
           # Match parameter seperator
           - match: ','
             name: punctuation.separator.comma
+          - include: '#expression'
+  
+  struct-declaration:
+    begin: '{'
+    end: '}'
+    beginCaptures:
+      0:
+        name: punctuation.definition.block
+    endCaptures:
+      0:
+        name: punctuation.definition.block
+    patterns:
+      - begin: '(({{type}})\s+)?({{part}})\s*(:)'
+        beginCaptures:
+          1:
+            patterns:
+              - include: '#type-matcher'
+          11:
+            name: variable.parameter
+          12:
+            name: punctuation.separator.key-value
+        end: (,)|(?=})
+        endCaptures:
+          1:
+            name: punctuation.separator.comma
+        patterns:
           - include: '#expression'
   
   # Variable
