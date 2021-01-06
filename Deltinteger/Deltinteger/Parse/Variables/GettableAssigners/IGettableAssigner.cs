@@ -8,6 +8,8 @@ namespace Deltin.Deltinteger.Parse
         public VarCollection VarCollection { get; }
         public VarIndexAssigner Assigner { get; }
         public bool SetInitialValue { get; set; } = true;
+        public IWorkshopTree InitialValueOverride { get; set; }
+        public bool Inline { get; set; }
 
         public GettableAssignerValueInfo(ActionSet actionSet, VarCollection varCollection, VarIndexAssigner assigner)
         {
@@ -46,13 +48,23 @@ namespace Deltin.Deltinteger.Parse
 
         public GettableAssignerResult GetResult(GettableAssignerValueInfo info)
         {
-            var value = info.VarCollection.Assign(_var.Name, _var.VariableType, info.ActionSet.IsGlobal, _var.InExtendedCollection, _var.ID);
-
             // Get the initial value.
             IWorkshopTree initialValue = Element.Num(0);
-            if (_var.InitialValue != null)
+
+            // Set the initial value to the override if it exists.
+            if (info.InitialValueOverride != null)
+                initialValue = info.InitialValueOverride;
+
+            // Otherwise, use the var's initial value.
+            else if (_var.InitialValue != null)
                 initialValue = _var.InitialValue.Parse(info.ActionSet);
+
+            // Inline
+            if (info.Inline) return new GettableAssignerResult(new WorkshopElementReference(initialValue), initialValue);
             
+            // Assign the index reference
+            var value = info.VarCollection.Assign(_var.Name, _var.VariableType, info.ActionSet.IsGlobal, _var.InExtendedCollection, _var.ID);
+
             // Add the variable to the assigner.
             // info.Assigner.Add(_var, value);
 
@@ -91,9 +103,7 @@ namespace Deltin.Deltinteger.Parse
             var value = _value.Parse(info.ActionSet);
             return new GettableAssignerResult(new WorkshopElementReference(value), value);
         }
-
         public IGettable AssignClassStacks(GetClassStacks info) => throw new System.NotImplementedException();
-
         public int StackDelta() => 0;
     }
 

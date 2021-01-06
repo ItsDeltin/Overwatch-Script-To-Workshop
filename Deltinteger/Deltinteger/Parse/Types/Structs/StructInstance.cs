@@ -57,10 +57,10 @@ namespace Deltin.Deltinteger.Parse
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
-            var structValue = (StructValue)reference;
+            var structValue = (IAssignedStructDictionary)reference;
 
-            for (int i = 0; i < structValue.Children.Length; i++)
-                assigner.Add(Variables[i].Provider, structValue.Children[i]);
+            foreach (var variable in Variables)
+                assigner.Add(variable.Provider, structValue[variable.Name]);
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
