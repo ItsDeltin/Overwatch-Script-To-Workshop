@@ -404,7 +404,6 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum Team
     {
-        [EnumOverride(null, "Both")]
         All,
         Team1,
         Team2,
