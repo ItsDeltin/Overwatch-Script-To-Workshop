@@ -172,6 +172,8 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>An IExpression created from the context.</returns>
         public IExpression GetVariable(Scope scope, Scope getter, Identifier variableContext, bool selfContained)
         {
+            if (!variableContext.Token) return MissingElementAction.MissingElement;
+
             // Get the variable name and range.
             string variableName = variableContext.Token.Text;
             DocRange variableRange = variableContext.Token.Range;
