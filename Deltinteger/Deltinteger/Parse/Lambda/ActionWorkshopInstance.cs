@@ -19,4 +19,11 @@ namespace Deltin.Deltinteger.Parse.Lambda
         bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new System.NotImplementedException();
         string IWorkshopTree.ToWorkshop(OutputLanguage language, ToWorkshopContext context) => throw new System.NotImplementedException();
     }
+
+    public class EmptyLambda : IWorkshopTree, ILambdaInvocable
+    {
+        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => null;
+        bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new System.NotImplementedException();
+        string IWorkshopTree.ToWorkshop(OutputLanguage language, ToWorkshopContext context) => throw new System.NotImplementedException();
+    }
 }
