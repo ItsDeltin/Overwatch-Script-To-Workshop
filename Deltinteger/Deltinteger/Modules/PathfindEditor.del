@@ -106,6 +106,7 @@ globalvar Vector attributesOut 2; // The attributes for the CSV output.
 globalvar Vector preloadNodes 3; // Preloading nodes.
 globalvar Vector preloadSegments 4; // Preloading segments.
 globalvar Vector preloadAttributes 5; // Preloading segments.
+globalvar define fileName = null; // The name of the pathmap file.
 
 globalvar define PlaceMode = 0;
 globalvar define FirstAttribute = 0; // The selected attribute.
@@ -574,6 +575,9 @@ if (CountOf(preloadNodes) != 0)
             Nodes[preload.Y],
             preload.Z
         ));
+    
+    if (fileName != null)
+        CreateHudText(AllPlayers(), Text: fileName, SortOrder: 1, TextColor: Color.Orange, Location: Location.Right);
 }
 
 rule: "Increment Place Mode"
