@@ -556,6 +556,7 @@ namespace Deltin.Deltinteger.Elements
         VisibleTo,
         SortOrder,
         SortOrderAndColor,
+        Color,
         None
     }
 
