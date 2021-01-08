@@ -78,6 +78,7 @@ namespace Deltin.Deltinteger
         CodeParameter[] Parameters { get; }
         MarkupBuilder Documentation { get; }
         object Call(ParseInfo parseInfo, DocRange callRange) => null;
+        bool RestrictedValuesAreFatal => true;
     }
 
     public interface IAccessable

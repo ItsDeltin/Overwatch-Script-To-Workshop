@@ -197,23 +197,21 @@ namespace Deltin.Deltinteger.Parse
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
 
-        public void AddAction(IWorkshopTree action)
-        {
-            ActionList.Add(new ALAction(action));
-        }
-        public void AddAction(IWorkshopTree[] actions)
+
+        public void AddAction(string comment, params IWorkshopTree[] actions)
         {
             foreach (var action in actions)
+            {
+                if (action is Element element && comment != null)
+                {
+                    element.Comment = comment;
+                    comment = null;
+                }
                 ActionList.Add(new ALAction(action));
+            }
         }
-        public void AddAction(IActionList action)
-        {
-            ActionList.Add(action);
-        }
-        public void AddAction(IActionList[] actions)
-        {
-            ActionList.AddRange(actions);
-        }
+        public void AddAction(params IWorkshopTree[] actions) => AddAction(null, actions);
+        public void AddAction(params IActionList[] actions) => ActionList.AddRange(actions);
 
         public ActionSet InitialSet()
         {

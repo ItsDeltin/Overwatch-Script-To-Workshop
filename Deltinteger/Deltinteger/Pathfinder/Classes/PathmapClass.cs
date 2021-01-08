@@ -6,11 +6,14 @@ using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.Lambda;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using static Deltin.Deltinteger.Elements.Element;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
     public class PathmapClass : ClassType
     {
+        static readonly MarkupBuilder AttributesDocumentation = "The attributes to pathfind with. Paths will only be taken if they contain an attribute in the provided array.";
+
         private DeltinScript DeltinScript { get; }
         public IndexReference Nodes { get; private set; }
         public IndexReference Segments { get; private set; }
@@ -63,6 +66,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(DeleteAllAttributes);
             serveObjectScope.AddNativeMethod(DeleteAllAttributesConnectedToNode);
             serveObjectScope.AddNativeMethod(SegmentFromNodes);
+            serveObjectScope.AddNativeMethod(Bake);
 
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CurrentSegmentAttribute);
@@ -207,31 +211,17 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public Element SegmentsFromNodes(IWorkshopTree pathmapObject, Element node1, Element node2) => Element.Filter(
             Segments.Get()[(Element)pathmapObject],
-            Element.And(
-                Element.Contains(
-                    DijkstraBase.BothNodes(Element.ArrayElement()),
+            And(
+                Contains(
+                    PathfindAlgorithmBuilder.BothNodes(ArrayElement()),
                     node1
                 ),
-                Element.Contains(
-                    DijkstraBase.BothNodes(Element.ArrayElement()),
+                Contains(
+                    PathfindAlgorithmBuilder.BothNodes(ArrayElement()),
                     node2
                 )
             )
         );
-
-        private void SetHooks(DijkstraBase algorithm, IWorkshopTree onLoop, IWorkshopTree onConnectLoop)
-        {
-            // OnLoop
-            if (onLoop is LambdaAction onLoopLambda)
-                algorithm.OnLoop = actionSet => onLoopLambda.Invoke(actionSet);
-
-            // OnConnectLoop
-            if (onConnectLoop is LambdaAction onConnectLoopLambda)
-                algorithm.OnConnectLoop = actionSet => onConnectLoopLambda.Invoke(actionSet);
-
-            if (ApplicableNodeDeterminer.HookValue != null)
-                algorithm.GetClosestNode = (actionSet, nodes, position) => (Element)((LambdaAction)ApplicableNodeDeterminer.HookValue).Invoke(actionSet, nodes, position);
-        }
 
         private static Element ContainParameter(ActionSet actionSet, string name, IWorkshopTree value)
         {
@@ -242,6 +232,19 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
         private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
+
+        SharedPathfinderInfoValues CreatePathfinderInfo(ActionSet actionSet, Element attributes, IWorkshopTree onLoop, IWorkshopTree onConnectLoop) => new SharedPathfinderInfoValues() {
+            ActionSet = actionSet,
+            PathmapObject = (Element)actionSet.CurrentObject,
+            Attributes = attributes,
+            OnLoop = onLoop as ILambdaInvocable,
+            OnConnectLoop = onConnectLoop as ILambdaInvocable,
+            NodeFromPosition = GetNodeFromPositionHandler(actionSet, (Element)actionSet.CurrentObject)
+        };
+
+        public INodeFromPosition GetNodeFromPositionHandler(ActionSet actionSet, Element pathmapObject) => ApplicableNodeDeterminer.HookValue == null ?
+            (INodeFromPosition)new ClosestNodeFromPosition(actionSet, this, pathmapObject) :
+            new NodeFromInvocable(actionSet, this, pathmapObject, (ILambdaInvocable)ApplicableNodeDeterminer.HookValue);
 
         // Object Functions
         // Pathfind(player, destination, [attributes])
@@ -258,18 +261,12 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             Action = (actionSet, methodCall) =>
             {
-                Element player = (Element)methodCall.ParameterValues[0];
+                Element player = methodCall.Get(0);
+                Element destination = ContainParameter(actionSet, "_pathfindDestination", methodCall.ParameterValues[1]); // Store the pathfind destination.
 
-                // Store the pathfind destination.
-                Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
-
-                DijkstraPlayer algorithm = new DijkstraPlayer(actionSet, (Element)actionSet.CurrentObject, player, destination, (Element)methodCall.ParameterValues[2]);
-
-                // Set lambda hooks
-                SetHooks(algorithm, methodCall.ParameterValues[3], methodCall.ParameterValues[4]);
-
-                // Apply
-                algorithm.Get();
+                // Create the pathfinder.
+                var pathfindPlayer = new PathfindPlayer(player, destination, CreatePathfinderInfo(actionSet, methodCall.Get(2), methodCall.ParameterValues[3], methodCall.ParameterValues[4]));
+                pathfindPlayer.Run();
                 return null;
             }
         };
@@ -288,15 +285,11 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             Action = (actionSet, methodCall) =>
             {
-                Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
+                Element players = methodCall.Get(0);
+                Element destination = ContainParameter(actionSet, "_pathfindDestination", methodCall.ParameterValues[1]); // Store the pathfind destination.
 
-                DijkstraMultiSource algorithm = new DijkstraMultiSource(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, (Element)methodCall.ParameterValues[2]);
-
-                // Set lambda hooks
-                SetHooks(algorithm, methodCall.ParameterValues[3], methodCall.ParameterValues[4]);
-
-                // Apply
-                algorithm.Get();
+                var pathfindAll = new PathfindAll(players, destination, CreatePathfinderInfo(actionSet, methodCall.Get(2), methodCall.ParameterValues[3], methodCall.ParameterValues[4]));
+                pathfindAll.Run();
                 return null;
             }
         };
@@ -315,36 +308,35 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             Action = (actionSet, methodCall) =>
             {
-                Element destinations = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
+                Element player = methodCall.Get(0);
+                Element destinations = ContainParameter(actionSet, "_pathfindEitherDestinations", methodCall.ParameterValues[1]);
 
-                DijkstraEither algorithm = new DijkstraEither(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destinations, (Element)methodCall.ParameterValues[2]);
-
-                // Set lambda hooks
-                SetHooks(algorithm, methodCall.ParameterValues[3], methodCall.ParameterValues[4]);
-
-                // Apply
-                algorithm.Get();
+                var pathfindEither = new PathfindEither(player, destinations, CreatePathfinderInfo(actionSet, methodCall.Get(2), methodCall.ParameterValues[3], methodCall.ParameterValues[4]));
+                pathfindEither.Run();
                 return null;
             }
         };
 
         // GetPath()
-        private static FuncMethod GetPath = new FuncMethodBuilder()
+        private FuncMethod GetPath => new FuncMethodBuilder()
         {
             Name = "GetPath",
             Documentation = "Returns an array of vectors forming a path from the starting point to the destination.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The initial position."),
-                new CodeParameter("destination", "The final destination.")
+                new CodeParameter("destination", "The final destination."),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(Element.Null())),
+                OnLoopStartParameter,
+                OnNeighborLoopParameter
             },
             Action = (actionSet, methodCall) =>
             {
-                Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
+                Element position = methodCall.Get(0);
+                Element destination = ContainParameter(actionSet, "_pathfindDestination", methodCall.ParameterValues[1]);
 
-                DijkstraNormal algorithm = new DijkstraNormal(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, null);
-                algorithm.Get();
-
-                return Element.Append(algorithm.finalPath.GetVariable(), destination);
+                var vectorPath = new PathfindVectorPath(position, destination, CreatePathfinderInfo(actionSet, methodCall.Get(2), methodCall.ParameterValues[3], methodCall.ParameterValues[4]));
+                vectorPath.Run();
+                return vectorPath.Result;
             }
         };
 
@@ -362,19 +354,14 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             Action = (actionSet, call) =>
             {
-                ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], (Element)call.ParameterValues[1]);
-
-                // Set lambda hooks
-                SetHooks(resolve, call.ParameterValues[2], call.ParameterValues[3]);
-
-                // Apply
-                resolve.Get();
-                return resolve.ClassReference.GetVariable();
+                var resolvePath = new ResolvePathfind(call.Get(0), CreatePathfinderInfo(actionSet, call.Get(1), call.ParameterValues[2], call.ParameterValues[3]));
+                resolvePath.Run();
+                return resolvePath.Result;
             }
         };
 
         // ResolveTo(position, resolveTo, [attributes])
-        private static FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder()
+        private FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder()
         {
             Name = "ResolveTo",
             Documentation = "Resolves the path to the specified destination. This can be used to precalculate the path to a position, or to reuse the calculated path to a position.",
@@ -382,13 +369,15 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve."),
                 new CodeParameter("resolveTo", "Resolving will stop once this position is reached."),
-                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(Element.Null()))
+                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(Element.Null())),
+                OnLoopStartParameter,
+                OnNeighborLoopParameter
             },
             Action = (actionSet, call) =>
             {
-                ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], ContainParameter(actionSet, "_pathfindDestinationStore", call.ParameterValues[1]), (Element)call.ParameterValues[2]);
-                resolve.Get();
-                return resolve.ClassReference.GetVariable();
+                var resolvePath = new ResolvePathfind(call.Get(0), call.Get(1), CreatePathfinderInfo(actionSet, call.Get(2), call.ParameterValues[3], call.ParameterValues[4]));
+                resolvePath.Run();
+                return resolvePath.Result;
             }
         };
 
@@ -458,8 +447,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 // Delete segments.
                 Element connectedSegments = ContainParameter(actionSet, "Delete Node: Segments", Element.Filter(
                     Segments.Get()[(Element)actionSet.CurrentObject],
-                    Element.Contains(
-                        DijkstraBase.BothNodes(Element.ArrayElement()),
+                    Contains(
+                        PathfindAlgorithmBuilder.BothNodes(ArrayElement()),
                         methodCall.ParameterValues[0]
                     )
                 ));
@@ -613,6 +602,32 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             ReturnType = SegmentsStruct.Instance,
             Action = (actionSet, methodCall) => SegmentsFromNodes(actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
+        };
+
+        // Bake()
+        private FuncMethod Bake => new FuncMethodBuilder()
+        {
+            Name = "Bake",
+            Documentation = new MarkupBuilder().Add("Bakes the pathmap for instant pathfinding. This will block the current rule until the bake is complete.")
+                .NewLine().Add("It is recommended to run ").Code("DisableInspectorRecording();").Add(" before baking since it can break the inspector."),
+            ReturnType = DeltinScript.Types.GetInstance<BakemapClass>(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("attributes", AttributesDocumentation, EmptyArray()),
+                new CodeParameter("printProgress",
+                    new MarkupBuilder().Add("An action that is invoked with the progress of the bake. The value will be between 0 and 1, and will equal 1 when completed.")
+                        .NewLine().Add("Example usage:").NewLine().StartCodeLine()
+                        .Add("Pathmap map;").NewLine()
+                        .Add("map.Bake(printProgress: p => {").NewLine()
+                        .Indent().Add("// Create a hud text of the baking process.").NewLine()
+                        .Indent().Add("CreateHudText(AllPlayers(), Header: <\"Baking: <0>\"%, p * 100>, Location: Location.Top);").NewLine()
+                        .Add("});").EndCodeLine(),
+                    new BlockLambda(new CodeType[] {null}), new ExpressionOrWorkshopValue(new EmptyLambda())),
+                OnLoopStartParameter
+            },
+            Action = (actionSet, methodCall) => {
+                PathmapBake bake = new PathmapBake(actionSet, (Element)actionSet.CurrentObject, methodCall.Get(0), methodCall.ParameterValues[2] as ILambdaInvocable);
+                return bake.Bake(p => ((ILambdaInvocable)methodCall.ParameterValues[1]).Invoke(actionSet, p));
+            }
         };
 
         // Static functions
@@ -832,8 +847,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
-            assigner.Add(Node_A, DijkstraBase.Node1((Element)reference));
-            assigner.Add(Node_B, DijkstraBase.Node2((Element)reference));
+            assigner.Add(Node_A, PathfindAlgorithmBuilder.Node1((Element)reference));
+            assigner.Add(Node_B, PathfindAlgorithmBuilder.Node2((Element)reference));
         }
 
         public override Scope GetObjectScope() => _scope;

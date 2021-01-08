@@ -17,6 +17,8 @@ namespace Deltin.Deltinteger.Parse
         public LanguageServer.Location DefinedAt { get; }
         public CodeType Type { get; }
         public MarkupBuilder Documentation { get; set; }
+        public virtual bool RestrictedValuesAreFatal => true;
+        bool IParameterCallable.RestrictedValuesAreFatal => RestrictedValuesAreFatal;
 
         public Constructor(CodeType type, LanguageServer.Location definedAt, AccessLevel accessLevel)
         {
@@ -47,6 +49,7 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly RecursiveCallHandler _recursiveCallHandler;
         public SubroutineInfo SubroutineInfo { get; set; }
+        public override bool RestrictedValuesAreFatal => SubroutineName == null;
 
         public DefinedConstructor(ParseInfo parseInfo, Scope scope, CodeType type, ConstructorContext context) : base(
             type,

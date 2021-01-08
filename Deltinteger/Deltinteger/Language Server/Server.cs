@@ -117,7 +117,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 // Get the pathmap. 'map' will be null if there is an error.
                 try
                 {
-                    Pathmap map = Pathmap.ImportFromCSV(Clipboard.GetText(), error);
+                    Pathmap map = Pathmap.ImportFromActionSet(Clipboard.GetText(), error);
 
                     if (map == null) return error.Message;
                     else

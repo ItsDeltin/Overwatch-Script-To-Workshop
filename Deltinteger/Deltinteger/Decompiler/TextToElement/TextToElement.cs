@@ -898,6 +898,21 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         // Operators
         bool MatchOperator(out TTEOperator op)
         {
+            // Make sure we do not match modify operators.
+            // +=, -=, ect.
+            bool isModify = false;
+            Lookahead(() => {
+                isModify = Match("-=") || Match("+=") || Match("%=") || Match("/=") || Match("*=") || Match("^=");
+                return false;
+            });
+
+            // If we do, set op to null then return false.
+            if (isModify)
+            {
+                op = null;
+                return false;
+            }
+
             if (Match("&&")) op = TTEOperator.And;
             else if (Match("||")) op = TTEOperator.Or;
             else if (Match("-")) op = TTEOperator.Subtract;

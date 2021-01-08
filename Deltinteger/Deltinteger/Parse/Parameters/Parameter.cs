@@ -199,6 +199,6 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public static bool UseNonnullParameter(IWorkshopTree input) => input != null && !(input is Element element && element.Function.Name == "Null");
+        public static implicit operator ExpressionOrWorkshopValue(Element value) => new ExpressionOrWorkshopValue(value);
     }
 }

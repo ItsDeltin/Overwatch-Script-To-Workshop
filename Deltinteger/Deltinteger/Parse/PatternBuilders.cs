@@ -55,6 +55,44 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class ForBuilder
+    {
+        public IndexReference Variable { get; }
+        public Element Value => Variable.Get();
+        private readonly ActionSet _actionSet;
+        private readonly Element _end;
+
+        public ForBuilder(ActionSet actionSet, string variableName, Element end)
+        {
+            Variable = actionSet.VarCollection.Assign(variableName, actionSet.IsGlobal, false);
+            _actionSet = actionSet;
+            _end = end;
+        }
+
+        public void Init()
+        {
+            var var = Variable.WorkshopVariable;
+
+            if (var.IsGlobal)
+                _actionSet.AddAction(Element.Part("For Global Variable",
+                    var,
+                    (Element)0,
+                    _end,
+                    (Element)1
+                ));
+            else
+                _actionSet.AddAction(Element.Part("For Player Variable",
+                    Element.EventPlayer(),
+                    var,
+                    (Element)0,
+                    _end,
+                    (Element)1
+                ));
+        }
+
+        public void End() => _actionSet.AddAction(Element.End());
+    }
+
     public class SwitchBuilder
     {
         public bool AutoBreak = true;

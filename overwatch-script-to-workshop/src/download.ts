@@ -3,7 +3,8 @@ import exec = require('child_process');
 import fs = require('fs');
 import yauzl = require("yauzl");
 import axios from 'axios';
-import glob = require('glob');
+const util = require('util');
+const glob = util.promisify(require('glob'));
 import path = require('path');
 import { defaultServerFolder } from './extensions';
 import { config } from './config';
@@ -199,10 +200,10 @@ export async function chooseAsset(assets: any[], token: CancellationToken = null
 		let fileName = names[i].replace(/\.[^/.]+$/, "");
 
 		// Cross-platform
-		if (dotnetInstalled && fileName.endsWith('crossplatform'))
-			return urls[i]
+		// if (dotnetInstalled && fileName.endsWith('crossplatform'))
+		// 	return urls[i]
 		// Win x32
-		else if (fileName.endsWith('win-x86') && process.arch == 'x32' && process.platform == 'win32')
+		if (fileName.endsWith('win-x86') && process.arch == 'x32' && process.platform == 'win32')
 			return urls[i];
 		// Win x64
 		else if (fileName.endsWith('win-x64') && process.arch == 'x64' && process.platform == 'win32')
@@ -254,25 +255,48 @@ export async function locateAndApplyServerModule(root: string): Promise<boolean>
 }
 
 async function getServerModuleFromFolder(root: string): Promise<string> {
-	let pattern = process.platform == 'win32' ? '**/Deltinteger.@(dll|exe)' : '**/Deltinteger?(.dll)'
+	let versionGlob = await aglob('**/Version', {cwd: root});
+	if (!versionGlob.matches || versionGlob.matches.length == 0)
+	{
+		let pattern = process.platform == 'win32' ? '**/Deltinteger.@(dll|exe)' : '**/Deltinteger?(.dll)';
+		let generic = await aglob(pattern, {cwd: root, nocase: true});
 
-	return new Promise<string>((resolve, reject) => glob(pattern, {cwd: root, nocase: true}, async (error, matches: string[]) => {
-		if (matches.length == 0)
-		{
-			resolve(null);
-			return;
-		}
+		if (generic.matches && generic.matches.length > 0)
+			return getServerModuleFromFile(generic[0]);
+		else
+			return null;
+	}
+
+	for (const file of versionGlob.matches) {
+		let versionPath = path.join(root, file);
+		let version = await getVersionInfo(versionPath, null);
+
+		let exec;
+		switch (version.arch) {
+			case 'win-x64':
+			case 'win-x86':
+				exec = 'Deltinteger.exe';
+				break;
+			
+			case 'linux-x64':
+				exec = 'Deltinteger';
+				break
 		
-		for (const match of matches) {
-			let result = getServerModuleFromFile(path.join(root, match));
-			if (result)
-			{
-				resolve(result);
-				return;
-			}
+			case 'crossplatform':
+			default:
+				exec = 'Deltinteger.dll';
+				break;
 		}
-		resolve(null);
-	}));
+		exec = path.join(path.dirname(versionPath), exec);
+
+		if (fs.existsSync(exec))
+			return getServerModuleFromFile(exec);
+	}
+	return null;
+}
+
+function aglob(pattern:string, options:any): Promise<{error: string, matches: string[]}> {
+	return new Promise((resolve, reject) => glob(pattern, options, (error, matches) => resolve({error: error, matches: matches})));
 }
 
 export function getServerModuleFromFile(file: string): string {
@@ -283,7 +307,7 @@ export function getServerModuleFromFile(file: string): string {
 	return null;
 }
 
-export async function getVersionInfo(file: string): Promise<{arch:string, version:string}>
+export async function getVersionInfo(file: string, error: (ex) => void): Promise<{arch:string, version:string}>
 {
 	let versionFile = path.join(path.dirname(file), 'Version');
 	let def = {
@@ -315,7 +339,7 @@ export async function getVersionInfo(file: string): Promise<{arch:string, versio
 	}
 	catch (ex)
 	{
-		window.showErrorMessage('Failed to retrieve version info: ' + ex);
+		if (error != null) error(ex);
 		return def;
 	}
 }

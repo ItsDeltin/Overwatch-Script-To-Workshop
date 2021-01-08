@@ -9,7 +9,7 @@ using Deltin.Deltinteger.Parse.FunctionBuilder;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedMethod : DefinedFunction
+    public class DefinedMethod : DefinedFunction, IParameterCallable
     {
         /// <summary>The context of the function.</summary>
         public FunctionContext Context { get; }
@@ -38,6 +38,8 @@ namespace Deltin.Deltinteger.Parse
 
         /// <summary>The function's subroutine info.</summary>
         public SubroutineInfo SubroutineInfo { get; set; }
+
+        bool IParameterCallable.RestrictedValuesAreFatal => !IsSubroutine;
 
         public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, FunctionContext context, CodeType containingType)
             : base(parseInfo, context.Identifier.Text, new Location(parseInfo.Script.Uri, context.Identifier.Range))

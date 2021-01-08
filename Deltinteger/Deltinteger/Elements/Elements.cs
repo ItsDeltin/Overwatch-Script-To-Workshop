@@ -231,11 +231,15 @@ namespace Deltin.Deltinteger.Elements
         public static Element Subtract(IWorkshopTree a, IWorkshopTree b) => Part("Subtract", a, b);
         public static Element And(IWorkshopTree a, IWorkshopTree b) => Part("And", a, b);
         public static Element Or(IWorkshopTree a, IWorkshopTree b) => Part("Or", a, b);
+        public static Element Min(IWorkshopTree a, IWorkshopTree b) => Part("Min", a, b);
+        public static Element Max(IWorkshopTree a, IWorkshopTree b) => Part("Max", a, b);
         public static Element If(IWorkshopTree expression) => Part("If", expression);
         public static Element ElseIf(IWorkshopTree expression) => Part("Else If", expression);
         public static Element Else() => Part("Else");
         public static Element End() => Part("End");
         public static Element While(IWorkshopTree expression) => Part("While", expression);
+        public static Element Break() => Part("Break");
+        public static Element Continue() => Part("Continue");
         public static Element TimeElapsed() => Part("Total Time Elapsed");
         public static Element Wait() => Part("Wait", Num(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"));
         public static Element LoopIfConditionIsTrue() => Part("Loop If Condition Is True");

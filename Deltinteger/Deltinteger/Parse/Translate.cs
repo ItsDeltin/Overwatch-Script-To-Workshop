@@ -349,6 +349,7 @@ namespace Deltin.Deltinteger.Parse
             // Pathfinder classes
             AddType(new Pathfinder.PathmapClass(deltinScript));
             AddType(new Pathfinder.PathResolveClass(this));
+            AddType(new Pathfinder.BakemapClass());
             // Constant lambda types.
             AddType(new Lambda.BlockLambda(_anyType));
             AddType(new Lambda.ValueBlockLambda(_anyType));

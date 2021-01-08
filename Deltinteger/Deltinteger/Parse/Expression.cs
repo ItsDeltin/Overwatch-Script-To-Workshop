@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
         public ValueInArrayAction(ParseInfo parseInfo, Scope scope, ValueInArray context)
         {
             Expression = parseInfo.GetExpression(scope, context.Array);
-            Index = new IExpression[] { parseInfo.GetExpression(scope, context.Index) };
+            Index = new IExpression[] { parseInfo.ClearContextual().GetExpression(scope, context.Index) };
             this.parseInfo = parseInfo;
         }
 

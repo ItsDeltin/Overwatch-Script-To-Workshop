@@ -157,12 +157,22 @@ namespace Deltin.Deltinteger
         public RestrictedCallType CallType { get; }
         public Location CallRange { get; }
         public string Message { get; }
+        public bool Fatal { get; }
 
-        public RestrictedCall(RestrictedCallType callType, Location callRange, string message)
+        public RestrictedCall(RestrictedCallType callType, Location callRange, string message, bool fatal = true)
         {
             CallType = callType;
             CallRange = callRange;
             Message = message;
+            Fatal = fatal;
+        }
+
+        public void AddDiagnostic(FileDiagnostics diagnostics)
+        {
+            if (Fatal)
+                diagnostics.Error(Message, CallRange.range);
+            else
+                diagnostics.Warning(Message, CallRange.range);
         }
 
         public static string StringFromCallType(RestrictedCallType type)
