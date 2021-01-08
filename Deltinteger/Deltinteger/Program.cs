@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v2.0-beta.3";
+        public const string VERSION = "v2.0-beta.6";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -251,7 +251,7 @@ namespace Deltin.Deltinteger
             // Run .csv file
             if (ext == ".csv")
             {
-                Pathmap map = Pathmap.ImportFromCSVFile(script, new ConsolePathmapErrorHandler(new Log("Pathmap")));
+                Pathmap map = Pathmap.ImportFromActionSetFile(script, new ConsolePathmapErrorHandler(new Log("Pathmap")));
                 if (map != null)
                 {
                     string result = map.ExportAsJSON();

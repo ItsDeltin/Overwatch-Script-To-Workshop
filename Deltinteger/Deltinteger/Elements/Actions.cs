@@ -1059,7 +1059,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Assist ID", ValueType.Any, null)]
     public class A_StopAssist : Element { }
 
-    [ElementData("Stop All Assist")]
+    [ElementData("Stop All Assists")]
     public class A_StopAllAssist : Element { }
 
     [ElementData("Create Progress Bar HUD Text")]

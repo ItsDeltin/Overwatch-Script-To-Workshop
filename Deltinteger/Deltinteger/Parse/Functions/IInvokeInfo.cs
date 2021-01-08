@@ -15,6 +15,14 @@ namespace Deltin.Deltinteger.Parse
         public IInvokeResult Invoke(InvokeData invokeInfo)
         {
             var parseInfo = invokeInfo.ParseInfo;
+
+            if (invokeInfo.Target is CallMethodGroup == false)
+            {
+                parseInfo.Script.Diagnostics.Error("Method name expected", invokeInfo.TargetRange);
+                CallMethodAction.DiscardParameters(parseInfo, invokeInfo.Getter, invokeInfo.Context.Parameters);
+                return null;
+            }
+
             MethodGroup group = ((CallMethodGroup)invokeInfo.Target).Group;
 
             // Make an OverloadChooser to choose an Overload.

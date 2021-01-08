@@ -319,10 +319,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
                 else throw new NotImplementedException();
             }
+            // Type cast operator.
             else if (iop is TypeCastInfo typeCastOp)
             {
                 var value = Operands.Pop();
                 Operands.Push(EndNodeFrom(new TypeCast(typeCastOp.CastingTo, value), typeCastOp.StartPosition));
+            }
+            // Array operator
+            else if (iop is ValueInArrayInfo valueInArray)
+            {
+                var value = Operands.Pop();
+                Operands.Push(new ValueInArray(value, valueInArray.Index, valueInArray.EndPosition));
+            }
+            // Invoke
+            else if (iop is InvokeInfo invoke)
+            {
+                var value = Operands.Pop();
+                Operands.Push(new FunctionExpression(value, invoke.LeftParentheses, invoke.RightParentheses, invoke.Values));
             }
         }
 
@@ -427,10 +440,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     expression = GetSubExpression();
                     break;
             }
-            Operands.Push(GetArrayAndInvokes(expression));
+            Operands.Push(expression);
+            GetArrayAndInvokes();
         }
 
-        public IParseExpression GetArrayAndInvokes(IParseExpression expression)
+        public void GetArrayAndInvokes()
         {
             while (true)
             {
@@ -439,9 +453,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 {
                     IParseExpression index = GetContainExpression();
                     // End the closing square bracket.
-                    ParseExpected(TokenType.SquareBracket_Close);
-                    // Update the expression.
-                    expression = EndNodeFrom(new ValueInArray(expression, index, Lexer.Tokens[Token - 1]), expression.Range.Start);
+                    var closing = ParseExpected(TokenType.SquareBracket_Close) ?? Current;
+                    // Push operator
+                    PushOperator(new ValueInArrayInfo(index, closing.Range.End));
                 }
                 // Invoke
                 else if (ParseOptional(TokenType.Parentheses_Open, out Token leftParentheses))
@@ -449,14 +463,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Parse parameters.
                     var values = ParseParameterValues();
                     // End the parentheses.
-                    Token rightParentheses = ParseExpected(TokenType.Parentheses_Close);
+                    Token rightParentheses = ParseExpected(TokenType.Parentheses_Close) ?? Current;
                     // Update the expression.
-                    expression = EndNodeFrom(new FunctionExpression(expression, leftParentheses, rightParentheses, values), expression.Range.Start);
+                    PushOperator(new InvokeInfo(leftParentheses, rightParentheses, values));
                 }
                 // No more array indices or invocations.
                 else break;
             }
-            return expression;
         }
 
         IParseExpression GetSubExpression()
@@ -521,7 +534,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 PushOperator(op);
                 op.Operator.RhsHandler.Get(this);
             }
-            while (Operators.Peek().Precedence > 0)
+            while (Operators.Peek().Source.Precedence > 0)
                 PopOperator();
         }
 
