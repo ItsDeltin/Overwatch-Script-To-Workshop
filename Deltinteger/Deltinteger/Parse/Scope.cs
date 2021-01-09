@@ -538,7 +538,7 @@ namespace Deltin.Deltinteger.Parse
             // Add custom methods
             GlobalFunctions.GlobalFunctions.Add(deltinScript, globalScope);
             
-            globalScope.AddNativeMethod(new Lambda.WaitAsyncFunction());
+            globalScope.AddNativeMethod(new Lambda.WaitAsyncFunction(deltinScript.Types));
             return globalScope;
         }
 

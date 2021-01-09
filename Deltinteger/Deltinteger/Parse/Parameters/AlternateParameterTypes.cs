@@ -16,12 +16,12 @@ namespace Deltin.Deltinteger.Parse
         private VariableType VariableType { get; }
         private VariableResolveOptions Options { get; }
 
-        public VariableParameter(string name, string documentation, VariableResolveOptions options = null) : base(name, documentation)
+        public VariableParameter(string name, string documentation, ITypeSupplier typeSupplier, VariableResolveOptions options = null) : base(name, documentation, typeSupplier.Any())
         {
             VariableType = VariableType.Dynamic;
             Options = options ?? new VariableResolveOptions();
         }
-        public VariableParameter(string name, string documentation, VariableType variableType, VariableResolveOptions options = null) : base(name, documentation)
+        public VariableParameter(string name, string documentation, VariableType variableType, ITypeSupplier typeSupplier, VariableResolveOptions options = null) : base(name, documentation, typeSupplier.Any())
         {
             if (variableType == VariableType.ElementReference) throw new Exception("Only the variable types Dynamic, Global, and Player is valid.");
             VariableType = variableType;
@@ -53,13 +53,11 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstBoolParameter : CodeParameter
     {
-        private bool DefaultConstValue { get; }
 
-        public ConstBoolParameter(string name, string documentation) : base(name, documentation) { }
-        public ConstBoolParameter(string name, string documentation, bool defaultValue)
-            : base(name, documentation, new ExpressionOrWorkshopValue(defaultValue ? Element.True() : Element.False()))
+        public ConstBoolParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Boolean()) { }
+        public ConstBoolParameter(string name, string documentation, ITypeSupplier typeSupplier, bool defaultValue)
+            : base(name, documentation, typeSupplier.Boolean(), new ExpressionOrWorkshopValue(defaultValue ? Element.True() : Element.False()))
         {
-            DefaultConstValue = defaultValue;
         }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
@@ -81,8 +79,8 @@ namespace Deltin.Deltinteger.Parse
     {
         private double DefaultConstValue { get; }
 
-        public ConstNumberParameter(string name, string documentation) : base(name, documentation) {}
-        public ConstNumberParameter(string name, string documentation, double defaultValue) : base(name, documentation, new ExpressionOrWorkshopValue(Element.Num(defaultValue)))
+        public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Number()) {}
+        public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier, double defaultValue) : base(name, documentation, typeSupplier.Number(), new ExpressionOrWorkshopValue(Element.Num(defaultValue)))
         {
             DefaultConstValue = defaultValue;
         }
@@ -103,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstStringParameter : CodeParameter
     {
-        public ConstStringParameter(string name, string documentation) : base(name, documentation) { }
+        public ConstStringParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.String()) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
@@ -117,7 +115,7 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstHeroParameter : CodeParameter
     {
-        public ConstHeroParameter(string name, string documentation) : base(name, documentation) { }
+        public ConstHeroParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Hero()) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
@@ -159,7 +157,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="parameterName">The name of the parameter.</param>
         /// <param name="description">The parameter's description. Can be null.</param>
         /// <param name="fileTypes">The expected file types. Can be null.</param>
-        public FileParameter(string parameterName, string description, params string[] fileTypes) : base(parameterName, description)
+        public FileParameter(string parameterName, string description, ITypeSupplier typeSupplier, params string[] fileTypes) : base(parameterName, description, typeSupplier.String())
         {
             if (fileTypes != null)
             {

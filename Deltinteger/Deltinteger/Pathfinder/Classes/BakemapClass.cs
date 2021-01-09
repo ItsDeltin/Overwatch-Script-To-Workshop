@@ -8,9 +8,11 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public ObjectVariable NodeBake { get; private set; }
         public ObjectVariable Pathmap { get; private set; }
+        private readonly ITypeSupplier _types;
 
-        public BakemapClass() : base("Bakemap")
+        public BakemapClass(ITypeSupplier types) : base("Bakemap")
         {
+            _types = types;
         }
 
         public override void ResolveElements()
@@ -28,8 +30,8 @@ namespace Deltin.Deltinteger.Pathfinder
             Name = "Pathfind",
             Documentation = "Pathfinds specified players to the destination.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("players", "The players to pathfind."),
-                new CodeParameter("destination", "The position to pathfind to.")
+                new CodeParameter("players", "The players to pathfind.", _types.Players()),
+                new CodeParameter("destination", "The position to pathfind to.", _types.Vector())
             },
             Action = (actionSet, call) =>
             {

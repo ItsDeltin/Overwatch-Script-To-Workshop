@@ -154,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
         private FuncMethod SetAbilityEnabled(string abilityName) => new FuncMethodBuilder() {
             Name = "Set" + abilityName.Replace(" ", "") + "Enabled",
             Documentation = $"Enables or disables the {abilityName.ToLower()} for one or more players.",
-            Parameters = new[] { new CodeParameter("enabled", $"Specifies whether the player or players are able to use their {abilityName.ToLower()}.") },
+            Parameters = new[] { new CodeParameter("enabled", $"Specifies whether the player or players are able to use their {abilityName.ToLower()}.", _supplier.Boolean()) },
             Action = (actionSet, methodCall) => Element.Part("Set " + abilityName + " Enabled", actionSet.CurrentObject, methodCall.Get(0))
         };
     }

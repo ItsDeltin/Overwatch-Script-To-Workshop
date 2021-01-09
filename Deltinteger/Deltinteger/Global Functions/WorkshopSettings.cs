@@ -13,10 +13,10 @@ namespace Deltin.Deltinteger.GlobalFunctions
             Name = "WorkshopSettingHero",
             Documentation = "Provides the value of a new hero setting that will appear in the Workshop Settings card as a combo box.",
             Parameters = new CodeParameter[] {
-                new ConstStringParameter("category", "The name of the category in which this setting can be found."),
-                new ConstStringParameter("name", "The name of this setting."),
-                new ConstHeroParameter("default", "The default value for this setting."),
-                new ConstNumberParameter("sortOrder", "The sort order of this setting relative to other settings in the same category. Settings with a higher sort order will come after settings with a lower sort order.")
+                new ConstStringParameter("category", "The name of the category in which this setting can be found.", deltinScript.Types),
+                new ConstStringParameter("name", "The name of this setting.", deltinScript.Types),
+                new ConstHeroParameter("default", "The default value for this setting.", deltinScript.Types),
+                new ConstNumberParameter("sortOrder", "The sort order of this setting relative to other settings in the same category. Settings with a higher sort order will come after settings with a lower sort order.", deltinScript.Types)
             },
             Action = (actionSet, methodCall) => Element.Part("Workshop Setting Hero",
                 Element.CustomString((string)methodCall.AdditionalParameterData[0]),
@@ -31,11 +31,11 @@ namespace Deltin.Deltinteger.GlobalFunctions
             Name = "WorkshopSettingCombo",
             Documentation = "Proves the value (a choice of strings) of a new option setting that will appear in the Workshop Seettings card as a combo box. This value returns the index of the selected choice.",
             Parameters = new CodeParameter[] {
-                new ConstStringParameter("category", "The name of the category in which this setting can be found."),
-                new ConstStringParameter("name", "The name of this setting."),
-                new ConstNumberParameter("default", "The default value for this setting."),
-                new ConstStringArrayParameter("options", "The options for this setting."),
-                new ConstNumberParameter("sortOrder", "The sort order of this setting relative to other settings in the same category. Settings with a higher sort order will come after settings with a lower sort order.")
+                new ConstStringParameter("category", "The name of the category in which this setting can be found.", deltinScript.Types),
+                new ConstStringParameter("name", "The name of this setting.", deltinScript.Types),
+                new ConstNumberParameter("default", "The default value for this setting.", deltinScript.Types),
+                new ConstStringArrayParameter("options", "The options for this setting.", deltinScript.Types),
+                new ConstNumberParameter("sortOrder", "The sort order of this setting relative to other settings in the same category. Settings with a higher sort order will come after settings with a lower sort order.", deltinScript.Types)
             },
             Action = (actionSet, methodCall) => Element.Part("Workshop Setting Combo",
                 Element.CustomString((string)methodCall.AdditionalParameterData[0]),
@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
 
         class ConstStringArrayParameter : CodeParameter
         {
-            public ConstStringArrayParameter(string name, string documentation) : base(name, documentation) { }
+            public ConstStringArrayParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Array(typeSupplier.String())) { }
 
             public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
             {

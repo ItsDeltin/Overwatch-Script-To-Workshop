@@ -7,22 +7,24 @@ namespace Deltin.Deltinteger.Elements
     {
         CodeType Default();
         CodeType Any();
-        CodeType AnyArray();
         CodeType Boolean();
         CodeType Number();
         CodeType String();
-        CodeType Player();
-        CodeType Players();
-        CodeType PlayerArray();
         CodeType Vector();
-        CodeType VectorArray();
-        CodeType PlayerOrVector();
+        CodeType Unknown();
+        CodeType Player();
+        CodeType EnumType(string typeName);
+        CodeType Array(CodeType type) => new ArrayType(this, type);
+        CodeType AnyArray() => new ArrayType(this, Any());
+        CodeType NumberArray() => new ArrayType(this, Number());
+        CodeType VectorArray() => new ArrayType(this, Vector());
+        CodeType PlayerArray() => new ArrayType(this, Player());
+        CodeType Players() => new PipeType(PlayerArray(), Player());
+        CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         CodeType Hero() => EnumType("Hero");
         CodeType Map() => EnumType("Map");
         CodeType GameMode() => EnumType("GameMode");
         CodeType Team() => EnumType("Team");
-        CodeType EnumType(string typeName);
-        CodeType Unknown();
         CodeType Button() => EnumType("Button");
         CodeType Color() => EnumType("Color");
 

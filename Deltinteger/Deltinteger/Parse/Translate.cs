@@ -349,7 +349,7 @@ namespace Deltin.Deltinteger.Parse
             // Pathfinder classes
             AddType(new Pathfinder.PathmapClass(deltinScript));
             AddType(new Pathfinder.PathResolveClass(this));
-            AddType(new Pathfinder.BakemapClass());
+            AddType(new Pathfinder.BakemapClass(this));
             // Constant lambda types.
             AddType(new Lambda.BlockLambda(_anyType));
             AddType(new Lambda.ValueBlockLambda(_anyType));
@@ -408,11 +408,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Number() => _numberType;
         public CodeType String() => _stringType;
         public CodeType Player() => _playerType;
-        public CodeType Players() => new PipeType(_playerType, PlayerArray());
-        public CodeType PlayerArray() => new ArrayType(this, _playerType);
         public CodeType Vector() => _vectorType;
-        public CodeType VectorArray() => new ArrayType(this, _vectorType);
-        public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         public CodeType Unknown() => _unknownType;
 
         public CodeType EnumType(string typeName)

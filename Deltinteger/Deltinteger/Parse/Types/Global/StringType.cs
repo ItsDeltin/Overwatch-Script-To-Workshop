@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = "Inserts an array of objects into a string.",
             ReturnType = supplier.String(),
             Parameters = new CodeParameter[] {
-                new StringFormatArrayParameter()
+                new StringFormatArrayParameter(supplier)
             },
             OnCall = (parseInfo, range) => {
                 // Resolve the source usage with StringFormat.
@@ -107,7 +107,7 @@ namespace Deltin.Deltinteger.Parse
 
     class StringFormatArrayParameter : CodeParameter
     {
-        public StringFormatArrayParameter() : base("args") {}
+        public StringFormatArrayParameter(ITypeSupplier types) : base("args", types.Array(types.String())) {}
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {

@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
             Name = "DistanceTo",
             Documentation = "Gets the distance between 2 vectors.",
             ReturnType = _typeSupplier.Number(),
-            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector or player to get the distance to.") },
+            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector or player to get the distance to.", _typeSupplier.PlayerOrVector()) },
             Action = (ActionSet actionSet, MethodCall call) => Element.DistanceBetween(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
@@ -114,7 +114,7 @@ namespace Deltin.Deltinteger.Parse
             Name = "CrossProduct",
             Documentation = "The cross product of the specified vector.",
             ReturnType = this,
-            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the cross product to.") },
+            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the cross product to.", _typeSupplier.Vector()) },
             Action = (ActionSet actionSet, MethodCall call) => Element.CrossProduct(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
@@ -122,7 +122,7 @@ namespace Deltin.Deltinteger.Parse
             Name = "DotProduct",
             Documentation = "Returns what amount of one vector goes in the direction of another.",
             ReturnType = _typeSupplier.Number(),
-            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the dot product to.") },
+            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the dot product to.", _typeSupplier.Vector()) },
             Action = (ActionSet actionSet, MethodCall call) => Element.DotProduct(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
@@ -137,7 +137,7 @@ namespace Deltin.Deltinteger.Parse
             Name = "DirectionTowards",
             Documentation = "The unit-length direction vector to another vector.",
             ReturnType = this,
-            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the direction towards.") },
+            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the direction towards.", _typeSupplier.Vector()) },
             Action = (ActionSet actionSet, MethodCall call) => Element.DirectionTowards(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
@@ -145,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
             Name = "FarthestPlayer",
             Documentation = "The farthest player from the vector, optionally restricted by team.",
             ReturnType = _typeSupplier.Player(),
-            Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the farthest player with.", new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
+            Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the farthest player with.", _typeSupplier.Team(), new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Farthest Player From", actionSet.CurrentObject, call.ParameterValues[0])
         };
 
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
             Name = "ClosestPlayer",
             Documentation = "The closest player to the vector, optionally restricted by team.",
             ReturnType = _typeSupplier.Player(),
-            Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the closest player with.", new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
+            Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the closest player with.", _typeSupplier.Team(), new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Closest Player To", actionSet.CurrentObject, call.ParameterValues[0])
         };
 
@@ -162,7 +162,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = "Whether the vector has line of sight with the specified vector.",
             ReturnType = _typeSupplier.Boolean(),
             Parameters = new CodeParameter[] {
-                new CodeParameter("other", "The vector to determine line of site."),
+                new CodeParameter("other", "The vector to determine line of site.", _typeSupplier.Vector()),
                 new CodeParameter("barriers", "Defines how barriers affect line of sight.", _typeSupplier.EnumType("BarrierLOS"), new ExpressionOrWorkshopValue(ElementRoot.Instance.GetEnumValue("BarrierLOS", "NoBarriersBlock")))
             },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Is In Line Of Sight", actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
@@ -172,7 +172,7 @@ namespace Deltin.Deltinteger.Parse
             Name = "Towards",
             Documentation = "The displacement vector from the vector to another.",
             ReturnType = this,
-            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the displacement towards.") },
+            Parameters = new CodeParameter[] { new CodeParameter("other", "The vector to get the displacement towards.", _typeSupplier.Vector()) },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Vector Towards", actionSet.CurrentObject, call.ParameterValues[0])
         };
 
@@ -181,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = "The vector in local coordinates corresponding to the vector in world coordinates.",
             ReturnType = this,
             Parameters = new CodeParameter[] {
-                new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
+                new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative.", _typeSupplier.Player()),
                 new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", _typeSupplier.EnumType("Transformation"))
             },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Local Vector Of", actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
@@ -192,7 +192,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = "The vector in world coordinates corresponding to the vector in local coordinates.",
             ReturnType = this,
             Parameters = new CodeParameter[] {
-                new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
+                new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative.", _typeSupplier.Player()),
                 new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", _typeSupplier.EnumType("Transformation"))
             },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("World Vector Of", actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])

@@ -54,6 +54,7 @@ namespace Deltin.Deltinteger.Elements
                         name,
                         documentation,
                         function.Parameters[i].VariableReferenceIsGlobal.Value ? VariableType.Global : VariableType.Player,
+                        typeSupplier,
                         new VariableResolveOptions() { CanBeIndexed = false, FullVariable = true }
                     );
                 }
