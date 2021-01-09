@@ -251,6 +251,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element DotProduct(IWorkshopTree a, IWorkshopTree b) => Part("Dot Product", a, b);
         public static Element Normalize(IWorkshopTree a) => Part("Normalize", a);
         public static Element DirectionTowards(IWorkshopTree a, IWorkshopTree b) => Part("Direction Towards", a, b);
+        public static Element MagnitudeOf(IWorkshopTree vector) => Part("Magnitude Of", vector);
         public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
         public static Element EyePosition(IWorkshopTree player) => Part("Eye Position", player);
         public static Element FacingDirectionOf(IWorkshopTree player) => Part("Facing Direction Of", player);

@@ -75,17 +75,31 @@ namespace Deltin.Deltinteger.Parse
 
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsButtonHeld",
-                Parameters = new CodeParameter[] { new CodeParameter("button", _supplier.EnumType("Button")) },
+                Parameters = new[] { new CodeParameter("button", _supplier.EnumType("Button")) },
                 ReturnType = _supplier.Boolean(),
                 Action = (set, call) => Element.Part("Is Button Held", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is holding a button."
             });
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsCommunicating",
-                Parameters = new CodeParameter[] { new CodeParameter("communication", _supplier.EnumType("Communication")) },
+                Parameters = new[] { new CodeParameter("communication", _supplier.EnumType("Communication")) },
                 ReturnType = _supplier.Boolean(),
                 Action = (set, call) => Element.Part("Is Communicating", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is communicating."
+            });
+            AddFunc(new FuncMethodBuilder() {
+               Name = "Stat",
+               Parameters = new[] { new CodeParameter("stat", _supplier.EnumType("PlayerStat")) },
+               ReturnType = _supplier.Number(),
+               Action = (set, call) => Element.Part("Player Stat", set.CurrentObject, call.ParameterValues[0]),
+               Documentation = "Provides a statistic of the specified Player (limited to the current match). Statistics are only gathered when the game is in progress. Dummy bots do not gather statistics.",
+            });
+            AddFunc(new FuncMethodBuilder() {
+               Name = "HeroStat",
+               Parameters = new[] { new CodeParameter("hero", _supplier.Hero()), new CodeParameter("stat", _supplier.EnumType("PlayerHeroStat")) },
+               ReturnType = _supplier.Number(),
+               Action = (set, call) => Element.Part("Player Hero Stat", set.CurrentObject, call.ParameterValues[0], call.ParameterValues[1]),
+               Documentation = "Provides a statistic of the specified Player's time playing a specific hero (limited to the current match). Statistics are only gathered when the game is in progress. Dummy bots do not gather statistics.",
             });
             AddFunc("Position", _supplier.Vector(), set => Element.PositionOf(set.CurrentObject), "The position of the player.");
             AddFunc("EyePosition", _supplier.Vector(), set => Element.EyePosition(set.CurrentObject), "The position of the player's head.");

@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Parse
 
         private InternalVar HorizontalAngle;
         private InternalVar VerticalAngle;
+        private InternalVar Magnitude;
 
         private InternalVar Zero;
 
@@ -30,12 +31,13 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
-            X = CreateInternalVar("X", "The X component of the vector.");
-            Y = CreateInternalVar("Y", "The Y component of the vector.");
-            Z = CreateInternalVar("Z", "The Z component of the vector.");
-            HorizontalAngle = CreateInternalVar("HorizontalAngle", "The horizontal angle of the vector.");
-            VerticalAngle = CreateInternalVar("VerticalAngle", "The vertical angle of the vector.");
-            Zero = CreateInternalVar("Zero", "Equal to `Vector(0, 0, 0)`.", true);
+            X = CreateInternalVar("X", "The X component of the vector.", _typeSupplier.Number());
+            Y = CreateInternalVar("Y", "The Y component of the vector.", _typeSupplier.Number());
+            Z = CreateInternalVar("Z", "The Z component of the vector.", _typeSupplier.Number());
+            HorizontalAngle = CreateInternalVar("HorizontalAngle", "The horizontal angle of the vector.", _typeSupplier.Number());
+            VerticalAngle = CreateInternalVar("VerticalAngle", "The vertical angle of the vector.", _typeSupplier.Number());
+            Magnitude = CreateInternalVar("Magnitude", "The magnitude of the vector.", _typeSupplier.Number());
+            Zero = CreateInternalVar("Zero", "Equal to `Vector(0, 0, 0)`.", _typeSupplier.Vector(), true);
 
             objectScope.AddNativeMethod(DistanceTo);
             objectScope.AddNativeMethod(CrossProduct);
@@ -59,16 +61,14 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        private InternalVar CreateInternalVar(string name, string documentation, bool isStatic = false)
+        private InternalVar CreateInternalVar(string name, string documentation, CodeType type, bool isStatic = false)
         {
             // Create the variable.
-            InternalVar newInternalVar = new InternalVar(name, CompletionItemKind.Property);
-
-            // Make the variable unsettable.
-            newInternalVar.IsSettable = false;
-
-            // Set the documentation.
-            newInternalVar.Documentation = documentation;
+            InternalVar newInternalVar = new InternalVar(name, CompletionItemKind.Property) {
+                IsSettable = false, // Make the variable unsettable.
+                Documentation = documentation, // Set the documentation.
+                CodeType = type // Set the type.
+            };
 
             // Add the variable to the object scope.
             if (!isStatic) objectScope.AddNativeVariable(newInternalVar);
@@ -88,6 +88,7 @@ namespace Deltin.Deltinteger.Parse
             assigner.Add(X, Element.XOf(reference));
             assigner.Add(Y, Element.YOf(reference));
             assigner.Add(Z, Element.ZOf(reference));
+            assigner.Add(Magnitude, Element.MagnitudeOf(reference));
 
             assigner.Add(HorizontalAngle, Element.Part("Horizontal Angle From Direction", reference));
             assigner.Add(VerticalAngle, Element.Part("Vertical Angle From Direction", reference));
