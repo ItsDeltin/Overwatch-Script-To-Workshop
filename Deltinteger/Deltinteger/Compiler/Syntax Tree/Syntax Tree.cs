@@ -414,6 +414,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Token { get; }
         public string Value { get; }
         public List<IParseExpression> Formats { get; }
+        public bool ClassicFormatSyntax { get; }
 
         public StringExpression(Token localized, Token token)
         {
@@ -425,6 +426,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public StringExpression(Token localized, Token token, List<IParseExpression> formats) : this(localized, token)
         {
             Formats = formats;
+            ClassicFormatSyntax = true;
         }
 
         public override string ToString() => '"' + Value + '"';

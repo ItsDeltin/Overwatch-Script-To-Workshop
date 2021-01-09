@@ -107,7 +107,7 @@ namespace Deltin.Deltinteger.Parse
 
     class StringFormatArrayParameter : CodeParameter
     {
-        public StringFormatArrayParameter(ITypeSupplier types) : base("args", types.Array(types.String())) {}
+        public StringFormatArrayParameter(ITypeSupplier types) : base("args", types.AnyArray()) {}
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {

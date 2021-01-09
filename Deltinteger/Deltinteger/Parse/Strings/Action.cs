@@ -17,20 +17,22 @@ namespace Deltin.Deltinteger.Parse
             Kind = CompletionItemKind.Text
         }).ToArray();
 
-        private ParseInfo _parseInfo;
-        private DocRange _stringRange;
         public string Value { get; private set; }
         public bool Localized { get; private set; }
         public IExpression[] FormatParameters { get; }
         public IStringParse StringParseInfo { get; private set; }
+        private readonly ParseInfo _parseInfo;
+        private readonly DocRange _stringRange;
+        private readonly bool _classicFormatSyntax;
         private bool _shouldParse = true;
 
         public StringAction(ParseInfo parseInfo, Scope scope, StringExpression stringContext)
         {
             _parseInfo = parseInfo;
+            _stringRange = stringContext.Token.Range;
+            _classicFormatSyntax = stringContext.ClassicFormatSyntax;
             Value = stringContext.Value;
             Localized = stringContext.Localized;
-            _stringRange = stringContext.Token.Range;
 
             // Add completion if the string is localized.
             if (Localized)
@@ -56,17 +58,26 @@ namespace Deltin.Deltinteger.Parse
         private void ParseString()
         {
             StringParseInfo = StringSaverComponent.GetCachedString(Value, Localized);
+
+            // The string does not exist in the cache.
             if (StringParseInfo == null)
             {
+                // Parse the string.
                 try
                 {
-                    StringParseBase parser = Localized ?
-                        (StringParseBase)new ParseLocalizedString(_parseInfo, Value, _stringRange, FormatParameters.Length) :
-                        new ParseCustomString(_parseInfo, Value, _stringRange, FormatParameters.Length);
+                    // String parse info
+                    var stringParseInfo = new StringParseInfo(Value, _classicFormatSyntax);
+
+                    // Create the parser.
+                    StringParseBase parser = Localized ? (StringParseBase)new ParseLocalizedString(stringParseInfo) : new ParseCustomString(stringParseInfo);
                     StringParseInfo = parser.Parse();
+
+                    // Cache the string.
+                    _parseInfo.TranslateInfo.GetComponent<StringSaverComponent>().Strings.Add(StringParseInfo);
                 }
                 catch (StringParseFailedException ex)
                 {
+                    // Convert the exception to an error.
                     if (ex.StringIndex == -1)
                     {
                         _parseInfo.Script.Diagnostics.Error(ex.Message, _stringRange);
@@ -81,7 +92,27 @@ namespace Deltin.Deltinteger.Parse
                     }
                 }
             }
-            _parseInfo.TranslateInfo.GetComponent<StringSaverComponent>().Strings.Add(StringParseInfo);
+
+            if (StringParseInfo != null)
+            {
+                // If there is no current usage resolver, add the error.
+                if (_parseInfo.CurrentUsageResolver == null)
+                    AddStringFormatCountError();
+                else // Otherwise, wait for the usage to be resolved before deciding if the error should be added.
+                {
+                    _parseInfo.CurrentUsageResolver.OnResolve(usage => {
+                        // Add the error if the usage is not StringFormat.
+                        if (usage != UsageType.StringFormat)
+                            AddStringFormatCountError();
+                    });
+                }
+            }
+        }
+
+        void AddStringFormatCountError()
+        {
+            if (FormatParameters.Length != StringParseInfo.ArgCount)
+                _parseInfo.Script.Diagnostics.Error($"String format requires {{{StringParseInfo.ArgCount}}} arguments, got {FormatParameters.Length} values", _stringRange);
         }
 
         public Scope ReturningScope() => Type().GetObjectScope();
