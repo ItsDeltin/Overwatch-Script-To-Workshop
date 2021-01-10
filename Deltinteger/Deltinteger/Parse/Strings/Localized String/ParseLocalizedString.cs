@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -65,6 +66,8 @@ namespace Deltin.Deltinteger.Parse.Strings
                         {
                             int index = int.Parse(parameterString.Groups[FormatGroupNumber].Value);
                             formatParameters.Add(new LocalizedStringOrExpression(index));
+
+                            str.ArgCount = Math.Max(str.ArgCount, index + 1);
                         }
                         else
                         {
@@ -113,7 +116,7 @@ namespace Deltin.Deltinteger.Parse.Strings
         public string Original { get; }
         public string String { get; }
         public LocalizedStringOrExpression[] ParameterValues { get; set; }
-        public int ArgCount => ParameterValues.Length;
+        public int ArgCount { get; set; }
 
         public LocalizedString(string original, string str)
         {
