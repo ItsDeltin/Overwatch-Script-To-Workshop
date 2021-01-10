@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
         void AddStringFormatCountError()
         {
             if (FormatParameters.Length != StringParseInfo.ArgCount)
-                _parseInfo.Script.Diagnostics.Error($"String format requires {{{StringParseInfo.ArgCount}}} arguments, got {FormatParameters.Length} values", _stringRange);
+                _parseInfo.Script.Diagnostics.Error($"String format requires {StringParseInfo.ArgCount} arguments, got {FormatParameters.Length} values", _stringRange);
         }
 
         public Scope ReturningScope() => Type().GetObjectScope();

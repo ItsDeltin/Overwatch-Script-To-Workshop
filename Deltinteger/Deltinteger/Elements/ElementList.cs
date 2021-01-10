@@ -165,5 +165,11 @@ namespace Deltin.Deltinteger.Elements
             
             return functions.ToArray();
         }
+
+        public static void AddWorkshopFunctionsToScope(Scope scope, ITypeSupplier typeSupplier)
+        {
+            foreach (var function in GetWorkshopFunctions(typeSupplier))
+                scope.AddNativeMethod(function);
+        }
     }
 }

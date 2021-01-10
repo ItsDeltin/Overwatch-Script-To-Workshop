@@ -527,21 +527,6 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public static Scope GetGlobalScope(DeltinScript deltinScript)
-        {
-            Scope globalScope = new Scope();
-
-            // Add workshop methods
-            var workshopFunctions = ElementList.GetWorkshopFunctions(deltinScript.Types);
-            foreach (var func in workshopFunctions) globalScope.AddNativeMethod(func);
-            
-            // Add custom methods
-            GlobalFunctions.GlobalFunctions.Add(deltinScript, globalScope);
-            
-            globalScope.AddNativeMethod(new Lambda.WaitAsyncFunction(deltinScript.Types));
-            return globalScope;
-        }
-
         public bool ScopeContains(IScopeable element)
         {
             // Variable

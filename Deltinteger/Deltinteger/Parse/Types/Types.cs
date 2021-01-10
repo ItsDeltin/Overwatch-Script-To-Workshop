@@ -158,12 +158,15 @@ namespace Deltin.Deltinteger.Parse
             if (typeContext == null) return parseInfo.TranslateInfo.Types.Unknown();
 
             CodeType type;
+            bool doCall = true;
+
             if (typeContext.IsDefault)
             {
                 if (typeContext.Infer)
                     parseInfo.Script.Diagnostics.Hint("Unable to infer type", typeContext.Identifier.Range);
 
                 type = parseInfo.TranslateInfo.Types.Any();
+                doCall = false;
             }
             else
             {
@@ -189,7 +192,8 @@ namespace Deltin.Deltinteger.Parse
                     type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
             }
 
-            type.Call(parseInfo, typeContext.Identifier.Range);
+            if (doCall)
+                type.Call(parseInfo, typeContext.Identifier.Range);
 
             for (int i = 0; i < typeContext.ArrayCount; i++)
                 type = new ArrayType(parseInfo.TranslateInfo.Types, type);

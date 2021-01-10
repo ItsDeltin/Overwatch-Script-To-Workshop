@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -15,7 +16,7 @@ namespace Deltin.Deltinteger.Parse.Strings
             // Look for <#>s
             var formats = Regex.Matches(Value, FormatMatch).ToArray();
 
-            CustomStringGroup customStringGroup = new CustomStringGroup(Value, formats.Length);
+            CustomStringGroup customStringGroup = new CustomStringGroup(Value);
 
             // If there are no formats, return the custom string normally.
             if (formats.Length == 0)
@@ -38,6 +39,8 @@ namespace Deltin.Deltinteger.Parse.Strings
             for (int i = 0; i < formats.Length; i++)
             {
                 FormatParameter parameter = new FormatParameter(formats[i], FormatGroupNumber);
+
+                customStringGroup.ArgCount = Math.Max(customStringGroup.ArgCount, parameter.Parameter + 1);
 
                 // If there is already 3 unique IDs, create a new section.
                 if (unique.Count == 3 && !unique.Contains(parameter.Parameter))
@@ -91,13 +94,12 @@ namespace Deltin.Deltinteger.Parse.Strings
     class CustomStringGroup : IStringParse
     {
         public string Original { get; }
-        public int ArgCount { get; }
+        public int ArgCount { get; set; }
         public CustomStringSegment[] Segments { get; set; }
 
-        public CustomStringGroup(string original, int argCount)
+        public CustomStringGroup(string original)
         {
             Original = original;
-            ArgCount = argCount;
         }
     
         public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters)

@@ -9,6 +9,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
             var functions = GetFunctions(deltinScript);
             foreach (var function in functions)
                 scope.AddNativeMethod(function);
+            scope.AddNativeMethod(new Parse.Lambda.WaitAsyncFunction(deltinScript.Types));
         }
 
         public static IMethod[] GetFunctions(DeltinScript deltinScript) => new IMethod[] {
