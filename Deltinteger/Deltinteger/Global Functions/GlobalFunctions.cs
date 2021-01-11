@@ -13,22 +13,30 @@ namespace Deltin.Deltinteger.GlobalFunctions
         }
 
         public static IMethod[] GetFunctions(DeltinScript deltinScript) => new IMethod[] {
-            CustomColor(deltinScript),
-
-            ModifyVariable(deltinScript),
-
+            AngleFromVectors(deltinScript),
             ChaseVariableAtRate(deltinScript),
             ChaseVariableOverTime(deltinScript),
-            StopChasingVariable(deltinScript),
-
             ClassMemory(deltinScript),
             ClassMemoryRemaining(deltinScript),
             ClassMemoryUsed(deltinScript),
-
-            WorkshopSettingHero(deltinScript),
+            CompareMap(deltinScript),
+            CustomColor(deltinScript),
+            Destination(deltinScript),
+            DestroyDummyBot(deltinScript),
+            DoesLineIntersectSphere(deltinScript),
+            InsertValueInArray(deltinScript),
+            LinearInterpolate(deltinScript),
+            LinearInterpolateDistance(deltinScript),
+            LinePlaneIntersection(deltinScript),
+            Midpoint(deltinScript),
+            MinWait(),
+            ModifyVariable(deltinScript),
+            Pi(deltinScript),
+            RemoveFromArrayAtIndex(deltinScript),
+            SphereHitboxRaycast(deltinScript),
+            StopChasingVariable(deltinScript),
             WorkshopSettingCombo(deltinScript),
-
-            MinWait()
+            WorkshopSettingHero(deltinScript)
         };
     }
 }

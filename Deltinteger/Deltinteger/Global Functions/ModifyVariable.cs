@@ -1,8 +1,5 @@
-using System.Linq;
-using System.Collections.Generic;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.GlobalFunctions
 {
