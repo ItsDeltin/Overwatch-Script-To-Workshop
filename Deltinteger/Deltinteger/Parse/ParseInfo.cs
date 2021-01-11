@@ -295,7 +295,7 @@ namespace Deltin.Deltinteger.Parse
                 if (referencer.RequiresCapture)
                     _parseInfo.LocalVariableAccessed(referencer);
 
-                return new CallVariableAction(referencer, index);
+                return new CallVariableAction(_parseInfo.TranslateInfo.Types, referencer, index);
             }
 
             // Check value in array.
