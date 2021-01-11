@@ -160,6 +160,9 @@ namespace Deltin.Deltinteger.Parse
                         if (newVar.VariableType == VariableType.Player)
                             PlayerVariableScope.CopyVariable(newVar);
                     }
+            
+            ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
+            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
 
             // Get the function declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -180,9 +183,6 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.GetMacro(RulesetScope, RulesetScope, macroVar);
                 }
             }
-
-            ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
-            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
 
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
             foreach (var apply in _applyBlocks) apply.SetupParameters();
