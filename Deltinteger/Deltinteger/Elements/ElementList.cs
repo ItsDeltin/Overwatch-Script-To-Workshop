@@ -120,7 +120,7 @@ namespace Deltin.Deltinteger.Elements
             Element element = Element.Part(_function, methodCall.ParameterValues);
             element.Comment = methodCall.ActionComment;
 
-            if (!DoesReturnValue)
+            if (element.Function is ElementJsonAction)
             {
                 actionSet.AddAction(element);
 
