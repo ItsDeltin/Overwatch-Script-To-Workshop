@@ -222,16 +222,15 @@ namespace Deltin.Deltinteger.Parse
                 if (Tree[i].Type() != null)
                 {
                     var type = Tree[i].Type();
-
-                    // If this isn't the last in the tree, set it as the target.
-                    if (!isLast)
-                    {
-                        previousTarget = target;
-                        target = type.Implements(actionSet.Translate.DeltinScript.Types.Player()) ? current : null;
-                    }
-
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
                     type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
+                }
+
+                // If this isn't the last in the tree, set it as the target.
+                if (!isLast)
+                {
+                    previousTarget = target;
+                    target = current;
                 }
 
                 result = current;
