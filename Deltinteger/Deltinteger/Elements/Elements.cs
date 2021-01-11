@@ -261,7 +261,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element RaycastPosition(IWorkshopTree start, IWorkshopTree end, IWorkshopTree playersToInclude = null, IWorkshopTree playersToExclude = null, IWorkshopTree includePlayerOwnedObjects = null)
             => Part("Ray Cast Hit Position", start ?? throw new ArgumentNullException(nameof(start)), end ?? throw new ArgumentNullException(nameof(end)), playersToInclude ?? Null(), playersToExclude ?? Null(), includePlayerOwnedObjects ?? False());
         public static Element CallSubroutine(Subroutine subroutine) => Element.Part("Call Subroutine", subroutine);
-        public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyRunning", restartRule ? "Restart Rule" : "Do Nothing"));
+        public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyExecuting", restartRule ? "RestartRule" : "DoNothing"));
         public static Element SkipIf(Element condition, Element count) => Element.Part("Skip If", condition, count);
 
         public static Element Hud(
