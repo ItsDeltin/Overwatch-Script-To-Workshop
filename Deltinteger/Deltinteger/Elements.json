@@ -2580,7 +2580,7 @@
       "parameters": {
         "Color": {
           "type": "Color",
-          "defaultValue": "Blue"
+          "defaultValue": "White"
         }
       },
       "alias": "ColorValue",
