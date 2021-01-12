@@ -84,6 +84,8 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
+        public virtual CodeType[] UnionTypes() => new[] {this};
+
         public virtual bool Is(CodeType type) => this == type;
 
         // Static

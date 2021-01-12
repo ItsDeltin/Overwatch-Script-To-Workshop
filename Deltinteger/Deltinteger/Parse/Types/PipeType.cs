@@ -50,6 +50,7 @@ namespace Deltin.Deltinteger.Parse
                     return true;
             return false;
         }
+        public override CodeType[] UnionTypes() => IncludedTypes;
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
             foreach (CodeType included in IncludedTypes)
