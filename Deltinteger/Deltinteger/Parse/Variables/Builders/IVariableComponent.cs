@@ -161,7 +161,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 
         public void Apply(VarInfo varInfo)
         {
-            throw new NotImplementedException();
+            varInfo.VariableTypeHandler.SetWorkshopReference();
         }
 
         public string RejectMessage() => "Macros cannot be declared here.";
