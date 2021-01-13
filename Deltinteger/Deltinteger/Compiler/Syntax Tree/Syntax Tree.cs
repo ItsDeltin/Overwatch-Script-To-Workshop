@@ -362,6 +362,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             LeftParentheses = leftParentheses;
             RightParentheses = rightParentheses;
             Parameters = parameters;
+            Range = target.Range.Start + rightParentheses.Range.End;
         }
 
         public override string ToString() => Target.ToString() + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
@@ -431,6 +432,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Token { get; }
         public string Value { get; }
         public List<IParseExpression> Formats { get; }
+        public bool ClassicFormatSyntax { get; }
 
         public StringExpression(Token localized, Token token)
         {
@@ -442,6 +444,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public StringExpression(Token localized, Token token, List<IParseExpression> formats) : this(localized, token)
         {
             Formats = formats;
+            ClassicFormatSyntax = true;
         }
 
         public override string ToString() => '"' + Value + '"';
@@ -489,11 +492,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseExpression Array { get; }
         public IParseExpression Index { get; }
 
-        public ValueInArray(IParseExpression array, IParseExpression index, Token closingToken)
+        public ValueInArray(IParseExpression array, IParseExpression index, DocPos endPosition)
         {
             Array = array;
             Index = index;
-            Range = new DocRange(Array.Range.Start, closingToken.Range.End);
+            Range = new DocRange(Array.Range.Start, endPosition);
         }
 
         public override string ToString() => Array.ToString() + "[" + Index.ToString() + "]";
@@ -670,9 +673,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public List<IParseStatement> Statements { get; }
         public MetaComment Comment { get; set; }
+        public MetaComment EndComment { get; set; }
 
-        public Block(List<IParseStatement> statements)
+        public Block(List<IParseStatement> statements, MetaComment endComment)
         {
+            EndComment = endComment;
             Statements = statements;
         }
 

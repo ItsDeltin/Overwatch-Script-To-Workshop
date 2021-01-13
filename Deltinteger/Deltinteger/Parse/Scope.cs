@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public void CopyAll(Scope other, Scope getter)
+        public void CopyAll(Scope other)
         {
             other.IterateParents(scope =>
             {
@@ -490,21 +490,6 @@ namespace Deltin.Deltinteger.Parse
                 }
             group = null;
             return false;
-        }
-
-        public static Scope GetGlobalScope(DeltinScript deltinScript)
-        {
-            Scope globalScope = new Scope();
-
-            // Add workshop methods
-            var workshopFunctions = ElementList.GetWorkshopFunctions(deltinScript.Types);
-            foreach (var func in workshopFunctions) globalScope.AddNativeMethod(func);
-            
-            // Add custom methods
-            GlobalFunctions.GlobalFunctions.Add(deltinScript, globalScope);
-            
-            globalScope.AddNativeMethod(new Lambda.WaitAsyncFunction());
-            return globalScope;
         }
 
         public bool ScopeContains(IScopeable element)

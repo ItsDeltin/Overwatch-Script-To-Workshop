@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -8,16 +9,14 @@ namespace Deltin.Deltinteger.Parse.Strings
 {
     class ParseCustomString : StringParseBase
     {
-        public ParseCustomString(ParseInfo parseInfo, string value, DocRange stringRange, int argCount) : base(parseInfo, value, stringRange, argCount)
-        {
-        }
+        public ParseCustomString(StringParseInfo stringParseInfo) : base(stringParseInfo) {}
 
         protected override IStringParse DoParse()
         {
             // Look for <#>s
-            var formats = Regex.Matches(Value, "<([0-9]+)>").ToArray();
+            var formats = Regex.Matches(Value, FormatMatch).ToArray();
 
-            CustomStringGroup customStringGroup = new CustomStringGroup(Value, formats.Length);
+            CustomStringGroup customStringGroup = new CustomStringGroup(Value);
 
             // If there are no formats, return the custom string normally.
             if (formats.Length == 0)
@@ -39,11 +38,9 @@ namespace Deltin.Deltinteger.Parse.Strings
             List<int> unique = new List<int>(); // Stores the list of each unique format id. The count shouldn't go above 3.
             for (int i = 0; i < formats.Length; i++)
             {
-                FormatParameter parameter = new FormatParameter(formats[i]);
+                FormatParameter parameter = new FormatParameter(formats[i], FormatGroupNumber);
 
-                // If the format id is more than the number of parameters, throw a syntax error.
-                if (parameter.Parameter >= ArgCount)
-                    StringFormatCountError(parameter.Parameter, RangeFromMatch(parameter.Match.Index, parameter.Match.Length));
+                customStringGroup.ArgCount = Math.Max(customStringGroup.ArgCount, parameter.Parameter + 1);
 
                 // If there is already 3 unique IDs, create a new section.
                 if (unique.Count == 3 && !unique.Contains(parameter.Parameter))
@@ -97,13 +94,12 @@ namespace Deltin.Deltinteger.Parse.Strings
     class CustomStringGroup : IStringParse
     {
         public string Original { get; }
-        public int ArgCount { get; }
+        public int ArgCount { get; set; }
         public CustomStringSegment[] Segments { get; set; }
 
-        public CustomStringGroup(string original, int argCount)
+        public CustomStringGroup(string original)
         {
             Original = original;
-            ArgCount = argCount;
         }
     
         public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters)
@@ -146,10 +142,10 @@ namespace Deltin.Deltinteger.Parse.Strings
         public Match Match { get; }
         public int Parameter { get; } 
 
-        public FormatParameter(Match match)
+        public FormatParameter(Match match, int group)
         {
             Match = match;
-            Parameter = int.Parse(match.Groups[1].Value);
+            Parameter = int.Parse(match.Groups[group].Value);
         }
     }
 

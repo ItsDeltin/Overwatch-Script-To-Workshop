@@ -6,8 +6,6 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ClassType : CodeType, IScopeAppender
     {
-        public ClassInitializer Initializer { get; protected set; }
-
         /// <summary>Used in static methods and returned when ReturningScope() is called. Contains all static members in the inheritance tree.</summary>
         public Scope StaticScope { get; set; }
         /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
@@ -17,12 +15,16 @@ namespace Deltin.Deltinteger.Parse
 
         public ObjectVariable[] ObjectVariables { get; protected set; }
 
-        public ClassType(ClassInitializer initializer) : base(initializer.Name)
+        private readonly IResolveElements _resolveElements;
+
+        public ClassType(string name, IResolveElements resolveElements = null) : base(name)
         {
-            Initializer = initializer;
+            _resolveElements = resolveElements;
         }
 
-        public override void ResolveElements() => Initializer.ResolveElements();
+        public ClassType(string name) : base(name) {}
+
+        public override void ResolveElements() => _resolveElements?.ResolveElements();
 
         public override void WorkshopInit(DeltinScript translateInfo)
         {

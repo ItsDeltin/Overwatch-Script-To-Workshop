@@ -10,13 +10,13 @@ namespace Deltin.Deltinteger.Lobby
         // ***********
         private static readonly LobbySetting QuickMelee = new SwitchValue("Quick Melee", true);
         private static readonly LobbySetting SpawnWithUlt = new SwitchValue("Spawn With Ultimate Ready", false);
-        private static readonly LobbySetting DamageDealt = new RangeValue("Damage Dealt", 10, 500);
-        private static readonly LobbySetting DamageReceived = new RangeValue("Damage Received", 10, 500);
-        private static readonly LobbySetting HealingDealt = new RangeValue("Healing Dealt", 10, 500);
-        private static readonly LobbySetting HealingReceived = new RangeValue("Healing Received", 10, 500);
-        private static readonly LobbySetting JumpVerticalSpeed = new RangeValue("Jump Vertical Speed", 25, 800);
-        private static readonly LobbySetting MovementGravity = new RangeValue("Movement Gravity", 25, 400);
-        private static readonly LobbySetting MovementSpeed = new RangeValue("Movement Speed", 50, 300);
+        private static readonly LobbySetting DamageDealt = RangeValue.NewPercentage("Damage Dealt", 10, 500);
+        private static readonly LobbySetting DamageReceived = RangeValue.NewPercentage("Damage Received", 10, 500);
+        private static readonly LobbySetting HealingDealt = RangeValue.NewPercentage("Healing Dealt", 10, 500);
+        private static readonly LobbySetting HealingReceived = RangeValue.NewPercentage("Healing Received", 10, 500);
+        private static readonly LobbySetting JumpVerticalSpeed = RangeValue.NewPercentage("Jump Vertical Speed", 25, 800);
+        private static readonly LobbySetting MovementGravity = RangeValue.NewPercentage("Movement Gravity", 25, 400);
+        private static readonly LobbySetting MovementSpeed = RangeValue.NewPercentage("Movement Speed", 50, 300);
         private static readonly LobbySetting ReceiveHeadshotsOnly = new SwitchValue("Receive Headshots Only", false);
         private static readonly LobbySetting PrimaryFire = new SwitchValue("Primary Fire", true);
         // * Generic Ammunition Info (Add to global) *
@@ -25,14 +25,14 @@ namespace Deltin.Deltinteger.Lobby
 
 
         // * Healers *
-        private static readonly LobbySetting Health = new RangeValue("Health", 10, 500);
+        private static readonly LobbySetting Health = RangeValue.NewPercentage("Health", 10, 500);
 
         // * Projectiles *
-        private static readonly LobbySetting ProjectileSpeed = new RangeValue("Projectile Speed", 0, 300);
-        private static readonly LobbySetting ProjectileGravity = new RangeValue("Projectile Gravity", 0, 500);
+        private static readonly LobbySetting ProjectileSpeed = RangeValue.NewPercentage("Projectile Speed", 0, 300);
+        private static readonly LobbySetting ProjectileGravity = RangeValue.NewPercentage("Projectile Gravity", 0, 500);
 
         // * Ult Duration *
-        private static readonly LobbySetting UltimateDuration = new RangeValue("Ultimate Duration", 25, 500);
+        private static readonly LobbySetting UltimateDuration = RangeValue.NewPercentage("Ultimate Duration", 25, 500);
         private static readonly LobbySetting InfiniteDuration = new SwitchValue("Infinite Ultimate Duration", false);
 
         // * Scope *
@@ -191,7 +191,7 @@ namespace Deltin.Deltinteger.Lobby
         public static void Init()
         {
             AllHeroSettings = new HeroSettingCollection[] {
-                new HeroSettingCollection("General").AddUlt(null, true).AddProjectile(true).AddHealer(),
+                new HeroSettingCollection("General").AddUlt(null, true).AddProjectile(true).AddHealer().AddRange("Ability Cooldown Time"),
                 new HeroSettingCollection("Ana").AddUlt("Nano Boost").AddProjectile(false).AddHealer().AddScope().AddAbility("Biotic Grenade").AddAbility("Sleep Dart"),
                 new HeroSettingCollection("Ashe").AddUlt("B.O.B.", true).AddProjectile(true).AddScope().AddAbility("Coach Gun", hasKnockback: true, selfKnockback: true).AddAbility("Dynamite").AddRange("Dynamite Fuse Time Scalar", 1),
                 new HeroSettingCollection("Baptiste").AddUlt("Amplification Matrix", true).AddProjectile(false).AddHealer().AddAbility("Immortality Field").AddAbility("Regenerative Burst").AddSecondaryFire(),

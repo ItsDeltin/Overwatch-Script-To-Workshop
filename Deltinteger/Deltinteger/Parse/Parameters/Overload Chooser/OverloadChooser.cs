@@ -358,8 +358,17 @@ namespace Deltin.Deltinteger.Parse.Overload
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
 
-            if (parameterType is PortableLambdaType == false || (value is PortableLambdaType portableType && portableType.LambdaKind == LambdaKind.Anonymous))
+            // Lambda arg count mismatch.
+            if (parameterType is PortableLambdaType portableParameterType && // Parameter type is a lambda.
+                value.Type() is UnknownLambdaType unknownLambdaType && // Value type is a lambda.
+                unknownLambdaType.ArgumentCount != portableParameterType.Parameters.Length) // The value lambda's parameter length does not match.
+                // Add the error.
+                Error($"Lambda does not take {unknownLambdaType.ArgumentCount} arguments", errorRange);
+            
+            // Do not add other errors if the value's type is an UnknownLambdaType.
+            else if (value.Type() is UnknownLambdaType == false)
             {
+                // The parameter type does not match.
                 if (parameterType.CodeTypeParameterInvalid(value.Type()))
                 {
                     // The parameter type does not match.
@@ -367,10 +376,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                     Error(msg, errorRange);
                 }
                 else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
-                {
-                    string msg = string.Format($"The type '{value.Type().Name}' cannot be used here");
-                    Error(msg, errorRange);
-                }
+                    Error($"The type '{value.Type().Name}' cannot be used here", errorRange);
             }
         }
 
@@ -421,7 +427,8 @@ namespace Deltin.Deltinteger.Parse.Overload
                         parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                             callType,
                             parseInfo.GetLocation(callRange),
-                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.Label, callType)
+                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.Label, callType),
+                            Option.RestrictedValuesAreFatal
                         ));
         }
     

@@ -222,16 +222,15 @@ namespace Deltin.Deltinteger.Parse
                 if (Tree[i].Type() != null)
                 {
                     var type = Tree[i].Type();
-
-                    // If this isn't the last in the tree, set it as the target.
-                    if (!isLast)
-                    {
-                        previousTarget = target;
-                        target = type.Implements(actionSet.Translate.DeltinScript.Types.Player()) ? current : null;
-                    }
-
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
                     type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
+                }
+
+                // If this isn't the last in the tree, set it as the target.
+                if (!isLast)
+                {
+                    previousTarget = target;
+                    target = current;
                 }
 
                 result = current;
@@ -425,7 +424,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Add all potential path's scopes to the scope batch.
             foreach (var path in _potentialPaths)
-                scopeBatch.CopyAll(path.GetScope(), _tcParseInfo.Getter);
+                scopeBatch.CopyAll(path.GetScope());
 
             // Finished.
             return scopeBatch;

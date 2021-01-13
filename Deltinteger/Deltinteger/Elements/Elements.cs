@@ -231,11 +231,15 @@ namespace Deltin.Deltinteger.Elements
         public static Element Subtract(IWorkshopTree a, IWorkshopTree b) => Part("Subtract", a, b);
         public static Element And(IWorkshopTree a, IWorkshopTree b) => Part("And", a, b);
         public static Element Or(IWorkshopTree a, IWorkshopTree b) => Part("Or", a, b);
+        public static Element Min(IWorkshopTree a, IWorkshopTree b) => Part("Min", a, b);
+        public static Element Max(IWorkshopTree a, IWorkshopTree b) => Part("Max", a, b);
         public static Element If(IWorkshopTree expression) => Part("If", expression);
         public static Element ElseIf(IWorkshopTree expression) => Part("Else If", expression);
         public static Element Else() => Part("Else");
         public static Element End() => Part("End");
         public static Element While(IWorkshopTree expression) => Part("While", expression);
+        public static Element Break() => Part("Break");
+        public static Element Continue() => Part("Continue");
         public static Element TimeElapsed() => Part("Total Time Elapsed");
         public static Element Wait() => Part("Wait", Num(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"));
         public static Element LoopIfConditionIsTrue() => Part("Loop If Condition Is True");
@@ -247,6 +251,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element DotProduct(IWorkshopTree a, IWorkshopTree b) => Part("Dot Product", a, b);
         public static Element Normalize(IWorkshopTree a) => Part("Normalize", a);
         public static Element DirectionTowards(IWorkshopTree a, IWorkshopTree b) => Part("Direction Towards", a, b);
+        public static Element MagnitudeOf(IWorkshopTree vector) => Part("Magnitude Of", vector);
         public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
         public static Element EyePosition(IWorkshopTree player) => Part("Eye Position", player);
         public static Element FacingDirectionOf(IWorkshopTree player) => Part("Facing Direction Of", player);
@@ -256,7 +261,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element RaycastPosition(IWorkshopTree start, IWorkshopTree end, IWorkshopTree playersToInclude = null, IWorkshopTree playersToExclude = null, IWorkshopTree includePlayerOwnedObjects = null)
             => Part("Ray Cast Hit Position", start ?? throw new ArgumentNullException(nameof(start)), end ?? throw new ArgumentNullException(nameof(end)), playersToInclude ?? Null(), playersToExclude ?? Null(), includePlayerOwnedObjects ?? False());
         public static Element CallSubroutine(Subroutine subroutine) => Element.Part("Call Subroutine", subroutine);
-        public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyRunning", restartRule ? "Restart Rule" : "Do Nothing"));
+        public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyExecuting", restartRule ? "RestartRule" : "DoNothing"));
         public static Element SkipIf(Element condition, Element count) => Element.Part("Skip If", condition, count);
 
         public static Element Hud(

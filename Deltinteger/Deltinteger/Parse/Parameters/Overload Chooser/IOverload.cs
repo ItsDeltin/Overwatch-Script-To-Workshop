@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         StringOrMarkupContent Documentation { get; }
         string Label { get; }
         IParameterCallable Value { get; }
+        bool RestrictedValuesAreFatal { get; }
         InstanceAnonymousTypeLinker GetTypeLinker(CodeType[] typeArgs);
     }
 
@@ -20,6 +21,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public StringOrMarkupContent Documentation => _function.Documentation;
         public string Label => _function.GetLabel(false);
         public IParameterCallable Value => _function;
+        public bool RestrictedValuesAreFatal => _function.RestrictedValuesAreFatal;
         private readonly IMethod _function;
 
         public MethodOverload(IMethod function)
@@ -37,6 +39,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public StringOrMarkupContent Documentation => _constructor.Documentation;
         public string Label => _constructor.GetLabel(false);
         public IParameterCallable Value => _constructor;
+        public bool RestrictedValuesAreFatal => true;
         private readonly Constructor _constructor;
 
         public ConstructorOverload(Constructor constructor)

@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Parse
                 // If the restricted call type's list of supported event types does not contain eventType...
                 if (!Deltin.Deltinteger.RestrictedCall.SupportedGroups[call.CallType].Contains(eventType))
                     // ...then add the syntax error.
-                    Script.Diagnostics.Error(call.Message, call.CallRange.range);
+                    call.AddDiagnostic(Script.Diagnostics);
         }
 
         public RestrictedCallType[] GetRestrictedCallTypes() => GetRestrictedCallTypes(RestrictedCalls);

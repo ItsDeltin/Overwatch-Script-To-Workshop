@@ -16,6 +16,14 @@ namespace Deltin.Deltinteger.Parse
         public IInvokeResult Invoke(InvokeData invokeInfo)
         {
             var parseInfo = invokeInfo.ParseInfo;
+
+            if (invokeInfo.Target is CallMethodGroup == false)
+            {
+                parseInfo.Script.Diagnostics.Error("Method name expected", invokeInfo.TargetRange);
+                CallMethodAction.DiscardParameters(parseInfo, invokeInfo.Getter, invokeInfo.Context.Parameters);
+                return null;
+            }
+
             var groupCall = (CallMethodGroup)invokeInfo.Target;
             var group = groupCall.Group;
 
@@ -207,7 +215,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Check callinfo :)
             foreach (RestrictedCallType type in ((IApplyBlock)Function).CallInfo.GetRestrictedCallTypes())
-                _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(type, _parseInfo.GetLocation(_targetRange), RestrictedCall.Message_FunctionCallsRestricted(Function.Name, type)));
+                _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                    type,
+                    _parseInfo.GetLocation(_targetRange),
+                    RestrictedCall.Message_FunctionCallsRestricted(Function.Name, type),
+                    _match.Option.RestrictedValuesAreFatal
+                ));
         }
 
         public void SetComment(string comment) => _comment = comment;

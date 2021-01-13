@@ -41,8 +41,8 @@ namespace Deltin.Deltinteger.Parse
 
             Types = new ScriptTypes(this);
             Types.GetDefaults();
-            GlobalScope = Scope.GetGlobalScope(this);
 
+            GlobalScope = new Scope("global scope");
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
             Types.AddTypesToScope(GlobalScope);
@@ -66,12 +66,13 @@ namespace Deltin.Deltinteger.Parse
                     disposable.Dispose();
         }
 
-        public T GetComponent<T>() where T : IComponent, new()
+        private void AddDefaultComponents()
         {
-            foreach (IComponent component in Components)
-                if (component is T t)
-                    return t;
+            AddComponent<Pathfinder.PathfinderTypesComponent>();
+        }
 
+        private T AddComponent<T>() where T: IComponent, new()
+        {
             T newT = new T();
             newT.DeltinScript = this;
 
@@ -86,6 +87,15 @@ namespace Deltin.Deltinteger.Parse
             newT.Init();
 
             return newT;
+        }
+
+        public T GetComponent<T>() where T : IComponent, new()
+        {
+            foreach (IComponent component in Components)
+                if (component is T t)
+                    return t;
+
+            return AddComponent<T>();
         }
 
         public bool IsComponent<T>() where T : IComponent => Components.Any(component => component is T);
@@ -147,8 +157,24 @@ namespace Deltin.Deltinteger.Parse
                 Types.AllTypes.Add(newType);
                 Types.DefinedTypes.Add(newType);
             }
+                        
+            // Get variable declarations
+            foreach (ScriptFile script in Importer.ScriptFiles)
+                foreach (var declaration in script.Context.Declarations)
+                    if (declaration is VariableDeclaration variable)
+                        new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable))
+                            .GetVar(var => {
+                                rulesetVariables.Add(var);
+
+                                // Add the variable to the player variables scope if it is a player variable.
+                                if (var.VariableType == VariableType.Player)
+                                    PlayerVariableScope.CopyVariable(var.GetDefaultInstance());
+                            }, macroVarProvider => {});
             
-            // Get the declarations
+            ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
+            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
+
+            // Get the function declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 ParseInfo parseInfo = new ParseInfo(script, this);
@@ -165,16 +191,6 @@ namespace Deltin.Deltinteger.Parse
                     // Macro function
                     else if (declaration is MacroFunctionContext macroFunction)
                         parseInfo.GetMacro(this, macroFunction);
-                    // Variables
-                    else if (declaration is VariableDeclaration variable)
-                        new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable))
-                            .GetVar(var => {
-                                rulesetVariables.Add(var);
-
-                                // Add the variable to the player variables scope if it is a player variable.
-                                if (var.VariableType == VariableType.Player)
-                                    PlayerVariableScope.CopyVariable(var.GetDefaultInstance());
-                            }, macroVarProvider => {});
                 }
             }
 
@@ -362,15 +378,10 @@ namespace Deltin.Deltinteger.Parse
             AddType(_booleanType);
             AddType(Positionable.Instance);
             AddType(Pathfinder.SegmentsStruct.Instance);
-            // Pathfinder classes
-            AddType(new Pathfinder.PathmapClass(_deltinScript));
-            AddType(new Pathfinder.PathResolveClass(this));
             // Constant lambda types.
-            AddType(new Lambda.BlockLambda(_anyType));
+            AddType(new Lambda.BlockLambda());
             AddType(new Lambda.ValueBlockLambda(_anyType));
             AddType(new Lambda.MacroLambda(_anyType));
-            // Model static class.
-            // AddType(new Models.AssetClass());
             // Enums
             foreach (var type in ValueGroupType.GetEnumTypes(this))
                 AddType(type);
@@ -384,8 +395,8 @@ namespace Deltin.Deltinteger.Parse
             _deltinScript.PlayerVariableScope = _playerType.PlayerVariableScope;
         }
 
-        private void AddType(CodeType type) => AllTypes.Add(new GenericCodeTypeInitializer(type));
-        private void AddType(ICodeTypeInitializer initializer) => AllTypes.Add(initializer);
+        public void AddType(CodeType type) => AllTypes.Add(new GenericCodeTypeInitializer(type));
+        public void AddType(ICodeTypeInitializer initializer) => AllTypes.Add(initializer);
 
         public void AddTypesToScope(Scope scope)
         {
@@ -415,11 +426,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Number() => _numberType;
         public CodeType String() => _stringType;
         public CodeType Player() => _playerType;
-        public CodeType Players() => new PipeType(_playerType, PlayerArray());
-        public CodeType PlayerArray() => new ArrayType(this, _playerType);
         public CodeType Vector() => _vectorType;
-        public CodeType VectorArray() => new ArrayType(this, _vectorType);
-        public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         public CodeType Unknown() => _unknownType;
 
         public CodeType EnumType(string typeName)

@@ -12,13 +12,14 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DefinedClass : ClassType
     {
-        private readonly ParseInfo _parseInfo;
         public Scope OperationalScope { get; }
-        private DefinedClassInitializer DefinedInitializer => (DefinedClassInitializer)Initializer;
+        private readonly ParseInfo _parseInfo;
+        private readonly DefinedClassInitializer _definedInitializer;
 
-        public DefinedClass(ParseInfo parseInfo, DefinedClassInitializer initializer, CodeType[] generics) : base(initializer)
+        public DefinedClass(ParseInfo parseInfo, DefinedClassInitializer initializer, CodeType[] generics) : base(initializer.Name, initializer)
         {
             _parseInfo = parseInfo;
+            _definedInitializer = initializer;
             Generics = generics;
             var anonymousTypeLinker = new InstanceAnonymousTypeLinker(initializer.AnonymousTypes, generics);
 
@@ -27,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             StaticScope = new Scope();
 
             // Add elements to scope.
-            ObjectVariables = new ObjectVariable[initializer.ObjectVariables.Count];            
+            ObjectVariables = new ObjectVariable[initializer.ObjectVariables.Count];
             foreach (var element in initializer.DeclaredElements)
             {
                 var instance = element.AddInstance(this, anonymousTypeLinker);
@@ -98,7 +99,7 @@ namespace Deltin.Deltinteger.Parse
                     newGenerics[i] = Generics[i];
             }
 
-            return DefinedInitializer.GetInstance(new GetInstanceInfo(newGenerics));
+            return _definedInitializer.GetInstance(new GetInstanceInfo(newGenerics));
         }
     }
 }

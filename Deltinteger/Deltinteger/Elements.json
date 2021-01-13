@@ -1697,7 +1697,7 @@
       "documentation": "The current progress towards the destination for the active payload (expressed as a percentage)."
     },
     {
-      "type": "number",
+      "type": "player",
       "name": "Player Carrying Flag",
       "documentation": "The player carrying a particular team’s flag in capture the flag. Results in null if no player is carrying the flag.",
       "parameters": {
@@ -1743,7 +1743,7 @@
       "hidden": true
     },
     {
-      "type": "player",
+      "type": "player[]",
       "name": "Players In Slot",
       "documentation": "The player or array of players who occupy a specific slot in the game.",
       "parameters": {
@@ -1760,7 +1760,7 @@
       }
     },
     {
-      "type": "player",
+      "type": "player[]",
       "name": "Players In View Angle",
       "documentation": "The players who are within a specific view angle of a specific player’s reticle, optionally restricted by team.",
       "parameters": {
@@ -1782,7 +1782,7 @@
       }
     },
     {
-      "type": "player",
+      "type": "player[]",
       "name": "Players On Hero",
       "documentation": "The array of players playing a specific hero on a team or in the match.",
       "parameters": {
@@ -1799,7 +1799,7 @@
       }
     },
     {
-      "type": "player",
+      "type": "player[]",
       "name": "Players Within Radius",
       "documentation": "An array containing all players within a certain distance of a position, optionally restricted by team and line of sight.",
       "parameters": {
@@ -1850,12 +1850,12 @@
       "parameters": {
         "Value": {
           "documentation": "The left-hand operand. May be any value that results in a number. Can use most Number based Value Syntax to provide this value.",
-          "type": "any",
+          "type": "number",
           "defaultValue": 0.0
         },
         "Value": {
           "documentation": "The left-hand operand. May be any value that results in a number. Can use most Number based Value Syntax to provide this value.",
-          "type": "any",
+          "type": "number",
           "defaultValue": 0.0
         }
       }
@@ -1933,11 +1933,11 @@
         },
         "Players To Include": {
           "documentation": "Which players can be hit by this ray cast. Can use most Player based Value Syntax to provide this value.",
-          "type": "player"
+          "type": "players"
         },
         "Players To Exclude": {
           "documentation": "Which players cannot be hit by this ray cast. This list takes precedence over players to include. Can use most Player based Value Syntax to provide this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Include Player Owned Objects": {
@@ -1964,11 +1964,11 @@
         },
         "Players To Include": {
           "documentation": "Which players can be hit by this ray cast. Can use most Player based Value Syntax to provide this value.",
-          "type": "player"
+          "type": "players"
         },
         "Players To Exclude": {
           "documentation": "Which players cannot be hit by this ray cast. This list takes precedence over players to include. Can use most Player based Value Syntax to provide this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Include Player Owned Objects": {
@@ -1995,11 +1995,11 @@
         },
         "Players To Include": {
           "documentation": "Which players can be hit by this ray cast. Can use most Player based Value Syntax to provide this value.",
-          "type": "player"
+          "type": "players"
         },
         "Players To Exclude": {
           "documentation": "Which players cannot be hit by this ray cast. This list takes precedence over players to include. Can use most Player based Value Syntax to provide this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Include Player Owned Objects": {
@@ -2166,7 +2166,7 @@
       }
     },
     {
-      "type": "any",
+      "type": "string",
       "name": "String",
       "documentation": "Text formed from a selection of strings and specified values.",
       "parameters": {
@@ -2188,7 +2188,7 @@
       }
     },
     {
-      "type": "any",
+      "type": "string",
       "name": "Custom String",
       "parameters": {
         "{0}": {
@@ -2206,7 +2206,7 @@
       }
     },
     {
-      "type": "any",
+      "type": "string",
       "name": "Icon String",
       "parameters": {
         "Icon": {
@@ -2279,7 +2279,7 @@
       }
     },
     {
-      "type": "team",
+      "type": "number",
       "name": "Team Score",
       "documentation": "The current score for the specified team. Results in a 0 in free-for-all game modes.",
       "parameters": {
@@ -2580,7 +2580,7 @@
       "parameters": {
         "Color": {
           "type": "Color",
-          "defaultValue": "Blue"
+          "defaultValue": "White"
         }
       },
       "alias": "ColorValue",
@@ -2768,11 +2768,11 @@
       }
     },
     {
-      "type": "number",
+      "type": "any[]",
       "name": "Mapped Array",
       "parameters": {
         "Array": {
-          "type": "any",
+          "type": "any[]",
           "defaultValue": "All Players"
         },
         "Mapping Expression": {
@@ -2864,7 +2864,7 @@
           "type": "number"
         },
         "Options": {
-          "type": "any"
+          "type": "string[]"
         },
         "Sort Order": {
           "type": "number",
@@ -3069,7 +3069,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose button is being reenabled. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Button": {
@@ -3083,7 +3083,7 @@
       "name": "Apply Impulse",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Direction": {
@@ -3110,7 +3110,7 @@
       "parameters": {
         "Visible To": {
           "documentation": "One or more players who will see the message. Can use most Value Syntax to select multiple players to specify.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Header": {
@@ -3200,7 +3200,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player whose variable will gradually change. If multiple players are provided, each of their variables will change independently.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Variable": {
@@ -3231,7 +3231,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player whose variable will gradually change. If multiple players are provided, each of their variables will change independently.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Variable": {
@@ -3262,7 +3262,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players from whom the status will be removed. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Status": {
@@ -3278,7 +3278,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players to perform the communication. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Type": {
@@ -3294,7 +3294,7 @@
       "parameters": {
         "Visible To": {
           "documentation": "One or more players who will be able to see the effect. Can use most Value Syntax to select one or multiple players.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Beam Type": {
@@ -3363,7 +3363,7 @@
       "parameters": {
         "Visible To": {
           "documentation": "One or more players who will be able to see the effect. Can use most Value Syntax to select one or multiple players.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Type": {
@@ -3401,7 +3401,7 @@
       "parameters": {
         "Visible To": {
           "documentation": "One or more players who will see the HUD text. Can use most Value Syntax to select one or multiple players.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Header": {
@@ -3462,7 +3462,7 @@
       "parameters": {
         "Visible To": {
           "documentation": "One or more players who will be able to see the icon. Can use most Value Syntax to select one or multiple players.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Position": {
@@ -3499,7 +3499,7 @@
       "parameters": {
         "Visible To": {
           "documentation": "One or more players who will see the HUD text. Can use most Value Syntax to select one or multiple players.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Header": {
@@ -3545,7 +3545,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will receive damage. Can use most Player based Value Syntax to select one or multiple players.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Damager": {
@@ -3638,7 +3638,7 @@
       "documentation": "Destroys an effect entity that was created by create effect.",
       "parameters": {
         "Effect ID": {
-          "type": "player"
+          "type": "any"
         }
       }
     },
@@ -3649,7 +3649,7 @@
       "parameters": {
         "Text ID": {
           "documentation": "Specifies which hud text to destroy. This ID may be last text ID or a variable into which last text ID was earlier stored.",
-          "type": "number"
+          "type": "any"
         }
       }
     },
@@ -3657,7 +3657,7 @@
       "name": "Destroy Icon",
       "parameters": {
         "Icon ID": {
-          "type": "number"
+          "type": "any"
         }
       }
     },
@@ -3665,7 +3665,7 @@
       "name": "Destroy In-World Text",
       "parameters": {
         "Text ID": {
-          "type": "number"
+          "type": "any"
         }
       },
       "alias": "DestroyInWorldText"
@@ -3690,7 +3690,7 @@
       "documentation": "Disables automatic respawning for one or more players, only allowing respawning by scripting commands.",
       "parameters": {
         "Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -3706,7 +3706,7 @@
       "documentation": "Undoes the effect of the enable death spectate all players action for one or more players.",
       "parameters": {
         "Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -3717,7 +3717,7 @@
       "documentation": "Undoes the effect of the enable death spectate target hud action for one or more players.",
       "parameters": {
         "Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -3732,7 +3732,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player executing this rule, as specified by the event. May be the same as the attacker or victim. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Button": {
@@ -3764,7 +3764,7 @@
       "documentation": "Undoes the effect of the disable built-in game mode respawning for one or more players.",
       "parameters": {
         "Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -3780,7 +3780,7 @@
       "documentation": "Allows one or more players to spectate all players when dead, as opposed to only allies.",
       "parameters": {
         "Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -3791,7 +3791,7 @@
       "documentation": "Allows one or more players to see their target’s HUD when dead instead of their own while death spectating.",
       "parameters": {
         "Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -3860,7 +3860,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose health will be restored. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Healer": {
@@ -3905,7 +3905,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will be killed. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Killer": {
@@ -3988,7 +3988,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player whose score will change. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Score": {
@@ -4004,7 +4004,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player whose variable will be modified. If multiple players are provided, each of their variables will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Variable": {
@@ -4030,7 +4030,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player whose variable will be modified. If multiple players are provided, each of their variables will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Variable": {
@@ -4081,7 +4081,7 @@
       "parameters": {
         "Visible To": {
           "documentation": "One or more players who will be able to see the effect. Can use most Value Syntax to select one or multiple players.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Type": {
@@ -4112,7 +4112,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will begin preloading a hero or heroes. Only one preload hero action will be active at a time for a given player. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Hero": {
@@ -4128,7 +4128,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players for whom virtual button input will be forced. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Button": {
@@ -4144,7 +4144,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose hero list is being reset. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -4156,7 +4156,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players to respawn. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -4167,7 +4167,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will be resurrected. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -4178,7 +4178,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose access to ability 1 is affected. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Enabled": {
@@ -4194,7 +4194,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose access to ability 2 is affected. Expects a Boolean Value such as True, False, or Compare. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Enabled": {
@@ -4210,7 +4210,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose aim will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Turn Speed Percent": {
@@ -4226,7 +4226,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose damage dealt will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Damage Dealt Percent": {
@@ -4242,7 +4242,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose damage received will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Damage Dealt Percent": {
@@ -4257,7 +4257,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose facing will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Direction": {
@@ -4310,7 +4310,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose movement gravity will be set. Can use most Player based Value Syntax with this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Gravity Percent": {
@@ -4326,7 +4326,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose healing dealt will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Healing Dealt Percent": {
@@ -4342,7 +4342,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose healing received will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Healing Received Percent": {
@@ -4358,7 +4358,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will become invisible. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Invisible To": {
@@ -4384,7 +4384,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose max health will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Health Percent": {
@@ -4400,7 +4400,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose move speed will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Move Speed Percent": {
@@ -4415,7 +4415,7 @@
       "parameters": {
         "Visible To": {
           "documentation": "One or more players who will see the message. Can use most Number based Player Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Header": {
@@ -4436,7 +4436,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose hero list is being set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Hero": {
@@ -4452,7 +4452,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose score will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Score": {
@@ -4468,7 +4468,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose variable will be set. If multiple players are provided, each of their variables will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Variable": {
@@ -4489,7 +4489,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose variable will be set. If multiple players are provided, each of their variables will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Variable": {
@@ -4515,7 +4515,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose access to primary fire is affected. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Enabled": {
@@ -4531,7 +4531,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose projectile gravity will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Projectile Gravity Percent": {
@@ -4547,7 +4547,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose projectile speed will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Projectile Speed Percent": {
@@ -4563,7 +4563,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose respawn max time will is being defined. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Time": {
@@ -4579,7 +4579,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose access to secondary fire is affected. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Enabled": {
@@ -4606,7 +4606,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players to whom the status will be applied. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Assister": {
@@ -4647,7 +4647,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose access to their ultimate ability is affected. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Enabled": {
@@ -4663,7 +4663,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose ultimate charge will be set. Can use most Player based Value Syntax for this value.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Charge Percent": {
@@ -4706,7 +4706,7 @@
       "parameters": {
         "Visible To": {
           "documentation": "One or more players who will see the message. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Header": {
@@ -4722,7 +4722,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players that will begin accelerating. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Direction": {
@@ -4758,7 +4758,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player executing this rule. As specified by the event, may be the same as the attacker or the victim. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Eye Position": {
@@ -4784,7 +4784,7 @@
       "parameters": {
         "Receivers": {
           "documentation": "The player or players whose incoming damage will be modified. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Damagers": {
@@ -4811,7 +4811,7 @@
       "parameters": {
         "Receivers": {
           "documentation": "One or more players who will receive the damage over time. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Damagers": {
@@ -4836,7 +4836,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will start turning. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Direction": {
@@ -4867,7 +4867,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will be forced to be a specified hero. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Hero": {
@@ -4901,7 +4901,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose movement whill be forced or limited. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Min Forward": {
@@ -4940,7 +4940,7 @@
       "name": "Start Healing Modification",
       "parameters": {
         "Recievers": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Healers": {
@@ -4962,7 +4962,7 @@
       "name": "Stop Healing Modification",
       "parameters": {
         "Healing Modification ID": {
-          "type": "number",
+          "type": "any",
           "defaultValue": "Last Healing Modification ID"
         }
       }
@@ -4973,7 +4973,7 @@
       "parameters": {
         "Player": {
           "documentation": "One or more players who will receive the heal over time. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Healer": {
@@ -4998,7 +4998,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who are holding a button virtually. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Button": {
@@ -5014,7 +5014,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose throttle will be set or added to.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Direction": {
@@ -5050,7 +5050,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose throttle will be transformed.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "X Axis Scalar": {
@@ -5076,7 +5076,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will stop accelerating. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5091,7 +5091,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose scripted damage over time will stop. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5102,7 +5102,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose scripted heal over time will stop. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5113,7 +5113,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose forced camera positions will stop. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5135,7 +5135,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player whose variable will stop changing. If multiple players are provided, each of their variables will stop changing. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Variable": {
@@ -5171,7 +5171,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will stop turning. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5182,7 +5182,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who will no longer be forced to be a specific hero. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -5205,7 +5205,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players whose movement inout will be restored. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5215,7 +5215,7 @@
       "documentation": "Stops an instance of heal over time that was started by the start heal over time action",
       "parameters": {
         "Stop Heal Over Time": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5226,7 +5226,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players who are no longer holding a button virtually. Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Button": {
@@ -5240,7 +5240,7 @@
       "documentation": "Cancels the behavior caused by START THROTTLE IN DIRECTION.",
       "parameters": {
         "Event Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5250,7 +5250,7 @@
       "documentation": "Stops the throttle transform started by START TRANSFORMING THROTTLE for one or more players.",
       "parameters": {
         "Event Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5261,7 +5261,7 @@
       "parameters": {
         "Player": {
           "documentation": "The player or players to teleport. Can use most Player based Value Syntax.",
-          "type": "any",
+          "type": "players",
           "defaultValue": 0.0
         },
         "Position": {
@@ -5314,7 +5314,7 @@
       "name": "Set Crouch Enabled",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Enabled": {
@@ -5327,7 +5327,7 @@
       "name": "Set Melee Enabled",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Enabled": {
@@ -5340,7 +5340,7 @@
       "name": "Set Jump Enabled",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Enabled": {
@@ -5356,7 +5356,7 @@
       "name": "Set Ability Cooldown",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Button": {
@@ -5373,7 +5373,7 @@
       "name": "Cancel Primary Action",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5382,7 +5382,7 @@
       "name": "Start Forcing Player Position",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Position": {
@@ -5399,7 +5399,7 @@
       "name": "Stop Forcing Player Position",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5408,7 +5408,7 @@
       "name": "Attach Players",
       "parameters": {
         "Child": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Parent": {
@@ -5425,7 +5425,7 @@
       "name": "Detach Players",
       "parameters": {
         "Children": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5434,7 +5434,7 @@
       "name": "Set Ammo",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Clip": {
@@ -5451,7 +5451,7 @@
       "name": "Set Max Ammo",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Clip": {
@@ -5468,7 +5468,7 @@
       "name": "Set Weapon",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Weapon": {
@@ -5481,7 +5481,7 @@
       "name": "Set Reload enabled",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Enabled": {
@@ -5495,7 +5495,7 @@
       "name": "Disable Game Mode HUD",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -5505,7 +5505,7 @@
       "name": "Enable Game Mode HUD",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -5515,7 +5515,7 @@
       "name": "Disable Game Mode In-World UI",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -5525,7 +5525,7 @@
       "name": "Enable Game Mode In-World UI",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       },
@@ -5536,7 +5536,7 @@
       "alias": "DisableHeroHud",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5546,7 +5546,7 @@
       "alias": "EnableHeroHud",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5555,7 +5555,7 @@
       "name": "Disable Kill Feed",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5564,7 +5564,7 @@
       "name": "Enable Kill Feed",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5573,7 +5573,7 @@
       "name": "Disable Messages",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5582,7 +5582,7 @@
       "name": "Enable Messages",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5591,7 +5591,7 @@
       "name": "Disable Scoreboard",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5600,7 +5600,7 @@
       "name": "Enable Scoreboard",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5609,7 +5609,7 @@
       "name": "Set Ability Charge",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Button": {
@@ -5626,7 +5626,7 @@
       "name": "Set Ability Resource",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Button": {
@@ -5643,7 +5643,7 @@
       "name": "Set Jump Vertical Speed",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Jump Vertical Speed Percent": {
@@ -5656,11 +5656,11 @@
       "name": "Disable Nameplates",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Viewing Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         }
       }
@@ -5669,11 +5669,11 @@
       "name": "Enable Nameplates",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Viewing Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         }
       }
@@ -5682,11 +5682,11 @@
       "name": "Start Forcing Player Outlines",
       "parameters": {
         "Viewed Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Viewing Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Visible": {
@@ -5707,11 +5707,11 @@
       "name": "Stop Forcing Player Outlines",
       "parameters": {
         "Viewed Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Viewing Players": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         }
       }
@@ -5720,7 +5720,7 @@
       "name": "Start Scaling Player",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Scale": {
@@ -5737,7 +5737,7 @@
       "name": "Stop Scaling Player",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5746,7 +5746,7 @@
       "name": "Start Scaling Barriers",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Scale": {
@@ -5763,7 +5763,7 @@
       "name": "Stop Scaling Barriers",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5772,7 +5772,7 @@
       "name": "Enable Movement Collision With Environment",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5781,7 +5781,7 @@
       "name": "Disable Movement Collision With Environment",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Include Floors": {
@@ -5794,7 +5794,7 @@
       "name": "Enable Movement Collision With Players",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5803,7 +5803,7 @@
       "name": "Disable Movement Collision With Players",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5812,7 +5812,7 @@
       "name": "Start Modifying Hero Voice Lines",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Pitch Scalar": {
@@ -5829,7 +5829,7 @@
       "name": "Stop Modifying Hero Voice Lines",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5838,7 +5838,7 @@
       "name": "Add Health Pool To Player",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Health Type": {
@@ -5873,7 +5873,7 @@
       "name": "Remove All Health Pools From Player",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         }
       }
@@ -5882,7 +5882,7 @@
       "name": "Set Player Health",
       "parameters": {
         "Player": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Amount": {
@@ -5940,7 +5940,7 @@
       "name": "Set Environment Credit Player",
       "parameters": {
         "Target": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Environment Credit Player": {
@@ -5952,16 +5952,16 @@
       "name": "Start Assist",
       "parameters": {
         "Assisters": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "Event Player"
         },
         "Targets": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Reevaluation": {
           "type": "Assist",
-          "defaultValue": "AssistersAndTargets"
+          "defaultValue": "Assisters And Targets"
         }
       },
       "return-value": "Last Assist ID"
@@ -5979,6 +5979,7 @@
     },
     {
       "name": "Create Progress Bar HUD Text",
+      "alias": "CreateProgressBarHudText",
       "parameters": {
         "Visible To": {
           "type": "players",
@@ -6020,6 +6021,7 @@
     },
     {
       "name": "Destroy Progress Bar HUD Text",
+      "alias": "DestroyProgressBarHudText",
       "parameters": {
         "Text ID": {
           "type": "any"
@@ -6027,7 +6029,8 @@
       }
     },
     {
-      "name": "Destroy All Progress Bar HUD Text"
+      "name": "Destroy All Progress Bar HUD Text",
+      "alias": "DestroyAllProgressBarHudText"
     },
     {
       "name": "Create Progress Bar In-World Text",
@@ -6392,11 +6395,18 @@
     ],
     "EffectRev": [
       {
+        "name": "Visible To Position Radius and Color",
+        "alias": "VisibleToPositionRadiusAndColor"
+      },
+      {
         "name": "Visible To Position and Radius",
         "alias": "VisibleToPositionAndRadius"
       },
+      "Position Radius And Color",
       "Position And Radius",
+      "Visible To And Color",
       "Visible To",
+      "Color",
       "None"
     ],
     "Rounding": [
@@ -6453,14 +6463,26 @@
     "HudTextRev": [
       "Visible To And String",
       "String",
+      "String And Color",
+      {
+        "name": "Visible To Sort Order String and Color",
+        "alias": "VisibleToSortOrderStringAndColor"
+      },
       {
         "name": "Visible To Sort Order and String",
         "alias": "VisibleToSortOrderAndString"
       },
+      {
+        "name": "Visible To String and Color",
+        "alias": "VisibleToStringAndColor"
+      },
       "Sort Order And String",
       "Visible To And Sort Order",
+      "Visible To And Color",
       "Visible To",
       "Sort Order",
+      "Sort Order And Color",
+      "Color",
       "None"
     ],
     "Icon": [
@@ -6514,9 +6536,15 @@
       "X"
     ],
     "IconRev": [
+      {
+        "name": "Visible To, Position, and Color",
+        "alias": "VisibleToPositionAndColor"
+      },
       "Visible To And Position",
       "Position",
+      "Position And Color",
       "Visible To",
+      "Visible To And Color",
       "None"
     ],
     "PlayEffect": [
@@ -6601,10 +6629,23 @@
     ],
     "InworldTextRev": [
       {
+        "name": "Visible To, Position, String, and Color",
+        "alias": "VisibleToPositionStringAndColor"
+      },
+      {
+        "name": "Visible To, String, and Color",
+        "alias": "VisibleToStringAndColor"
+      },
+      {
+        "name": "Visible To, Position, and Color",
+        "alias": "VisibleToPositionAndColor"
+      },
+      {
         "name": "Visible To Position and String",
         "alias": "VisibleToPositionAndString"
       },
       "Visible To And String",
+      "Visible To And Color",
       "String",
       "Visible To And Position",
       "Visible To",
@@ -6854,7 +6895,9 @@
       "Practice Range",
       "Skirmish",
       "Team Deathmatch",
-      "Yeti Hunter"
+      "Yeti Hunter",
+      "Snowball Deathmatch",
+      "Freezethaw Elimination"
     ],
     "HealthType": [
       "Health",
@@ -6867,7 +6910,7 @@
       "Always"
     ],
     "Assist": [
-      "AssistersAndTargets",
+      "Assisters And Targets",
       "None"
     ],
     "ProgressBarEvaluation": [

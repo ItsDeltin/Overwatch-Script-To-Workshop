@@ -7,11 +7,13 @@ namespace Deltin.Deltinteger.Parse
     {
         public IVariableInstance Calling { get; }
         public IExpression[] Index { get; }
+        private readonly CodeType _anyType;
 
-        public CallVariableAction(IVariableInstance calling, IExpression[] index)
+        public CallVariableAction(ITypeSupplier types, IVariableInstance calling, IExpression[] index)
         {
             Calling = calling;
             Index = index ?? new IExpression[0];
+            _anyType = types.Any();
         }
 
         public IWorkshopTree Parse(ActionSet actionSet)
@@ -29,11 +31,11 @@ namespace Deltin.Deltinteger.Parse
             var type = Calling.CodeType;
             for (int i = 0; i < Index.Length; i++)
             {
-                if (type is ArrayType)
-                    type = ((ArrayType)type).ArrayOfType;
+                if (type is ArrayType arrayType)
+                    type = arrayType.ArrayOfType;
                 else
                 {
-                    type = null;
+                    type = _anyType;
                     break;
                 }
             }

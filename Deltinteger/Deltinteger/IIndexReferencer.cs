@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger
         MarkupBuilder Documentation { get; }
         IGettableAssigner GetAssigner();
         IWorkshopTree ToWorkshop(ActionSet actionSet) => actionSet.IndexAssigner.Get(Provider).GetVariable();
-        ICallVariable GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(this, index);
+        ICallVariable GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(parseInfo.TranslateInfo.Types, this, index);
         void Call(ParseInfo parseInfo, DocRange callRange) => Call(this, parseInfo, callRange);
         MarkupBuilder GetLabel() => new MarkupBuilder().StartCodeLine().Add(CodeType.GetNameOrAny() + " " + Name).EndCodeLine();
 

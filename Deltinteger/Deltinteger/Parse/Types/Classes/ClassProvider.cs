@@ -35,8 +35,8 @@ namespace Deltin.Deltinteger.Parse
             if (Extends != null) ((ClassType)Extends).ResolveElements();
         }
 
-        public virtual CodeType GetInstance() => new ClassType(this);
-        public virtual CodeType GetInstance(GetInstanceInfo instanceInfo) => new ClassType(this);
+        public virtual CodeType GetInstance() => new ClassType(Name);
+        public virtual CodeType GetInstance(GetInstanceInfo instanceInfo) => new ClassType(Name);
 
         public CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,

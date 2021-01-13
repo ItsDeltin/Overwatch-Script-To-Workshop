@@ -32,28 +32,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the generics.
             AnonymousTypes = AnonymousType.GetGenerics(_typeContext.Generics);
-
-            /*
-            if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
-                parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", typeContext.Identifier.Range);
-            
-            DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, typeContext.Identifier.GetRange(typeContext.Range));
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
-            */
         }
-
-        /*
-        public override void Call(ParseInfo parseInfo, DocRange callRange)
-        {
-            base.Call(parseInfo, callRange);
-            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            AddLink(new LanguageServer.Location(parseInfo.Script.Uri, callRange));
-        }
-        public void AddLink(LanguageServer.Location location)
-        {
-            _parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, location);
-        }
-        */
 
         public override bool BuiltInTypeMatches(Type type) => false;
 
@@ -151,6 +130,11 @@ namespace Deltin.Deltinteger.Parse
         void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => _operationalStaticScope.CopyVariable(variable);
 
         public IVariableInstance GetOverridenVariable(string variableName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddMacro(MacroVarProvider macro)
         {
             throw new NotImplementedException();
         }

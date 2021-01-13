@@ -179,6 +179,7 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>An IExpression created from the context.</returns>
         public IExpression GetVariable(Scope scope, Scope getter, Identifier variableContext)
         {
+            if (!variableContext.Token) return new MissingElementAction(TranslateInfo);
             // Get the variable.
             var variable = scope.GetVariable(variableContext.Token.Text, getter, Script.Diagnostics, variableContext.Token.Range, ResolveInvokeInfo != null);
             if (variable == null)
@@ -214,6 +215,10 @@ namespace Deltin.Deltinteger.Parse
             ResolveInvokeInfo = null,
             AsyncInfo = null
         };
+
+        public ParseInfo ClearContextual() => new ParseInfo(this) {
+            SourceExpression = null
+        }.ClearTail().ClearHead();
 
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
     }

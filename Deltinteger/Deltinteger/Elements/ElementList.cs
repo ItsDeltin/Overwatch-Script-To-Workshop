@@ -54,6 +54,7 @@ namespace Deltin.Deltinteger.Elements
                         name,
                         documentation,
                         function.Parameters[i].VariableReferenceIsGlobal.Value ? VariableType.Global : VariableType.Player,
+                        typeSupplier,
                         new VariableResolveOptions() { CanBeIndexed = false, FullVariable = true }
                     );
                 }
@@ -119,7 +120,7 @@ namespace Deltin.Deltinteger.Elements
             Element element = Element.Part(_function, methodCall.ParameterValues);
             element.Comment = methodCall.ActionComment;
 
-            if (!DoesReturnValue)
+            if (element.Function is ElementJsonAction)
             {
                 actionSet.AddAction(element);
 
@@ -163,6 +164,12 @@ namespace Deltin.Deltinteger.Elements
                     functions.Add(new ElementList(value, typeSupplier));
             
             return functions.ToArray();
+        }
+
+        public static void AddWorkshopFunctionsToScope(Scope scope, ITypeSupplier typeSupplier)
+        {
+            foreach (var function in GetWorkshopFunctions(typeSupplier))
+                scope.AddNativeMethod(function);
         }
     }
 }

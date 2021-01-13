@@ -13,7 +13,6 @@ namespace Deltin.Deltinteger.Pathfinder
         public bool PotentiallyNullNodes { get; set; } // Determines if nodes can potentially be null.
 
         // Class Instances
-        private PathResolveClass PathResolveInstance;
         private PathmapClass PathmapInstance;
 
         // Workshop Variables
@@ -53,9 +52,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 TimeSinceLastNode = DeltinScript.VarCollection.Assign("timeSinceLastNode", false, assignExtended);
             }
 
+            var pathfinderTypes = DeltinScript.GetComponent<PathfinderTypesComponent>();
+
             // Get the PathResolve instance and the Pathmap instance.
-            PathResolveInstance = DeltinScript.Types.GetInitializer<PathResolveClass>();
-            PathmapInstance = DeltinScript.Types.GetInitializer<PathmapClass>();
+            PathmapInstance = pathfinderTypes.Pathmap;
 
             // Get the resolve subroutine.
             GetResolveRoutine();
@@ -131,17 +131,7 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         /// <summary>Gets the closest node from a position.</summary>
-        public Element ClosestNode(ActionSet actionSet, Element position)
-        {
-            // Get the nodes in the pathmap
-            Element nodes = PathmapInstance.Nodes.Get()[PathmapReference.GetVariable()];
-
-            // Get the closest node index.
-            if (ApplicableNodeDeterminer == null)
-                return DijkstraBase.ClosestNodeToPosition(nodes, position, PotentiallyNullNodes);
-            else
-                return (Element)ApplicableNodeDeterminer.Invoke(actionSet, nodes, position);
-        }
+        public Element ClosestNode(ActionSet actionSet, Element position) => PathmapInstance.GetNodeFromPositionHandler(actionSet, PathmapReference.Get()).NodeFromPosition(position);
 
         /// <summary>The position of the current node the player is walking towards.</summary>
         public Element CurrentPosition(Element player = null) => PathmapInstance.Nodes.Get()[PathmapReference.Get()][Current.Get(player)];
@@ -158,7 +148,7 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <summary>The position of the current player: `Position Of(Event Player)`</summary>
         private Element PlayerPosition() => Element.PositionOf(Element.EventPlayer());
 
-        /// <summary>Starts pathfinding for the specified players/</summary>
+        /// <summary>Starts pathfinding for the specified players.</summary>
         /// <param name="actionSet">The actionset of the current rule.</param>
         /// <param name="players">The players that will start pathfinding.</param>
         /// <param name="pathmapReference">A reference to the pathmap the players are pathfinding with.</param>

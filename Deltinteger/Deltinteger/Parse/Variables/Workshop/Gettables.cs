@@ -36,6 +36,9 @@ namespace Deltin.Deltinteger.Parse
         public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
             => actionSet.AddAction(SetVariable((Element)value, target, index));
 
+        public void Set(ActionSet actionSet, Element value, Element target = null, params Element[] index) => Set(actionSet, null, value, target, index);
+        public void Set(ActionSet actionSet, string comment, Element value, Element target = null, params Element[] index) => actionSet.AddAction(comment, SetVariable(value, target, index));
+
         public IndexReference CreateChild(params Element[] index)
         {
             // Note: `ArrayBuilder` and `ArrayBuilder<Element>` are 2 very different things.

@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
                 if (typeScope != null)
                 {
                     // Cope the elements.
-                    _scope.CopyAll(typeScope, null);
+                    _scope.CopyAll(typeScope);
 
                     // Append to the scope name.
                     scopeName += "'" + typeScope.ErrorName + "'";

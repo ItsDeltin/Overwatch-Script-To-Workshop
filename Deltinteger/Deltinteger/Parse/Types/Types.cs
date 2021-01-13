@@ -71,8 +71,15 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual bool Implements(CodeType type)
         {
-            if (type == null) return false;
+            if (type is PipeType union)
+                foreach (var unionType in union.IncludedTypes)
+                    if (DoesImplement(unionType))
+                        return true;
+            return DoesImplement(type);
+        }
 
+        protected virtual bool DoesImplement(CodeType type)
+        {
             // Iterate through all extended classes.
             CodeType checkType = this;
             while (checkType != null)

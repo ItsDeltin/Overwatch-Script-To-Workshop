@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public List<RestrictedCallType> RestrictedCalls { get; set; } = new List<RestrictedCallType>();
         public ParameterInvokedInfo Invoked { get; set; } = new ParameterInvokedInfo();
 
-        public CodeParameter(string name)
+        private CodeParameter(string name)
         {
             Name = name;
         }
@@ -35,24 +35,11 @@ namespace Deltin.Deltinteger.Parse
             DefaultValue = defaultValue;
         }
 
-        public CodeParameter(string name, MarkupBuilder documentation)
-        {
-            Name = name;
-            Documentation = documentation;
-        }
-
         public CodeParameter(string name, MarkupBuilder documentation, CodeType type)
         {
             Name = name;
             Type = type;
             Documentation = documentation;
-        }
-
-        public CodeParameter(string name, MarkupBuilder documentation, ExpressionOrWorkshopValue defaultValue)
-        {
-            Name = name;
-            Documentation = documentation;
-            DefaultValue = defaultValue;
         }
 
         public CodeParameter(string name, MarkupBuilder documentation, CodeType type, ExpressionOrWorkshopValue defaultValue)
@@ -199,6 +186,6 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public static bool UseNonnullParameter(IWorkshopTree input) => input != null && !(input is Element element && element.Function.Name == "Null");
+        public static implicit operator ExpressionOrWorkshopValue(Element value) => new ExpressionOrWorkshopValue(value);
     }
 }

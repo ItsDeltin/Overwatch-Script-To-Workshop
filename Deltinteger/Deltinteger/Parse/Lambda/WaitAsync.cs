@@ -75,10 +75,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public MethodAttributes Attributes { get; } = new MethodAttributes();
-        public CodeParameter[] Parameters { get; } = new CodeParameter[] {
-            new CodeParameter("duration", "The duration to wait in seconds before the action gets execute."),
-            new CodeParameter("action", "The action that is executed when the wait completes.", new PortableLambdaType(LambdaKind.Portable))
-        };
+        public CodeParameter[] Parameters { get; }
+
+        public WaitAsyncFunction(ITypeSupplier types)
+        {
+            Parameters = new CodeParameter[] {
+                new CodeParameter("duration", "The duration to wait in seconds before the action gets execute.", types.Number()),
+                new CodeParameter("action", "The action that is executed when the wait completes.", new PortableLambdaType(LambdaKind.Portable))
+            };
+        }
+
         public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
         public string GetLabel(bool markdown) => LanguageServer.HoverHandler.GetLabel("void", Name, Parameters, markdown, null);
 

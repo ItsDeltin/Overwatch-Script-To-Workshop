@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.Divide, this, this), // Number / number
                 new TypeOperation(TypeOperator.Modulo, this, this), // Number % number
 				new TypeOperation(TypeOperator.Pow, this, this),
-                new TypeOperation(TypeOperator.Multiply, _supplier.Vector(), this), // Vector * number
+                new TypeOperation(TypeOperator.Multiply, _supplier.Vector(), _supplier.Vector()), // Vector * number
 				new TypeOperation(TypeOperator.LessThan, this, _supplier.Boolean()), // Number < number
                 new TypeOperation(TypeOperator.LessThanOrEqual, this, _supplier.Boolean()), // Number <= number
                 new TypeOperation(TypeOperator.GreaterThanOrEqual, this, _supplier.Boolean()), // Number >= number
@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Boolean());
+        protected override bool DoesImplement(CodeType type) => base.DoesImplement(type) || type.Implements(_supplier.Boolean());
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        public override bool Implements(CodeType type) => base.Implements(type) || type.Implements(_supplier.Number());
+        protected override bool DoesImplement(CodeType type) => base.DoesImplement(type) || type.Implements(_supplier.Number());
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
