@@ -6,6 +6,7 @@ namespace Deltin.Deltinteger.Parse
     public interface IDefinedTypeInitializer : ICodeTypeInitializer, IScopeHandler
     {
         void AddVariable(IVariable var);
+        void AddMacro(MacroVarProvider macro);
 
         public static ICodeTypeInitializer GetInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext)
         {
@@ -29,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
             // Variable
             else if (declaration is VariableDeclaration variable)
                 result = new ClassVariable(this, new DefineContextHandler(parseInfo, variable))
-                    .GetVar(var => AddVariable(var), macroVarProvider => {});
+                    .GetVar(var => AddVariable(var), macroVarProvider => AddMacro(macroVarProvider));
 
             else throw new NotImplementedException();
 

@@ -189,7 +189,9 @@ namespace Deltin.Deltinteger.Parse
             {
                 bool isLast = i == Tree.Length - 1;
                 IWorkshopTree current = null;
-                if (Tree[i] is CallVariableAction callVariableAction)
+
+                // TODO: Make this an interface function.
+                if (Tree[i] is CallVariableAction callVariableAction && callVariableAction.Calling.UseDefaultVariableAssigner)
                 {
                     // Get the reference.
                     var reference = currentAssigner.Get(callVariableAction.Calling.Provider);

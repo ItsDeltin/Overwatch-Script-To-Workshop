@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger
 
     public interface IVariableInstance : IScopeable
     {
-        bool CanBeIndexed => true;
+        bool UseDefaultVariableAssigner => true;
         IVariable Provider { get; }
         MarkupBuilder Documentation { get; }
         IGettableAssigner GetAssigner();

@@ -1381,13 +1381,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
             }
             // Variable macro
-            else if (ParseOptional(TokenType.Colon))
-            {
-                // Get the value.
-                var macroValue = GetContainExpression();
-                ParseSemicolon();
-                return EndNode(new MacroVarDeclaration(attributes, type, identifier, macroValue));
-            }
+            // else if (ParseOptional(TokenType.Colon))
+            // {
+            //     // Get the value.
+            //     var macroValue = GetContainExpression();
+            //     ParseSemicolon();
+            //     return EndNode(new MacroVarDeclaration(attributes, type, identifier, macroValue));
+            // }
             // Variable
             else
             {

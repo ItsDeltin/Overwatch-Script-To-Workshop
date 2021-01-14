@@ -34,6 +34,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public void AddVariable(IVariable var) => base.Variables.Add(var);
+        public void AddMacro(MacroVarProvider macro) {}
+        // public void AddMacro(MacroVarProvider macro) => ObjectScope.AddNativeVariable(macro.GetDefaultInstance());
 
         public override CodeType GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
         // TODO: generics support for structs.

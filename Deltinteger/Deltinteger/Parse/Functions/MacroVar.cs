@@ -30,6 +30,7 @@ namespace Deltin.Deltinteger.Parse
 
         public MacroVarProvider(IMacroInfo macroInfo)
         {
+            Name = macroInfo.Name;
             _parseInfo = macroInfo.ParseInfo;
             _expressionContext = macroInfo.InitialValueContext;
             _scope = macroInfo.Scope;
@@ -41,6 +42,8 @@ namespace Deltin.Deltinteger.Parse
 
             _recursiveCallHandler = new RecursiveCallHandler(this);
             CallInfo = new CallInfo(_recursiveCallHandler, macroInfo.ParseInfo.Script);
+
+            macroInfo.ParseInfo.TranslateInfo.ApplyBlock(this);
         }
 
         public void SetupBlock()
@@ -83,6 +86,7 @@ namespace Deltin.Deltinteger.Parse
         public LanguageServer.Location DefinedAt => Provider.DefinedAt;
         public AccessLevel AccessLevel => Provider.AccessLevel;
         public MarkupBuilder Documentation { get; }
+        public bool UseDefaultVariableAssigner => false;
 
         public MacroVarInstance(MacroVarProvider provider)
         {
@@ -91,5 +95,6 @@ namespace Deltin.Deltinteger.Parse
 
         public IGettableAssigner GetAssigner() => new ConstantWorkshopValueAssigner(Provider.Value);
         public CompletionItem GetCompletion() => IVariableInstance.GetCompletion(this, CompletionItemKind.Variable);
+        public IWorkshopTree ToWorkshop(ActionSet actionSet) => Provider.Value.Parse(actionSet);
     }
 }
