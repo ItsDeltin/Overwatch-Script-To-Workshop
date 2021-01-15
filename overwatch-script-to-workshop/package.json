@@ -310,7 +310,7 @@
     },
     "dependencies": {
         "async": "^3.2.0",
-        "axios": "^0.19.2",
+        "axios": "^0.21.1",
         "chokidar": "^3.4.3",
         "glob": "^7.1.6",
         "vscode-debugadapter": "^1.41.1",
