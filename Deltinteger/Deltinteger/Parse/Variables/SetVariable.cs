@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             IExpression variableExpression = parseInfo.GetExpression(scope, assignmentContext.VariableExpression);
 
             // Get the variable being set.
-            VariableResolve = new VariableResolve(new VariableResolveOptions(), variableExpression, assignmentContext.VariableExpression.Range, parseInfo.Script.Diagnostics);
+            VariableResolve = new VariableResolve(new VariableResolveOptions() { ShouldBeSettable = true }, variableExpression, assignmentContext.VariableExpression.Range, parseInfo.Script.Diagnostics);
 
             // Get the operation.
             Operation = assignmentContext.AssignmentToken;

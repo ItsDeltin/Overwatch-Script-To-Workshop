@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Json
         public JsonProperty(JProperty property)
         {
             Name = property.Name;
-            Var = new JsonVar(property.Name);
+            Var = new InternalVar(property.Name, CompletionItemKind.Property);
             Var.IsSettable = false;
             Value = IJsonValue.GetValue(property.Value);
             Var.Documentation = Value.Documentation;
@@ -187,8 +187,6 @@ namespace Deltin.Deltinteger.Json
         public string Documentation { get; }
         public CodeType Type { get; }
 
-        public JsonVar Var { get; }
-
         public JsonObject(JToken token)
         {
             Documentation = "A JSON object.";
@@ -198,22 +196,12 @@ namespace Deltin.Deltinteger.Json
         public bool ContainsDeepArrays() => ((JsonType)Type).Properties.Any(p => p.Value.ContainsDeepArrays());
     }
 
-    class JsonVar : InternalVar
-    {
-        public JsonVar(string name) : base(name, CompletionItemKind.Property) { }
-        public override string GetLabel(bool markdown)
-        {
-            if (!markdown) return base.GetLabel(false);
-            return Documentation;
-        }
-    }
-
     class GetJsonPropertyFunction : IMethod
     {
         public MethodAttributes Attributes { get; }
         public CodeParameter[] Parameters { get; }
         public string Name => "Get";
-        public CodeType CodeType => null;
+        public ICodeTypeSolver CodeType => null;
         public bool Static => false;
         public bool WholeContext => true;
         public MarkupBuilder Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";
@@ -232,16 +220,6 @@ namespace Deltin.Deltinteger.Json
             };
             ContainingType = containingType;
         }
-
-        public CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = Name,
-            Detail = GetLabel(false),
-            Kind = CompletionItemKind.Method,
-            Documentation = Documentation
-        };
-
-        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this).ToString(markdown);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => (Element)methodCall.AdditionalParameterData[0];
 
@@ -274,7 +252,7 @@ namespace Deltin.Deltinteger.Json
                         Documentation = Extras.GetMarkupContent(prop.Var.Documentation),
                         Kind = CompletionItemKind.Property
                     });
-                parseInfo.Script.AddCompletionRange(new CompletionRange(completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));
+                parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));
 
                 string text = stringAction.Value;
 

@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private readonly ITypeSupplier _typeSupplier;
         private readonly Scope _scope = new Scope();
-        private readonly InternalVar _length = new InternalVar("Length", CompletionItemKind.Property);
+        private readonly InternalVar _length = new InternalVar("Length", CompletionItemKind.Property) { IsSettable = false };
 
         public StringType(ITypeSupplier typeSupplier) : base("String")
         {

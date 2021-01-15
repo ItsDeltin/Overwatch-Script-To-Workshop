@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.AsyncInfo.Accept();
                 }
 
-                parseInfo.Script.AddHover(invokeInfo.Context.Range, callingMethod.GetLabel(true));
+                parseInfo.Script.AddHover(invokeInfo.Context.Range, callingMethod.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
             }
 
             return result;
@@ -92,8 +92,7 @@ namespace Deltin.Deltinteger.Parse
             var invoke = (LambdaInvoke)overloadChooser.Overload;
             invoke?.Call(parseInfo, invokeInfo.TargetRange);
 
-            return new LambdaInvokeResult(invoke, overloadChooser.Values, invokeInfo.Target);
-            // return new FunctionInvokeResult(parseInfo, invokeInfo.TargetRange, invokeInfo.UsedAsExpression, invoke, overloadChooser.Values, overloadChooser.AdditionalParameterData, overloadChooser.Match);
+            return new LambdaInvokeResult(parseInfo.TranslateInfo, invoke, overloadChooser.Values, invokeInfo.Target);
         }
     }
 
@@ -145,8 +144,8 @@ namespace Deltin.Deltinteger.Parse
 
     class FunctionInvokeResult : IInvokeResult, IBlockListener, IOnBlockApplied
     {
-        public CodeType ReturnType => Function.CodeType;
         public IMethod Function { get; }
+        public CodeType ReturnType { get; }
         public IExpression[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
         private readonly object _additionalData;
@@ -160,6 +159,7 @@ namespace Deltin.Deltinteger.Parse
         public FunctionInvokeResult(ParseInfo parseInfo, DocRange targetRange, bool usedAsExpression, IMethod function, object additionalData, IExpression[] parameterValues, object[] additionalParameterData, OverloadMatch match)
         {
             Function = function;
+            ReturnType = Function.CodeType?.GetCodeType(parseInfo.TranslateInfo);
             ParameterValues = parameterValues;
             AdditionalParameterData = additionalParameterData;
             _additionalData = additionalData;
@@ -212,15 +212,16 @@ namespace Deltin.Deltinteger.Parse
     {
         public LambdaInvoke Function { get; }
         IMethod IInvokeResult.Function => this.Function;
-        public CodeType ReturnType => Function.CodeType;
+        public CodeType ReturnType { get; }
         public IExpression[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
         private readonly IExpression _target;
         private string _comment;
 
-        public LambdaInvokeResult(LambdaInvoke function, IExpression[] parameterValues, IExpression target)
+        public LambdaInvokeResult(DeltinScript deltinScript, LambdaInvoke function, IExpression[] parameterValues, IExpression target)
         {
             Function = function;
+            ReturnType = function.CodeType.GetCodeType(deltinScript);
             ParameterValues = parameterValues;
             AdditionalParameterData = new object[parameterValues?.Length ?? 0];
             _target = target;

@@ -21,6 +21,7 @@ namespace Deltin.Deltinteger.Parse
         public TokenType? TokenType { get; set; } = null;
         public bool Ambiguous { get; set; }
         public bool RequiresCapture => false;
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
 
         public InternalVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
         {
@@ -48,25 +49,17 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            parseInfo.Script.AddHover(callRange, GetLabel(true));
+            parseInfo.Script.AddHover(callRange, ((IVariable)this).GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
             if (TokenType != null) parseInfo.Script.AddToken(callRange, (TokenType)TokenType);
         }
 
-        public virtual CompletionItem GetCompletion() => new CompletionItem()
+        public virtual CompletionItem GetCompletion(DeltinScript deltinScript) => new CompletionItem()
         {
             Label = Name,
             Kind = CompletionItemKind,
-            Detail = GetLabel(false),
+            Detail = ((IVariable)this).GetLabel(deltinScript, LabelInfo.Hover),
             Documentation = Documentation
         };
-
-        public virtual string GetLabel(bool markdown)
-        {
-            string typeName = "define";
-            if (CodeType != null) typeName = CodeType.GetName();
-            if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation);
-            else return typeName + " " + Name;
-        }
 
         bool IAmbiguityCheck.CanBeAmbiguous() => Ambiguous;
     }

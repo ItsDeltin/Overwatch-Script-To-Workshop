@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Add completion if the string is localized.
             if (Localized)
-                _parseInfo.Script.AddCompletionRange(new CompletionRange(StringCompletion, _stringRange, CompletionRangeKind.ClearRest));
+                _parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, StringCompletion, _stringRange, CompletionRangeKind.ClearRest));
 
             // Get the format parameters.
             if (stringContext.Formats == null)

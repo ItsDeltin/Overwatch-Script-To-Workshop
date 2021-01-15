@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
 
                     parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(Constructor, new Location(parseInfo.Script.Uri, nameRange));
                     Constructor.Call(parseInfo, nameRange);
-                    parseInfo.Script.AddHover(context.Range, Constructor.GetLabel(true));
+                    parseInfo.Script.AddHover(context.Range, Constructor.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
                 }
             }
         }

@@ -42,6 +42,7 @@ namespace Deltin.Deltinteger.Parse
                 // Make sure both left and right parentheses exists.
                 if (ruleContext.Conditions[i].LeftParen && ruleContext.Conditions[i].RightParen)
                     parseInfo.Script.AddCompletionRange(new CompletionRange(
+                        parseInfo.TranslateInfo,
                         scope,
                         ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range,
                         CompletionRangeKind.Catch
@@ -153,6 +154,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Add the completion.
             parseInfo.Script.AddCompletionRange(new CompletionRange(
+                parseInfo.TranslateInfo,
                 items,
                 // Use the start of the next token if the value token is null.
                 dot.Range.End + (value != null ? value.Range.End : parseInfo.Script.NextToken(dot).Range.Start),

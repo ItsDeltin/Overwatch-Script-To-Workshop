@@ -64,6 +64,7 @@ namespace Deltin.Deltinteger.Parse
     class DefinedEnumMember : IVariable, IExpression, ICallable
     {
         public string Name { get; }
+        public MarkupBuilder Documentation { get; }
         public LanguageServer.Location DefinedAt { get; }
         public DefinedEnum Enum { get; }
 
@@ -71,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static => true;
         public bool WholeContext => true;
         public bool CanBeIndexed => false;
-        public CodeType CodeType => null;
+        public ICodeTypeSolver CodeType => null;
 
         public ExpressionOrWorkshopValue ValueExpression { get; private set; }
 

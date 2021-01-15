@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (Attributes.Override)
             {
-                IMethod overriding = objectScope.GetMethodOverload(this);
+                IMethod overriding = objectScope.GetMethodOverload(parseInfo.TranslateInfo, this);
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a macro to override.", nameRange);
@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range, !Attributes.Override);
+            containingScope.AddMethod(this, parseInfo, DefinedAt.range, !Attributes.Override);
 
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SetupParameters()
         {
-            parseInfo.Script.AddHover(_context.Identifier.Range, GetLabel(true));
+            parseInfo.Script.AddHover(_context.Identifier.Range, ((IMethod)this).GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
         }
 
         override public void SetupBlock()

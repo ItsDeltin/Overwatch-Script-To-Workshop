@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
             RulesetScope.PrivateCatch = true;
 
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(translateSettings.Root);
+            Importer.CollectScriptFiles(this, translateSettings.Root);
 
             Translate();
             if (!Diagnostics.ContainsErrors())
@@ -187,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
             foreach (var apply in _applyBlocks) apply.SetupParameters();
             foreach (var apply in _applyBlocks) apply.SetupBlock();
-            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion();
+            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion(this);
 
             // Get hooks
             foreach (ScriptFile script in Importer.ScriptFiles)

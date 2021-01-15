@@ -244,28 +244,25 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return builder.Call();
         }
 
-        public string GetLabel(bool markdown)
+        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)
         {
-            string label = "";
+            var builder = new MarkupBuilder().StartCodeLine();
 
-            if (Parameters.Length == 1) label += Parameters[0].GetLabel(false);
+            if (Parameters.Length == 1)
+                builder.Add(Parameters[0].GetLabel(false));
             else
             {
-                label += "(";
+                builder.Add("(");
                 for (int i = 0; i < Parameters.Length; i++)
                 {
-                    if (i != 0) label += ", ";
-                    label += Parameters[i].GetLabel(false);
+                    if (i != 0) builder.Add(", ");
+                    builder.Add(Parameters[i].GetLabel(false));
                 }
-                label += ")";
+                builder.Add(")");
             }
-            label += " => ";
+            builder.Add(" => ");
 
-            // if (LambdaType is MacroLambda macroLambda) label += macroLambda.ReturnType?.GetName() ?? "define";
-            // else if (LambdaType is ValueBlockLambda vbl) label += "{" + (vbl.ReturnType?.GetName() ?? "define") + "}";
-            // else if (LambdaType is BlockLambda) label += "{}";
-
-            return label;
+            return builder;
         }
 
         public void SetupParameters() { }
@@ -293,7 +290,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             public string TypeName => "lambda";
             public bool CanBeRecursivelyCalled() => false;
             public bool DoesRecursivelyCall(IRecursiveCallHandler calling) => calling is LambdaRecursionHandler lambdaRecursion && Lambda == lambdaRecursion.Lambda;
-            public string GetLabel() => Lambda.GetLabel(false);
+            public string GetLabel(DeltinScript deltinScript) => Lambda.GetLabel(deltinScript, LabelInfo.RecursionError).ToString(false);
         }
     }
 }

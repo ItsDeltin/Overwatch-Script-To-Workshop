@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Elements
         public CodeParameter[] Parameters { get; private set; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public MarkupBuilder Documentation { get; }
-        public CodeType CodeType { get; private set; }
+        public ICodeTypeSolver CodeType { get; private set; }
         private readonly RestrictedCallType? _restricted;
         private readonly ElementBaseJson _function;
         private readonly Element _actionReturnValue;
@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Elements
         public bool Static => true;
         public bool DoesReturnValue => _function is ElementJsonValue || _actionReturnValue != null;
 
-        ElementList(ElementBaseJson function, ITypeSupplier typeSupplier)
+        ElementList(ElementBaseJson function)
         {
             _function = function;
 
@@ -54,18 +54,14 @@ namespace Deltin.Deltinteger.Elements
                         name,
                         documentation,
                         function.Parameters[i].VariableReferenceIsGlobal.Value ? VariableType.Global : VariableType.Player,
-                        typeSupplier,
+                        new CodeTypeFromStringSolver("Any"),
                         new VariableResolveOptions() { CanBeIndexed = false, FullVariable = true }
                     );
                 }
                 else // Not a variable reference parameter.
                 {
                     // The type of the parameter.
-                    CodeType type = typeSupplier.Default();
-
-                    // Get the type from the type value.
-                    if (function.Parameters[i].Type != null)    
-                        type = typeSupplier.FromString(function.Parameters[i].Type);
+                    string type = function.Parameters[i].Type ?? "Any";
 
                     // Get the default value.
                     IWorkshopTree defaultValueWorkshop = null;
@@ -77,7 +73,7 @@ namespace Deltin.Deltinteger.Elements
                     }
                     
                     // Set the parameter.
-                    Parameters[i] = new CodeParameter(name, documentation, type, defaultValue);
+                    Parameters[i] = new CodeParameter(name, documentation, new CodeTypeFromStringSolver(type), defaultValue);
 
                     // If the default parameter value is an Element and the Element is restricted,
                     if (defaultValueWorkshop is Element parameterElement && parameterElement.Function.Restricted != null)
@@ -87,18 +83,18 @@ namespace Deltin.Deltinteger.Elements
             }
         }
 
-        ElementList(ElementJsonValue value, ITypeSupplier typeSupplier) : this((ElementBaseJson)value, typeSupplier)
+        ElementList(ElementJsonValue value) : this((ElementBaseJson)value)
         {
-            CodeType = typeSupplier.FromString(value.ReturnType);
+            CodeType = new CodeTypeFromStringSolver(value.ReturnType);
         }
 
-        ElementList(ElementJsonAction action, ITypeSupplier typeSupplier) : this((ElementBaseJson)action, typeSupplier)
+        ElementList(ElementJsonAction action) : this((ElementBaseJson)action)
         {
             if (action.ReturnValue != null)
             {
                 var returnValue = (ElementJsonValue)ElementRoot.Instance.GetFunction(action.ReturnValue);
                 _actionReturnValue = Element.Part(returnValue);
-                CodeType = typeSupplier.FromString(returnValue.ReturnType);
+                CodeType = new CodeTypeFromStringSolver(returnValue.ReturnType);
             }
         }
 
@@ -131,10 +127,6 @@ namespace Deltin.Deltinteger.Elements
             else return element;
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, Documentation);
-
-        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
-
         public object Call(ParseInfo parseInfo, DocRange callRange)
         {
             if (_restricted != null)
@@ -148,7 +140,8 @@ namespace Deltin.Deltinteger.Elements
             return null;
         }
 
-        public static IMethod[] GetWorkshopFunctions(ITypeSupplier typeSupplier)
+        private static IMethod[] WorkshopFunctions { get; } = GetWorkshopFunctions();
+        private static IMethod[] GetWorkshopFunctions()
         {
             // Initialize the list.
             List<IMethod> functions = new List<IMethod>();
@@ -156,19 +149,19 @@ namespace Deltin.Deltinteger.Elements
             // Get the actions.
             foreach (var action in ElementRoot.Instance.Actions)
                 if (!action.IsHidden)
-                    functions.Add(new ElementList(action, typeSupplier));
+                    functions.Add(new ElementList(action));
 
             // Get the values.
             foreach (var value in ElementRoot.Instance.Values)
                 if (!value.IsHidden)
-                    functions.Add(new ElementList(value, typeSupplier));
+                    functions.Add(new ElementList(value));
             
             return functions.ToArray();
         }
 
         public static void AddWorkshopFunctionsToScope(Scope scope, ITypeSupplier typeSupplier)
         {
-            foreach (var function in GetWorkshopFunctions(typeSupplier))
+            foreach (var function in WorkshopFunctions)
                 scope.AddNativeMethod(function);
         }
     }

@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public string Name => "WaitAsync";
         public MarkupBuilder Documentation => _documentation;
-        public CodeType CodeType => null;
+        public ICodeTypeSolver CodeType => null;
         public bool Static => true;
         public bool DoesReturnValue => false;
         public bool WholeContext => true;
@@ -84,9 +84,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 new CodeParameter("action", "The action that is executed when the wait completes.", new PortableLambdaType(LambdaKind.Portable))
             };
         }
-
-        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => LanguageServer.HoverHandler.GetLabel("void", Name, Parameters, markdown, null);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {

@@ -16,12 +16,12 @@ namespace Deltin.Deltinteger.Parse
         private VariableType VariableType { get; }
         private VariableResolveOptions Options { get; }
 
-        public VariableParameter(string name, string documentation, ITypeSupplier typeSupplier, VariableResolveOptions options = null) : base(name, documentation, typeSupplier.Any())
+        public VariableParameter(string name, string documentation, ICodeTypeSolver typeSolver, VariableResolveOptions options = null) : base(name, documentation, typeSolver)
         {
             VariableType = VariableType.Dynamic;
             Options = options ?? new VariableResolveOptions();
         }
-        public VariableParameter(string name, string documentation, VariableType variableType, ITypeSupplier typeSupplier, VariableResolveOptions options = null) : base(name, documentation, typeSupplier.Any())
+        public VariableParameter(string name, string documentation, VariableType variableType, ICodeTypeSolver typeSolver, VariableResolveOptions options = null) : base(name, documentation, typeSolver)
         {
             if (variableType == VariableType.ElementReference) throw new Exception("Only the variable types Dynamic, Global, and Player is valid.");
             VariableType = variableType;
@@ -187,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
 
             string dir = Path.GetDirectoryName(resultingPath);
             if (Directory.Exists(dir))
-                Importer.AddImportCompletion(parseInfo.Script, dir, valueRange);
+                Importer.AddImportCompletion(parseInfo.TranslateInfo, parseInfo.Script, dir, valueRange);
 
             if (!File.Exists(resultingPath))
             {

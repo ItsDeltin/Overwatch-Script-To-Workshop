@@ -152,12 +152,12 @@ namespace Deltin.Deltinteger.Parse
 
                     // If the named argument's name is not found, throw an error.
                     if (!nameFound)
-                        match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.GetLabel(false)}'.", inputParameters[i].NameRange);
+                        match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.GetLabel(parseInfo.TranslateInfo, LabelInfo.OverloadError)}'.", inputParameters[i].NameRange);
                 }
             }
 
             // Compare parameter types.
-            for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(i);
+            for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(parseInfo.TranslateInfo, i);
 
             // Get the missing parameters.
             match.GetMissingParameters(_errorMessages, context, _targetRange, CallRange);
@@ -181,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
             {
                 // If the CodeParameter type is a lambda type, get the lambda statement with it.
-                if (bestOption.Option.Parameters[i].Type is PortableLambdaType portableLambda)
+                if (bestOption.Option.Parameters[i].GetCodeType(parseInfo.TranslateInfo) is PortableLambdaType portableLambda)
                     bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers(portableLambda);
                 // Otherwise, get the lambda statement with the default.
                 else
@@ -202,7 +202,7 @@ namespace Deltin.Deltinteger.Parse
             else if (!getter.AccessorMatches(scope, Overload.AccessLevel)) accessable = false;
 
             if (!accessable)
-                parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), _targetRange);
+                parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(parseInfo.TranslateInfo, LabelInfo.OverloadError)), _targetRange);
         }
 
         private bool SetParameterCount(int numberOfParameters)
@@ -262,7 +262,7 @@ namespace Deltin.Deltinteger.Parse
                     parameters[p] = new ParameterInformation()
                     {
                         // Get the label to show in the signature.
-                        Label = AllOverloads[i].Parameters[p].GetLabel(),
+                        Label = AllOverloads[i].Parameters[p].GetLabel(parseInfo.TranslateInfo),
                         // Get the documentation.
                         Documentation = AllOverloads[i].Parameters[p].Documentation
                     };
@@ -270,7 +270,7 @@ namespace Deltin.Deltinteger.Parse
                 // Create the signature information.
                 overloads[i] = new SignatureInformation()
                 {
-                    Label = AllOverloads[i].GetLabel(false),
+                    Label = AllOverloads[i].GetLabel(parseInfo.TranslateInfo, LabelInfo.SignatureOverload),
                     Parameters = parameters,
                     Documentation = AllOverloads[i].Documentation
                 };
@@ -329,9 +329,9 @@ namespace Deltin.Deltinteger.Parse
         public void Error(string message, DocRange range, bool vital = true) => Errors.Add(new OverloadMatchError(message, range, vital));
 
         /// <summary>Confirms that a parameter type matches.</summary>
-        public void CompareParameterTypes(int parameter)
+        public void CompareParameterTypes(DeltinScript deltinScript, int parameter)
         {
-            CodeType parameterType = Option.Parameters[parameter].Type;
+            CodeType parameterType = Option.Parameters[parameter].GetCodeType(deltinScript);
             IExpression value = OrderedParameters[parameter]?.Value;
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
@@ -348,7 +348,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // The parameter type does not match.
                 if (parameterType.CodeTypeParameterInvalid(value.Type()))
-                    Error(string.Format("Cannot convert type '{0}' to '{1}'", value.Type().GetName(), Option.Parameters[parameter].Type.GetName()), errorRange);
+                    Error(string.Format("Cannot convert type '{0}' to '{1}'", value.Type().GetName(), parameterType.GetName()), errorRange);
                 
                 // Constant used in bad place.
                 else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
@@ -403,7 +403,7 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                             callType,
                             parseInfo.GetLocation(callRange),
-                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.GetLabel(false), callType),
+                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.GetLabel(parseInfo.TranslateInfo, LabelInfo.OverloadError), callType),
                             Option.RestrictedValuesAreFatal
                         ));
         }

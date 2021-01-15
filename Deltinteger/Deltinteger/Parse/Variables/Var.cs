@@ -14,6 +14,8 @@ namespace Deltin.Deltinteger.Parse
 
         // IScopeable
         public string Name { get; }
+        public MarkupBuilder Documentation { get; }
+        public MarkupBuilder MarkupBuilder { get; }
         public AccessLevel AccessLevel { get; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; }
@@ -21,6 +23,7 @@ namespace Deltin.Deltinteger.Parse
 
         // Attributes
         public CodeType CodeType { get; private set; }
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
         public VariableType VariableType { get; private set; }
         public StoreType StoreType { get; private set; }
         public bool InExtendedCollection { get; }
@@ -174,16 +177,13 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            return actionSet.IndexAssigner[this].GetVariable();
-        }
+        public IWorkshopTree Parse(ActionSet actionSet) => actionSet.IndexAssigner[this].GetVariable();
 
         public CompletionItem GetCompletion() => new CompletionItem()
         {
             Label = Name,
             Kind = CompletionItemKind.Variable,
-            Detail = (CodeType?.Name ?? "define") + " " + Name
+            Detail = CodeType.GetName() + " " + Name
         };
 
         public string GetLabel(bool markdown)

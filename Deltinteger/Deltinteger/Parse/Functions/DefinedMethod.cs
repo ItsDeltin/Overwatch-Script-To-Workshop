@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
             // Override attribute.
             if (Attributes.Override)
             {
-                IMethod overriding = objectScope.GetMethodOverload(this);
+                IMethod overriding = objectScope.GetMethodOverload(parseInfo.TranslateInfo, this);
                 Attributes.Overriding = overriding;
 
                 // No method with the name and parameters found.
@@ -109,10 +109,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
 
             // Add to the scope. Check for conflicts if the method is not overriding.
-            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
-
-            // Add the hover info.
-            parseInfo.Script.AddHover(nameRange, GetLabel(true));
+            containingScope.AddMethod(this, parseInfo, nameRange, !Attributes.Override);
 
             if (Attributes.IsOverrideable)
                 parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));

@@ -12,7 +12,7 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class CodeType : IExpression, ICallable
+    public abstract class CodeType : IExpression, ICallable, ICodeTypeSolver
     {
         public string Name { get; }
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
@@ -135,8 +135,11 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
+            var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name).EndCodeLine();
+            if (Description != null) hover.NewSection().Add(Description);
+
             parseInfo.TranslateInfo.Types.CallType(this);
-            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind.ToString().ToLower() + " " + Name, Description));
+            parseInfo.Script.AddHover(callRange, hover);
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
 
@@ -150,6 +153,8 @@ namespace Deltin.Deltinteger.Parse
 
         /// <summary>Gets the full name of the type.</summary>
         public virtual string GetName() => Name;
+
+        public CodeType GetCodeType(DeltinScript deltinScript) => this;
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, IParseType typeContext) => GetCodeTypeFromContext(parseInfo, (dynamic)typeContext);
 

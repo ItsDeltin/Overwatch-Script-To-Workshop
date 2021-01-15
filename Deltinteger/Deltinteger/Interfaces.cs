@@ -16,31 +16,33 @@ namespace Deltin.Deltinteger
         MethodAttributes Attributes { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         bool DoesReturnValue => CodeType != null;
+        CompletionItem IScopeable.GetCompletion(DeltinScript deltinScript) => GetFunctionCompletion(deltinScript, this);
+        MarkupBuilder ILabeled.GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => DefaultLabel(deltinScript, labelInfo, this);
 
-        public static MarkupBuilder DefaultLabel(bool includeDescription, IMethod function)
+        public static MarkupBuilder DefaultLabel(DeltinScript deltinScript, LabelInfo labelInfo, IMethod function)
         {
-            MarkupBuilder markup = new MarkupBuilder()
-                .StartCodeLine()
-                .Add(function.CodeType.GetNameOrVoid())
-                .Add(" ")
-                .Add(function.Name + CodeParameter.GetLabels(function.Parameters))
+            MarkupBuilder markup = new MarkupBuilder().StartCodeLine();
+            
+            // Add return type.
+            if (labelInfo.IncludeReturnType)
+                markup.Add(ICodeTypeSolver.GetNameOrVoid(deltinScript, function.CodeType)).Add(" ");
+            
+            // Add function name and parameters.
+            markup.Add(function.Name + CodeParameter.GetLabels(deltinScript, function.Parameters))
                 .EndCodeLine();
             
-            if (includeDescription && function.Documentation != null)
-            {
-                markup
-                    .NewSection()
-                    .Add(function.Documentation);
-            }
+            // Add documentation.
+            if (labelInfo.IncludeDocumentation && function.Documentation != null)
+                markup.NewSection().Add(function.Documentation);
             
             return markup;
         }
 
-        public static CompletionItem GetFunctionCompletion(IMethod function) => new CompletionItem()
+        public static CompletionItem GetFunctionCompletion(DeltinScript deltinScript, IMethod function) => new CompletionItem()
         {
             Label = function.Name,
             Kind = CompletionItemKind.Method,
-            Detail = function.CodeType.GetNameOrVoid() + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
+            Detail = ICodeTypeSolver.GetNameOrVoid(deltinScript, function.CodeType) + " " + function.Name + CodeParameter.GetLabels(deltinScript, function.Parameters),
             Documentation = Extras.GetMarkupContent(function.Documentation)
         };
     }
@@ -57,15 +59,32 @@ namespace Deltin.Deltinteger
 
     public interface IScopeable : INamed, IAccessable
     {
-        CodeType CodeType { get; }
+        ICodeTypeSolver CodeType { get; }
         bool Static { get; }
         bool WholeContext { get; }
-        CompletionItem GetCompletion();
+        CompletionItem GetCompletion(DeltinScript deltinScript);
     }
 
-    public interface IVariable : IScopeable
+    public interface IVariable : IScopeable, ILabeled
     {
         bool CanBeIndexed => true;
+        MarkupBuilder Documentation { get; }
+
+        MarkupBuilder ILabeled.GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)
+        {
+            var builder = new MarkupBuilder().StartCodeLine();
+
+            if (labelInfo.IncludeReturnType)
+                builder.Add(CodeType.GetCodeType(deltinScript).GetName()).Add(" ");
+            
+            builder.Add(Name);
+            return builder;
+        }
+
+        CompletionItem IScopeable.GetCompletion(DeltinScript deltinScript) => new CompletionItem() {
+            Label = Name,
+            Documentation = Documentation
+        };
     }
 
     public interface ICallable : INamed
@@ -94,7 +113,7 @@ namespace Deltin.Deltinteger
 
     public interface ILabeled
     {
-        string GetLabel(bool markdown);
+        MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo);
     }
 
     public interface IApplyBlock : IBlockListener, ILabeled

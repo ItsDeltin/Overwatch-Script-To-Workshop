@@ -11,41 +11,41 @@ namespace Deltin.Deltinteger.Parse
     public class CodeParameter : IRestrictedCallHandler
     {
         public string Name { get; set; }
-        public CodeType Type { get; set; }
         public MarkupBuilder Documentation { get; set; }
         public ExpressionOrWorkshopValue DefaultValue { get; set; }
         public List<RestrictedCallType> RestrictedCalls { get; } = new List<RestrictedCallType>();
         public ParameterInvokedInfo Invoked { get; set; } = new ParameterInvokedInfo();
+        public ICodeTypeSolver _type;
 
         private CodeParameter(string name)
         {
             Name = name;
         }
 
-        public CodeParameter(string name, CodeType type)
+        public CodeParameter(string name, ICodeTypeSolver type)
         {
             Name = name;
-            Type = type;
+            _type = type;
         }
 
-        public CodeParameter(string name, CodeType type, ExpressionOrWorkshopValue defaultValue)
+        public CodeParameter(string name, ICodeTypeSolver type, ExpressionOrWorkshopValue defaultValue)
         {
             Name = name;
-            Type = type;
+            _type = type;
             DefaultValue = defaultValue;
         }
 
-        public CodeParameter(string name, MarkupBuilder documentation, CodeType type)
+        public CodeParameter(string name, MarkupBuilder documentation, ICodeTypeSolver type)
         {
             Name = name;
-            Type = type;
+            _type = type;
             Documentation = documentation;
         }
 
-        public CodeParameter(string name, MarkupBuilder documentation, CodeType type, ExpressionOrWorkshopValue defaultValue)
+        public CodeParameter(string name, MarkupBuilder documentation, ICodeTypeSolver type, ExpressionOrWorkshopValue defaultValue)
         {
             Name = name;
-            Type = type;
+            _type = type;
             DefaultValue = defaultValue;
             Documentation = documentation;
         }
@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             // If the type of the parameter is a lambda, then resolve the expression.
-            if (Type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr =>
+            if (_type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr =>
             {
                 // If the expression is a lambda...
                 if (expr is Lambda.LambdaAction lambda)
@@ -71,24 +71,22 @@ namespace Deltin.Deltinteger.Parse
         }
         public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => expression.Parse(actionSet);
 
-        public string GetLabel()
-        {
-            string result = Type.GetNameOrAny() + " " + Name;
-            if (DefaultValue != null) result = "[" + result + "]";
-            return result;
-        }
-
-        override public string ToString()
-        {
-            if (Type == null) return Name;
-            else return Type.GetName() + " " + Name;
-        }
-
         public void RestrictedCall(RestrictedCall restrictedCall)
         {
             if (!RestrictedCalls.Contains(restrictedCall.CallType))
                 RestrictedCalls.Add(restrictedCall.CallType);
         }
+
+        public CodeType GetCodeType(DeltinScript deltinScript) => _type.GetCodeType(deltinScript);
+
+        public string GetLabel(DeltinScript deltinScript)
+        {
+            string result = _type.GetCodeType(deltinScript).GetName() + " " + Name;
+            if (DefaultValue != null) result = "[" + result + "]";
+            return result;
+        }
+
+        override public string ToString() => Name;
 
         public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, List<VariableDeclaration> context, bool subroutineParameter)
         {
@@ -113,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
                     newVar = new SubroutineParameterVariable(methodScope, contextHandler);
 
                 vars[i] = newVar;
-                parameter.Type = newVar.CodeType;
+                parameter._type = newVar.CodeType;
 
                 if (newVar.InitialValue != null) parameter.DefaultValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
 
@@ -123,9 +121,9 @@ namespace Deltin.Deltinteger.Parse
             return new ParameterParseResult(parameters, vars);
         }
 
-        public static string GetLabels(CodeParameter[] parameters)
+        public static string GetLabels(DeltinScript deltinScript, CodeParameter[] parameters)
         {
-            return "(" + string.Join(", ", parameters.Select(p => p.GetLabel())) + ")";
+            return "(" + string.Join(", ", parameters.Select(p => p.GetLabel(deltinScript))) + ")";
         }
     }
 

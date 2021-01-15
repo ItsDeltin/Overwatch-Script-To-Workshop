@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
         public LocationLink[] GetDefinitionLinks() => _callLinks.ToArray();
 
         ///<summary>Adds a hover to the file.</summary>
-        public void AddHover(DocRange range, string content)
+        public void AddHover(DocRange range, MarkupBuilder content)
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
             if (content == null) throw new ArgumentNullException(nameof(content));
@@ -88,38 +88,42 @@ namespace Deltin.Deltinteger.Parse
 
     public class CompletionRange
     {
-        private Scope Scope { get; }
-        private Scope Getter { get; }
-        private CompletionItem[] CompletionItems { get; }
         public DocRange Range { get; }
         public CompletionRangeKind Kind { get; }
+        private readonly DeltinScript _deltinScript;
+        private readonly Scope _scope;
+        private readonly Scope _getter;
+        private readonly CompletionItem[] _completionItems;
 
-        public CompletionRange(Scope scope, DocRange range, CompletionRangeKind kind)
+        public CompletionRange(DeltinScript deltinScript, Scope scope, DocRange range, CompletionRangeKind kind)
         {
-            Scope = scope ?? throw new ArgumentNullException(nameof(scope));
+            _deltinScript = deltinScript;
+            _scope = scope ?? throw new ArgumentNullException(nameof(scope));
             Kind = kind;
             Range = range;
         }
 
-        public CompletionRange(Scope scope, Scope getter, DocRange range, CompletionRangeKind kind)
+        public CompletionRange(DeltinScript deltinScript, Scope scope, Scope getter, DocRange range, CompletionRangeKind kind)
         {
-            Scope = scope ?? throw new ArgumentNullException(nameof(scope));
-            Getter = getter;
+            _deltinScript = deltinScript;
+            _scope = scope ?? throw new ArgumentNullException(nameof(scope));
+            _getter = getter;
             Kind = kind;
             Range = range;
         }
 
-        public CompletionRange(CompletionItem[] completionItems, DocRange range, CompletionRangeKind kind)
+        public CompletionRange(DeltinScript deltinScript, CompletionItem[] completionItems, DocRange range, CompletionRangeKind kind)
         {
-            CompletionItems = completionItems ?? throw new ArgumentNullException(nameof(completionItems));
+            _deltinScript = deltinScript;
+            _completionItems = completionItems ?? throw new ArgumentNullException(nameof(completionItems));
             Kind = kind;
             Range = range;
         }
 
         public CompletionItem[] GetCompletion(DocPos pos, bool immediate)
         {
-            return Scope?.GetCompletion(pos, immediate, Getter) ?? CompletionItems;
-
+            if (_scope == null) return _completionItems;
+            return _scope.GetCompletion(_deltinScript, pos, immediate, _getter);
         }
     }
 
@@ -133,9 +137,9 @@ namespace Deltin.Deltinteger.Parse
     public class HoverRange
     {
         public DocRange Range { get; }
-        public string Content { get; }
+        public MarkupBuilder Content { get; }
 
-        public HoverRange(DocRange range, string content)
+        public HoverRange(DocRange range, MarkupBuilder content)
         {
             Range = range;
             Content = content;
