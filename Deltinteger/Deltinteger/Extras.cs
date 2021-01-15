@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using Deltin.Deltinteger.Parse;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
+using MarkedStringsOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkedStringsOrMarkupContent;
 using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
 using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
 using DocumentUri = OmniSharp.Extensions.LanguageServer.Protocol.DocumentUri;
@@ -210,8 +211,9 @@ namespace Deltin.Deltinteger
         };
         
         public static implicit operator MarkupBuilder(string value) => value == null ? null : new MarkupBuilder(value);
+        public static implicit operator string(MarkupBuilder builder) => builder?.ToString(false);
         public static implicit operator StringOrMarkupContent(MarkupBuilder builder) => builder == null ? null : new StringOrMarkupContent((MarkupContent)builder);
         public static implicit operator MarkupContent(MarkupBuilder builder) => builder == null ? null : new MarkupContent() { Kind = MarkupKind.Markdown, Value = builder.ToString(true) };
-        public static implicit operator string(MarkupBuilder builder) => builder?.ToString(false);
+        public static implicit operator MarkedStringsOrMarkupContent(MarkupBuilder builder) => new MarkedStringsOrMarkupContent(builder);
     }
 }
