@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree result = Calling.ToWorkshop(actionSet);
 
             for (int i = 0; i < Index.Length; i++)
-                result = Element.ValueInArray(result, Index[i].Parse(actionSet));
+                result = ValueInArrayToWorkshop.ValueInArray(result, Index[i].Parse(actionSet));
 
             return result;
         }

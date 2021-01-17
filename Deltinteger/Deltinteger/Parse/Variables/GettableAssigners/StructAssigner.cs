@@ -20,7 +20,16 @@ namespace Deltin.Deltinteger.Parse
 
         public GettableAssignerResult GetResult(GettableAssignerValueInfo info)
         {
-            var initialValue = (IStructValue)info.InitialValueOverride ?? (IStructValue)_defaultInitialValue?.Parse(info.ActionSet);
+            IStructValue initialValue = null;
+            
+            // Set the initial value.
+            // If an initial value is provided, use that.
+            if (info.InitialValueOverride != null)
+                initialValue = ValueInArrayToWorkshop.ExtractStructValue(info.InitialValueOverride);
+            // Otherwise, use the default initial value if it exists.
+            else if (_defaultInitialValue != null)
+                initialValue = ValueInArrayToWorkshop.ExtractStructValue(_defaultInitialValue.Parse(info.ActionSet));
+            // 'initialValue' may still be null.
 
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
@@ -85,7 +94,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
         {
-            var structValue = ExtractStructValue(value);
+            var structValue = ValueInArrayToWorkshop.ExtractStructValue(value);
 
             foreach (var child in _children)
                 child.Value.Set(actionSet, structValue.GetValue(child.Key), target, index);
@@ -93,7 +102,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
         {
-            var structValue = ExtractStructValue(value);
+            var structValue = ValueInArrayToWorkshop.ExtractStructValue(value);
 
             foreach (var child in _children)
                 child.Value.Modify(actionSet, Operation.AppendToArray, structValue.GetValue(child.Key), target, index);
@@ -108,22 +117,19 @@ namespace Deltin.Deltinteger.Parse
             
             return new StructAssignerValue(values);
         }
-
-        private IStructValue ExtractStructValue(IWorkshopTree value)
-        {
-            // Struct value.
-            if (value is IStructValue structValue) return structValue;
-
-            // Empty array.
-            if (value is Element element &&
-                (element.Function.Name == "Empty Array" ||
-                (element.Function.Name == "Array" && element.ParameterValues.Length == 0)))
-                return new StructArray(new IStructValue[0]);
-            
-            // Unknown
-            throw new Exception(value.ToString() + " is not a valid struct value.");
-        }
     }
+
+    /*
+    Hierarchy tree for struct types.
+
+    IStructValue    - An interface that represents any type of struct value.
+        StructArray    - Creates an array of struct values.
+        ValueInStructArray    - Gets a value in a struct array.
+        IInlineStructDictionary    - A dictionary linking variable names and values.
+            (LinkedStructAssigner)    - Default IInlineStructDictionary implementation.
+            IAssignedStructDictionary    - A dictionary linking variable names and workshop variables.
+                (StructAssignerValue)    - Assigns struct to workshop variables. Default IAssignedStructDictionary implementation.
+    */
 
     /// <summary>Represents a struct value or a struct array.</summary>
     public interface IStructValue : IWorkshopTree
@@ -187,6 +193,24 @@ namespace Deltin.Deltinteger.Parse
 
             // Otherwise, create a normal workshop array.
             return Element.CreateArray(Children.Select(c => c.GetValue(variableName)).ToArray());
+        }
+    }
+
+    /// <summary>Gets a value in a struct array by an index.</summary>
+    public class ValueInStructArray : IStructValue
+    {
+        private readonly IStructValue _structValue;
+        private readonly IWorkshopTree _index;
+
+        public ValueInStructArray(IStructValue structValue, IWorkshopTree index)
+        {
+            _structValue = structValue;
+            _index = index;
+        }
+
+        public IWorkshopTree GetValue(string variableName)
+        {
+            return Element.ValueInArray(_structValue.GetValue(variableName), _index);
         }
     }
 }
