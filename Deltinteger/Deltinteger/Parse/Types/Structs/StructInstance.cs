@@ -49,15 +49,20 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (!(utype is StructInstance other && other.Variables.Length == Variables.Length && Generics.Length == other.Generics.Length))
                     continue;
+                
+                bool structVariablesMatch = true;
             
                 for (int i = 0; i < Variables.Length; i++)
                 {
                     var matchingVariable = other.Variables.FirstOrDefault(v => Variables[i].Name == v.Name);
                     if (matchingVariable == null || !Variables[i].CodeType.Implements(matchingVariable.CodeType))
-                        continue;
+                    {
+                        structVariablesMatch = false;
+                        break;
+                    }
                 }
-                
-                return true;
+
+                return structVariablesMatch;
             }
             return false;
         }
