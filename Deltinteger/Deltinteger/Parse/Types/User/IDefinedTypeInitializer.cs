@@ -26,6 +26,10 @@ namespace Deltin.Deltinteger.Parse
             // Function
             if (declaration is FunctionContext function)
                 result = DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, this);
+            
+            // Macro
+            else if (declaration is MacroFunctionContext macroFunction)
+                result = parseInfo.GetMacro(this, macroFunction);
 
             // Variable
             else if (declaration is VariableDeclaration variable)

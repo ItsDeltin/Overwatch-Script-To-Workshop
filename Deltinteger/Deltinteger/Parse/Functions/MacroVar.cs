@@ -31,6 +31,7 @@ namespace Deltin.Deltinteger.Parse
         public MacroVarProvider(IMacroInfo macroInfo)
         {
             Name = macroInfo.Name;
+            CodeType = macroInfo.Type;
             _parseInfo = macroInfo.ParseInfo;
             _expressionContext = macroInfo.InitialValueContext;
             _scope = macroInfo.Scope;

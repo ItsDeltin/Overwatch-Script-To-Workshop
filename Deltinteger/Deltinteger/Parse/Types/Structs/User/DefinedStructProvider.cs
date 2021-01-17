@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public Scope StaticScope { get; private set; }
         public Scope ObjectScope { get; private set; }
+        private readonly ValueSolveSource _onReady = new ValueSolveSource();
 
         public DefinedStructInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
@@ -21,6 +22,7 @@ namespace Deltin.Deltinteger.Parse
             _scope = scope;
             DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
             parseInfo.TranslateInfo.AddResolve(this);
+            OnReady = _onReady;
         }
 
         public void ResolveElements()
@@ -31,6 +33,8 @@ namespace Deltin.Deltinteger.Parse
             // Get declarations.
             foreach (var declaration in _context.Declarations)
                 ((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo);
+            
+            _onReady.Set();
         }
 
         public void AddVariable(IVariable var) => base.Variables.Add(var);

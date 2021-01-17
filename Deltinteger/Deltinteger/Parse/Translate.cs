@@ -234,6 +234,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Assign the variable an index.
                 IGettable value = variable.GetDefaultInstance().GetAssigner().GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet, VarCollection, DefaultIndexAssigner));
+                DefaultIndexAssigner.Add(variable, value);
                 
                 // TODO: Don't cast to IndexReference
                 DebugVariables.Add(variable, (IndexReference)value);

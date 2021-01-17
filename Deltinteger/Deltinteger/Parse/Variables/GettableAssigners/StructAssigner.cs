@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var var in _variables)
                 // Get the child gettable.
                 values.Add(var.Name, var.GetAssigner().GetValue(new GettableAssignerValueInfo(info.ActionSet) {
-                    InitialValueOverride = initialValue.GetValue(var.Name),
+                    InitialValueOverride = initialValue?.GetValue(var.Name),
                     Inline = info.Inline // Copy inline status
                 }));
             
@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
         {
-            var structValue = (IStructValue)value;
+            var structValue = ExtractStructValue(value);
 
             foreach (var child in _children)
                 child.Value.Set(actionSet, structValue.GetValue(child.Key), target, index);
@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
         {
-            var structValue = (IStructValue)value;
+            var structValue = ExtractStructValue(value);
 
             foreach (var child in _children)
                 child.Value.Modify(actionSet, Operation.AppendToArray, structValue.GetValue(child.Key), target, index);
@@ -107,6 +107,21 @@ namespace Deltin.Deltinteger.Parse
                 values.Add(child.Key, child.Value.ChildFromClassReference(reference));
             
             return new StructAssignerValue(values);
+        }
+
+        private IStructValue ExtractStructValue(IWorkshopTree value)
+        {
+            // Struct value.
+            if (value is IStructValue structValue) return structValue;
+
+            // Empty array.
+            if (value is Element element &&
+                (element.Function.Name == "Empty Array" ||
+                (element.Function.Name == "Array" && element.ParameterValues.Length == 0)))
+                return new StructArray(new IStructValue[0]);
+            
+            // Unknown
+            throw new Exception(value.ToString() + " is not a valid struct value.");
         }
     }
 
@@ -157,8 +172,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree GetValue(string variableName)
         {
             // Check if we need to do an array subsection.
-            // 'Children' is garanteed to have at lease one element.
-            if (Children[0].GetValue(variableName) is IInlineStructDictionary)
+            if (Children.Length > 0 && Children[0].GetValue(variableName) is IInlineStructDictionary)
             {
                 // If we do, create a new StructArray with the target variable.
                 // This will convert the data structure like so:

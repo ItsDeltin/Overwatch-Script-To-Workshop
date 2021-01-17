@@ -8,11 +8,13 @@ namespace Deltin.Deltinteger.Parse
     {
         string Name { get; }
         IVariable[] Variables { get; }
+        IValueSolve OnReady { get; }
     }
 
     public abstract class StructInitializer : ICodeTypeInitializer, IStructProvider
     {
         public string Name { get; }
+        public IValueSolve OnReady { get; protected set; } = new ValueSolveSource(true);
         public int GenericsCount { get; }
         public List<IVariable> Variables { get; } = new List<IVariable>();
         IVariable[] IStructProvider.Variables => Variables.ToArray();
