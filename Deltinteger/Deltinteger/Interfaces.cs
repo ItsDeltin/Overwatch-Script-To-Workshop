@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger
             if (labelInfo.IncludeReturnType)
                 builder.Add(ICodeTypeSolver.GetNameOrVoid(deltinScript, CodeType)).Add(" ");
             
-            builder.Add(Name);
+            builder.Add(Name).EndCodeLine();
             return builder;
         }
 
