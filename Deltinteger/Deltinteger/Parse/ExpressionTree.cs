@@ -415,7 +415,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope GetScope()
         {
             // Get the name of the scope batch.
-            var batchNameGroup = _potentialPaths.Select(pp => pp.GetScope().ErrorName).Distinct(); // Gets all scope names in an enumerable with no duplicates.
+            var batchNameGroup = _potentialPaths.Select(pp => pp.GetScope()?.ErrorName).Where(name => name != null).Distinct(); // Gets all scope names in an enumerable with no duplicates.
             string name = "current scope"; // The default scope name.
 
             // Set the scope name.
@@ -427,7 +427,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Add all potential path's scopes to the scope batch.
             foreach (var path in _potentialPaths)
-                scopeBatch.CopyAll(path.GetScope());
+            {
+                var scope = path.GetScope();
+
+                if (scope != null)
+                    scopeBatch.CopyAll(scope);
+            }
 
             // Finished.
             return scopeBatch;

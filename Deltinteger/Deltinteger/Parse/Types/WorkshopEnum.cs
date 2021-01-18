@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
             _objectScope = new Scope("enum " + Name);
             _constant = constant;
             EnumData = enumData;
-            TokenType = TokenType.Enum;
+            TokenType = SemanticTokenType.Enum;
 
             if (constant)
                 TokenModifiers.Add(TokenModifier.Readonly);
@@ -69,15 +69,18 @@ namespace Deltin.Deltinteger.Parse
         public static ValueGroupType[] GetEnumTypes(ITypeSupplier supplier)
         {
             var enums = ElementRoot.Instance.Enumerators;
-            ValueGroupType[] types = new ValueGroupType[enums.Length];
-            for (int i = 0; i < types.Length; i++)
-            {
-                if (enums[i].Name == "Team")
-                    types[i] = new TeamGroupType(supplier, enums[i]);
-                else
-                    types[i] = new ValueGroupType(enums[i], !enums[i].ConvertableToElement());
-            }
-            return types;
+            var types = new List<ValueGroupType>();
+
+            foreach (var enumerator in enums)
+                if (!enumerator.Hidden)
+                {
+                    if (enumerator.Name == "Team")
+                        types.Add(new TeamGroupType(supplier, enumerator));
+                    else
+                        types.Add(new ValueGroupType(enumerator, !enumerator.ConvertableToElement()));
+                }
+
+            return types.ToArray();
         }
     }
 
@@ -135,7 +138,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Member = member;
             CodeType = type;
-            TokenType = Deltin.Deltinteger.Parse.TokenType.EnumMember;
+            TokenType = Deltin.Deltinteger.Parse.SemanticTokenType.EnumMember;
         }
     }
 }

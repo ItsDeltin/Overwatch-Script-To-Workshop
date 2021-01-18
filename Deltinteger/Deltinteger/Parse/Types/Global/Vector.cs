@@ -24,8 +24,7 @@ namespace Deltin.Deltinteger.Parse
         {
             CanBeDeleted = false;
             CanBeExtended = false;
-            Inherit(Positionable.Instance, null, null);
-            TokenType = TokenType.Struct;
+            TokenType = SemanticTokenType.Struct;
             _typeSupplier = supplier;
         }
 
@@ -58,6 +57,14 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.Divide, this, this), // Vector / vector
                 new TypeOperation(TypeOperator.Multiply, _typeSupplier.Number(), this), // Vector * number
                 new TypeOperation(TypeOperator.Divide, _typeSupplier.Number(), this), // Vector / number
+            });
+            Operations.AddTypeOperation(new[] {
+                new AssignmentOperation(AssignmentOperator.AddEqual, this), // += vector
+                new AssignmentOperation(AssignmentOperator.SubtractEqual, this), // -= vector
+                new AssignmentOperation(AssignmentOperator.MultiplyEqual, this), // *= vector
+                new AssignmentOperation(AssignmentOperator.DivideEqual, this), // /= vector
+                new AssignmentOperation(AssignmentOperator.MultiplyEqual, _typeSupplier.Number()), // *= number
+                new AssignmentOperation(AssignmentOperator.DivideEqual, _typeSupplier.Number()) // /= number
             });
         }
 

@@ -29,6 +29,8 @@ namespace Deltin.Deltinteger.Parse
         public ResolveInvokeInfo ResolveInvokeInfo { get; private set; }
         public AsyncInfo AsyncInfo { get; private set; }
 
+        public Elements.ITypeSupplier Types => TranslateInfo.Types;
+
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
             Script = script;

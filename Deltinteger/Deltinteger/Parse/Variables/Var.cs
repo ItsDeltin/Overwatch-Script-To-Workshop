@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Recursive { get; }
         public Lambda.IBridgeInvocable BridgeInvocable { get; }
         public bool RequiresCapture { get; }
-        private readonly TokenType _tokenType;
+        private readonly SemanticTokenType _tokenType;
         private readonly TokenModifier[] _tokenModifiers;
         private readonly bool _handleRestrictedCalls;
         private readonly bool _inferType;
@@ -232,7 +232,7 @@ namespace Deltin.Deltinteger.Parse
         public InitialValueResolve InitialValueResolve = InitialValueResolve.Instant;
         public Scope OperationalScope;
         public bool Recursive;
-        public TokenType TokenType = TokenType.Variable;
+        public SemanticTokenType TokenType = SemanticTokenType.Variable;
         public List<TokenModifier> TokenModifiers = new List<TokenModifier>();
         public bool HandleRestrictedCalls;
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;

@@ -187,9 +187,17 @@ namespace Deltin.Deltinteger.Parse
             });
 
             // Add type operations.
-            Operations.AddTypeOperation(new ITypeOperation[] {
+            Operations.AddTypeOperation(new[] {
+                // + append
                 new TypeOperation(TypeOperator.Add, pipeType, this, (l, r) => Element.Append(l, r)),
+                // - remove
                 new TypeOperation(TypeOperator.Subtract, pipeType, this, (l, r) => Element.Remove(l, r))
+            });
+            Operations.AddTypeOperation(new[] {
+                // += mod append
+                new AssignmentOperation(AssignmentOperator.AddEqual, pipeType, info => info.Modify(Operation.AppendToArray)),
+                // -= mod remove
+                new AssignmentOperation(AssignmentOperator.SubtractEqual, pipeType, info => info.Modify(Operation.RemoveFromArrayByValue))
             });
 
             if (arrayOfType is IAdditionalArray addition)

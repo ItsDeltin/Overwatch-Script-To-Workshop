@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeLensRange[] GetCodeLensRanges() => _codeLensRanges.ToArray();
 
         /// <summary>Adds a semantic token to the file.</summary>
-        public void AddToken(DocRange range, TokenType type, params TokenModifier[] modifiers) => AddToken(new SemanticToken(range, type, modifiers));
+        public void AddToken(DocRange range, SemanticTokenType type, params TokenModifier[] modifiers) => AddToken(new SemanticToken(range, type, modifiers));
         /// <summary>Adds a semantic token to the file.</summary>
         public void AddToken(SemanticToken token) => _semanticTokens.Add(token);
         public SemanticToken[] GetSemanticTokens() => _semanticTokens.ToArray();
@@ -152,18 +152,18 @@ namespace Deltin.Deltinteger.Parse
         public string TokenType { get; }
         public string[] Modifiers { get; }
 
-        public SemanticToken(DocRange range, TokenType tokenType, params TokenModifier[] modifiers)
+        public SemanticToken(DocRange range, SemanticTokenType tokenType, params TokenModifier[] modifiers)
         {
             Range = range;
             TokenType = GetTokenName(tokenType);
             Modifiers = modifiers == null ? new string[0] : Array.ConvertAll(modifiers, modifier => GetModifierName(modifier));
         }
 
-        private static string GetTokenName(TokenType tokenType)
+        private static string GetTokenName(SemanticTokenType tokenType)
         {
             switch (tokenType)
             {
-                case Deltin.Deltinteger.Parse.TokenType.TypeParameter: return "typeParameter";
+                case Deltin.Deltinteger.Parse.SemanticTokenType.TypeParameter: return "typeParameter";
                 default: return tokenType.ToString().ToLower();
             }
         }
@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public enum TokenType
+    public enum SemanticTokenType
     {
         Namespace,
         Type, Class, Enum, Interface, Struct, TypeParameter,

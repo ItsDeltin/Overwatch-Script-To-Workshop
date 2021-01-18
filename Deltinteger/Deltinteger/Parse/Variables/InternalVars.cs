@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsSettable { get; set; } = true;
         public VariableType VariableType { get; set; } = VariableType.Global;
         public bool Static => true;
-        public TokenType? TokenType { get; set; } = null;
+        public SemanticTokenType? TokenType { get; set; } = null;
         public bool Ambiguous { get; set; }
         public bool RequiresCapture => false;
         ICodeTypeSolver IScopeable.CodeType => CodeType;
@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddHover(callRange, ((IVariable)this).GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
-            if (TokenType != null) parseInfo.Script.AddToken(callRange, (TokenType)TokenType);
+            if (TokenType != null) parseInfo.Script.AddToken(callRange, (SemanticTokenType)TokenType);
         }
 
         public virtual CompletionItem GetCompletion(DeltinScript deltinScript) => new CompletionItem()

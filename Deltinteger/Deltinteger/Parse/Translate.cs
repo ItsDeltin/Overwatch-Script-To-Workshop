@@ -352,7 +352,6 @@ namespace Deltin.Deltinteger.Parse
             AddType(_numberType);
             AddType(_stringType);
             AddType(_booleanType);
-            AddType(Positionable.Instance);
             AddType(Pathfinder.SegmentsStruct.Instance);
             // Pathfinder classes
             AddType(new Pathfinder.PathmapClass(deltinScript));

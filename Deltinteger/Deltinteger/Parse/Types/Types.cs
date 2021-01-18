@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
         public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
         protected TypeKind Kind = TypeKind.Struct;
-        protected TokenType TokenType { get; set; } = TokenType.Type;
+        protected SemanticTokenType TokenType { get; set; } = SemanticTokenType.Type;
         protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>

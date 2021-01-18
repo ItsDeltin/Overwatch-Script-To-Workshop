@@ -44,7 +44,7 @@ Object-serve scope. Only object members.
         {
             CanBeDeleted = true;
             CanBeExtended = true;
-            TokenType = TokenType.Class;
+            TokenType = SemanticTokenType.Class;
             DebugVariableResolver = new ClassDebugVariableResolver(this);
             Kind = TypeKind.Class;
         }

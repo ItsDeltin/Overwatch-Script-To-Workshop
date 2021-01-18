@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Accept()
         {
-            _parseInfo.Script.AddToken(_range, TokenType.Function);
+            _parseInfo.Script.AddToken(_range, SemanticTokenType.Function);
 
             if (_parseInfo.ResolveInvokeInfo != null)
                 _parseInfo.ResolveInvokeInfo.Resolve(new MethodGroupInvokeInfo());

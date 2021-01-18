@@ -126,7 +126,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = true; // Shouldn't matter.
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
-            _varInfo.TokenType = TokenType.Parameter;
+            _varInfo.TokenType = SemanticTokenType.Parameter;
             _varInfo.BridgeInvocable = _bridgeInvocable;
             _varInfo.RequiresCapture = true;
         }
@@ -236,7 +236,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
             _varInfo.VariableTypeHandler.SetWorkshopReference();
 
-            _varInfo.TokenType = TokenType.Variable;
+            _varInfo.TokenType = SemanticTokenType.Variable;
             _varInfo.TokenModifiers.Add(TokenModifier.Declaration);
             _varInfo.TokenModifiers.Add(TokenModifier.Readonly);
         }

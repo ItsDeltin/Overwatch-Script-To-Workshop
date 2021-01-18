@@ -58,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
             GetCodeType();
 
             if (_varInfo.Type is Lambda.PortableLambdaType)
-                _varInfo.TokenType = TokenType.Function;
+                _varInfo.TokenType = SemanticTokenType.Function;
             
             Apply();
             TypeCheck();
