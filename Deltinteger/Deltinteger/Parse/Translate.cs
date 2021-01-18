@@ -129,12 +129,13 @@ namespace Deltin.Deltinteger.Parse
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var enumContext in script.Context.Enums)
-                {
-                    var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
-                    Types.AllTypes.Add(newEnum);
-                    Types.DefinedTypes.Add(newEnum);
-                    Types.CalledTypes.Add(newEnum);
-                }
+                    if (enumContext.Identifier)
+                    {
+                        var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
+                        Types.AllTypes.Add(newEnum);
+                        Types.DefinedTypes.Add(newEnum);
+                        Types.CalledTypes.Add(newEnum);
+                    }
 
             // Get the types
             foreach (ScriptFile script in Importer.ScriptFiles)
