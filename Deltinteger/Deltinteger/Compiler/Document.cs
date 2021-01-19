@@ -31,9 +31,9 @@ namespace Deltin.Deltinteger.Compiler
             Version = document.Version;
         }
 
-        private void Parse(IncrementInfo incrementInfo = null)
+        private void Parse()
         {
-            Parser parser = new Parser(Lexer, Syntax, incrementInfo);
+            Parser parser = new Parser(Lexer, Syntax);
             Syntax = parser.Parse();
             Errors = parser.Errors;
         }
@@ -42,8 +42,8 @@ namespace Deltin.Deltinteger.Compiler
         {
             Version = version;
             Content = newContent;
-            var increment = Lexer.Update(new VersionInstance(newContent), updateRange);
-            Parse(increment);
+            Lexer.Update(new VersionInstance(newContent), updateRange);
+            Parse();
         }
 
         public void UpdateIfChanged(string newContent)

@@ -432,6 +432,30 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => '"' + Value + '"';
     }
 
+    public class InterpolatedStringExpression : Node, IParseExpression
+    {
+        public Token Tail { get; }
+        public List<InterpolatedStringPart> Parts { get; }
+
+        public InterpolatedStringExpression(Token tail, List<InterpolatedStringPart> parts)
+        {
+            Tail = tail;
+            Parts = parts;
+        }
+    }
+
+    public class InterpolatedStringPart
+    {
+        public IParseExpression Expression { get; } 
+        public Token Right { get; }
+
+        public InterpolatedStringPart(IParseExpression expression, Token right)
+        {
+            Expression = expression;
+            Right = right;
+        }
+    }
+
     public class Identifier : Node, IParseExpression
     {
         public Token Token { get; }

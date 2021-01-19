@@ -9,28 +9,33 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         public List<Token> Tokens { get; } = new List<Token>();
         public VersionInstance Content { get; private set; }
-        public List<int> Newlines { get; } = new List<int>();
+        public LexController CurrentController { get; private set; }
+        public int IncrementalChangeStart { get; private set; }
+        public int IncrementalChangeEnd { get; private set; }
+        public int TokenCount => Tokens.Count;
+        private ITokenPush _currentTokenPush;
+        private int _lastTokenCount;
+        public bool IsPushCompleted { get; private set; }
 
         public Lexer() { }
 
         public void Init(VersionInstance content)
         {
             Content = content;
-
-            LexController controller = new LexController(Content.Text, new InitTokenPush(Tokens));
-            controller.Match();
+            CurrentController = new LexController(Content.Text, _currentTokenPush = new InitTokenPush(this));
         }
 
         public void Reset()
         {
             Tokens.Clear();
             Content = null;
-            Newlines.Clear();
+            IsPushCompleted = false;
         }
 
-        public IncrementInfo Update(VersionInstance newContent, UpdateRange updateRange)
+        public void Update(VersionInstance newContent, UpdateRange updateRange)
         {
-            int lastTokenCount = Tokens.Count;
+            IsPushCompleted = false;
+            _lastTokenCount = Tokens.Count;
             AffectedAreaInfo affectedArea = GetAffectedArea(updateRange);
 
             // The number of lines
@@ -54,17 +59,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
             }
 
-            var tokenInsert = new IncrementalTokenInsert(Tokens, affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex);
-            LexController controller = new LexController(newContent.Text, tokenInsert);
+            _currentTokenPush = new IncrementalTokenInsert(this, affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex);
+            CurrentController = new LexController(newContent.Text, _currentTokenPush);
 
             // Set start range
-            controller.Index = affectedArea.StartIndex;
-            controller.Line = newContent.GetLine(controller.Index);
-            controller.Column = newContent.GetColumn(controller.Index);
+            CurrentController.Index = affectedArea.StartIndex;
+            CurrentController.Line = newContent.GetLine(CurrentController.Index);
+            CurrentController.Column = newContent.GetColumn(CurrentController.Index);
 
-            controller.Match();
             Content = newContent;
-            return new IncrementInfo(affectedArea.StartingTokenIndex, Math.Max(tokenInsert.Current, affectedArea.EndingTokenIndex), Tokens.Count - lastTokenCount);
+            IncrementalChangeStart = affectedArea.StartingTokenIndex;
+            IncrementalChangeEnd = affectedArea.EndingTokenIndex;
         }
 
         AffectedAreaInfo GetAffectedArea(UpdateRange updateRange)
@@ -149,6 +154,30 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new AffectedAreaInfo(startIndex, startingTokenIndex, endingTokenIndex);
         }
 
+        public Token ScanTokenAt(int tokenIndex) => ScanTokenAt(tokenIndex, CurrentController.MatchOne);
+
+        public Token ScanTokenAt(int tokenIndex, Action match)
+        {
+            while (!IsPushCompleted && !_currentTokenPush.IncrementalStop() && _currentTokenPush.Current <= tokenIndex)
+                match();
+            return Tokens.ElementAtOrDefault(tokenIndex);
+        }
+
+        public bool IsFinished(int currentToken) => currentToken >= TokenCount && IsPushCompleted;
+
+        public void PushCompleted()
+        {
+            IsPushCompleted = true;
+            IncrementalChangeEnd = Math.Max(IncrementalChangeEnd, _currentTokenPush.Current);
+        }
+
+        public int GetTokenDelta()
+        {
+            if (!IsPushCompleted)
+                throw new Exception("Cannot get token delta until the current token push is completed.");
+            return Tokens.Count - _lastTokenCount;
+        }
+
         private static int NumberOfNewLines(string text)
         {
             int count = 0;
@@ -159,8 +188,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         private static int NumberOfCharactersInLastLine(string text) => text.Split('\n').Last().Length;
-
-        public Token NextToken(Token token) => Tokens[Tokens.IndexOf(token) + 1];
     }
 
     public class LexController
@@ -177,16 +204,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
             _push = push;
         }
 
-        public void Match()
+        public void MatchOne()
         {
-            while (Index < Content.Length && !_push.IncrementalStop())
+            Skip();
+            if (Index < Content.Length && !_push.IncrementalStop())
             {
-                Skip();
-                if (Index >= Content.Length) break;
-
                 bool matched =
-                    MatchLineComment() ||
-                    MatchBlockComment() ||
                     MatchActionComment() ||
                     MatchNumber() ||
                     MatchSymbol('{', TokenType.CurlyBracket_Open) ||
@@ -268,10 +291,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("as", TokenType.As) ||
                     MatchIdentifier() ||
                     MatchString();
-
-                if (!matched)
+                
+                if (matched)
+                    Skip();
+                else
                     Unknown();
             }
+            PostMatch();
+        }
+
+        public void PostMatch()
+        {
             if (Index >= Content.Length) _push.EndReached();
         }
 
@@ -351,31 +381,49 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         /// <summary>Matches a string. Works with single or double quotes and escaping.</summary>
         /// <returns>Wether a string was matched.</returns>
-        public bool MatchString()
+        public bool MatchString(bool continueInterpolatedString = false, bool single = false)
         {
             LexScanner scanner = MakeScanner();
 
-            // single will be true for single quotes, false for double quotes.
-            bool single = scanner.At('\'');
+            // Interpolated string.
+            bool interpolated = continueInterpolatedString || scanner.Match('$');
 
-            // Not a string.
-            if (!single && !scanner.At('\"')) return false;
+            if (!continueInterpolatedString)
+            {
+                // single will be true for single quotes, false for double quotes.
+                single = scanner.Match('\'');
+
+                // Not a string.
+                if (!single && !scanner.Match('\"')) return false;
+            }
 
             char lookingFor = single ? '\'' : '\"';
 
             //escaped will be 0 whenever it's not escaped
-            int escaped = 0;
+            bool escaped = false;
             // Look for end of string.
-            do
+            while (!scanner.ReachedEnd && (escaped || !scanner.Match(lookingFor)))
             {
-                scanner.Advance();
-                if (scanner.At('\\') && escaped == 0) escaped = 2;
-                else if (escaped > 0) escaped -= 1;
-            }
-            while (!scanner.ReachedEnd && ((escaped > 0) || !scanner.At(lookingFor)));
-            scanner.Advance();
+                var progressCheck = scanner.Index;
 
-            PushToken(scanner, TokenType.String);
+                // If this is an interpolated string, look for a '{' that is not followed by another '{'.
+                if (interpolated && scanner.Match('{') && !scanner.Match('{'))
+                {
+                    Token resultingToken = scanner.AsToken(continueInterpolatedString ? TokenType.InterpolatedStringMiddle : TokenType.InterpolatedStringTail);
+                    if (single) resultingToken.Flags |= TokenFlags.StringSingleQuotes;
+                    PushToken(resultingToken);
+                    Accept(scanner);
+                    return true;
+                }
+
+                escaped = escaped ? false : scanner.Match('\\');
+
+                // If the scanner did not progress, advance.
+                if (progressCheck == scanner.Index)
+                    scanner.Advance();
+            }
+
+            PushToken(scanner, interpolated ? TokenType.InterpolatedStringHead : TokenType.String);
             return true;
         }
 
@@ -487,17 +535,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Skips whitespace.</summary>
-        public bool Skip()
+        public void Skip()
         {
-            bool preceedingWhitespace = false;
-            LexScanner scanner = MakeScanner();
-            while (!scanner.ReachedEnd && scanner.AtWhitespace())
+            do
             {
-                if (scanner.At('\n')) preceedingWhitespace = true;
-                scanner.Advance();
-            }
-            Accept(scanner);
-            return preceedingWhitespace;
+                LexScanner scanner = MakeScanner();
+                while (!scanner.ReachedEnd && scanner.AtWhitespace())
+                    scanner.Advance();
+                Accept(scanner);
+            } while(MatchLineComment() || MatchBlockComment());
         }
 
         /// <summary>Pushes a token to the token list.</summary>
@@ -562,9 +608,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public bool Match(char character)
         {
-            bool res = !ReachedEnd && _content[Index] == character;
-            Advance();
-            return res;
+            if (!ReachedEnd && _content[Index] == character)
+            {
+                Advance();
+                return true;
+            }
+            return false;
         }
 
         public bool At(char chr) => !ReachedEnd && _content[Index] == chr;
@@ -581,6 +630,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
     /// </summary>
     public interface ITokenPush
     {
+        int Current { get; }
         void PushToken(Token token);
         bool IncrementalStop();
         void EndReached();
@@ -590,16 +640,24 @@ namespace Deltin.Deltinteger.Compiler.Parse
     /// When a token is encountered, simply add the token to the token list.</summary>
     class InitTokenPush : ITokenPush
     {
+        public int Current => _tokens.Count;
+        private readonly Lexer _lexer;
         private readonly List<Token> _tokens;
+        private bool _finished = false;
 
-        public InitTokenPush(List<Token> list)
+        public InitTokenPush(Lexer lexer)
         {
-            _tokens = list;
+            _lexer = lexer;
+            _tokens = lexer.Tokens;
         }
 
         public void PushToken(Token token) => _tokens.Add(token);
-        public bool IncrementalStop() => false;
-        public void EndReached() { }
+        public bool IncrementalStop() => _finished;
+        public void EndReached()
+        {
+            _finished = true;
+            _lexer.PushCompleted();
+        }
     }
 
     /// <summary>Every subsequent lex after the first will use this for the ITokenPush.
@@ -608,15 +666,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
     class IncrementalTokenInsert : ITokenPush
     {
         public int Current { get; private set; } // Where in the token list the tokens will be inserted to when a token is found.
+        private readonly Lexer _lexer;
         private readonly List<Token> _tokens; // The list of tokens.
         private bool _lexUntilEnd = true; // Determines if lexing should occur until the end of the file is reached.
         private int _stopAt; // The index to stop lexing at.
         private bool _lastInsertWasEqual; // Will be true when we have resynced with the tokens.
 
-        public IncrementalTokenInsert(List<Token> list, int startingTokenIndex, int stopMinimum)
+        public IncrementalTokenInsert(Lexer lexer, int startingTokenIndex, int stopMinimum)
         {
             Current = startingTokenIndex;
-            _tokens = list;
+            _lexer = lexer;
+            _tokens = lexer.Tokens;
             if (stopMinimum < _tokens.Count)
             {
                 _stopAt = stopMinimum;
@@ -626,6 +686,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public void PushToken(Token token)
         {
+            if (_lastInsertWasEqual) return;
             // This is used to determine wether _stopAt is correctly being incremented as tokens are inserted.
             // System.Diagnostics.Debug.Assert(_lexUntilEnd || _tokens.IndexOf(_debugEndToken) == _stopAt);
 
@@ -688,6 +749,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (Current != -1)
                 while (_tokens.Count > Current)
                     _tokens.RemoveAt(Current);
+            _lexer.PushCompleted();
         }
     }
 
@@ -706,20 +768,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StartIndex = startIndex;
             StartingTokenIndex = startingTokenIndex;
             EndingTokenIndex = endingTokenIndex;
-        }
-    }
-
-    public class IncrementInfo
-    {
-        public int ChangeStart { get; }
-        public int ChangeEnd { get; }
-        public int Delta { get; }
-
-        public IncrementInfo(int startIgnoring, int stopIgnoring, int delta)
-        {
-            ChangeStart = startIgnoring;
-            ChangeEnd = stopIgnoring;
-            Delta = delta;
         }
     }
 }
