@@ -84,6 +84,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
             int startingTokenIndex = -1; // The position in the token list where new tokens will be inserted into.
             int endingTokenIndex = int.MaxValue; // The token where lexing will end.
 
+            // If there are no tokens or the update range preceeds the range of the first token, set the starting index to 0.
+            if (Tokens.Count == 0 || updateRange.Range.End < Tokens[0].Range.Start) startIndex = 0;
+
             // Find the first token to the left of the update range and the first token to the right of the update range.
             // Set 'startIndex', 'startingTokenIndex' with the left token and 'endingTokenIndex' with the right token.
             // 
