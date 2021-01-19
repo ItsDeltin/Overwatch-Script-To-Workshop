@@ -394,7 +394,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             Localized = localized;
             Token = token;
-            Value = Extras.RemoveQuotes(token.Text);
+            Value = Extras.RemoveQuotes(token.Text).Replace("\\'", "'");
         }
 
         public StringExpression(Token localized, Token token, List<IParseExpression> formats) : this(localized, token)
