@@ -17,6 +17,8 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
+    - name: move to Deltinteger directory
+    - run: cd Deltinteger
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
