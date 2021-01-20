@@ -122,17 +122,30 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Iterate through each cached node.
             foreach (var capture in _last.NodeCaptures)
+            {
+                bool surpassesIncrementalChange = Token > Lexer.IncrementalChangeStart;
+
                 // If the node's type is equal to the expected node type
                 // and the cached node's start token index is equal to the current token's index (adjusted for token difference if the current token is past the change position) 
                 if (capture.Node.GetType() == typeof(T) &&
+                    // The capture's end token (capture.startToken + capture.Length) preceeds (<) the token where the change starts (Lexer.IncrementalChangeStart)
+                    // OR the Lexer's increment is completed (Lexer.IsPushCompleted) and the capture's start token (capture.startToken) proceeds (>) the token where
+                    // the change starts (Lexer.IncrementalChangeStart)
+                    //
+                    // This makes sure we do not reuse a changed incremental node.
                     (capture.StartToken + capture.Length < Lexer.IncrementalChangeStart || (Lexer.IsPushCompleted && capture.StartToken > Lexer.IncrementalChangeEnd)) &&
-                    capture.StartToken + (Token > Lexer.IncrementalChangeStart ? Lexer.GetTokenDelta() : 0) == Token)
+                    // If this surpasses the incremental change range, make sure the push is completed.
+                    (!surpassesIncrementalChange || Lexer.IsPushCompleted) &&
+                    // Make sure the incremental node's position matches the current Token (capture.StartToken + ... = Token).
+                    // If Token surpasses the incremental change range (surpassesIncrementalChange), then offset by the change delta.
+                    capture.StartToken + (surpassesIncrementalChange ? Lexer.GetTokenDelta() : 0) == Token)
                 {
                     // Then return the node then advance by the number of tokens in the cached node.
                     node = (T)capture.Node;
                     Token += capture.Length;
                     return true;
                 }
+            }
 
             // No matching node was found.
             node = default(T);
