@@ -143,11 +143,15 @@
         {
           "match": "=>",
           "name": "storage.type.function.arrow"
+        },
+        {
+          "match": "\\|",
+          "name": "keyword.operator.type"
         }
       ]
     },
     "declare-variable": {
-      "begin": "(((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\\b\\s*)*)(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?(?!\\s*\\()",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\\b\\s*)*)(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?(?!\\s*\\()",
       "end": ";",
       "patterns": [
         {
@@ -165,13 +169,13 @@
             }
           ]
         },
-        "11": {
+        "12": {
           "name": "entity.name.variable.field"
         },
-        "12": {
+        "13": {
           "name": "keyword.operator.assignment.ostw"
         },
-        "13": {
+        "14": {
           "name": "keyword.operator.assignment.ostw"
         }
       },
@@ -182,7 +186,7 @@
       }
     },
     "declare-macro-var": {
-      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive)\\b\\s*)*)(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b\\s*(:)",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive)\\b\\s*)*)(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b\\s*(:)",
       "end": ";",
       "patterns": [
         {
@@ -200,16 +204,16 @@
             }
           ]
         },
-        "11": {
+        "12": {
           "name": "entity.name.variable.property"
         },
-        "12": {
+        "13": {
           "name": "keyword.operator.assignment.ostw"
         }
       }
     },
     "declare-local-variable": {
-      "begin": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?",
+      "begin": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?",
       "end": ";",
       "patterns": [
         {
@@ -224,13 +228,13 @@
             }
           ]
         },
-        "8": {
+        "9": {
           "name": "entity.name.variable.local"
         },
-        "9": {
+        "10": {
           "name": "keyword.operator.assignment.ostw"
         },
-        "10": {
+        "11": {
           "name": "keyword.operator.assignment.ostw"
         }
       },
@@ -241,7 +245,7 @@
       }
     },
     "declare-function": {
-      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive)\\b\\s*)*)(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)?\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive)\\b\\s*)*)(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)?\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "1": {
@@ -254,7 +258,7 @@
             }
           ]
         },
-        "11": {
+        "12": {
           "name": "entity.name.function"
         }
       },
@@ -415,6 +419,15 @@
           "include": "#comment"
         },
         {
+          "begin": "\\[",
+          "end": "\\]",
+          "patterns": [
+            {
+              "include": "#parameter-declaration"
+            }
+          ]
+        },
+        {
           "include": "#parameter-declaration"
         },
         {
@@ -427,7 +440,7 @@
       ]
     },
     "parameter-declaration": {
-      "match": "(ref\\s+)?(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)",
+      "match": "(ref\\s+)?(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)",
       "captures": {
         "1": {
           "name": "storage.modifier"
@@ -439,7 +452,7 @@
             }
           ]
         },
-        "9": {
+        "10": {
           "name": "variable.parameter"
         }
       }
@@ -464,7 +477,7 @@
       ]
     },
     "set-hook": {
-      "begin": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*(.)\\s*([_[:alnum:]]+)\\b\\s*(=)",
+      "begin": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*(.)\\s*([_[:alnum:]]+)\\b\\s*(=)",
       "end": ";",
       "beginCaptures": {
         "1": {
@@ -474,13 +487,13 @@
             }
           ]
         },
-        "8": {
+        "9": {
           "name": "punctuation.accessor"
         },
-        "9": {
+        "10": {
           "name": "support.variable"
         },
-        "10": {
+        "11": {
           "name": "keyword.operator.assignment.ostw"
         }
       },
@@ -496,7 +509,7 @@
       ]
     },
     "rule": {
-      "begin": "\\s*\\b(disabled\\b\\s*)?(rule)\\b\\s*(:)\\s*((\\\"(?:[^\"\\\\]|\\\\.)*\\\")|(\\'(?:[^'\\\\]|\\\\.)*\\'))\\s*(-?[0-9]+(\\.[0-9]+)?\\b)?",
+      "begin": "\\s*\\b(disabled\\b\\s*)?(rule)\\b\\s*(:)\\s*((\\\"(?:[^\"\\\\]|\\\\.)*\\\")|(\\'(?:[^'\\\\]|\\\\.)*\\'))\\s*((([0-9]+)?\\.)?[0-9]+\\b)?",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "1": {
@@ -653,7 +666,7 @@
               ]
             },
             {
-              "match": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b",
+              "match": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b",
               "captures": {
                 "1": {
                   "patterns": [
@@ -662,7 +675,7 @@
                     }
                   ]
                 },
-                "8": {
+                "9": {
                   "name": "entity.name.variable.local"
                 }
               }
@@ -796,7 +809,7 @@
           "include": "#lambda"
         },
         {
-          "match": "(<)\\s*(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*(>)",
+          "match": "(<)\\s*(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*(>)",
           "captures": {
             "1": {
               "name": "punctuation.definition.typeparameters.begin"
@@ -808,7 +821,7 @@
                 }
               ]
             },
-            "9": {
+            "10": {
               "name": "punctuation.definition.typeparameters.end"
             }
           }
@@ -839,7 +852,7 @@
     "number": {
       "patterns": [
         {
-          "match": "-?[0-9]+(\\.[0-9]+)?\\b",
+          "match": "(([0-9]+)?\\.)?[0-9]+\\b",
           "name": "constant.numeric"
         }
       ]
@@ -1023,7 +1036,7 @@
     "lambda": {
       "patterns": [
         {
-          "match": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b\\s*(=>)",
+          "match": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b\\s*(=>)",
           "captures": {
             "1": {
               "patterns": [
@@ -1032,10 +1045,10 @@
                 }
               ]
             },
-            "8": {
+            "9": {
               "name": "variable.parameter"
             },
-            "9": {
+            "10": {
               "name": "storage.type.function.arrow"
             }
           }
@@ -1061,7 +1074,7 @@
               "include": "#comment"
             },
             {
-              "match": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b",
+              "match": "(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)\\b",
               "captures": {
                 "1": {
                   "patterns": [
@@ -1070,7 +1083,7 @@
                     }
                   ]
                 },
-                "8": {
+                "9": {
                   "name": "variable.parameter"
                 }
               }
@@ -1114,6 +1127,10 @@
         {
           "name": "keyword.operator.arithmetic",
           "match": "%|\\*|\\/|-|\\+|\\^"
+        },
+        {
+          "name": "storage.type.function.arrow",
+          "match": "=>"
         }
       ]
     },

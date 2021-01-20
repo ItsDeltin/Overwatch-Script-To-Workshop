@@ -52,7 +52,7 @@ function applyVariables(obj: object) {
 
 function setVariables(value:string):string
 {
-    return value.replace('~', '\\s*').replace(/{{(.*?)}}/g, function(g0, g1) {
+    return value.replace(/~/g, '\\s*').replace(/{{(.*?)}}/g, function(g0, g1) {
         if (g1 == null) return null;
 
         // group 1 is the variable name

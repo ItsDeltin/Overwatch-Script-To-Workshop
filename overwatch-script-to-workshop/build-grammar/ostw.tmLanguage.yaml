@@ -13,16 +13,17 @@ variables:
   #
   #     '(?<set-type>' Names the entire type group, which is used for recursion later. Recursion can be used using the '\g<set-type>' regex.
   #      ^          '(' The start of the group that contains the OR that either matches an identifier and the type args or a parentesized type.
-  #      |           ^'\(\s*\g<set-type>\)' Matches a parenthesized type recursively.
-  #      |           |^                 '|{{part}}\b\s*' Matches the type's identifier.
-  #      |           ||                  ^            '(<\s*(\s*,?\s*\g<set-type>\s*)*>)?' Matches the type args recursviely.
-  #      |           ||                  |             ^                                ')' Ends the group that chooses either an identifier or parenthesized type.
-  #      |           ||                  |             |                                 ^  '(\[\s*\])*' Matches zero or infinite '[]'.
-  #      |           ||                  |             |                                 |   ^        '(\s*=>\s*\g<set-type>)?' Matches a function type, ex 'define => void'.
-  #      |           ||                  |             |                                 |   |         ^                     ')' ends the group that contains the type matcher.
-  #      |           ||                  |             |                                 |   |         |                      ^
-  #      |           ||                  |             |                                 |   |         |                      |
-  type: '(?<set-type>(\(\s*\g<set-type>\)|{{part}}\b\s*(<\s*(\s*,?\s*\g<set-type>\s*)*>)?)\s*(\[\s*\])*(\s*=>\s*\g<set-type>)?)' # 7 groups
+  #      |           ^'\(~\g<set-type>\)' Matches a parenthesized type recursively.
+  #      |           |^                 '|{{part}}\b~' Matches the type's identifier.
+  #      |           ||                  ^            '(<~(~,?~\g<set-type>~)*>)?' Matches the type args recursively.
+  #      |           ||                  |             ^                  ')' Ends the group that chooses either an identifier or parenthesized type.
+  #      |           ||                  |             |                   ^  '(\[~\])*' Matches zero or infinite '[]'.
+  #      |           ||                  |             |                   |   ^      '(~\|~\g<set-type>)' Matches union types.
+  #      |           ||                  |             |                   |   |       |                 '(~=>~\g<set-type>)?' Matches a function type, ex 'define => void'.
+  #      |           ||                  |             |                   |   |       |                  ^                 ')' ends the group that contains the type matcher.
+  #      |           ||                  |             |                   |   |       |                  |                  ^
+  #      |           ||                  |             |                   |   |       |                  |                  |
+  type: '(?<set-type>(\(~\g<set-type>\)|{{part}}\b~(<~(~,?~\g<set-type>~)*>)?)~(\[~\])*(~\|~\g<set-type>)*(~=>~\g<set-type>)?)' # 8 groups
   # define a =
   declare-variable-start: '{{type}}\s*{{part}}(\s*\!)?(\s*=)?'
   string-double: \"(?:[^"\\]|\\.)*\"
@@ -30,7 +31,7 @@ variables:
   encapsulated-block-end: '(?<=})|(?<=;)'
   attribute-list: (((public|private|protected|virtual|override|abstract|static|recursive)\b\s*)*)
   variable-attribute-list: (((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\b\s*)*)
-  number: -?[0-9]+(\.[0-9]+)?\b
+  number: (([0-9]+)?\.)?[0-9]+\b
   unescaped: (?<!\\)(?:\\{2})*
 
   # Scopes
@@ -126,6 +127,9 @@ repository:
       # Lambda
       - match: '=>'
         name: storage.type.function.arrow
+      # Union
+      - match: \|
+        name: keyword.operator.type
   
   # Variable definition syntax
   declare-variable:
@@ -139,11 +143,11 @@ repository:
       4: # Apply highlighting to the type match
         patterns:
           - include: '#type-matcher'
-      11: # The variable name
+      12: # The variable name
         name: entity.name.variable.field
-      12: # Extended collection '!' marker
+      13: # Extended collection '!' marker
         name: '{{assignment}}'
-      13: # The equals for an initial value.
+      14: # The equals for an initial value.
         name: '{{assignment}}'
     endCaptures:
       0:
@@ -161,9 +165,9 @@ repository:
       4: # Apply highlighting to the type match
         patterns:
           - include: '#type-matcher'
-      11: # The variable name
+      12: # The variable name
         name: entity.name.variable.property
-      12: # Macro colon
+      13: # Macro colon
         name: '{{assignment}}'
   
   # Variables defined in rules and functions
@@ -176,11 +180,11 @@ repository:
       1: # Apply highlighting to type match
         patterns:
           - include: '#type-matcher'
-      8: # The variable name
+      9: # The variable name
         name: entity.name.variable.local
-      9: # Extended collection '!' marker
+      10: # Extended collection '!' marker
         name: '{{assignment}}'
-      10: # The equals for an initial value.
+      11: # The equals for an initial value.
         name: '{{assignment}}'
     endCaptures:
       0:
@@ -196,7 +200,7 @@ repository:
       4:
         patterns:
           - include: '#type-matcher'
-      11:
+      12:
         name: entity.name.function
     patterns:
       - include: '#comment'
@@ -286,11 +290,16 @@ repository:
       0:
         name: punctuation.parenthesis.close
     patterns:
-      - include: '#comment'
+    - include: '#comment'
+    # Optional parameter
+    - begin: \[
+      end: \]
+      patterns:
       - include: '#parameter-declaration'
-      - include: '#expression'
-      - match: '='
-        name: '{{assignment}}'
+    - include: '#parameter-declaration'
+    - include: '#expression'
+    - match: '='
+      name: '{{assignment}}'
     
   parameter-declaration:
     match: '(ref\s+)?{{type}}\s*{{part}}'
@@ -300,7 +309,7 @@ repository:
       2:
         patterns:
           - include: '#type-matcher'
-      9:
+      10:
         name: variable.parameter
   
   macro-value:
@@ -323,11 +332,11 @@ repository:
       1: # {{type}}
         patterns:
           - include: '#type-matcher'
-      8: # (.)
+      9: # (.)
         name: punctuation.accessor
-      9: # Hook name
+      10: # Hook name
         name: support.variable
-      10: # =
+      11: # =
         name: '{{assignment}}'
     endCaptures:
       0:
@@ -437,7 +446,7 @@ repository:
               1:
                 patterns:
                   - include: '#type-matcher'
-              8:
+              9:
                 name: entity.name.variable.local
       # If, else if, and switch.
       - include: '#if-statement'
@@ -555,7 +564,7 @@ repository:
           2:
             patterns:
             - include: '#type-matcher'
-          9:
+          10:
             name: punctuation.definition.typeparameters.end
       - include: '#expression-operators' # Must be below lambda
       # null
@@ -704,9 +713,9 @@ repository:
           1:
             patterns:
               - include: '#type-matcher'
-          8:
-            name: variable.parameter
           9:
+            name: variable.parameter
+          10:
             name: storage.type.function.arrow
       # With parenthesis: () =>
       - begin: \(
@@ -727,7 +736,7 @@ repository:
               1:
                 patterns:
                   - include: '#type-matcher'
-              8:
+              9:
                 name: variable.parameter
           # Match parameter seperator
           - match: ','
@@ -754,6 +763,8 @@ repository:
         match: \!|&&|\|\|
       - name: keyword.operator.arithmetic
         match: '%|\*|\/|-|\+|\^'
+      - name: storage.type.function.arrow
+        match: =>
 
   # Argument list
   argument-list:
