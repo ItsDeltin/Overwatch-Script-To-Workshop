@@ -4,6 +4,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.Lambda;
+using Deltin.Deltinteger.Parse.FunctionBuilder;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -64,6 +65,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(DeleteAllAttributesConnectedToNode);
             serveObjectScope.AddNativeMethod(SegmentFromNodes);
             serveObjectScope.AddNativeMethod(Bake);
+            serveObjectScope.AddNativeMethod(BakeCompressed);
 
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CurrentSegmentAttribute);
@@ -632,6 +634,35 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
+        private FuncMethod BakeCompressed => new FuncMethodBuilder()
+        {
+            Name = "BakeCompressed",
+            Documentation = new MarkupBuilder().Add("Bakes the pathmap for instant pathfinding. This will block the current rule until the bake is complete.")
+                .NewLine().Add("This will execute faster than the ").Code("Bake").Add(" function but will use more elements. Attributes are constant and cannot be changed."),
+            DoesReturnValue = true,
+            ReturnType = DeltinScript.Types.GetInstance<BakemapClass>(),
+            Parameters = new CodeParameter[] {
+                new PathmapFileParameter("originalPathmapFile", "The original file of this pathmap."),
+                new CodeParameter("attributes", AttributesDocumentation, new V_EmptyArray())
+            },
+            Action = (actionSet, methodCall) =>
+            {
+                var map = (Pathmap)methodCall.AdditionalParameterData[0];
+                var bake = CompressedBakeComponent.Create(map, new int[0]);
+                var component = actionSet.DeltinScript.GetComponent<CompressedBakeComponent>();
+                var builder = new FunctionBuildController(actionSet, new CallHandler(new[] { bake }), component);
+                builder.Call();
+
+                var bakemapClass = actionSet.DeltinScript.Types.GetInstance<BakemapClass>();
+
+                // Create a new Bakemap class instance.
+                var newBakemap = bakemapClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
+                bakemapClass.Pathmap.Set(actionSet, newBakemap.Get(), (Element)actionSet.CurrentObject);
+                bakemapClass.NodeBake.Set(actionSet, newBakemap.Get(), component.Result);
+                return newBakemap.Get();
+            }
+        };
+
         // Static functions
         // StopPathfind(players)
         private static FuncMethod StopPathfind = new FuncMethodBuilder()
@@ -837,6 +868,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 parseInfo.Script.Diagnostics.Error("Failed to deserialize the Pathmap: " + ex.Message, valueRange);
                 return null;
             }
+
+            parseInfo.TranslateInfo.ExecOnComponent<CompressedBakeComponent>(component => component.SetNodesValue(map.Nodes.Length));
 
             return map;
         }

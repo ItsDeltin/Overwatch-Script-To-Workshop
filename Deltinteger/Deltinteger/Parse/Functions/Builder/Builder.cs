@@ -382,6 +382,36 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         }
     }
 
+    public class ParameterHandler : IParameterHandler
+    {
+        private readonly string _name;
+        private readonly bool _global;
+        private readonly bool _extended;
+        public IndexReference Index { get; private set; }
+
+        public ParameterHandler(string name, bool global = true, bool extended = false)
+        {
+            _name = name;
+            _global = global;
+            _extended = extended;
+        }
+
+        public void Apply(ActionSet actionSet, IGettable gettable) => throw new NotImplementedException();
+        public void Pop(ActionSet actionSet) => throw new NotImplementedException();
+        public void Push(ActionSet actionSet, IWorkshopTree value) => throw new NotImplementedException();
+        public IndexReference GetSubroutineStack(ActionSet actionSet, bool defaultGlobal)
+        {
+            Index = actionSet.VarCollection.Assign(_name, _global, _extended);
+            return Index;
+        }
+        public void Set(ActionSet actionSet, IWorkshopTree value)
+        {
+            var assignable = actionSet.VarCollection.Assign(_name, _global, _extended);
+            assignable.Set(actionSet, (Element)value);
+        }
+        public void SetSubroutine(ActionSet actionSet, IndexReference parameterStore, IWorkshopTree value) => actionSet.AddAction(parameterStore.SetVariable((Element)value));
+    }
+
     public interface ICallHandler
     {
         IWorkshopTree[] ParameterValues { get; }
