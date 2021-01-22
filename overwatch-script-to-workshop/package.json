@@ -242,7 +242,11 @@
                     "*.lobby.json",
                     "*.lobby"
                 ],
-                "url": "./LobbySettingValidation.json"
+                "url": "./json-schemas/LobbySettingValidation.json"
+            },
+            {
+                "fileMatch": "module.json",
+                "url": "./json-schemas/ConfigValidation.json"
             }
         ],
         "debuggers": [

@@ -51,6 +51,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         public DocumentHandler DocumentHandler { get; private set; }
+        public ServerWorkspace Workspace { get; } = new ServerWorkspace();
         public FileGetter FileGetter { get; private set; }
         public ConfigurationHandler ConfigurationHandler { get; private set; }
         private readonly ClipboardListener _debugger;
@@ -70,8 +71,10 @@ namespace Deltin.Deltinteger.LanguageServer
 
             Serilog.Log.Information("Deltinteger Language Server");
 
-            DocumentHandler = new DocumentHandler(this);
-            FileGetter = new FileGetter(DocumentHandler);
+            var builder = new LanguageServerBuilder(this);
+
+            DocumentHandler = new DocumentHandler(builder);
+            FileGetter = new FileGetter(DocumentHandler, builder.ParserSettingsResolver);
             CompletionHandler completionHandler = new CompletionHandler(this);
             SignatureHandler signatureHandler = new SignatureHandler(this);
             ConfigurationHandler = new ConfigurationHandler(this);
@@ -88,7 +91,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 .ConfigureLogging(x => x
                     .AddSerilog()
                     .AddLanguageProtocolLogging()
-                    .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
+                    .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Critical))
                 .WithHandler<DocumentHandler>(DocumentHandler)
                 .WithHandler<CompletionHandler>(completionHandler)
                 .WithHandler<SignatureHandler>(signatureHandler)
@@ -98,10 +101,14 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<ReferenceHandler>(referenceHandler)
                 .WithHandler<CodeLensHandler>(codeLensHandler)
                 .WithHandler<DoRenameHandler>(renameHandler)
+                .WithHandler<DidChangeWatchedFilesHandler>(builder.FileHandlerBuilder.GetHandler())
                 .WithHandler<PrepareRenameHandler>(prepareRenameHandler)
             ));
 
-            Server.SendNotification(Version, Program.VERSION);
+            Workspace.SetWorkspaceFolders(Server.ClientSettings.WorkspaceFolders);
+            builder.ParserSettingsResolver.GetModuleFiles();
+            
+            Server.SendNotification(Version, Program.VERSION);            
             await Server.WaitForExit;
         }
 
@@ -314,6 +321,10 @@ namespace Deltin.Deltinteger.LanguageServer
             {
                 Language = "ostw",
                 Pattern = "**/*.workshop"
+            },
+            new DocumentFilter() {
+                Language = "ostw",
+                Pattern = "dsconfig.json"
             }
         );
     }
