@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Parse;
@@ -643,22 +643,31 @@ namespace Deltin.Deltinteger.Pathfinder
             ReturnType = DeltinScript.Types.GetInstance<BakemapClass>(),
             Parameters = new CodeParameter[] {
                 new PathmapFileParameter("originalPathmapFile", "The original file of this pathmap."),
-                new CodeParameter("attributes", AttributesDocumentation, new V_EmptyArray())
+                new ConstIntegerArrayParameter("attributes", AttributesDocumentation, true)
             },
             Action = (actionSet, methodCall) =>
             {
+                // Get the pathmap.
                 var map = (Pathmap)methodCall.AdditionalParameterData[0];
-                var bake = CompressedBakeComponent.Create(map, new int[0]);
+
+                // Get the compressed bakemap.
+                var compressed = CompressedBakeComponent.Create(map, ((List<int>)methodCall.AdditionalParameterData[1]).ToArray());
+
+                // Get the CompressedBakeComponent.
                 var component = actionSet.DeltinScript.GetComponent<CompressedBakeComponent>();
-                var builder = new FunctionBuildController(actionSet, new CallHandler(new[] { bake }), component);
+
+                // Call the decompresser.
+                var builder = new FunctionBuildController(actionSet, new CallHandler(new[] { compressed }), component);
                 builder.Call();
 
+                // Get the bakemapClass instance.
                 var bakemapClass = actionSet.DeltinScript.Types.GetInstance<BakemapClass>();
 
                 // Create a new Bakemap class instance.
                 var newBakemap = bakemapClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
                 bakemapClass.Pathmap.Set(actionSet, newBakemap.Get(), (Element)actionSet.CurrentObject);
                 bakemapClass.NodeBake.Set(actionSet, newBakemap.Get(), component.Result);
+                
                 return newBakemap.Get();
             }
         };

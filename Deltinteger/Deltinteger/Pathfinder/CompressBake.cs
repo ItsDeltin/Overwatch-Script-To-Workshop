@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Pathfinder
             var nodeArray = new Element[map.Nodes.Length];
             for (int i = 0; i < nodeArray.Length; i++)
             {
-                int[] pathfindResult = Dijkstra(map, i);
+                int[] pathfindResult = Dijkstra(map, attributes, i);
                 var compressed = CompressIntArray(pathfindResult);
 
                 nodeArray[i] = Element.CreateArray(compressed.Select(s => new V_CustomString(s)).ToArray());
@@ -131,7 +131,7 @@ namespace Deltin.Deltinteger.Pathfinder
             return Element.CreateArray(nodeArray);
         }
 
-        private static int[] Dijkstra(Pathmap map, int node)
+        private static int[] Dijkstra(Pathmap map, int[] attributes, int node)
         {
             int nodeCount = map.Nodes.Length;
 
@@ -163,8 +163,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 
                 foreach (var neighbor in neighbors)
                 {
+                    var neighborAttributes = map.Attributes.Where(m => m.Node1 == neighbor && m.Node2 == current);
+
                     var newDist = dist[current] + map.Nodes[current].DistanceTo(map.Nodes[neighbor]);
-                    if (newDist < dist[neighbor])
+                    if (newDist < dist[neighbor] && (neighborAttributes.Count() == 0 || neighborAttributes.Any(attribute => attributes.Contains(attribute.Attribute))))
                     {
                         dist[neighbor] = newDist;
                         prev[neighbor] = current + 1;
