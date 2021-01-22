@@ -120,6 +120,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
             if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock) next.ActionSet.AddAction(Element.Part<A_End>());
 
+            // Loop the next rule if the condition is true.
+            next.ActionSet.AddAction(new A_LoopIfConditionIsTrue());
+
             // Add rule
             DeltinScript.WorkshopRules.Add(next.GetRule());
         }

@@ -15,12 +15,12 @@ namespace Deltin.Deltinteger.Pathfinder
         public Element Result { get; private set; }
 
         private readonly ParameterHandler _bakeNodesParameter = new ParameterHandler("bakeNodes");
-        private int _maxNodesValue;
+        private int _maxNodeCount;
         private SubroutineInfo _subroutineInfo;
 
         public void SetNodesValue(int maxNodesValue)
         {
-            _maxNodesValue = maxNodesValue;
+            _maxNodeCount = maxNodesValue;
         }
 
         public void Init() {}
@@ -105,8 +105,8 @@ namespace Deltin.Deltinteger.Pathfinder
         Element GetMatcher(ActionSet actionSet)
         {
             // Create an array of strings with a single character.
-            var matcherArray = new Element[_maxNodesValue];
-            for (int i = 0; i < _maxNodesValue; i++)
+            var matcherArray = new Element[_maxNodeCount + 1];
+            for (int i = 0; i <= _maxNodeCount; i++)
                 matcherArray[i] = new V_CustomString(CharFromInt(i));
 
             // Set matcher.
