@@ -649,16 +649,16 @@ namespace Deltin.Deltinteger.Pathfinder
             {
                 // Get the pathmap.
                 var map = (Pathmap)methodCall.AdditionalParameterData[0];
+                var attributes = ((List<int>)methodCall.AdditionalParameterData[1]).ToArray();
 
                 // Get the compressed bakemap.
-                var compressed = CompressedBakeComponent.Create(map, ((List<int>)methodCall.AdditionalParameterData[1]).ToArray());
+                var compressed = Cache.CacheWatcher.Global.Get<Element>(new CompressedBakeCacheObject(map, attributes));
 
                 // Get the CompressedBakeComponent.
                 var component = actionSet.DeltinScript.GetComponent<CompressedBakeComponent>();
 
                 // Call the decompresser.
-                var builder = new FunctionBuildController(actionSet, new CallHandler(new[] { compressed }), component);
-                builder.Call();
+                component.Build(actionSet, compressed);
 
                 // Get the bakemapClass instance.
                 var bakemapClass = actionSet.DeltinScript.Types.GetInstance<BakemapClass>();
@@ -870,7 +870,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Pathmap map;
             try
             {
-                map = Pathmap.ImportFromFile(filepath);
+                map = Cache.FileIdentifier<PathmapLoader>.FromFile(parseInfo.Script.Document.Cache, filepath, uri => new PathmapLoader(uri)).Pathmap;
             }
             catch (Exception ex)
             {

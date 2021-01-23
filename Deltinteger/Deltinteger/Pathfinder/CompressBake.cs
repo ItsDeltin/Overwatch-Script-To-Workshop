@@ -8,15 +8,14 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class CompressedBakeComponent : IComponent, ISubroutineContext, IGroupDeterminer, IFunctionLookupTable
+    public class CompressedBakeComponent : IComponent
     {
         public DeltinScript DeltinScript { get; set; }
 
         public Element Result { get; private set; }
 
-        private readonly ParameterHandler _bakeNodesParameter = new ParameterHandler("bakeNodes");
         private int _maxNodeCount;
-        private SubroutineInfo _subroutineInfo;
+        private Element _matcher;
 
         public void SetNodesValue(int maxNodesValue)
         {
@@ -25,45 +24,14 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public void Init() {}
 
-        public IParameterHandler[] Parameters() => new[] { _bakeNodesParameter };
-
-        public SubroutineInfo GetSubroutineInfo()
+        public void Build(ActionSet actionSet, Element compressedNodeArray)
         {
-            if (_subroutineInfo == null)
-            {
-                var builder = new SubroutineBuilder(DeltinScript, this);
-                builder.SetupSubroutine();
-                _subroutineInfo = builder.SubroutineInfo;
-            }
-            return _subroutineInfo;
-        }
-
-        void ISubroutineContext.SetSubroutineInfo(SubroutineInfo subroutineInfo) => _subroutineInfo = subroutineInfo;
-        void ISubroutineContext.Finish(Rule rule) { }
-        string ISubroutineContext.RuleName() => "Pathfinder: Compressed Bake";
-        string ISubroutineContext.ElementName() => "todo: pathfinder element name";
-        string ISubroutineContext.ThisArrayName() => "todo: pathfinder array name";
-        bool ISubroutineContext.VariableGlobalDefault() => true;
-        IGroupDeterminer ISubroutineContext.GetDeterminer() => this;
-        CodeType ISubroutineContext.ContainingType() => null;
-        string IGroupDeterminer.GroupName() => "Pathfinder: Compressed Bake";
-        bool IGroupDeterminer.IsRecursive() => false;
-        bool IGroupDeterminer.IsObject() => false;
-        bool IGroupDeterminer.IsSubroutine() => true;
-        bool IGroupDeterminer.MultiplePaths() => false;
-        bool IGroupDeterminer.IsVirtual() => false;
-        bool IGroupDeterminer.ReturnsValue() => false;
-        IFunctionLookupTable IGroupDeterminer.GetLookupTable() => this;
-        RecursiveStack IGroupDeterminer.GetExistingRecursiveStack(List<RecursiveStack> stack) => throw new NotImplementedException();
-        object IGroupDeterminer.GetStackIdentifier() => throw new NotImplementedException();
-
-        void IFunctionLookupTable.Build(FunctionBuildController builder)
-        {
-            var actionSet = builder.ActionSet; // The action set.
             var matcher = GetMatcher(actionSet); // Get the character matcher.
-            var nodeArray = _bakeNodesParameter.Index; // The index the node array is stored in.
+            var nodeArray = actionSet.VarCollection.Assign("compressedNodes", actionSet.IsGlobal, false); // The index the node array is stored in.
             var nodeCount = Element.Part<V_CountOf>(nodeArray.Get()); // The number of nodes.
             var nodeResult = actionSet.VarCollection.Assign("compressBakeResult", true, false); // Assign the nodeResult.
+
+            nodeArray.Set(actionSet, compressedNodeArray);
             nodeResult.Set(actionSet, new V_EmptyArray()); // Initialize the nodeResult.
 
             // Loop through each node.
@@ -91,6 +59,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(nodeResult.ModifyVariable(Operation.AppendToArray, Element.Part<V_IndexOfArrayValue>(matcher, character), index: nodeArrayLoop.Value));
 
+            // actionSet.AddAction(Element.Part<A_SkipIf>(characterLoop.Value % 30, (Element)1));
+            // actionSet.AddAction(A_Wait.MinimumWait);
+
             characterLoop.End();
 
             actionSet.AddAction(A_Wait.MinimumWait);
@@ -104,16 +75,20 @@ namespace Deltin.Deltinteger.Pathfinder
 
         Element GetMatcher(ActionSet actionSet)
         {
-            // Create an array of strings with a single character.
-            var matcherArray = new Element[_maxNodeCount + 1];
-            for (int i = 0; i <= _maxNodeCount; i++)
-                matcherArray[i] = new V_CustomString(CharFromInt(i));
+            if (_matcher == null)
+            {
+                // Create an array of strings with a single character.
+                var matcherArray = new Element[_maxNodeCount + 1];
+                for (int i = 0; i <= _maxNodeCount; i++)
+                    matcherArray[i] = new V_CustomString(CharFromInt(i));
 
-            // Set matcher.
-            var storeMatcher = actionSet.VarCollection.Assign("compressBakeMatcher", true, false);
-            storeMatcher.Set(actionSet.DeltinScript.InitialGlobal.ActionSet, Element.CreateArray(matcherArray));
+                // Set matcher.
+                var storeMatcher = actionSet.VarCollection.Assign("compressBakeMatcher", true, false);
+                storeMatcher.Set(actionSet.DeltinScript.InitialGlobal.ActionSet, Element.CreateArray(matcherArray));
+                _matcher = storeMatcher.Get();
+            }
 
-            return storeMatcher.Get();
+            return _matcher;
         }
     
         public static Element Create(Pathmap map, int[] attributes)

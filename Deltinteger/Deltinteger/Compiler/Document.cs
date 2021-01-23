@@ -4,6 +4,7 @@ using System.Linq;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Compiler.Parse;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Cache;
 using TextDocumentItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.TextDocumentItem;
 
 namespace Deltin.Deltinteger.Compiler
@@ -16,6 +17,7 @@ namespace Deltin.Deltinteger.Compiler
         public RootContext Syntax { get; private set; }
         public long Version { get; private set; }
         public List<IParserError> Errors { get; private set; }
+        public CacheWatcher Cache { get; } = new CacheWatcher();
 
         public Document(Uri uri, string initialContent)
         {
@@ -68,5 +70,10 @@ namespace Deltin.Deltinteger.Compiler
             Text = Content,
             LanguageId = "ostw"
         };
+    
+        public void Remove()
+        {
+            Cache.Unregister();
+        }
     }
 }
