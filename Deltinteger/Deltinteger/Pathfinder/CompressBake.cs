@@ -53,11 +53,10 @@ namespace Deltin.Deltinteger.Pathfinder
             // Create an array with the length of the number of characters in the string.
             var mapper = actionSet.VarCollection.Assign("compressMapper", actionSet.IsGlobal, false);
             mapper.Set(actionSet, new V_EmptyArray());
-            mapper.Set(actionSet, index: Element.Part<V_StringLength>(currentString), value: 0);
+            mapper.Set(actionSet, index: Element.Part<V_StringLength>(currentString) - 1, value: 0);
 
             actionSet.AddAction(compressCurrentNodeArray.ModifyVariable(
                 operation: Operation.AppendToArray,
-                index: nodeArrayLoop.Value,
                 value: Element.Part<V_MappedArray>(
                     mapper.Get(),
                     Element.Part<V_IndexOfArrayValue>(
@@ -74,7 +73,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 onLoop.Invoke(actionSet);
 
             stringArrayLoop.End();
-            actionSet.AddAction(bakeResult.ModifyVariable(Operation.AppendToArray, Element.CreateArray(compressCurrentNodeArray.Get())));
+            actionSet.AddAction(bakeResult.SetVariable(index: nodeArrayLoop.Value, value: compressCurrentNodeArray.Get()));
             nodeArrayLoop.End();
             Result = bakeResult.Get();
         }
