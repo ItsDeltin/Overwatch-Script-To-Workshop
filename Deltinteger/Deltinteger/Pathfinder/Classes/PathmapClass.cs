@@ -231,6 +231,17 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
         private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
+        private readonly static CodeParameter PrintProgress = new CodeParameter(
+            "printProgress",
+            new MarkupBuilder().Add("An action that is invoked with the progress of the bake. The value will be between 0 and 1, and will equal 1 when completed.")
+                .NewLine().Add("Example usage:").NewLine().StartCodeLine()
+                .Add("Pathmap map;").NewLine()
+                .Add("map.Bake(printProgress: p => {").NewLine()
+                .Indent().Add("// Create a hud text of the baking process.").NewLine()
+                .Indent().Add("CreateHudText(AllPlayers(), Header: <\"Baking: <0>\"%, p * 100>, Location: Location.Top);").NewLine()
+                .Add("});").EndCodeLine(),
+            new BlockLambda(new CodeType[] {null}), new ExpressionOrWorkshopValue(new EmptyLambda())
+        );
 
         SharedPathfinderInfoValues CreatePathfinderInfo(ActionSet actionSet, Element attributes, IWorkshopTree onLoop, IWorkshopTree onConnectLoop) => new SharedPathfinderInfoValues() {
             ActionSet = actionSet,
@@ -617,15 +628,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ReturnType = DeltinScript.Types.GetInstance<BakemapClass>(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("attributes", AttributesDocumentation, new V_EmptyArray()),
-                new CodeParameter("printProgress",
-                    new MarkupBuilder().Add("An action that is invoked with the progress of the bake. The value will be between 0 and 1, and will equal 1 when completed.")
-                        .NewLine().Add("Example usage:").NewLine().StartCodeLine()
-                        .Add("Pathmap map;").NewLine()
-                        .Add("map.Bake(printProgress: p => {").NewLine()
-                        .Indent().Add("// Create a hud text of the baking process.").NewLine()
-                        .Indent().Add("CreateHudText(AllPlayers(), Header: <\"Baking: <0>\"%, p * 100>, Location: Location.Top);").NewLine()
-                        .Add("});").EndCodeLine(),
-                    new BlockLambda(new CodeType[] {null}), new ExpressionOrWorkshopValue(new EmptyLambda())),
+                PrintProgress,
                 OnLoopStartParameter
             },
             Action = (actionSet, methodCall) => {
@@ -643,13 +646,17 @@ namespace Deltin.Deltinteger.Pathfinder
             ReturnType = DeltinScript.Types.GetInstance<BakemapClass>(),
             Parameters = new CodeParameter[] {
                 new PathmapFileParameter("originalPathmapFile", "The original file of this pathmap."),
-                new ConstIntegerArrayParameter("attributes", AttributesDocumentation, true)
+                new ConstIntegerArrayParameter("attributes", AttributesDocumentation, true),
+                PrintProgress,
+                OnLoopStartParameter
             },
             Action = (actionSet, methodCall) =>
             {
                 // Get the pathmap.
                 var map = (Pathmap)methodCall.AdditionalParameterData[0];
                 var attributes = ((List<int>)methodCall.AdditionalParameterData[1]).ToArray();
+                var printProgress = (ILambdaInvocable)methodCall.ParameterValues[2];
+                var onLoop = methodCall.ParameterValues[3] as ILambdaInvocable;
 
                 // Get the compressed bakemap.
                 var compressed = Cache.CacheWatcher.Global.Get<Element>(new CompressedBakeCacheObject(map, attributes));
@@ -658,7 +665,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 var component = actionSet.DeltinScript.GetComponent<CompressedBakeComponent>();
 
                 // Call the decompresser.
-                component.Build(actionSet, compressed);
+                component.Build(actionSet, compressed, p => printProgress.Invoke(actionSet, p), onLoop);
 
                 // Get the bakemapClass instance.
                 var bakemapClass = actionSet.DeltinScript.Types.GetInstance<BakemapClass>();

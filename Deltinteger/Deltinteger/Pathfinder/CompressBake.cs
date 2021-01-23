@@ -3,7 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
+using Deltin.Deltinteger.Parse.Lambda;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Pathfinder
@@ -24,21 +24,23 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public void Init() {}
 
-        public void Build(ActionSet actionSet, Element compressedNodeArray)
+        public void Build(ActionSet actionSet, Element compressedNodeArray, Action<Element> printProgress, ILambdaInvocable onLoop)
         {
             var matcher = GetMatcher(actionSet); // Get the character matcher.
             var nodeArray = actionSet.VarCollection.Assign("compressedNodes", actionSet.IsGlobal, false); // The index the node array is stored in.
             var nodeCount = Element.Part<V_CountOf>(nodeArray.Get()); // The number of nodes.
-            var nodeResult = actionSet.VarCollection.Assign("compressBakeResult", true, false); // Assign the nodeResult.
+            var bakeResult = actionSet.VarCollection.Assign("compressBakeResult", true, false); // Assign the nodeResult.
+            var compressCurrentNodeArray = actionSet.VarCollection.Assign("compressCurrentNodeArray", true, false); // Assign the nodeResult.
 
             nodeArray.Set(actionSet, compressedNodeArray);
-            nodeResult.Set(actionSet, new V_EmptyArray()); // Initialize the nodeResult.
+            bakeResult.Set(actionSet, new V_EmptyArray()); // Initialize the nodeResult.
 
             // Loop through each node.
             var nodeArrayLoop = new ForBuilder(actionSet, "compressBakeNodeLoop", nodeCount);
+            printProgress(nodeArrayLoop.Value / nodeCount); // Print the node count.
             nodeArrayLoop.Init();
 
-            nodeResult.Set(actionSet, new V_EmptyArray(), index: nodeArrayLoop.Value);
+            compressCurrentNodeArray.Set(actionSet, new V_EmptyArray());
 
             var currentStringArray = nodeArray.Get()[nodeArrayLoop.Value]; // The current string array.
 
@@ -48,29 +50,33 @@ namespace Deltin.Deltinteger.Pathfinder
 
             var currentString = currentStringArray[stringArrayLoop.Value]; // The current string.
 
-            // Loop through each character
-            var characterLoop = new ForBuilder(actionSet, "compressCharacterLoop", Element.Part<V_StringLength>(currentString));
-            characterLoop.Init();
+            // Create an array with the length of the number of characters in the string.
+            var mapper = actionSet.VarCollection.Assign("compressMapper", actionSet.IsGlobal, false);
+            mapper.Set(actionSet, new V_EmptyArray());
+            mapper.Set(actionSet, index: Element.Part<V_StringLength>(currentString), value: 0);
 
-            // Get and store the current character.
-            var storeCharacter = actionSet.VarCollection.Assign("compressCharacter", true, false);
-            storeCharacter.Set(actionSet, Element.Part<V_StringSlice>(currentString, characterLoop.Value, (Element)1));
-            var character = storeCharacter.Get();
+            actionSet.AddAction(compressCurrentNodeArray.ModifyVariable(
+                operation: Operation.AppendToArray,
+                index: nodeArrayLoop.Value,
+                value: Element.Part<V_MappedArray>(
+                    mapper.Get(),
+                    Element.Part<V_IndexOfArrayValue>(
+                        matcher,
+                        Element.Part<V_StringSlice>(currentString, new V_CurrentArrayIndex(), (Element)1)
+                    )
+                )
+            ));
 
-            actionSet.AddAction(nodeResult.ModifyVariable(Operation.AppendToArray, Element.Part<V_IndexOfArrayValue>(matcher, character), index: nodeArrayLoop.Value));
-
-            // actionSet.AddAction(Element.Part<A_SkipIf>(characterLoop.Value % 30, (Element)1));
-            // actionSet.AddAction(A_Wait.MinimumWait);
-
-            characterLoop.End();
-
-            actionSet.AddAction(A_Wait.MinimumWait);
-            actionSet.AddAction(A_Wait.MinimumWait);
+            // Invoke onLoop.
+            if (onLoop == null)
+                actionSet.AddAction(A_Wait.MinimumWait);
+            else
+                onLoop.Invoke(actionSet);
 
             stringArrayLoop.End();
+            actionSet.AddAction(bakeResult.ModifyVariable(Operation.AppendToArray, Element.CreateArray(compressCurrentNodeArray.Get())));
             nodeArrayLoop.End();
-
-            Result = nodeResult.Get();
+            Result = bakeResult.Get();
         }
 
         Element GetMatcher(ActionSet actionSet)
