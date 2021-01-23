@@ -13,13 +13,6 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class Pathmap
     {
-        // nodesOut and segmentsOut must equal the ID override in Modules/PathfindEditor.del:
-        // line 312: define globalvar nodesOut    [3];
-        // line 313: define globalvar segmentsOut [4];
-        private const int nodesOut = 0;
-        private const int segmentsOut = 1;
-        private const int attributesOut = 2;
-
         public static Pathmap ImportFromActionSetFile(string file, IPathmapErrorHandler errorHandler) => ImportFromActionSet(File.ReadAllText(file).Trim(), errorHandler);
         public static Pathmap ImportFromActionSet(string text, IPathmapErrorHandler errorHandler)
         {

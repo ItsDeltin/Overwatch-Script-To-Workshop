@@ -47,59 +47,5 @@ namespace Deltin.Deltinteger.GlobalFunctions
                 new V_Number((double)methodCall.AdditionalParameterData[4])
             )
         };
-
-        class ConstStringArrayParameter : CodeParameter
-        {
-            public ConstStringArrayParameter(string name, string documentation) : base(name, documentation) { }
-
-            public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
-            {
-                var values = new List<string>();
-                ConstantExpressionResolver.Resolve(value, expr =>
-                {
-                    // If the resulting expression is a CreateArray,
-                    if (expr is CreateArrayAction array)
-                    {
-                        var error = new ConstStringElementErrorHandler(parseInfo.Script.Diagnostics, valueRange);
-
-                        // Iterate through each element in the array and get the string value.
-                        foreach (var value in array.Values)
-                            ConstantExpressionResolver.Resolve(value, expr =>
-                            {
-                                // Make sure the value is a string.
-                                if (value is StringAction stringAction)
-                                    values.Add(stringAction.Value);
-                                // Otherwise, add an error.
-                                else
-                                    error.AddError();
-                            });
-                    }
-                    // Otherwise, add an error.
-                    else if (valueRange != null)
-                        parseInfo.Script.Diagnostics.Error("Expected a string array", valueRange);
-                });
-                return values;
-            }
-
-            class ConstStringElementErrorHandler
-            {
-                private readonly FileDiagnostics _diagnostics;
-                private readonly DocRange _errorRange;
-                private bool _addedError;
-
-                public ConstStringElementErrorHandler(FileDiagnostics diagnostics, DocRange errorRange)
-                {
-                    _diagnostics = diagnostics;
-                    _errorRange = errorRange;
-                }
-
-                public void AddError()
-                {
-                    if (_addedError) return;
-                    _addedError = true;
-                    _diagnostics.Error("One or more values in the string array is not a constant string expression", _errorRange);
-                }
-            }
-        }
     }
 }

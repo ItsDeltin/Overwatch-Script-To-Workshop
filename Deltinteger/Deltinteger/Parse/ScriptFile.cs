@@ -29,6 +29,7 @@ namespace Deltin.Deltinteger.Parse
             Document = document;
             Diagnostics = diagnostics.FromUri(Uri);
             Diagnostics.AddDiagnostics(document.GetDiagnostics());
+            Document.Cache.EndCycle();
         }
         public ScriptFile(Diagnostics diagnostics, Uri uri, string content) : this(diagnostics, new Document(uri, content))
         {
