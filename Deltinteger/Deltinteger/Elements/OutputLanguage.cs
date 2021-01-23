@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Elements
         ptBR,
         ruRU,
         zhCN,
-        zhTW
+        zhTW,
+        system
     }
 }

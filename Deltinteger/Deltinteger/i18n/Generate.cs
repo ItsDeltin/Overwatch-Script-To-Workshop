@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.I18n
         static readonly string syntax = "deltinteger i18n \"datatool file location\" language \"output file\" \"[overwatch file location]\"";
 
         static readonly string[] ProcLanguages = new string[] {
-            "deDE", "esES", "esMX", "frFR", "itIT", "jaJP", "koKR", "plPL", "ptBR", "ruRU", "zhCN", "zhTW"
+            "deDE", "enUS", "esES", "esMX", "frFR", "itIT", "jaJP", "koKR", "plPL", "ptBR", "ruRU", "zhCN", "zhTW"
         };
 
         public static string[] Keywords()
@@ -47,6 +47,76 @@ namespace Deltin.Deltinteger.I18n
             keywords.AddRange(Lobby.Ruleset.Keywords());
 
             return keywords.Distinct().Where(k => k != null).ToArray();
+        }
+
+        public static void GenerateEx(string[] args)
+        {
+            string datatoolPath = args.ElementAtOrDefault(1);
+            string keyLinkFile = args.ElementAtOrDefault(2);
+            string outputFile = args.ElementAtOrDefault(3);
+            string overwatchPath = args.ElementAtOrDefault(4);
+
+            // Return if one of the required arguments is missing.
+            if (datatoolPath == null || outputFile == null)
+            {
+                Log.Write(LogLevel.Normal, syntax);
+                return;
+            }
+            // Get the overwatch path.
+            if (overwatchPath == null)
+            {
+                overwatchPath = "C:/Program Files (x86)/Overwatch";
+
+                if (!Directory.Exists(overwatchPath))
+                {
+                    Log.Write(LogLevel.Normal, "Could not find a folder at the default Overwatch install location.");
+                    Log.Write(LogLevel.Normal, syntax);
+                    return;
+                }
+            }
+            else if (!Directory.Exists(overwatchPath))
+            {
+                Log.Write(LogLevel.Normal, "Could not find a folder at " + overwatchPath + ".");
+                Log.Write(LogLevel.Normal, syntax);
+                return;
+            }
+
+            var datatool = new Dump.DataTool(datatoolPath, overwatchPath);
+
+            XmlSerializer linkSerializer = new XmlSerializer(typeof(KeyLinkList));
+            KeyLink[] keyLinks;
+            using (var fileStream = File.OpenRead(keyLinkFile))
+                keyLinks = ((KeyLinkList)linkSerializer.Deserialize(fileStream)).Methods;
+
+            XmlSerializer serializer = new XmlSerializer(typeof(I18nLanguage));
+            foreach (string lang in ProcLanguages)
+            {
+                // Dump the strings for the language.
+                StringKeyGroup strings = new StringKeyGroup();
+                strings.DumpStrings(datatool, lang, true, Log);
+
+                I18nLanguage xml = new I18nLanguage();
+
+                // Translate
+                foreach (var aLink in keyLinks)
+                    xml.Methods.Add(new I18nMethod(
+                        aLink.MethodName,
+                        strings.ValueFromKeyAndLang(aLink.Key, lang)
+                    ));
+
+                // Get the file
+                string file = Path.Combine(outputFile, "i18n-" + lang + ".xml");
+
+                if (File.Exists(file))
+                    File.Delete(file);
+
+                // Serialize
+                using (var fileStream = File.Create(file))
+                using (StreamWriter writer = new StreamWriter(fileStream))
+                    serializer.Serialize(writer, xml);
+
+                Log.Write(LogLevel.Normal, "Finished " + lang + ".");
+            }
         }
 
         public static void Generate(string[] args)
@@ -121,6 +191,12 @@ namespace Deltin.Deltinteger.I18n
 
         public static void GenerateKeyLink()
         {
+            /* MarbasFR paths
+            string datatoolPath = "D:/DEV/overwatch/tools/datatool/DataTool.exe";
+            string overwatchPath = "C:/Program Files (x86)/Overwatch";
+            string previous = null;// "D:/DEV/overwatch/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.1/Languages/key_links.xml";
+            string saveAt = "D:/DEV/overwatch/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.1/Languages/key_links.xml";
+            */
             string datatoolPath = "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe";
             string overwatchPath = "C:/Program Files (x86)/Overwatch";
             string previous = "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.0/Languages/key_links.xml";
@@ -134,6 +210,7 @@ namespace Deltin.Deltinteger.I18n
             strings.DumpStrings(datatool, "enUS", true, Log);
             strings.DumpStrings(datatool, "esES", false, Log);
             strings.DumpStrings(datatool, "itIT", false, Log);
+            strings.DumpStrings(datatool, "frFR", false, Log);
 
             List<KeyLink> links = new List<KeyLink>();
             var serializer = new XmlSerializer(typeof(KeyLinkList));
@@ -200,6 +277,7 @@ namespace Deltin.Deltinteger.I18n
             else if (pairs.Length == 0)
             {
                 Console.WriteLine($"Error: no pairs found for '{name}'.");
+                // links.Add(new KeyLink(name, "")); // auto add in the keylink file to fill it later by hand
                 Console.ReadLine();
                 return;
             }

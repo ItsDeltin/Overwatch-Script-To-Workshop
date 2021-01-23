@@ -10,16 +10,19 @@ namespace Deltin.Deltinteger.I18n
 {
     public class LanguageInfo
     {
-        public static OutputLanguage CurrentLanguage { get; private set; } = OutputLanguage.enUS;
+        public static OutputLanguage CurrentLanguage { get; private set; } = OutputLanguage.system;
         private static I18nLanguage Language;
         private static object LanguageLock = new object();
 
         public static string Translate(OutputLanguage language, string methodName)
         {
-            if (language == OutputLanguage.enUS) return methodName;
+            // if (language == OutputLanguage.enUS) return methodName;
 
             lock (LanguageLock)
             {
+                // Auto load language file
+                if (Language == null)
+                    LanguageInfo.LoadLanguage(language);
                 if (CurrentLanguage != language)
                     throw new Exception($"The '{language.ToString()}' language is not loaded.");
 
@@ -33,7 +36,7 @@ namespace Deltin.Deltinteger.I18n
         {
             lock (LanguageLock)
             {
-                if (CurrentLanguage == OutputLanguage.enUS) return true;
+                //if (CurrentLanguage == OutputLanguage.enUS) return true;
                 return Language.Methods.Any(m => m.EnglishName == keyword);
             }
         }
@@ -42,7 +45,7 @@ namespace Deltin.Deltinteger.I18n
         {
             lock (LanguageLock)
             {
-                if (CurrentLanguage != language && language != OutputLanguage.enUS)
+                if (CurrentLanguage != language /*&& language != OutputLanguage.enUS*/)
                 {
                     string languageFile = Path.Combine(Program.ExeFolder, "Languages", "i18n-" + language.ToString() + ".xml");
                     XmlSerializer serializer = new XmlSerializer(typeof(I18nLanguage));
@@ -56,7 +59,7 @@ namespace Deltin.Deltinteger.I18n
 
         public static void I18nWarningMessage(WorkshopBuilder builder, OutputLanguage outputLanguage)
         {
-            if (outputLanguage == OutputLanguage.enUS) return;
+            //if (outputLanguage == OutputLanguage.enUS) return;
             builder.AppendLine($"// Outputting to the language {outputLanguage.ToString()}.");
             builder.AppendLine($"// Not all languages are tested. If a value is not outputting correctly, you can change");
             builder.AppendLine($"// the keyword info in the Languages/i18n-{outputLanguage.ToString()}.xml file.");
