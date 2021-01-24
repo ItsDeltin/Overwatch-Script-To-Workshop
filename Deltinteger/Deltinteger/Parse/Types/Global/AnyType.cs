@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.Pow, this, this),
                 new TypeOperation(TypeOperator.Subtract, this, this)
             });
-            Operations.AddTypeOperation(AssignmentOperation.GetOperationsForValueType(this));
+            Operations.AddTypeOperation(AssignmentOperation.GetNumericOperations(this));
         }
 
         public override bool Implements(CodeType type) => !type.IsConstant();

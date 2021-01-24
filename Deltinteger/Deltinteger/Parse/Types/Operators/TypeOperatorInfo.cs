@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="op">The operation's operator type.</param>
         /// <param name="right">The right object's type.</param>
         /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>
-        public ITypeOperation GetOperation(TypeOperator op, CodeType right)
+        public virtual ITypeOperation GetOperation(TypeOperator op, CodeType right)
         {
             CodeType current = _type;
             while (current != null)
@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets an unary operation.</summary>
         /// <param name="op">The operation's operator type.</param>
         /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>
-        public IUnaryTypeOperation GetOperation(UnaryTypeOperator op)
+        public virtual IUnaryTypeOperation GetOperation(UnaryTypeOperator op)
         {
             CodeType current = _type;
             while (current != null)
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         /// <summary>Gets an assignment operation.</summary>
-        public IAssignmentOperation GetOperation(AssignmentOperator op, CodeType value)
+        public virtual IAssignmentOperation GetOperation(AssignmentOperator op, CodeType value)
         {
             CodeType current = _type;
             while (current != null)
@@ -76,5 +76,7 @@ namespace Deltin.Deltinteger.Parse
             }
             return null;
         }
+    
+        public void AddEqualsAssignmentOperator(ITypeSupplier supplier) => AddTypeOperation(new AssignmentOperation(AssignmentOperator.Equal, supplier.Any()));
     }
 }

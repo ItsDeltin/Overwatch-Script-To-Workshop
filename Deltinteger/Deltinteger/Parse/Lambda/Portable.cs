@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse.Lambda
@@ -27,6 +28,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         protected PortableLambdaType(string name, LambdaKind lambdaKind, CodeType[] parameters) : base(name)
         {
+            if (parameters.Any(p => p == null))
+                throw new Exception("Element in " + nameof(parameters) + " is null.");
+
             LambdaKind = lambdaKind;
             ParameterTypesKnown = true;
             Parameters = parameters;

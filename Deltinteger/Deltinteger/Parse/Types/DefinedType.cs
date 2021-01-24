@@ -34,6 +34,8 @@ namespace Deltin.Deltinteger.Parse
         {
             if (elementsResolved) return;
 
+            Operations.AddEqualsAssignmentOperator(_parseInfo.Types);
+
             // Get the type being extended.
             // This is an array for future interface support.
             if (_typeContext.Inheriting.Count > 0 && _typeContext.Inheriting[0])

@@ -51,6 +51,8 @@ namespace Deltin.Deltinteger.Pathfinder
             if (elementsResolved) return;
             base.ResolveElements();
 
+            Operations.AddEqualsAssignmentOperator(_supplier);
+
             serveObjectScope.AddNativeMethod(Pathfind);
             serveObjectScope.AddNativeMethod(PathfindAll);
             serveObjectScope.AddNativeMethod(GetPath);
@@ -621,7 +623,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         .Indent().Add("// Create a hud text of the baking process.").NewLine()
                         .Indent().Add("CreateHudText(AllPlayers(), Header: <\"Baking: <0>\"%, p * 100>, Location: Location.Top);").NewLine()
                         .Add("});").EndCodeLine(),
-                    new BlockLambda(new CodeType[] {null}), new ExpressionOrWorkshopValue(new EmptyLambda())),
+                    new BlockLambda(new CodeType[] { _supplier.Number() }), new ExpressionOrWorkshopValue(new EmptyLambda())),
                 OnLoopStartParameter
             },
             Action = (actionSet, methodCall) => {

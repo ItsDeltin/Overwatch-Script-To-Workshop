@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.GreaterThanOrEqual, this, _supplier.Boolean()), // Number >= number
                 new TypeOperation(TypeOperator.GreaterThan, this, _supplier.Boolean()), // Number > number
             });
-            Operations.AddTypeOperation(AssignmentOperation.GetOperationsForValueType(this));
+            Operations.AddTypeOperation(AssignmentOperation.GetNumericOperations(this));
         }
 
         public override Scope GetObjectScope() => _scope;

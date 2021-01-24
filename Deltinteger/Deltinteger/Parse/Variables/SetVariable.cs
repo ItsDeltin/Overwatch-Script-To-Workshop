@@ -33,14 +33,7 @@ namespace Deltin.Deltinteger.Parse
 
             // No operators exist for the variable and value pair.
             if (_operation == null)
-            {
-                // If the variable type is any, use default operation.
-                if (TypeComparison.IsAny(parseInfo.Types, variableType))
-                    _operation = new AssignmentOperation(op, parseInfo.Types.Any());
-                // Otherwise, add an error.
-                else
-                    parseInfo.Script.Diagnostics.Error("Operator '" + assignmentToken.Text + "' cannot be applied to the types '" + variableType.GetNameOrAny() + "' and '" + valueType.GetNameOrAny() + "'.", assignmentToken.Range);
-            }
+                parseInfo.Script.Diagnostics.Error("Operator '" + assignmentToken.Text + "' cannot be applied to the types '" + variableType.GetNameOrAny() + "' and '" + valueType.GetNameOrAny() + "'.", assignmentToken.Range);
         }
 
         public void Translate(ActionSet actionSet) => _operation.Resolve(new AssignmentOperationInfo(_comment, actionSet, _variableResolve.ParseElements(actionSet), _value.Parse(actionSet)));

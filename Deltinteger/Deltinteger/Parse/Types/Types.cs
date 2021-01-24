@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
-        public TypeOperatorInfo Operations { get; }
+        public TypeOperatorInfo Operations { get; protected set; }
 
         public CodeType(string name)
         {

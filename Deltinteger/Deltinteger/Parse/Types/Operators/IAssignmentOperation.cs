@@ -62,7 +62,8 @@ namespace Deltin.Deltinteger.Parse
             _ => throw new NotImplementedException()
         };
 
-        public static AssignmentOperation[] GetOperationsForValueType(CodeType valueType) => new AssignmentOperation[] {
+        public static AssignmentOperation[] GetNumericOperations(CodeType valueType) => new AssignmentOperation[] {
+            new AssignmentOperation(AssignmentOperator.Equal, valueType),
             new AssignmentOperation(AssignmentOperator.AddEqual, valueType),
             new AssignmentOperation(AssignmentOperator.DivideEqual, valueType),
             new AssignmentOperation(AssignmentOperator.ModuloEqual, valueType),
