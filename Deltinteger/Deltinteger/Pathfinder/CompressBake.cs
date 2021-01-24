@@ -197,7 +197,20 @@ namespace Deltin.Deltinteger.Pathfinder
             return strings;
         }
     
-        static Encoding WorkshopEncoding => Encoding.BigEndianUnicode;
-        static string CharFromInt(int value) => WorkshopEncoding.GetString(BitConverter.GetBytes(value + 1))[0].ToString();
+        static Encoding WorkshopEncoding => Encoding.UTF8;
+        static string CharFromInt(int value)
+        {
+            var illegal = new[] { "\"", "\n", "\r", "\\", "{" };
+
+            for (int i = 0, c = 0;; i++)
+            {
+                string r = WorkshopEncoding.GetString(BitConverter.GetBytes(i + 1))[0].ToString(); 
+
+                if (illegal.Contains(r)) continue;
+                if (value == c) return r;
+
+                c++;
+            }
+        }
     }
 }
