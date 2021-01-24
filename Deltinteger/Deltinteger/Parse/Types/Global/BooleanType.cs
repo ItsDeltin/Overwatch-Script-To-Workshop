@@ -16,7 +16,6 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
-            Operations.AddEqualsAssignmentOperator(_supplier);
             Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(TypeOperator.And, this, this),
                 new TypeOperation(TypeOperator.Or, this, this),

@@ -51,8 +51,6 @@ namespace Deltin.Deltinteger.Pathfinder
             if (elementsResolved) return;
             base.ResolveElements();
 
-            Operations.AddEqualsAssignmentOperator(_supplier);
-
             serveObjectScope.AddNativeMethod(Pathfind);
             serveObjectScope.AddNativeMethod(PathfindAll);
             serveObjectScope.AddNativeMethod(GetPath);

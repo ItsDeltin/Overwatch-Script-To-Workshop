@@ -69,8 +69,6 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
-            Operations.AddEqualsAssignmentOperator(_supplier);
-
             _objectScope = PlayerVariableScope.Child();
             AddSharedFunctionsToScope(_objectScope);
 

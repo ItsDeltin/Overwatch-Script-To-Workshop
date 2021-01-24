@@ -50,7 +50,6 @@ namespace Deltin.Deltinteger.Parse
             objectScope.AddNativeMethod(AsLocalVector);
             objectScope.AddNativeMethod(AsWorldVector);
 
-            Operations.AddEqualsAssignmentOperator(_typeSupplier);
             Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(TypeOperator.Add, this, this), // Vector + vector
                 new TypeOperation(TypeOperator.Subtract, this, this), // Vector - vector

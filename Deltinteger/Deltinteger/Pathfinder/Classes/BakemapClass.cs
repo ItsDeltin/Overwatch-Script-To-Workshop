@@ -20,8 +20,6 @@ namespace Deltin.Deltinteger.Pathfinder
             if (elementsResolved) return;
             base.ResolveElements();
 
-            Operations.AddEqualsAssignmentOperator(_types);
-
             NodeBake = AddObjectVariable(new InternalVar("NodeBake"));
             Pathmap = AddObjectVariable(new InternalVar("Pathmap"));
 

@@ -35,8 +35,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
             serveObjectScope.AddNativeMethod(PathfindFunction);
             serveObjectScope.AddNativeMethod(Next);
-
-            Operations.AddEqualsAssignmentOperator(_supplier);
         }
 
         private FuncMethod PathfindFunction => new FuncMethodBuilder()

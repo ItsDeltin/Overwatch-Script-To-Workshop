@@ -21,7 +21,6 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
-            Operations.AddEqualsAssignmentOperator(_typeSupplier);
             Operations.AddTypeOperation(new ITypeOperation[] {
                 new StringAddOperation(_typeSupplier)
             });

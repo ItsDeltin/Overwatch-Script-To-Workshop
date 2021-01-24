@@ -34,8 +34,7 @@ namespace Deltin.Deltinteger.Parse
                 _staticScope.AddNativeVariable(newPair);
             }
 
-            if (!constant)
-                Operations.AddEqualsAssignmentOperator(types);
+            Operations.DefaultAssignment = !constant;
         }
 
         public override bool IsConstant() => _constant;

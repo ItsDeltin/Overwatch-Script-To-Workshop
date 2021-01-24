@@ -9,10 +9,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<ITypeOperation> _typeOperations = new List<ITypeOperation>();
         private readonly List<IUnaryTypeOperation> _unaryTypeOperations = new List<IUnaryTypeOperation>();
         private readonly List<IAssignmentOperation> _assignmentOperations = new List<IAssignmentOperation>();
-        public bool DefaultEquality { get; set; } = true;
-        public bool DefaultComparison { get; set; } = true;
-        public bool DefaultBooleanLogic { get; set; } = true;
-        public bool DefaultMath { get; set; } = true;
+        public bool DefaultAssignment { get; set; } = true;
         private readonly CodeType _type;
 
         public TypeOperatorInfo(CodeType type)
@@ -76,7 +73,5 @@ namespace Deltin.Deltinteger.Parse
             }
             return null;
         }
-    
-        public void AddEqualsAssignmentOperator(ITypeSupplier supplier) => AddTypeOperation(new AssignmentOperation(AssignmentOperator.Equal, supplier.Any()));
-    }
+        }
 }
