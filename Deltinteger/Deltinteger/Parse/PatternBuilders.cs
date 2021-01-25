@@ -35,17 +35,17 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(IndexStore.SetVariable(0));
 
             Array = array;
-            Condition = new V_Compare(IndexStore.GetVariable(), Operators.LessThan, Element.Part<V_CountOf>(Array));
+            Condition = Element.Compare(IndexStore.GetVariable(), Operator.LessThan, Element.CountOf(Array));
             Index = (Element)IndexStore.GetVariable();
-            IndexValue = Element.Part<V_ValueInArray>(Array, IndexStore.GetVariable());
-
-            actionSet.AddAction(Element.Part<A_While>(Condition));
+            IndexValue = Element.ValueInArray(Array, IndexStore.GetVariable());
+            
+            actionSet.AddAction(Element.While(Condition));
         }
 
         public void Finish()
         {
             ActionSet.AddAction(IndexStore.ModifyVariable(Operation.Add, 1));
-            ActionSet.AddAction(new A_End());
+            ActionSet.AddAction(Element.End());
 
             if (Recursive)
             {
@@ -74,15 +74,15 @@ namespace Deltin.Deltinteger.Parse
             var var = Variable.WorkshopVariable;
 
             if (var.IsGlobal)
-                _actionSet.AddAction(Element.Part<A_ForGlobalVariable>(
+                _actionSet.AddAction(Element.Part("For Global Variable",
                     var,
                     (Element)0,
                     _end,
                     (Element)1
                 ));
             else
-                _actionSet.AddAction(Element.Part<A_ForPlayerVariable>(
-                    new V_EventPlayer(),
+                _actionSet.AddAction(Element.Part("For Player Variable",
+                    Element.EventPlayer(),
                     var,
                     (Element)0,
                     _end,
@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
                 ));
         }
 
-        public void End() => _actionSet.AddAction(new A_End());
+        public void End() => _actionSet.AddAction(Element.End());
     }
 
     public class SwitchBuilder
@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse
                     // Get the case with the value that matches.
                     // IndexOfArrayValue will return -1 if the case is not found,
                     // Add 1 and skip to the default case.
-                    Element.Part<V_IndexOfArrayValue>(
+                    Element.IndexOfArrayValue(
                         Element.CreateArray(skipValues.ToArray()),
                         switchValue
                     ) + 1

@@ -1,6 +1,7 @@
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.Lambda;
+using static Deltin.Deltinteger.Elements.Element;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
@@ -28,13 +29,13 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // If nodes can be null, filter out the null nodes.
             if (_actionSet.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes)
-                sortArray = Element.Part<V_FilteredArray>(nodes, new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Null()));
+                sortArray = Filter(nodes, Compare(ArrayElement(), Operator.NotEqual, Null()));
 
-            return Element.Part<V_IndexOfArrayValue>(
+            return IndexOfArrayValue(
                 nodes,
-                Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(
+                FirstOf(Sort(
                     sortArray,
-                    Element.Part<V_DistanceBetween>(position, new V_ArrayElement())
+                    DistanceBetween(position, ArrayElement())
                 ))
             );
         }

@@ -6,8 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Reflection;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.WorkshopWiki;
-using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Models;
 using Deltin.Deltinteger.I18n;
 using Deltin.Deltinteger.Compiler;
@@ -17,167 +15,94 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Elements
 {
-    public enum ValueType
+    public class Element : IWorkshopTree
     {
-        Any,
-        VectorAndPlayer,
-        Number,
-        Boolean,
-        Hero,
-        Vector,
-        Player,
-        Team,
-        Map,
-        Gamemode,
-        Button,
-        String,
-        Color
-    }
+        public static Element Part(string name, params IWorkshopTree[] parameterValues)
+            => new Element(ElementRoot.Instance.GetFunction(name), parameterValues);
+        public static Element Part(ElementBaseJson function, params IWorkshopTree[] parameterValues)
+            => new Element(function, parameterValues);
 
-    public abstract class Element : IWorkshopTree
-    {
-        public static T Part<T>(params IWorkshopTree[] parameterValues) where T : Element, new()
-        {
-            T element = new T()
-            {
-                ParameterValues = parameterValues
-            };
-            return element;
-        }
-
-        public Element(params IWorkshopTree[] parameterValues)
-        {
-            ElementList = ElementList.FromType(GetType());
-            ElementData = GetType().GetCustomAttribute<ElementData>();
-            ParameterData = ElementList.WorkshopParameters;
-            ParameterValues = parameterValues;
-        }
-
-        public ElementList ElementList { get; private set; }
-        public ElementData ElementData { get; private set; }
-        public ParameterBase[] ParameterData { get; private set; }
-        public string Name => ElementList.WorkshopName;
-
+        public ElementBaseJson Function { get; }
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
         public string Comment { get; set; }
-        public int Indent { get; set; }
-        protected bool AlwaysShowParentheses = false;
 
-        public override string ToString() => Name.ToString() + (ParameterValues.Length == 0 ? "" : "(" + string.Join(", ", ParameterValues.Select(v => v.ToString())) + ")");
-
-        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
+        public Element(ElementBaseJson function, params IWorkshopTree[] parameterValues)
         {
-            // Get the parameters
-            AddMissingParameters();
-            List<string> parameters = AdditionalParameters().ToList();
-            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue)));
-
-            string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
-
-            // Add a comment and newline
-            if (Comment != null) result += $"\"{Comment}\"\n" + Extras.Indent(Indent, true);
-
-            // Add the disabled tag if the element is disabled.
-            if (!ElementList.IsValue && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
-
-            // Add the name of the element.
-            result += LanguageInfo.Translate(language, Name);
-
-            // Add the parameters.
-            if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
-            else if (AlwaysShowParentheses) result += "()";
-
-            // Add the ; if the element is an action.
-            if (!ElementList.IsValue) result += ";";
-            return result;
+            Function = function;
+            ParameterValues = parameterValues;
         }
 
-        protected void AddMissingParameters()
+        public override string ToString() => Function.Name.ToString() + (ParameterValues.Length == 0 ? "" : "(" + string.Join(", ", ParameterValues.Select(v => v.ToString())) + ")");
+
+        public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
+        {
+            if (CustomConverters.Converters.TryGetValue(Function.Name, out var converter))
+            {
+                converter(b, this);
+                return;
+            }
+
+            var action = Function as ElementJsonAction;
+            if (action != null && action.Indentation == "outdent") b.Outdent();
+
+            // Add a comment and newline
+            if (Comment != null) b.Append($"\"{Comment}\"");
+
+            // Add the disabled tag if the element is disabled.
+            if (Function is ElementJsonAction && Disabled) b.AppendKeyword("disabled").Append(" ");
+
+            // Add the name of the element.
+            b.AppendKeyword(Function.Name);
+
+            // Add the parameters.
+            AddMissingParameters();
+            if (ParameterValues.Length > 0)
+            {
+                b.Append("(");
+                ParametersToWorkshop(b);
+                b.Append(")");
+            }
+
+            if (action != null)
+            {
+                b.AppendLine(";");
+                if (action.Indentation == "indent") b.Indent();
+            }
+        }
+
+        protected void ParametersToWorkshop(WorkshopBuilder b)
+        {
+            for (int i = 0; i < ParameterValues.Length; i++)
+            {
+                ParameterValues[i].ToWorkshop(b, ToWorkshopContext.NestedValue);
+                if (i != ParameterValues.Length - 1) b.Append(", ");
+            }
+        }
+
+        /// <summary>Makes sure no parameter values are null.</summary>
+        private void AddMissingParameters()
         {
             List<IWorkshopTree> parameters = new List<IWorkshopTree>();
 
-            for (int i = 0; i < ParameterData.Length || i < ParameterValues.Length; i++)
-                parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? ParameterData[i].GetDefault());
-
+            for (int i = 0; (Function.Parameters != null && i < Function.Parameters.Length) || (ParameterValues != null && i < ParameterValues.Length); i++)
+                parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? Function.Parameters[i].GetDefaultValue() ?? throw new Exception("Null argument"));
+            
             ParameterValues = parameters.ToArray();
         }
 
-        public virtual bool ConstantSupported<T>()
+        public virtual bool EqualTo(IWorkshopTree other)
         {
-            return false;
-        }
-        public virtual object GetConstant()
-        {
-            return null;
-        }
+            if (this.GetType() != other.GetType()) return false;
 
-        public virtual Element Optimize()
-        {
-            OptimizeChildren();
-            return this;
-        }
+            Element bElement = (Element)other;
+            if (Function != bElement.Function || ParameterValues.Length != bElement.ParameterValues.Length) return false;
 
-        protected void OptimizeChildren()
-        {
-            AddMissingParameters();
-            for (int i = 0; i < ParameterValues.Length; i++)
-                if (ParameterValues[i] is Element)
-                    ParameterValues[i] = ((Element)ParameterValues[i]).Optimize();
-        }
-
-        protected virtual string[] AdditionalParameters() => new string[0];
-
-        // Creates an array from a list of values.
-        public static Element CreateArray(params IWorkshopTree[] values)
-        {
-            if (values == null || values.Length == 0) return new V_EmptyArray();
-            return Element.Part<V_Array>(values);
-        }
-
-        public static Element CreateAppendArray(params IWorkshopTree[] values)
-        {
-            Element array = new V_EmptyArray();
-            for (int i = 0; i < values.Length; i++)
-                array = Element.Part<V_Append>(array, values[i]);
-            return array;
-        }
-
-        // Creates an ternary conditional that works in the workshop
-        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Element.Part<V_IfThenElse>(condition, consequent, alternative);
-
-        public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
-        public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
-        public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
-        public static Element operator /(Element a, Element b) => Element.Part<V_Divide>(a, b);
-        public static Element operator %(Element a, Element b) => Element.Part<V_Modulo>(a, b);
-        public static Element operator <(Element a, Element b) => new V_Compare(a, Operators.LessThan, b);
-        public static Element operator >(Element a, Element b) => new V_Compare(a, Operators.GreaterThan, b);
-        public static Element operator <=(Element a, Element b) => new V_Compare(a, Operators.LessThanOrEqual, b);
-        public static Element operator >=(Element a, Element b) => new V_Compare(a, Operators.GreaterThanOrEqual, b);
-        public static Element operator !(Element a) => Element.Part<V_Not>(a);
-        public static Element operator -(Element a) => a * -1;
-        public Element this[Element i]
-        {
-            get { return Element.Part<V_ValueInArray>(this, i); }
-            private set { }
-        }
-        public static implicit operator Element(double number) => new V_Number(number);
-        public static implicit operator Element(int number) => new V_Number(number);
-        public static implicit operator Element(bool boolean) => boolean ? (Element)new V_True() : new V_False();
-
-        public bool EqualTo(IWorkshopTree b)
-        {
-            if (this.GetType() != b.GetType()) return false;
-
-            Element bElement = (Element)b;
-            if (ParameterValues.Length != bElement.ParameterValues.Length) return false;
-
-            Type[] createsRandom = new Type[] {
-                typeof(V_RandomInteger),
-                typeof(V_RandomizedArray),
-                typeof(V_RandomReal),
-                typeof(V_RandomValueInArray)
+            string[] createsRandom = new string[] {
+                "Random Integer",
+                "Randomized Array",
+                "Random Real",
+                "Random Value In Array"
             };
 
             for (int i = 0; i < ParameterValues.Length; i++)
@@ -185,299 +110,287 @@ namespace Deltin.Deltinteger.Elements
                 if ((ParameterValues[i] == null) != (bElement.ParameterValues[i] == null))
                     return false;
 
-                if (ParameterValues[i] != null && (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType())))
+                if (ParameterValues[i] != null && (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || (ParameterValues[i] is Element element && createsRandom.Contains(element.Function.Name))))
                     return false;
             }
-
-            return OverrideEquals(b);
+            
+            return true;
         }
 
-        protected virtual bool OverrideEquals(IWorkshopTree other) => true;
+        public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (OptimizeElements.Optimizations.TryGetValue(Function.Name, out var optimizer))
+                return optimizer(this);
+            
+            return this;
+        }
+
+        protected void OptimizeChildren()
+        {
+            AddMissingParameters();
+            for (int i = 0; i < ParameterValues.Length; i++)
+                if (ParameterValues[i] is Element element)
+                    ParameterValues[i] = element.Optimize();
+        }
+
+        public bool TryGetConstant(out Vertex vertex)
+        {
+            if (Function.Name == "Vector"
+                && ParameterValues[0] is Element xe && xe.TryGetConstant(out double x)
+                && ParameterValues[1] is Element ye && ye.TryGetConstant(out double y)
+                && ParameterValues[2] is Element ze && ze.TryGetConstant(out double z))
+            {
+                vertex = new Vertex(x, y, z);
+            }
+            else if (Function.Name == "Left") vertex = new Vertex(1, 0, 0);
+            else if (Function.Name == "Right") vertex = new Vertex(-1, 0, 0);
+            else if (Function.Name == "Up") vertex = new Vertex(0, 1, 0);
+            else if (Function.Name == "Down") vertex = new Vertex(0, -1, 0);
+            else if (Function.Name == "Forward") vertex = new Vertex(0, 0, 1);
+            else if (Function.Name == "Backward") vertex = new Vertex(0, 0, -1);
+			else if (Function.Name == "Subtract" 
+					&& ParameterValues[0] is Element le && le.Function.Name == "Left"  
+					&& ParameterValues[1] is Element re && re.Function.Name == "Left") vertex = new Vertex(0,0,0);
+            else
+            {   
+                vertex = null;
+                return false;
+            }
+            return true;
+        }
+
+        public virtual bool TryGetConstant(out double number)
+        {
+            number = 0;
+            return false;
+        }
+
+        public virtual bool TryGetConstant(out bool boolean)
+        {
+            if (Function.Name == "True")
+            {
+                boolean = true;
+                return true;
+            }
+            else if (Function.Name == "False")
+            {
+                boolean = false;
+                return true;
+            }
+            boolean = false;
+            return false;
+        }
 
         public virtual int ElementCount()
         {
             AddMissingParameters();
             int count = 1;
-
+            
             foreach (var parameter in ParameterValues)
                 count += parameter.ElementCount();
-
+            
             return count;
         }
 
-        public Element OptimizeAddOperation(
-            Func<double, double, double> op,
-            Func<Element, Element, Element> areEqual,
-            bool returnBIf0
-        )
+        public static Element True() => Part("True");
+        public static Element False() => Part("False");
+        public static Element EmptyArray() => Part("Empty Array");
+        public static Element Null() => Part("Null");
+        public static Element EventPlayer() => Part("Event Player");
+        public static Element ArrayElement() => Part("Current Array Element");
+        public static Element ArrayIndex() => Part("Current Array Index");
+        public static Element Num(double value) => new NumberElement(value);
+        public static Element Compare(IWorkshopTree a, Operator op, IWorkshopTree b) => Part("Compare", a, new OperatorElement(op), b);
+        public static Element Vector(Element x, Element y, Element z) => Part("Vector", x, y, z);
+        public static Element Vector(IWorkshopTree x, IWorkshopTree y, IWorkshopTree z) => Part("Vector", x, y, z);
+        public static Element Not(IWorkshopTree a) => Part("Not", a);
+        public static Element IndexOfArrayValue(Element array, Element value) => Part("Index Of Array Value", array, value);
+        public static Element IndexOfArrayValue(IWorkshopTree array, IWorkshopTree value) => Part("Index Of Array Value", array, value);
+        public static Element Append(Element array, Element value) => Part("Append To Array", array, value);
+        public static Element Append(IWorkshopTree array, IWorkshopTree value) => Part("Append To Array", array, value);
+        public static Element Remove(IWorkshopTree array, IWorkshopTree value) => Part("Remove From Array", array, value);
+        public static Element FirstOf(IWorkshopTree array) => Part("First Of", array);
+        public static Element LastOf(IWorkshopTree array) => Part("Last Of", array);
+        public static Element CountOf(IWorkshopTree array) => Part("Count Of", array);
+        public static Element Contains(IWorkshopTree array, IWorkshopTree value) => Part("Array Contains", array, value);
+        public static Element ValueInArray(IWorkshopTree array, IWorkshopTree index) => Part("Value In Array", array, index);
+        public static Element Filter(IWorkshopTree array, IWorkshopTree condition) => Part("Filtered Array", array, condition);
+        public static Element Sort(IWorkshopTree array, IWorkshopTree rank) => Part("Sorted Array", array, rank);
+        public static Element All(IWorkshopTree array, IWorkshopTree condition) => Part("Is True For All", array, condition);
+        public static Element Any(IWorkshopTree array, IWorkshopTree condition) => Part("Is True For Any", array, condition);
+        public static Element Map(IWorkshopTree array, IWorkshopTree select) => Part("Mapped Array", array, select);
+        public static Element Slice(IWorkshopTree array, IWorkshopTree start, IWorkshopTree count) => Part("Array Slice", array, start, count);
+        public static Element Pow(Element a, Element b) => Part("Raise To Power", a, b);
+        public static Element Pow(IWorkshopTree a, IWorkshopTree b) => Part("Raise To Power", a, b);
+        public static Element Multiply(IWorkshopTree a, IWorkshopTree b) => Part("Multiply", a, b);
+        public static Element Divide(IWorkshopTree a, IWorkshopTree b) => Part("Divide", a, b);
+        public static Element Modulo(IWorkshopTree a, IWorkshopTree b) => Part("Modulo", a, b);
+        public static Element Add(IWorkshopTree a, IWorkshopTree b) => Part("Add", a, b);
+        public static Element Subtract(IWorkshopTree a, IWorkshopTree b) => Part("Subtract", a, b);
+        public static Element And(IWorkshopTree a, IWorkshopTree b) => Part("And", a, b);
+        public static Element Or(IWorkshopTree a, IWorkshopTree b) => Part("Or", a, b);
+        public static Element Min(IWorkshopTree a, IWorkshopTree b) => Part("Min", a, b);
+        public static Element Max(IWorkshopTree a, IWorkshopTree b) => Part("Max", a, b);
+        public static Element If(IWorkshopTree expression) => Part("If", expression);
+        public static Element ElseIf(IWorkshopTree expression) => Part("Else If", expression);
+        public static Element Else() => Part("Else");
+        public static Element End() => Part("End");
+        public static Element While(IWorkshopTree expression) => Part("While", expression);
+        public static Element Break() => Part("Break");
+        public static Element Continue() => Part("Continue");
+        public static Element TimeElapsed() => Part("Total Time Elapsed");
+        public static Element Wait() => Part("Wait", Num(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"));
+        public static Element LoopIfConditionIsTrue() => Part("Loop If Condition Is True");
+        public static Element XOf(IWorkshopTree expression) => Part("X Component Of", expression);
+        public static Element YOf(IWorkshopTree expression) => Part("Y Component Of", expression);
+        public static Element ZOf(IWorkshopTree expression) => Part("Z Component Of", expression);
+        public static Element DistanceBetween(IWorkshopTree a, IWorkshopTree b) => Part("Distance Between", a, b);
+        public static Element CrossProduct(IWorkshopTree a, IWorkshopTree b) => Part("Cross Product", a, b);
+        public static Element DotProduct(IWorkshopTree a, IWorkshopTree b) => Part("Dot Product", a, b);
+        public static Element Normalize(IWorkshopTree a) => Part("Normalize", a);
+        public static Element DirectionTowards(IWorkshopTree a, IWorkshopTree b) => Part("Direction Towards", a, b);
+        public static Element MagnitudeOf(IWorkshopTree vector) => Part("Magnitude Of", vector);
+        public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
+        public static Element EyePosition(IWorkshopTree player) => Part("Eye Position", player);
+        public static Element FacingDirectionOf(IWorkshopTree player) => Part("Facing Direction Of", player);
+        public static Element Abs(IWorkshopTree value) => Part("Absolute Value", value);
+        public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValueFromWorkshop("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest"));
+        public static Element CustomString(string value, params Element[] formats) => new StringElement(value, formats);
+        public static Element StringLength(IWorkshopTree value) => Part("String Length", value);
+        public static Element StringSlice(IWorkshopTree value, IWorkshopTree start, IWorkshopTree count) => Part("String Slice", value, start, count);
+        public static Element LastEntity() => Part("Last Entity");
+        public static Element RaycastPosition(IWorkshopTree start, IWorkshopTree end, IWorkshopTree playersToInclude = null, IWorkshopTree playersToExclude = null, IWorkshopTree includePlayerOwnedObjects = null)
+            => Part("Ray Cast Hit Position", start ?? throw new ArgumentNullException(nameof(start)), end ?? throw new ArgumentNullException(nameof(end)), playersToInclude ?? Null(), playersToExclude ?? Null(), includePlayerOwnedObjects ?? False());
+        public static Element CallSubroutine(Subroutine subroutine) => Element.Part("Call Subroutine", subroutine);
+        public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyExecuting", restartRule ? "RestartRule" : "DoNothing"));
+        public static Element SkipIf(Element condition, Element count) => Element.Part("Skip If", condition, count);
+
+        public static Element Hud(
+            IWorkshopTree players = null,
+            IWorkshopTree header = null, IWorkshopTree subheader = null, IWorkshopTree text = null,
+            string location = null, double? sortOrder = null,
+            string headerColor = null, string subheaderColor = null, string textColor = null,
+            string reevaluation = null, string spectators = null)
+        =>
+            Element.Part("Create HUD Text",
+                players ?? Part("All Players"),
+                header ?? Null(),
+                subheader ?? Null(),
+                text ?? Null(),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Location", location ?? "Top"),
+                Element.Num(sortOrder == null ? 0 : sortOrder.Value),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Color", headerColor ?? "White"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Color", subheaderColor ?? "White"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Color", textColor ?? "White"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("HudTextRev", reevaluation ?? "Visible To And String"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Spectators", spectators ?? "Default Visibility")
+            );
+
+        public static Element operator +(Element a, Element b) => Part("Add", a, b);
+        public static Element operator -(Element a, Element b) => Part("Subtract", a, b);
+        public static Element operator *(Element a, Element b) => Part("Multiply", a, b);
+        public static Element operator /(Element a, Element b) => Part("Divide", a, b);
+        public static Element operator %(Element a, Element b) => Part("Modulo", a, b);
+        public static Element operator <(Element a, Element b) => Compare(a, Operator.LessThan, b);
+        public static Element operator >(Element a, Element b) => Compare(a, Operator.GreaterThan, b);
+        public static Element operator <=(Element a, Element b) => Compare(a, Operator.LessThanOrEqual, b);
+        public static Element operator >=(Element a, Element b) => Compare(a, Operator.GreaterThanOrEqual, b);
+        public static Element operator !(Element a) => Part("Not", a);
+        public static Element operator -(Element a) => a * -1;
+        public Element this[IWorkshopTree i]
         {
-            OptimizeChildren();
+            get => Part("Value In Array", this, i);
+            private set {}
+        }
+        public Element this[Element i]
+        {
+            get => Part("Value In Array", this, i);
+            private set {}
+        }
+        public static implicit operator Element(double number) => Num(number);
+        public static implicit operator Element(int number) => Num(number);
+        public static implicit operator Element(bool boolean) => Part(boolean.ToString());
 
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            V_Number aAsNumber = a as V_Number;
-            V_Number bAsNumber = b as V_Number;
-
-            // If a and b are numbers, operate them.
-            if (aAsNumber != null && bAsNumber != null)
-                return op(aAsNumber.Value, bAsNumber.Value);
-
-            // If a is 0, return b.
-            if (aAsNumber != null && aAsNumber.Value == 0 && returnBIf0)
-                return b;
-
-            // If b is 0, return a.
-            if (bAsNumber != null && bAsNumber.Value == 0)
-                return a;
-
-            if (a.EqualTo(b))
-                return areEqual(a, b);
-
-            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
-            {
-                var aVertex = (Vertex)a.GetConstant();
-                var bVertex = (Vertex)b.GetConstant();
-
-                return new V_Vector(
-                    op(aVertex.X, bVertex.X),
-                    op(aVertex.Y, bVertex.Y),
-                    op(aVertex.Z, bVertex.Z)
-                );
-            }
-
-            return this;
+        // Creates an array from a list of values.
+        public static Element CreateArray(params IWorkshopTree[] values)
+        {
+            if (values == null || values.Length == 0) return Part("Empty Array");
+            return Part("Array", values);
         }
 
-        public Element OptimizeMultiplyOperation(
-            Func<double, double, double> op,
-            Func<Element, Element, Element> areEqual,
-            bool returnBIf1
-        )
+        public static Element CreateAppendArray(params IWorkshopTree[] values)
         {
-            OptimizeChildren();
+            Element array = Part("Empty Array");
+            for (int i = 0; i < values.Length; i++)
+                array = Part("Append To Array", array, values[i]);
+            return array;
+        }
 
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
+        // Creates an ternary conditional that works in the workshop
+        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Part("If-Then-Else", condition, consequent, alternative);
+    }
 
-            V_Number aAsNumber = a as V_Number;
-            V_Number bAsNumber = b as V_Number;
+    public class OperatorElement : IWorkshopTree
+    {
+        public Operator Operator { get; }
 
-            // Multiply number and number
-            if (aAsNumber != null && bAsNumber != null)
-                return op(aAsNumber.Value, bAsNumber.Value);
+        public OperatorElement(Operator op)
+        {
+            Operator = op;
+        }
 
-            // Multiply vector and a vector
-            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+        public bool EqualTo(IWorkshopTree other) => other is OperatorElement oe && oe.Operator == Operator;
+
+        public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(ToString());
+
+        public override string ToString()
+        {
+            switch (Operator)
             {
-                Vertex vertexA = (Vertex)a.GetConstant();
-                Vertex vertexB = (Vertex)b.GetConstant();
-                return new V_Vector(
-                    op(vertexA.X, vertexB.X),
-                    op(vertexA.Y, vertexB.Y),
-                    op(vertexA.Z, vertexB.Z)
-                );
+                case Operator.Equal: return "==";
+                case Operator.GreaterThan: return ">";
+                case Operator.GreaterThanOrEqual: return ">=";
+                case Operator.LessThan: return "<";
+                case Operator.LessThanOrEqual: return "<=";
+                case Operator.NotEqual: return "!=";
+                default: throw new NotImplementedException();
             }
-
-            // Multiply vector and number
-            if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
-            {
-                Vertex vector = a.ConstantSupported<Vertex>() ? (Vertex)a.GetConstant() : (Vertex)b.GetConstant();
-                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
-                return new V_Vector(
-                    op(vector.X, number.Value),
-                    op(vector.Y, number.Value),
-                    op(vector.Z, number.Value)
-                );
-            }
-
-            if (aAsNumber != null)
-            {
-                if (aAsNumber.Value == 1 && returnBIf1) return b;
-                if (aAsNumber.Value == 0) return 0;
-            }
-
-            if (bAsNumber != null)
-            {
-                if (bAsNumber.Value == 1) return a;
-                if (bAsNumber.Value == 0) return 0;
-            }
-
-            if (a.EqualTo(b))
-                return areEqual(a, b);
-
-            return this;
         }
     }
 
-    public class ElementList : IMethod
+    public class OperationElement : IWorkshopTree
     {
-        public static ElementList[] Elements { get; private set; }
+        public Operation Operation { get; }
 
-        public static void InitElements()
+        public OperationElement(Operation op)
         {
-            Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
-
-            Elements = new ElementList[methodList.Length];
-            for (int i = 0; i < Elements.Length; i++)
-                Elements[i] = new ElementList(methodList[i]);
-
-            for (int i = 0; i < Elements.Length; i++)
-                Elements[i].ApplyParameters();
-        }
-        public static ElementList GetElement(string codeName)
-        {
-            return Elements.FirstOrDefault(e => e.Name == codeName);
-        }
-        public static ElementList GetElement<T>() where T : Element
-        {
-            return Elements.FirstOrDefault(e => e.Type == typeof(T));
-        }
-        public static ElementList FromType(Type type)
-        {
-            return Elements.FirstOrDefault(element => element.Type == type);
+            Operation = op;
         }
 
-        public string Name { get; }
-        public string WorkshopName { get; }
-        public Type Type { get; }
-        public bool IsValue { get; }
-        public bool Hidden { get; }
-        public CodeParameter[] Parameters { get; private set; }
-        public ParameterBase[] WorkshopParameters { get; }
-        public MethodAttributes Attributes { get; } = new MethodAttributes();
-        public UsageDiagnostic[] UsageDiagnostics { get; }
-        public WikiMethod Wiki { get; }
-        public MarkupBuilder Documentation => Wiki?.Description;
-        private ValueType ElementValueType { get; }
-        private RestrictedCallType? Restricted { get; }
+        public bool EqualTo(IWorkshopTree other) => other is OperationElement oe && oe.Operation == Operation;
 
-        // IScopeable defaults
-        public LanguageServer.Location DefinedAt { get; } = null;
-        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public bool WholeContext { get; } = true;
-        public bool Static => true;
-
-        public CodeType CodeType { get; private set; }
-
-        public ElementList(Type type)
-        {
-            ElementData data = type.GetCustomAttribute<ElementData>();
-            Name = type.Name.Substring(2);
-            WorkshopName = data.ElementName;
-            Type = type;
-            IsValue = data.IsValue;
-            ElementValueType = data.ValueType;
-            WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
-            UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
-            Hidden = type.GetCustomAttribute<HideElement>() != null;
-            Restricted = type.GetCustomAttribute<RestrictedAttribute>()?.Type;
-
-            Wiki = WorkshopWiki.Wiki.GetWiki()?.GetMethod(WorkshopName);
-        }
-
-        public void ApplyParameters()
-        {
-            // Set the return type to the Vector class if the value returns a vector.
-            if (ElementValueType == ValueType.Vector) CodeType = VectorType.Instance;
-
-            // Get the parameters.
-            Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
-            for (int i = 0; i < Parameters.Length; i++)
-            {
-                string name = WorkshopParameters[i].Name.Replace(" ", "");
-                string description = Wiki?.GetWikiParameter(WorkshopParameters[i].Name)?.Description;
-
-                if (WorkshopParameters[i] is VarRefParameter)
-                {
-                    Parameters[i] = new VariableParameter(
-                        name,
-                        description,
-                        ((VarRefParameter)WorkshopParameters[i]).IsGlobal ? VariableType.Global : VariableType.Player,
-                        new VariableResolveOptions()
-                        {
-                            CanBeIndexed = false,
-                            FullVariable = true
-                        }
-                    );
-                }
-                else
-                {
-                    CodeType codeType = null;
-
-                    // If the parameter is an enum, get the enum CodeType.
-                    if (WorkshopParameters[i] is EnumParameter)
-                        codeType = ValueGroupType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
-
-                    var defaultValue = WorkshopParameters[i].GetDefault();
-
-                    Parameters[i] = new CodeParameter(
-                        name,
-                        description,
-                        codeType,
-                        defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue)
-                    );
-
-                    // If the default parameter value is an Element and the Element is restricted,
-                    if (defaultValue is Element parameterElement && parameterElement.ElementList.Restricted != null)
-                        // ...then add the restricted call type to the parameter's list of restricted call types.
-                        Parameters[i].RestrictedCalls.Add((RestrictedCallType)parameterElement.ElementList.Restricted);
-                }
-            }
-        }
-
-        public Element GetObject()
-        {
-            return (Element)Activator.CreateInstance(Type);
-        }
-
-        public bool DoesReturnValue => IsValue;
-
-        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
-        {
-            Element element = GetObject();
-            element.ParameterValues = methodCall.ParameterValues;
-            element.Comment = methodCall.ActionComment;
-
-            if (!IsValue)
-            {
-                actionSet.AddAction(element);
-                return null;
-            }
-            else return element;
-        }
-
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
-
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-
-        public void Call(ParseInfo parseInfo, DocRange callRange)
-        {
-            if (Restricted != null)
-                // If there is a restricted call type, add it.
-                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
-                    (RestrictedCallType)Restricted,
-                    parseInfo.GetLocation(callRange),
-                    RestrictedCall.Message_Element((RestrictedCallType)Restricted)
-                ));
-        }
+        public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => ElementRoot.Instance.GetEnumValue("Operation", Operation.ToString()).ToWorkshop(b, context);
     }
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class UsageDiagnostic : Attribute
+    public class NumberElement : Element
     {
-        public UsageDiagnostic(string message, int severity)
+        public double Value { get; set; }
+
+        public NumberElement(double value) : base(ElementRoot.Instance.GetFunction("Number"), null)
         {
-            Message = message;
-            Severity = severity;
+            Value = value;
+        }
+        public NumberElement() : this(0) {}
+
+        public override bool TryGetConstant(out double number)
+        {
+            number = Value;
+            return true;
         }
 
-        public string Message { get; }
-        public int Severity { get; }
-
-        public LanguageServer.Diagnostic GetDiagnostic(DocRange range)
-        {
-            return new LanguageServer.Diagnostic(Message, range, Severity);
-        }
+        public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(Value.ToString());
+        public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
     }
 }

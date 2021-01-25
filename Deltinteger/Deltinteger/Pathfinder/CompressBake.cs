@@ -28,47 +28,47 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             var matcher = GetMatcher(actionSet); // Get the character matcher.
             var nodeArray = actionSet.VarCollection.Assign("compressedNodes", actionSet.IsGlobal, false); // The index the node array is stored in.
-            var nodeCount = Element.Part<V_CountOf>(nodeArray.Get()); // The number of nodes.
+            var nodeCount = Element.CountOf(nodeArray.Get()); // The number of nodes.
             var bakeResult = actionSet.VarCollection.Assign("compressBakeResult", true, false); // Assign the nodeResult.
             var compressCurrentNodeArray = actionSet.VarCollection.Assign("compressCurrentNodeArray", true, false); // Assign the nodeResult.
 
             nodeArray.Set(actionSet, compressedNodeArray);
-            bakeResult.Set(actionSet, new V_EmptyArray()); // Initialize the nodeResult.
+            bakeResult.Set(actionSet, Element.EmptyArray()); // Initialize the nodeResult.
 
             // Loop through each node.
             var nodeArrayLoop = new ForBuilder(actionSet, "compressBakeNodeLoop", nodeCount);
             printProgress(nodeArrayLoop.Value / nodeCount); // Print the node count.
             nodeArrayLoop.Init();
 
-            compressCurrentNodeArray.Set(actionSet, new V_EmptyArray());
+            compressCurrentNodeArray.Set(actionSet, Element.EmptyArray());
 
             var currentStringArray = nodeArray.Get()[nodeArrayLoop.Value]; // The current string array.
 
             // Loop through each string.
-            var stringArrayLoop = new ForBuilder(actionSet, "compressBakeStringLoop", Element.Part<V_CountOf>(currentStringArray));
+            var stringArrayLoop = new ForBuilder(actionSet, "compressBakeStringLoop", Element.CountOf(currentStringArray));
             stringArrayLoop.Init();
 
             var currentString = currentStringArray[stringArrayLoop.Value]; // The current string.
 
             // Create an array with the length of the number of characters in the string.
             var mapper = actionSet.VarCollection.Assign("compressMapper", actionSet.IsGlobal, false);
-            mapper.Set(actionSet, new V_EmptyArray());
-            mapper.Set(actionSet, index: Element.Part<V_StringLength>(currentString) - 1, value: 0);
+            mapper.Set(actionSet, Element.EmptyArray());
+            mapper.Set(actionSet, index: Element.StringLength(currentString) - 1, value: 0);
 
             actionSet.AddAction(compressCurrentNodeArray.ModifyVariable(
                 operation: Operation.AppendToArray,
-                value: Element.Part<V_MappedArray>(
+                value: Element.Map(
                     mapper.Get(),
-                    Element.Part<V_IndexOfArrayValue>(
+                    Element.IndexOfArrayValue(
                         matcher,
-                        Element.Part<V_StringSlice>(currentString, new V_CurrentArrayIndex(), (Element)1)
+                        Element.StringSlice(currentString, Element.ArrayIndex(), (Element)1)
                     )
                 )
             ));
 
             // Invoke onLoop.
             if (onLoop == null)
-                actionSet.AddAction(A_Wait.MinimumWait);
+                actionSet.AddAction(Element.Wait());
             else
                 onLoop.Invoke(actionSet);
 
@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 // Create an array of strings with a single character.
                 var matcherArray = new Element[_maxNodeCount + 1];
                 for (int i = 0; i <= _maxNodeCount; i++)
-                    matcherArray[i] = new V_CustomString(CharFromInt(i));
+                    matcherArray[i] = Element.CustomString(CharFromInt(i).ToString());
 
                 // Set matcher.
                 var storeMatcher = actionSet.VarCollection.Assign("compressBakeMatcher", true, false);
@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 int[] pathfindResult = Dijkstra(map, attributes, i);
                 var compressed = CompressIntArray(pathfindResult);
 
-                nodeArray[i] = Element.CreateArray(compressed.Select(s => new V_CustomString(s)).ToArray());
+                nodeArray[i] = Element.CreateArray(compressed.Select(s => Element.CustomString(s)).ToArray());
             }
 
             // Create the final node array.
@@ -170,7 +170,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 // Do not accept negative numbers.
                 if (value < 0) throw new Exception($"Index {i} in {nameof(values)} is less than 0.");
 
-                string newStringValue = CharFromInt(value);
+                char newStringValue = CharFromInt(value);
 
                 // Append the new character to the compressed string.
                 string newCurrent = current + newStringValue;
@@ -180,7 +180,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 {
                     // Then add 'current' to the list of strings.
                     strings.Add(current);
-                    current = newStringValue;
+                    current = newStringValue.ToString();
                     addCurrentStringAfterLoop = false;
                 }
                 else
@@ -197,14 +197,14 @@ namespace Deltin.Deltinteger.Pathfinder
             return strings;
         }
     
-        static Encoding WorkshopEncoding => Encoding.UTF8;
-        static string CharFromInt(int value)
+        static Encoding WorkshopEncoding => Encoding.Unicode;
+        static char CharFromInt(int value)
         {
-            var illegal = new[] { "\"", "\n", "\r", "\\", "{" };
+            var illegal = new[] { '\"', '\n', '\r', '\\', '{' };
 
             for (int i = 0, c = 0;; i++)
             {
-                string r = WorkshopEncoding.GetString(BitConverter.GetBytes(i + 1))[0].ToString(); 
+                char r = WorkshopEncoding.GetString(BitConverter.GetBytes(i + 1))[0]; 
 
                 if (illegal.Contains(r)) continue;
                 if (value == c) return r;

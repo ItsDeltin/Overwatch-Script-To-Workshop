@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         // Client capability
         private DidChangeConfigurationCapability _capability;
-        public void SetCapability(DidChangeConfigurationCapability capability)
+        public void SetCapability(DidChangeConfigurationCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
             _capability = capability;
         }

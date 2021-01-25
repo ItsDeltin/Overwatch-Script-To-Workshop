@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using Deltin.Deltinteger.Parse;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
+using MarkedStringsOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkedStringsOrMarkupContent;
 using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
 using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
 using DocumentUri = OmniSharp.Extensions.LanguageServer.Protocol.DocumentUri;
@@ -74,7 +75,13 @@ namespace Deltin.Deltinteger
             return DocumentUri.File(uri.LocalPath);
         }
 
-        public static string GetNameOrDefine(this CodeType type) => type?.GetName() ?? "define";
+        public static Uri Clean(this Uri uri)
+        {
+			return new Uri(uri.FilePath());
+        }
+
+        public static string GetNameOrVoid(this CodeType type) => type?.GetName() ?? "void";
+        public static string GetNameOrAny(this CodeType type) => type?.GetName() ?? "Any";
 
         public static bool CodeTypeParameterInvalid(this CodeType parameterType, CodeType valueType) =>
             parameterType != null && ((parameterType.IsConstant() && valueType == null) || (valueType != null && !valueType.Implements(parameterType)));
@@ -204,8 +211,9 @@ namespace Deltin.Deltinteger
         };
         
         public static implicit operator MarkupBuilder(string value) => value == null ? null : new MarkupBuilder(value);
+        public static implicit operator string(MarkupBuilder builder) => builder?.ToString(false);
         public static implicit operator StringOrMarkupContent(MarkupBuilder builder) => builder == null ? null : new StringOrMarkupContent((MarkupContent)builder);
         public static implicit operator MarkupContent(MarkupBuilder builder) => builder == null ? null : new MarkupContent() { Kind = MarkupKind.Markdown, Value = builder.ToString(true) };
-        public static implicit operator string(MarkupBuilder builder) => builder?.ToString(false);
+        public static implicit operator MarkedStringsOrMarkupContent(MarkupBuilder builder) => new MarkedStringsOrMarkupContent(builder);
     }
 }

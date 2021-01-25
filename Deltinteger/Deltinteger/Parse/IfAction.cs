@@ -22,6 +22,8 @@ namespace Deltin.Deltinteger.Parse
             // Get the if condition.
             Expression = parseInfo.GetExpression(scope, ifContext.Expression);
 
+            TypeComparison.ExpectNonConstant(parseInfo, ifContext.Expression.Range, Expression.Type());
+
             // Contains the path info of all blocks in the if/else-if/else list.
             var paths = new List<PathInfo>();
 
@@ -130,32 +132,32 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet)
         {
             // Add the if action.
-            A_If newIf = Element.Part<A_If>(Expression.Parse(actionSet));
+            Element newIf = Element.If(Expression.Parse(actionSet));
             newIf.Comment = Comment;
             actionSet.AddAction(newIf);
 
             // Translate the if block.
-            Block.Translate(actionSet.Indent());
+            Block.Translate(actionSet);
 
             // Add the else-ifs.
             for (int i = 0; i < ElseIfs.Length; i++)
             {
                 // Add the else-if action.
-                actionSet.AddAction(Element.Part<A_ElseIf>(ElseIfs[i].Expression.Parse(actionSet)));
+                actionSet.AddAction(Element.ElseIf(ElseIfs[i].Expression.Parse(actionSet)));
 
                 // Translate the else-if block.
-                ElseIfs[i].Block.Translate(actionSet.Indent());
+                ElseIfs[i].Block.Translate(actionSet);
             }
 
             // If there is an else block, translate it.
             if (ElseBlock != null)
             {
-                actionSet.AddAction(new A_Else());
-                ElseBlock.Translate(actionSet.Indent());
+                actionSet.AddAction(Element.Else());
+                ElseBlock.Translate(actionSet);
             }
 
             // Add the end of the if.
-            var end = new A_End();
+            var end = Element.End();
             end.Comment = EndComment;
             actionSet.AddAction(end);
         }
@@ -170,6 +172,8 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the else-if's expression.
             Expression = parseInfo.GetExpression(scope, elseIfContext.Expression);
+
+            TypeComparison.ExpectNonConstant(parseInfo, elseIfContext.Expression.Range, Expression.Type());
 
             // Get the else-if's block.
             Block = parseInfo.GetStatement(scope, elseIfContext.Statement);

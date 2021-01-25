@@ -12,7 +12,7 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class CodeType : IExpression, ICallable
+    public abstract class CodeType : IExpression, ICallable, ICodeTypeSolver
     {
         public string Name { get; }
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
@@ -20,8 +20,8 @@ namespace Deltin.Deltinteger.Parse
         public string Description { get; protected set; }
         public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
-        protected string Kind = "class";
-        protected TokenType TokenType { get; set; } = TokenType.Type;
+        protected TypeKind Kind = TypeKind.Struct;
+        protected SemanticTokenType TokenType { get; set; } = SemanticTokenType.Type;
         protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
@@ -30,9 +30,12 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
+        public TypeOperatorInfo Operations { get; protected set; }
+
         public CodeType(string name)
         {
             Name = name;
+            Operations = new TypeOperatorInfo(this);
         }
 
         protected void Inherit(CodeType extend, FileDiagnostics diagnostics, DocRange range)
@@ -65,18 +68,27 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual bool Implements(CodeType type)
         {
-            if (type == null) return false;
+            if (type is PipeType union)
+                foreach (var unionType in union.IncludedTypes)
+                    if (DoesImplement(unionType))
+                        return true;
+            return DoesImplement(type);
+        }
 
+        protected virtual bool DoesImplement(CodeType type)
+        {
             // Iterate through all extended classes.
             CodeType checkType = this;
             while (checkType != null)
             {
-                if (checkType == type) return true;
+                if (type.Is(checkType) || (!checkType.IsConstant() && type is AnyType)) return true;
                 checkType = checkType.Extends;
             }
 
             return false;
         }
+
+        public virtual bool Is(CodeType type) => this == type;
 
         // Static
         public abstract Scope ReturningScope();
@@ -123,25 +135,49 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
+            var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name).EndCodeLine();
+            if (Description != null) hover.NewSection().Add(Description);
+
             parseInfo.TranslateInfo.Types.CallType(this);
-            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.Script.AddHover(callRange, hover);
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
 
+        public static CompletionItem GetTypeCompletion(CodeType type) => new CompletionItem() {
+            Label = type.GetName(),
+            Kind = type.Kind == TypeKind.Class ? CompletionItemKind.Class : type.Kind == TypeKind.Constant ? CompletionItemKind.Constant : type.Kind == TypeKind.Enum ? CompletionItemKind.Enum : CompletionItemKind.Struct
+        };
+
         /// <summary>Gets the full name of the type.</summary>
         public virtual string GetName() => Name;
+
+        public CodeType GetCodeType(DeltinScript deltinScript) => this;
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, IParseType typeContext) => GetCodeTypeFromContext(parseInfo, (dynamic)typeContext);
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, ParseType typeContext)
         {
-            if (typeContext == null) return null;
+            if (typeContext == null) return parseInfo.TranslateInfo.Types.Unknown();
 
-            CodeType type = null;
-            if (!typeContext.IsDefault) type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
+            CodeType type;
+            bool doCall = true;
+
+            if (typeContext.IsDefault)
+            {
+                if (typeContext.Infer)
+                    parseInfo.Script.Diagnostics.Hint("Unable to infer type", typeContext.Identifier.Range);
+
+                type = parseInfo.TranslateInfo.Types.Any();
+                doCall = false;
+            }
+            else
+            {
+                type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
+                if (type == null) return parseInfo.TranslateInfo.Types.Unknown();
+            }
 
             // Get generics
             if (typeContext.HasTypeArgs)
@@ -161,12 +197,12 @@ namespace Deltin.Deltinteger.Parse
                     type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
             }
 
-            if (type != null)
+            if (doCall)
                 type.Call(parseInfo, typeContext.Identifier.Range);
 
             for (int i = 0; i < typeContext.ArrayCount; i++)
-                type = new ArrayType(type);
-
+                type = new ArrayType(parseInfo.TranslateInfo.Types, type);
+            
             return type;
         }
 
@@ -201,32 +237,20 @@ namespace Deltin.Deltinteger.Parse
             // Get the contained type.
             var result = GetCodeTypeFromContext(parseInfo, type.Type);
             // Get the array type.
-            for (int i = 0; i < type.ArrayCount; i++) result = new ArrayType(result);
+            for (int i = 0; i < type.ArrayCount; i++) result = new ArrayType(parseInfo.TranslateInfo.Types, result);
             // Done.
             return result;
         }
 
-        static List<CodeType> _defaultTypes;
-        public static List<CodeType> DefaultTypes
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, PipeTypeContext type)
         {
-            get
-            {
-                if (_defaultTypes == null) GetDefaultTypes();
-                return _defaultTypes;
-            }
-        }
-        private static void GetDefaultTypes()
-        {
-            _defaultTypes = new List<CodeType>();
-            _defaultTypes.AddRange(ValueGroupType.EnumTypes);
+            var left = GetCodeTypeFromContext(parseInfo, type.Left);
+            var right = GetCodeTypeFromContext(parseInfo, type.Right);
 
-            // Add custom classes here.
-            _defaultTypes.Add(new Models.AssetClass());
-            _defaultTypes.Add(new Lambda.BlockLambda());
-            _defaultTypes.Add(new Lambda.ValueBlockLambda(null));
-            _defaultTypes.Add(new Lambda.MacroLambda(null));
-            _defaultTypes.Add(VectorType.Instance);
-            _defaultTypes.Add(Pathfinder.SegmentsStruct.Instance);
+            if (left.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Left.Range);
+            if (right.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Right.Range);
+
+            return new PipeType(left, right);
         }
     }
 }

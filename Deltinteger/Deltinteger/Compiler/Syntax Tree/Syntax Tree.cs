@@ -49,6 +49,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         bool LookaheadValid { get; }
         bool IsVoid { get; }
         bool DefinitelyType { get; }
+        bool Infer => false;
     }
 
     public class ParseType : Node, IParseType
@@ -73,9 +74,9 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
 
         public bool HasTypeArgs => TypeArgs != null && TypeArgs.Count > 0;
-        public bool IsArray => ArrayCount > 0;
         public bool LookaheadValid => Identifier != null;
         public bool IsDefault => !Identifier || Identifier.TokenType == TokenType.Define;
+        public bool Infer => Identifier && Identifier.TokenType == TokenType.Define;
         public bool DefinitelyType => IsVoid || Identifier.TokenType == TokenType.Define || TypeArgs.Count > 0;
         Token IParseType.GenericToken => Identifier;
     }
@@ -121,6 +122,23 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool IsVoid => Type.IsVoid;
         public bool DefinitelyType => Type.DefinitelyType;
         Token IParseType.GenericToken => Type.GenericToken;
+    }
+
+    public class PipeTypeContext : Node, IParseType
+    {
+        public IParseType Left { get; }
+        public IParseType Right { get; }
+
+        public PipeTypeContext(IParseType left, IParseType right)
+        {
+            Left = left;
+            Right = right;
+        }
+
+        public Token GenericToken => throw new NotImplementedException();
+        public bool LookaheadValid => true;
+        public bool IsVoid => false;
+        public bool DefinitelyType => true;
     }
 
     public class RuleContext : Node
@@ -398,6 +416,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Token { get; }
         public string Value { get; }
         public List<IParseExpression> Formats { get; }
+        public bool ClassicFormatSyntax { get; }
 
         public StringExpression(Token localized, Token token)
         {
@@ -409,9 +428,34 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public StringExpression(Token localized, Token token, List<IParseExpression> formats) : this(localized, token)
         {
             Formats = formats;
+            ClassicFormatSyntax = true;
         }
 
         public override string ToString() => '"' + Value + '"';
+    }
+
+    public class InterpolatedStringExpression : Node, IParseExpression
+    {
+        public Token Tail { get; }
+        public List<InterpolatedStringPart> Parts { get; }
+
+        public InterpolatedStringExpression(Token tail, List<InterpolatedStringPart> parts)
+        {
+            Tail = tail;
+            Parts = parts;
+        }
+    }
+
+    public class InterpolatedStringPart
+    {
+        public IParseExpression Expression { get; } 
+        public Token Right { get; }
+
+        public InterpolatedStringPart(IParseExpression expression, Token right)
+        {
+            Expression = expression;
+            Right = right;
+        }
     }
 
     public class Identifier : Node, IParseExpression

@@ -7,7 +7,7 @@ using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.Compl
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class DefinedFunction : IMethod, ICallable, IApplyBlock
+    public abstract class DefinedFunction : IMethod, IApplyBlock, ICallable
     {
         public string Name { get; }
         public CodeType CodeType { get; protected set; }
@@ -23,13 +23,14 @@ namespace Deltin.Deltinteger.Parse
         protected Scope methodScope { get; private set; }
         protected Scope containingScope { get; private set; }
         public Var[] ParameterVars { get; private set; }
-        public bool DoesReturnValue { get; protected set; }
 
         public CallInfo CallInfo { get; }
 
         protected bool WasApplied = false;
 
         private readonly RecursiveCallHandler _recursiveCallHandler;
+
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
 
         public DefinedFunction(ParseInfo parseInfo, string name, Location definedAt)
         {
@@ -59,22 +60,20 @@ namespace Deltin.Deltinteger.Parse
             var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context, subroutineParameter);
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
+
+            parseInfo.Script.AddHover(DefinedAt.range, ((IMethod)this).GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
         }
 
-        public void Call(ParseInfo parseInfo, DocRange callRange)
+        public object Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
             parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
+            return null;
         }
-
-        protected virtual IRecursiveCallHandler GetRecursiveCallHandler() => null;
-
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, null);
+        void ICallable.Call(ParseInfo parseInfo, DocRange callRange) => Call(parseInfo, callRange);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
-
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
 
         protected List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)
@@ -85,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override string ToString()
         {
-            string name = GetLabel(false);
+            string name = Name;
             if (Attributes.ContainingType != null) name = Attributes.ContainingType.Name + "." + name;
             return name;
         }

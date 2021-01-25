@@ -47,8 +47,6 @@ namespace Deltin.Deltinteger
 
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
-            ElementList.InitElements();
-            VectorType.Instance.ResolveElements();
             Lobby.HeroSettingCollection.Init();
             Lobby.ModeSettingCollection.Init();
 

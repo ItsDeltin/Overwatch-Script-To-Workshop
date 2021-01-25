@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
             return assigned;
         }
 
-        public IndexReference AddIndexReference(VarCollection varCollection, Var var, bool isGlobal, bool recursive = false)
+        public IndexReference AddIndexReference(VarCollection varCollection, IIndexReferencer var, bool isGlobal, bool recursive = false)
         {
             if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
             if (var == null) throw new ArgumentNullException(nameof(var));

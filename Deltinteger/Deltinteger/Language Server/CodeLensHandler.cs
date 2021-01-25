@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 (_languageServer.ConfigurationHandler.ElementCountCodeLens && lens is ElementCountCodeLens);
         }
 
-        public CodeLensRegistrationOptions GetRegistrationOptions()
+        public CodeLensRegistrationOptions GetRegistrationOptions(CodeLensCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
             return new CodeLensRegistrationOptions()
             {

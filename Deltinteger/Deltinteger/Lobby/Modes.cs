@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 All.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
 
@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Lobby
             TeamDeathmatch?.ToWorkshop(builder, allSettings, "TeamDeathmatch");
             FreezethawElimination?.ToWorkshop(builder, allSettings, "FreezethawElimination");
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -151,7 +151,7 @@ namespace Deltin.Deltinteger.Lobby
                     Ruleset.WriteList(builder, DisabledMaps);
                 }
 
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
         }
@@ -164,7 +164,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (string map in maps)
                 builder.AppendLine(builder.Translate(map).RemoveStructuralChars());
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
     }

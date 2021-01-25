@@ -1,5 +1,6 @@
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
+using static Deltin.Deltinteger.Elements.Element;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
@@ -7,9 +8,11 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public ObjectVariable NodeBake { get; private set; }
         public ObjectVariable Pathmap { get; private set; }
+        private readonly ITypeSupplier _types;
 
-        public BakemapClass() : base("Bakemap")
+        public BakemapClass(ITypeSupplier types) : base("Bakemap")
         {
+            _types = types;
         }
 
         public override void ResolveElements()
@@ -27,8 +30,8 @@ namespace Deltin.Deltinteger.Pathfinder
             Name = "Pathfind",
             Documentation = "Pathfinds specified players to the destination.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("players", "The players to pathfind."),
-                new CodeParameter("destination", "The position to pathfind to.")
+                new CodeParameter("players", "The players to pathfind.", _types.Players()),
+                new CodeParameter("destination", "The position to pathfind to.", _types.Vector())
             },
             Action = (actionSet, call) =>
             {
@@ -42,14 +45,14 @@ namespace Deltin.Deltinteger.Pathfinder
                 Element nodeArray = pathmapClass.Nodes.Get()[Pathmap.Get(actionSet)];
 
                 // Get the node closest to the destination.
-                Element targetNode = Element.Part<V_IndexOfArrayValue>(
+                Element targetNode = IndexOfArrayValue(
                     nodeArray,
-                    Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(
+                    FirstOf(Sort(
                         // Sort non-null nodes
                         /*Element.Part<V_FilteredArray>(nodeArray, new V_ArrayElement()),*/
                         nodeArray,
                         // Sort by distance to destination
-                        Element.Part<V_DistanceBetween>(new V_ArrayElement(), destination)
+                        DistanceBetween(ArrayElement(), destination)
                     ))
                 );
 

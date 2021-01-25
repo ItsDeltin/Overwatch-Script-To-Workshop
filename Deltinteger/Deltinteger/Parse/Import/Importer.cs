@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
             ImportedFiles.Add(initial);
         }
 
-        public void CollectScriptFiles(ScriptFile scriptFile)
+        public void CollectScriptFiles(DeltinScript deltinScript, ScriptFile scriptFile)
         {
             ScriptFiles.Add(scriptFile);
 
@@ -41,13 +41,13 @@ namespace Deltin.Deltinteger.Parse
             foreach (var importFileContext in scriptFile.Context.Imports)
                 if (importFileContext.File)
                 {
-                    string directory = GetImportedFile(scriptFile, importer, importFileContext);
+                    string directory = GetImportedFile(deltinScript, scriptFile, importer, importFileContext);
                     if (Directory.Exists(directory))
-                        AddImportCompletion(scriptFile, directory, importFileContext.File.Range);
+                        AddImportCompletion(deltinScript, scriptFile, directory, importFileContext.File.Range);
                 }
         }
 
-        public static void AddImportCompletion(ScriptFile script, string directory, DocRange range)
+        public static void AddImportCompletion(DeltinScript deltinScript, ScriptFile script, string directory, DocRange range)
         {
             List<CompletionItem> completionItems = new List<CompletionItem>();
             var directories = Directory.GetDirectories(directory);
@@ -76,10 +76,10 @@ namespace Deltin.Deltinteger.Parse
                     Kind = CompletionItemKind.File
                 });
 
-            script.AddCompletionRange(new CompletionRange(completionItems.ToArray(), range, CompletionRangeKind.ClearRest));
+            script.AddCompletionRange(new CompletionRange(deltinScript, completionItems.ToArray(), range, CompletionRangeKind.ClearRest));
         }
 
-        string GetImportedFile(ScriptFile script, FileImporter importer, Import importFileContext)
+        string GetImportedFile(DeltinScript deltinScript, ScriptFile script, FileImporter importer, Import importFileContext)
         {
             // If the file being imported is being imported as an object, get the variable name.
             string variableName = importFileContext.Identifier?.Text;
@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
                         case ".ostw":
                         case ".workshop":
                             ScriptFile importedScript = new ScriptFile(_diagnostics, _fileGetter.GetScript(importResult.Uri));
-                            CollectScriptFiles(importedScript);
+                            CollectScriptFiles(deltinScript, importedScript);
                             break;
 
                         // Get lobby settings.
@@ -166,7 +166,7 @@ namespace Deltin.Deltinteger.Parse
                                 script.Diagnostics.Error("JSON Arrays cannot include objects or arrays.", stringRange);
 
                             _deltinScript.RulesetScope.AddVariable(jsonVar, script.Diagnostics, importFileContext.Identifier.Range);
-                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, new V_Null());
+                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, Element.Null());                            
                             break;
                     }
 

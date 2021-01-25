@@ -37,18 +37,12 @@ namespace Deltin.Deltinteger.LanguageServer
             });
         }
 
-        public DefinitionRegistrationOptions GetRegistrationOptions()
+        public DefinitionRegistrationOptions GetRegistrationOptions(DefinitionCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
             return new DefinitionRegistrationOptions()
             {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector
             };
-        }
-
-        private DefinitionCapability _capability;
-        public void SetCapability(DefinitionCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Lobby
                     .AppendLine("{")
                     .Indent()
                     .AppendKeyword("Description").Append(": \"" + Description + "\"").AppendLine()
-                    .Unindent()
+                    .Outdent()
                     .AppendLine("}");
             }
 
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Lobby.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
 
@@ -78,11 +78,11 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Workshop.ToWorkshopCustom(builder);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -267,7 +267,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (string map in maps)
                 builder.AppendLine(builder.Translate(map).RemoveStructuralChars());
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -351,7 +351,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 General.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
             if (Team1 != null)
@@ -360,7 +360,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Team1.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
             if (Team2 != null)
@@ -369,11 +369,11 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Team2.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -440,7 +440,7 @@ namespace Deltin.Deltinteger.Lobby
                         builder.AppendLine("{");
                         builder.Indent();
                         WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
-                        builder.Unindent();
+                        builder.Outdent();
                         builder.AppendLine("}");
                     }
                     else WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);

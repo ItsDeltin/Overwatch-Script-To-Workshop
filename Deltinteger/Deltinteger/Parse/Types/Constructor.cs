@@ -32,7 +32,16 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual void Call(ParseInfo parseInfo, DocRange callRange) { }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel("new " + Type.Name, Parameters, markdown, Documentation);
+        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)
+        {
+            var builder = new MarkupBuilder().StartCodeLine().Add("new " + Type.GetName());
+            builder.Add(CodeParameter.GetLabels(deltinScript, Parameters)).EndCodeLine();
+
+            if (labelInfo.IncludeDocumentation)
+                builder.NewSection().Add(Documentation);
+
+            return builder.EndCodeLine();
+        }
     }
 
     public class DefinedConstructor : Constructor, IApplyBlock
@@ -78,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
 
-            parseInfo.Script.AddHover(context.LocationToken.Range, GetLabel(true));
+            parseInfo.Script.AddHover(context.LocationToken.Range, GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
         }
 
         public void SetupBlock()

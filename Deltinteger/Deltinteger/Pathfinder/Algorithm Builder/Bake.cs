@@ -2,6 +2,7 @@ using System;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.Lambda;
+using static Deltin.Deltinteger.Elements.Element;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
@@ -37,7 +38,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Assign bakemap then set it to an empty array.
             _bakemap = ActionSet.VarCollection.Assign("bakemap", ActionSet.IsGlobal, false);
-            _bakemap.Set(ActionSet, new V_EmptyArray());
+            _bakemap.Set(ActionSet, EmptyArray());
 
             // Loop through each node.
             _nodeLoop = new ForBuilder(ActionSet, "bakemapNode", NodeArrayLength);
@@ -55,22 +56,22 @@ namespace Deltin.Deltinteger.Pathfinder
             return newBakemap.Get();
         }
 
-        public Element Progress => Element.Part<V_Min>((Element)1, (_nodeLoop.Value / NodeArrayLength)
-            + ((NodeArrayLength - Element.Part<V_CountOf>(_builder.Unvisited.Get()))
-                / Element.Part<V_RaiseToPower>(NodeArrayLength, (Element)2)));
+        public Element Progress => Min(Num(1), (_nodeLoop.Value / NodeArrayLength)
+            + ((NodeArrayLength - CountOf(_builder.Unvisited.Get()))
+                / Pow(NodeArrayLength, Num(2))));
 
         // When the dijkstra is finished, set the bakemap's node to the parent array.
         void IPathfinderInfo.Finished() => _bakemap.Set(ActionSet, _builder.ParentArray.Get(), index: _nodeLoop.Value);
 
         // Wait on loop.
-        void IPathfinderInfo.OnConnectLoop() {} //=> ActionSet.AddAction(A_Wait.MinimumWait);
+        void IPathfinderInfo.OnConnectLoop() {}
         void IPathfinderInfo.OnLoop()
         {
             if (_onLoop == null)
             {
                 ActionSet.AddAction(_bakeWait.ModifyVariable(Operation.Add, 1));
-                ActionSet.AddAction(Element.Part<A_SkipIf>(_bakeWait.Get() % 6, (Element)1));
-                ActionSet.AddAction(A_Wait.MinimumWait);
+                ActionSet.AddAction(SkipIf(_bakeWait.Get() % 6, Num(1)));
+                ActionSet.AddAction(Wait());
             }
             else
                 _onLoop.Invoke(ActionSet);
@@ -80,7 +81,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         Element IPathfinderInfo.InitialNode => _nodeLoop.Value;
         public Element NodeArray => _pathmapClass.Nodes.Get()[_pathmapObject];
-        Element NodeArrayLength => Element.Part<V_CountOf>(NodeArray);
+        Element NodeArrayLength => Element.CountOf(NodeArray);
         Element IPathfinderInfo.SegmentArray => _pathmapClass.Segments.Get()[_pathmapObject];
         Element IPathfinderInfo.AttributeArray => _pathmapClass.Attributes.Get()[_pathmapObject];
         Element IPathfinderInfo.LoopCondition => _builder.AnyAccessableUnvisited();

@@ -6,12 +6,17 @@ namespace Deltin.Deltinteger.Parse
 {
     public class MissingElementAction : IExpression, IStatement
     {
-        public static readonly MissingElementAction MissingElement = new MissingElementAction();
+        private readonly CodeType _type;
+
+        public MissingElementAction(DeltinScript deltinScript)
+        {
+            _type = deltinScript.Types.Any();
+        }
 
         private MissingElementAction() { }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => _type;
         public bool IsStatement() => true;
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) { }
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
@@ -21,20 +26,23 @@ namespace Deltin.Deltinteger.Parse
     public class MissingVariable : IVariable, IExpression
     {
         public string Name { get; }
+        public MarkupBuilder Documentation => null;
         public bool Static => true;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
-        public CodeType CodeType => null;
+        public CodeType CodeType { get; }
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
 
-        public MissingVariable(string name)
+        public MissingVariable(DeltinScript deltinScript, string name)
         {
             Name = name;
+            CodeType = deltinScript.Types.Any();
         }
 
         public bool IsStatement() => true;
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => CodeType;
         public CompletionItem GetCompletion() => throw new NotImplementedException();
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
     }

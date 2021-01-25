@@ -45,6 +45,7 @@ namespace Deltin.Deltinteger.Parse
         public ScopedVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
         {
             _operationalScope = operationalScope;
+            _canInferType = true;
         }
 
         protected override void CheckAttributes()
@@ -62,9 +63,6 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.WholeContext = false;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
             _varInfo.RequiresCapture = true;
-
-            if (_varInfo.IsWorkshopReference && _varInfo.InitialValueContext == null)
-                _diagnostics.Error("Variables with the 'ref' attribute must have an initial value.", _nameRange);
         }
 
         protected override Scope OperationalScope() => _operationalScope;
@@ -128,7 +126,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = true; // Shouldn't matter.
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
-            _varInfo.TokenType = TokenType.Parameter;
+            _varInfo.TokenType = SemanticTokenType.Parameter;
             _varInfo.BridgeInvocable = _bridgeInvocable;
             _varInfo.RequiresCapture = true;
         }
@@ -192,7 +190,20 @@ namespace Deltin.Deltinteger.Parse
                 base.GetCodeType();
             // Otherwise, we can supply the parameter code type from the contextual lambda type.
             else
-                ApplyCodeType(_contextualLambdaType.Parameters[_parameter]);
+            {
+                var inferredType = _contextualLambdaType.Parameters[_parameter];
+
+                // If an explicit type was provided, make sure the inferred type matches.
+                if (_contextHandler.GetCodeType() != null)
+                {
+                    CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, _contextHandler.GetCodeType());
+
+                    if (!type.Is(inferredType))
+                        _parseInfo.Script.Diagnostics.Error("Expected the '" + inferredType.GetName() + "' type", _contextHandler.GetTypeRange());
+                }
+
+                ApplyCodeType(inferredType);
+            }
         }
     }
 
@@ -221,11 +232,11 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = false;
-            _varInfo.IsWorkshopReference = true;
             _varInfo.RequiresCapture = true;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
+            _varInfo.VariableTypeHandler.SetWorkshopReference();
 
-            _varInfo.TokenType = TokenType.Variable;
+            _varInfo.TokenType = SemanticTokenType.Variable;
             _varInfo.TokenModifiers.Add(TokenModifier.Declaration);
             _varInfo.TokenModifiers.Add(TokenModifier.Readonly);
         }

@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
                 return Result.ReturnType.GetObjectScope();
         }
 
-        public CodeType Type() => Result?.ReturnType;
+        public CodeType Type() => Result?.ReturnType ?? _parseInfo.TranslateInfo.Types.Unknown();
 
         // IStatement
         public void Translate(ActionSet actionSet) => Result.Parse(actionSet);

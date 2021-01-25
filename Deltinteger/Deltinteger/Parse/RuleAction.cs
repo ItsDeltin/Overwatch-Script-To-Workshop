@@ -42,6 +42,7 @@ namespace Deltin.Deltinteger.Parse
                 // Make sure both left and right parentheses exists.
                 if (ruleContext.Conditions[i].LeftParen && ruleContext.Conditions[i].RightParen)
                     parseInfo.Script.AddCompletionRange(new CompletionRange(
+                        parseInfo.TranslateInfo,
                         scope,
                         ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range,
                         CompletionRangeKind.Catch
@@ -133,12 +134,14 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private static T GetMember<T>(string groupName, string name, FileDiagnostics diagnostics, DocRange range)
+        private static T GetMember<T>(string groupName, string name, FileDiagnostics diagnostics, DocRange range) where T: Enum
         {
-            foreach (var m in EnumData.GetEnum<T>().Members)
-                if (name == m.CodeName)
-                    return (T)m.Value;
+            var elementEnum = ElementRoot.Instance.GetEnum(groupName);
 
+            foreach (var m in elementEnum.Members)
+                if (name == m.CodeName())
+                    return m.ToEnum<T>();
+                
             diagnostics.Error("Invalid " + groupName + " value.", range);
             return default(T);
         }
@@ -151,6 +154,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Add the completion.
             parseInfo.Script.AddCompletionRange(new CompletionRange(
+                parseInfo.TranslateInfo,
                 items,
                 // Use the start of the next token if the value token is null.
                 dot.Range.End + (value != null ? value.Range.End : parseInfo.Script.NextToken(dot).Range.Start),
@@ -158,16 +162,13 @@ namespace Deltin.Deltinteger.Parse
             ));
         }
 
-        private static readonly CompletionItem[] EventItems = GetItems<RuleEvent>("Event");
-        private static readonly CompletionItem[] TeamItems = GetItems<Team>("Team");
-        private static readonly CompletionItem[] PlayerItems = GetItems<PlayerSelector>("Player");
+        private static readonly CompletionItem[] EventItems = GetItems(ElementRoot.Instance.GetEnum("Event"));
+        private static readonly CompletionItem[] TeamItems = GetItems(ElementRoot.Instance.GetEnum("Team"));
+        private static readonly CompletionItem[] PlayerItems = GetItems(ElementRoot.Instance.GetEnum("Player"));
 
-        private static CompletionItem[] GetItems<T>(string tag) => EnumData.GetEnum<T>()
-            .Members.Select(m => new CompletionItem()
-            {
-                Label = m.CodeName,
-                Detail = m.CodeName,
-                //Detail = new MarkupBuilder().StartCodeLine().Add(tag + "." + m.CodeName).ToString(),
+        private static CompletionItem[] GetItems(ElementEnum elementEnum) => elementEnum.Members.Select(m => new CompletionItem() {
+                Label = m.CodeName(),
+                Detail = m.CodeName(),
                 Kind = CompletionItemKind.Constant
             }).ToArray();
     }

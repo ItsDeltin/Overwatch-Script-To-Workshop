@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Return(Scope returningFromScope, ActionSet returningSet)
         {
-            _actionSet.AddAction(Element.Part<A_Abort>());
+            _actionSet.AddAction(Element.Part("Abort"));
         }
     }
 

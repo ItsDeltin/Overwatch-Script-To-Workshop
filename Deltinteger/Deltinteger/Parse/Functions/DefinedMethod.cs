@@ -67,10 +67,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the type.
             if (!context.Type.IsVoid)
-            {
-                DoesReturnValue = true;
                 CodeType = CodeType.GetCodeTypeFromContext(parseInfo, context.Type);
-            }
 
             // Setup the parameters and parse the block.
             if (!IsSubroutine)
@@ -87,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
             // Override attribute.
             if (Attributes.Override)
             {
-                IMethod overriding = objectScope.GetMethodOverload(this);
+                IMethod overriding = objectScope.GetMethodOverload(parseInfo.TranslateInfo, this);
                 Attributes.Overriding = overriding;
 
                 // No method with the name and parameters found.
@@ -112,10 +109,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
 
             // Add to the scope. Check for conflicts if the method is not overriding.
-            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
-
-            // Add the hover info.
-            parseInfo.Script.AddHover(nameRange, GetLabel(true));
+            containingScope.AddMethod(this, parseInfo, nameRange, !Attributes.Override);
 
             if (Attributes.IsOverrideable)
                 parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
@@ -129,7 +123,7 @@ namespace Deltin.Deltinteger.Parse
             Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope.Child(), Context.Block);
 
             // Validate returns.
-            BlockTreeScan validation = new BlockTreeScan(DoesReturnValue, parseInfo, this);
+            BlockTreeScan validation = new BlockTreeScan(CodeType != null, parseInfo, this);
             validation.ValidateReturns();
             MultiplePaths = validation.MultiplePaths;
 

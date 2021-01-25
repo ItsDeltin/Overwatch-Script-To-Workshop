@@ -10,9 +10,16 @@ namespace Deltin.Deltinteger
     {
         public static void MakeNameTable()
         {
-            List<ElementList> elements = new List<ElementList>();
-            foreach (var element in ElementList.Elements)
-                if (!element.Hidden && element.Name.ToLower() != element.WorkshopName.Replace(" ", "").Replace("-", "").ToLower())
+            var elements = new List<ElementBaseJson>();
+
+            // Add the actions.
+            foreach (var element in ElementRoot.Instance.Actions)
+                if (!element.IsHidden && element.CodeName().ToLower() != element.Name.Replace(" ", "").Replace("-", "").ToLower())
+                    elements.Add(element);
+            
+            // Add the values.
+            foreach (var element in ElementRoot.Instance.Values)
+                if (!element.IsHidden && element.CodeName().ToLower() != element.Name.Replace(" ", "").Replace("-", "").ToLower())
                     elements.Add(element);
 
             TableElement[,] table = new TableElement[2, elements.Count + 2];
@@ -23,8 +30,8 @@ namespace Deltin.Deltinteger
 
             for (int i = 0; i < elements.Count; i++)
             {
-                table[0, i + 2] = new TextElement(elements[i].WorkshopName);
-                table[1, i + 2] = new TextElement(elements[i].Name);
+                table[0, i + 2] = new TextElement(elements[i].Name);
+                table[1, i + 2] = new TextElement(elements[i].CodeName());
             }
 
             Program.WorkshopCodeResult(TableToString(table));

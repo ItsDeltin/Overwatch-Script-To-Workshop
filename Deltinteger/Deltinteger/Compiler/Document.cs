@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Compiler
         public Lexer Lexer { get; }
         public string Content { get; private set; }
         public RootContext Syntax { get; private set; }
-        public long Version { get; private set; }
+        public int? Version { get; private set; }
         public List<IParserError> Errors { get; private set; }
         public CacheWatcher Cache { get; } = new CacheWatcher();
 
@@ -33,19 +33,19 @@ namespace Deltin.Deltinteger.Compiler
             Version = document.Version;
         }
 
-        private void Parse(IncrementInfo incrementInfo = null)
+        private void Parse()
         {
-            Parser parser = new Parser(Lexer, Syntax, incrementInfo);
+            Parser parser = new Parser(Lexer, Syntax);
             Syntax = parser.Parse();
             Errors = parser.Errors;
         }
 
-        public void Update(string newContent, UpdateRange updateRange, long version)
+        public void Update(string newContent, UpdateRange updateRange, int? version)
         {
             Version = version;
             Content = newContent;
-            var increment = Lexer.Update(new VersionInstance(newContent), updateRange);
-            Parse(increment);
+            Lexer.Update(new VersionInstance(newContent), updateRange);
+            Parse();
         }
 
         public void UpdateIfChanged(string newContent)

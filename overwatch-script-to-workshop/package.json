@@ -243,10 +243,28 @@
                     "*.lobby"
                 ],
                 "url": "./LobbySettingValidation.json"
+            },
+            {
+                "fileMatch": "Elements.json",
+                "url": "./json-schemas/ElementValidation.json"
             }
         ],
-        "debuggers": [
-            {
+        "debuggers": [{
+            "type": "ostw",
+            "label": "Overwatch Script To Workshop",
+            "languages": [
+                "ostw"
+            ],
+            "configurationSnippets": [{
+                "label": "Overwatch Script To Workshop: Debug Current File",
+                "name": "Overwatch Script To Workshop Configuration",
+                "description": "A new configuration for debugging an OSTW script.",
+                "body": {
+                    "type": "ostw",
+                    "program": "${workspaceFolder}/${file}"
+                }
+            }],
+            "initialConfigurations": [{
                 "type": "ostw",
                 "label": "Overwatch Script To Workshop",
                 "languages": [
@@ -285,8 +303,8 @@
                         }
                     }
                 }
-            }
-        ]
+            }]
+        }]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && webpack --mode production",

@@ -15,12 +15,11 @@ namespace Deltin.Deltinteger.Parse
         private Scope Scope { get; }
         private DeltinScript _translateInfo { get; }
 
-
         public DefinedEnum(ParseInfo parseInfo, EnumContext enumContext) : base(enumContext.Identifier.Text)
         {
             CanBeExtended = false;
             CanBeDeleted = false;
-            Kind = "enum";
+            Kind = TypeKind.Enum;
 
             // Check if a type with the same name already exists.
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
@@ -39,8 +38,8 @@ namespace Deltin.Deltinteger.Parse
                 {
                     var expression = enumContext.Values[i].Value != null
                         ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.Values[i].Value))
-                        : new ExpressionOrWorkshopValue(new V_Number(i));
-
+                        : new ExpressionOrWorkshopValue(Element.Num(i));
+                    
                     var newMember = new DefinedEnumMember(parseInfo, this, enumContext.Values[i].Identifier.Text, new Location(parseInfo.Script.Uri, enumContext.Values[i].Identifier.Range), expression);
                     Scope.AddVariable(newMember, parseInfo.Script.Diagnostics, newMember.DefinedAt.range);
                 }
@@ -65,6 +64,7 @@ namespace Deltin.Deltinteger.Parse
     class DefinedEnumMember : IVariable, IExpression, ICallable
     {
         public string Name { get; }
+        public MarkupBuilder Documentation { get; }
         public LanguageServer.Location DefinedAt { get; }
         public DefinedEnum Enum { get; }
 
@@ -72,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static => true;
         public bool WholeContext => true;
         public bool CanBeIndexed => false;
-        public CodeType CodeType => null;
+        public ICodeTypeSolver CodeType => null;
 
         public ExpressionOrWorkshopValue ValueExpression { get; private set; }
 

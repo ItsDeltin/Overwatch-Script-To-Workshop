@@ -22,6 +22,7 @@ namespace Deltin.Deltinteger.Parse
         public bool CompletionCatch { get; set; }
         public bool MethodContainer { get; set; }
         public bool CatchConflict { get; set; }
+        public bool TagPlayerVariables { get; set; }
 
         public Scope() { }
         private Scope(Scope parent)
@@ -105,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public void CopyAll(Scope other, Scope getter)
+        public void CopyAll(Scope other)
         {
             other.IterateParents(scope =>
             {
@@ -194,6 +195,16 @@ namespace Deltin.Deltinteger.Parse
             return element;
         }
 
+        public IVariable[] GetAllVariables(string name)
+        {
+            List<IVariable> variables = new List<IVariable>();
+            IterateElements(true, false, it => {
+                if (it.Element.Name == name) variables.Add((IVariable)it.Element);
+                return ScopeIterateAction.Continue;
+            });
+            return variables.ToArray();
+        }
+        
         public bool Conflicts(IScopeable scopeable, bool variables = true, bool functions = true)
         {
             bool conflicts = false;
@@ -223,22 +234,12 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="method">The method that will be added to the current scope. If the object reference is already in the direct scope, an exception will be thrown.</param>
         /// <param name="diagnostics">The file diagnostics to throw errors with. Should be null when adding methods internally.</param>
         /// <param name="range">The document range to throw errors at. Should be null when adding methods internally.</param>
-        public void AddMethod(IMethod method, FileDiagnostics diagnostics, DocRange range, bool checkConflicts = true)
+        public void AddMethod(IMethod method, ParseInfo parseInfo, DocRange range, bool checkConflicts = true)
         {
             if (method == null) throw new ArgumentNullException(nameof(method));
 
-            if (checkConflicts && HasConflict(method))
-            {
-                string message = "A method with the same name and parameter types was already defined in this scope.";
-
-                if (diagnostics != null && range != null)
-                {
-                    diagnostics.Error(message, range);
-                    return;
-                }
-                else
-                    throw new Exception(message);
-            }
+            if (checkConflicts && HasConflict(parseInfo.TranslateInfo, method))
+                parseInfo.Script.Diagnostics.Error("A method with the same name and parameter types was already defined in this scope.", range);
 
             AddNativeMethod(method);
         }
@@ -293,24 +294,24 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Checks if a method conflicts with another method in the scope.</summary>
         /// <param name="method">The method to check.</param>
         /// <returns>Returns true if the current scope already has the same name and parameters as the input method.</returns>
-        public bool HasConflict(IMethod method) => Conflicts(method, functions: false) || GetMethodOverload(method) != null;
+        public bool HasConflict(DeltinScript deltinScript, IMethod method) => Conflicts(method, functions: false) || GetMethodOverload(deltinScript, method) != null;
 
         public bool HasConflict(MacroVar macro) => GetMacroOverload(macro.Name, macro.DefinedAt) != null;
 
         /// <summary>Gets a method in the scope that has the same name and parameter types. Can potentially resolve to itself if the method being tested is in the scope.</summary>
         /// <param name="method">The method to get a matching overload.</param>
         /// <returns>A method with the matching overload, or null if none is found.</returns>
-        public IMethod GetMethodOverload(IMethod method)
+        public IMethod GetMethodOverload(DeltinScript deltinScript, IMethod method)
         {
             if (method == null) throw new ArgumentNullException(nameof(method));
-            return GetMethodOverload(method.Name, method.Parameters.Select(p => p.Type).ToArray());
+            return GetMethodOverload(deltinScript, method.Name, method.Parameters.Select(p => p.GetCodeType(deltinScript)).ToArray());
         }
 
         /// <summary>Gets a method overload in the scope that has the same name and parameter types.</summary>
         /// <param name="name">The name of the method.</param>
         /// <param name="parameterTypes">The types of the parameters.</param>
         /// <returns>A method with the name and parameter types, or null if none is found.</returns>
-        public IMethod GetMethodOverload(string name, CodeType[] parameterTypes)
+        public IMethod GetMethodOverload(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (parameterTypes == null) throw new ArgumentNullException(nameof(parameterTypes));
@@ -328,7 +329,7 @@ namespace Deltin.Deltinteger.Parse
                 // Loop through all parameters.
                 for (int p = 0; p < checking.Parameters.Length; p++)
                     // If the parameter types do not match, continue.
-                    if (checking.Parameters[p].Type != parameterTypes[p])
+                    if (checking.Parameters[p].GetCodeType(deltinScript) != parameterTypes[p])
                         return ScopeIterateAction.Continue;
 
                 // Parameter overload matches.
@@ -442,7 +443,7 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public CompletionItem[] GetCompletion(DocPos pos, bool immediate, Scope getter = null)
+        public CompletionItem[] GetCompletion(DeltinScript deltinScript, DocPos pos, bool immediate, Scope getter = null)
         {
             var completions = new List<CompletionItem>(); // The list of completion items in this scope.
 
@@ -478,14 +479,23 @@ namespace Deltin.Deltinteger.Parse
                 // Add the variables.
                 foreach (var variable in scope._variables)
                     if (variable is MethodGroup == false && scope.WasScopedAtPosition(variable, pos, getter))
-                        completions.Add(variable.GetCompletion());
+                        if (TagPlayerVariables && variable is IIndexReferencer referencer && referencer.VariableType == VariableType.Player)
+                            completions.Add(new CompletionItem() {
+                                Label = "★ " + variable.Name,
+                                SortText = "!" + variable.Name,
+                                InsertText = variable.Name,
+                                Kind = CompletionItemKind.Variable,
+                                Detail = variable.CodeType.GetCodeType(deltinScript).GetName() + " " + variable.Name
+                            });
+                        else
+                            completions.Add(variable.GetCompletion(deltinScript));
 
                 return scope.CompletionCatch;
             });
 
             // Get the batch completion.
             foreach (var batch in batches)
-                completions.Add(batch.GetCompletion());
+                completions.Add(batch.GetCompletion(deltinScript));
 
             return completions.ToArray();
         }
@@ -505,24 +515,6 @@ namespace Deltin.Deltinteger.Parse
                 }
             group = null;
             return false;
-        }
-
-        public static Scope GetGlobalScope()
-        {
-            Scope globalScope = new Scope();
-
-            // Add workshop methods
-            foreach (var workshopMethod in ElementList.Elements)
-                if (!workshopMethod.Hidden)
-                    globalScope.AddNativeMethod(workshopMethod);
-
-            // Add custom methods
-            foreach (var builtInMethod in CustomMethods.CustomMethodData.GetCustomMethods())
-                if (builtInMethod.Global)
-                    globalScope.AddNativeMethod(builtInMethod);
-
-            globalScope.AddNativeMethod(new Lambda.WaitAsyncFunction());
-            return globalScope;
         }
 
         public bool ScopeContains(IScopeable element)
@@ -611,12 +603,12 @@ namespace Deltin.Deltinteger.Parse
 
         public void Add() => Overloads++;
 
-        public CompletionItem GetCompletion() => new CompletionItem()
+        public CompletionItem GetCompletion(DeltinScript deltinScript) => new CompletionItem()
         {
             Label = Name,
             Kind = CompletionItemKind.Function,
             Documentation = Primary.Documentation,
-            Detail = IMethod.GetLabel(Primary, true)
+            Detail = IMethod.DefaultLabel(deltinScript, LabelInfo.SignatureOverload, Primary).ToString(false)
             // Fancy label (similiar to what c# does)
             // Documentation = new MarkupBuilder()
             //     .StartCodeLine()

@@ -22,37 +22,7 @@ namespace Deltin.Deltinteger.Compiler
             Character = character;
         }
 
-        public int PosIndex(string text)
-        {
-            if (Line == 0 && Character == 0) return 0;
-
-            int line = 0;
-            int character = 0;
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] == '\n')
-                {
-                    line++;
-                    character = 0;
-                }
-                else
-                {
-                    character++;
-                }
-
-                if (Line == line && Character == character)
-                    return i + 1;
-
-                if (line > Line)
-                    throw new Exception("Scanned line surpassed expected line.");
-            }
-            throw new Exception("End reached without encountering position.");
-        }
-
-        public override string ToString()
-        {
-            return Line + ", " + Character;
-        }
+        public override string ToString() => Line + ", " + Character;
 
         public int CompareTo(DocPos other)
         {
@@ -181,6 +151,7 @@ namespace Deltin.Deltinteger.Compiler
         public string Text { get; }
         public DocRange Range { get; set; }
         public TokenType TokenType { get; }
+        public TokenFlags Flags { get; set; }
 
         public Token(string text, DocRange range, TokenType tokenType)
         {
@@ -195,6 +166,14 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator false(Token x) => x == null;
         public static bool operator !(Token x) => x == null;
         public static implicit operator bool(Token x) => x != null;
+        public static implicit operator DocRange(Token x) => x.Range;
+    }
+
+    [Flags]
+    public enum TokenFlags
+    {
+        None = 0,
+        StringSingleQuotes = 1
     }
 
     public static class TokenExtensions
@@ -437,12 +416,17 @@ namespace Deltin.Deltinteger.Compiler
         // Boolean
         And,
         Or,
+        Pipe,
         // Generic expressions
-        String,
         Number,
         True,
         False,
         Null,
+        // Strings
+        String,
+        InterpolatedStringTail,
+        InterpolatedStringMiddle,
+        InterpolatedStringHead,
         // Keywords
         Import,
         Define,
