@@ -96,7 +96,7 @@ namespace Deltin.Deltinteger.Elements
             if (this.GetType() != other.GetType()) return false;
 
             Element bElement = (Element)other;
-            if (Function != bElement.Function || ParameterValues.Length != bElement.ParameterValues.Length) return false;
+            if (Function != bElement.Function || ParameterValues.Length != bElement.ParameterValues?.Length) return false;
 
             string[] createsRandom = new string[] {
                 "Random Integer",
