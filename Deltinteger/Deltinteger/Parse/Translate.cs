@@ -126,6 +126,7 @@ namespace Deltin.Deltinteger.Parse
             //     }
             // }
 
+
             // Get the variable reservations
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (Token reservation in script.Context.GlobalvarReservations)
@@ -147,6 +148,7 @@ namespace Deltin.Deltinteger.Parse
                         VarCollection.Reserve(text, false);
                     }
                 }
+
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var enumContext in script.Context.Enums)
@@ -160,13 +162,28 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the types
             foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var typeContext in script.Context.Classes)
-                {
-                    var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
-                    Types.AllTypes.Add(newType);
-                    Types.DefinedTypes.Add(newType);
-                    Types.CalledTypes.Add(newType);
-                }
+            foreach (var typeContext in script.Context.Classes)
+            {
+                var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
+                Types.AllTypes.Add(newType);
+                Types.DefinedTypes.Add(newType);
+                Types.CalledTypes.Add(newType);
+            }
+	
+			//Get the type aliases
+            foreach (ScriptFile script in Importer.ScriptFiles)
+			{    
+				ParseInfo parseInfo = new ParseInfo(script, this);
+            	foreach (var typeContext in script.Context.TypeAliases)
+				{
+					var aliasType = Types.GetCodeType(typeContext.NewTypeName?.Text);
+					var type = PipeType.GetCodeTypeFromContext(parseInfo, typeContext.OtherType);
+					if(aliasType != null)
+						parseInfo.Script.Diagnostics.Error("type name already in use.", typeContext.Range);
+					else if(type != null)
+						Types.TypeAliases.Add(typeContext.NewTypeName.Text, type);
+				}
+			}
             
             // Get variable declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -347,6 +364,7 @@ namespace Deltin.Deltinteger.Parse
         public List<CodeType> AllTypes { get; } = new List<CodeType>();
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
         public List<CodeType> CalledTypes { get; } = new List<CodeType>();
+		public Dictionary<String, CodeType> TypeAliases {get; } =  new Dictionary<String, CodeType>();
         private readonly PlayerType _playerType;
         private readonly VectorType _vectorType;
         private readonly NumberType _numberType;
@@ -402,6 +420,11 @@ namespace Deltin.Deltinteger.Parse
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
             var type = AllTypes.FirstOrDefault(type => type.Name == name);
+			if(type == null) {
+				CodeType typeAlias;
+				if(TypeAliases.TryGetValue(name, out typeAlias))
+					type = typeAlias;
+			}
 
             if (range != null && type == null)
                 diagnostics.Error(string.Format("The type {0} does not exist.", name), range);

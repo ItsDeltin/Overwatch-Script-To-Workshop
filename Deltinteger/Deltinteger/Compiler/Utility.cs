@@ -261,6 +261,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.CurlyBracket_Close:
                 case TokenType.CurlyBracket_Open:
                 case TokenType.EOF:
+				case TokenType.Type:
                     return false;
 
                 default:
@@ -434,6 +435,7 @@ namespace Deltin.Deltinteger.Compiler
         Continue,
         Return,
         Rule,
+		Type,
         Disabled,
         For,
         While,
@@ -475,7 +477,7 @@ namespace Deltin.Deltinteger.Compiler
         QuestionMark,
         // Other
         ActionComment,
-        EOF
+        EOF,
     }
 
     public class UpdateRange
