@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void CheckAttributes()
         {
-            RejectAttributes(AttributeType.Ref, AttributeType.Static);
+            RejectAttributes(AttributeType.Ref, AttributeType.In, AttributeType.Static);
         }
 
         protected override void Apply()
@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
             RejectAttributes(
                 AttributeType.Globalvar, AttributeType.Playervar,
                 AttributeType.ID, AttributeType.Ext,
-                AttributeType.Ref
+                AttributeType.Ref, AttributeType.In
             );
         }
 
@@ -134,11 +134,11 @@ namespace Deltin.Deltinteger.Parse
         protected override void TypeCheck()
         {
             // Get the 'ref' attribute.
-            VarBuilderAttribute refAttribute = _attributes.FirstOrDefault(attribute => attribute.Type == AttributeType.Ref);
+            VarBuilderAttribute refAttribute = _attributes.FirstOrDefault(attribute => attribute.Type == AttributeType.Ref || attribute.Type == AttributeType.In);
 
             // If the type is constant and the variable has the ref parameter, show a warning.
             if (refAttribute != null && _varInfo.Type != null && _varInfo.Type.IsConstant())
-                _diagnostics.Warning("Constant workshop types have the 'ref' attribute by default.", refAttribute.Range);
+                _diagnostics.Warning("Constant workshop types have the 'in' attribute by default.", refAttribute.Range);
         }
 
         protected override Scope OperationalScope() => _operationalScope;
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void CheckAttributes()
         {
             base.CheckAttributes();
-            RejectAttributes(AttributeType.Ref);
+            RejectAttributes(AttributeType.Ref, AttributeType.In);
         }
 
         protected override void GetCodeType()
@@ -225,7 +225,7 @@ namespace Deltin.Deltinteger.Parse
                 AttributeType.ID,
                 AttributeType.Ext,
                 AttributeType.Initial,
-                AttributeType.Ref
+                AttributeType.Ref, AttributeType.In
             );
         }
 

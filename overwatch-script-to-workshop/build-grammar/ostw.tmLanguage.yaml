@@ -302,14 +302,14 @@ repository:
       name: '{{assignment}}'
     
   parameter-declaration:
-    match: '(ref\s+)?{{type}}\s*{{part}}'
+    match: '((ref|in)\b\s+)*{{type}}\s*{{part}}'
     captures:
       1:
         name: storage.modifier
-      2:
+      3:
         patterns:
           - include: '#type-matcher'
-      10:
+      11:
         name: variable.parameter
   
   macro-value:

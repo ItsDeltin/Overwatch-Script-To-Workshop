@@ -290,6 +290,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token GlobalVar { get; set; }
         public Token PlayerVar { get; set; }
         public Token Ref { get; set; }
+        public Token In { get; set; }
         public List<Token> AllAttributes { get; } = new List<Token>();
         public AccessLevel GetAccessLevel() => Public != null ? AccessLevel.Public : Protected != null ? AccessLevel.Protected : AccessLevel.Private;
     }

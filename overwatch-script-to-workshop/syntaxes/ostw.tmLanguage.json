@@ -440,19 +440,19 @@
       ]
     },
     "parameter-declaration": {
-      "match": "(ref\\s+)?(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)",
+      "match": "((ref|in)\\b\\s+)*(?<set-type>(\\(\\s*\\g<set-type>\\)|([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?)\\s*(\\[\\s*\\])*(\\s*\\|\\s*\\g<set-type>)*(\\s*=>\\s*\\g<set-type>)?)\\s*([_[:alnum:]]+)",
       "captures": {
         "1": {
           "name": "storage.modifier"
         },
-        "2": {
+        "3": {
           "patterns": [
             {
               "include": "#type-matcher"
             }
           ]
         },
-        "10": {
+        "11": {
           "name": "variable.parameter"
         }
       }

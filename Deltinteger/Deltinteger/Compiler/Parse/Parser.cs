@@ -1249,7 +1249,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return parsedAny && Is(TokenType.Equal);
         });
 
-        bool IsStartOfParameter() => Is(TokenType.Ref) || Kind.IsStartOfType();
+        bool IsStartOfParameter() => Is(TokenType.Ref) || Is(TokenType.In) || Kind.IsStartOfType();
 
         bool IsStartOfExpression() => Kind.IsStartOfExpression() || Kind.IsBinaryOperator();
 
@@ -1786,6 +1786,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 else if (ParseOptional(TokenType.GlobalVar, out token)) tokens.GlobalVar = token;
                 else if (ParseOptional(TokenType.PlayerVar, out token)) tokens.PlayerVar = token;
                 else if (ParseOptional(TokenType.Ref, out token)) tokens.Ref = token;
+                else if (ParseOptional(TokenType.In, out token)) tokens.In = token;
                 else break;
                 tokens.AllAttributes.Add(token);
             }

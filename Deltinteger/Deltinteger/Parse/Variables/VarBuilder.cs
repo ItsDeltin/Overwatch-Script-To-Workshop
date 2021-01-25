@@ -182,6 +182,7 @@ namespace Deltin.Deltinteger.Parse
                 case AttributeType.Globalvar:
                 case AttributeType.Playervar:
                 case AttributeType.Ref:
+                case AttributeType.In:
                 default:
                     diagnostics.Error($"'{Type.ToString().ToLower()}' attribute not valid here.", Range);
                     break;
@@ -214,6 +215,10 @@ namespace Deltin.Deltinteger.Parse
 
                 // ref
                 case AttributeType.Ref:
+                    varInfo.ParseInfo.Script.Diagnostics.Warning("The 'ref' keyword is being replaced with the 'in' keyword. In the future, 'ref' will have a different functionality.", Range);
+                    goto case AttributeType.In;
+
+                case AttributeType.In:
                     varInfo.VariableTypeHandler.SetWorkshopReference();
                     break;
 
@@ -264,7 +269,7 @@ namespace Deltin.Deltinteger.Parse
 
     public enum AttributeType
     {
-        Public, Protected, Private, Static, Globalvar, Playervar, Ref, ID, Ext, Initial
+        Public, Protected, Private, Static, Globalvar, Playervar, Ref, In, ID, Ext, Initial
     }
 
     public class VariableTypeHandler
