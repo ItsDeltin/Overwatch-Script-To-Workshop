@@ -17,7 +17,8 @@ namespace Deltin.Deltinteger.Parse
             Left = parseInfo.GetExpression(scope, context.Left);
             Right = parseInfo.GetExpression(scope, context.Right);
 
-            string op = context.Operator.Operator.Operator;
+				
+			string op = context.Operator.Operator.Operator;
             Operation = Left.Type()?.Operations.GetOperation(TypeOperation.TypeOperatorFromString(op), Right.Type()) ?? GetDefaultOperation(op, parseInfo.TranslateInfo.Types);
                         
             if (Operation == null)

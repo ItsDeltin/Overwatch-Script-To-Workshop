@@ -292,6 +292,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("root", TokenType.Root) ||
                     MatchKeyword("async", TokenType.Async) ||
                     MatchKeyword("as", TokenType.As) ||
+					MatchKeyword("type", TokenType.Type) ||
                     MatchIdentifier() ||
                     MatchString();
                 
@@ -773,4 +774,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             EndingTokenIndex = endingTokenIndex;
         }
     }
+
 }
+

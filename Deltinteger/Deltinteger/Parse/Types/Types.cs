@@ -128,7 +128,27 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Deletes a variable from memory.</summary>
         /// <param name="actionSet">The action set to add the actions to.</param>
         /// <param name="reference">The object reference.</param>
-        public virtual void Delete(ActionSet actionSet, Element reference) { }
+        public virtual void Delete(ActionSet actionSet, Element reference) {}
+
+        /// <summary>
+        /// Gets an operation.
+        /// </summary>
+        /// <param name="op">The operation's operator type.</param>
+        /// <param name="right">The right object's type.</param>
+        /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>
+        public virtual TypeOperation GetOperation(TypeOperator op, CodeType right)
+        {
+            CodeType current = this;
+            while (current != null)
+            {
+                    ITypeOperation operation = current.Operations.GetOperation(op, right);
+                    if (operation.Operator == op && right != null && right.Implements(operation.Right))
+                        return (TypeOperation)operation;
+                
+                current = current.Extends;
+            }
+            return null;
+        }
 
         /// <summary>Calls a type from the specified document range.</summary>
         /// <param name="parseInfo">The script that the type was called from.</param>
