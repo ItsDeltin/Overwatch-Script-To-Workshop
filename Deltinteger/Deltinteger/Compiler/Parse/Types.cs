@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public int GetLine(int index)
         {
             int r;
-            for (r = 0; r < _newlines.Count && _newlines[r] < index; r++);
+            for (r = 0; r < _newlines.Count && _newlines[r] < index; r++) ;
             return r;
         }
         public int GetColumn(int index) => index - GetLineIndex(GetLine(index));

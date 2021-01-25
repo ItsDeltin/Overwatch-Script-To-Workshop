@@ -1,4 +1,5 @@
-using System;   
+using System;
+using System.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse.Lambda
@@ -20,13 +21,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnsValue = returnsValue;
             ReturnType = returnType;
             ParameterTypesKnown = parameterTypesKnown;
-            AddInvokeFunction();            
+            AddInvokeFunction();
         }
 
-        public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], false, null, false) {}
+        public PortableLambdaType(LambdaKind lambdaType) : this(lambdaType, new CodeType[0], false, null, false) { }
 
         protected PortableLambdaType(string name, LambdaKind lambdaKind, CodeType[] parameters) : base(name)
         {
+            if (parameters.Any(p => p == null))
+                throw new Exception("Element in " + nameof(parameters) + " is null.");
+
             LambdaKind = lambdaKind;
             ParameterTypesKnown = true;
             Parameters = parameters;
@@ -43,25 +47,26 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public override bool IsConstant() => LambdaKind == LambdaKind.ConstantBlock || LambdaKind == LambdaKind.ConstantMacro || LambdaKind == LambdaKind.ConstantValue;
         public override Scope GetObjectScope() => _scope;
 
-        public override bool Implements(CodeType type)
+        protected override bool DoesImplement(CodeType type)
         {
             var other = type as PortableLambdaType;
             if (other == null || Parameters.Length != other.Parameters.Length) return false;
 
-            if (!ParameterTypesKnown) return true;
-
-            // Make sure the parameters match.
-            for (int i = 0; i < Parameters.Length; i++)
-            {
-                if (Parameters[i] == null)
+            if (ParameterTypesKnown)
+                // Make sure the parameters match.
+                for (int i = 0; i < Parameters.Length; i++)
                 {
-                    if (other.Parameters[i] != null && other.Parameters[i].IsConstant())
+                    if (Parameters[i] == null)
+                    {
+                        if (other.Parameters[i] != null && other.Parameters[i].IsConstant())
+                            return false;
+                    }
+                    else if (!Parameters[i].Implements(other.Parameters[i]))
                         return false;
                 }
-                else if (!Parameters[i].Implements(other.Parameters[i]))
-                    return false;
-            }
-            return true;
+
+            // Make sure the return type matches.
+            return other.ReturnsValue == ReturnsValue && (((ReturnType == null) == (other.ReturnType == null)) || (ReturnType != null && ReturnType.Implements(other.ReturnType)));
         }
 
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
@@ -93,6 +98,19 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             return result;
         }
+    }
+
+    class UnknownLambdaType : CodeType
+    {
+        public int ArgumentCount { get; }
+
+        public UnknownLambdaType(int argumentCount) : base(null)
+        {
+            ArgumentCount = argumentCount;
+        }
+
+        public override CompletionItem GetCompletion() => throw new NotImplementedException();
+        public override Scope ReturningScope() => throw new NotImplementedException();
     }
 
     public enum LambdaKind

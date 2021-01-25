@@ -15,20 +15,19 @@ namespace Deltin.Deltinteger.Parse
         private Scope Scope { get; }
         private DeltinScript _translateInfo { get; }
 
-
         public DefinedEnum(ParseInfo parseInfo, EnumContext enumContext) : base(enumContext.Identifier.Text)
         {
             CanBeExtended = false;
             CanBeDeleted = false;
-            Kind = "enum";
+            Kind = TypeKind.Enum;
 
             // Check if a type with the same name already exists.
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", enumContext.Identifier.Range);
-            
+
             _translateInfo = parseInfo.TranslateInfo;
             Scope = new Scope("enum " + Name);
-            
+
             // Set location and symbol link.
             DefinedAt = new Location(parseInfo.Script.Uri, enumContext.Identifier.Range);
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
@@ -55,7 +54,8 @@ namespace Deltin.Deltinteger.Parse
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new LanguageServer.Location(parseInfo.Script.Uri, callRange));
         }
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Enum
         };
@@ -64,6 +64,7 @@ namespace Deltin.Deltinteger.Parse
     class DefinedEnumMember : IVariable, IExpression, ICallable
     {
         public string Name { get; }
+        public MarkupBuilder Documentation { get; }
         public LanguageServer.Location DefinedAt { get; }
         public DefinedEnum Enum { get; }
 
@@ -71,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static => true;
         public bool WholeContext => true;
         public bool CanBeIndexed => false;
-        public CodeType CodeType => null;
+        public ICodeTypeSolver CodeType => null;
 
         public ExpressionOrWorkshopValue ValueExpression { get; private set; }
 
@@ -93,7 +94,8 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet) => ValueExpression.Parse(actionSet);
 
-        public CompletionItem GetCompletion() => new CompletionItem() {
+        public CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.EnumMember
         };

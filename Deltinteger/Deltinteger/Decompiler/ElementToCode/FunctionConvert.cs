@@ -24,9 +24,11 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 decompiler.Append("]");
             }},
 
+            {"Team", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Map", (decompiler, function) => function.Values[0].Decompile(decompiler)},
+            {"Color", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Game Mode", (decompiler, function) => function.Values[0].Decompile(decompiler)},
-            // {"Button", (decompiler, function) => function.Values[0].Decompile(decompiler)},
+            {"Button", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Hero", (decompiler, function) => function.Values[0].Decompile(decompiler)},
 
             {"Modify Global Variable", (decompiler, function) => {
@@ -274,7 +276,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 function.Values[4].Decompile(decompiler);
                 decompiler.Append(")");
                 bool withBlock = StartBlock(decompiler);
-                
+
                 new ActionGroupIterator(decompiler).On("End", endFunc => {
                     Cap(decompiler);
                     decompiler.Advance();
@@ -303,7 +305,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                     function.Default(decompiler, true);
                 }
             }},
-            
+
             {"Break", (decompiler, function) => {
                 decompiler.Append("break");
                 decompiler.EndAction();

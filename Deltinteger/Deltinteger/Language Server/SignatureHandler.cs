@@ -21,39 +21,36 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<SignatureHelp> Handle(SignatureHelpParams signatureHelpParams, CancellationToken token)
         {
-            var def = new SignatureHelp();
-            if (_languageServer.LastParse == null) return def;
+            return await Task.Run(() =>
+            {
+                var def = new SignatureHelp();
+                if (_languageServer.LastParse == null) return def;
 
-            var script = _languageServer.LastParse.ScriptFromUri(signatureHelpParams.TextDocument.Uri.ToUri());
-            if (script == null) return def;
+                var script = _languageServer.LastParse.ScriptFromUri(signatureHelpParams.TextDocument.Uri.ToUri());
+                if (script == null) return def;
 
-            // Get all signatures in the file.
-            OverloadChooser signature = script.GetSignatures()
-                // Only get the ranges that have the caret inside them.
-                .Where(sig => sig.CallRange.IsInside(signatureHelpParams.Position))
-                // Order by the size of the ranges.
-                .OrderBy(sig => sig.CallRange)
-                // Choose the first signature.
-                .FirstOrDefault();
-            
-            if (signature != null)
-                return signature.GetSignatureHelp(signatureHelpParams.Position);
-            return def;
+                // Get all signatures in the file.
+                OverloadChooser signature = script.GetSignatures()
+                    // Only get the ranges that have the caret inside them.
+                    .Where(sig => sig.CallRange.IsInside(signatureHelpParams.Position))
+                    // Order by the size of the ranges.
+                    .OrderBy(sig => sig.CallRange)
+                    // Choose the first signature.
+                    .FirstOrDefault();
+
+                if (signature != null)
+                    return signature.GetSignatureHelp(signatureHelpParams.Position);
+                return def;
+            });
         }
 
-        public SignatureHelpRegistrationOptions GetRegistrationOptions()
+        public SignatureHelpRegistrationOptions GetRegistrationOptions(SignatureHelpCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
-            return new SignatureHelpRegistrationOptions() {
+            return new SignatureHelpRegistrationOptions()
+            {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
                 TriggerCharacters = new Container<string>("(", ",")
             };
-        }
-
-        // Client capability
-        private SignatureHelpCapability _capability;
-        public void SetCapability(SignatureHelpCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

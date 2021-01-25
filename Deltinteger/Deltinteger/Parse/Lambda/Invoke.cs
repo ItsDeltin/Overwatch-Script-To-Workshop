@@ -8,23 +8,22 @@ namespace Deltin.Deltinteger.Parse.Lambda
     public class LambdaInvoke : IMethod
     {
         public string Name => "Invoke";
-        public CodeType CodeType { get; }
+        public ICodeTypeSolver CodeType => LambdaType.ReturnType;
         public CodeParameter[] Parameters { get; }
 
         public MethodAttributes Attributes => new MethodAttributes();
         public bool Static => false;
         public bool WholeContext => true;
-        public string Documentation => "Invokes the lambda expression.";
+        public MarkupBuilder Documentation => "Invokes the lambda expression.";
         public Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool DoesReturnValue => LambdaType.ReturnsValue;
-        
+
         public PortableLambdaType LambdaType { get; }
 
         public LambdaInvoke(PortableLambdaType lambdaType)
         {
             LambdaType = lambdaType;
-            CodeType = lambdaType.ReturnType;
             Parameters = ParametersFromTypes(lambdaType.Parameters);
         }
 
@@ -32,7 +31,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             if (LambdaType.IsConstant())
             {
-                ILambdaApplier lambda = (ILambdaApplier)actionSet.CurrentObject;
+                ILambdaInvocable lambda = (ILambdaInvocable)actionSet.CurrentObject;
                 return lambda.Invoke(actionSet, methodCall.ParameterValues);
             }
             return actionSet.DeltinScript.GetComponent<LambdaGroup>().Call(actionSet, methodCall);
@@ -41,7 +40,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             if (LambdaType.LambdaKind != LambdaKind.Anonymous && LambdaType.LambdaKind != LambdaKind.Portable && parseInfo.SourceExpression != null)
-                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr => {
+                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr =>
+                {
                     // Get the lambda that is being invoked.
                     if (expr is ILambdaApplier source)
                     {
@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
                         // Recursion and error check.
                         LambdaInvokeApply(parseInfo, source, callRange);
-                        
+
                         // Parameter invocation states.
                         for (int i = 0; i < source.InvokedState.Length; i++)
                             if (source.InvokedState[i].Invoked)
@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                     call.CallType,
                     parseInfo.GetLocation(callRange),
-                    RestrictedCall.Message_LambdaInvoke(source.GetLabel(false), call.CallType)
+                    RestrictedCall.Message_LambdaInvoke(source.GetLabel(parseInfo.TranslateInfo, LabelInfo.RecursionError), call.CallType)
                 ));
         }
 
@@ -97,9 +97,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
             invocable = null;
             return false;
         }
-
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue ? CodeType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
 
         /// <summary>Gets the 'Invoke' parameters from an array of CodeTypes.</summary>
         /// <param name="argumentTypes">The array of CodeTypes. The resulting CodeParameter[] will have an equal length to this.</param>

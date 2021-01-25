@@ -16,8 +16,8 @@ namespace Deltin.Deltinteger.Parse
         {
             _context = context;
             DocRange nameRange = context.Identifier.Range;
-            Attributes.ContainingType = (Static ? staticScope: objectScope).This;
-            
+            Attributes.ContainingType = (Static ? staticScope : objectScope).This;
+
             // Get the attributes.
             MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
             FunctionAttributesGetter attributeInfo = new MacroAttributesGetter(context, attributeResult);
@@ -26,14 +26,14 @@ namespace Deltin.Deltinteger.Parse
             // Copy attribute results
             Static = attributeResult.Static;
             AccessLevel = attributeResult.AccessLevel;
-            
+
             SetupScope(Static ? staticScope : objectScope);
             CodeType = returnType;
             SetupParameters(context.Parameters, false);
 
             if (Attributes.Override)
             {
-                IMethod overriding = objectScope.GetMethodOverload(this);
+                IMethod overriding = objectScope.GetMethodOverload(parseInfo.TranslateInfo, this);
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a macro to override.", nameRange);
@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range, !Attributes.Override);
+            containingScope.AddMethod(this, parseInfo, DefinedAt.range, !Attributes.Override);
 
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
@@ -62,12 +62,12 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SetupParameters()
         {
-            parseInfo.Script.AddHover(_context.Identifier.Range, GetLabel(true));
+            parseInfo.Script.AddHover(_context.Identifier.Range, ((IMethod)this).GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
         }
 
         override public void SetupBlock()
         {
-            Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(methodScope, _context.Expression);
+            Expression = parseInfo.SetCallInfo(CallInfo).SetExpectingLambda(CodeType).GetExpression(methodScope, _context.Expression);
             WasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }
@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
                 IGettable result = actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
 
                 //if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
-                    //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
+                //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
 
                 foreach (Var virtualParameterOption in VirtualVarGroup(i))
                     actionSet.IndexAssigner.Add(virtualParameterOption, result);

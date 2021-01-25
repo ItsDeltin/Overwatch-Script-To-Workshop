@@ -52,14 +52,14 @@ namespace Deltin.Deltinteger.LanguageServer
             foreach (var completion in completions)
                 if (completion.Range.IsInside(completionParams.Position))
                     inRange.Add(completion);
-            
+
             if (inRange.Count > 0)
             {
                 inRange = inRange
                     // Order by the size of the ranges.
                     .OrderBy(range => range.Range)
                     .ToList();
-                
+
                 for (int i = 0; i < inRange.Count; i++)
                 {
                     // Additive
@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.LanguageServer
             return items;
         }
 
-        public CompletionRegistrationOptions GetRegistrationOptions()
+        public CompletionRegistrationOptions GetRegistrationOptions(CompletionCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
             return new CompletionRegistrationOptions()
             {
@@ -101,13 +101,6 @@ namespace Deltin.Deltinteger.LanguageServer
                 // information for a completion item.
                 ResolveProvider = false
             };
-        }
-
-        // Client compatibility
-        private CompletionCapability _capability;
-        public void SetCapability(CompletionCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

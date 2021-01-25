@@ -26,6 +26,9 @@ namespace Deltin.Deltinteger
         ///<summary>If true, the method is overriding another method.</summary>
         public bool Override { get; set; } = false;
 
+        /// <summary>The overriden method.</summary>
+        public IMethod Overriding { get; set; }
+
         ///<summary>Determines if the method can be overriden. This will return true if the method is virtual, abstract, or overriding another method.</summary>
         public bool IsOverrideable => Virtual || Abstract || Override;
 
@@ -40,7 +43,7 @@ namespace Deltin.Deltinteger
 
         private readonly List<IMethod> _overriders = new List<IMethod>();
 
-        public MethodAttributes() {}
+        public MethodAttributes() { }
 
         public MethodAttributes(bool isParallelable, bool isVirtual, bool isAbstract)
         {
@@ -62,35 +65,8 @@ namespace Deltin.Deltinteger
 
             foreach (var overrider in _overriders)
                 options.AddRange(overrider.Attributes.AllOverrideOptions());
-            
+
             return options.ToArray();
-        }
-
-        public static CompletionItem GetFunctionCompletion(IMethod function) => new CompletionItem()
-        {
-            Label = function.Name,
-            Kind = CompletionItemKind.Method,
-            Detail = function.CodeType.GetNameOrVoid() + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
-            Documentation = Extras.GetMarkupContent(function.Documentation)
-        };
-
-        public static MarkupBuilder DefaultLabel(IMethod function)
-        {
-            MarkupBuilder markup = new MarkupBuilder()
-                .StartCodeLine()
-                .Add(function.CodeType.GetNameOrVoid())
-                .Add(" ")
-                .Add(function.Name + CodeParameter.GetLabels(function.Parameters))
-                .EndCodeLine();
-            
-            if (function.Documentation != null)
-            {
-                markup
-                    .NewSection()
-                    .Add(function.Documentation);
-            }
-            
-            return markup;
         }
     }
 
@@ -98,13 +74,20 @@ namespace Deltin.Deltinteger
     {
         public IWorkshopTree[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
-        public CallParallel CallParallel { get; set; } = CallParallel.NoParallel;
+        public object AdditionalData { get; set; }
+        public CallParallel ParallelMode { get; set; } = CallParallel.NoParallel;
         public string ActionComment { get; set; }
 
         public MethodCall(IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             ParameterValues = parameterValues;
             AdditionalParameterData = additionalParameterData;
+        }
+
+        public MethodCall(IWorkshopTree[] parameterValues)
+        {
+            ParameterValues = parameterValues;
+            AdditionalParameterData = new object[parameterValues.Length];
         }
 
         /// <summary>Gets a parameter as an element.</summary>
@@ -174,12 +157,22 @@ namespace Deltin.Deltinteger
         public RestrictedCallType CallType { get; }
         public Location CallRange { get; }
         public string Message { get; }
+        public bool Fatal { get; }
 
-        public RestrictedCall(RestrictedCallType callType, Location callRange, string message)
+        public RestrictedCall(RestrictedCallType callType, Location callRange, string message, bool fatal = true)
         {
             CallType = callType;
             CallRange = callRange;
             Message = message;
+            Fatal = fatal;
+        }
+
+        public void AddDiagnostic(FileDiagnostics diagnostics)
+        {
+            if (Fatal)
+                diagnostics.Error(Message, CallRange.range);
+            else
+                diagnostics.Warning(Message, CallRange.range);
         }
 
         public static string StringFromCallType(RestrictedCallType type)
@@ -190,7 +183,7 @@ namespace Deltin.Deltinteger
                 default: return type.ToString();
             }
         }
-        
+
         public static bool EventPlayerDefaultCall(IIndexReferencer referencer, IExpression parent, ParseInfo parseInfo)
             => referencer.VariableType == VariableType.Player && (parent == null || parent is RootAction);
     }

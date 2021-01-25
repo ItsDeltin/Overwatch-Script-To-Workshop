@@ -59,12 +59,12 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                     NewLine();
                 }
                 NewLine();
-                
+
                 // Rules
                 foreach (var rule in Workshop.Rules)
                     new RuleTraveler(this, rule).Decompile();
             }
-            
+
             return _builder.ToString().Trim();
         }
 
@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         {
             if (!isGlobal && Workshop.Variables.Any(v => v.IsGlobal && v.Name == baseName))
                 baseName = "p_" + baseName;
-            
+
             return baseName;
         }
 
@@ -147,7 +147,8 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         public void NewLine() => Decompiler.NewLine();
         public void AddBlock(bool startBlock = true) => Decompiler.AddBlock(startBlock);
         public void Outdent() => Decompiler.Outdent();
-        public void Advance() {
+        public void Advance()
+        {
             CurrentAction++;
         }
         public void EndAction()
@@ -156,13 +157,18 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             NewLine();
             Advance();
         }
-        public void AddComment(ITTEAction action)
+        public void AddComment(ITTEAction action) => AddComment(action.Comment, action.Disabled);
+        public void AddComment(string comment, bool disabled)
         {
-            if (action.Comment == null) return;
-            if (action.Disabled) Append("// ");
-            else Append("# ");
-            Append(action.Comment);
-            NewLine();
+            if (comment == null) return;
+
+            var lines = comment.Split(new[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.None);
+            foreach (var line in lines)
+            {
+                if (disabled) Append("// " + line);
+                else Append("# " + line);
+                NewLine();
+            }
         }
     }
 
@@ -175,7 +181,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         {
             Rule = rule;
         }
-        
+
         public override void Decompile()
         {
             if (Rule.EventInfo.Event != RuleEvent.Subroutine)
@@ -271,20 +277,21 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         {
             // Get the file name.
             string directory = Path.GetDirectoryName(_sourceFile);
-            string file = Path.Join(directory, "customGameSettings.json");
+            string file = Path.Join(directory, "customGameSettings.lobby");
 
             // Change file if the name already exists.
             int i = 0;
             while (File.Exists(file))
             {
-                file = Path.Join(directory, "customGameSettings_" + i + ".json");
+                file = Path.Join(directory, "customGameSettings_" + i + ".lobby");
                 i++;
             }
 
             // Create the file.
             using (var writer = File.CreateText(file))
                 // Write to the settings file.
-                writer.Write(JsonConvert.SerializeObject(_settings, new JsonSerializerSettings() {
+                writer.Write(JsonConvert.SerializeObject(_settings, new JsonSerializerSettings()
+                {
                     Formatting = Formatting.Indented,
                     NullValueHandling = NullValueHandling.Ignore
                 }));

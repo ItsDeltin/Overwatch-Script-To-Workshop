@@ -12,7 +12,8 @@ namespace Deltin.Deltinteger.Debugger
 
     class DefaultResolver : IDebugVariableResolver
     {
-        public DBPVariable GetVariable(DebugVariableLinkCollection collection, IDebugVariable debugVariable) {
+        public DBPVariable GetVariable(DebugVariableLinkCollection collection, IDebugVariable debugVariable)
+        {
             // Return null if there is no value.
             if (debugVariable.Value == null) return null;
 
@@ -37,7 +38,8 @@ namespace Deltin.Deltinteger.Debugger
 
             return variable;
         }
-        public EvaluateResponse GetEvaluation(DebugVariableLinkCollection collection, IDebugVariable debugVariable) {
+        public EvaluateResponse GetEvaluation(DebugVariableLinkCollection collection, IDebugVariable debugVariable)
+        {
             // Return null if there is no value.
             if (debugVariable.Value == null) return EvaluateResponse.Empty;
 
@@ -56,7 +58,7 @@ namespace Deltin.Deltinteger.Debugger
                 response.namedVariables = 3;
                 response.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
             }
-            
+
             return response;
         }
 
@@ -72,7 +74,7 @@ namespace Deltin.Deltinteger.Debugger
                     children[i] = GetChildDebugVariable(collection, array.Values[i], "[" + i + "]");
                     collection.Add(children[i]);
                 }
-                
+
                 // Done
                 return children;
             }
@@ -85,7 +87,7 @@ namespace Deltin.Deltinteger.Debugger
                 collection.Add(x);
                 collection.Add(y);
                 collection.Add(z);
-                return new IDebugVariable[] {x,y,z};
+                return new IDebugVariable[] { x, y, z };
             }
             return new LinkableDebugVariable[0];
         }

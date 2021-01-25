@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Models.Import
 
         public List<Line> Lines { get; } = new List<Line>();
 
-        private static ObjImportParser[] LineParsers = new ObjImportParser[] 
+        private static ObjImportParser[] LineParsers = new ObjImportParser[]
         {
             new VertexParser(),
             new FaceParser(),
@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Models.Import
                 foreach (ObjImportParser parser in LineParsers)
                     if (parser.ParseLine(line, model))
                         break;
-            
+
             return model;
         }
 
@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Models.Import
         protected override void Add(Match match, ObjModel model)
         {
             List<Vertex> vertices = new List<Vertex>();
-            foreach(Capture capture in match.Groups[2].Captures)
+            foreach (Capture capture in match.Groups[2].Captures)
             {
                 int index = int.Parse(capture.Value);
                 if (index > 0)

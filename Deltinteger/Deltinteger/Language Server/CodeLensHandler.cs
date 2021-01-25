@@ -29,36 +29,38 @@ namespace Deltin.Deltinteger.LanguageServer
                 // Do not show references for scoped variables and parameters.
                 if (lens.SourceType != CodeLensSourceType.ScopedVariable && lens.SourceType != CodeLensSourceType.ParameterVariable
                     // Check if the lens should be used.
-                    && lens.ShouldUse() 
+                    && lens.ShouldUse()
                     // Check if the code lens type is enabled.
                     && LensIsEnabled(lens))
                     // Create the CodeLens.
-                    finalLenses.Add(new CodeLens() {
-                        Command = new Command() {
+                    finalLenses.Add(new CodeLens()
+                    {
+                        Command = new Command()
+                        {
                             Title = lens.GetTitle(),
                             Name = lens.Command,
                             Arguments = lens.GetArguments()
                         },
                         Range = lens.Range
                     });
-            
+
             return finalLenses;
         }
 
         public bool LensIsEnabled(CodeLensRange lens)
         {
             return
-                (_languageServer.ConfigurationHandler.ReferencesCodeLens   && lens is ReferenceCodeLensRange ) ||
-                (_languageServer.ConfigurationHandler.ImplementsCodeLens   && lens is ImplementsCodeLensRange) ||
+                (_languageServer.ConfigurationHandler.ReferencesCodeLens && lens is ReferenceCodeLensRange) ||
+                (_languageServer.ConfigurationHandler.ImplementsCodeLens && lens is ImplementsCodeLensRange) ||
                 (_languageServer.ConfigurationHandler.ElementCountCodeLens && lens is ElementCountCodeLens);
         }
 
-        public CodeLensRegistrationOptions GetRegistrationOptions()
+        public CodeLensRegistrationOptions GetRegistrationOptions(CodeLensCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
             return new CodeLensRegistrationOptions()
             {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
-                ResolveProvider = false 
+                ResolveProvider = false
             };
         }
 

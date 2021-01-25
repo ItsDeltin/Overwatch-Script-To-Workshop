@@ -118,13 +118,13 @@ namespace Deltin.Deltinteger.Parse
         {
             if (index.Length == 0)
                 return array;
-            
+
             if (index.Length == 1)
                 return array[index[0]];
             
             return ValueInArrayPath(array, index.Take(index.Length - 1).ToArray())[index.Last()];
         }
-        
+
         private static Element GetRoot(Element targetPlayer, WorkshopVariable variable)
         {
             if (variable.IsGlobal)
@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Parse
             else
                 return Element.Part("Player Variable", targetPlayer, variable);
         }
-    
+
         public static Element[] ModifyVariable(WorkshopArrayBuilder builder, Operation operation, Element value, Element targetPlayer, WorkshopVariable variable, params Element[] index)
         {
             if (index == null || index.Length == 0)

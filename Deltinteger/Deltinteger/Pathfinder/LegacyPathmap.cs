@@ -12,11 +12,11 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public Vertex[] Nodes { get; set; }
         [XmlArray]
-        [XmlArrayItem(ElementName="Segment", Type = typeof(LegacySegment))]
+        [XmlArrayItem(ElementName = "Segment", Type = typeof(LegacySegment))]
         public LegacySegment[] Segments { get; set; }
         public MapAttribute[] Attributes { get; set; }
 
-        public LegacyPathmap() {}
+        public LegacyPathmap() { }
 
         public static bool TryLoad(string text, out Pathmap pathmap)
         {
@@ -95,6 +95,6 @@ namespace Deltin.Deltinteger.Pathfinder
         [XmlAttribute]
         public int Node2Attribute { get; set; }
 
-        public LegacySegment() {}
+        public LegacySegment() { }
     }
 }

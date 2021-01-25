@@ -1,8 +1,8 @@
 using System;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Compiler;
-using LSPos      = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
-using LSRange    = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+using LSPos = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
+using LSRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using LSLocation = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 
 namespace Deltin.Deltinteger.LanguageServer
@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public const int Warning = 2;
         public const int Information = 3;
         public const int Hint = 4;
-        
+
         public string message;
         public DocRange range;
         public int severity;
@@ -23,8 +23,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public Diagnostic(string message, DocRange range, int severity)
         {
-            this.message = message;
-            this.range = range;
+            this.message = message ?? throw new NullReferenceException(nameof(message));
+            this.range = range ?? throw new NullReferenceException(nameof(range));
             this.severity = severity;
         }
 
@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
     }
 
-    public class Location 
+    public class Location
     {
         public Uri uri;
         public DocRange range;
@@ -76,7 +76,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public LSLocation ToLsLocation()
         {
-            return new LSLocation() {
+            return new LSLocation()
+            {
                 Uri = uri,
                 Range = range
             };

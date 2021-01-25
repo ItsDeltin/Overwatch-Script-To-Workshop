@@ -9,28 +9,28 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public CodeParameter[] Parameters { get; set; }
-        public CodeType CodeType { get; set; }
+        public ICodeTypeSolver CodeType { get; set; }
         public MethodAttributes Attributes { get; set; } = new MethodAttributes();
         public bool Static { get; set; }
         public bool WholeContext { get; set; } = true;
-        public string Documentation { get; set; }
+        public MarkupBuilder Documentation { get; set; }
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
 
-        private Func<ActionSet, MethodCall, IWorkshopTree> Action { get; }
-        private Action<ParseInfo, DocRange> OnCall { get; }
+        private readonly Func<ActionSet, MethodCall, IWorkshopTree> _action;
+        private readonly Func<ParseInfo, DocRange, object> _onCall;
 
         public FuncMethod(string name, Func<ActionSet, MethodCall, IWorkshopTree> action)
         {
             Name = name;
-            Action = action;
+            _action = action;
         }
 
         public FuncMethod(string name, CodeParameter[] parameters, Func<ActionSet, MethodCall, IWorkshopTree> action)
         {
             Name = name;
             Parameters = parameters;
-            Action = action;
+            _action = action;
         }
 
         public FuncMethod(FuncMethodBuilder builder)
@@ -39,15 +39,12 @@ namespace Deltin.Deltinteger.Parse
             Parameters = builder.Parameters ?? new CodeParameter[0];
             CodeType = builder.ReturnType;
             Documentation = builder.Documentation ?? throw new ArgumentNullException(nameof(Documentation));
-            Action = builder.Action ?? throw new ArgumentNullException(nameof(Action));
-            OnCall = builder.OnCall;
+            _action = builder.Action ?? throw new ArgumentNullException(nameof(_action));
+            _onCall = builder.OnCall;
         }
 
-        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
-        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => Action.Invoke(actionSet, methodCall);
-
-        public void Call(ParseInfo parseInfo, DocRange callRange) => OnCall?.Invoke(parseInfo, callRange);
+        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => _action.Invoke(actionSet, methodCall);
+        public object Call(ParseInfo parseInfo, DocRange callRange) => _onCall?.Invoke(parseInfo, callRange);
     }
 
     public class FuncMethodBuilder
@@ -63,8 +60,10 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Required: The action of the function.</summary>
         public Func<ActionSet, MethodCall, IWorkshopTree> Action;
         /// <summary>Not required: The code to run when the function is called.</summary>
-        public Action<ParseInfo, DocRange> OnCall;
+        public Func<ParseInfo, DocRange, object> OnCall;
 
         public static implicit operator FuncMethod(FuncMethodBuilder builder) => new FuncMethod(builder);
+
+        public FuncMethod GetMethod() => new FuncMethod(this);
     }
 }

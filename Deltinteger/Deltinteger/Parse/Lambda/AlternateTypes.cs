@@ -11,10 +11,11 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             CanBeDeleted = false;
             CanBeExtended = false;
-            Kind = "constant";
+            Kind = TypeKind.Constant;
         }
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Constant
         };
@@ -25,16 +26,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 return Name;
             // Return type and parameters
             else if (ReturnsValue)
-                return Name + string.Join(", ", Parameters.Select(p => p.GetName()).Prepend(ReturnType.GetName()));
+                return Name + "<" + string.Join(", ", Parameters.Select(p => p.GetName()).Prepend(ReturnType.GetName())) + ">";
             // Parameters
             else
-                return Name + string.Join(", ", Parameters.Select(p => p.GetName()));
+                return Name + "<" + string.Join(", ", Parameters.Select(p => p.GetName())) + ">";
         }
     }
 
     public class BlockLambda : BaseLambda
     {
-        public BlockLambda(params CodeType[] argumentTypes) : base("BlockLambda", LambdaKind.ConstantBlock, argumentTypes) {}
+        public BlockLambda(params CodeType[] argumentTypes) : base("BlockLambda", LambdaKind.ConstantBlock, argumentTypes) { }
     }
 
     public class ValueBlockLambda : BaseLambda

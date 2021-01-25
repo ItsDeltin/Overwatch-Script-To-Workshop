@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <KeyLinkList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <method name="variables" key="00000000EB73.07C" />
+  <method name="global" key="00000000EB74.07C" />
+  <method name="player" key="00000000EB75.07C" />
+  <method name="rule" key="00000000C7B4.07C" />
+  <method name="event" key="00000000C7B5.07C" />
+  <method name="conditions" key="00000000C7B6.07C" />
+  <method name="actions" key="00000000C7B7.07C" />
+  <method name="disabled" key="00000000C7B8.07C" />
+  <method name="subroutines" key="00000000FFFA.07C" />
   <method name="Abort" key="00000000BB09.07C" />
   <method name="Abort If" key="00000000BB04.07C" />
   <method name="Abort If Condition Is False" key="00000000BB02.07C" />
@@ -7,6 +16,8 @@
   <method name="Allow Button" key="00000000B9D0.07C" />
   <method name="Apply Impulse" key="0000000078F6.07C" />
   <method name="Big Message" key="00000000BA88.07C" />
+  <method name="Call Subroutine" key="00000001001E.07C" />
+  <method name="Start Rule" key="000000010022.07C" />
   <method name="Chase Global Variable At Rate" key="00000000B840.07C" />
   <method name="Chase Global Variable Over Time" key="00000000B842.07C" />
   <method name="Chase Player Variable At Rate" key="00000000B83F.07C" />
@@ -16,7 +27,7 @@
   <method name="Create Beam Effect" key="00000000CE80.07C" />
   <method name="Create Dummy Bot" key="00000000CA6A.07C" />
   <method name="Create Effect" key="00000000B8AF.07C" />
-  <method name="Create Hud Text" key="00000000BAD3.07C" />
+  <method name="Create HUD Text" key="00000000BAD3.07C" />
   <method name="Create Icon" key="00000000ACFA.07C" />
   <method name="Create In-World Text" key="00000000BAD0.07C" />
   <method name="Damage" key="000000007876.07C" />
@@ -31,8 +42,8 @@
   <method name="Destroy All In-World Text" key="00000000B8AB.07C" />
   <method name="Destroy Dummy Bot" key="00000000CC21.07C" />
   <method name="Destroy Effect" key="00000000B8AE.07C" />
-  <method name="Destroy Hud Text" key="00000000BAD2.07C" />
-  <method name="Destroy Effect" key="00000000B8AE.07C" />
+  <method name="Destroy HUD Text" key="00000000BAD2.07C" />
+  <method name="Destroy Icon" key="00000000B4E7.07C" />
   <method name="Destroy In-World Text" key="00000000BACF.07C" />
   <method name="Disable Built-In Game Mode Announcer" key="00000000C3F8.07C" />
   <method name="Disable Built-In Game Mode Completion" key="00000000AD2D.07C" />
@@ -41,16 +52,24 @@
   <method name="Disable Built-In Game Mode Scoring" key="00000000ABFA.07C" />
   <method name="Disable Death Spectate All Players" key="00000000B9B5.07C" />
   <method name="Disable Death Spectate Target HUD" key="00000000B9B3.07C" />
+  <method name="Disable Inspector Recording" key="00000000FB2F.07C" />
   <method name="Disallow Button" key="00000000B9CF.07C" />
   <method name="Enable Built-In Game Mode Announcer" key="00000000C3FA.07C" />
   <method name="Enable Built-In Game Mode Completion" key="00000000AD2F.07C" />
+  <method name="Enable Inspector Recording" key="00000000FB2E.07C" />
   <method name="Enable Built-In Game Mode Music" key="00000000C3F6.07C" />
   <method name="Enable Built-In Game Mode Respawning" key="00000000B878.07C" />
   <method name="Enable Built-In Game Mode Scoring" key="00000000ABF8.07C" />
   <method name="Enable Death Spectate All Players" key="00000000B9AE.07C" />
   <method name="Enable Death Spectate Target HUD" key="00000000B9B4.07C" />
+  <method name="End" key="00000000FB37.07C" />
+  <method name="For Global Variable" key="00000000FEE2.07C" />
+  <method name="For Player Variable" key="00000000FEE1.07C" />
   <method name="Go To Assemble Heroes" key="00000000C5B5.07C" />
   <method name="Heal" key="000000007875.07C" />
+  <method name="If" key="00000000FB32.07C" />
+  <method name="Else If" key="00000000FB33.07C" />
+  <method name="Else" key="00000000FB34.07C" />
   <method name="Kill" key="000000007877.07C" />
   <method name="Loop" key="0000000078F5.07C" />
   <method name="Loop If" key="00000000BB06.07C" />
@@ -110,6 +129,8 @@
   <method name="Start Forcing Player To Be Hero" key="00000000ABFB.07C" />
   <method name="Start Forcing Spawn Room" key="00000000B573.07C" />
   <method name="Start Forcing Throttle" key="00000000BB0F.07C" />
+  <method name="Start Healing Modification" key="00000000FD40.07C" />
+  <method name="Stop Healing Modification" key="00000000FD37.07C" />
   <method name="Start Heal Over Time" key="00000000B9C2.07C" />
   <method name="Start Holding Button" key="00000000B9D3.07C" />
   <method name="Start Throttle In Direction" key="00000000CEA4.07C" />
@@ -134,6 +155,70 @@
   <method name="Teleport" key="00000000B9BA.07C" />
   <method name="Unpause Match Time" key="00000000B9F0.07C" />
   <method name="Wait" key="000000007872.07C" />
+  <method name="While" key="00000000FB35.07C" />
+  <method name="Continue" key="0000000105B7.07C" />
+  <method name="Break" key="0000000105B6.07C" />
+  <method name="Set Crouch Enabled" key="0000000105A3.07C" />
+  <method name="Set Melee Enabled" key="000000010596.07C" />
+  <method name="Set Jump Enabled" key="0000000105A5.07C" />
+  <method name="Declare Round Draw" key="00000001098F.07C" />
+  <method name="Set Ability Cooldown" key="0000000109CA.07C" />
+  <method name="Cancel Primary Action" key="0000000109CB.07C" />
+  <method name="Start Forcing Player Position" key="000000010E85.07C" />
+  <method name="Stop Forcing Player Position" key="000000010E8D.07C" />
+  <method name="Attach Players" key="000000010E4F.07C" />
+  <method name="Detach Players" key="000000010E52.07C" />
+  <method name="Set Ammo" key="0000000110F1.07C" />
+  <method name="Set Max Ammo" key="0000000110F2.07C" />
+  <method name="Set Weapon" key="00000001105C.07C" />
+  <method name="Set Reload enabled" key="000000011068.07C" />
+  <method name="Disable Game Mode HUD" key="0000000110A8.07C" />
+  <method name="Enable Game Mode HUD" key="0000000110A7.07C" />
+  <method name="Disable Game Mode In-World UI" key="000000011242.07C" />
+  <method name="Enable Game Mode In-World UI" key="00000001123F.07C" />
+  <method name="Disable Hero HUD" key="00000001109E.07C" />
+  <method name="Enable Hero HUD" key="00000001109B.07C" />
+  <method name="Disable Kill Feed" key="000000011093.07C" />
+  <method name="Enable Kill Feed" key="000000011092.07C" />
+  <method name="Disable Messages" key="0000000110AE.07C" />
+  <method name="Enable Messages" key="0000000110AD.07C" />
+  <method name="Disable Scoreboard" key="0000000110A5.07C" />
+  <method name="Enable Scoreboard" key="0000000110A1.07C" />
+  <method name="Set Ability Charge" key="00000001120C.07C" />
+  <method name="Set Ability Resource" key="00000001120F.07C" />
+  <method name="Set Jump Vertical Speed" key="00000001122D.07C" />
+  <method name="Disable Nameplates" key="000000011254.07C" />
+  <method name="Enable Nameplates" key="000000011253.07C" />
+  <method name="Start Forcing Player Outlines" key="0000000112EC.07C" />
+  <method name="Stop Forcing Player Outlines" key="0000000112ED.07C" />
+  <method name="Start Scaling Player" key="0000000112FE.07C" />
+  <method name="Stop Scaling Player" key="0000000112FD.07C" />
+  <method name="Start Scaling Barriers" key="0000000112FC.07C" />
+  <method name="Stop Scaling Barriers" key="0000000112FB.07C" />
+  <method name="Enable Movement Collision With Environment" key="0000000112FA.07C" />
+  <method name="Disable Movement Collision With Environment" key="0000000112F9.07C" />
+  <method name="Enable Movement Collision With Players" key="0000000112F8.07C" />
+  <method name="Disable Movement Collision With Players" key="0000000112F7.07C" />
+  <method name="Start Modifying Hero Voice Lines" key="0000000113C1.07C" />
+  <method name="Stop Modifying Hero Voice Lines" key="0000000113C0.07C" />
+  <method name="Add Health Pool To Player" key="000000011423.07C" />
+  <method name="Remove Health Pool From Player" key="000000011425.07C" />
+  <method name="Remove All Health Pools From Player" key="000000011433.07C" />
+  <method name="Set Player Health" key="000000011440.07C" />
+  <method name="Log To Inspector" key="000000012449.07C" />
+  <method name="Wait Until" key="0000000121C2.07C" />
+  <method name="Set Knockback Dealt" key="000000011FA9.07C" />
+  <method name="Set Knockback Received" key="000000011FAA.07C" />
+  <method name="Set Environment Credit Player" key="000000011C08.07C" />
+  <method name="Start Assist" key="000000012200.07C" />
+  <method name="Stop Assist" key="0000000121FC.07C" />
+  <method name="Stop All Assists" key="0000000121FA.07C" />
+  <method name="Create Progress Bar HUD Text" key="0000000122F3.07C" />
+  <method name="Destroy Progress Bar HUD Text" key="0000000122E4.07C" />
+  <method name="Destroy All Progress Bar HUD Text" key="0000000122E2.07C" />
+  <method name="Create Progress Bar In-World Text" key="00000001233A.07C" />
+  <method name="Destroy Progress Bar In-World Text" key="000000012336.07C" />
+  <method name="Destroy All Progress Bar In-World Text" key="000000012334.07C" />
   <method name="Absolute Value" key="00000000C358.07C" />
   <method name="Add" key="00000000B16D.07C" />
   <method name="All Dead Players" key="00000000B265.07C" />
@@ -142,6 +227,9 @@
   <method name="All Players" key="00000000B261.07C" />
   <method name="All Players Not On Objective" key="00000000B267.07C" />
   <method name="All Players On Objective" key="00000000B266.07C" />
+  <method name="All Tank Heroes" key="00000000D40C.07C" />
+  <method name="All Damage Heroes" key="00000000D40A.07C" />
+  <method name="All Support Heroes" key="00000000D40B.07C" />
   <method name="Allowed Heroes" key="00000000BBA8.07C" />
   <method name="Altitude Of" key="00000000B11D.07C" />
   <method name="And" key="00000000B273.07C" />
@@ -156,7 +244,7 @@
   <method name="Arctangent In Radians" key="00000000C7FF.07C" />
   <method name="Array Contains" key="00000000C336.07C" />
   <method name="Array Slice" key="00000000B597.07C" />
-  <method name="Attacker" key="00000000B32F.07C" />
+  <method name="Attacker" key="0000000077FF.07C" />
   <method name="Backward" key="00000000B11B.07C" />
   <method name="Closest Player To" key="00000000B1DE.07C" />
   <method name="Compare" key="00000000B276.07C" />
@@ -166,21 +254,22 @@
   <method name="Cosine From Degrees" key="00000000C33E.07C" />
   <method name="Cosine From Radians" key="00000000C342.07C" />
   <method name="Cross Product" key="00000000C35D.07C" />
-  <method name="Current Map" key="00000000D418.07C" />
+  <method name="Current Map" key="0000000056EE.07C" />
   <method name="Current Array Element" key="00000000B5B9.07C" />
   <method name="Direction From Angles" key="00000000BB2D.07C" />
   <method name="Direction Towards" key="00000000B1EA.07C" />
   <method name="Distance Between" key="00000000B1E7.07C" />
   <method name="Divide" key="00000000B16A.07C" />
   <method name="Dot Product" key="00000000C35A.07C" />
-  <method name="Down" key="00000000B119.07C" />
+  <method name="Down" key="00000000C16A.07C" />
   <method name="Empty Array" key="00000000BF5A.07C" />
   <method name="Entity Exists" key="00000000B619.07C" />
   <method name="Event Damage" key="00000000C635.07C" />
   <method name="Event Healing" key="00000000CC33.07C" />
   <method name="Event Player" key="00000000B331.07C" />
   <method name="Event Was Critical Hit" key="00000000C637.07C" />
-  <method name="Eye Position" key="00000000C595.07C" />
+  <method name="Event Was Health Pack" key="00000000FC80.07C" />
+  <method name="Eye Position" key="00000000C397.07C" />
   <method name="Facing Direction Of" key="00000000B281.07C" />
   <method name="False" key="00000000AC3A.07C" />
   <method name="Farthest Player From" key="00000000B1DF.07C" />
@@ -188,15 +277,15 @@
   <method name="First Of" key="00000000B5C2.07C" />
   <method name="Flag Position" key="00000000B3A0.07C" />
   <method name="Forward" key="00000000B11A.07C" />
-  <method name="Game Mode" key="00000000F161.07C" />
+  <method name="Game Mode" key="0000000056EC.07C" />
   <method name="Current Game Mode" key="00000000F163.07C" />
   <method name="Global Variable" key="00000000B0F9.07C" />
   <method name="Has Spawned" key="00000000C192.07C" />
   <method name="Has Status" key="00000000B363.07C" />
   <method name="Healee" key="00000000CC1C.07C" />
-  <method name="Healer" key="00000000CC1A.07C" />
+  <method name="Healer" key="00000000B58E.07C" />
   <method name="Health" key="0000000081C2.07C" />
-  <method name="Hero" key="00000000ACAA.07C" />
+  <method name="Hero" key="00000000B293.07C" />
   <method name="Hero Icon String" key="00000000C1FE.07C" />
   <method name="Hero Of" key="00000000ACA9.07C" />
   <method name="Horizontal Angle From Direction" key="00000000BB2C.07C" />
@@ -213,6 +302,7 @@
   <method name="Is Communicating Any" key="00000000B9E5.07C" />
   <method name="Is Communicating Any Emote" key="00000000B9E8.07C" />
   <method name="Is Communicating Any Voice Line" key="00000000B9E7.07C" />
+  <method name="Is Communicating Any Spray" key="000000012290.07C" />
   <method name="Is Control Mode Point Locked" key="00000000B37B.07C" />
   <method name="Is Crouching" key="00000000B289.07C" />
   <method name="Is CTF Mode In Sudden Death" key="00000000B3A4.07C" />
@@ -248,14 +338,15 @@
   <method name="Last Damage Modification ID" key="00000000C64A.07C" />
   <method name="Last Damage Over Time ID" key="00000000B263.07C" />
   <method name="Last Heal Over Time ID" key="00000000B262.07C" />
+  <method name="Last Healing Modification ID" key="00000000FD2A.07C" />
   <method name="Last Of" key="00000000B5C1.07C" />
   <method name="Last Text ID" key="00000000BAFE.07C" />
-  <method name="Left" key="00000000B116.07C" />
+  <method name="Left" key="00000000C162.07C" />
   <method name="Local Vector Of" key="00000000B342.07C" />
-  <method name="Map" key="00000000D415.07C" />
+  <method name="Map" key="000000002C43.07C" />
   <method name="Match Round" key="00000000B375.07C" />
   <method name="Match Time" key="00000000AD3B.07C" />
-  <method name="Max" key="00000000B59E.07C" />
+  <method name="Max" key="00000000C5E0.07C" />
   <method name="Max Health" key="0000000081C4.07C" />
   <method name="Min" key="00000000B190.07C" />
   <method name="Modulo" key="00000000B169.07C" />
@@ -263,7 +354,7 @@
   <method name="Nearest Walkable Position" key="00000000C324.07C" />
   <method name="Normalize" key="00000000C344.07C" />
   <method name="Normalized Health" key="0000000081C3.07C" />
-  <method name="Not" key="00000000B275.07C" />
+  <method name="Not" key="0000000077D9.07C" />
   <method name="Null" key="00000000B594.07C" />
   <method name="Number" key="00000000AC38.07C" />
   <method name="Number Of Dead Players" key="00000000B29A.07C" />
@@ -277,7 +368,7 @@
   <method name="Objective Index" key="00000000B37D.07C" />
   <method name="Objective Position" key="00000000B355.07C" />
   <method name="Opposite Team Of" key="00000000BB0A.07C" />
-  <method name="Or" key="00000000B274.07C" />
+  <method name="Or" key="000000007665.07C" />
   <method name="Payload Position" key="00000000B356.07C" />
   <method name="Payload Progress Percentage" key="00000000B357.07C" />
   <method name="Player Carrying Flag" key="00000000B3A3.07C" />
@@ -288,7 +379,7 @@
   <method name="Players On Hero" key="00000000B338.07C" />
   <method name="Players Within Radius" key="00000000B1E0.07C" />
   <method name="Point Capture Percentage" key="00000000B358.07C" />
-  <method name="Position of" key="00000000B11C.07C" />
+  <method name="Position Of" key="00000000B11C.07C" />
   <method name="Raise To Power" key="00000000B168.07C" />
   <method name="Random Integer" key="00000000B59B.07C" />
   <method name="Random Real" key="00000000B59A.07C" />
@@ -298,12 +389,12 @@
   <method name="Ray Cast Hit Player" key="00000000C611.07C" />
   <method name="Ray Cast Hit Position" key="00000000C597.07C" />
   <method name="Remove From Array" key="00000000C421.07C" />
-  <method name="Right" key="00000000B117.07C" />
+  <method name="Right" key="00000000C163.07C" />
   <method name="Round To Integer" key="00000000C354.07C" />
   <method name="Score Of" key="00000000AD3C.07C" />
   <method name="Server Load" key="00000000C961.07C" />
-  <method name="Server Load Average" key="00000000C997.07C" />
-  <method name="Server Load Peak" key="00000000C996.07C" />
+  <method name="Server Load Average" key="00000000C983.07C" />
+  <method name="Server Load Peak" key="00000000C984.07C" />
   <method name="Sine From Degrees" key="00000000C33C.07C" />
   <method name="Sine From Radians" key="00000000C340.07C" />
   <method name="Slot Of" key="00000000BB7F.07C" />
@@ -311,40 +402,76 @@
   <method name="Speed Of" key="00000000B25D.07C" />
   <method name="Speed Of In Direction" key="00000000B260.07C" />
   <method name="Square Root" key="00000000C356.07C" />
-  <method name="String" key="00000000BB31.07C" />
+  <method name="String" key="00000000BA60.07C" />
   <method name="Custom String" key="00000000CE3C.07C" />
   <method name="Icon String" key="00000000CCDC.07C" />
   <method name="Subtract" key="00000000B16C.07C" />
   <method name="Tangent From Degrees" key="00000000C7F8.07C" />
   <method name="Tangent From Radians" key="00000000C7FD.07C" />
-  <method name="Team" key="00000000B0F8.07C" />
+  <method name="Team" key="00000000B336.07C" />
   <method name="Team Of" key="00000000B279.07C" />
-  <method name="Team Score" key="00000000B353.07C" />
+  <method name="Team Score" key="000000008048.07C" />
   <method name="Throttle Of" key="00000000B2F5.07C" />
   <method name="Total Time Elapsed" key="00000000B361.07C" />
   <method name="True" key="00000000AC39.07C" />
   <method name="Ultimate Charge Percent" key="0000000081C5.07C" />
   <method name="Up" key="00000000B118.07C" />
   <method name="Value In Array" key="00000000B52A.07C" />
+  <method name="Vector" key="00000000B0F1.07C" />
   <method name="Vector Towards" key="00000000B1EB.07C" />
   <method name="Velocity Of" key="00000000B25C.07C" />
   <method name="Vertical Angle From Direction" key="00000000BB2B.07C" />
   <method name="Vertical Angle Towards" key="00000000B27E.07C" />
   <method name="Vertical Facing Angle Of" key="00000000B280.07C" />
   <method name="Vertical Speed Of" key="00000000B25F.07C" />
-  <method name="Victim" key="00000000B330.07C" />
+  <method name="Victim" key="000000007800.07C" />
   <method name="World Vector Of" key="00000000B33A.07C" />
   <method name="X Component Of" key="00000000B26F.07C" />
   <method name="Y Component Of" key="00000000B270.07C" />
   <method name="Z Component Of" key="00000000B272.07C" />
-  <method name="variables" key="00000000EB73.07C" />
-  <method name="global" key="00000000EB74.07C" />
-  <method name="player" key="00000000EB75.07C" />
-  <method name="rule" key="00000000C7B4.07C" />
-  <method name="event" key="00000000C7B5.07C" />
-  <method name="conditions" key="00000000C7B6.07C" />
-  <method name="actions" key="00000000C7B7.07C" />
-  <method name="disabled" key="00000000C7B8.07C" />
+  <method name="Array" key="00000000B52C.07C" />
+  <method name="If-Then-Else" key="000000010BC7.07C" />
+  <method name="Is Meleeing" key="00000001059A.07C" />
+  <method name="Is Jumping" key="0000000105A0.07C" />
+  <method name="Event Direction" key="0000000107D5.07C" />
+  <method name="Button" key="00000000B9D1.07C" />
+  <method name="Event Ability" key="0000000109CF.07C" />
+  <method name="Ability Cooldown" key="0000000109B3.07C" />
+  <method name="Ability Icon String" key="000000010B52.07C" />
+  <method name="Is In Alternate Form" key="000000010E62.07C" />
+  <method name="Is Duplicating" key="000000010E65.07C" />
+  <method name="Hero Being Duplicated" key="000000010E6A.07C" />
+  <method name="Ammo" key="0000000110E8.07C" />
+  <method name="Max Ammo" key="0000000110EA.07C" />
+  <method name="Weapon" key="000000011059.07C" />
+  <method name="Is Reloading" key="000000011065.07C" />
+  <method name="Event Was Environment" key="00000001107C.07C" />
+  <method name="Current Array Index" key="0000000111B5.07C" />
+  <method name="Input Binding String" key="0000000111B7.07C" />
+  <method name="Ability Charge" key="000000011216.07C" />
+  <method name="Ability Resource" key="000000011218.07C" />
+  <method name="Mapped Array" key="000000011228.07C" />
+  <method name="Workshop Setting Integer" key="000000011375.07C" />
+  <method name="Workshop Setting Real" key="00000001137B.07C" />
+  <method name="Workshop Setting Toggle" key="00000001136B.07C" />
+  <method name="Workshop Setting Combo" key="000000011CC0.07C" />
+  <method name="Workshop Setting Hero" key="000000011CBC.07C" />
+  <method name="Last Created Health Pool" key="000000011439.07C" />
+  <method name="Health Of Type" key="000000011448.07C" />
+  <method name="Max Health Of Type" key="000000011446.07C" />
+  <method name="Color" key="00000000442D.07C" />
+  <method name="Custom Color" key="000000011DA2.07C" />
+  <method name="Evaluate Once" key="000000012214.07C" />
+  <method name="Update Every Frame" key="00000001232B.07C" />
+  <method name="Magnitude Of" key="000000011F55.07C" />
+  <method name="Number Of Slots" key="000000011CB7.07C" />
+  <method name="Spawn Points" key="000000011FE7.07C" />
+  <method name="String Contains" key="000000012070.07C" />
+  <method name="String Length" key="0000000124A2.07C" />
+  <method name="String Slice" key="0000000124A6.07C" />
+  <method name="Last Assist ID" key="0000000121F2.07C" />
+  <method name="Player Stat" key="000000012507.07C" />
+  <method name="Player Hero Stat" key="000000012505.07C" />
   <method name="Ongoing - Global" key="000000007895.07C" />
   <method name="Ongoing - Each Player" key="000000007897.07C" />
   <method name="Player earned elimination" key="0000000078F7.07C" />
@@ -356,9 +483,13 @@
   <method name="Player Received Healing" key="00000000CC17.07C" />
   <method name="Player Joined Match" key="00000000CC18.07C" />
   <method name="Player Left Match" key="00000000CC19.07C" />
-  <method name="Slot" key="00000000B337.07C" />
+  <method name="Subroutine" key="00000000FEBE.07C" />
+  <method name="Player Dealt Knockback" key="0000000105BB.07C" />
+  <method name="Player Received Knockback" key="0000000105BC.07C" />
+  <method name="All" key="0000000077FE.07C" />
+  <method name="Slot" key="000000005DA5.07C" />
   <method name="Reaper" key="000000000026.07C" />
-  <method name="Tracer" key="00000000002B.07C" />
+  <method name="Tracer" key="000000001BF0.07C" />
   <method name="Mercy" key="000000000020.07C" />
   <method name="Hanzo" key="000000000021.07C" />
   <method name="Torbjörn" key="000000000024.07C" />
@@ -386,6 +517,7 @@
   <method name="Moira" key="000000006339.07C" />
   <method name="Wrecking Ball" key="000000007269.07C" />
   <method name="Ashe" key="00000000832E.07C" />
+  <method name="Echo" key="000000008684.07C" />
   <method name="Baptiste" key="000000009411.07C" />
   <method name="Sigma" key="000000009E9E.07C" />
   <method name="==" key="00000000780E.07C" />
@@ -399,16 +531,19 @@
   <method name="Primary Fire" key="00000000B17B.07C" />
   <method name="Secondary Fire" key="00000000B17A.07C" />
   <method name="Ability" key="00000000BFF6.07C" />
-  <method name="Ultimate" key="00000000B177.07C" />
-  <method name="Interact" key="00000000B31E.07C" />
+  <method name="Ultimate" key="000000000E76.07C" />
+  <method name="Interact" key="00000000C866.07C" />
   <method name="Jump" key="00000000B176.07C" />
   <method name="Crouch" key="00000000B175.07C" />
+  <method name="Melee" key="00000000FC8D.07C" />
+  <method name="Reload" key="00000000FC8E.07C" />
   <method name="To World" key="00000000B170.07C" />
   <method name="To Player" key="00000000B16F.07C" />
   <method name="Cancel Contrary Motion" key="00000000B520.07C" />
+  <method name="Cancel Contrary Motion XYZ" key="0000000125A5.07C" />
   <method name="Incorporate Contrary Motion" key="00000000B521.07C" />
-  <method name="Destination And Rate" key="00000000B8CA.07C" />
-  <method name="None" key="00000000CEB2.07C" />
+  <method name="Destination and Rate" key="00000000B8CA.07C" />
+  <method name="None" key="000000007321.07C" />
   <method name="Destination And Duration" key="00000000C479.07C" />
   <method name="Hacked" key="00000000B36D.07C" />
   <method name="Burning" key="00000000B36C.07C" />
@@ -425,9 +560,9 @@
   <method name="Restart When True" key="00000000787E.07C" />
   <method name="Sphere" key="00000000B935.07C" />
   <method name="Light Shaft" key="00000000B934.07C" />
-  <method name="Orb" key="00000000B933.07C" />
+  <method name="Orb" key="000000001711.07C" />
   <method name="Ring" key="00000000BC16.07C" />
-  <method name="Cloud" key="00000000BC15.07C" />
+  <method name="Cloud" key="00000000246E.07C" />
   <method name="Sparkles" key="00000000BC14.07C" />
   <method name="Good Aura" key="00000000BC13.07C" />
   <method name="Bad Aura" key="00000000BC17.07C" />
@@ -439,20 +574,27 @@
   <method name="Smoke Sound" key="00000000C4D5.07C" />
   <method name="Decal Sound" key="00000000C4D4.07C" />
   <method name="Beacon Sound" key="00000000C4D3.07C" />
-  <method name="White" key="00000000B93C.07C" />
-  <method name="Yellow" key="00000000B93B.07C" />
-  <method name="Green" key="00000000B93A.07C" />
-  <method name="Purple" key="00000000BC1C.07C" />
+  <method name="White" key="000000001979.07C" />
+  <method name="Yellow" key="000000001650.07C" />
+  <method name="Green" key="00000000A42B.07C" />
+  <method name="Purple" key="00000000A42D.07C" />
   <method name="Red" key="00000000B938.07C" />
   <method name="Blue" key="00000000B939.07C" />
-  <method name="Aqua" key="00000000CDB3.07C" />
-  <method name="Orange" key="00000000CDB4.07C" />
+  <method name="Aqua" key="00000000A2D1.07C" />
+  <method name="Orange" key="0000000015D3.07C" />
   <method name="Sky Blue" key="00000000CDB5.07C" />
-  <method name="Turquoise" key="00000000CDB6.07C" />
-  <method name="Lime Green" key="00000000CDB7.07C" />
+  <method name="Turquoise" key="000000004848.07C" />
+  <method name="Lime Green" key="00000000A2CF.07C" />
+  <method name="Black" key="000000002667.07C" />
+  <method name="Gray" key="00000001254E.07C" />
+  <method name="Rose" key="000000012550.07C" />
+  <method name="Violet" key="000000002501.07C" />
+  <method name="Visible To, Position, Radius, and Color" key="000000011E65.07C" />
   <method name="Visible To, Position, and Radius" key="00000000B8C6.07C" />
+  <method name="Position Radius And Color" key="000000011E66.07C" />
   <method name="Position And Radius" key="00000000B8C5.07C" />
-  <method name="Visible To" key="00000000B8C4.07C" />
+  <method name="Visible To And Color" key="000000011E49.07C" />
+  <method name="Visible To" key="00000000B5F1.07C" />
   <method name="To Nearest" key="00000000C34D.07C" />
   <method name="Voice Line Up" key="00000000B9E2.07C" />
   <method name="Voice Line Left" key="00000000B9E1.07C" />
@@ -463,13 +605,43 @@
   <method name="Emote Right" key="00000000B9DC.07C" />
   <method name="Emote Down" key="00000000B9DB.07C" />
   <method name="Ultimate Status" key="00000000B9DA.07C" />
-  <method name="Hello" key="00000000B9D9.07C" />
+  <method name="Hello" key="00000000C178.07C" />
   <method name="Need Healing" key="00000000B9D8.07C" />
   <method name="Group Up" key="00000000B9D7.07C" />
   <method name="Thanks" key="00000000B9D6.07C" />
   <method name="Acknowledge" key="00000000B9D5.07C" />
+  <method name="Press The Attack" key="000000010BE2.07C" />
+  <method name="You Are Welcome" key="000000010BE3.07C" />
+  <method name="Yes" key="000000010BE4.07C" />
+  <method name="No" key="000000010BE5.07C" />
+  <method name="Goodbye" key="000000010BE6.07C" />
+  <method name="Go" key="000000010BE7.07C" />
+  <method name="Ready" key="000000010BE8.07C" />
+  <method name="Fall Back" key="000000010BE9.07C" />
+  <method name="Push Forward" key="000000010BEA.07C" />
+  <method name="Incoming" key="000000010BEB.07C" />
+  <method name="With You" key="000000010BEC.07C" />
+  <method name="Going In" key="000000010BED.07C" />
+  <method name="On My Way" key="000000010BEE.07C" />
+  <method name="Attacking" key="000000010BEF.07C" />
+  <method name="Defending" key="000000010BF0.07C" />
+  <method name="Need Help" key="000000010BF1.07C" />
+  <method name="Sorry" key="000000010BF2.07C" />
+  <method name="Countdown" key="000000010BF3.07C" />
+  <method name="Spray Up" key="00000001221C.07C" />
+  <method name="Spray Left" key="00000001228A.07C" />
+  <method name="Spray Right" key="00000001228B.07C" />
+  <method name="Spray Down" key="00000001228C.07C" />
   <method name="Top" key="00000000BAF7.07C" />
-  <method name="Visible To And String" key="00000000BA8C.07C" />
+  <method name="Visible To and String" key="00000000BA8C.07C" />
+  <method name="String And Color" key="000000011E71.07C" />
+  <method name="Visible To, Sort Order, String, and Color" key="000000011E72.07C" />
+  <method name="Visible To, Sort Order, and String" key="00000000FCA5.07C" />
+  <method name="Visible To, String, and Color" key="000000011E70.07C" />
+  <method name="Sort Order And String" key="00000000FCA6.07C" />
+  <method name="Visible To And Sort Order" key="00000001095E.07C" />
+  <method name="Sort Order" key="00000000BAFF.07C" />
+  <method name="Sort Order And Color" key="000000011E75.07C" />
   <method name="Arrow: Down" key="00000000C2C9.07C" />
   <method name="Arrow: Left" key="00000000C2CA.07C" />
   <method name="Arrow: Right" key="00000000C2CB.07C" />
@@ -477,9 +649,9 @@
   <method name="Asterisk" key="00000000C2CD.07C" />
   <method name="Bolt" key="00000000C2CE.07C" />
   <method name="Checkmark" key="00000000C2CF.07C" />
-  <method name="Circle" key="00000000C2D0.07C" />
+  <method name="Circle" key="000000006611.07C" />
   <method name="Club" key="00000000C2D1.07C" />
-  <method name="Diamond" key="00000000C2D2.07C" />
+  <method name="Diamond" key="00000000CAC2.07C" />
   <method name="Dizzy" key="00000000C2D3.07C" />
   <method name="Exclamation Mark" key="00000000C2D4.07C" />
   <method name="Eye" key="00000000C2D5.07C" />
@@ -487,9 +659,8 @@
   <method name="Flag" key="00000000C2F0.07C" />
   <method name="Halo" key="00000000163F.07C" />
   <method name="Happy" key="00000000C2D8.07C" />
-  <method name="Heart" key="00000000C2D9.07C" />
-  <method name="Moon" key="00000000C2DA.07C" />
-  <method name="No" key="00000000C2DB.07C" />
+  <method name="Heart" key="0000000026DC.07C" />
+  <method name="Moon" key="00000000164A.07C" />
   <method name="Plus" key="00000000C2DC.07C" />
   <method name="Poison" key="00000000C2DD.07C" />
   <method name="Poison 2" key="00000000C2DE.07C" />
@@ -499,15 +670,17 @@
   <method name="Ring Thick" key="00000000C2E6.07C" />
   <method name="Ring Thin" key="00000000C2E7.07C" />
   <method name="Sad" key="00000000C2E8.07C" />
-  <method name="Skull" key="00000000C2E9.07C" />
+  <method name="Skull" key="00000000165B.07C" />
   <method name="Spade" key="00000000C2EA.07C" />
   <method name="Spiral" key="00000000C2EB.07C" />
   <method name="Stop" key="00000000C2EC.07C" />
   <method name="Trashcan" key="00000000C2ED.07C" />
-  <method name="Warning" key="00000000C2EE.07C" />
-  <method name="X" key="00000000027F.07C" />
+  <method name="Warning" key="000000007658.07C" />
+  <method name="X" key="00000000C2EF.07C" />
+  <method name="Visible To, Position, and Color" key="000000011E47.07C" />
   <method name="Visible To And Position" key="00000000B8D9.07C" />
-  <method name="Position" key="00000000CEA2.07C" />
+  <method name="Position" key="00000000B18C.07C" />
+  <method name="Position And Color" key="000000011E48.07C" />
   <method name="Good Explosion" key="00000000BB28.07C" />
   <method name="Bad Explosion" key="00000000BC1A.07C" />
   <method name="Ring Explosion" key="00000000BC1B.07C" />
@@ -522,18 +695,23 @@
   <method name="Direction, Rate, and Max Speed" key="00000000BB1A.07C" />
   <method name="Receivers, Damagers, and Damage Percent" key="00000000C645.07C" />
   <method name="Receivers And Damagers" key="00000000C644.07C" />
-  <method name="Direction And Turn Rate" key="00000000BB1F.07C" />
+  <method name="Receivers, Healers, and Healing Percent" key="00000000FD27.07C" />
+  <method name="Receivers And Healers" key="00000000FD26.07C" />
+  <method name="Restart Rule" key="000000010025.07C" />
+  <method name="Do Nothing" key="000000010026.07C" />
+  <method name="Direction and Turn Rate" key="00000000BB1F.07C" />
   <method name="Barriers Do Not Block LOS" key="00000000B1ED.07C" />
   <method name="Enemy Barriers Block LOS" key="00000000B1EE.07C" />
   <method name="All Barriers Block LOS" key="00000000B1EF.07C" />
   <method name="Rotation" key="00000000B33B.07C" />
   <method name="Rotation And Translation" key="00000000B33C.07C" />
-  <method name="Off" key="00000000B1E2.07C" />
+  <method name="Off" key="00000000C5DD.07C" />
   <method name="Surfaces" key="00000000B1E3.07C" />
   <method name="Surfaces And Enemy Barriers" key="00000000B1E4.07C" />
   <method name="Surfaces And All Barriers" key="00000000B1E5.07C" />
   <method name="Clip Against Surfaces" key="00000000BAF5.07C" />
   <method name="Do Not Clip" key="00000000BAF4.07C" />
+  <method name="Visible To, Position, String, and Color" key="000000011E76.07C" />
   <method name="Visible To, Position, and String" key="00000000BAD4.07C" />
   <method name="Good Beam" key="00000000CE84.07C" />
   <method name="Bad Beam" key="00000000CE85.07C" />
@@ -541,23 +719,32 @@
   <method name="Default Visibility" key="00000000CE55.07C" />
   <method name="Visible Always" key="00000000CE56.07C" />
   <method name="Visible Never" key="00000000CE57.07C" />
-  <method name="Replace Existing Throttle" key="00000000CEB0.07C" />
+  <method name="Replace existing throttle" key="00000000CEB0.07C" />
   <method name="Add To Existing Throttle" key="00000000CEB1.07C" />
-  <method name="Direction And Magnitude" key="00000000CEB3.07C" />
+  <method name="Direction and Magnitude" key="00000000CEB3.07C" />
   <method name="Ayutthaya" key="00000000676E.07C" />
   <method name="Black Forest" key="0000000059C3.07C" />
+  <method name="Black Forest (Winter)" key="0000000070F4.07C" />
   <method name="Blizzard World" key="000000006905.07C" />
+  <method name="Blizzard World (Winter)" key="00000000A933.07C" />
   <method name="Busan" key="000000006D90.07C" />
-  <method name="Busan Stadium" key="000000008A19.07C" />
+  <method name="Busan Downtown (Lunar New Year)" key="00000000D2C9.07C" />
+  <method name="Busan Sanctuary (Lunar New Year)" key="00000000D2CA.07C" />
+  <method name="Busan Stadium" key="000000010DDB.07C" />
   <method name="Castillo" key="000000005C04.07C" />
   <method name="Château Guillard" key="0000000069CA.07C" />
+  <method name="Château Guillard (Halloween)" key="000000009FA4.07C" />
   <method name="Dorado" key="0000000008C1.07C" />
   <method name="Ecopoint: Antarctica" key="0000000047D3.07C" />
+  <method name="Ecopoint: Antarctica (Winter)" key="0000000075A7.07C" />
   <method name="Eichenwalde" key="0000000029AF.07C" />
+  <method name="Eichenwalde (Halloween)" key="000000006E6B.07C" />
   <method name="Estádio das Rãs" key="000000004629.07C" />
   <method name="Hanamura" key="000000000138.07C" />
+  <method name="Hanamura (Winter)" key="000000005479.07C" />
   <method name="Havana" key="00000000B457.07C" />
   <method name="Hollywood" key="00000000053D.07C" />
+  <method name="Hollywood (Halloween)" key="000000004EE3.07C" />
   <method name="Horizon Lunar Colony" key="000000004EEE.07C" />
   <method name="Ilios" key="0000000022FA.07C" />
   <method name="Ilios Lighthouse" key="000000005847.07C" />
@@ -566,87 +753,118 @@
   <method name="Junkenstein's Revenge" key="000000004AF4.07C" />
   <method name="Junkertown" key="000000005D7B.07C" />
   <method name="King's Row" key="000000000133.07C" />
+  <method name="King's Row (Winter)" key="00000000547A.07C" />
   <method name="Lijiang Control Center" key="000000005724.07C" />
+  <method name="Lijiang Control Center (Lunar New Year)" key="000000007EFB.07C" />
   <method name="Lijiang Garden" key="000000005623.07C" />
+  <method name="Lijiang Garden (Lunar New Year)" key="000000007EF9.07C" />
   <method name="Lijiang Night Market" key="000000005631.07C" />
+  <method name="Lijiang Night Market (Lunar New Year)" key="000000007EFA.07C" />
   <method name="Lijiang Tower" key="000000001D22.07C" />
+  <method name="Lijiang Tower (Lunar New Year)" key="000000005A33.07C" />
   <method name="Necropolis" key="0000000053FB.07C" />
   <method name="Nepal" key="00000000138A.07C" />
   <method name="Nepal Sanctum" key="0000000056BA.07C" />
   <method name="Nepal Shrine" key="00000000582C.07C" />
   <method name="Nepal Village" key="000000005821.07C" />
   <method name="Numbani" key="0000000002EA.07C" />
-  <method name="Oasis" key="00000000592F.07C" />
+  <method name="Oasis" key="0000000046D5.07C" />
   <method name="Oasis City Center" key="000000005905.07C" />
   <method name="Oasis Gardens" key="000000005931.07C" />
   <method name="Oasis University" key="00000000593F.07C" />
-  <method name="Paris" key="00000000B777.07C" />
+  <method name="Paris" key="00000000831E.07C" />
   <method name="Petra" key="0000000081CB.07C" />
   <method name="Rialto" key="000000006906.07C" />
   <method name="Route 66" key="0000000011D3.07C" />
-  <method name="Sydney Harbour Arena" key="0000000063D5.07C" />
+  <method name="Sydney Harbour Arena" key="000000010EA8.07C" />
   <method name="Temple of Anubis" key="00000000012E.07C" />
   <method name="Volskaya Industries" key="0000000002EB.07C" />
   <method name="Watchpoint: Gibraltar" key="0000000002E9.07C" />
+  <method name="Workshop Chamber" key="00000000FFF0.07C" />
+  <method name="Workshop Expanse" key="00000000FFF2.07C" />
+  <method name="Workshop Expanse (Night)" key="000000010C6D.07C" />
+  <method name="Workshop Island" key="00000000FFF1.07C" />
+  <method name="Workshop Island (Night)" key="000000010C71.07C" />
   <method name="Assault" key="000000005836.07C" />
   <method name="Capture The Flag" key="00000000594C.07C" />
-  <method name="Control" key="000000005839.07C" />
-  <method name="Deathmatch" key="00000000EC0D.07C" />
-  <method name="Elimination" key="00000000594D.07C" />
-  <method name="Escort" key="00000000CE2B.07C" />
+  <method name="Control" key="00000000CD5B.07C" />
+  <method name="Deathmatch" key="000000006855.07C" />
+  <method name="Elimination" key="000000006600.07C" />
+  <method name="Escort" key="00000000CD5C.07C" />
   <method name="Hybrid" key="000000005837.07C" />
   <method name="Lúcioball" key="000000004989.07C" />
-  <method name="Mei's Snowball Offensive" key="00000000525A.07C" />
+  <method name="Mei's Snowball Offensive" key="0000000075C8.07C" />
   <method name="Practice Range" key="00000000EC7D.07C" />
   <method name="Skirmish" key="00000000EC72.07C" />
   <method name="Team Deathmatch" key="0000000093E2.07C" />
-  <method name="Yeti Hunter" key="00000000759C.07C" />
-  <method name="Black Forest (Winter)" key="0000000070F4.07C" />
-  <method name="Blizzard World (Winter)" key="00000000A933.07C" />
-  <method name="Busan Downtown (Lunar New Year)" key="00000000D2C9.07C" />
-  <method name="Busan Sanctuary (Lunar New Year)" key="00000000D2CA.07C" />
-  <method name="Château Guillard (Halloween)" key="000000009FA4.07C" />
-  <method name="Ecopoint: Antarctica (Winter)" key="0000000075A7.07C" />
-  <method name="Eichenwalde (Halloween)" key="000000006E6B.07C" />
-  <method name="Hanamura (Winter)" key="000000005479.07C" />
-  <method name="Hollywood (Halloween)" key="000000004EE3.07C" />
-  <method name="King's Row (Winter)" key="00000000547A.07C" />
-  <method name="Lijiang Control Center (Lunar New Year)" key="000000007EFB.07C" />
-  <method name="Lijiang Garden (Lunar New Year)" key="000000007EF9.07C" />
-  <method name="Lijiang Night Market (Lunar New Year)" key="000000007EFA.07C" />
-  <method name="Lijiang Tower (Lunar New Year)" key="000000005A33.07C" />
-  <method name="Vector" key="00000000B0F1.07C" />
-  <method name="All" key="000000007804.07C" />
-  <method name="subroutines" key="00000000FFFA.07C" />
-  <method name="Call Subroutine" key="00000001001E.07C" />
-  <method name="Start Rule" key="000000010022.07C" />
-  <method name="Destroy Icon" key="00000000B4E7.07C" />
-  <method name="Disable Inspector Recording" key="00000000FB2F.07C" />
-  <method name="Enable Inspector Recording" key="00000000FB2E.07C" />
-  <method name="End" key="00000000FB37.07C" />
-  <method name="For Global Variable" key="00000000FEE2.07C" />
-  <method name="For Player Variable" key="00000000FEE1.07C" />
-  <method name="If" key="00000000FB32.07C" />
-  <method name="Else If" key="00000000FB33.07C" />
-  <method name="Else" key="00000000FB34.07C" />
-  <method name="Start Healing Modification" key="00000000FD40.07C" />
-  <method name="Stop Healing Modification" key="00000000FD37.07C" />
-  <method name="While" key="00000000FB35.07C" />
-  <method name="Event Was Health Pack" key="00000000FC80.07C" />
-  <method name="Last Healing Modification ID" key="00000000FD2A.07C" />
-  <method name="Subroutine" key="00000001001F.07C" />
-  <method name="Melee" key="00000000FC8D.07C" />
-  <method name="Reload" key="00000000FC8E.07C" />
-  <method name="Visible To, Sort Order, and String" key="00000000FCA5.07C" />
-  <method name="Sort Order And String" key="00000000FCA6.07C" />
-  <method name="Receivers, Healers, and Healing Percent" key="00000000FD27.07C" />
-  <method name="Receivers And Healers" key="00000000FD26.07C" />
-  <method name="Restart Rule" key="000000010025.07C" />
-  <method name="Do Nothing" key="000000010026.07C" />
+  <method name="Yeti Hunter" key="000000006DF3.07C" />
+  <method name="Snowball Deathmatch" key="00000000EC7B.07C" />
+  <method name="Freezethaw Elimination" key="0000000122DF.07C" />
+  <method name="Armor" key="000000011427.07C" />
+  <method name="Shields" key="000000011428.07C" />
+  <method name="Default" key="000000006610.07C" />
+  <method name="Occluded" key="00000000F044.07C" />
+  <method name="Always" key="000000004AE3.07C" />
+  <method name="Assisters And Targets" key="000000012206.07C" />
+  <method name="Visible To, Values, And Color" key="0000000122EE.07C" />
+  <method name="Visible To And Values" key="0000000122EF.07C" />
+  <method name="Values And Color" key="0000000122F0.07C" />
+  <method name="Values" key="0000000122F1.07C" />
+  <method name="All Damage Dealt" key="0000000124B7.07C" />
+  <method name="Barrier Damage Dealt" key="0000000124B8.07C" />
+  <method name="Damage Blocked" key="000000001514.07C" />
+  <method name="Damage Taken" key="000000001299.07C" />
+  <method name="Deaths" key="0000000110E2.07C" />
+  <method name="Defensive Assists" key="00000001110D.07C" />
+  <method name="Eliminations" key="00000000446F.07C" />
+  <method name="Final Blows" key="000000004470.07C" />
+  <method name="Environmental Deaths" key="0000000124D8.07C" />
+  <method name="Environmental Kills" key="000000011111.07C" />
+  <method name="Hero Damage Dealt" key="0000000124D5.07C" />
+  <method name="Healing Dealt" key="0000000058A3.07C" />
+  <method name="Multikill Best" key="0000000124CD.07C" />
+  <method name="Multikills" key="000000011114.07C" />
+  <method name="Objective Kills" key="000000004471.07C" />
+  <method name="Offensive Assists" key="00000001110F.07C" />
+  <method name="Solo Kills" key="000000004475.07C" />
+  <method name="Ultimates Earned" key="0000000124C1.07C" />
+  <method name="Ultimates Used" key="0000000124BF.07C" />
+  <method name="Weapon Accuracy" key="000000000091.07C" />
+  <method name="Critical Hit Accuracy" key="0000000043B1.07C" />
+  <method name="Critical Hits" key="00000001112B.07C" />
+  <method name="Healing Received" key="0000000058A4.07C" />
+  <method name="Scoped Accuracy" key="000000001505.07C" />
+  <method name="Scoped Critical Hit Accuracy" key="000000008B98.07C" />
+  <method name="Scoped Critical Hit Kills" key="0000000124F8.07C" />
+  <method name="Scoped Critical Hits" key="000000011131.07C" />
+  <method name="Scoped Hits" key="0000000124FA.07C" />
+  <method name="Scoped Shots" key="0000000124FB.07C" />
+  <method name="Self Healing" key="0000000043B9.07C" />
+  <method name="Shots Fired" key="0000000124FD.07C" />
+  <method name="Shots Hit" key="0000000124FE.07C" />
+  <method name="Shots Missed" key="0000000124FF.07C" />
   <method name="settings" key="000000010030.07C" />
   <method name="lobby" key="000000010031.07C" />
   <method name="modes" key="000000010044.07C" />
-  <method name="heroes" key="000000010046.07C" />
+  <method name="heroes" key="0000000058DB.07C" />
+  <method name="General" key="000000002A18.07C" />
+  <method name="Team 1" key="000000007179.07C" />
+  <method name="Team 2" key="00000000B471.07C" />
+  <method name="enabled maps" key="000000010045.07C" />
+  <method name="disabled maps" key="000000010041.07C" />
+  <method name="enabled heroes" key="000000010053.07C" />
+  <method name="disabled heroes" key="000000010052.07C" />
+  <method name="Enabled" key="0000000058B2.07C" />
+  <method name="On" key="00000000C5DC.07C" />
+  <method name="main" key="00000001006E.07C" />
+  <method name="Description" key="00000000B94E.07C" />
+  <method name="%1$s Cooldown Time" key="000000005B84.07C" />
+  <method name="%1$s Recharge Rate" key="000000005B3F.07C" />
+  <method name="%1$s Maximum Time" key="000000005B45.07C" />
+  <method name="Ultimate Ability (%1$s)" key="000000005B85.07C" />
+  <method name="Ultimate Generation (%1$s)" key="000000005B86.07C" />
+  <method name="Ultimate Generation - Combat (%1$s)" key="00000000765D.07C" />
+  <method name="Ultimate Generation - Passive (%1$s)" key="00000000765E.07C" />
   <method name="Quick Melee" key="000000005B4C.07C" />
   <method name="Spawn With Ultimate Ready" key="00000000765F.07C" />
   <method name="Damage Dealt" key="0000000058A1.07C" />
@@ -654,6 +872,7 @@
   <method name="Jump Vertical Speed" key="00000000631A.07C" />
   <method name="Movement Gravity" key="0000000058C0.07C" />
   <method name="Movement Speed" key="0000000058A6.07C" />
+  <method name="Receive Headshots Only" key="0000000058A5.07C" />
   <method name="Ammunition Clip Size Scalar" key="000000005ECC.07C" />
   <method name="No Ammunition Requirement" key="000000005ECD.07C" />
   <method name="Ultimate Ability" key="0000000058A9.07C" />
@@ -664,82 +883,51 @@
   <method name="Infinite Ultimate Duration" key="000000007672.07C" />
   <method name="Projectile Speed" key="0000000058A7.07C" />
   <method name="Projectile Gravity" key="0000000058C1.07C" />
-  <method name="Healing Dealt" key="0000000058A3.07C" />
+  <method name="Ability Cooldown Time" key="0000000058A0.07C" />
+  <method name="Nano Boost" key="0000000046BA.07C" />
   <method name="No Automatic Fire" key="0000000060EB.07C" />
   <method name="No Scope" key="0000000060F8.07C" />
   <method name="Biotic Grenade" key="0000000046B2.07C" />
   <method name="Sleep Dart" key="0000000046AE.07C" />
+  <method name="B.O.B." key="000000008A5B.07C" />
   <method name="Coach Gun" key="000000008A5C.07C" />
   <method name="Coach Gun Knockback Scalar (Enemy)" key="00000000A2E7.07C" />
   <method name="Coach Gun Knockback Scalar (Self)" key="00000000A2E5.07C" />
   <method name="Dynamite" key="000000008A5D.07C" />
   <method name="Dynamite Fuse Time Scalar" key="00000000A2E6.07C" />
+  <method name="Amplification Matrix" key="00000000A44C.07C" />
   <method name="Immortality Field" key="00000000A3FF.07C" />
   <method name="Regenerative Burst" key="00000000A7AB.07C" />
+  <method name="Configuration: Tank" key="0000000003C1.07C" />
   <method name="Reconfigure" key="0000000003C3.07C" />
   <method name="Self-Repair" key="0000000003C5.07C" />
+  <method name="Rally" key="0000000076C6.07C" />
+  <method name="Barrier Shield" key="00000000802E.07C" />
   <method name="Repair Pack" key="0000000076C2.07C" />
   <method name="Shield Bash" key="000000008030.07C" />
-  <method name="Shield Bash Cooldown Time" key="00000000819C.07C" />
   <method name="Shield Bash Knockback Scalar" key="00000000819F.07C" />
   <method name="Whip Shot" key="0000000076BE.07C" />
   <method name="Whip Shot Knockback Scalar" key="0000000081A0.07C" />
+  <method name="Self-Destruct" key="000000001708.07C" />
   <method name="Micro Missiles" key="000000006E30.07C" />
   <method name="Boosters" key="000000001704.07C" />
   <method name="Boosters Knockback Scalar" key="000000006333.07C" />
   <method name="Defense Matrix" key="000000001706.07C" />
-  <method name="Enemy Health Bars" key="000000005888.07C" />
-  <method name="Game Mode Start" key="000000005A10.07C" />
-  <method name="All Slots Filled" key="000000005A11.07C" />
-  <method name="Immediately" key="000000005A12.07C" />
-  <method name="Manual" key="000000005A13.07C" />
-  <method name="Health Pack Respawn Time Scalar" key="000000005889.07C" />
-  <method name="Kill Cam" key="00000000596B.07C" />
-  <method name="Kill Feed" key="00000000588B.07C" />
-  <method name="Skins" key="00000000588C.07C" />
-  <method name="Spawn Health Packs" key="00000000588A.07C" />
-  <method name="Determined By Mode" key="0000000059FC.07C" />
-  <method name="Enabled" key="00000000EC7F.07C" />
-  <method name="Allow Hero Switching" key="00000000588D.07C" />
-  <method name="Hero Limit" key="000000005890.07C" />
-  <method name="1 Per Team" key="000000005892.07C" />
-  <method name="2 Per Team" key="000000005894.07C" />
-  <method name="1 Per Game" key="000000005893.07C" />
-  <method name="2 Per Game" key="000000005895.07C" />
-  <method name="Limit Roles" key="00000000596D.07C" />
-  <method name="2 Of Each Role Per Team" key="000000002C63.07C" />
-  <method name="Respawn As Random Hero" key="00000000588F.07C" />
-  <method name="Respawn Time Scalar" key="0000000058A8.07C" />
-  <method name="Competitive Rules" key="000000005897.07C" />
-  <method name="Capture Speed Modifier" key="000000005898.07C" />
-  <method name="Limit Valid Control Points" key="0000000058ED.07C" />
-  <method name="First" key="000000004371.07C" />
-  <method name="Second" key="000000005038.07C" />
-  <method name="Third" key="000000005039.07C" />
-  <method name="Score To Win" key="00000000589A.07C" />
-  <method name="Scoring Speed Modifier" key="000000005899.07C" />
-  <method name="Payload Speed Modifier" key="00000000589F.07C" />
-  <method name="%1$s Cooldown Time" key="000000005B84.07C" />
-  <method name="Ultimate Ability (%1$s)" key="000000005B85.07C" />
-  <method name="Ultimate Generation (%1$s)" key="000000005B86.07C" />
-  <method name="Ultimate Generation - Combat (%1$s)" key="00000000765D.07C" />
-  <method name="Ultimate Generation - Passive (%1$s)" key="00000000765E.07C" />
-  <method name="Healing Received" key="0000000058A4.07C" />
-  <method name="Receive Headshots Only" key="0000000058A5.07C" />
-  <method name="Nano Boost" key="0000000046BA.07C" />
-  <method name="B.O.B." key="000000008A5B.07C" />
-  <method name="Amplification Matrix" key="00000000A44C.07C" />
-  <method name="Configuration: Tank" key="0000000003C1.07C" />
-  <method name="Rally" key="00000000818A.07C" />
-  <method name="Self-Destruct" key="000000001708.07C" />
+  <method name="Call Mech Knockback Scalar" key="0000000065A5.07C" />
+  <method name="Spawn Without Mech" key="0000000072AF.07C" />
   <method name="Meteor Strike" key="0000000056D3.07C" />
   <method name="Meteor Strike Knockback Scalar" key="000000006667.07C" />
   <method name="Rising Uppercut" key="0000000056D0.07C" />
   <method name="Rising Uppercut Knockback Scalar" key="000000006664.07C" />
   <method name="Rocket Punch" key="0000000056D5.07C" />
   <method name="Rocket Punch Knockback Scalar" key="000000006666.07C" />
-  <method name="Seismic Slam" key="000000005B4A.07C" />
+  <method name="Seismic Slam" key="00000000AA54.07C" />
   <method name="Ammunition Regeneration Time Scalar" key="00000000665B.07C" />
+  <method name="Duplicate" key="000000010956.07C" />
+  <method name="Flight" key="00000000266E.07C" />
+  <method name="Focusing Beam" key="00000000C7FA.07C" />
+  <method name="Glide" key="00000000C1E6.07C" />
+  <method name="Sticky Bombs" key="00000000A91F.07C" />
   <method name="Dragonblade" key="00000000178F.07C" />
   <method name="Deflect" key="000000001791.07C" />
   <method name="Swift Strike" key="000000001793.07C" />
@@ -747,7 +935,7 @@
   <method name="Lunge" key="0000000088D4.07C" />
   <method name="Lunge Distance Scalar" key="0000000088D3.07C" />
   <method name="Sonic Arrow" key="0000000003A4.07C" />
-  <method name="Storm Arrow" key="00000000B97A.07C" />
+  <method name="Storm Arrows" key="000000008189.07C" />
   <method name="Storm Arrows Quantity" key="000000008900.07C" />
   <method name="Rip-Tire" key="0000000001B4.07C" />
   <method name="Concussion Mine" key="000000001495.07C" />
@@ -762,47 +950,6 @@
   <method name="Deadeye" key="0000000004A2.07C" />
   <method name="Combat Roll" key="00000000049E.07C" />
   <method name="Flashbang" key="0000000004A0.07C" />
-  <method name="Blitz Flag Locations" key="00000000F405.07C" />
-  <method name="Damage Interrupts Flag Interaction" key="0000000059B9.07C" />
-  <method name="Flag Carrier Abilities" key="0000000059BF.07C" />
-  <method name="Restricted" key="0000000059C0.07C" />
-  <method name="Flag Dropped Lock Time" key="000000008017.07C" />
-  <method name="Flag Pickup Time" key="0000000059AD.07C" />
-  <method name="Flag Return Time" key="0000000059AA.07C" />
-  <method name="Flag Score Respawn Time" key="000000008015.07C" />
-  <method name="Game Length (Minutes)" key="0000000059D9.07C" />
-  <method name="Respawn Speed Buff Duration" key="00000000F408.07C" />
-  <method name="Team Needs Flag At Base To Score" key="0000000058B0.07C" />
-  <method name="Game Length In Minutes" key="00000000617D.07C" />
-  <method name="Self Initiated Respawn" key="000000006884.07C" />
-  <method name="Hero Selection Time" key="000000005A97.07C" />
-  <method name="Restrict Previously Used Heroes" key="000000005FE6.07C" />
-  <method name="After Round Won" key="000000005FE8.07C" />
-  <method name="After Round Played" key="000000005FE9.07C" />
-  <method name="Hero Selection" key="00000000589B.07C" />
-  <method name="Any" key="00000000589C.07C" />
-  <method name="Limited" key="000000005FE5.07C" />
-  <method name="Random" key="00000000589D.07C" />
-  <method name="Random (Mirrored)" key="00000000589E.07C" />
-  <method name="Limited Choice Pool" key="000000006145.07C" />
-  <method name="Team Size +2" key="000000006148.07C" />
-  <method name="Team Size" key="000000006146.07C" />
-  <method name="Team Size +1" key="000000006147.07C" />
-  <method name="Team Size +3" key="000000006149.07C" />
-  <method name="Capture Objective Tiebreaker" key="000000005FC9.07C" />
-  <method name="Tiebreaker After Match Time Elapsed" key="00000000615D.07C" />
-  <method name="Time To Capture" key="00000000619C.07C" />
-  <method name="Draw After Match Time Elapsed With No Tiebreaker" key="00000000615C.07C" />
-  <method name="Reveal Heroes" key="000000005FC8.07C" />
-  <method name="Reveal Heroes After Match Time Elapsed" key="00000000615B.07C" />
-  <method name="Mercy Resurrect Counteracts Kills" key="00000000688A.07C" />
-  <method name="Imbalanced Team Score To Win" key="000000006D65.07C" />
-  <method name="Team 1 Score To Win" key="000000006D66.07C" />
-  <method name="Team 2 Score To Win" key="000000006D67.07C" />
-  <method name="Spawn Training Bots" key="00000000EC7E.07C" />
-  <method name="Training Bot Respawn Time Scalar" key="00000000F0CC.07C" />
-  <method name="%1$s Recharge Rate" key="000000005B3F.07C" />
-  <method name="%1$s Maximum Time" key="000000005B45.07C" />
   <method name="Blizzard" key="000000001789.07C" />
   <method name="Cryo-Freeze" key="00000000178B.07C" />
   <method name="Ice Wall" key="00000000178D.07C" />
@@ -839,10 +986,10 @@
   <method name="Jump Jet Acceleration Scalar" key="00000000631B.07C" />
   <method name="Rocket Launcher Knockback Scalar" key="000000006341.07C" />
   <method name="Death Blossom" key="0000000003B7.07C" />
-  <method name="Shadow Step" key="0000000003BF.07C" />
+  <method name="Shadow Step" key="000000002804.07C" />
   <method name="Wraith Form" key="0000000003BB.07C" />
   <method name="Earthshatter" key="0000000003E6.07C" />
-  <method name="Barrier Field" key="0000000003EC.07C" />
+  <method name="Barrier Field" key="000000000358.07C" />
   <method name="Charge" key="0000000003E8.07C" />
   <method name="Charge Knockback Scalar" key="000000006371.07C" />
   <method name="Fire Strike" key="0000000003EA.07C" />
@@ -862,17 +1009,18 @@
   <method name="Helix Rockets Knockback Scalar" key="000000006362.07C" />
   <method name="Sprint" key="000000000C85.07C" />
   <method name="EMP" key="00000000470C.07C" />
-  <method name="Hack" key="000000004711.07C" />
-  <method name="Stealth" key="000000007FFC.07C" />
+  <method name="Hack" key="00000000C0EA.07C" />
+  <method name="Stealth" key="000000004712.07C" />
   <method name="Translocator" key="000000004700.07C" />
   <method name="Photon Barrier" key="000000005462.07C" />
   <method name="Sentry Turret" key="00000000018D.07C" />
   <method name="Teleporter" key="000000000404.07C" />
   <method name="Molten Core" key="0000000003CB.07C" />
   <method name="Deploy Turret" key="000000009295.07C" />
-  <method name="Overload" key="000000009297.07C" />
+  <method name="Overload" key="000000002707.07C" />
   <method name="Overload Duration Scalar" key="00000000A43D.07C" />
   <method name="Rivet Gun Only" key="000000006025.07C" />
+  <method name="Forge Hammer Only" key="000000006026.07C" />
   <method name="Pulse Bomb" key="000000000398.07C" />
   <method name="Blink" key="000000000393.07C" />
   <method name="Recall" key="000000000396.07C" />
@@ -880,39 +1028,122 @@
   <method name="Grappling Hook" key="0000000003E0.07C" />
   <method name="Venom Mine" key="00000000018A.07C" />
   <method name="Primal Rage" key="0000000003F0.07C" />
-  <method name="Barrier Projector" key="0000000003F4.07C" />
+  <method name="Primal Rage Melee Knockback Scalar" key="00000000633F.07C" />
+  <method name="Barrier Projector" key="000000000357.07C" />
   <method name="Jump Pack" key="0000000003F2.07C" />
   <method name="Jump Pack Knockback Scalar" key="000000006373.07C" />
   <method name="Jump Pack Acceleration Scalar" key="00000000631D.07C" />
-  <method name="Minefield" key="00000000866F.07C" />
+  <method name="Minefield" key="00000000261F.07C" />
   <method name="Minefield Knockback Scalar" key="00000000928B.07C" />
   <method name="Adaptive Shield" key="000000008B75.07C" />
   <method name="Grappling Claw" key="0000000082A6.07C" />
   <method name="Grappling Claw Knockback Scalar" key="000000009288.07C" />
   <method name="Piledriver" key="000000007547.07C" />
-  <method name="Roll" key="0000000072E4.07C" />
+  <method name="Roll" key="000000006965.07C" />
   <method name="Roll Always Active" key="00000000928D.07C" />
   <method name="Graviton Surge" key="000000000496.07C" />
-  <method name="Particle Barrier" key="00000000036B.07C" />
+  <method name="Particle Barrier" key="000000000492.07C" />
   <method name="Projected Barrier" key="000000000494.07C" />
   <method name="Particle Cannon Secondary Knockback Scalar" key="000000006340.07C" />
   <method name="Transcendence" key="0000000003F9.07C" />
   <method name="Orb Of Harmony" key="0000000003FC.07C" />
   <method name="Orb Of Discord" key="0000000003FE.07C" />
-  <method name="Forge Hammer Only" key="000000006026.07C" />
-  <method name="Primal Rage Melee Knockback Scalar" key="00000000633F.07C" />
-  <method name="General" key="0000000059A7.07C" />
-  <method name="Team 1" key="000000009AB9.07C" />
-  <method name="Team 2" key="000000009ABA.07C" />
-  <method name="enabled maps" key="000000010045.07C" />
-  <method name="disabled maps" key="000000010041.07C" />
-  <method name="enabled heroes" key="000000010053.07C" />
-  <method name="disabled heroes" key="000000010052.07C" />
-  <method name="All Tank Heroes" key="00000000D40C.07C" />
-  <method name="All Damage Heroes" key="00000000D40A.07C" />
-  <method name="All Support Heroes" key="00000000D40B.07C" />
-  <method name="On" key="0000000059BC.07C" />
-  <method name="Yes" key="00000000731F.07C" />
-  <method name="Call Mech Knockback Scalar" key="0000000065A5.07C" />
-  <method name="Spawn Without Mech" key="0000000072AF.07C" />
+  <method name="Enemy Health Bars" key="000000005888.07C" />
+  <method name="Game Mode Start" key="000000005A10.07C" />
+  <method name="All Slots Filled" key="000000005A11.07C" />
+  <method name="Immediately" key="000000005A12.07C" />
+  <method name="Manual" key="000000005A13.07C" />
+  <method name="Health Pack Respawn Time Scalar" key="000000005889.07C" />
+  <method name="Kill Cam" key="00000000596B.07C" />
+  <method name="Kill Feed" key="00000000588B.07C" />
+  <method name="Skins" key="000000009241.07C" />
+  <method name="Spawn Health Packs" key="00000000588A.07C" />
+  <method name="Determined By Mode" key="0000000059FC.07C" />
+  <method name="Allow Hero Switching" key="00000000588D.07C" />
+  <method name="Hero Limit" key="000000005890.07C" />
+  <method name="1 Per Team" key="000000005892.07C" />
+  <method name="2 Per Team" key="000000005894.07C" />
+  <method name="1 Per Game" key="000000005893.07C" />
+  <method name="2 Per Game" key="000000005895.07C" />
+  <method name="Limit Roles" key="00000000596D.07C" />
+  <method name="2 Of Each Role Per Team" key="000000002C63.07C" />
+  <method name="Respawn As Random Hero" key="00000000588F.07C" />
+  <method name="Respawn Time Scalar" key="0000000058A8.07C" />
+  <method name="Competitive Rules" key="000000005897.07C" />
+  <method name="Capture Speed Modifier" key="000000005898.07C" />
+  <method name="Limit Valid Control Points" key="0000000058ED.07C" />
+  <method name="First" key="0000000058EF.07C" />
+  <method name="Second" key="000000005038.07C" />
+  <method name="Third" key="000000005039.07C" />
+  <method name="Score To Win" key="00000000589A.07C" />
+  <method name="Scoring Speed Modifier" key="000000005899.07C" />
+  <method name="Payload Speed Modifier" key="00000000589F.07C" />
+  <method name="Blitz Flag Locations" key="00000000F405.07C" />
+  <method name="Damage Interrupts Flag Interaction" key="0000000059B9.07C" />
+  <method name="Flag Carrier Abilities" key="0000000059BF.07C" />
+  <method name="Restricted" key="0000000059C0.07C" />
+  <method name="Flag Dropped Lock Time" key="000000008017.07C" />
+  <method name="Flag Pickup Time" key="0000000059AD.07C" />
+  <method name="Flag Return Time" key="0000000059AA.07C" />
+  <method name="Flag Score Respawn Time" key="000000008015.07C" />
+  <method name="Game Length (Minutes)" key="0000000059D9.07C" />
+  <method name="Respawn Speed Buff Duration" key="00000000F408.07C" />
+  <method name="Team Needs Flag At Base To Score" key="0000000058B0.07C" />
+  <method name="Game Length In Minutes" key="00000000617D.07C" />
+  <method name="Self Initiated Respawn" key="000000006884.07C" />
+  <method name="Hero Selection Time" key="000000005A97.07C" />
+  <method name="Restrict Previously Used Heroes" key="000000005FE6.07C" />
+  <method name="After Round Won" key="000000005FE8.07C" />
+  <method name="After Round Played" key="000000005FE9.07C" />
+  <method name="Hero Selection" key="00000000589B.07C" />
+  <method name="Any" key="00000000589C.07C" />
+  <method name="Limited" key="00000000C13A.07C" />
+  <method name="Random" key="00000000589D.07C" />
+  <method name="Random (Mirrored)" key="00000000589E.07C" />
+  <method name="Limited Choice Pool" key="000000006145.07C" />
+  <method name="Team Size +2" key="000000006148.07C" />
+  <method name="Team Size" key="000000006146.07C" />
+  <method name="Team Size +1" key="000000006147.07C" />
+  <method name="Team Size +3" key="000000006149.07C" />
+  <method name="Capture Objective Tiebreaker" key="000000005FC9.07C" />
+  <method name="Tiebreaker After Match Time Elapsed" key="00000000615D.07C" />
+  <method name="Time To Capture" key="00000000619C.07C" />
+  <method name="Draw After Match Time Elapsed With No Tiebreaker" key="00000000615C.07C" />
+  <method name="Reveal Heroes" key="000000005FC8.07C" />
+  <method name="Reveal Heroes After Match Time Elapsed" key="00000000615B.07C" />
+  <method name="Mercy Resurrect Counteracts Kills" key="00000000688A.07C" />
+  <method name="Imbalanced Team Score To Win" key="000000006D65.07C" />
+  <method name="Team 1 Score To Win" key="000000006D66.07C" />
+  <method name="Team 2 Score To Win" key="000000006D67.07C" />
+  <method name="Spawn Training Bots" key="00000000EC7E.07C" />
+  <method name="Training Bot Respawn Time Scalar" key="00000000F0CC.07C" />
+  <method name="Both" key="000000007804.07C" />
+  <method name="Allow Players Who Are In Queue" key="00000000F25B.07C" />
+  <method name="Match Voice Chat" key="000000006A04.07C" />
+  <method name="Max Spectators" key="000000005A92.07C"/>
+  <method name="Max FFA Players" key="000000006ABB.07C"/>
+  <method name="Map Rotation" key="000000004122.07C"/>
+  <method name="After A Mirror Match" key="000000004123.07C"/>
+  <method name="After A Game" key="000000004124.07C"/>
+  <method name="Paused" key="000000004125.07C"/>
+  <method name="Return To Lobby" key="000000002C4C.07C"/>
+  <method name="Never" key="000000002C5A.07C"/>
+  <method name="Team Balancing" key="000000002C45.07C"/>
+  <method name="Swap Teams After Match" key="00000000705F.07C"/>
+  <method name="Use Experimental Update If Available" key="0000000102F5.07C"/>
+  <method name="Pause Game On Player Disconnect" key="000000007110.07C"/>
+  <method name="Data Center Preference" key="00000000AAD8.07C"/>
+  <method name="Best Available" key="00000000AA5A.07C"/>
+  <method name="USA - Central" key="00000000AA75.07C"/>
+  <method name="Brazil" key="000000004953.07C"/>
+  <method name="Singapore" key="00000000AA68.07C"/>
+  <method name="USA - West" key="00000000AA63.07C"/>
+  <method name="Australia 3" key="00000000AA65.07C"/>
+  <method name="Max Team 1 Players" key="000000005A91.07C"/>
+  <method name="Max Team 2 Players" key="000000005A91.07C"/>
+  <method name="Pause Game On Player Disconnect" key="000000007110.07C"/>
+  <method name="Disabled" key="0000000122CA.07C" />
+  <method name="Enabled" key="0000000122C9.07C" />
+  <method name="TeamDeathmatch" key="000000006854.07C" />
+  <method name="workshop" key="0000000113B7.07C"/>
 </KeyLinkList>

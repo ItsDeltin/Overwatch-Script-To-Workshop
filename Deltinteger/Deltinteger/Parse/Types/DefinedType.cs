@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly ParseInfo _parseInfo;
         private readonly ClassContext _typeContext;
-        private readonly List<Var> staticVariables = new List<Var>();
+        private readonly List<Var> _staticVariables = new List<Var>();
 
         public DefinedType(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", typeContext.Identifier.Range);
-            
+
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, typeContext.Identifier.GetRange(typeContext.Range));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
         }
@@ -68,7 +68,10 @@ namespace Deltin.Deltinteger.Parse
                     scopeable = _parseInfo.GetMacro(operationalScope, staticScope, macroFunction);
                 // Variable
                 else if (declaration is VariableDeclaration variable)
+                {
                     scopeable = new ClassVariable(operationalScope, staticScope, new DefineContextHandler(_parseInfo, variable)).GetVar();
+                    if (scopeable.Static) _staticVariables.Add((Var)scopeable);
+                }
                 // Macro variable
                 else if (declaration is MacroVarDeclaration macroVar)
                     scopeable = _parseInfo.GetMacro(operationalScope, staticScope, macroVar);
@@ -78,7 +81,7 @@ namespace Deltin.Deltinteger.Parse
                 // Add the object variable if it is an IIndexReferencer.
                 if (scopeable is IIndexReferencer referencer)
                     AddObjectVariable(referencer);
-                
+
                 // Copy to scopes.
                 // Method copy
                 if (scopeable is IMethod method)
@@ -111,8 +114,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // If the extend token exists, add completion that only contains all extendable classes.
-            if (_typeContext.InheritToken != null)
+            if (_typeContext.InheritToken != null && !_parseInfo.Script.IsTokenLast(_typeContext.InheritToken))
                 _parseInfo.Script.AddCompletionRange(new CompletionRange(
+                    _parseInfo.TranslateInfo,
                     // Get the completion items of all types.
                     _parseInfo.TranslateInfo.Types.AllTypes
                         .Where(t => t is ClassType ct && ct.CanBeExtended)
@@ -141,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
             if (workshopInitialized) return;
             base.WorkshopInit(translateInfo);
 
-            foreach (Var staticVariable in staticVariables)
+            foreach (Var staticVariable in _staticVariables)
                 DefineAction.Assign(translateInfo.InitialGlobal.ActionSet, staticVariable);
         }
 
@@ -162,5 +166,5 @@ namespace Deltin.Deltinteger.Parse
         {
             _parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, location);
         }
-    }    
+    }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler.Parse;
 
 namespace Deltin.Deltinteger.Compiler.Parse
@@ -14,27 +15,29 @@ namespace Deltin.Deltinteger.Compiler.Parse
         // Compare
         public static CompilerOperator Ternary { get; } = new CompilerOperator(2, "?", TokenType.QuestionMark, OperatorType.TernaryLeft);
         public static CompilerOperator RhsTernary { get; } = new CompilerOperator(3, ":", TokenType.Colon, OperatorType.TernaryRight);
+
+        public static CompilerOperator Or { get; } = new CompilerOperator(4, "||", TokenType.Or);
+        public static CompilerOperator And { get; } = new CompilerOperator(5, "&&", TokenType.And);
+
         public static CompilerOperator Equal { get; } = new CompilerOperator(6, "==", TokenType.EqualEqual);
-        public static CompilerOperator NotEqual { get; } = new CompilerOperator(7, "!=", TokenType.NotEqual);
-        public static CompilerOperator GreaterThan { get; } = new CompilerOperator(8, ">", TokenType.GreaterThan);
-        public static CompilerOperator LessThan { get; } = new CompilerOperator(9, "<", TokenType.LessThan);
-        public static CompilerOperator GreaterThanOrEqual { get; } = new CompilerOperator(10, ">=", TokenType.GreaterThanOrEqual);
-        public static CompilerOperator LessThanOrEqual { get; } = new CompilerOperator(11, "<=", TokenType.LessThanOrEqual);
+        public static CompilerOperator NotEqual { get; } = new CompilerOperator(6, "!=", TokenType.NotEqual);
+        public static CompilerOperator GreaterThan { get; } = new CompilerOperator(7, ">", TokenType.GreaterThan);
+        public static CompilerOperator LessThan { get; } = new CompilerOperator(7, "<", TokenType.LessThan);
+        public static CompilerOperator GreaterThanOrEqual { get; } = new CompilerOperator(7, ">=", TokenType.GreaterThanOrEqual);
+        public static CompilerOperator LessThanOrEqual { get; } = new CompilerOperator(7, "<=", TokenType.LessThanOrEqual);
         // Boolean
-        public static CompilerOperator And { get; } = new CompilerOperator(4, "&&", TokenType.And);
-        public static CompilerOperator Or { get; } = new CompilerOperator(5, "||", TokenType.Or);
         // Math
-        public static CompilerOperator Subtract { get; } = new CompilerOperator(12, "-", TokenType.Subtract);
-        public static CompilerOperator Add { get; } = new CompilerOperator(13, "+", TokenType.Add);
-        public static CompilerOperator Modulo { get; } = new CompilerOperator(14, "%", TokenType.Modulo);
-        public static CompilerOperator Divide { get; } = new CompilerOperator(15, "/", TokenType.Divide);
-        public static CompilerOperator Multiply { get; } = new CompilerOperator(16, "*", TokenType.Multiply);
-        public static CompilerOperator Power { get; } = new CompilerOperator(17, "^", TokenType.Hat);
+        public static CompilerOperator Subtract { get; } = new CompilerOperator(8, "-", TokenType.Subtract);
+        public static CompilerOperator Add { get; } = new CompilerOperator(8, "+", TokenType.Add);
+        public static CompilerOperator Modulo { get; } = new CompilerOperator(9, "%", TokenType.Modulo);
+        public static CompilerOperator Divide { get; } = new CompilerOperator(9, "/", TokenType.Divide);
+        public static CompilerOperator Multiply { get; } = new CompilerOperator(9, "*", TokenType.Multiply);
+        public static CompilerOperator Power { get; } = new CompilerOperator(10, "^", TokenType.Hat);
         // Unary
-        public static CompilerOperator Not { get; } = new CompilerOperator(18, "!", TokenType.Exclamation, OperatorType.Unary);
-        public static CompilerOperator Inv { get; } = new CompilerOperator(18, "-", TokenType.Subtract, OperatorType.Unary);
+        public static CompilerOperator Not { get; } = new CompilerOperator(11, "!", TokenType.Exclamation, OperatorType.Unary);
+        public static CompilerOperator Inv { get; } = new CompilerOperator(11, "-", TokenType.Subtract, OperatorType.Unary);
         // Dot
-        public static CompilerOperator Dot { get; } = new CompilerOperator(19, ".", TokenType.Dot) { RhsHandler = new DotRhsHandler() };
+        public static CompilerOperator Dot { get; } = new CompilerOperator(13, ".", TokenType.Dot) { RhsHandler = new DotRhsHandler() };
 
         // Lists
         public static CompilerOperator[] BinaryOperators { get; } = new CompilerOperator[] {
@@ -71,9 +74,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             if ((op1 == Ternary || op1 == RhsTernary) && (op2 == Ternary || op2 == RhsTernary))
                 return op1 == RhsTernary && op2 == RhsTernary;
-            
+
             if (op1 == Sentinel || op2 == Sentinel) return false;
-            return op1.Precedence > op2.Precedence;
+
+            return op1.Precedence >= op2.Precedence && !(op1 is CompilerOperator op1co && op1co.Type == OperatorType.Unary && op2 is CompilerOperator op2co && op2co.Type == OperatorType.Unary);
         }
     }
 
@@ -94,7 +98,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         public void Get(Parser parser)
         {
-            parser.Operands.Push(parser.GetExpressionWithArray());
+            parser.GetExpressionWithArray();
         }
     }
 
@@ -102,15 +106,27 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         public void Get(Parser parser)
         {
-            var identifier = parser.GetArrayAndInvokes(parser.Identifier());
-            parser.Operands.Push(identifier);
+            parser.Operands.Push(parser.Identifier());
+            parser.GetArrayAndInvokes();
         }
     }
 
     public class TypeCastOperator : ICompilerOperator
     {
         public static TypeCastOperator Instance { get; } = new TypeCastOperator();
-        public int Precedence => 18;
+        public int Precedence => 11;
+    }
+
+    public class ArrayOperator : ICompilerOperator
+    {
+        public static ArrayOperator Instance { get; } = new ArrayOperator();
+        public int Precedence => 12;
+    }
+
+    public class InvokeOperator : ICompilerOperator
+    {
+        public static InvokeOperator Instance { get; } = new InvokeOperator();
+        public int Precedence => 14;
     }
 }
 
@@ -118,7 +134,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 {
     public interface IOperatorInfo
     {
-        int Precedence { get; }
         ICompilerOperator Source { get; }
     }
 
@@ -143,7 +158,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class TypeCastInfo : IOperatorInfo
     {
-        public int Precedence => Source.Precedence;
         public ICompilerOperator Source => TypeCastOperator.Instance;
         public IParseType CastingTo { get; }
         public DocPos StartPosition { get; }
@@ -152,6 +166,34 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             CastingTo = castingTo;
             StartPosition = startPosition;
+        }
+    }
+
+    public class ValueInArrayInfo : IOperatorInfo
+    {
+        public ICompilerOperator Source => ArrayOperator.Instance;
+        public IParseExpression Index { get; }
+        public DocPos EndPosition { get; }
+
+        public ValueInArrayInfo(IParseExpression index, DocPos endPosition)
+        {
+            Index = index;
+            EndPosition = endPosition;
+        }
+    }
+
+    public class InvokeInfo : IOperatorInfo
+    {
+        public ICompilerOperator Source => InvokeOperator.Instance;
+        public Token LeftParentheses { get; }
+        public Token RightParentheses { get; }
+        public List<ParameterValue> Values { get; }
+
+        public InvokeInfo(Token leftParentheses, Token rightParentheses, List<ParameterValue> values)
+        {
+            LeftParentheses = leftParentheses;
+            RightParentheses = rightParentheses;
+            Values = values;
         }
     }
 
@@ -186,7 +228,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Range = op.Token.Range.Start + value.Range.End;
         }
 
-        public override string ToString() => Operator.ToString() + Value.ToString(); 
+        public override string ToString() => Operator.ToString() + Value.ToString();
     }
 
     public class TernaryExpression : Node, IParseExpression

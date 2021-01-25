@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Debugger
                     // As workshop actions
                     ConvertTextToElement tte = new ConvertTextToElement(clipboard);
                     Workshop workshop = tte.GetActionList();
-                    
+
                     if (workshop != null) // Determines if the clipboard is an action list.
                     {
                         DebuggerActionSetResult actionStream = new DebuggerActionSetResult(workshop);
@@ -116,11 +116,11 @@ namespace Deltin.Deltinteger.Debugger
                     if (setVariable.Operator != "=") Error($"Variable is not being set with '{setVariable.Operator}' rather than '='.");
                     // Error if set variable's index is not null.
                     if (setVariable.Index != null) Error("Variable is incorrectly being set at an index.");
-                    
+
                     // Get the variable.
                     string variableName = setVariable.Variable.Name;
                     StreamVariable relatedVariable = Array.Find(Variables, value => value.Name == variableName);
-                    
+
                     // Get the value.
                     var value = PartFromExpression(setVariable.Value);
                     relatedVariable.Value = value;
@@ -152,18 +152,19 @@ namespace Deltin.Deltinteger.Debugger
                     // Null
                     case "Null": return new CsvNull();
                     // Vector
-                    case "Vector": return new CsvVector(new Models.Vertex(
-                        ExtractComponent(func, 0, "X"),
-                        ExtractComponent(func, 1, "Y"),
-                        ExtractComponent(func, 2, "Z")
-                    ));
+                    case "Vector":
+                        return new CsvVector(new Models.Vertex(
+             ExtractComponent(func, 0, "X"),
+             ExtractComponent(func, 1, "Y"),
+             ExtractComponent(func, 2, "Z")
+         ));
                     // Default
                     default:
                         Error("Unsure of how to handle function '" + func.Function.Name);
                         return null;
                 }
             }
-            
+
             Error("Unsure of how to handle expression of type '" + expression.GetType().Name + "'.");
             return null;
         }

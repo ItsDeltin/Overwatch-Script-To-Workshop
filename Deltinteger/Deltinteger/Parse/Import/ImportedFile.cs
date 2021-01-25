@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public ImportedFile(Uri uri)
         {
             Uri = uri;
-            
+
             using (FileStream stream = GetStream())
             {
                 // Get the file hash and content.
@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private FileStream GetStream() => new FileStream(Uri.FilePath(), FileMode.Open, FileAccess.Read);
+        private FileStream GetStream() => new FileStream(Uri.LocalPath, FileMode.Open, FileAccess.Read);
 
         private byte[] GetFileHash(FileStream stream)
         {
@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
             using (FileStream stream = GetStream())
             {
                 byte[] newHash = GetFileHash(stream);
-            
+
                 if (!Hash.SequenceEqual(newHash))
                 {
                     Hash = newHash;
@@ -59,14 +59,15 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        protected virtual void OnUpdate() {}
+        protected virtual void OnUpdate() { }
     }
 
     public class ImportedScript : ImportedFile
     {
         public Document Document { get; }
 
-        public ImportedScript(Uri uri) : base(uri) {
+        public ImportedScript(Uri uri) : base(uri)
+        {
             Document = new Document(uri, Content);
             Document.Update(Content);
         }

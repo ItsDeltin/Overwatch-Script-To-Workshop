@@ -6,7 +6,8 @@ namespace Deltin.Deltinteger.Parse
     {
         public static void Resolve(IExpression start, Action<IExpression> callback)
         {
-            Action resolver = () => {
+            Action resolver = () =>
+            {
                 IExpression resolve = null;
 
                 // If the expression is a CallvariableAction, resolve the initial value.
@@ -22,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
                     // If the function is calling a DefinedMethod, resolve the value.
                     if (callMethod.CallingMethod is DefinedMethod definedMethod && definedMethod.SingleReturnValue != null)
                         resolve = definedMethod.SingleReturnValue;
-                    
+
                     // If the expression is a parametered macro, resolve the value.
                     else if (callMethod.CallingMethod is DefinedMacro definedMacro)
                         resolve = definedMacro.Expression;
@@ -31,17 +32,17 @@ namespace Deltin.Deltinteger.Parse
                 // If the expression is a macro variable, resolve the value.
                 else if (start is MacroVar macroVar)
                     resolve = macroVar.Expression;
-                
+
                 // If the expression is an ExpressionTree, resolve the last value.
                 else if (start is ExpressionTree expressionTree)
                     resolve = expressionTree.Result;
-                
+
                 if (resolve == null) callback.Invoke(start);
                 else Resolve(resolve, callback);
             };
 
             if (start is IBlockListener blockListener)
-                blockListener.OnBlockApply(new OnBlockApplied(() => resolver.Invoke()));
+                blockListener.OnBlockApply(new OnBlockApplied(resolver));
             else
                 resolver.Invoke();
         }

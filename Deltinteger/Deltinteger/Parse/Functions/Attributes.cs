@@ -15,13 +15,13 @@ namespace Deltin.Deltinteger.Parse
         {
             ResultAppender = resultAppender;
         }
-        
+
         public void GetAttributes(FileDiagnostics diagnostics)
         {
             // Get the name of the rule the method will be stored in.
             string subroutineName = GetSubroutineName();
             if (subroutineName != null) ResultAppender.SetSubroutine(subroutineName);
-            
+
             // context will be null if there are no attributes.
             var context = GetAttributeContext();
             if (context == null) return;
@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.Parse
             CheckAttribute(diagnostics, context.Public, MethodAttributeType.Public);
             CheckAttribute(diagnostics, context.Recursive, MethodAttributeType.Recursive);
             CheckAttribute(diagnostics, context.Ref, MethodAttributeType.Ref);
+            CheckAttribute(diagnostics, context.In, MethodAttributeType.In);
             CheckAttribute(diagnostics, context.Static, MethodAttributeType.Static);
             CheckAttribute(diagnostics, context.Virtual, MethodAttributeType.Virtual);
         }
@@ -53,10 +54,10 @@ namespace Deltin.Deltinteger.Parse
                     wasCopy = true;
                     break;
                 }
-            
+
             // Add the attribute.
             ObtainedAttributes.Add(newAttribute);
-            
+
             // Additonal syntax errors. Only throw if the attribute is not a copy.
             if (!wasCopy)
             {
@@ -75,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
                 // Virtual attribute on a static method (static attribute was first.)
                 if (ResultAppender.IsStatic() && newAttribute.Type == MethodAttributeType.Virtual)
                     diagnostics.Error("Static methods cannot be virtual.", newAttribute.Range);
-                
+
                 // Static attribute on a virtual method (virtual attribute was first.)
                 if (ResultAppender.IsVirtual() && newAttribute.Type == MethodAttributeType.Static)
                     diagnostics.Error("Virtual methods cannot be static.", newAttribute.Range);
@@ -91,16 +92,16 @@ namespace Deltin.Deltinteger.Parse
                 case MethodAttributeType.Public: ResultAppender.SetAccessLevel(AccessLevel.Public); break;
                 case MethodAttributeType.Protected: ResultAppender.SetAccessLevel(AccessLevel.Protected); break;
                 case MethodAttributeType.Private: ResultAppender.SetAccessLevel(AccessLevel.Private); break;
-                
+
                 // Apply static
                 case MethodAttributeType.Static: ResultAppender.SetStatic(); break;
-                
+
                 // Apply virtual
                 case MethodAttributeType.Virtual: ResultAppender.SetVirtual(); break;
-                
+
                 // Apply override
                 case MethodAttributeType.Override: ResultAppender.SetOverride(); break;
-                
+
                 // Apply Recursive
                 case MethodAttributeType.Recursive: ResultAppender.SetRecursive(); break;
 
@@ -145,7 +146,8 @@ namespace Deltin.Deltinteger.Parse
         Static,
         Override,
         Virtual,
-        Recursive
+        Recursive,
+        In
     }
 
     // Result Appenders
@@ -185,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
         public void SetSubroutine(string name) => SubroutineName = name;
         public void SetVariableType(bool isGlobal) => throw new NotImplementedException();
     }
-    
+
     // Attribute handler for defined methods
     class MethodAttributesGetter : FunctionAttributesGetter
     {
@@ -198,7 +200,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected override AttributeTokens GetAttributeContext() => Context.Attributes;
         protected override string GetSubroutineName() => Context.Subroutine?.Text.RemoveQuotes();
-        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref };
+        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref, MethodAttributeType.In };
     }
 
     // Attribute handler for defined macros
@@ -213,6 +215,6 @@ namespace Deltin.Deltinteger.Parse
 
         protected override AttributeTokens GetAttributeContext() => Declaration.Attributes;
         protected override string GetSubroutineName() => null;
-        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.Recursive, MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref };
+        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.Recursive, MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref, MethodAttributeType.In };
     }
 }

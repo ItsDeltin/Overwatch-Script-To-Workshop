@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using Deltin.Deltinteger;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.CustomMethods;
 using Deltin.Deltinteger.Compiler;
 using Newtonsoft.Json.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
@@ -23,7 +19,7 @@ namespace Deltin.Deltinteger.Json
         {
             objectScope.AddNativeMethod(new GetJsonPropertyFunction(this));
 
-            foreach(JProperty prop in jsonData.Children<JProperty>())
+            foreach (JProperty prop in jsonData.Children<JProperty>())
             {
                 JsonProperty newProperty = new JsonProperty(prop);
                 Properties.Add(newProperty);
@@ -43,10 +39,11 @@ namespace Deltin.Deltinteger.Json
         {
             foreach (var p in Properties)
             {
-                if(p.Value.Value != null)
+                if (p.Value.Value != null)
                 {
                     assigner.Add(p.Var, p.Value.Value);
-                } else
+                }
+                else
                 {
                     assigner.Add(p.Var, Element.Null());
                 }
@@ -80,7 +77,7 @@ namespace Deltin.Deltinteger.Json
         public JsonProperty(JProperty property)
         {
             Name = property.Name;
-            Var = new JsonVar(property.Name);
+            Var = new InternalVar(property.Name, CompletionItemKind.Property);
             Var.IsSettable = false;
             Value = IJsonValue.GetValue(property.Value);
             Var.Documentation = Value.Documentation;
@@ -125,34 +122,34 @@ namespace Deltin.Deltinteger.Json
             switch (token.Type)
             {
                 case JTokenType.String:
-                {
-                    // Get the string value.
-                    string str = token.ToObject<string>();
-                    codeDescription = "\"" + str + "\"";
-                    break;
-                }
+                    {
+                        // Get the string value.
+                        string str = token.ToObject<string>();
+                        codeDescription = "\"" + str + "\"";
+                        break;
+                    }
                 case JTokenType.Boolean:
-                {
-                    bool val = token.ToObject<bool>();
-                    codeDescription = val.ToString().ToLower();
-                    break;
-                }
-                
+                    {
+                        bool val = token.ToObject<bool>();
+                        codeDescription = val.ToString().ToLower();
+                        break;
+                    }
+
                 case JTokenType.Float:
                 case JTokenType.Integer:
-                {
-                    double val = token.ToObject<double>();
-                    codeDescription = val.ToString();
-                    break;
-                }
-                
+                    {
+                        double val = token.ToObject<double>();
+                        codeDescription = val.ToString();
+                        break;
+                    }
+
                 case JTokenType.Null:
                     codeDescription = "null";
                     break;
-                
+
                 default: throw new NotImplementedException();
             }
-            
+
             Documentation = new MarkupBuilder().StartCodeLine()
                 .Add(codeDescription)
                 .EndCodeLine()
@@ -177,7 +174,7 @@ namespace Deltin.Deltinteger.Json
             Children = new IJsonValue[array.Count];
             for (int i = 0; i < Children.Length; i++)
                 Children[i] = IJsonValue.GetValue(array[i]);
-            
+
             Value = Element.CreateArray(Children.Select(c => c.Value).ToArray());
         }
 
@@ -190,25 +187,13 @@ namespace Deltin.Deltinteger.Json
         public string Documentation { get; }
         public CodeType Type { get; }
 
-        public JsonVar Var { get; }
-
         public JsonObject(JToken token)
         {
-            Documentation =  "A JSON object.";
+            Documentation = "A JSON object.";
             Type = new JsonType((JObject)token);
         }
 
         public bool ContainsDeepArrays() => ((JsonType)Type).Properties.Any(p => p.Value.ContainsDeepArrays());
-    }
-
-    class JsonVar : InternalVar
-    {
-        public JsonVar(string name) : base(name, CompletionItemKind.Property) {}
-        public override string GetLabel(bool markdown)
-        {
-            if (!markdown) return base.GetLabel(false);
-            return Documentation;
-        }
     }
 
     class GetJsonPropertyFunction : IMethod
@@ -216,17 +201,18 @@ namespace Deltin.Deltinteger.Json
         public MethodAttributes Attributes { get; }
         public CodeParameter[] Parameters { get; }
         public string Name => "Get";
-        public CodeType CodeType => null;
+        public ICodeTypeSolver CodeType => null;
         public bool Static => false;
         public bool WholeContext => true;
-        public string Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";
+        public MarkupBuilder Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";
         public Deltin.Deltinteger.LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         private JsonType ContainingType { get; }
 
         public GetJsonPropertyFunction(JsonType containingType)
         {
-            Attributes = new MethodAttributes() {
+            Attributes = new MethodAttributes()
+            {
                 ContainingType = containingType
             };
             Parameters = new CodeParameter[] {
@@ -235,29 +221,20 @@ namespace Deltin.Deltinteger.Json
             ContainingType = containingType;
         }
 
-        public CompletionItem GetCompletion() => new CompletionItem() {
-            Label = Name,
-            Detail = GetLabel(false),
-            Kind = CompletionItemKind.Method,
-            Documentation = Documentation
-        };
-
-        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
-
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => (Element)methodCall.AdditionalParameterData[0];
 
         class GetPropertyParameter : CodeParameter
         {
             private JsonType containingType { get; }
 
-            public GetPropertyParameter(JsonType type) : base("propertyName", type:null)
+            public GetPropertyParameter(JsonType type) : base("propertyName", type: null)
             {
                 containingType = type;
             }
 
             public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
 
-            public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+            public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
             {
                 StringAction stringAction = value as StringAction;
                 if (stringAction == null)
@@ -268,13 +245,14 @@ namespace Deltin.Deltinteger.Json
 
                 List<CompletionItem> completion = new List<CompletionItem>();
                 foreach (var prop in containingType.Properties)
-                    completion.Add(new CompletionItem() {
+                    completion.Add(new CompletionItem()
+                    {
                         Label = prop.Name,
                         Detail = prop.Name,
                         Documentation = Extras.GetMarkupContent(prop.Var.Documentation),
                         Kind = CompletionItemKind.Property
                     });
-                parseInfo.Script.AddCompletionRange(new CompletionRange(completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));
+                parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));
 
                 string text = stringAction.Value;
 
@@ -282,7 +260,7 @@ namespace Deltin.Deltinteger.Json
                 foreach (var prop in containingType.Properties)
                     if (prop.Name == text)
                         return prop.Value.Value;
-                
+
                 parseInfo.Script.Diagnostics.Error($"Could not find the property '{text}'.", valueRange);
                 return null;
             }

@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected VarBuilderAttribute[] _attributes;
         protected VarInfo _varInfo;
+        protected bool _canInferType = false;
 
         public VarBuilder(IVarContextHandler contextHandler)
         {
@@ -38,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
             // Filter missing attributes.
             foreach (VarBuilderAttribute attribute in _attributes)
                 missingTypes.Remove(attribute.Type);
-            
+
             // Check missing attributes.
             MissingAttribute(missingTypes.ToArray());
 
@@ -48,37 +49,18 @@ namespace Deltin.Deltinteger.Parse
             // Create the varinfo.
             _varInfo = new VarInfo(_contextHandler.GetName(), _contextHandler.GetDefineLocation(), _parseInfo);
 
+            // Apply attributes.
+            foreach (VarBuilderAttribute attribute in _attributes)
+                attribute.Apply(_varInfo);
+            
             // Get the variable type.
             _typeRange = _contextHandler.GetTypeRange();
             GetCodeType();
 
             if (_varInfo.Type is Lambda.PortableLambdaType)
-                _varInfo.TokenType = TokenType.Function;
-
-            // Apply attributes.
-            foreach (VarBuilderAttribute attribute in _attributes)
-                attribute.Apply(_varInfo);
+                _varInfo.TokenType = SemanticTokenType.Function;
             
             Apply();
-            
-            // Set the variable and store types.
-            if (_varInfo.IsWorkshopReference)
-            {
-                // If the variable is a workshop reference, set the variable type to ElementReference.
-                _varInfo.VariableType = VariableType.ElementReference;
-                _varInfo.StoreType = StoreType.None;
-            }
-            // In extended collection.
-            else if (_varInfo.InExtendedCollection)
-            {
-                _varInfo.StoreType = StoreType.Indexed;
-            }
-            // Full workshop variable.
-            else
-            {
-                _varInfo.StoreType = StoreType.FullVariable;
-            }
-
             TypeCheck();
             _varInfo.Recursive = IsRecursive();
 
@@ -108,16 +90,25 @@ namespace Deltin.Deltinteger.Parse
         {
             if (_contextHandler.GetCodeType() == null) return;
 
-            // Get the type.
-            CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, _contextHandler.GetCodeType());
-            
-            if (type != null && type.IsConstant())
-                _varInfo.IsWorkshopReference = true;
-            
+            if (_canInferType && _contextHandler.GetCodeType().Infer && _varInfo.InitialValueContext != null)
+            {
+                _varInfo.InferType = true;
+            }
+            else
+            {
+                // Get the type.
+                CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, _contextHandler.GetCodeType());
+                ApplyCodeType(type);
+            }
+        }
+
+        protected void ApplyCodeType(CodeType type)
+        {
+            _varInfo.VariableTypeHandler.SetType(type);
             _varInfo.Type = type;
         }
 
-        protected virtual void MissingAttribute(AttributeType[] attributeTypes) {}
+        protected virtual void MissingAttribute(AttributeType[] attributeTypes) { }
         protected abstract void CheckAttributes();
         protected abstract void Apply();
         protected abstract Scope OperationalScope();
@@ -170,33 +161,34 @@ namespace Deltin.Deltinteger.Parse
                 case AttributeType.Private:
                     diagnostics.Error("Accessor not valid here.", Range);
                     break;
-                
+
                 // Workshop ID override
                 case AttributeType.ID:
                     diagnostics.Error($"Cannot override workshop variable ID here.", Range);
                     break;
-                
+
                 // Extended collection
                 case AttributeType.Ext:
                     diagnostics.Error($"Cannot put variable in the extended collection.", Range);
                     break;
-                
+
                 // Initial value
                 case AttributeType.Initial:
                     diagnostics.Error($"Variable cannot have an initial value.", Range);
                     break;
-                
+
                 // Use attribute name
                 case AttributeType.Static:
                 case AttributeType.Globalvar:
                 case AttributeType.Playervar:
                 case AttributeType.Ref:
+                case AttributeType.In:
                 default:
                     diagnostics.Error($"'{Type.ToString().ToLower()}' attribute not valid here.", Range);
                     break;
             }
         }
-    
+
         public virtual void Apply(VarInfo varInfo)
         {
             switch (Type)
@@ -205,7 +197,7 @@ namespace Deltin.Deltinteger.Parse
                 case AttributeType.Ext:
                     varInfo.InExtendedCollection = true;
                     break;
-                
+
                 // Access levels
                 case AttributeType.Public: varInfo.AccessLevel = AccessLevel.Public; break;
                 case AttributeType.Protected: varInfo.AccessLevel = AccessLevel.Protected; break;
@@ -213,24 +205,28 @@ namespace Deltin.Deltinteger.Parse
 
                 // globalvar
                 case AttributeType.Globalvar:
-                    varInfo.VariableType = VariableType.Global;
+                    varInfo.VariableTypeHandler.SetAttribute(true);
                     break;
-                
+
                 // playervar
                 case AttributeType.Playervar:
-                    varInfo.VariableType = VariableType.Player;
+                    varInfo.VariableTypeHandler.SetAttribute(false);
                     break;
-                
+
                 // ref
                 case AttributeType.Ref:
-                    varInfo.IsWorkshopReference = true;
+                    varInfo.ParseInfo.Script.Diagnostics.Warning("The 'ref' keyword is being replaced with the 'in' keyword. In the future, 'ref' will have a different functionality.", Range);
+                    goto case AttributeType.In;
+
+                case AttributeType.In:
+                    varInfo.VariableTypeHandler.SetWorkshopReference();
                     break;
-                
+
                 // Static
                 case AttributeType.Static:
                     varInfo.Static = true;
                     break;
-                
+
                 // Should be handled by overrides.
                 case AttributeType.ID:
                 case AttributeType.Initial:
@@ -273,6 +269,73 @@ namespace Deltin.Deltinteger.Parse
 
     public enum AttributeType
     {
-        Public, Protected, Private, Static, Globalvar, Playervar, Ref, ID, Ext, Initial
+        Public, Protected, Private, Static, Globalvar, Playervar, Ref, In, ID, Ext, Initial
+    }
+
+    public class VariableTypeHandler
+    {
+        private readonly VarInfo _varInfo;
+        private bool _preset;
+        private bool _presetIsGlobal;
+        private bool _setType;
+        private CodeType _setTypeValue;
+        private bool _isWorkshopReference;
+
+        public VariableTypeHandler(VarInfo varInfo)
+        {
+            _varInfo = varInfo;
+        }
+
+        public void SetAttribute(bool isGlobal)
+        {
+            if (_preset)
+                throw new Exception("Preset cannot be set more than once.");
+
+            _preset = true;
+            _presetIsGlobal = isGlobal;
+        }
+
+        public void SetType(CodeType type)
+        {
+            if (_setType)
+                throw new Exception("Type cannot be set more than once.");
+            
+            if (type == null)
+                return;
+
+            _setType = true;
+            _setTypeValue = type;
+            _isWorkshopReference = _isWorkshopReference || _setTypeValue.IsConstant();
+        }
+
+        public void SetWorkshopReference()
+        {
+            _isWorkshopReference = true;
+        }
+
+        public VariableType GetVariableType()
+        {
+            if (_isWorkshopReference || (_setType && _setTypeValue.IsConstant()))
+                return VariableType.ElementReference;
+
+            else if (_preset)
+                return _presetIsGlobal ? VariableType.Global : VariableType.Player;
+            
+            else
+                return VariableType.Dynamic;
+        }
+
+        public StoreType GetStoreType()
+        {
+            // Set the variable and store types.
+            if (_isWorkshopReference)
+                return StoreType.None;
+            // In extended collection.
+            else if (_varInfo.InExtendedCollection)
+                return StoreType.Indexed;
+            // Full workshop variable.
+            else
+                return StoreType.FullVariable;
+        }
     }
 }

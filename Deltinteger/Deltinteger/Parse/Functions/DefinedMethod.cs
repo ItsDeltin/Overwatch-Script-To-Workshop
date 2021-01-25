@@ -9,7 +9,7 @@ using Deltin.Deltinteger.Parse.FunctionBuilder;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedMethod : DefinedFunction
+    public class DefinedMethod : DefinedFunction, IParameterCallable
     {
         /// <summary>The context of the function.</summary>
         public FunctionContext Context { get; }
@@ -35,9 +35,11 @@ namespace Deltin.Deltinteger.Parse
         public bool SubroutineDefaultGlobal { get; }
 
         // * Private fields *
-        
+
         /// <summary>The function's subroutine info.</summary>
         public SubroutineInfo SubroutineInfo { get; set; }
+
+        bool IParameterCallable.RestrictedValuesAreFatal => !IsSubroutine;
 
         public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, FunctionContext context, CodeType containingType)
             : base(parseInfo, context.Identifier.Text, new Location(parseInfo.Script.Uri, context.Identifier.Range))
@@ -82,7 +84,8 @@ namespace Deltin.Deltinteger.Parse
             // Override attribute.
             if (Attributes.Override)
             {
-                IMethod overriding = objectScope.GetMethodOverload(this);
+                IMethod overriding = objectScope.GetMethodOverload(parseInfo.TranslateInfo, this);
+                Attributes.Overriding = overriding;
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", nameRange);
@@ -106,10 +109,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
 
             // Add to the scope. Check for conflicts if the method is not overriding.
-            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
-
-            // Add the hover info.
-            parseInfo.Script.AddHover(nameRange, GetLabel(true));
+            containingScope.AddMethod(this, parseInfo, nameRange, !Attributes.Override);
 
             if (Attributes.IsOverrideable)
                 parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
@@ -138,16 +138,16 @@ namespace Deltin.Deltinteger.Parse
                     if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(CodeType)))
                         // ... then add a syntax error.
                         parseInfo.Script.Diagnostics.Error("Must return a value of type '" + CodeType.GetName() + "'.", returnAction.ErrorRange);
-            
+
             WasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }
 
         // Parses the method.
-        override public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
+        public override IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-            var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(Attributes.AllOverrideOptions().Append(this).Select(op => new DefinedFunctionHandler((DefinedMethod)op)).ToArray()));
+            var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(GetOverrideFunctionHandlers()));
             return controller.Call();
         }
 
@@ -157,39 +157,14 @@ namespace Deltin.Deltinteger.Parse
             if (!IsSubroutine) return null;
             if (SubroutineInfo == null)
             {
-                var builder = new SubroutineBuilder(parseInfo.TranslateInfo, new DefinedSubroutineContext(parseInfo, this));
+                var builder = new SubroutineBuilder(parseInfo.TranslateInfo, new DefinedSubroutineContext(parseInfo, this, GetOverrideFunctionHandlers()));
                 builder.SetupSubroutine();
                 SubroutineInfo = builder.SubroutineInfo;
             }
             return SubroutineInfo;
         }
 
-        public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues, bool recursive)
-        {
-            for (int i = 0; i < ParameterVars.Length; i++)
-            {
-                IGettable indexResult = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
-
-                if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
-                    actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
-
-                foreach (Var virtualParameterOption in VirtualVarGroup(i))
-                    actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
-            }
-        }
-
-        // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.
-        public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues, bool recursive = false)
-        {
-            for (int i = 0; i < parameterVars.Length; i++)
-            {
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
-
-                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference && parameterValues?[i] != null)
-                    actionSet.AddAction(
-                        ((IndexReference)actionSet.IndexAssigner[parameterVars[i]]).SetVariable((Element)parameterValues[i])
-                    );
-            }
-        }
+        private DefinedFunctionHandler[] GetOverrideFunctionHandlers()
+            => Attributes.AllOverrideOptions().Select(op => new DefinedFunctionHandler((DefinedMethod)op, false)).Prepend(new DefinedFunctionHandler(this, true)).ToArray();
     }
 }

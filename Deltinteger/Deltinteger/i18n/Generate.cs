@@ -56,9 +56,9 @@ namespace Deltin.Deltinteger.I18n
 
         public static void Generate(string[] args)
         {
-            string datatoolPath  = args.ElementAtOrDefault(1);
-            string keyLinkFile   = args.ElementAtOrDefault(2);
-            string outputFile    = args.ElementAtOrDefault(3);
+            string datatoolPath = args.ElementAtOrDefault(1);
+            string keyLinkFile = args.ElementAtOrDefault(2);
+            string outputFile = args.ElementAtOrDefault(3);
             string overwatchPath = args.ElementAtOrDefault(4);
 
             // Return if one of the required arguments is missing.
@@ -114,12 +114,12 @@ namespace Deltin.Deltinteger.I18n
 
                 if (File.Exists(file))
                     File.Delete(file);
-                
+
                 // Serialize
                 using (var fileStream = File.Create(file))
                 using (StreamWriter writer = new StreamWriter(fileStream))
                     serializer.Serialize(writer, xml);
-                
+
                 Log.Write(LogLevel.Normal, "Finished " + lang + ".");
             }
         }
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.I18n
             foreach (var keyword in Keywords())
                 if (!links.Any(link => link.MethodName.ToLower() == keyword.ToLower()))
                     GetKeyLink(links, keyword, 5, strings);
-            
+
             while (true)
             {
                 Console.WriteLine("Write name of link to redo.");
@@ -168,7 +168,7 @@ namespace Deltin.Deltinteger.I18n
                     GetKeyLink(links, input, 5, strings);
                 }
             }
-            
+
             using (var fileStream = File.Create(saveAt))
             using (StreamWriter writer = new StreamWriter(fileStream))
                 serializer.Serialize(writer, new KeyLinkList(links.ToArray()));
@@ -199,7 +199,7 @@ namespace Deltin.Deltinteger.I18n
                     foreach (var row in rows)
                         row.Write();
 
-                    while (!int.TryParse(Console.ReadLine(), out chosen) || chosen >= pairs.Length);
+                    while (!int.TryParse(Console.ReadLine(), out chosen) || chosen >= pairs.Length) ;
                 }
             }
             else if (pairs.Length == 0)
@@ -245,10 +245,10 @@ namespace Deltin.Deltinteger.I18n
                     for (int c = 0; c < _strings.Languages.Count; c++)
                     {
                         int columnLength = ColumnLength(c);
-                        
+
                         string value = _strings.FromIndex(i).Translations[c].Text;
                         if (value.Length > 20) value = value.Substring(0, 20);
-                        
+
                         lineBuilder.Append(value);
                         lineBuilder.Append(new string(' ', columnLength - value.Length));
 
@@ -270,7 +270,7 @@ namespace Deltin.Deltinteger.I18n
                 int length = 0;
                 for (int i = _start; i < _end; i++)
                     length = Math.Min(20, Math.Max(length, _strings.FromIndex(i).Translations[column].Text.Length));
-                
+
                 return length;
             }
         }
@@ -296,7 +296,7 @@ namespace Deltin.Deltinteger.I18n
         [XmlAttribute("key")]
         public string Key { get; set; }
 
-        public KeyLink() {}
+        public KeyLink() { }
         public KeyLink(string methodName, string key)
         {
             MethodName = methodName;

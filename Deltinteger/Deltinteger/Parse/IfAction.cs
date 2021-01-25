@@ -15,18 +15,21 @@ namespace Deltin.Deltinteger.Parse
         public IStatement ElseBlock { get; }
         private PathInfo[] Paths { get; }
         private string Comment;
+        private string EndComment;
 
         public IfAction(ParseInfo parseInfo, Scope scope, If ifContext)
         {
             // Get the if condition.
             Expression = parseInfo.GetExpression(scope, ifContext.Expression);
-            
+
+            TypeComparison.ExpectNonConstant(parseInfo, ifContext.Expression.Range, Expression.Type());
+
             // Contains the path info of all blocks in the if/else-if/else list.
             var paths = new List<PathInfo>();
 
             // Get the if's block.
             Block = parseInfo.GetStatement(scope, ifContext.Statement);
-            
+
             // Add the if block path info.
             paths.Add(new PathInfo(Block, ifContext.Range, false));
 
@@ -42,11 +45,14 @@ namespace Deltin.Deltinteger.Parse
             if (ifContext.Else != null)
             {
                 ElseBlock = parseInfo.GetStatement(scope, ifContext.Else.Statement);
-                
+
                 // Add the else path info.
                 paths.Add(new PathInfo(ElseBlock, ifContext.Range, true));
             }
             Paths = paths.ToArray();
+            if(Block is BlockAction block) {
+                EndComment = block.EndComment;
+            }
         }
 
         public PathInfo[] GetPaths() => Paths;
@@ -64,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Translate the if block.
             Block.Translate(actionSet);
-            
+
             // 'block caps' are skips that are added to the end of the if block and each else-if block.
             // The skips skip to the end of the entire if/else-if/else.
             List<SkipStartMarker> blockCaps = new List<SkipStartMarker>();
@@ -151,7 +157,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Add the end of the if.
-            actionSet.AddAction(Element.End());
+            var end = Element.End();
+            end.Comment = EndComment;
+            actionSet.AddAction(end);
         }
     }
 
@@ -164,7 +172,9 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the else-if's expression.
             Expression = parseInfo.GetExpression(scope, elseIfContext.Expression);
-            
+
+            TypeComparison.ExpectNonConstant(parseInfo, elseIfContext.Expression.Range, Expression.Type());
+
             // Get the else-if's block.
             Block = parseInfo.GetStatement(scope, elseIfContext.Statement);
         }

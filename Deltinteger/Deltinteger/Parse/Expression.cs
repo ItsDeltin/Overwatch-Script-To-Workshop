@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public interface IExpression
     {
-        Scope ReturningScope();
+        Scope ReturningScope() => Type()?.GetObjectScope();
         CodeType Type();
         IWorkshopTree Parse(ActionSet actionSet);
         bool IsStatement() => false;
@@ -16,37 +16,43 @@ namespace Deltin.Deltinteger.Parse
     public class NumberAction : IExpression
     {
         public double Value { get; }
+        private readonly CodeType _type;
 
-        public NumberAction(ScriptFile script, NumberExpression numberContext)
+        public NumberAction(ParseInfo parseInfo, NumberExpression numberContext)
         {
             Value = numberContext.Value;
+            _type = parseInfo.TranslateInfo.Types.Number();
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => NumberType.Instance;
+        public CodeType Type() => _type;
         public IWorkshopTree Parse(ActionSet actionSet) => Element.Num(Value);
     }
 
     public class BoolAction : IExpression
     {
         public bool Value { get; }
+        private readonly CodeType _type;
 
-        public BoolAction(ScriptFile script, bool value)
+        public BoolAction(ParseInfo parseInfo, bool value)
         {
             Value = value;
+            _type = parseInfo.TranslateInfo.Types.Boolean();
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => BooleanType.Instance;
+        public CodeType Type() => _type;
 
         public IWorkshopTree Parse(ActionSet actionSet) => Value ? Element.True() : Element.False();
     }
 
     public class NullAction : IExpression
     {
-        public NullAction() {}
+        private readonly CodeType _type;
+
+        public NullAction(ParseInfo parseInfo) => _type = parseInfo.TranslateInfo.Types.Any();
         public Scope ReturningScope() => null;
-        public CodeType Type() => NullType.Instance;
+        public CodeType Type() => _type;
         public IWorkshopTree Parse(ActionSet actionSet) => Element.Null();
     }
 
@@ -59,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
         public ValueInArrayAction(ParseInfo parseInfo, Scope scope, ValueInArray context)
         {
             Expression = parseInfo.GetExpression(scope, context.Array);
-            Index = new IExpression[] { parseInfo.GetExpression(scope, context.Index) };
+            Index = new IExpression[] { parseInfo.ClearContextual().GetExpression(scope, context.Index) };
             this.parseInfo = parseInfo;
         }
 
@@ -86,16 +92,18 @@ namespace Deltin.Deltinteger.Parse
     public class CreateArrayAction : IExpression
     {
         public IExpression[] Values { get; }
+        private readonly CodeType _type;
 
         public CreateArrayAction(ParseInfo parseInfo, Scope scope, CreateArray createArrayContext)
         {
             Values = new IExpression[createArrayContext.Values.Count];
             for (int i = 0; i < Values.Length; i++)
                 Values[i] = parseInfo.GetExpression(scope, createArrayContext.Values[i]);
+            
+            _type = new ArrayType(parseInfo.TranslateInfo.Types, Values.Length == 0 ? parseInfo.TranslateInfo.Types.Any() : Values[0].Type());
         }
 
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => _type;
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
@@ -129,35 +137,34 @@ namespace Deltin.Deltinteger.Parse
     public class UnaryOperatorAction : IExpression
     {
         public IExpression Value { get; }
-        public OperatorInfo Operator { get; }
+        private readonly IUnaryTypeOperation _operation;
+        private readonly CodeType _type;
 
         public UnaryOperatorAction(ParseInfo parseInfo, Scope scope, UnaryOperatorExpression expression)
         {
             Value = parseInfo.GetExpression(scope, expression.Value);
-            Operator = expression.Operator;
+
+            string op = expression.Operator.Operator.Operator;
+            _operation = Value?.Type()?.Operations.GetOperation(UnaryTypeOperation.OperatorFromString(op)) ?? GetDefaultOperation(op, parseInfo.TranslateInfo.Types);
+            _type = _operation.ReturnType ?? parseInfo.TranslateInfo.Types.Unknown();
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet) => _operation.Resolve(actionSet, Value);
+
+        private UnaryTypeOperation GetDefaultOperation(string op, ITypeSupplier supplier)
         {
-            // OperatorInfo (an operator instance) ->
-            // CompilerOperator (the actual operator data) ->
-            // Operator's actual string identifier
-            switch (Operator.Operator.Operator)
+            if (Value.Type().IsConstant())
+                return null;
+            
+            switch (op)
             {
-                // Not
-                case "!":
-                    return Element.Not(Value.Parse(actionSet));
-                // Inverse
-                case "-":
-                    return Element.Multiply(Value.Parse(actionSet), Element.Num(-1));
-                // Unimplemented unary operator.
-                default:
-                    throw new NotImplementedException(Operator.Operator.Operator);
+                case "!": return new UnaryTypeOperation(UnaryTypeOperation.OperatorFromString(op), supplier.Boolean(), v => !(Element)v);
+                case "-": return new UnaryTypeOperation(UnaryTypeOperation.OperatorFromString(op), supplier.Number(), v => (Element)v * -1);
+                default: throw new NotImplementedException();
             }
         }
 
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => _type;
     }
 
     public class TernaryConditionalAction : IExpression
@@ -170,10 +177,15 @@ namespace Deltin.Deltinteger.Parse
         public TernaryConditionalAction(ParseInfo parseInfo, Scope scope, TernaryExpression ternaryContext)
         {
             this.parseInfo = parseInfo;
-            
+
             Condition = parseInfo.GetExpression(scope, ternaryContext.Condition);
             Consequent = parseInfo.GetExpression(scope, ternaryContext.Consequent);
             Alternative = parseInfo.GetExpression(scope, ternaryContext.Alternative);
+
+            if (Consequent.Type() != null && Consequent.Type().IsConstant())
+                parseInfo.Script.Diagnostics.Error($"Cannot use constant types in a ternary expression.", ternaryContext.Consequent.Range);
+            if (Alternative.Type() != null && Alternative.Type().IsConstant())
+                parseInfo.Script.Diagnostics.Error($"Cannot use constant types in a ternary expression.", ternaryContext.Alternative.Range);
         }
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;

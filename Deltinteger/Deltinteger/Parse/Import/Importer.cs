@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
             ImportedFiles.Add(initial);
         }
 
-        public void CollectScriptFiles(ScriptFile scriptFile)
+        public void CollectScriptFiles(DeltinScript deltinScript, ScriptFile scriptFile)
         {
             ScriptFiles.Add(scriptFile);
 
@@ -39,44 +39,47 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the imported files.
             foreach (var importFileContext in scriptFile.Context.Imports)
-            if (importFileContext.File)
-            {
-                string directory = GetImportedFile(scriptFile, importer, importFileContext);
-                if (Directory.Exists(directory))
-                    AddImportCompletion(scriptFile, directory, importFileContext.File.Range);
-            }
+                if (importFileContext.File)
+                {
+                    string directory = GetImportedFile(deltinScript, scriptFile, importer, importFileContext);
+                    if (Directory.Exists(directory))
+                        AddImportCompletion(deltinScript, scriptFile, directory, importFileContext.File.Range);
+                }
         }
 
-        public static void AddImportCompletion(ScriptFile script, string directory, DocRange range)
+        public static void AddImportCompletion(DeltinScript deltinScript, ScriptFile script, string directory, DocRange range)
         {
             List<CompletionItem> completionItems = new List<CompletionItem>();
             var directories = Directory.GetDirectories(directory);
             var files = Directory.GetFiles(directory);
 
-            completionItems.Add(new CompletionItem() {
+            completionItems.Add(new CompletionItem()
+            {
                 Label = "../",
                 Detail = Directory.GetParent(directory).FullName,
                 Kind = CompletionItemKind.Folder
             });
 
             foreach (var dir in directories)
-                completionItems.Add(new CompletionItem() {
+                completionItems.Add(new CompletionItem()
+                {
                     Label = Path.GetFileName(dir),
                     Detail = dir,
                     Kind = CompletionItemKind.Folder
                 });
-            
+
             foreach (var file in files)
-                completionItems.Add(new CompletionItem() {
+                completionItems.Add(new CompletionItem()
+                {
                     Label = Path.GetFileName(file),
                     Detail = file,
                     Kind = CompletionItemKind.File
                 });
-            
-            script.AddCompletionRange(new CompletionRange(completionItems.ToArray(), range, CompletionRangeKind.ClearRest));
+
+            script.AddCompletionRange(new CompletionRange(deltinScript, completionItems.ToArray(), range, CompletionRangeKind.ClearRest));
         }
 
-        string GetImportedFile(ScriptFile script, FileImporter importer, Import importFileContext)
+        string GetImportedFile(DeltinScript deltinScript, ScriptFile script, FileImporter importer, Import importFileContext)
         {
             // If the file being imported is being imported as an object, get the variable name.
             string variableName = importFileContext.Identifier?.Text;
@@ -105,11 +108,12 @@ namespace Deltin.Deltinteger.Parse
                         case ".ostw":
                         case ".workshop":
                             ScriptFile importedScript = new ScriptFile(_diagnostics, _fileGetter.GetScript(importResult.Uri));
-                            CollectScriptFiles(importedScript);
+                            CollectScriptFiles(deltinScript, importedScript);
                             break;
-                        
+
                         // Get lobby settings.
                         case ".json":
+                        case ".lobby":
                             JObject lobbySettings = null;
 
                             // Make sure the json is in the correct format.
@@ -138,7 +142,8 @@ namespace Deltin.Deltinteger.Parse
                             else
                             {
                                 // Otherwise, merge current lobby settings.
-                                lobbySettings.Merge(MergedLobbySettings, new JsonMergeSettings {
+                                lobbySettings.Merge(MergedLobbySettings, new JsonMergeSettings
+                                {
                                     MergeArrayHandling = MergeArrayHandling.Union,
                                     MergeNullValueHandling = MergeNullValueHandling.Ignore
                                 });
@@ -199,15 +204,15 @@ namespace Deltin.Deltinteger.Parse
 
         public ImportResult(FileImporter fileImporter, DocRange importRange, string relativePath, Uri referencingFile)
         {
-            string resultingPath = Extras.CombinePathWithDotNotation(referencingFile.FilePath(), relativePath);
-            
+            string resultingPath = Extras.CombinePathWithDotNotation(referencingFile.LocalPath, relativePath);
+
             // Syntax error if the filename has invalid characters.
             if (resultingPath == null)
             {
                 fileImporter.Diagnostics.Error("File path contains invalid characters.", importRange);
                 return;
             }
-            Uri = Extras.Definition(resultingPath);
+            Uri = new Uri(resultingPath);
             Directory = Path.GetDirectoryName(resultingPath);
             FilePath = resultingPath;
             FileType = Path.GetExtension(FilePath).ToLower();

@@ -2,11 +2,12 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
-using System.Xml.Serialization;
 using Deltin.Deltinteger.Parse;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
+using MarkedStringsOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkedStringsOrMarkupContent;
 using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
 using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
+using DocumentUri = OmniSharp.Extensions.LanguageServer.Protocol.DocumentUri;
 
 namespace Deltin.Deltinteger
 {
@@ -26,21 +27,21 @@ namespace Deltin.Deltinteger
 
         public static string AddSpacesToSentence(string text, bool preserveAcronyms)
         {
-                if (string.IsNullOrWhiteSpace(text))
-                    return string.Empty;
-                
-                StringBuilder newText = new StringBuilder(text.Length * 2);
-                newText.Append(text[0]);
-                for (int i = 1; i < text.Length; i++)
-                {
-                    if (char.IsUpper(text[i]))
-                        if ((text[i - 1] != ' ' && !char.IsUpper(text[i - 1])) ||
-                            (preserveAcronyms && char.IsUpper(text[i - 1]) && 
-                            i < text.Length - 1 && !char.IsUpper(text[i + 1])))
-                            newText.Append(' ');
-                    newText.Append(text[i]);
-                }
-                return newText.ToString();
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            StringBuilder newText = new StringBuilder(text.Length * 2);
+            newText.Append(text[0]);
+            for (int i = 1; i < text.Length; i++)
+            {
+                if (char.IsUpper(text[i]))
+                    if ((text[i - 1] != ' ' && !char.IsUpper(text[i - 1])) ||
+                        (preserveAcronyms && char.IsUpper(text[i - 1]) &&
+                        i < text.Length - 1 && !char.IsUpper(text[i + 1])))
+                        newText.Append(' ');
+                newText.Append(text[i]);
+            }
+            return newText.ToString();
         }
 
         public static string CombinePathWithDotNotation(string referenceDirectory, string file)
@@ -55,7 +56,6 @@ namespace Deltin.Deltinteger
             {
                 string directory = Path.GetDirectoryName(referenceDirectory);
                 string combined = Path.Combine(directory, file);
-                if (file == "") combined += Path.DirectorySeparatorChar;
                 return Path.GetFullPath(combined);
             }
             catch (Exception)
@@ -64,37 +64,30 @@ namespace Deltin.Deltinteger
             }
         }
 
-        public static string Lines(params string[] lines)
-        {
-            return string.Join("\n", lines);
-        }
+        public static string RemoveQuotes(this string str) => str.Length >= 2 &&
+            ((str[0] == '"' && str[str.Length - 1] == '"') || (str[0] == '\'' && str[str.Length - 1] == '\'')) ? str.Substring(1, str.Length - 2) : str;
 
-        public static string RemoveQuotes(this string str) => str.Length >= 2 && str[0] == '"' && str[str.Length - 1] == '"' ? str.Substring(1, str.Length - 2) : str;
-
-        public static string FilePath(this Uri uri)
+        public static string FilePath(this Uri uri) => uri.LocalPath;
+        public static bool Compare(this Uri uri, Uri other) => uri.LocalPath == other.LocalPath;
+        public static DocumentUri ToDefinition(this Uri uri)
         {
-            return uri.LocalPath.TrimStart('/');
+            string enc = uri.LocalPath.Replace('\\', '/').Replace(" ", "%20").Replace(":", "%3A");
+            return DocumentUri.File(uri.LocalPath);
         }
 
         public static Uri Clean(this Uri uri)
         {
-            return new Uri(uri.FilePath());
+			return new Uri(uri.FilePath());
         }
 
-        public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
-
         public static string GetNameOrVoid(this CodeType type) => type?.GetName() ?? "void";
+        public static string GetNameOrAny(this CodeType type) => type?.GetName() ?? "Any";
 
         public static bool CodeTypeParameterInvalid(this CodeType parameterType, CodeType valueType) =>
             parameterType != null && ((parameterType.IsConstant() && valueType == null) || (valueType != null && !valueType.Implements(parameterType)));
 
-        public static Uri Definition(string path)
+        public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent()
         {
-            string enc = "file:///" + path.Replace('\\', '/').Replace(" ","%20").Replace(":", "%3A");
-            return new Uri(enc);
-        }
-
-        public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent() {
             Kind = MarkupKind.Markdown,
             Value = text
         });
@@ -126,17 +119,17 @@ namespace Deltin.Deltinteger
         {
             this.values = values;
         }
-        
+
         public static implicit operator ArrayBuilder<T>(T value)
         {
             return new ArrayBuilder<T>(new T[] { value });
         }
-        
+
         public static implicit operator ArrayBuilder<T>(T[] value)
         {
             return new ArrayBuilder<T>(value);
         }
-        
+
         public static T[] Build(params ArrayBuilder<T>[] values)
         {
             List<T> valueList = new List<T>();
@@ -144,7 +137,7 @@ namespace Deltin.Deltinteger
             foreach (var val in values)
                 if (val?.values != null)
                     valueList.AddRange(val.values);
-            
+
             return valueList.ToArray();
         }
     }
@@ -155,7 +148,13 @@ namespace Deltin.Deltinteger
         StringBuilder noMarkup = new StringBuilder();
         bool inCodeLine = false;
 
-        public MarkupBuilder() {}
+        public MarkupBuilder() { }
+
+        public MarkupBuilder(string value)
+        {
+            result.Append(value);
+            noMarkup.Append(value);
+        }
 
         public MarkupBuilder Add(string line)
         {
@@ -201,12 +200,20 @@ namespace Deltin.Deltinteger
             noMarkup.Append("\n\r");
             return this;
         }
+        public MarkupBuilder Indent() => Add("    ");
 
         public override string ToString() => result.ToString();
         public string ToString(bool markup) => markup ? result.ToString() : noMarkup.ToString();
-        public MarkupContent ToMarkup() => new MarkupContent() {
+        public MarkupContent ToMarkup() => new MarkupContent()
+        {
             Kind = MarkupKind.Markdown,
             Value = ToString()
         };
+        
+        public static implicit operator MarkupBuilder(string value) => value == null ? null : new MarkupBuilder(value);
+        public static implicit operator string(MarkupBuilder builder) => builder?.ToString(false);
+        public static implicit operator StringOrMarkupContent(MarkupBuilder builder) => builder == null ? null : new StringOrMarkupContent((MarkupContent)builder);
+        public static implicit operator MarkupContent(MarkupBuilder builder) => builder == null ? null : new MarkupContent() { Kind = MarkupKind.Markdown, Value = builder.ToString(true) };
+        public static implicit operator MarkedStringsOrMarkupContent(MarkupBuilder builder) => new MarkedStringsOrMarkupContent(builder);
     }
 }

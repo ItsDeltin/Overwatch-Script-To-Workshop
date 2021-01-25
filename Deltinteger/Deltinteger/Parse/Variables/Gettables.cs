@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopVariable = workshopVariable;
             Index = index;
         }
-        protected IndexReference() {}
+        protected IndexReference() { }
 
         public virtual IWorkshopTree GetVariable(Element targetPlayer = null)
         {
@@ -33,6 +33,9 @@ namespace Deltin.Deltinteger.Parse
         {
             return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
         }
+
+        public void Set(ActionSet actionSet, Element value, Element target = null, params Element[] index) => Set(actionSet, null, value, target, index);
+        public void Set(ActionSet actionSet, string comment, Element value, Element target = null, params Element[] index) => actionSet.AddAction(comment, SetVariable(value, target, index));
 
         public IndexReference CreateChild(params Element[] index)
         {

@@ -71,11 +71,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 case Parse.CallParallel.NoParallel:
                     decompiler.Append(SubroutineName + "()");
                     break;
-                
+
                 case Parse.CallParallel.AlreadyRunning_DoNothing:
                     decompiler.Append("async! " + SubroutineName + "()");
                     break;
-                
+
                 case Parse.CallParallel.AlreadyRunning_RestartRule:
                     decompiler.Append("async " + SubroutineName + "()");
                     break;

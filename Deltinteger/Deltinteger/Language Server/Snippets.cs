@@ -58,7 +58,8 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         // Creates the CompletionItem for a snippet.
-        static CompletionItem MakeSnippet(string label, string detail, MarkupBuilder documentation, string insert) => new CompletionItem() {
+        static CompletionItem MakeSnippet(string label, string detail, MarkupBuilder documentation, string insert) => new CompletionItem()
+        {
             Kind = CompletionItemKind.Snippet,
             InsertTextFormat = InsertTextFormat.Snippet,
             Label = label,

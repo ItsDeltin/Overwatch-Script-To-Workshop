@@ -12,7 +12,7 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class CodeType : IExpression, ICallable
+    public abstract class CodeType : IExpression, ICallable, ICodeTypeSolver
     {
         public string Name { get; }
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
@@ -20,8 +20,8 @@ namespace Deltin.Deltinteger.Parse
         public string Description { get; protected set; }
         public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
-        protected string Kind = "class";
-        protected TokenType TokenType { get; set; } = TokenType.Type;
+        protected TypeKind Kind = TypeKind.Struct;
+        protected SemanticTokenType TokenType { get; set; } = SemanticTokenType.Type;
         protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
@@ -30,11 +30,12 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
-        public TypeOperation[] Operations { get; protected set; }
+        public TypeOperatorInfo Operations { get; protected set; }
 
         public CodeType(string name)
         {
             Name = name;
+            Operations = new TypeOperatorInfo(this);
         }
 
         protected void Inherit(CodeType extend, FileDiagnostics diagnostics, DocRange range)
@@ -45,10 +46,10 @@ namespace Deltin.Deltinteger.Parse
 
             if (!extend.CanBeExtended)
                 errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
-            
+
             else if (extend == this)
                 errorMessage = "Cannot extend self.";
-            
+
             else if (extend.Implements(this))
                 errorMessage = $"The class {extend.Name} extends this class.";
 
@@ -67,13 +68,20 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual bool Implements(CodeType type)
         {
-            if (type == null) return false;
+            if (type is PipeType union)
+                foreach (var unionType in union.IncludedTypes)
+                    if (DoesImplement(unionType))
+                        return true;
+            return DoesImplement(type);
+        }
 
+        protected virtual bool DoesImplement(CodeType type)
+        {
             // Iterate through all extended classes.
             CodeType checkType = this;
             while (checkType != null)
             {
-                if (type.Is(checkType)) return true;
+                if (type.Is(checkType) || (!checkType.IsConstant() && type is AnyType)) return true;
                 checkType = checkType.Extends;
             }
 
@@ -103,19 +111,19 @@ namespace Deltin.Deltinteger.Parse
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();
         }
-        
+
         /// <summary>Sets up an object reference when a new object is created. Is also called when a new object of a class extending this type is created.</summary>
         /// <param name="actionSet">The actionset to use.</param>
         /// <param name="reference">The reference of the object.</param>
         public virtual void BaseSetup(ActionSet actionSet, Element reference) => throw new NotImplementedException();
 
         /// <summary>Assigns workshop elements so the class can function. Implementers should check if `wasCalled` is true.</summary>
-        public virtual void WorkshopInit(DeltinScript translateInfo) {}
+        public virtual void WorkshopInit(DeltinScript translateInfo) { }
 
         /// <summary>Adds the class objects to the index assigner.</summary>
         /// <param name="source">The source of the type.</param>
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
-        public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
+        public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) { }
 
         /// <summary>Deletes a variable from memory.</summary>
         /// <param name="actionSet">The action set to add the actions to.</param>
@@ -148,27 +156,49 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
+            var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name).EndCodeLine();
+            if (Description != null) hover.NewSection().Add(Description);
+
             parseInfo.TranslateInfo.Types.CallType(this);
-            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.Script.AddHover(callRange, hover);
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
 
+        public static CompletionItem GetTypeCompletion(CodeType type) => new CompletionItem() {
+            Label = type.GetName(),
+            Kind = type.Kind == TypeKind.Class ? CompletionItemKind.Class : type.Kind == TypeKind.Constant ? CompletionItemKind.Constant : type.Kind == TypeKind.Enum ? CompletionItemKind.Enum : CompletionItemKind.Struct
+        };
+
         /// <summary>Gets the full name of the type.</summary>
         public virtual string GetName() => Name;
+
+        public CodeType GetCodeType(DeltinScript deltinScript) => this;
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, IParseType typeContext) => GetCodeTypeFromContext(parseInfo, (dynamic)typeContext);
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, ParseType typeContext)
         {
-            if (typeContext == null) return null;
+            if (typeContext == null) return parseInfo.TranslateInfo.Types.Unknown();
 
-            if (typeContext.IsDefault) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
-            
-            CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
-            if (type == null) return ObjectType.Instance; // TODO: ???
+            CodeType type;
+            bool doCall = true;
+
+            if (typeContext.IsDefault)
+            {
+                if (typeContext.Infer)
+                    parseInfo.Script.Diagnostics.Hint("Unable to infer type", typeContext.Identifier.Range);
+
+                type = parseInfo.TranslateInfo.Types.Any();
+                doCall = false;
+            }
+            else
+            {
+                type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
+                if (type == null) return parseInfo.TranslateInfo.Types.Unknown();
+            }
 
             // Get generics
             if (typeContext.HasTypeArgs)
@@ -179,7 +209,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the generics.
                 foreach (var genericContext in typeContext.TypeArgs)
                     generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
-                
+
                 if (type is Lambda.ValueBlockLambda)
                     type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
                 else if (type is Lambda.BlockLambda)
@@ -188,7 +218,8 @@ namespace Deltin.Deltinteger.Parse
                     type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
             }
 
-            type.Call(parseInfo, typeContext.Identifier.Range);
+            if (doCall)
+                type.Call(parseInfo, typeContext.Identifier.Range);
 
             for (int i = 0; i < typeContext.ArrayCount; i++)
                 type = new ArrayType(parseInfo.TranslateInfo.Types, type);
@@ -212,13 +243,13 @@ namespace Deltin.Deltinteger.Parse
             // Get the return type.
             CodeType returnType = null;
             bool returnsValue = false;
-            
+
             if (!type.ReturnType.IsVoid)
             {
                 returnType = GetCodeTypeFromContext(parseInfo, type.ReturnType);
                 returnsValue = true;
             }
-            
+
             return new PortableLambdaType(LambdaKind.Portable, parameters, returnsValue, returnType, true);
         }
 
@@ -236,35 +267,11 @@ namespace Deltin.Deltinteger.Parse
         {
             var left = GetCodeTypeFromContext(parseInfo, type.Left);
             var right = GetCodeTypeFromContext(parseInfo, type.Right);
+
+            if (left.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Left.Range);
+            if (right.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Right.Range);
+
             return new PipeType(left, right);
-        }
-
-        static List<CodeType> _defaultTypes;
-        public static List<CodeType> DefaultTypes {
-            get {
-                if (_defaultTypes == null) GetDefaultTypes();
-                return _defaultTypes;
-            }
-        }
-        private static void GetDefaultTypes()
-        {
-            _defaultTypes = new List<CodeType>();
-            _defaultTypes.AddRange(ValueGroupType.EnumTypes);
-
-            // Add custom classes here.
-            _defaultTypes.Add(new Models.AssetClass());
-            _defaultTypes.Add(ObjectType.Instance);
-            _defaultTypes.Add(NumberType.Instance);
-            _defaultTypes.Add(BooleanType.Instance);
-            _defaultTypes.Add(TeamType.Instance);
-            _defaultTypes.Add(VectorType.Instance);
-            _defaultTypes.Add(StringType.Instance);
-            _defaultTypes.Add(Positionable.Instance);
-            _defaultTypes.Add(Pathfinder.SegmentsStruct.Instance);
-            ObjectType.Instance.InitOperations();
-            NumberType.Instance.InitOperations();
-            VectorType.Instance.InitOperations();
-            StringType.Instance.InitOperations();
         }
     }
 }

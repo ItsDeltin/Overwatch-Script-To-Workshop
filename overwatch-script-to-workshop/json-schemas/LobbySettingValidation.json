@@ -69,6 +69,18 @@
       "default": false,
       "type": "boolean"
     },
+    "Data Center Preference": {
+      "default": "Best Available",
+      "type": "string",
+      "enum": [
+        "Best Available",
+        "USA - Central",
+        "Brazil",
+        "Singapore",
+        "USA - West",
+        "Australia 3"
+      ]
+    },
     "Enemy Health Bars": {
       "default": true,
       "type": "boolean"
@@ -336,7 +348,7 @@
     },
     "Game Length In Minutes": {
       "default": 10.0,
-      "type": "number",
+      "type": "integer",
       "minimum": 5.0,
       "maximum": 15.0
     },
@@ -406,7 +418,7 @@
     },
     "Hero Selection Time": {
       "default": 20.0,
-      "type": "number",
+      "type": "integer",
       "minimum": 20.0,
       "maximum": 60.0
     },
@@ -645,6 +657,22 @@
         ]
       }
     },
+    "Freezethaw Elimination Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Ecopoint: Antarctica",
+          "Necropolis",
+          "Black Forest",
+          "Ecopoint: Antarctica (Winter)",
+          "Castillo",
+          "Ayutthaya",
+          "Black Forest (Winter)"
+        ]
+      }
+    },
     "Quick Melee": {
       "default": true,
       "type": "boolean"
@@ -757,6 +785,11 @@
       "default": 100.0,
       "type": "number",
       "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ability Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
       "maximum": 500.0
     },
     "Ultimate Ability (Nano Boost)": {
@@ -958,6 +991,26 @@
     "Ultimate Generation - Combat (Rally)": {
       "default": 100.0,
       "type": "number",
+      "maximum": 500.0
+    },
+    "Barrier Shield": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Barrier Shield Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Barrier Shield Recharge Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Barrier Shield Maximum Time": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 20.0,
       "maximum": 500.0
     },
     "Repair Pack": {
@@ -1265,11 +1318,11 @@
       "type": "number",
       "maximum": 500.0
     },
-    "Storm Arrow": {
+    "Storm Arrows": {
       "default": true,
       "type": "boolean"
     },
-    "Storm Arrow Cooldown Time": {
+    "Storm Arrows Cooldown Time": {
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
@@ -2489,6 +2542,9 @@
             },
             "Healing Dealt": {
               "$ref": "#/definitions/Healing Dealt"
+            },
+            "Ability Cooldown Time": {
+              "$ref": "#/definitions/Ability Cooldown Time"
             }
           },
           "additionalProperties": false
@@ -2891,6 +2947,18 @@
             },
             "Healing Dealt": {
               "$ref": "#/definitions/Healing Dealt"
+            },
+            "Barrier Shield": {
+              "$ref": "#/definitions/Barrier Shield"
+            },
+            "Barrier Shield Cooldown Time": {
+              "$ref": "#/definitions/Barrier Shield Cooldown Time"
+            },
+            "Barrier Shield Recharge Rate": {
+              "$ref": "#/definitions/Barrier Shield Recharge Rate"
+            },
+            "Barrier Shield Maximum Time": {
+              "$ref": "#/definitions/Barrier Shield Maximum Time"
             },
             "Repair Pack": {
               "$ref": "#/definitions/Repair Pack"
@@ -3333,11 +3401,11 @@
             "Sonic Arrow Cooldown Time": {
               "$ref": "#/definitions/Sonic Arrow Cooldown Time"
             },
-            "Storm Arrow": {
-              "$ref": "#/definitions/Storm Arrow"
+            "Storm Arrows": {
+              "$ref": "#/definitions/Storm Arrows"
             },
-            "Storm Arrow Cooldown Time": {
-              "$ref": "#/definitions/Storm Arrow Cooldown Time"
+            "Storm Arrows Cooldown Time": {
+              "$ref": "#/definitions/Storm Arrows Cooldown Time"
             },
             "Storm Arrows Quantity": {
               "$ref": "#/definitions/Storm Arrows Quantity"
@@ -5235,6 +5303,9 @@
         },
         "Pause Game On Player Disconnect": {
           "$ref": "#/definitions/Pause Game On Player Disconnect"
+        },
+        "Data Center Preference": {
+          "$ref": "#/definitions/Data Center Preference"
         }
       },
       "additionalProperties": false
@@ -5953,6 +6024,92 @@
             }
           },
           "additionalProperties": false
+        },
+        "Freezethaw Elimination": {
+          "description": "Freezethaw Elimination settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled Off"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Hero Selection Time": {
+              "$ref": "#/definitions/Hero Selection Time"
+            },
+            "Score To Win": {
+              "$ref": "#/definitions/Score To Win 1-9"
+            },
+            "Restrict Previously Used Heroes": {
+              "$ref": "#/definitions/Restrict Previously Used Heroes"
+            },
+            "Hero Selection": {
+              "$ref": "#/definitions/Hero Selection"
+            },
+            "Limited Choice Pool": {
+              "$ref": "#/definitions/Limited Choice Pool"
+            },
+            "Capture Objective Tiebreaker": {
+              "$ref": "#/definitions/Capture Objective Tiebreaker"
+            },
+            "Tiebreaker After Match Time Elapsed": {
+              "$ref": "#/definitions/Tiebreaker After Match Time Elapsed"
+            },
+            "Time To Capture": {
+              "$ref": "#/definitions/Time To Capture"
+            },
+            "Draw After Match Time Elapsed With No Tiebreaker": {
+              "$ref": "#/definitions/Draw After Match Time Elapsed With No Tiebreaker"
+            },
+            "Reveal Heroes": {
+              "$ref": "#/definitions/Reveal Heroes"
+            },
+            "Reveal Heroes After Match Time Elapsed": {
+              "$ref": "#/definitions/Reveal Heroes After Match Time Elapsed"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Freezethaw Elimination Maps",
+              "description": "An array of enabled maps for the 'Freezethaw Elimination' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Freezethaw Elimination Maps",
+              "description": "An array of disabled maps for the 'Freezethaw Elimination' mode."
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -5978,6 +6135,11 @@
     "Description": {
       "description": "The description of the custom game.",
       "type": "string"
+    },
+    "Workshop": {
+      "properties": {},
+      "type": "object",
+      "additionalProperties": true
     }
   },
   "type": "object",

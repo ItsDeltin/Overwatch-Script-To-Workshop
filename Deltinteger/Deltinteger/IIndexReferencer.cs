@@ -7,11 +7,14 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger
 {
-    public interface IIndexReferencer : IVariable, IExpression, ICallable, ILabeled
+    public interface IIndexReferencer : IVariable, IExpression, ICallable
     {
         bool Settable();
         bool RequiresCapture { get; }
         VariableType VariableType { get; }
+        bool InExtendedCollection => false;
+        int ID => -1;
+        bool Recursive => false;
     }
 
     public class IndexReferencer : IIndexReferencer
@@ -25,6 +28,7 @@ namespace Deltin.Deltinteger
         public CodeType CodeType { get; protected set; }
         public MarkupBuilder Documentation { get; set; }
         public bool RequiresCapture => false;
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
 
         public IndexReferencer(string name)
         {
@@ -34,26 +38,10 @@ namespace Deltin.Deltinteger
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             if (DefinedAt != null) parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.Script.AddHover(callRange, GetLabel(true));
+            parseInfo.Script.AddHover(callRange, ((ILabeled)this).GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
-
-        public CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = Name,
-            Kind = CompletionItemKind.Variable,
-            Detail = (CodeType?.GetName() ?? "define") + " " + Name,
-            Documentation = Documentation == null ? null : Extras.GetMarkupContent(Documentation.ToString())
-        };
-
-        public string GetLabel(bool markdown)
-        {
-            string typeName = "define";
-            if (CodeType != null) typeName = CodeType.GetName();
-            if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation?.ToString(true));
-            else return typeName + " " + Name;
-        }
-
+        
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
         public virtual bool Settable() => true;
         public Scope ReturningScope() => CodeType.GetObjectScope();

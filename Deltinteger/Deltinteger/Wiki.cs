@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.WorkshopWiki
         public const string URL = "https://us.forums.blizzard.com/en/overwatch/t/wiki-workshop-syntax-script-database/";
         private static Log Log = new Log("Wiki");
 
-        private static Wiki wiki = null; 
+        private static Wiki wiki = null;
         public static Wiki GetWiki()
         {
             if (wiki == null)
@@ -42,14 +42,14 @@ namespace Deltin.Deltinteger.WorkshopWiki
             {
                 HtmlDocument htmlDoc = new HtmlDocument();
                 htmlDoc.OptionFixNestedTags = true;
-            
+
                 using (var webClient = new WebClient())
                     htmlDoc.Load(webClient.OpenRead(URL), Encoding.UTF8);
-                
+
                 List<WikiMethod> methods = new List<WikiMethod>();
 
                 // Loop through all summaries
-                foreach(var summary in htmlDoc.DocumentNode.Descendants("summary"))
+                foreach (var summary in htmlDoc.DocumentNode.Descendants("summary"))
                 {
                     string name = summary.InnerText.Trim(); // Gets the name
 
@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.WorkshopWiki
                     if (parameterSummaries != null)
                         foreach (var parameterSummary in parameterSummaries)
                         {
-                            string[] data = parameterSummary.InnerText.Split(new char[]{'-'}, 2);
+                            string[] data = parameterSummary.InnerText.Split(new char[] { '-' }, 2);
                             parameters.Add(new WikiParameter(data[0].Trim(), data.ElementAtOrDefault(1)?.Trim()));
                         }
 
@@ -94,7 +94,7 @@ namespace Deltin.Deltinteger.WorkshopWiki
         {
             Methods = methods;
         }
-        public Wiki() {}
+        public Wiki() { }
 
         public WikiMethod GetMethod(string methodName)
         {
@@ -106,8 +106,8 @@ namespace Deltin.Deltinteger.WorkshopWiki
             XmlSerializer serializer = new XmlSerializer(typeof(Wiki));
 
             using (var fileStream = File.Create(file))
-                using (StreamWriter writer = new StreamWriter(fileStream))
-                    serializer.Serialize(writer, this);
+            using (StreamWriter writer = new StreamWriter(fileStream))
+                serializer.Serialize(writer, this);
         }
     }
 
@@ -126,7 +126,7 @@ namespace Deltin.Deltinteger.WorkshopWiki
             Description = description;
             Parameters = parameters;
         }
-        public WikiMethod() {}
+        public WikiMethod() { }
 
         public override string ToString()
         {
@@ -151,7 +151,7 @@ namespace Deltin.Deltinteger.WorkshopWiki
             Name = name;
             Description = description;
         }
-        public WikiParameter() {}
+        public WikiParameter() { }
 
         public override string ToString()
         {

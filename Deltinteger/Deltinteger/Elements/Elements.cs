@@ -15,27 +15,6 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Elements
 {
-    public enum ValueType
-    {
-        Any,
-        VectorAndPlayer,
-        Number,
-        Boolean,
-        Hero,
-        Vector,
-        Player,
-        Players,
-        Team,
-        Map,
-        Gamemode,
-        Button,
-        String,
-        Effect,
-        Text,
-        Icon,
-        WorldText
-    }
-
     public class Element : IWorkshopTree
     {
         public static Element Part(string name, params IWorkshopTree[] parameterValues)
@@ -53,6 +32,8 @@ namespace Deltin.Deltinteger.Elements
             Function = function;
             ParameterValues = parameterValues;
         }
+
+        public override string ToString() => Function.Name.ToString() + (ParameterValues.Length == 0 ? "" : "(" + string.Join(", ", ParameterValues.Select(v => v.ToString())) + ")");
 
         public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
@@ -169,6 +150,9 @@ namespace Deltin.Deltinteger.Elements
             else if (Function.Name == "Down") vertex = new Vertex(0, -1, 0);
             else if (Function.Name == "Forward") vertex = new Vertex(0, 0, 1);
             else if (Function.Name == "Backward") vertex = new Vertex(0, 0, -1);
+			else if (Function.Name == "Subtract" 
+					&& ParameterValues[0] is Element le && le.Function.Name == "Left"  
+					&& ParameterValues[1] is Element re && re.Function.Name == "Left") vertex = new Vertex(0,0,0);
             else
             {   
                 vertex = null;
@@ -226,6 +210,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element IndexOfArrayValue(IWorkshopTree array, IWorkshopTree value) => Part("Index Of Array Value", array, value);
         public static Element Append(Element array, Element value) => Part("Append To Array", array, value);
         public static Element Append(IWorkshopTree array, IWorkshopTree value) => Part("Append To Array", array, value);
+        public static Element Remove(IWorkshopTree array, IWorkshopTree value) => Part("Remove From Array", array, value);
         public static Element FirstOf(IWorkshopTree array) => Part("First Of", array);
         public static Element LastOf(IWorkshopTree array) => Part("Last Of", array);
         public static Element CountOf(IWorkshopTree array) => Part("Count Of", array);
@@ -246,11 +231,15 @@ namespace Deltin.Deltinteger.Elements
         public static Element Subtract(IWorkshopTree a, IWorkshopTree b) => Part("Subtract", a, b);
         public static Element And(IWorkshopTree a, IWorkshopTree b) => Part("And", a, b);
         public static Element Or(IWorkshopTree a, IWorkshopTree b) => Part("Or", a, b);
+        public static Element Min(IWorkshopTree a, IWorkshopTree b) => Part("Min", a, b);
+        public static Element Max(IWorkshopTree a, IWorkshopTree b) => Part("Max", a, b);
         public static Element If(IWorkshopTree expression) => Part("If", expression);
         public static Element ElseIf(IWorkshopTree expression) => Part("Else If", expression);
         public static Element Else() => Part("Else");
         public static Element End() => Part("End");
         public static Element While(IWorkshopTree expression) => Part("While", expression);
+        public static Element Break() => Part("Break");
+        public static Element Continue() => Part("Continue");
         public static Element TimeElapsed() => Part("Total Time Elapsed");
         public static Element Wait() => Part("Wait", Num(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"));
         public static Element LoopIfConditionIsTrue() => Part("Loop If Condition Is True");
@@ -262,16 +251,20 @@ namespace Deltin.Deltinteger.Elements
         public static Element DotProduct(IWorkshopTree a, IWorkshopTree b) => Part("Dot Product", a, b);
         public static Element Normalize(IWorkshopTree a) => Part("Normalize", a);
         public static Element DirectionTowards(IWorkshopTree a, IWorkshopTree b) => Part("Direction Towards", a, b);
+        public static Element MagnitudeOf(IWorkshopTree vector) => Part("Magnitude Of", vector);
         public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
         public static Element EyePosition(IWorkshopTree player) => Part("Eye Position", player);
         public static Element FacingDirectionOf(IWorkshopTree player) => Part("Facing Direction Of", player);
+        public static Element Abs(IWorkshopTree value) => Part("Absolute Value", value);
         public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValueFromWorkshop("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest"));
         public static Element CustomString(string value, params Element[] formats) => new StringElement(value, formats);
+        public static Element StringLength(IWorkshopTree value) => Part("String Length", value);
+        public static Element StringSlice(IWorkshopTree value, IWorkshopTree start, IWorkshopTree count) => Part("String Slice", value, start, count);
         public static Element LastEntity() => Part("Last Entity");
         public static Element RaycastPosition(IWorkshopTree start, IWorkshopTree end, IWorkshopTree playersToInclude = null, IWorkshopTree playersToExclude = null, IWorkshopTree includePlayerOwnedObjects = null)
             => Part("Ray Cast Hit Position", start ?? throw new ArgumentNullException(nameof(start)), end ?? throw new ArgumentNullException(nameof(end)), playersToInclude ?? Null(), playersToExclude ?? Null(), includePlayerOwnedObjects ?? False());
         public static Element CallSubroutine(Subroutine subroutine) => Element.Part("Call Subroutine", subroutine);
-        public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyRunning", restartRule ? "Restart Rule" : "Do Nothing"));
+        public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyExecuting", restartRule ? "RestartRule" : "DoNothing"));
         public static Element SkipIf(Element condition, Element count) => Element.Part("Skip If", condition, count);
 
         public static Element Hud(

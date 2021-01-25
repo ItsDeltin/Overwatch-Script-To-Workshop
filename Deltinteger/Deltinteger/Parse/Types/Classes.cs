@@ -44,8 +44,9 @@ Object-serve scope. Only object members.
         {
             CanBeDeleted = true;
             CanBeExtended = true;
-            TokenType = TokenType.Class;
+            TokenType = SemanticTokenType.Class;
             DebugVariableResolver = new ClassDebugVariableResolver(this);
+            Kind = TypeKind.Class;
         }
 
         public virtual void ResolveElements()
@@ -67,7 +68,7 @@ Object-serve scope. Only object members.
             {
                 ((ClassType)Extends).ResolveElements();
 
-                staticScope      = ((ClassType)Extends).staticScope.Child(scopeName);
+                staticScope = ((ClassType)Extends).staticScope.Child(scopeName);
                 operationalScope = ((ClassType)Extends).operationalScope.Child(scopeName);
                 serveObjectScope = ((ClassType)Extends).serveObjectScope.Child(scopeName);
             }
@@ -186,7 +187,8 @@ Object-serve scope. Only object members.
         public override Scope GetObjectScope() => serveObjectScope;
         public override Scope ReturningScope() => staticScope;
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Class
         };
@@ -198,7 +200,7 @@ Object-serve scope. Only object members.
         public Constructor Constructor { get; }
         public IWorkshopTree[] ConstructorValues { get; }
         public object[] AdditionalParameterData { get; }
-        
+
         public NewClassInfo(IndexReference objectReference, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             ObjectReference = objectReference;
@@ -267,6 +269,8 @@ Object-serve scope. Only object members.
         {
             ClassIndexes = DeltinScript.VarCollection.Assign(ClassIndexesTag, true, false);
             DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
+            //set the first element to -1. This makes it so that no instance == 0
+            DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(-1, null, 0));
         }
 
         public IndexReference CreateObject(int classIdentifier, ActionSet actionSet, string internalName)
@@ -293,7 +297,7 @@ Object-serve scope. Only object members.
             if (index > VariableStacks.Count) throw new Exception("Variable stack skipped");
             if (index == VariableStacks.Count)
                 VariableStacks.Add(collection.Assign(ObjectVariableTag + index, true, false));
-            
+
             return VariableStacks[index];
         }
 
@@ -336,7 +340,7 @@ Object-serve scope. Only object members.
             IDebugVariable.ApplyReference(collection, debugVariable);
             EvaluateResponse response = new EvaluateResponse(collection, debugVariable);
             response.namedVariables = Class.ObjectVariables.Count;
-            
+
             return response;
         }
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using LSPos   = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
+using LSPos = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
 using LSRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace Deltin.Deltinteger.Compiler
@@ -11,9 +11,9 @@ namespace Deltin.Deltinteger.Compiler
     {
         public static DocPos Zero = new DocPos(0, 0);
 
-        [JsonProperty("line")] 
+        [JsonProperty("line")]
         public int Line;
-        [JsonProperty("character")] 
+        [JsonProperty("character")]
         public int Character;
 
         public DocPos(int line, int character)
@@ -22,46 +22,16 @@ namespace Deltin.Deltinteger.Compiler
             Character = character;
         }
 
-        public int PosIndex(string text)
-        {
-            if (Line == 0 && Character == 0) return 0;
-
-            int line = 0;
-            int character = 0;
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] == '\n')
-                {
-                    line++;
-                    character = 0;
-                }
-                else
-                {
-                    character++;
-                }
-
-                if (Line == line && Character == character)
-                    return i + 1;
-                
-                if (line > Line)
-                    throw new Exception("Scanned line surpassed expected line.");
-            }
-            throw new Exception("End reached without encountering position.");
-        }
-
-        public override string ToString()
-        {
-            return Line + ", " + Character;
-        }
+        public override string ToString() => Line + ", " + Character;
 
         public int CompareTo(DocPos other)
         {
             if (other == null || this.Line < other.Line || (this.Line == other.Line && this.Character < other.Character))
                 return -1;
-            
+
             if (this.Line == other.Line && this.Character == other.Character)
                 return 0;
-            
+
             if (this.Line > other.Line || (this.Line == other.Line && this.Character > other.Character))
                 return 1;
 
@@ -76,8 +46,8 @@ namespace Deltin.Deltinteger.Compiler
 
         public override int GetHashCode() => HashCode.Combine(Line, Character);
 
-        public static bool operator <(DocPos p1, DocPos p2)  => p1.CompareTo(p2) <  0;
-        public static bool operator >(DocPos p1, DocPos p2)  => p1.CompareTo(p2) >  0;
+        public static bool operator <(DocPos p1, DocPos p2) => p1.CompareTo(p2) < 0;
+        public static bool operator >(DocPos p1, DocPos p2) => p1.CompareTo(p2) > 0;
         public static bool operator <=(DocPos p1, DocPos p2) => p1.CompareTo(p2) <= 0;
         public static bool operator >=(DocPos p1, DocPos p2) => p1.CompareTo(p2) >= 0;
         public static DocRange operator +(DocPos p1, DocPos p2) => new DocRange(p1, p2);
@@ -89,9 +59,9 @@ namespace Deltin.Deltinteger.Compiler
     {
         public static readonly DocRange Zero = new DocRange(DocPos.Zero, DocPos.Zero);
 
-        [JsonProperty("start")] 
+        [JsonProperty("start")]
         public DocPos Start;
-        [JsonProperty("end")] 
+        [JsonProperty("end")]
         public DocPos End;
 
         public DocRange(DocPos start, DocPos end)
@@ -116,7 +86,7 @@ namespace Deltin.Deltinteger.Compiler
                 return 1;
 
             // Get the number of lines 'start' and 'stop' contain.
-            int thisLineDif = this.End.Line - this.Start.Line; 
+            int thisLineDif = this.End.Line - this.Start.Line;
             int otherLineDif = other.End.Line - other.Start.Line;
 
             // If 'this' has less lines than 'other', return less than.
@@ -126,7 +96,7 @@ namespace Deltin.Deltinteger.Compiler
             // If 'this' has more lines than 'other', return greater than.
             if (thisLineDif > otherLineDif)
                 return 1;
-            
+
             // If the amount of lines are equal, compare by character offset.
             if (thisLineDif == otherLineDif)
             {
@@ -136,7 +106,7 @@ namespace Deltin.Deltinteger.Compiler
                 // Return less-than.
                 if (thisCharDif < otherCharDif)
                     return -1;
-                
+
                 // Return equal.
                 if (thisCharDif == otherCharDif)
                     return 0;
@@ -167,8 +137,8 @@ namespace Deltin.Deltinteger.Compiler
 
         public override int GetHashCode() => HashCode.Combine(Start, End);
 
-        public static bool operator <(DocRange r1, DocRange r2)  => r1.CompareTo(r2) <  0;
-        public static bool operator >(DocRange r1, DocRange r2)  => r1.CompareTo(r2) >  0;
+        public static bool operator <(DocRange r1, DocRange r2) => r1.CompareTo(r2) < 0;
+        public static bool operator >(DocRange r1, DocRange r2) => r1.CompareTo(r2) > 0;
         public static bool operator <=(DocRange r1, DocRange r2) => r1.CompareTo(r2) <= 0;
         public static bool operator >=(DocRange r1, DocRange r2) => r1.CompareTo(r2) >= 0;
         public static DocRange operator +(DocRange start, DocRange end) => new DocRange(start.Start, end.End);
@@ -181,6 +151,7 @@ namespace Deltin.Deltinteger.Compiler
         public string Text { get; }
         public DocRange Range { get; set; }
         public TokenType TokenType { get; }
+        public TokenFlags Flags { get; set; }
 
         public Token(string text, DocRange range, TokenType tokenType)
         {
@@ -195,12 +166,20 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator false(Token x) => x == null;
         public static bool operator !(Token x) => x == null;
         public static implicit operator bool(Token x) => x != null;
+        public static implicit operator DocRange(Token x) => x.Range;
+    }
+
+    [Flags]
+    public enum TokenFlags
+    {
+        None = 0,
+        StringSingleQuotes = 1
     }
 
     public static class TokenExtensions
     {
         public static readonly TokenType[] Assignment_Tokens = new TokenType[] {
-            TokenType.Equal, TokenType.AddEqual, TokenType.DivideEqual, TokenType.HatEqual, TokenType.ModuloEqual, TokenType.MultiplyEqual, TokenType.SubtractEqual 
+            TokenType.Equal, TokenType.AddEqual, TokenType.DivideEqual, TokenType.HatEqual, TokenType.ModuloEqual, TokenType.MultiplyEqual, TokenType.SubtractEqual
         };
 
         public static string Name(this TokenType tokenType)
@@ -284,7 +263,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.EOF:
 				case TokenType.Type:
                     return false;
-                
+
                 default:
                     return true;
             }
@@ -305,13 +284,14 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.String:
                 case TokenType.Parentheses_Open:
                 case TokenType.SquareBracket_Open:
+                case TokenType.Async:
                 // Unary
                 case TokenType.Subtract:
                 case TokenType.Exclamation:
                 // Type cast
                 case TokenType.LessThan:
                     return true;
-                
+
                 default:
                     return tokenType.IsStartOfType(); // Lambdas
             }
@@ -339,7 +319,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Squiggle:
                 case TokenType.Subtract:
                     return true;
-                
+
                 default:
                     return false;
             }
@@ -354,7 +334,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Define:
                 case TokenType.Void:
                     return true;
-                
+
                 default:
                     return false;
             }
@@ -379,8 +359,9 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Semicolon:
                 case TokenType.Switch:
                 case TokenType.While:
+                case TokenType.ActionComment:
                     return true;
-                
+
                 default:
                     return tokenType.IsStartOfType() || tokenType.IsStartOfExpression();
             }
@@ -438,11 +419,15 @@ namespace Deltin.Deltinteger.Compiler
         Or,
         Pipe,
         // Generic expressions
-        String,
         Number,
         True,
         False,
         Null,
+        // Strings
+        String,
+        InterpolatedStringTail,
+        InterpolatedStringMiddle,
+        InterpolatedStringHead,
         // Keywords
         Import,
         Define,
@@ -469,6 +454,7 @@ namespace Deltin.Deltinteger.Compiler
         This,
         Root,
         As,
+        Async,
         // Attributes
         Public,
         Private,
