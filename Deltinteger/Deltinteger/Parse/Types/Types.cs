@@ -141,10 +141,9 @@ namespace Deltin.Deltinteger.Parse
             CodeType current = this;
             while (current != null)
             {
-                if (current.Operations != null)
-                    foreach (TypeOperation operation in current.Operations)
-                        if (operation.Operator == op && right != null && right.Implements(operation.Right))
-                            return operation;
+                    ITypeOperation operation = current.Operations.GetOperation(op, right);
+                    if (operation.Operator == op && right != null && right.Implements(operation.Right))
+                        return (TypeOperation)operation;
                 
                 current = current.Extends;
             }
