@@ -378,7 +378,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public double Value { get; set; }
 
-        public NumberElement(double value) : base(ElementRoot.Instance.GetFunction("Number"), null)
+        public NumberElement(double value) : base(ElementRoot.Instance.GetFunction("Number"), new IWorkshopTree[0])
         {
             Value = value;
         }

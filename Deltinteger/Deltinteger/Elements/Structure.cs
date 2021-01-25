@@ -190,10 +190,7 @@ namespace Deltin.Deltinteger.Elements
         public string CodeName() => Alias ?? Name.Replace(" ", "");
         public string DecompileName() => Name.Replace("(", "").Replace(")", "");
 
-        public bool EqualTo(IWorkshopTree other)
-        {
-            throw new NotImplementedException();
-        }
+        public bool EqualTo(IWorkshopTree other) => other is ElementEnumMember enumMember && Enum == enumMember.Enum && Name == enumMember.Name;
 
         public Element ToElement()
         {
