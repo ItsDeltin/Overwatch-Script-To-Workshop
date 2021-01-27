@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
         public override bool BuiltInTypeMatches(Type type) => false;
         public Scope GetObjectBasedScope() => ObjectScope;
         public Scope GetStaticBasedScope() => StaticScope;
-        public IMethod GetOverridenFunction(IMethodProvider provider) => throw new NotImplementedException();
+        public IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverloadInfo) => throw new NotImplementedException();
         public IVariableInstance GetOverridenVariable(string variableName) => throw new NotImplementedException();
         public void AddObjectBasedScope(IMethod function) => ObjectScope.CopyMethod(function);
         public void AddStaticBasedScope(IMethod function) => StaticScope.CopyMethod(function);

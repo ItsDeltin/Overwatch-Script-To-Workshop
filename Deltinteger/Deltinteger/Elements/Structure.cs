@@ -3,158 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 namespace Deltin.Deltinteger.Elements
 {
-    public class EnumeratorConverter : JsonConverter
-    {
-        public override bool CanConvert(Type objectType) => typeof(ElementEnum[]) == objectType;
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            var enumerators = new List<ElementEnum>();
-
-            // When ReadJson is called, reader's token type is StartObject.
-            reader.Read(); // Advance to property name.
-            
-            while (reader.TokenType != JsonToken.EndObject)
-            {
-                string name = (string)reader.Value;
-                reader.Read(); // Advance to the next object.
-
-                // Direct
-                if (reader.TokenType == JsonToken.StartArray)
-                {
-                    ElementEnum newEnum = new ElementEnum();
-                    newEnum.Name = name;
-                    newEnum.Members = JToken.Load(reader).ToArray().Select(v => {
-                            // String
-                            if (v.Type == JTokenType.String)
-                                return new ElementEnumMember() {
-                                    Name = v.ToObject<string>(),
-                                    Enum = newEnum
-                                };
-                            // Object
-                            else if (v.Type == JTokenType.Object)
-                                return new ElementEnumMember() {
-                                    Name = v["name"].ToObject<string>(),
-                                    Alias = v["alias"].ToObject<string>(),
-                                    Enum = newEnum
-                                };
-                            // Unknown
-                            throw new NotImplementedException(v.Type.ToString());
-                        }).ToArray();
-
-                    enumerators.Add(newEnum);
-                }
-                // With additional properties
-                else if (reader.TokenType == JsonToken.StartObject)
-                {
-                    // todo
-                }
-            }
-
-            return enumerators.ToArray();
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-            foreach (var enumerator in (ElementEnum[])value)
-            {
-                // Write the enum name.
-                writer.WritePropertyName(enumerator.Name);
-
-                // Member array.
-                writer.WriteStartArray();
-
-                // Write the members.
-                foreach (var member in enumerator.Members)
-                {
-                    // No additional properties, just write the name.
-                    if (member.Alias == null)
-                        writer.WriteValue(member.Name);
-                    else
-                    {
-                        // Start the object.
-                        writer.WriteStartObject();
-
-                        // Write the name.
-                        writer.WritePropertyName("name");
-                        writer.WriteValue(member.Name);
-
-                        // Write the alias.
-                        writer.WritePropertyName("alias");
-                        writer.WriteValue(member.Alias);
-
-                        // End the object.
-                        writer.WriteEndObject();
-                    }
-                }
-
-                // End the member array.
-                writer.WriteEndArray();
-            }
-            writer.WriteEndObject();
-        }
-    }
-
-    public class ParameterConverter : JsonConverter
-    {
-        public override bool CanConvert(Type objectType) => typeof(ElementParameter[]) == objectType;
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            // var parameter = existingValue as ElementParameter[] ?? new ElementParameter[0];
-            List<ElementParameter> parameters = new List<ElementParameter>();
-
-            // When ReadJson is called, reader's token type is StartObject.
-            reader.Read(); // Advance to property name.
-
-            while (reader.TokenType != JsonToken.EndObject)
-            {
-                string name = (string)reader.Value;
-                reader.Read(); // Advance to the next object.
-
-                // Convert the parameter to an object.
-                var parameterObject = JObject.Load(reader);
-                var parameter = parameterObject.ToObject<ElementParameter>();
-
-                // Get the name.
-                parameter.Name = name;
-
-                // Get the default value state.
-                parameter.HasDefaultValue = parameterObject.ContainsKey("defaultValue");
-
-                // Add it to the parameter list.
-                parameters.Add(parameter);
-
-                // Advance
-                reader.Read();
-            }
-
-            return parameters.ToArray();
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            foreach (var parameter in (ElementParameter[])value)
-            {
-                 // Write the property name.
-                writer.WritePropertyName(parameter.Name);
-
-                // Serialize the actual value.
-                serializer.Serialize(writer, parameter);
-            }
-
-            writer.WriteEndObject();
-        }
-    }
-
     public class ElementRoot
     {
         public static ElementRoot Instance { get; } = Get(File.ReadAllText(Path.Combine(Program.ExeFolder, "Elements.json")));
@@ -314,6 +166,8 @@ namespace Deltin.Deltinteger.Elements
     {
         public string Name;
         public ElementEnumMember[] Members;
+        public bool Hidden;
+
 
         public override string ToString() => Name + " [" + Members.Length + " members]";
 
@@ -336,10 +190,7 @@ namespace Deltin.Deltinteger.Elements
         public string CodeName() => Alias ?? Name.Replace(" ", "");
         public string DecompileName() => Name.Replace("(", "").Replace(")", "");
 
-        public bool EqualTo(IWorkshopTree other)
-        {
-            throw new NotImplementedException();
-        }
+        public bool EqualTo(IWorkshopTree other) => other is ElementEnumMember enumMember && Enum == enumMember.Enum && Name == enumMember.Name;
 
         public Element ToElement()
         {

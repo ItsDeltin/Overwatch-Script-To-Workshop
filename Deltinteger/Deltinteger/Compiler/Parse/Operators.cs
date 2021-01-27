@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             if (op1 == Sentinel || op2 == Sentinel) return false;
 
-            return op1.Precedence >= op2.Precedence;
+            return op1.Precedence >= op2.Precedence && !(op1 is CompilerOperator op1co && op1co.Type == OperatorType.Unary && op2 is CompilerOperator op2co && op2co.Type == OperatorType.Unary);
         }
     }
 

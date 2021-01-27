@@ -14,6 +14,8 @@ namespace Deltin.Deltinteger.Parse
 
         // IScopeable
         public string Name { get; }
+        public MarkupBuilder Documentation { get; }
+        public MarkupBuilder MarkupBuilder { get; }
         public AccessLevel AccessLevel { get; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; }
@@ -28,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Recursive { get; }
         public Lambda.IBridgeInvocable BridgeInvocable { get; }
         public bool RequiresCapture { get; }
-        private readonly TokenType _tokenType;
+        private readonly SemanticTokenType _tokenType;
         private readonly TokenModifier[] _tokenModifiers;
         private readonly bool _handleRestrictedCalls;
         private readonly bool _inferType;
@@ -178,7 +180,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Label = Name,
             Kind = CompletionItemKind.Variable,
-            Detail = (CodeType?.Name ?? "define") + " " + Name
+            Detail = CodeType.GetName() + " " + Name
         };
 
         public string GetLabel(bool markdown)
@@ -217,6 +219,8 @@ namespace Deltin.Deltinteger.Parse
         }
         public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(), Static);
         public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => new VariableInstance(this, genericsLinker);
+
+        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeVariableLabel(CodeType, Name);
     }
 
     public enum VariableType

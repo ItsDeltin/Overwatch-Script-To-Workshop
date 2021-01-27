@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = true; // Shouldn't matter.
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
-            _varInfo.TokenType = TokenType.Parameter;
+            _varInfo.TokenType = SemanticTokenType.Parameter;
             _varInfo.BridgeInvocable = _bridgeInvocable;
             _varInfo.RequiresCapture = true;
         }

@@ -9,11 +9,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         public Lexer Lexer { get; }
         public int Token { get; private set; }
-        public Token Current => Lexer.Tokens[Token];
-        public Token CurrentOrLast => Lexer.Tokens[Math.Min(Token, Lexer.Tokens.Count - 1)];
-        public TokenType Kind => IsFinished ? TokenType.EOF : Current.TokenType;
-        public int TokenCount => Lexer.Tokens.Count;
-        public bool IsFinished => Token >= Lexer.Tokens.Count;
+        public Token Current => Lexer.ScanTokenAt(Token);
+        public Token CurrentOrLast => Lexer.ScanTokenAt(Token) ?? Lexer.Tokens.Last();
+        public TokenType Kind => Current?.TokenType ?? TokenType.EOF;
+        public bool IsFinished => Lexer.IsFinished(Token) || Kind == TokenType.EOF;
 
         public Stack<IOperatorInfo> Operators { get; } = new Stack<IOperatorInfo>();
         public Stack<IParseExpression> Operands { get; } = new Stack<IParseExpression>();
@@ -24,24 +23,22 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public List<TokenCapture> NodeCaptures { get; } = new List<TokenCapture>();
         public List<IParserError> Errors { get; } = new List<IParserError>();
         private readonly RootContext _last;
-        private readonly IncrementInfo _incrementInfo;
 
         private int LookaheadDepth = 0;
 
-        public Parser(Lexer lexer, RootContext last = null, IncrementInfo incrementInfo = null)
+        public Parser(Lexer lexer, RootContext last = null)
         {
             Lexer = lexer;
             _last = last;
-            _incrementInfo = incrementInfo;
             StringCheck.Push(false);
         }
 
         Token Consume()
         {
-            if (Token < Lexer.Tokens.Count)
+            if (!Lexer.IsFinished(Token))
             {
                 Token++;
-                return Lexer.Tokens[Token - 1];
+                return Lexer.ScanTokenAt(Token - 1);
             }
             return null;
         }
@@ -86,7 +83,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNodeWithoutPopping<T>(T node) where T : INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(Lexer.Tokens[TokenRangeStart.Peek()].Range.Start, CurrentOrLast.Range.End);
+                node.Range = new DocRange(Lexer.ScanTokenAt(TokenRangeStart.Peek()).Range.Start, CurrentOrLast.Range.End);
             return node;
         }
 
@@ -117,7 +114,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool GetIncrementalNode<T>(out T node)
         {
             // If the last syntax tree was not provided or the current token is inside the change range, return null.
-            if (_last == null || _incrementInfo == null || (Token >= _incrementInfo.ChangeStart && Token <= _incrementInfo.ChangeEnd))
+            if (_last == null || (Token >= Lexer.IncrementalChangeStart && Token <= Lexer.IncrementalChangeEnd))
             {
                 node = default(T);
                 return false;
@@ -125,17 +122,30 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Iterate through each cached node.
             foreach (var capture in _last.NodeCaptures)
+            {
+                bool surpassesIncrementalChange = Token > Lexer.IncrementalChangeStart;
+
                 // If the node's type is equal to the expected node type
                 // and the cached node's start token index is equal to the current token's index (adjusted for token difference if the current token is past the change position) 
                 if (capture.Node.GetType() == typeof(T) &&
-                    !(capture.StartToken <= _incrementInfo.ChangeEnd && _incrementInfo.ChangeStart <= capture.StartToken + capture.Length) &&
-                    capture.StartToken + (Token > _incrementInfo.ChangeStart ? _incrementInfo.Delta : 0) == Token)
+                    // The capture's end token (capture.startToken + capture.Length) preceeds (<) the token where the change starts (Lexer.IncrementalChangeStart)
+                    // OR the Lexer's increment is completed (Lexer.IsPushCompleted) and the capture's start token (capture.startToken) proceeds (>) the token where
+                    // the change starts (Lexer.IncrementalChangeStart)
+                    //
+                    // This makes sure we do not reuse a changed incremental node.
+                    (capture.StartToken + capture.Length < Lexer.IncrementalChangeStart || (Lexer.IsPushCompleted && capture.StartToken > Lexer.IncrementalChangeEnd)) &&
+                    // If this surpasses the incremental change range, make sure the push is completed.
+                    (!surpassesIncrementalChange || Lexer.IsPushCompleted) &&
+                    // Make sure the incremental node's position matches the current Token (capture.StartToken + ... = Token).
+                    // If Token surpasses the incremental change range (surpassesIncrementalChange), then offset by the change delta.
+                    capture.StartToken + (surpassesIncrementalChange ? Lexer.GetTokenDelta() : 0) == Token)
                 {
                     // Then return the node then advance by the number of tokens in the cached node.
                     node = (T)capture.Node;
                     Token += capture.Length;
                     return true;
                 }
+            }
 
             // No matching node was found.
             node = default(T);
@@ -181,9 +191,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         bool Is(TokenType type) => Kind == type;
 
-        bool Is(TokenType type, int lookahead) => lookahead >= TokenCount ? type == TokenType.EOF : type == Lexer.Tokens[Token + lookahead].TokenType;
+        bool Is(TokenType type, int lookahead) => type == Lexer.ScanTokenAt(Token + lookahead).TokenType;
 
-        Token TokenAtOrEnd(int position) => Lexer.Tokens[Math.Min(Lexer.Tokens.Count - 1, position)];
+        Token TokenAtOrEnd(int position) => Lexer.ScanTokenAt(position) ?? Lexer.Tokens.Last();
 
         /// <summary>If the current token's type is equal to the specified type in the 'type' parameter,
         /// advance then return true. Otherwise, error then return false.</summary>
@@ -344,7 +354,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             foreach (var op in CompilerOperator.BinaryOperators)
             {
                 // Do not parse '>' if we are in a formatted string and the following token is not an identifier.
-                if (op.Operator == ">" && StringCheck.Peek() && !Lexer.Tokens[Token + 1].TokenType.IsStartOfExpression())
+                if (op.Operator == ">" && StringCheck.Peek() && !Lexer.ScanTokenAt(Token + 1).TokenType.IsStartOfExpression())
                     continue;
 
                 // Do not parse right-hand ternary if the top operator is not a left-hand ternary operator.
@@ -485,6 +495,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.String: return Node(() => new StringExpression(null, Consume()));
                 // Localized strings
                 case TokenType.At: return Node(() => new StringExpression(Consume(), ParseExpected(TokenType.String)));
+                // Interpolated strings
+                case TokenType.InterpolatedStringTail:
+                case TokenType.InterpolatedStringMiddle:
+                case TokenType.InterpolatedStringHead:
+                    return ParseInterpolatedString();
                 // Null
                 case TokenType.Null: return new NullExpression(Consume());
                 // This
@@ -699,7 +714,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Parses a block.</summary>
-        /// <returns>The resulting block.</returns
+        /// <returns>The resulting block.</returns>
         Block ParseBlock()
         {
             StartTokenCapture();
@@ -1241,7 +1256,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return parsedAny && Is(TokenType.Equal);
         });
 
-        bool IsStartOfParameter() => Is(TokenType.Ref) || Kind.IsStartOfType();
+        bool IsStartOfParameter() => Is(TokenType.Ref) || Is(TokenType.In) || Kind.IsStartOfType();
 
         bool IsStartOfExpression() => Kind.IsStartOfExpression() || Kind.IsBinaryOperator();
 
@@ -1611,6 +1626,54 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndTokenCapture(new StructDeclarationContext(values));
         }
 
+        InterpolatedStringExpression ParseInterpolatedString()
+        {
+            StartNode();
+
+            // Interpolated string with no values.
+            if (ParseOptional(TokenType.InterpolatedStringHead, out Token existingHead))
+                return EndNode(new InterpolatedStringExpression(existingHead, null));
+
+            // Get the interpolated string tail.
+            var tail = ParseExpected(TokenType.InterpolatedStringTail);
+
+            // Determines if the string is single or double quotes.
+            bool single = tail && ((tail.Flags & TokenFlags.StringSingleQuotes) == TokenFlags.StringSingleQuotes);
+
+            // Get the interpolated value.
+            var interpolatedValue = GetContainExpression();
+
+            var parts = new List<InterpolatedStringPart>();
+
+            while (ParseExpected(TokenType.CurlyBracket_Close))
+            {
+                if (Lexer.ScanTokenAt(Token, () => Lexer.CurrentController.MatchString(true, single)))
+                {
+                    Lexer.CurrentController.PostMatch();
+                    // } {
+                    if (ParseOptional(TokenType.InterpolatedStringMiddle, out Token middle))
+                    {
+                        parts.Add(new InterpolatedStringPart(interpolatedValue, middle));
+                        interpolatedValue = GetContainExpression();
+                    }
+                    // }"
+                    else if (ParseOptional(TokenType.InterpolatedStringHead, out Token head) || ParseOptional(TokenType.String, out head))
+                    {
+                        parts.Add(new InterpolatedStringPart(interpolatedValue, head));
+                        break;
+                    }
+                    else throw new Exception("Resulting match should either be InterpolatedStringMiddle or InterpolatedStringHead.");
+                }
+                else
+                {
+                    AddError(new InterpolationMissingTerminator(tail.Range));
+                    break;
+                }
+            }
+
+            return EndNode(new InterpolatedStringExpression(tail, parts));
+        }
+
         /// <summary>Parses the root of a file.</summary>
         public RootContext Parse()
         {
@@ -1649,6 +1712,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     context.Imports.Add(ParseImport());
                     break;
 
+        				case TokenType.Type:
+                  context.TypeAliases.Add(ParseTypeAlias());
+                  break;  
+
+                case TokenType.GlobalVar:
+                    if(Is(TokenType.CurlyBracket_Open, 1)) {
+                        context.GlobalvarReservations.AddRange(ParseVariableReservation());
+                    } else goto default;
+                    break;
+                case TokenType.PlayerVar:
+                    if(Is(TokenType.CurlyBracket_Open, 1)) {
+                        context.PlayervarReservations.AddRange(ParseVariableReservation());
+                    } else goto default;
+                    break;
+
                 // Others
                 default:
                     // Variable declaration
@@ -1662,6 +1740,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
                         Unexpected(true);
                     break;
             }
+        }
+
+
+        List<Token> ParseVariableReservation() {
+            if(Is(TokenType.GlobalVar)) {
+                ParseExpected(TokenType.GlobalVar);
+            } else {
+                ParseExpected(TokenType.PlayerVar);
+            }
+            ParseExpected(TokenType.CurlyBracket_Open);
+            var variables = ParseDelimitedList(TokenType.CurlyBracket_Close, () => true, () => ParseOptional(TokenType.String)??ParseOptional(TokenType.Number));
+            ParseExpected(TokenType.CurlyBracket_Close);
+            return variables;
+            
+            //TODO
         }
 
         /// <summary>Parses a rule.</summary>
@@ -1699,6 +1792,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             return EndTokenCapture(new RuleContext(ruleToken, name, disabled, order, settings, conditions, statement));
         }
+
+		/// <summary>Parses a type alias. </summary>
+		TypeAliasContext ParseTypeAlias() {
+			StartTokenCapture();
+			if (GetIncrementalNode(out TypeAliasContext type)) return EndTokenCapture(type);
+
+			ParseExpected(TokenType.Type);
+			Token nameToken = ParseExpected(TokenType.Identifier);
+			ParseExpected(TokenType.Equal);
+			var parseType = ParseType();
+			ParseExpected(TokenType.Semicolon);
+
+			return EndTokenCapture(new TypeAliasContext(nameToken, parseType));
+
+		}
 
         /// <summary>Parses a class.</summary>
         ClassContext ParseClass()
@@ -1797,6 +1905,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 else if (ParseOptional(TokenType.GlobalVar, out token)) tokens.GlobalVar = token;
                 else if (ParseOptional(TokenType.PlayerVar, out token)) tokens.PlayerVar = token;
                 else if (ParseOptional(TokenType.Ref, out token)) tokens.Ref = token;
+                else if (ParseOptional(TokenType.In, out token)) tokens.In = token;
                 else break;
                 tokens.AllAttributes.Add(token);
             }

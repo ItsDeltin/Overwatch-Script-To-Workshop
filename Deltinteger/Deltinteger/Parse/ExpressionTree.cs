@@ -72,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
                 Result = Tree[Tree.Length - 1];
 
             // Get the completion items for each expression in the path.
-            GetCompletion(parseInfo.Script, scope);
+            GetCompletion(parseInfo, scope);
         }
 
         private ITreeContextPart[] Flatten(ScriptFile script, BinaryOperatorExpression exprContext)
@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private void GetCompletion(ScriptFile script, Scope scope)
+        private void GetCompletion(ParseInfo parseInfo, Scope scope)
         {
             for (int i = 0; i < Tree.Length; i++)
                 if (Tree[i] != null)
@@ -136,16 +136,16 @@ namespace Deltin.Deltinteger.Parse
                             range = ExprContextTree[i + 1].GetRange();
                         }
                         // Expression path has a trailing '.'
-                        else if (_trailingSeperator != null && !script.IsTokenLast(_trailingSeperator))
+                        else if (_trailingSeperator != null && !parseInfo.Script.IsTokenLast(_trailingSeperator))
                         {
                             range = new DocRange(
                                 _trailingSeperator.Range.End,
-                                script.NextToken(_trailingSeperator).Range.Start
+                                parseInfo.Script.NextToken(_trailingSeperator).Range.Start
                             );
                         }
                         else continue;
 
-                        script.AddCompletionRange(new CompletionRange(treeScope, scope, range, CompletionRangeKind.ClearRest));
+                        parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, treeScope, scope, range, CompletionRangeKind.ClearRest));
                     }
                 }
         }
@@ -414,7 +414,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope GetScope()
         {
             // Get the name of the scope batch.
-            var batchNameGroup = _potentialPaths.Select(pp => pp.GetScope().ErrorName).Distinct(); // Gets all scope names in an enumerable with no duplicates.
+            var batchNameGroup = _potentialPaths.Select(pp => pp.GetScope()?.ErrorName).Where(name => name != null).Distinct(); // Gets all scope names in an enumerable with no duplicates.
             string name = "current scope"; // The default scope name.
 
             // Set the scope name.
@@ -426,7 +426,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Add all potential path's scopes to the scope batch.
             foreach (var path in _potentialPaths)
-                scopeBatch.CopyAll(path.GetScope());
+            {
+                var scope = path.GetScope();
+
+                if (scope != null)
+                    scopeBatch.CopyAll(scope);
+            }
 
             // Finished.
             return scopeBatch;

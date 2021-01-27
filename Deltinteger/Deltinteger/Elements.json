@@ -3031,7 +3031,7 @@
           "type": "player"
         },
         "Hero": {
-          "type": "hero" 
+          "type": "hero"
         },
         "Stat": {
           "type": "PlayerHeroStat"
@@ -6088,114 +6088,120 @@
     }
   ],
   "enumerators": {
-    "Event": [
-      {
-        "name": "Ongoing - Global",
-        "alias": "OngoingGlobal"
-      },
-      {
-        "name": "Ongoing - Each Player",
-        "alias": "OngoingPlayer"
-      },
-      {
-        "name": "Player earned elimination",
-        "alias": "OnElimination"
-      },
-      {
-        "name": "Player dealt final blow",
-        "alias": "OnFinalBlow"
-      },
-      {
-        "name": "Player dealt damage",
-        "alias": "OnDamageDealt"
-      },
-      {
-        "name": "Player took damage",
-        "alias": "OnDamageTaken"
-      },
-      {
-        "name": "Player died",
-        "alias": "OnDeath"
-      },
-      {
-        "name": "Player Dealt Healing",
-        "alias": "OnHealingDealt"
-      },
-      {
-        "name": "Player Received Healing",
-        "alias": "OnHealingTaken"
-      },
-      {
-        "name": "Player Joined Match",
-        "alias": "OnPlayerJoin"
-      },
-      {
-        "name": "Player Left Match",
-        "alias": "OnPlayerLeave"
-      },
-      "Subroutine",
-      "Player Dealt Knockback",
-      "Player Received Knockback"
-    ],
-    "Player": [
-      "All",
-      "Slot0",
-      "Slot1",
-      "Slot2",
-      "Slot3",
-      "Slot4",
-      "Slot5",
-      "Slot6",
-      "Slot7",
-      "Slot8",
-      "Slot9",
-      "Slot10",
-      "Slot11",
-      "Reaper",
-      "Tracer",
-      "Mercy",
-      "Hanzo",
-      {
-        "name": "Torbjörn",
-        "alias": "Torbjorn"
-      },
-      "Reinhardt",
-      "Pharah",
-      "Winston",
-      "Widowmaker",
-      "Bastion",
-      "Symmetra",
-      "Zenyatta",
-      "Genji",
-      "Roadhog",
-      "Mccree",
-      "Junkrat",
-      "Zarya",
-      {
-        "name": "Soldier: 76",
-        "alias": "Soldier76"
-      },
-      {
-        "name": "Lúcio",
-        "alias": "Lucio"
-      },
-      {
-        "name": "D.va",
-        "alias": "Dva"
-      },
-      "Mei",
-      "Sombra",
-      "Doomfist",
-      "Ana",
-      "Orisa",
-      "Brigitte",
-      "Moira",
-      "Wrecking Ball",
-      "Ashe",
-      "Echo",
-      "Baptiste",
-      "Sigma"
-    ],
+    "Event": {
+      "hidden": true,
+      "members": [
+        {
+          "name": "Ongoing - Global",
+          "alias": "OngoingGlobal"
+        },
+        {
+          "name": "Ongoing - Each Player",
+          "alias": "OngoingPlayer"
+        },
+        {
+          "name": "Player earned elimination",
+          "alias": "OnElimination"
+        },
+        {
+          "name": "Player dealt final blow",
+          "alias": "OnFinalBlow"
+        },
+        {
+          "name": "Player dealt damage",
+          "alias": "OnDamageDealt"
+        },
+        {
+          "name": "Player took damage",
+          "alias": "OnDamageTaken"
+        },
+        {
+          "name": "Player died",
+          "alias": "OnDeath"
+        },
+        {
+          "name": "Player Dealt Healing",
+          "alias": "OnHealingDealt"
+        },
+        {
+          "name": "Player Received Healing",
+          "alias": "OnHealingTaken"
+        },
+        {
+          "name": "Player Joined Match",
+          "alias": "OnPlayerJoin"
+        },
+        {
+          "name": "Player Left Match",
+          "alias": "OnPlayerLeave"
+        },
+        "Subroutine",
+        "Player Dealt Knockback",
+        "Player Received Knockback"
+      ]
+    },
+    "Player": {
+      "hidden": true,
+      "members": [
+        "All",
+        "Slot0",
+        "Slot1",
+        "Slot2",
+        "Slot3",
+        "Slot4",
+        "Slot5",
+        "Slot6",
+        "Slot7",
+        "Slot8",
+        "Slot9",
+        "Slot10",
+        "Slot11",
+        "Reaper",
+        "Tracer",
+        "Mercy",
+        "Hanzo",
+        {
+          "name": "Torbjörn",
+          "alias": "Torbjorn"
+        },
+        "Reinhardt",
+        "Pharah",
+        "Winston",
+        "Widowmaker",
+        "Bastion",
+        "Symmetra",
+        "Zenyatta",
+        "Genji",
+        "Roadhog",
+        "Mccree",
+        "Junkrat",
+        "Zarya",
+        {
+          "name": "Soldier: 76",
+          "alias": "Soldier76"
+        },
+        {
+          "name": "Lúcio",
+          "alias": "Lucio"
+        },
+        {
+          "name": "D.va",
+          "alias": "Dva"
+        },
+        "Mei",
+        "Sombra",
+        "Doomfist",
+        "Ana",
+        "Orisa",
+        "Brigitte",
+        "Moira",
+        "Wrecking Ball",
+        "Ashe",
+        "Echo",
+        "Baptiste",
+        "Sigma"
+      ]
+    },
     "Hero": [
       "Ana",
       "Ashe",
@@ -6242,32 +6248,35 @@
       "Zarya",
       "Zenyatta"
     ],
-    "Operators": [
-      {
-        "name": "==",
-        "alias": "Equal"
-      },
-      {
-        "name": "!=",
-        "alias": "NotEqual"
-      },
-      {
-        "name": "<",
-        "alias": "LessThan"
-      },
-      {
-        "name": "<=",
-        "alias": "LessThanOrEqual"
-      },
-      {
-        "name": ">",
-        "alias": "GreaterThan"
-      },
-      {
-        "name": ">=",
-        "alias": "GreaterThanOrEqual"
-      }
-    ],
+    "Operators": {
+      "hidden": true,
+      "members": [
+        {
+          "name": "==",
+          "alias": "Equal"
+        },
+        {
+          "name": "!=",
+          "alias": "NotEqual"
+        },
+        {
+          "name": "<",
+          "alias": "LessThan"
+        },
+        {
+          "name": "<=",
+          "alias": "LessThanOrEqual"
+        },
+        {
+          "name": ">",
+          "alias": "GreaterThan"
+        },
+        {
+          "name": ">=",
+          "alias": "GreaterThanOrEqual"
+        }
+      ]
+    },
     "Operation": [
       "Add",
       "Subtract",
@@ -6587,10 +6596,13 @@
       "Receivers And Healers",
       "None"
     ],
-    "IfAlreadyExecuting": [
-      "Restart Rule",
-      "Do Nothing"
-    ],
+    "IfAlreadyExecuting": {
+      "hidden": true,
+      "members": [
+        "Restart Rule",
+        "Do Nothing"
+      ]
+    },
     "FacingRev": [
       "Direction And Turn Rate",
       "None"

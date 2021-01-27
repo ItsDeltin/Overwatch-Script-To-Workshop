@@ -16,13 +16,13 @@ namespace Deltin.Deltinteger.Parse
         private List<EnumValuePair> _valuePairs = new List<EnumValuePair>();
         private bool _constant;
 
-        public ValueGroupType(ElementEnum enumData, bool constant) : base(enumData.Name)
+        public ValueGroupType(ElementEnum enumData, ITypeSupplier types, bool constant) : base(enumData.Name)
         {
             _staticScope = new Scope("enum " + Name);
             _objectScope = new Scope("enum " + Name);
             _constant = constant;
             EnumData = enumData;
-            TokenType = TokenType.Enum;
+            TokenType = SemanticTokenType.Enum;
 
             if (constant)
                 TokenModifiers.Add(TokenModifier.Readonly);
@@ -33,6 +33,8 @@ namespace Deltin.Deltinteger.Parse
                 _valuePairs.Add(newPair);
                 _staticScope.AddNativeVariable(newPair);
             }
+
+            Operations.DefaultAssignment = !constant;
         }
 
         public override bool IsConstant() => _constant;
@@ -69,15 +71,18 @@ namespace Deltin.Deltinteger.Parse
         public static ValueGroupType[] GetEnumTypes(ITypeSupplier supplier)
         {
             var enums = ElementRoot.Instance.Enumerators;
-            ValueGroupType[] types = new ValueGroupType[enums.Length];
-            for (int i = 0; i < types.Length; i++)
-            {
-                if (enums[i].Name == "Team")
-                    types[i] = new TeamGroupType(supplier, enums[i]);
-                else
-                    types[i] = new ValueGroupType(enums[i], !enums[i].ConvertableToElement());
-            }
-            return types;
+            var types = new List<ValueGroupType>();
+
+            foreach (var enumerator in enums)
+                if (!enumerator.Hidden)
+                {
+                    if (enumerator.Name == "Team")
+                        types.Add(new TeamGroupType(supplier, enumerator));
+                    else
+                        types.Add(new ValueGroupType(enumerator, supplier, !enumerator.ConvertableToElement()));
+                }
+
+            return types.ToArray();
         }
     }
 
@@ -88,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly InternalVar OnDefense;
         private readonly InternalVar OnOffense;
 
-        public TeamGroupType(ITypeSupplier typeSupplier, ElementEnum enumData) : base(enumData, false)
+        public TeamGroupType(ITypeSupplier typeSupplier, ElementEnum enumData) : base(enumData, typeSupplier, false)
         {
             Opposite = new InternalVar("Opposite", this, CompletionItemKind.Property) {
                 Documentation = new MarkupBuilder()
@@ -131,7 +136,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Member = member;
             CodeType = type;
-            // TokenType = Deltin.Deltinteger.Parse.TokenType.EnumMember;
+            // TokenType = Deltin.Deltinteger.Parse.SemanticTokenType.EnumMember;
         }
     }
 }

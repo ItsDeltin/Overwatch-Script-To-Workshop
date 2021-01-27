@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
             Types.AddTypesToScope(GlobalScope);
 
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(translateSettings.Root);
+            Importer.CollectScriptFiles(this, translateSettings.Root);
 
             Translate();
             if (!Diagnostics.ContainsErrors())
@@ -158,6 +158,29 @@ namespace Deltin.Deltinteger.Parse
                 Types.DefinedTypes.Add(newType);
             }
                         
+            // Get the variable reservations
+            foreach (ScriptFile script in Importer.ScriptFiles)
+            {
+                foreach (Token reservation in script.Context.GlobalvarReservations)
+                {
+                    string text = reservation.GetText().RemoveQuotes();
+
+                    if(Int32.TryParse(text, out int id))
+                        VarCollection.Reserve(id, true, script.Diagnostics, reservation.Range);
+                    else
+                        VarCollection.Reserve(text, true);
+                }
+                foreach (Token reservation in script.Context.PlayervarReservations)
+                {
+                    string text = reservation.GetText().RemoveQuotes();
+
+                    if(Int32.TryParse(text, out int id))
+                        VarCollection.Reserve(id, false, script.Diagnostics, reservation.Range);
+                    else
+                        VarCollection.Reserve(text, false);
+                }
+            }
+
             // Get variable declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var declaration in script.Context.Declarations)
@@ -197,7 +220,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var resolve in _resolveElements) resolve.ResolveElements();
             foreach (var apply in _applyBlocks) apply.SetupParameters();
             foreach (var apply in _applyBlocks) apply.SetupBlock();
-            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion();
+            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion(this);
 
             // Get hooks
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -340,7 +363,7 @@ namespace Deltin.Deltinteger.Parse
         void IScopeAppender.AddStaticBasedScope(IMethod function) => RulesetScope.CopyMethod(function);
         void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => RulesetScope.CopyVariable(variable);
         void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => RulesetScope.CopyVariable(variable);
-        IMethod IScopeProvider.GetOverridenFunction(IMethodProvider provider) => throw new NotImplementedException();
+        IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverloadInfo) => throw new NotImplementedException();
         IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => throw new NotImplementedException();
     }
 
@@ -377,7 +400,6 @@ namespace Deltin.Deltinteger.Parse
             AddType(_numberType);
             AddType(_stringType);
             AddType(_booleanType);
-            AddType(Positionable.Instance);
             AddType(Pathfinder.SegmentsStruct.Instance);
             // Constant lambda types.
             AddType(new Lambda.BlockLambda());

@@ -26,13 +26,14 @@ namespace Deltin.Deltinteger.Parse
     public class MissingVariable : IVariable, IVariableInstance, IExpression
     {
         public string Name { get; }
+        public MarkupBuilder Documentation => null;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public CodeType CodeType { get; }
         public VariableType VariableType => VariableType.Dynamic;
         public IVariable Provider => this;
-        public MarkupBuilder Documentation { get; set; }
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
 
         public MissingVariable(DeltinScript deltinScript, string name)
         {

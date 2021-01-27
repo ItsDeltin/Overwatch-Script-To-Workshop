@@ -9,6 +9,7 @@ namespace Deltin.Deltinteger.Parse
     public class ClassDebugVariableResolver : IDebugVariableResolver
     {
         public ClassType Class { get; }
+        private readonly DeltinScript _deltinScript;
 
         public ClassDebugVariableResolver(ClassType @class)
         {
@@ -59,16 +60,18 @@ namespace Deltin.Deltinteger.Parse
                 var objectVariableArray = collection.ActionStream.Variables.FirstOrDefault(v => v.Name == ClassData.ObjectVariableTag + i);
                 if (objectVariableArray != null && objectVariableArray.Value is Csv.CsvArray csvArray && reference < csvArray.Values.Length)
                     value = csvArray.Values[reference];
+                
+                var type = Class.ObjectVariables[i].Variable.CodeType.GetCodeType(_deltinScript);
 
                 variables[i] = new ChildDebugVariable(
                     // Child variable resolver
-                    Class.ObjectVariables[i].Variable.CodeType.DebugVariableResolver ?? new DefaultResolver(),
+                    type.DebugVariableResolver ?? new DefaultResolver(),
                     // Value
                     value,
                     // Name
                     Class.ObjectVariables[i].Variable.Name,
                     // Type
-                    Class.ObjectVariables[i].Variable.CodeType.GetName()
+                    type.GetName()
                 );
                 collection.Add(variables[i]);
             }

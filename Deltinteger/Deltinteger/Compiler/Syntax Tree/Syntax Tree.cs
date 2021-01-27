@@ -12,6 +12,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<ClassContext> Classes { get; } = new List<ClassContext>();
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
+
+		    public List<TypeAliasContext> TypeAliases {get; } = new List<TypeAliasContext>();
+
+        public List<Token> PlayervarReservations {get; } = new List<Token>();
+        public List<Token> GlobalvarReservations {get; } = new List<Token>();
+
         public List<Hook> Hooks { get; } = new List<Hook>();
         public List<TokenCapture> NodeCaptures { get; set; }
     }
@@ -304,6 +310,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token GlobalVar { get; set; }
         public Token PlayerVar { get; set; }
         public Token Ref { get; set; }
+        public Token In { get; set; }
         public List<Token> AllAttributes { get; } = new List<Token>();
         public Deltin.Deltinteger.Parse.AccessLevel GetAccessLevel() =>
             Public != null ? Deltin.Deltinteger.Parse.AccessLevel.Public :
@@ -320,6 +327,17 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }
+	
+	public class TypeAliasContext : Node
+	{
+		public Token NewTypeName;
+		public IParseType OtherType;
+
+		public TypeAliasContext(Token newTypeName, IParseType otherType) {
+			NewTypeName = newTypeName;
+			OtherType = otherType;
+		}
+	}
 
     public class Import
     {
@@ -448,6 +466,30 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
 
         public override string ToString() => '"' + Value + '"';
+    }
+
+    public class InterpolatedStringExpression : Node, IParseExpression
+    {
+        public Token Tail { get; }
+        public List<InterpolatedStringPart> Parts { get; }
+
+        public InterpolatedStringExpression(Token tail, List<InterpolatedStringPart> parts)
+        {
+            Tail = tail;
+            Parts = parts;
+        }
+    }
+
+    public class InterpolatedStringPart
+    {
+        public IParseExpression Expression { get; } 
+        public Token Right { get; }
+
+        public InterpolatedStringPart(IParseExpression expression, Token right)
+        {
+            Expression = expression;
+            Right = right;
+        }
     }
 
     public class Identifier : Node, IParseExpression, ITypeContextHandler

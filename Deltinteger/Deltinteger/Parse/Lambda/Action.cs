@@ -23,6 +23,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         /// <summary>The parameters of the lambda.</summary>
         public IVariable[] Parameters { get; private set; }
 
+        private IVariableInstance _parameterInstances;
+
         /// <summary>The invocation status of the lambda parameters/</summary>
         public IBridgeInvocable[] InvokedState { get; private set; }
 
@@ -99,7 +101,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
                 InvokedState[i] = new SubLambdaInvoke();
                 Parameters[i] = new LambdaVariable(i, expectingType, _lambdaScope, new LambdaContextHandler(_parseInfo, _context.Parameters[i]), InvokedState[i]).GetVar();
-                _argumentTypes[i] = Parameters[i].CodeType;
+                _argumentTypes[i] = Parameters[i].GetDefaultInstance().CodeType.GetCodeType(_parseInfo.TranslateInfo);
             }
 
             ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).AddVariableTracker(this).SetExpectingLambda(expectingType?.ReturnType);
@@ -244,24 +246,25 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return builder.Call();
         }
 
-        public string GetLabel(bool markdown)
+        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)
         {
-            string label = "";
+            var builder = new MarkupBuilder().StartCodeLine();
 
-            if (Parameters.Length == 1) label += Parameters[0].CodeType.GetName() + " " + Parameters[0].Name;
+            if (Parameters.Length == 1)
+                builder.Add(_argumentTypes[0].GetName() + " " + Parameters[0].Name);
             else
             {
-                label += "(";
+                builder.Add("(");
                 for (int i = 0; i < Parameters.Length; i++)
                 {
-                    if (i != 0) label += ", ";
-                    label += Parameters[i].CodeType.GetName() + " " + Parameters[i].Name;
+                    if (i != 0) builder.Add(", ");
+                    builder.Add(_argumentTypes[i].GetName() + " " + Parameters[i].Name);
                 }
-                label += ")";
+                builder.Add(")");
             }
-            label += " => ";
+            builder.Add(" => ");
 
-            return label;
+            return builder;
         }
 
         public void SetupParameters() { }
@@ -289,7 +292,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             public string TypeName => "lambda";
             public bool CanBeRecursivelyCalled() => false;
             public bool DoesRecursivelyCall(IRecursiveCallHandler calling) => calling is LambdaRecursionHandler lambdaRecursion && Lambda == lambdaRecursion.Lambda;
-            public string GetLabel() => Lambda.GetLabel(false);
+            public string GetLabel(DeltinScript deltinScript) => Lambda.GetLabel(deltinScript, LabelInfo.RecursionError).ToString(false);
         }
     }
 }

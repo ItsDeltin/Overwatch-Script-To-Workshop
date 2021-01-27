@@ -13,18 +13,14 @@ namespace Deltin.Deltinteger.Parse
     public class MethodGroup : IVariableInstance, IVariable
     {
         public string Name { get; }
+        public MarkupBuilder Documentation { get; }
         public bool WholeContext => true;
         public Location DefinedAt => null; // Doesn't matter.
         public AccessLevel AccessLevel => AccessLevel.Public; // Doesn't matter.
-        public CodeType CodeType => null;
+        public ICodeTypeSolver CodeType => null;
         public List<IMethod> Functions { get; } = new List<IMethod>();
         IVariable IVariableInstance.Provider => this;
         VariableType IVariable.VariableType => VariableType.ElementReference;
-        public MarkupBuilder Documentation { get; set; }
-
-        string IVariable.Name => throw new NotImplementedException();
-
-        CodeType IVariable.CodeType => throw new NotImplementedException();
 
         public MethodGroup(string name)
         {
@@ -34,15 +30,14 @@ namespace Deltin.Deltinteger.Parse
         public bool MethodIsValid(IMethod method) => method.Name == Name;
         public void AddMethod(IMethod method) => Functions.Add(method);
 
-        public CompletionItem GetCompletion() => new CompletionItem()
+        public CompletionItem GetCompletion(DeltinScript deltinScript) => new CompletionItem()
         {
             Label = Name,
             Kind = CompletionItemKind.Function,
             Documentation = new MarkupBuilder()
                 .StartCodeLine()
                 .Add(
-                    (Functions[0].DoesReturnValue ? (Functions[0].CodeType == null ? "define" : Functions[0].CodeType.GetName()) : "void") + " " +
-                    Functions[0].GetLabel(false) + (Functions.Count == 1 ? "" : " (+" + (Functions.Count - 1) + " overloads)")
+                    Functions[0].GetLabel(deltinScript, LabelInfo.SignatureOverload) + (Functions.Count == 1 ? "" : " (+" + (Functions.Count - 1) + " overloads)")
                 ).EndCodeLine().ToMarkup()
         };
 
@@ -82,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Accept()
         {
-            _parseInfo.Script.AddToken(_range, TokenType.Function);
+            _parseInfo.Script.AddToken(_range, SemanticTokenType.Function);
 
             if (_parseInfo.ResolveInvokeInfo != null)
                 _parseInfo.ResolveInvokeInfo.Resolve(new MethodGroupInvokeInfo());
@@ -106,8 +101,12 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Make sure the method implements the target lambda.
                     for (int i = 0; i < func.Parameters.Length; i++)
-                        if (func.Parameters[i].Type != null && !func.Parameters[i].Type.Implements(expecting.Parameters[i]))
+                    {
+                        var parameterType = func.Parameters[i].GetCodeType(_parseInfo.TranslateInfo);
+                        
+                        if (parameterType != null && parameterType.Implements(expecting.Parameters[i]))
                             continue;
+                    }
 
                     _chosenFunction = func;
                     found = true;
@@ -157,7 +156,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _functionInvoker.Invoke(actionSet, parameterValues);
 
-        public string GetLabel(bool markdown) => _chosenFunction.GetLabel(markdown);
+        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => _chosenFunction.GetLabel(deltinScript, labelInfo);
         public Scope ReturningScope() => null;
         public CodeType Type() => _type;
         

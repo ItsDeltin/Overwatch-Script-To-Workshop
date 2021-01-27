@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.RequiresCapture = true;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
 
-            _varInfo.TokenType = TokenType.Variable;
+            _varInfo.TokenType = SemanticTokenType.Variable;
             _varInfo.TokenModifiers.Add(TokenModifier.Declaration);
             _varInfo.TokenModifiers.Add(TokenModifier.Readonly);
         }

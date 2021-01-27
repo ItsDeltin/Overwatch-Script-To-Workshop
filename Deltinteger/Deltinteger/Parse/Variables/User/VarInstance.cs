@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel => _var.AccessLevel;
         IVariable IVariableInstance.Provider => _var;
         public MarkupBuilder Documentation { get; set; }
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
 
         private readonly Var _var;
 

@@ -28,6 +28,8 @@ namespace Deltin.Deltinteger.Parse
         public ResolveInvokeInfo ResolveInvokeInfo { get; private set; }
         public AsyncInfo AsyncInfo { get; private set; }
 
+        public Elements.ITypeSupplier Types => TranslateInfo.Types;
+
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
             Script = script;
@@ -132,7 +134,6 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets an IExpression from an ExprContext.</summary>
         /// <param name="scope">The scope the expression was called in.</param>
         /// <param name="exprContext">The context of the expression/</param>
-        /// <param name="selfContained">Determines if the expression is not an expression tree.</param>
         /// <param name="usedAsValue">Determines if the expression is being used as a value.</param>
         /// <param name="getter">The getter scope. Used for preserving scope through parameters.</param>
         /// <returns>An IExpression created from the ExprContext.</returns>
@@ -146,6 +147,7 @@ namespace Deltin.Deltinteger.Parse
                 case BooleanExpression boolean: return new BoolAction(this, boolean.Value);
                 case NullExpression @null: return new NullAction(this);
                 case StringExpression @string: return new StringAction(this, scope, @string);
+                case InterpolatedStringExpression interpolatedString: return new Strings.InterpolatedStringAction(interpolatedString, this, scope);
                 case Identifier identifier: return GetVariable(scope, getter, identifier);
                 case FunctionExpression method: return new CallMethodAction(this, scope, method, usedAsValue, getter);
                 case NewExpression newObject: return new CreateObjectAction(this, scope, newObject);

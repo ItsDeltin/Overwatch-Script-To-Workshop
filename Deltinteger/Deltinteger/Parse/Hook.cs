@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse
     public class HookVar : IVariable, IVariableInstance
     {
         public string Name { get; }
-        public CodeType CodeType { get; }
+        public ICodeTypeSolver CodeType { get; }
         public bool WasSet { get; private set; }
         public IExpression HookValue { get; private set; }
         public Action<IExpression> SetHook { get; } = null;
@@ -29,12 +29,14 @@ namespace Deltin.Deltinteger.Parse
 
         public void TrySet(ParseInfo parseInfo, IExpression value, DocRange expressionRange)
         {
+            var type = CodeType.GetCodeType(parseInfo.TranslateInfo);
+
             // Check if the hook was already set.
             if (WasSet)
                 parseInfo.Script.Diagnostics.Error("Hooks cannot be set twice.", expressionRange);
             // Check if the given value implements the expected value.
-            else if (!value.Type().Implements(CodeType))
-                parseInfo.Script.Diagnostics.Error($"Expected a value of type {CodeType.GetName()}.", expressionRange);
+            else if (!value.Type().Implements(type))
+                parseInfo.Script.Diagnostics.Error($"Expected a value of type {type.GetName()}.", expressionRange);
             // Set the hook.
             else
             {
@@ -44,8 +46,6 @@ namespace Deltin.Deltinteger.Parse
 
             WasSet = true;
         }
-
-        public bool Settable() => false;
 
         public static void GetHook(ParseInfo parseInfo, Scope scope, Hook context)
         {
@@ -79,7 +79,6 @@ namespace Deltin.Deltinteger.Parse
 
         public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
         public IGettableAssigner GetAssigner() => throw new NotImplementedException();
-        public CompletionItem GetCompletion() => IVariableInstance.GetCompletion(this, CompletionItemKind.Constant);
         public IVariableInstance GetDefaultInstance() => this;
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
         public void AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();

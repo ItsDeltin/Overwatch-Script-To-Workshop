@@ -76,7 +76,9 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle close.
         public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
         {
-            Documents.Remove(TextDocumentFromUri(closeParams.TextDocument.Uri.ToUri()));
+            var removing = TextDocumentFromUri(closeParams.TextDocument.Uri.ToUri());
+            removing.Remove();
+            Documents.Remove(removing);
             return Unit.Task;
         }
 

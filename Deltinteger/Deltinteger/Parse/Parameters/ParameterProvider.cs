@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ParameterProvider : IParameterProvider, IRestrictedCallHandler
+    public class ParameterProvider : IParameterProvider, IRestrictedCallHandler, IParameterLike
     {
         public string Name { get; }
         public Var Var { get; private set; }
@@ -77,6 +77,13 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return parameters;
+        }
+
+        public string GetLabel(DeltinScript deltinScript)
+        {
+            string result = Type.GetName() + " " + Name;
+            if (DefaultValue != null) result = "[" + result + "]";
+            return result;
         }
     }
 }

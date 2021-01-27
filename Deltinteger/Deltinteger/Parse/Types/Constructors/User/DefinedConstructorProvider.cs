@@ -17,6 +17,9 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         public CodeType[] ParameterTypes { get; private set; }
         public BlockAction Block { get; private set; }
         public SubroutineInfo SubroutineInfo { get; set; }
+
+        CallInfo IApplyBlock.CallInfo => throw new System.NotImplementedException();
+
         private readonly ParseInfo _parseInfo;
         private readonly Scope _scope;
         private readonly ConstructorContext _context;
@@ -53,9 +56,6 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         }
 
         public void OnBlockApply(IOnBlockApplied onBlockApplied) => _applyBlock.OnBlockApply(onBlockApplied);
-
-        public string GetLabel(bool markdown)
-            => throw new System.NotImplementedException();
         
         public SubroutineInfo GetSubroutineInfo()
         {
@@ -71,5 +71,31 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         // TODO: Set access level
         public DefinedConstructorInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker)
             => new DefinedConstructorInstance(this, genericsLinker, DefinedAt, AccessLevel.Public);
+
+        MarkupBuilder ILabeled.GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)
+        {
+            var builder = new MarkupBuilder();
+            builder.StartCodeLine().Add("new " + Type.GetName() + "(");
+
+            for (int i = 0; i < ParameterProviders.Length; i++)
+            {
+                if (i != 0) builder.Add(", ");
+
+                // Add the parameter type.
+                if (labelInfo.IncludeParameterTypes)
+                {
+                    builder.Add(ParameterProviders[i].Type.GetName());
+
+                    // Add a space if the name is also included.
+                    if (labelInfo.IncludeParameterNames) builder.Add(" ");
+                }
+
+                // Add the parameter name.
+                if (labelInfo.IncludeParameterNames)
+                    builder.Add(ParameterProviders[i].Name);
+            }
+
+            return builder.Add(")").EndCodeLine();
+        }
     }
 }

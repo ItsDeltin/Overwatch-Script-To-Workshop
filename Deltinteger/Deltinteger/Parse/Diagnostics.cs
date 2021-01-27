@@ -152,7 +152,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void OutputDiagnostics(StringBuilder builder)
         {
-            var sorted = Diagnostics.OrderBy(d => d.severity);
+            var sorted = Diagnostics.Where(d => d.severity != Diagnostic.Hint).OrderBy(d => d.severity);
             foreach (var diagnostic in sorted)
                 builder.AppendLine(diagnostic.Info(Uri.AbsolutePath));
         }

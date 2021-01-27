@@ -16,12 +16,12 @@ namespace Deltin.Deltinteger.Parse
         private VariableType VariableType { get; }
         private VariableResolveOptions Options { get; }
 
-        public VariableParameter(string name, string documentation, ITypeSupplier typeSupplier, VariableResolveOptions options = null) : base(name, documentation, typeSupplier.Any())
+        public VariableParameter(string name, string documentation, ICodeTypeSolver typeSolver, VariableResolveOptions options = null) : base(name, documentation, typeSolver)
         {
             VariableType = VariableType.Dynamic;
             Options = options ?? new VariableResolveOptions();
         }
-        public VariableParameter(string name, string documentation, VariableType variableType, ITypeSupplier typeSupplier, VariableResolveOptions options = null) : base(name, documentation, typeSupplier.Any())
+        public VariableParameter(string name, string documentation, VariableType variableType, ICodeTypeSolver typeSolver, VariableResolveOptions options = null) : base(name, documentation, typeSolver)
         {
             if (variableType == VariableType.ElementReference) throw new Exception("Only the variable types Dynamic, Global, and Player is valid.");
             VariableType = variableType;
@@ -147,6 +147,102 @@ namespace Deltin.Deltinteger.Parse
         public void Resolve(string hero) => Hero = hero;
     }
 
+    abstract class ConstArrayParameter<T> : CodeParameter
+    {
+        private readonly string _elementKindName;
+
+        protected ConstArrayParameter(ICodeTypeSolver type, string elementKindName, string name, MarkupBuilder documentation, bool optional = false)
+            : base(name, documentation, type, optional ? new ExpressionOrWorkshopValue() : null)
+        {
+            _elementKindName = elementKindName;
+        }
+
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
+        {
+            var values = new List<T>();
+            ConstantExpressionResolver.Resolve(value, expr =>
+            {
+                // If the resulting expression is a CreateArray,
+                if (expr is CreateArrayAction array)
+                {
+                    var error = new ConstElementErrorHandler(parseInfo.Script.Diagnostics, valueRange, _elementKindName);
+
+                    // Iterate through each element in the array and get the value.
+                    foreach (var value in array.Values)
+                        ConstantExpressionResolver.Resolve(value, expr =>
+                        {
+                            // Make sure the value is a string.
+                            if (TryGetValue(expr, out T value))
+                                values.Add(value);
+                            // Otherwise, add an error.
+                            else
+                                error.AddError();
+                        });
+                }
+                // Otherwise, add an error.
+                else if (valueRange != null)
+                    parseInfo.Script.Diagnostics.Error($"Expected a {_elementKindName} array", valueRange);
+            });
+            return values;
+        }
+
+        protected abstract bool TryGetValue(IExpression expression, out T value);
+
+        class ConstElementErrorHandler
+        {
+            private readonly FileDiagnostics _diagnostics;
+            private readonly DocRange _errorRange;
+            private readonly string _kindName;
+            private bool _addedError;
+
+            public ConstElementErrorHandler(FileDiagnostics diagnostics, DocRange errorRange, string kindName)
+            {
+                _diagnostics = diagnostics;
+                _errorRange = errorRange;
+                _kindName = kindName;
+            }
+
+            public void AddError()
+            {
+                if (_addedError) return;
+                _addedError = true;
+                _diagnostics.Error($"One or more values in the {_kindName} array is not a constant {_kindName} expression", _errorRange);
+            }
+        }
+    }
+
+    class ConstStringArrayParameter : ConstArrayParameter<string>
+    {
+        public ConstStringArrayParameter(string name, string documentation, ITypeSupplier types) : base(types.Array(types.String()), "string", name, documentation) { }
+
+        protected override bool TryGetValue(IExpression expression, out string value)
+        {
+            if (expression is StringAction stringAction)
+            {
+                value = stringAction.Value;
+                return true;
+            }
+            value = null;
+            return false;
+        }
+    }
+
+    class ConstIntegerArrayParameter : ConstArrayParameter<int>
+    {
+        public ConstIntegerArrayParameter(string name, MarkupBuilder documentation, ITypeSupplier types, bool optional = false) : base(types.NumberArray(), "integer", name, documentation, optional) { }
+
+        protected override bool TryGetValue(IExpression expression, out int value)
+        {
+            if (expression is NumberAction numberAction)
+            {
+                value = (int)numberAction.Value;
+                return true;
+            }
+            value = 0;
+            return false;
+        }
+    }
+
     class FileParameter : CodeParameter
     {
         public string[] FileTypes { get; }
@@ -187,7 +283,7 @@ namespace Deltin.Deltinteger.Parse
 
             string dir = Path.GetDirectoryName(resultingPath);
             if (Directory.Exists(dir))
-                Importer.AddImportCompletion(parseInfo.Script, dir, valueRange);
+                Importer.AddImportCompletion(parseInfo.TranslateInfo, parseInfo.Script, dir, valueRange);
 
             if (!File.Exists(resultingPath))
             {

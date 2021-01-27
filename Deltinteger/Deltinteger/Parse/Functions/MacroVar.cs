@@ -53,17 +53,9 @@ namespace Deltin.Deltinteger.Parse
             _applyBlock.Apply();
         }
 
-        public string GetLabel(bool markdown)
-        {
-            throw new NotImplementedException();
-        }
-
         public void OnBlockApply(IOnBlockApplied onBlockApplied) => _applyBlock.OnBlockApply(onBlockApplied);
 
-        public void Call(ParseInfo parseInfo, DocRange callRange)
-        {
-            throw new NotImplementedException();
-        }
+        public void Call(ParseInfo parseInfo, DocRange callRange) {}
 
         public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => GetDefaultInstance();
         public IVariableInstance GetDefaultInstance() => new MacroVarInstance(this);
@@ -74,6 +66,8 @@ namespace Deltin.Deltinteger.Parse
             return instance;
         }
         public void AddDefaultInstance(IScopeAppender scopeAppender) => AddInstance(scopeAppender, null);
+
+        MarkupBuilder ILabeled.GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeVariableLabel(CodeType, Name);
     }
 
     public class MacroVarInstance : IVariableInstance
@@ -88,6 +82,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel => Provider.AccessLevel;
         public MarkupBuilder Documentation { get; }
         public bool UseDefaultVariableAssigner => false;
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
 
         public MacroVarInstance(MacroVarProvider provider)
         {
@@ -95,7 +90,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IGettableAssigner GetAssigner() => new ConstantWorkshopValueAssigner(Provider.Value);
-        public CompletionItem GetCompletion() => IVariableInstance.GetCompletion(this, CompletionItemKind.Variable);
         public IWorkshopTree ToWorkshop(ActionSet actionSet) => Provider.Value.Parse(actionSet);
     }
 }

@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
                 for (int i = 0; i < Variables.Length; i++)
                 {
                     var matchingVariable = other.Variables.FirstOrDefault(v => Variables[i].Name == v.Name);
-                    if (matchingVariable == null || !Variables[i].CodeType.Implements(matchingVariable.CodeType))
+                    if (matchingVariable == null || !((CodeType)Variables[i].CodeType).Implements((CodeType)matchingVariable.CodeType))
                     {
                         structVariablesMatch = false;
                         break;

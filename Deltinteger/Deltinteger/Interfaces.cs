@@ -15,113 +15,6 @@ namespace Deltin.Deltinteger
         void AddDefaultInstance(IScopeAppender scopeAppender);
     }
 
-    public interface IMethodProvider
-    {
-        string Name { get; }
-        AnonymousType[] GenericTypes { get; }
-        CodeType[] ParameterTypes { get; }
-        public int TypeArgCount => GenericTypes == null ? 0 : GenericTypes.Length;
-
-        IMethod GetDefaultInstance()
-        {
-            if (this is IMethod method)
-                return method;
-            throw new NotImplementedException();
-        }
-        IMethod GetInstance(GetInstanceInfo instanceInfo) => GetDefaultInstance();
-
-        void Override(IMethodProvider overridenBy) => throw new NotImplementedException();
-
-        public InstanceAnonymousTypeLinker GetInstanceInfo(CodeType[] typeArgs) => new InstanceAnonymousTypeLinker(GenericTypes, typeArgs);
-    }
-
-    class DefaultProvider : IMethodProvider
-    {
-        private readonly IMethod _function;
-        public string Name => _function.Name;
-        public AnonymousType[] GenericTypes => null;
-        public CodeType[] ParameterTypes { get; }
-
-        public DefaultProvider(IMethod function)
-        {
-            _function = function;
-            ParameterTypes = function.Parameters.Select(p => p.Type).ToArray();
-        }
-    }
-
-    public interface IMethod : IScopeable, IParameterCallable
-    {
-        MethodAttributes Attributes { get; }
-        IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
-        bool DoesReturnValue => CodeType != null;
-
-        IMethodProvider GetProvider()
-        {
-            if (this is IMethodProvider provider) return provider;
-            else return new DefaultProvider(this);
-        }
-
-        public static MarkupBuilder DefaultLabel(bool includeDescription, IMethod function)
-        {
-            MarkupBuilder markup = new MarkupBuilder()
-                .StartCodeLine()
-                .Add(function.CodeType.GetNameOrVoid())
-                .Add(" ")
-                .Add(function.Name + CodeParameter.GetLabels(function.Parameters))
-                .EndCodeLine();
-            
-            if (includeDescription && function.Documentation != null)
-            {
-                markup
-                    .NewSection()
-                    .Add(function.Documentation);
-            }
-            
-            return markup;
-        }
-
-        public static MarkupBuilder Hover(InstanceAnonymousTypeLinker typeLinker, string name, CodeType returnType, CodeType[] typeArgs, CodeParameter[] parameters)
-        {
-            MarkupBuilder builder = new MarkupBuilder()
-                .StartCodeLine()
-                .Add(typeLinker == null || returnType == null ? returnType.GetNameOrVoid() : returnType.GetRealType(typeLinker).GetNameOrVoid())
-                .Add(" " + name);
-
-            if (typeArgs != null && typeArgs.Length > 0)
-            {
-                builder.Add("<");
-                for (int i = 0; i < typeArgs.Length; i++)
-                {
-                    builder.Add((typeLinker == null ? typeArgs[i] : typeArgs[i].GetRealType(typeLinker)).GetName());
-                    if (i != typeArgs.Length - 1) builder.Add(", ");
-                }
-                builder.Add(">");
-            }
-
-            builder.Add("(");
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                builder.Add((typeLinker == null ? parameters[i].Type : parameters[i].Type.GetRealType(typeLinker)).GetName() + " " + parameters[i].Name);
-                if (i != parameters.Length - 1) builder.Add(", ");
-            }
-            builder.Add(")");
-
-            return builder.EndCodeLine();
-        }
-        public static CompletionItem GetFunctionCompletion(IMethod function) => new CompletionItem()
-        {
-            Label = function.Name,
-            Kind = CompletionItemKind.Method,
-            Detail = function.CodeType.GetNameOrVoid() + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
-            Documentation = Extras.GetMarkupContent(function.Documentation)
-        };
-    }
-
-    public interface ISkip
-    {
-        int SkipParameterIndex();
-    }
-
     public interface INamed
     {
         string Name { get; }
@@ -129,9 +22,9 @@ namespace Deltin.Deltinteger
 
     public interface IScopeable : INamed, IAccessable
     {
-        CodeType CodeType { get; }
+        ICodeTypeSolver CodeType { get; }
         bool WholeContext { get; }
-        CompletionItem GetCompletion();
+        CompletionItem GetCompletion(DeltinScript deltinScript);
     }
 
     public interface ICallable : INamed
@@ -164,7 +57,7 @@ namespace Deltin.Deltinteger
 
     public interface ILabeled
     {
-        string GetLabel(bool markdown);
+        MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo);
     }
 
     public interface IApplyBlock : IBlockListener, ILabeled

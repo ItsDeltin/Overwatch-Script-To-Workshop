@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
         public InitialValueResolve InitialValueResolve { get; set; } = InitialValueResolve.Instant;
         public Scope Scope { get; set; }
         public bool Recursive { get; set; }
-        public TokenType TokenType { get; set; } = TokenType.Variable;
+        public SemanticTokenType TokenType { get; set; } = SemanticTokenType.Variable;
         public List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
         public bool HandleRestrictedCalls { get; set; }
         public CodeLensSourceType CodeLensType { get; set; } = CodeLensSourceType.Variable;

@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
                     _parseInfo.Script.Diagnostics.Error("Inconsistent struct value usage; value types must be all explicit or all implicit", _context.Values[i].Identifier.Range);
                 
                 Variables[i] = new StructValueVariable(_scope, new StructValueContextHandler(_parseInfo, _context.Values[i])).GetVar();
-                Name += Variables[i].GetDefaultInstance().GetLabel().ToString(false);
+                Name += Variables[i].GetDefaultInstance().GetLabel(_parseInfo.TranslateInfo);
             }
 
             Name += "}";

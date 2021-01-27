@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
     {
         Scope GetObjectBasedScope();
         Scope GetStaticBasedScope();
-        IMethod GetOverridenFunction(IMethodProvider provider);
+        IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo provider);
         IVariableInstance GetOverridenVariable(string variableName);
         Scope GetScope(bool isStatic) => isStatic ? GetStaticBasedScope() : GetObjectBasedScope();
     }
@@ -125,7 +125,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Override
             if (attributeResult.IsOverride)
-                OverridingFunction = scopeProvider.GetOverridenFunction(this);
+                OverridingFunction = scopeProvider.GetOverridenFunction(parseInfo.TranslateInfo, new FunctionOverrideInfo(Name, ParameterTypes));
 
             // TODO Add the hover info.
             // parseInfo.Script.AddHover(nameRange, GetLabel(true));
@@ -167,8 +167,6 @@ namespace Deltin.Deltinteger.Parse
             if (_wasApplied) onBlockApplied.Applied();
             else _listeners.Add(onBlockApplied);
         }
-
-        public string GetLabel(bool markdown) => throw new NotImplementedException();
     
         public IMethod GetDefaultInstance() => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes));
         public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(), Static);
@@ -206,19 +204,21 @@ namespace Deltin.Deltinteger.Parse
 
         public void Override(IMethodProvider overridenBy)
         {
-            OverridingFunction?.GetProvider().Override(overridenBy);
+            OverridingFunction?.MethodInfo.Override(overridenBy);
             _overriders.Add(overridenBy);
         }
 
         public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeProvider scopeHandler, FunctionContext context, ICodeTypeInitializer containingType)
             => new DefinedMethodProvider(parseInfo, scopeHandler, context, containingType);
+
+        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeFunctionLabel(deltinScript, ReturnType, Name, ParameterProviders);
     }
 
     public class DefinedMethodInstance : IMethod
     {
         public string Name { get; }
         public MarkupBuilder Documentation => null;
-        public CodeType CodeType { get; }
+        public ICodeTypeSolver CodeType { get; }
         public IVariableInstance[] ParameterVars { get; }
         public CodeParameter[] Parameters { get; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
@@ -227,6 +227,7 @@ namespace Deltin.Deltinteger.Parse
         public LanguageServer.Location DefinedAt => Provider.DefinedAt;
         public AccessLevel AccessLevel => Provider.AccessLevel;
         public DefinedMethodProvider Provider { get; }
+        IMethodInfo IMethod.MethodInfo => Provider;
 
         public DefinedMethodInstance(string name, DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo)
         {
@@ -244,9 +245,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        IMethodProvider IMethod.GetProvider() => Provider;
-        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this);
+        MarkupBuilder ILabeled.GetLabel(DeltinScript deltinScript, LabelInfo labelInfo1) => ((IMethod)this).GetLabel(deltinScript, LabelInfo.Hover);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {

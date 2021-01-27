@@ -32,6 +32,7 @@ namespace Deltin.Deltinteger.Parse
             Document = document;
             Diagnostics = diagnostics.FromUri(Uri);
             Diagnostics.AddDiagnostics(document.GetDiagnostics());
+            Document.Cache.EndCycle();
         }
         public ScriptFile(Diagnostics diagnostics, Uri uri, string content) : this(diagnostics, new Document(uri, content))
         {
@@ -65,7 +66,7 @@ namespace Deltin.Deltinteger.Parse
         public LocationLink[] GetDefinitionLinks() => _callLinks.ToArray();
 
         ///<summary>Adds a hover to the file.</summary>
-        public void AddHover(DocRange range, string content)
+        public void AddHover(DocRange range, MarkupBuilder content)
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
             if (content == null) throw new ArgumentNullException(nameof(content));
@@ -79,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeLensRange[] GetCodeLensRanges() => _codeLensRanges.ToArray();
 
         /// <summary>Adds a semantic token to the file.</summary>
-        public void AddToken(DocRange range, TokenType type, params TokenModifier[] modifiers) => AddToken(new SemanticToken(range, type, modifiers));
+        public void AddToken(DocRange range, SemanticTokenType type, params TokenModifier[] modifiers) => AddToken(new SemanticToken(range, type, modifiers));
         /// <summary>Adds a semantic token to the file.</summary>
         public void AddToken(SemanticToken token) => _semanticTokens.Add(token);
         public SemanticToken[] GetSemanticTokens() => _semanticTokens.ToArray();
@@ -90,38 +91,42 @@ namespace Deltin.Deltinteger.Parse
 
     public class CompletionRange
     {
-        private Scope Scope { get; }
-        private Scope Getter { get; }
-        private CompletionItem[] CompletionItems { get; }
         public DocRange Range { get; }
         public CompletionRangeKind Kind { get; }
+        private readonly DeltinScript _deltinScript;
+        private readonly Scope _scope;
+        private readonly Scope _getter;
+        private readonly CompletionItem[] _completionItems;
 
-        public CompletionRange(Scope scope, DocRange range, CompletionRangeKind kind)
+        public CompletionRange(DeltinScript deltinScript, Scope scope, DocRange range, CompletionRangeKind kind)
         {
-            Scope = scope ?? throw new ArgumentNullException(nameof(scope));
+            _deltinScript = deltinScript;
+            _scope = scope ?? throw new ArgumentNullException(nameof(scope));
             Kind = kind;
             Range = range;
         }
 
-        public CompletionRange(Scope scope, Scope getter, DocRange range, CompletionRangeKind kind)
+        public CompletionRange(DeltinScript deltinScript, Scope scope, Scope getter, DocRange range, CompletionRangeKind kind)
         {
-            Scope = scope ?? throw new ArgumentNullException(nameof(scope));
-            Getter = getter;
+            _deltinScript = deltinScript;
+            _scope = scope ?? throw new ArgumentNullException(nameof(scope));
+            _getter = getter;
             Kind = kind;
             Range = range;
         }
 
-        public CompletionRange(CompletionItem[] completionItems, DocRange range, CompletionRangeKind kind)
+        public CompletionRange(DeltinScript deltinScript, CompletionItem[] completionItems, DocRange range, CompletionRangeKind kind)
         {
-            CompletionItems = completionItems ?? throw new ArgumentNullException(nameof(completionItems));
+            _deltinScript = deltinScript;
+            _completionItems = completionItems ?? throw new ArgumentNullException(nameof(completionItems));
             Kind = kind;
             Range = range;
         }
 
         public CompletionItem[] GetCompletion(DocPos pos, bool immediate)
         {
-            return Scope?.GetCompletion(pos, immediate, Getter) ?? CompletionItems;
-
+            if (_scope == null) return _completionItems;
+            return _scope.GetCompletion(_deltinScript, pos, immediate, _getter);
         }
     }
 
@@ -135,9 +140,9 @@ namespace Deltin.Deltinteger.Parse
     public class HoverRange
     {
         public DocRange Range { get; }
-        public string Content { get; }
+        public MarkupBuilder Content { get; }
 
-        public HoverRange(DocRange range, string content)
+        public HoverRange(DocRange range, MarkupBuilder content)
         {
             Range = range;
             Content = content;
@@ -150,18 +155,18 @@ namespace Deltin.Deltinteger.Parse
         public string TokenType { get; }
         public string[] Modifiers { get; }
 
-        public SemanticToken(DocRange range, TokenType tokenType, params TokenModifier[] modifiers)
+        public SemanticToken(DocRange range, SemanticTokenType tokenType, params TokenModifier[] modifiers)
         {
             Range = range;
             TokenType = GetTokenName(tokenType);
             Modifiers = modifiers == null ? new string[0] : Array.ConvertAll(modifiers, modifier => GetModifierName(modifier));
         }
 
-        private static string GetTokenName(TokenType tokenType)
+        private static string GetTokenName(SemanticTokenType tokenType)
         {
             switch (tokenType)
             {
-                case Deltin.Deltinteger.Parse.TokenType.TypeParameter: return "typeParameter";
+                case Deltin.Deltinteger.Parse.SemanticTokenType.TypeParameter: return "typeParameter";
                 default: return tokenType.ToString().ToLower();
             }
         }
@@ -176,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public enum TokenType
+    public enum SemanticTokenType
     {
         Namespace,
         Type, Class, Enum, Interface, Struct, TypeParameter,

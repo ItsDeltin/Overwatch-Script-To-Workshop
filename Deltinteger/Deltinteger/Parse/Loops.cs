@@ -92,6 +92,8 @@ namespace Deltin.Deltinteger.Parse
             RawContinue = true;
             Condition = parseInfo.GetExpression(scope, whileContext.Condition);
 
+            TypeComparison.ExpectNonConstant(parseInfo, whileContext.Condition.Range, Condition.Type());
+
             Block = parseInfo.SetLoop(this).GetStatement(scope, whileContext.Statement);
             Path = new PathInfo(Block, whileContext.Range, false);
         }
@@ -235,7 +237,10 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the condition.
             if (forContext.Condition != null)
+            {
                 Condition = parseInfo.GetExpression(varScope, forContext.Condition);
+                TypeComparison.ExpectNonConstant(parseInfo, forContext.Condition.Range, Condition.Type());
+            }
 
             // Get the iterator.
             if (forContext.Iterator != null)

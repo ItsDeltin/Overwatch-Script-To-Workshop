@@ -187,8 +187,6 @@ namespace Deltin.Deltinteger.Json
         public string Documentation { get; }
         public CodeType Type { get; }
 
-        public InternalVar Var { get; }
-
         public JsonObject(JToken token)
         {
             Documentation = "A JSON object.";
@@ -203,13 +201,14 @@ namespace Deltin.Deltinteger.Json
         public MethodAttributes Attributes { get; }
         public CodeParameter[] Parameters { get; }
         public string Name => "Get";
-        public CodeType CodeType => null;
+        public ICodeTypeSolver CodeType => null;
         public bool Static => false;
         public bool WholeContext => true;
         public MarkupBuilder Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";
         public Deltin.Deltinteger.LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         private JsonType ContainingType { get; }
+        IMethodInfo IMethod.MethodInfo { get; } = new MethodInfo();
 
         public GetJsonPropertyFunction(JsonType containingType)
         {
@@ -222,16 +221,6 @@ namespace Deltin.Deltinteger.Json
             };
             ContainingType = containingType;
         }
-
-        public CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = Name,
-            Detail = GetLabel(false),
-            Kind = CompletionItemKind.Method,
-            Documentation = Documentation
-        };
-
-        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this).ToString(markdown);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => (Element)methodCall.AdditionalParameterData[0];
 
@@ -264,7 +253,7 @@ namespace Deltin.Deltinteger.Json
                         Documentation = prop.Var.Documentation.ToMarkup(),
                         Kind = CompletionItemKind.Property
                     });
-                parseInfo.Script.AddCompletionRange(new CompletionRange(completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));
+                parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));
 
                 string text = stringAction.Value;
 

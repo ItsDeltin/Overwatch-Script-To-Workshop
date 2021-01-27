@@ -12,7 +12,7 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class CodeType : IExpression, ICallable, IWorkshopInit
+    public abstract class CodeType : IExpression, ICallable, IWorkshopInit, ICodeTypeSolver
     {
         public string Name { get; }
         public CodeType[] Generics { get; protected set; } = new CodeType[0];
@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
         public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
         protected TypeKind Kind = TypeKind.Struct;
-        protected TokenType TokenType { get; set; } = TokenType.Type;
+        protected SemanticTokenType TokenType { get; set; } = SemanticTokenType.Type;
         protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected List<IMethod> VirtualFunctions { get; } = new List<IMethod>();
         protected List<IVariableInstance> VirtualVariables { get; } = new List<IVariableInstance>();
-        public TypeOperatorInfo Operations { get; }
+        public TypeOperatorInfo Operations { get; protected set; }
 
         public CodeType(string name)
         {
@@ -145,8 +145,11 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.TranslateInfo.AddWorkshopInit(this);
-            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind.ToString().ToLower() + " " + Name, Description));
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
+            
+            var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name).EndCodeLine();
+            if (Description != null) hover.NewSection().Add(Description);
+            parseInfo.Script.AddHover(callRange, hover);
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
@@ -174,7 +177,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override string ToString() => GetName();
 
-        public IMethod GetVirtualFunction(string name, CodeType[] parameterTypes)
+        public IMethod GetVirtualFunction(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
         {
             // Loop through each virtual function.
             foreach (var virtualFunction in VirtualFunctions)
@@ -185,7 +188,7 @@ namespace Deltin.Deltinteger.Parse
                     // Loop though the parameters.
                     for (int i = 0; i < parameterTypes.Length; i++)
                         // Make sure the parameter types match.
-                        if (!parameterTypes[i].Is(virtualFunction.Parameters[i].Type))
+                        if (!parameterTypes[i].Is(virtualFunction.Parameters[i].GetCodeType(deltinScript)))
                         {
                             matches = false;
                             break;
@@ -195,7 +198,7 @@ namespace Deltin.Deltinteger.Parse
                         return virtualFunction;
                 }
             
-            if (Extends != null) return Extends.GetVirtualFunction(name, parameterTypes);
+            if (Extends != null) return Extends.GetVirtualFunction(deltinScript, name, parameterTypes);
             return null;
         }
 
@@ -209,5 +212,7 @@ namespace Deltin.Deltinteger.Parse
             if (Extends != null) return Extends.GetVirtualVariable(name);
             return null;
         }
+
+        CodeType ICodeTypeSolver.GetCodeType(DeltinScript deltinScript) => this;
     }
 }

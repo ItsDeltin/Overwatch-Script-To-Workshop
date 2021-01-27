@@ -58,8 +58,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Override
             if (Attributes.IsOverride)
-                Overriding = scopeProvider.GetOverridenFunction(this);
-            
+                Overriding = scopeProvider.GetOverridenFunction(parseInfo.TranslateInfo, new FunctionOverrideInfo(Name, ParameterTypes));
+
             // TODO: add hover info
             parseInfo.TranslateInfo.ApplyBlock(this);
         }
@@ -70,8 +70,8 @@ namespace Deltin.Deltinteger.Parse
             scopeHandler.Add(instance, Attributes.IsStatic);
             return instance;
         }
-
         public void AddDefaultInstance(IScopeAppender scopeAppender) => new DefinedMacroInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes));
+        public IMethod GetDefaultInstance() => new DefinedMacroInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes));
 
         public void SetupBlock()
         {
@@ -81,10 +81,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void OnBlockApply(IOnBlockApplied onBlockApplied) => _applyBlock.OnBlockApply(onBlockApplied);
 
-        public string GetLabel(bool markdown)
-        {
-            throw new NotImplementedException();
-        }
+        MarkupBuilder ILabeled.GetLabel(DeltinScript deltinScript, LabelInfo labelInfo1) => ((IMethod)this).GetLabel(deltinScript, LabelInfo.Hover);
     }
 
     public class DefinedMacroInstance : IMethod
@@ -94,11 +91,12 @@ namespace Deltin.Deltinteger.Parse
         public CodeParameter[] Parameters { get; }
         public IVariableInstance[] ParameterVars { get; }
         public MarkupBuilder Documentation { get; }
-        public CodeType CodeType { get; }
+        public ICodeTypeSolver CodeType { get; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public AccessLevel AccessLevel => Provider.Attributes.Accessor;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => throw new NotImplementedException();
+        IMethodInfo IMethod.MethodInfo { get; } = new MethodInfo();
 
         public DefinedMacroInstance(DefinedMacroProvider provider, InstanceAnonymousTypeLinker genericsLinker)
         {
@@ -114,10 +112,6 @@ namespace Deltin.Deltinteger.Parse
                 ParameterVars[i] = parameterInstance.Variable;
             }
         }
-        
-        public CompletionItem GetCompletion() => IMethod.GetFunctionCompletion(this);
-        public IMethodProvider GetProvider() => Provider;
-        public string GetLabel(bool markdown) => IMethod.DefaultLabel(markdown, this);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {

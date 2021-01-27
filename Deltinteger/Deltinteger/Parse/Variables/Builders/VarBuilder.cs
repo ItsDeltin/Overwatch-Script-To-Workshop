@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
 
             // If the type of the variable is PortableLambdaType, set the TokenType to Function
             if (_varInfo.Type is Lambda.PortableLambdaType)
-                _varInfo.TokenType = TokenType.Function;
+                _varInfo.TokenType = SemanticTokenType.Function;
 
             // Apply attributes.
             foreach (var component in _components)
@@ -121,10 +121,11 @@ namespace Deltin.Deltinteger.Parse
             if (!_components.IsAttribute(AttributeType.Override)) return;
 
             var overriding = _scopeHandler.GetOverridenVariable(_contextHandler.GetName());
+            var overridingType = overriding.CodeType.GetCodeType(_parseInfo.TranslateInfo);
 
             // Make sure the overriden variable's type matches.
-            if (!overriding.CodeType.Is(_varInfo.Type))
-                _parseInfo.Script.Diagnostics.Error($"'{_name}' type must be {overriding.CodeType.GetName()}", _typeRange);
+            if (!overridingType.Is(_varInfo.Type))
+                _parseInfo.Script.Diagnostics.Error($"'{_name}' type must be {overridingType.GetName()}", _typeRange);
             
             _varInfo.Overriding = overriding;
         }

@@ -30,12 +30,12 @@ namespace Deltin.Deltinteger.Parse
             Calls[callBlock].Add(range);
         }
 
-        public void CheckRecursion()
+        public void CheckRecursion(DeltinScript deltinScript)
         {
             foreach (var call in Calls)
                 if (DoesTreeCall(Function, call.Key))
                     foreach (DocRange range in call.Value)
-                        Script.Diagnostics.Error($"Recursion is not allowed here, the {call.Key.TypeName} '{call.Key.GetLabel()}' calls '{Function.GetLabel()}'.", range);
+                        Script.Diagnostics.Error($"Recursion is not allowed here, the {call.Key.TypeName} '{call.Key.GetLabel(deltinScript)}' calls '{Function.GetLabel(deltinScript)}'.", range);
         }
 
         private bool DoesTreeCall(IRecursiveCallHandler function, IRecursiveCallHandler currentCheck, List<IRecursiveCallHandler> check = null)
@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
         string TypeName { get; }
         bool DoesRecursivelyCall(IRecursiveCallHandler calling);
         bool CanBeRecursivelyCalled();
-        string GetLabel();
+        string GetLabel(DeltinScript deltinScript);
     }
 
     public class RecursiveCallHandler : IRecursiveCallHandler
@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
         public string TypeName => _typeName;
         public bool DoesRecursivelyCall(IRecursiveCallHandler calling) => this == calling;
         public bool CanBeRecursivelyCalled() => _applyBlock is IMethod function && function.Attributes.Recursive;
-        public string GetLabel() => _applyBlock.GetLabel(false);
+        public string GetLabel(DeltinScript deltinScript) => _applyBlock.GetLabel(deltinScript, LabelInfo.RecursionError).ToString(false);
     }
 
     public interface IRestrictedCallHandler

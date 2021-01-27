@@ -10,7 +10,6 @@ namespace Deltin.Deltinteger
     public interface IVariable : IElementProvider
     {
         string Name { get; }
-        CodeType CodeType { get; }
         bool RequiresCapture => false;
         VariableType VariableType { get; }
         IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker);
@@ -24,21 +23,23 @@ namespace Deltin.Deltinteger
         MarkupBuilder Documentation { get; }
         IGettableAssigner GetAssigner();
         IWorkshopTree ToWorkshop(ActionSet actionSet) => actionSet.IndexAssigner.Get(Provider).GetVariable();
-        ICallVariable GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(parseInfo.TranslateInfo.Types, this, index);
+        ICallVariable GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(parseInfo, this, index);
         void Call(ParseInfo parseInfo, DocRange callRange) => Call(this, parseInfo, callRange);
-        MarkupBuilder GetLabel() => new MarkupBuilder().StartCodeLine().Add(CodeType.GetNameOrAny() + " " + Name).EndCodeLine();
 
-        static CompletionItem GetCompletion(IVariableInstance variable, CompletionItemKind kind) => new CompletionItem()
-        {
-            Label = variable.Name,
+        MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeVariableLabel(CodeType.GetCodeType(deltinScript), Name);
+
+        string GetLabel(DeltinScript deltinScript) => CodeType.GetCodeType(deltinScript) + " " + Name;
+
+        CompletionItem IScopeable.GetCompletion(DeltinScript deltinScript) => new CompletionItem() {
+            Label = Name,
+            Documentation = Documentation,
             Kind = CompletionItemKind.Variable,
-            Detail = variable.CodeType.GetNameOrAny() + " " + variable.Name,
-            Documentation = variable.Documentation == null ? null : variable.Documentation.ToMarkup()
+            Detail = CodeType.GetCodeType(deltinScript).GetName() + " " + Name
         };
         
         static void Call(IVariableInstance variable, ParseInfo parseInfo, DocRange callRange)
         {
-            parseInfo.Script.AddHover(callRange, variable.GetLabel().ToString());
+            parseInfo.Script.AddHover(callRange, variable.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover).ToString());
         }
     }
 
@@ -55,7 +56,7 @@ namespace Deltin.Deltinteger
         public bool WholeContext { get; set; } = true;
         public LanguageServer.Location DefinedAt { get; set; }
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
-        public CodeType CodeType { get; set; }
+        public ICodeTypeSolver CodeType { get; set; }
         public MarkupBuilder Documentation { get; set; }
         public IGettableAssigner Assigner { get; set; }
         public bool Ambiguous { get; set; } = true;
@@ -87,16 +88,6 @@ namespace Deltin.Deltinteger
         //     parseInfo.Script.AddHover(callRange, GetLabel(true));
         //     parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         // }
-
-        public CompletionItem GetCompletion() => IVariableInstance.GetCompletion(this, CompletionItemKind);
-
-        public string GetLabel(bool markdown)
-        {
-            string typeName = "define";
-            if (CodeType != null) typeName = CodeType.GetName();
-            if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation?.ToString(true));
-            else return typeName + " " + Name;
-        }
 
         public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
         public IVariableInstance GetDefaultInstance() => this;

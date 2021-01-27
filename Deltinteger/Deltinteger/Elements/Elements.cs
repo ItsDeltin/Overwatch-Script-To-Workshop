@@ -96,7 +96,7 @@ namespace Deltin.Deltinteger.Elements
             if (this.GetType() != other.GetType()) return false;
 
             Element bElement = (Element)other;
-            if (Function != bElement.Function || ParameterValues.Length != bElement.ParameterValues.Length) return false;
+            if (Function != bElement.Function || ParameterValues.Length != bElement.ParameterValues?.Length) return false;
 
             string[] createsRandom = new string[] {
                 "Random Integer",
@@ -255,8 +255,11 @@ namespace Deltin.Deltinteger.Elements
         public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
         public static Element EyePosition(IWorkshopTree player) => Part("Eye Position", player);
         public static Element FacingDirectionOf(IWorkshopTree player) => Part("Facing Direction Of", player);
+        public static Element Abs(IWorkshopTree value) => Part("Absolute Value", value);
         public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValueFromWorkshop("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest"));
         public static Element CustomString(string value, params Element[] formats) => new StringElement(value, formats);
+        public static Element StringLength(IWorkshopTree value) => Part("String Length", value);
+        public static Element StringSlice(IWorkshopTree value, IWorkshopTree start, IWorkshopTree count) => Part("String Slice", value, start, count);
         public static Element LastEntity() => Part("Last Entity");
         public static Element RaycastPosition(IWorkshopTree start, IWorkshopTree end, IWorkshopTree playersToInclude = null, IWorkshopTree playersToExclude = null, IWorkshopTree includePlayerOwnedObjects = null)
             => Part("Ray Cast Hit Position", start ?? throw new ArgumentNullException(nameof(start)), end ?? throw new ArgumentNullException(nameof(end)), playersToInclude ?? Null(), playersToExclude ?? Null(), includePlayerOwnedObjects ?? False());
@@ -375,7 +378,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public double Value { get; set; }
 
-        public NumberElement(double value) : base(ElementRoot.Instance.GetFunction("Number"), null)
+        public NumberElement(double value) : base(ElementRoot.Instance.GetFunction("Number"), new IWorkshopTree[0])
         {
             Value = value;
         }

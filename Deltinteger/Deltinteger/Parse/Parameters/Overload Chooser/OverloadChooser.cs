@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
             // Check type arg count.
             if (_genericsProvided && _generics.Length != option.TypeArgCount)
-                match.IncorrectTypeArgCount(_targetRange);
+                match.IncorrectTypeArgCount(_parseInfo.TranslateInfo, _targetRange);
             
             // Iterate through the option's parameters.
             for (int i = 0; i < inputParameters.Length; i++)
@@ -139,7 +139,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
                         // If _genericsFilled is false, get context-inferred type arguments.
                         if (!_genericsProvided)
-                            ExtractInferredGenerics(match, match.TypeArgLinker, option.Parameters[i].Type, inputParameters[i].Value.Type());
+                            ExtractInferredGenerics(match, match.TypeArgLinker, option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo), inputParameters[i].Value.Type());
 
                         // Next contextual parameter
                         if (i == inputParameters.Length - 1 && i < option.Parameters.Length - 1)
@@ -162,17 +162,17 @@ namespace Deltin.Deltinteger.Parse.Overload
 
                             // If _genericsFilled is false, get context-inferred type arguments.
                             if (!_genericsProvided)
-                                ExtractInferredGenerics(match, match.TypeArgLinker, option.Parameters[p].Type, inputParameters[i].Value.Type());
+                                ExtractInferredGenerics(match, match.TypeArgLinker, option.Parameters[p].GetCodeType(_parseInfo.TranslateInfo), inputParameters[i].Value.Type());
                         }
 
                     // If the named argument's name is not found, throw an error.
                     if (!nameFound)
-                        match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.Label}'.", inputParameters[i].NameRange);
+                        match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)}'.", inputParameters[i].NameRange);
                 }
             }
 
             // Compare parameter types.
-            for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(i);
+            for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(_parseInfo.TranslateInfo, i);
 
             // Get the missing parameters.
             match.GetMissingParameters(_errorMessages, context, _targetRange, CallRange);
@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
         private void ExtractInferredGenerics(OverloadMatch match, InstanceAnonymousTypeLinker typeLinker, CodeType parameterType, CodeType expressionType)
         {
-            string couldNotInfer = $"The type arguments for method '{match.Option.Label}' cannot be inferred from the usage. Try specifying the type arguments explicitly.";
+            string couldNotInfer = $"The type arguments for method '{match.Option.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)}' cannot be inferred from the usage. Try specifying the type arguments explicitly.";
 
             // If the parameter type is an AnonymousType, add the link for the expression type if it doesn't already exist.
             if (parameterType is AnonymousType pat)
@@ -219,7 +219,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
             {
                 // If the CodeParameter type is a lambda type, get the lambda statement with it.
-                if (bestOption.Option.Parameters[i].Type is PortableLambdaType portableLambda)
+                if (bestOption.Option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo) is PortableLambdaType portableLambda)
                     bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers(portableLambda);
                 // Otherwise, get the lambda statement with the default.
                 else
@@ -242,7 +242,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             else if (!_getter.AccessorMatches(_scope, Overload.AccessLevel)) accessable = false;
 
             if (!accessable)
-                _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), _targetRange);
+                _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)), _targetRange);
         }
 
         private void GetAdditionalData()
@@ -285,14 +285,15 @@ namespace Deltin.Deltinteger.Parse.Overload
                     parameters[p] = new ParameterInformation()
                     {
                         // Get the label to show in the signature.
-                        Label = _overloads[i].Parameters[p].GetLabel(),
+                        Label = _overloads[i].Parameters[p].GetLabel(_parseInfo.TranslateInfo),
                         // Get the documentation.
                         Documentation = Extras.GetMarkupContent(_overloads[i].Parameters[p].Documentation)
                     };
 
                 // Create the signature information.
-                overloads[i] = new SignatureInformation() {
-                    Label = _overloads[i].Label,
+                overloads[i] = new SignatureInformation()
+                {
+                    Label = _overloads[i].GetLabel(_parseInfo.TranslateInfo, LabelInfo.SignatureOverload),
                     Parameters = parameters,
                     Documentation = _overloads[i].Documentation
                 };
@@ -351,9 +352,9 @@ namespace Deltin.Deltinteger.Parse.Overload
         public void Error(string message, DocRange range) => Errors.Add(new OverloadMatchError(message, range));
 
         /// <summary>Confirms that a parameter type matches.</summary>
-        public void CompareParameterTypes(int parameter)
+        public void CompareParameterTypes(DeltinScript deltinScript, int parameter)
         {
-            CodeType parameterType = Option.Parameters[parameter].Type.GetRealType(TypeArgLinker);
+            CodeType parameterType = Option.Parameters[parameter].GetCodeType(deltinScript).GetRealType(TypeArgLinker);
             IExpression value = OrderedParameters[parameter]?.Value;
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
@@ -370,11 +371,9 @@ namespace Deltin.Deltinteger.Parse.Overload
             {
                 // The parameter type does not match.
                 if (parameterType.CodeTypeParameterInvalid(value.Type()))
-                {
-                    // The parameter type does not match.
-                    string msg = string.Format("Cannot convert type '{0}' to '{1}'", value.Type().GetNameOrVoid(), parameterType.GetNameOrVoid());
-                    Error(msg, errorRange);
-                }
+                    Error(string.Format("Cannot convert type '{0}' to '{1}'", value.Type().GetName(), parameterType.GetName()), errorRange);
+                
+                // Constant used in bad place.
                 else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
                     Error($"The type '{value.Type().Name}' cannot be used here", errorRange);
             }
@@ -427,12 +426,13 @@ namespace Deltin.Deltinteger.Parse.Overload
                         parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                             callType,
                             parseInfo.GetLocation(callRange),
-                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.Label, callType),
+                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.GetLabel(parseInfo.TranslateInfo, LabelInfo.OverloadError), callType),
                             Option.RestrictedValuesAreFatal
                         ));
         }
     
-        public void IncorrectTypeArgCount(DocRange range) => Error("The function '" + Option.Label + "' requires " + Option.TypeArgCount + " type arguments", range);
+        public void IncorrectTypeArgCount(DeltinScript deltinScript, DocRange range) =>
+            Error("The function '" + Option.GetLabel(deltinScript, LabelInfo.OverloadError) + "' requires " + Option.TypeArgCount + " type arguments", range);
     }
 
     public class OverloadMatchError

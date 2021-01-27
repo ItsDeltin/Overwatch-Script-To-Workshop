@@ -33,9 +33,10 @@ namespace Deltin.Deltinteger.Debugger
 
         public LinkableDebugVariable(DebugVariableLinkCollection collection, IVariable scriptVariable, WorkshopVariable workshopVariable, int[] index)
         {
-            Resolver = scriptVariable.CodeType.DebugVariableResolver ?? new DefaultResolver();
+            // todo
+            // Resolver = scriptVariable.CodeType.DebugVariableResolver ?? new DefaultResolver();
             Name = scriptVariable.Name;
-            Type = scriptVariable.CodeType.GetName();
+            // Type = scriptVariable.CodeType.GetName();
             Variable = workshopVariable;
             Index = index;
         }

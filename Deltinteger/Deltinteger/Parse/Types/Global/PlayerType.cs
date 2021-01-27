@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
         FuncMethod Teleport => new FuncMethodBuilder() {
             Name = "Teleport",
             Parameters = new CodeParameter[] {
-                new CodeParameter("position", "The position to teleport the player or players to. Can be a player or a vector.", Positionable.Instance)
+                new CodeParameter("position", "The position to teleport the player or players to. Can be a player or a vector.", _supplier.PlayerOrVector())
             },
             Documentation = "Teleports one or more players to the specified location.",
             Action = (actionSet, methodCall) => {
@@ -64,7 +64,6 @@ namespace Deltin.Deltinteger.Parse
         public PlayerType(ITypeSupplier typeSupplier) : base("Player")
         {
             CanBeExtended = false;
-            Inherit(Positionable.Instance, null, null);
             _supplier = typeSupplier;
         }
 
