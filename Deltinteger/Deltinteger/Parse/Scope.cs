@@ -13,7 +13,6 @@ namespace Deltin.Deltinteger.Parse
     {
         private readonly List<IVariable> _variables = new List<IVariable>();
         private readonly List<IMethod> _functions = new List<IMethod>();
-        private readonly List<MethodGroup> _methodGroups = new List<MethodGroup>();
         public Scope Parent { get; }
         public string ErrorName { get; set; } = "current scope";
         public CodeType This { get; set; }
@@ -64,9 +63,7 @@ namespace Deltin.Deltinteger.Parse
                 if (iterateVariables) checkScopeables.AddRange(current._variables);
 
                 // If functions are being iterated, add them to the list.
-                if (iterateMethods)
-                    foreach (var group in current._methodGroups)
-                        checkScopeables.AddRange(group.Functions);
+                if (iterateMethods) checkScopeables.AddRange(_functions);
 
                 bool stopAfterScope = false;
 
@@ -110,7 +107,7 @@ namespace Deltin.Deltinteger.Parse
         {
             other.IterateParents(scope =>
             {
-                _methodGroups.AddRange(scope._methodGroups);
+                _functions.AddRange(scope._functions);
                 return true;
             });
 
@@ -167,16 +164,28 @@ namespace Deltin.Deltinteger.Parse
 
         public IVariable GetVariable(string name, bool methodGroupsOnly)
         {
-            IVariable element = null;
-            Scope current = this;
+            IVariable variable = null;
+            List<IMethod> functions = new List<IMethod>();
 
-            while (current != null && element == null)
+            Scope current = this;
+            while (current != null)
             {
-                element = current._variables.Where(v => !methodGroupsOnly || v is MethodGroup || v.CodeType is Lambda.PortableLambdaType).FirstOrDefault(element => element.Name == name);
+                // Add functions with the same name.
+                functions.AddRange(current._functions.Where(f => f.Name == name));
+
+                // Set the variable if it was not set yet.
+                if (variable == null)
+                    variable = current._variables.Where(v => !methodGroupsOnly || v is MethodGroup || v.CodeType is Lambda.PortableLambdaType).FirstOrDefault(element => element.Name == name);
+
+                // Go to the parent scope.
                 current = current.Parent;
             }
 
-            return element;
+            // If a variable was found, use that.
+            if (variable != null) return variable;
+
+            // Otherwise, return the method group.
+            return new MethodGroup(name, functions.ToArray());
         }
 
         public IVariable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range, bool methodGroupsOnly)
@@ -265,20 +274,7 @@ namespace Deltin.Deltinteger.Parse
             _variables.Add(macro);
         }
 
-        public void AddNativeMethod(IMethod method)
-        {
-            foreach (var group in _methodGroups)
-                if (group.MethodIsValid(method))
-                {
-                    group.AddMethod(method);
-                    return;
-                }
-
-            var newGroup = new MethodGroup(method.Name);
-            newGroup.AddMethod(method);
-            _variables.Add(newGroup);
-            _methodGroups.Add(newGroup);
-        }
+        public void AddNativeMethod(IMethod method) => _functions.Add(method);
 
         /// <summary>
         /// Blindly copies a method to the current scope without doing any syntax checking.
@@ -364,23 +360,6 @@ namespace Deltin.Deltinteger.Parse
 
         }
 
-        /// <summary>Gets all methods in the scope with the provided name.</summary>
-        /// <param name="name">The name of the methods.</param>
-        /// <returns>An array of methods with the matching name.</returns>
-        public IMethod[] GetMethodsByName(string name)
-        {
-            List<IMethod> methods = new List<IMethod>();
-
-            IterateParents(scope =>
-            {
-                if (scope.TryGetGroupByName(name, out var group))
-                    methods.AddRange(group.Functions);
-                return false;
-            });
-
-            return methods.ToArray();
-        }
-
         public CodeType GetThis()
         {
             CodeType @this = null;
@@ -451,30 +430,28 @@ namespace Deltin.Deltinteger.Parse
             var batches = new List<FunctionBatch>();
             IterateParents(scope =>
             {
-                // Iterate through each group.
-                foreach (var group in scope._methodGroups)
-                    // Iterate through each function in the group.
-                    foreach (var func in group.Functions)
-                        // If the function is scoped at pos,
-                        // add it to a batch.
-                        if (scope.WasScopedAtPosition(func, pos, getter))
-                        {
-                            bool batchFound = false; // Determines if a batch was found for the function.
+                // Iterate through each function.
+                foreach (var func in scope._functions)
+                    // If the function is scoped at pos,
+                    // add it to a batch.
+                    if (scope.WasScopedAtPosition(func, pos, getter))
+                    {
+                        bool batchFound = false; // Determines if a batch was found for the function.
 
-                            // Iterate through each existing batch.
-                            foreach (var batch in batches)
-                                // If the current batch's name is equal to the function's name, add it to the batch.
-                                if (batch.Name == func.Name)
-                                {
-                                    batch.Add();
-                                    batchFound = true;
-                                    break;
-                                }
+                        // Iterate through each existing batch.
+                        foreach (var batch in batches)
+                            // If the current batch's name is equal to the function's name, add it to the batch.
+                            if (batch.Name == func.Name)
+                            {
+                                batch.Add();
+                                batchFound = true;
+                                break;
+                            }
 
-                            // If no batch was found for the function name, create a new batch.
-                            if (!batchFound)
-                                batches.Add(new FunctionBatch(func.Name, func));
-                        }
+                        // If no batch was found for the function name, create a new batch.
+                        if (!batchFound)
+                            batches.Add(new FunctionBatch(func.Name, func));
+                    }
 
                 // Add the variables.
                 foreach (var variable in scope._variables)
@@ -503,18 +480,6 @@ namespace Deltin.Deltinteger.Parse
         private bool WasScopedAtPosition(IScopeable element, DocPos pos, Scope getter)
         {
             return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.Start <= pos) && (getter == null || getter.AccessorMatches(element));
-        }
-
-        private bool TryGetGroupByName(string name, out MethodGroup group)
-        {
-            foreach (var g in _methodGroups)
-                if (g.Name == name)
-                {
-                    group = g;
-                    return true;
-                }
-            group = null;
-            return false;
         }
 
         public bool ScopeContains(IScopeable element)
@@ -546,7 +511,7 @@ namespace Deltin.Deltinteger.Parse
             bool found = false;
             IterateParents(scope =>
             {
-                found = scope.TryGetGroupByName(function.Name, out var group) && group.Functions.Contains(function);
+                found = scope._functions.Contains(function);
                 return found;
             });
             return found;

@@ -111,22 +111,6 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
-            // Get the reserved variables and IDs
-            // foreach (ScriptFile script in Importer.ScriptFiles)
-            // {
-            //     if (script.Context.reserved_global()?.reserved_list() != null)
-            //     {
-            //         foreach (var name in script.Context.reserved_global().reserved_list().PART()) VarCollection.Reserve(name.GetText(), true);
-            //         foreach (var id in script.Context.reserved_global().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), true, null, null);
-            //     }
-            //     if (script.Context.reserved_player()?.reserved_list() != null)
-            //     {
-            //         foreach (var name in script.Context.reserved_player().reserved_list().PART()) VarCollection.Reserve(name.GetText(), false);
-            //         foreach (var id in script.Context.reserved_player().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), false, null, null);
-            //     }
-            // }
-
-
             // Get the variable reservations
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (Token reservation in script.Context.GlobalvarReservations)

@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             MethodGroup group = ((CallMethodGroup)invokeInfo.Target).Group;
 
             // Make an OverloadChooser to choose an Overload.
-            var overloadChooser = new OverloadChooser(group.Functions.ToArray(), parseInfo, invokeInfo.Scope, invokeInfo.Getter, invokeInfo.TargetRange, invokeInfo.CallRange, invokeInfo.FullRange, new OverloadError("method '" + group.Name + "'"));
+            var overloadChooser = new OverloadChooser(group.Functions, parseInfo, invokeInfo.Scope, invokeInfo.Getter, invokeInfo.TargetRange, invokeInfo.CallRange, invokeInfo.FullRange, new OverloadError("method '" + group.Name + "'"));
             // Apply the parameters.
             overloadChooser.Apply(invokeInfo.Context.Parameters);
 
