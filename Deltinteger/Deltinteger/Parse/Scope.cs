@@ -181,11 +181,14 @@ namespace Deltin.Deltinteger.Parse
                 current = current.Parent;
             }
 
-            // If a variable was found, use that.
+            // Variables take priority over method groups.
             if (variable != null) return variable;
 
-            // Otherwise, return the method group.
-            return new MethodGroup(name, functions.ToArray());
+            // If there were any functions that share the variable name, return the method group.
+            if (functions.Count > 0) return new MethodGroup(name, functions.ToArray());
+
+            // Otherwise, return null.
+            return null;
         }
 
         public IVariable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range, bool methodGroupsOnly)
