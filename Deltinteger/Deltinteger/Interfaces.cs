@@ -83,7 +83,9 @@ namespace Deltin.Deltinteger
 
         CompletionItem IScopeable.GetCompletion(DeltinScript deltinScript) => new CompletionItem() {
             Label = Name,
-            Documentation = Documentation
+            Documentation = Documentation,
+            Detail = CodeType.GetCodeType(deltinScript).GetName() + " " + Name,
+            Kind = CompletionItemKind.Variable
         };
     }
 

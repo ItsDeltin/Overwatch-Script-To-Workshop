@@ -179,13 +179,6 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet) => actionSet.IndexAssigner[this].GetVariable();
 
-        public CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = Name,
-            Kind = CompletionItemKind.Variable,
-            Detail = CodeType.GetName() + " " + Name
-        };
-
         public string GetLabel(bool markdown)
         {
             string typeName = "define";
