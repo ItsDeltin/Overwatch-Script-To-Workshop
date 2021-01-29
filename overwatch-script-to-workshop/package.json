@@ -2,7 +2,7 @@
     "name": "overwatch-script-to-workshop",
     "displayName": "Overwatch Script To Workshop",
     "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-    "version": "3.1.1",
+    "version": "3.1.2",
     "publisher": "Deltin",
     "engines": {
         "vscode": "^1.47.0"
@@ -201,7 +201,7 @@
             },
             {
                 "command": "ostw.createPathmap",
-                "title": "Create pathmap from CSV clipboard",
+                "title": "Create pathmap from action-set clipboard",
                 "category": "Overwatch Script To Workshop"
             },
             {
