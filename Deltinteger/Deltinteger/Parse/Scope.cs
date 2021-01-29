@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
                 if (iterateVariables) checkScopeables.AddRange(current._variables);
 
                 // If functions are being iterated, add them to the list.
-                if (iterateMethods) checkScopeables.AddRange(_functions);
+                if (iterateMethods) checkScopeables.AddRange(current._functions);
 
                 bool stopAfterScope = false;
 
