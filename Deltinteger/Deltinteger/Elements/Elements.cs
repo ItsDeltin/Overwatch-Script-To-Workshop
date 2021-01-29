@@ -1,17 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Models;
-using Deltin.Deltinteger.I18n;
-using Deltin.Deltinteger.Compiler;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -390,7 +380,7 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(Value.ToString());
+        public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(((decimal)Value).ToString());
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
     }
 }

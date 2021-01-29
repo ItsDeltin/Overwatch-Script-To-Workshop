@@ -159,14 +159,15 @@ namespace Deltin.Deltinteger.Parse
 			{    
 				ParseInfo parseInfo = new ParseInfo(script, this);
             	foreach (var typeContext in script.Context.TypeAliases)
-				{
-					var aliasType = Types.GetCodeType(typeContext.NewTypeName?.Text);
-					var type = PipeType.GetCodeTypeFromContext(parseInfo, typeContext.OtherType);
-					if(aliasType != null)
-						parseInfo.Script.Diagnostics.Error("type name already in use.", typeContext.Range);
-					else if(type != null)
-						Types.TypeAliases.Add(typeContext.NewTypeName.Text, type);
-				}
+                    if (typeContext.NewTypeName)
+                    {
+                        var aliasType = Types.GetCodeType(typeContext.NewTypeName?.Text);
+                        var type = PipeType.GetCodeTypeFromContext(parseInfo, typeContext.OtherType);
+                        if(aliasType != null)
+                            parseInfo.Script.Diagnostics.Error("type name already in use.", typeContext.Range);
+                        else if(type != null)
+                            Types.TypeAliases.Add(typeContext.NewTypeName.GetText(), type);
+                    }
 			}
             
             // Get variable declarations
