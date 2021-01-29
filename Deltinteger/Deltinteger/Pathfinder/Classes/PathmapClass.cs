@@ -4,7 +4,6 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.Lambda;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using static Deltin.Deltinteger.Elements.Element;
@@ -71,6 +70,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(BakeCompressed);
 
             staticScope.AddNativeMethod(StopPathfind);
+            staticScope.AddNativeMethod(SkipNode);
             staticScope.AddNativeMethod(CurrentSegmentAttribute);
             staticScope.AddNativeMethod(IsPathfinding);
             staticScope.AddNativeMethod(IsPathfindStuck);
@@ -687,6 +687,21 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) =>
             {
                 actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().StopPathfinding(actionSet, (Element)methodCall.ParameterValues[0]);
+                return null;
+            }
+        };
+
+        // SkipNode(players)
+        private FuncMethod SkipNode => new FuncMethodBuilder() {
+            Name = "SkipNode",
+            Documentation = "Skips the a pathfinding player's current node.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The pathfinding player who will skip their current node.", _supplier.Players())
+            },
+            Action = (actionSet, methodCall) =>
+            {
+                var resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
+                resolveInfo.GetNextNode(actionSet, methodCall.Get(0));
                 return null;
             }
         };
