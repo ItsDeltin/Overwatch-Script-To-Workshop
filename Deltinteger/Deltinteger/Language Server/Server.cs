@@ -143,26 +143,34 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // Pathmap editor request.
-            options.OnRequest<PathmapDocument, bool>("pathmapEditor", (editFileToken) => Task<bool>.Run(() =>
+            options.OnRequest<PathmapDocument, PathmapEditorResult>("pathmapEditor", (editFileToken) => Task<PathmapEditorResult>.Run(() =>
             {
-
-                DeltinScript compile;
-                if (editFileToken.Text == null)
+                try
                 {
-                    string editor = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
-                    compile = new DeltinScript(new TranslateSettings(editor)
+                    DeltinScript compile;
+                    if (editFileToken.Text == null)
                     {
-                        OutputLanguage = ConfigurationHandler.OutputLanguage
-                    });
+                        string editor = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+                        compile = new DeltinScript(new TranslateSettings(editor)
+                        {
+                            OutputLanguage = ConfigurationHandler.OutputLanguage
+                        });
+                    }
+                    else
+                    {
+                        compile = Editor.Generate(editFileToken.File, Pathmap.ImportFromText(editFileToken.Text), ConfigurationHandler.OutputLanguage);
+                    }
+
+                    if (compile.Diagnostics.ContainsErrors())
+                        return new PathmapEditorResult("An error was found in the pathmap script: " + compile.Diagnostics.GetDiagnostics()[0].ToString()); // error
+
+                    Clipboard.SetText(compile.WorkshopCode);
+                    return new PathmapEditorResult(); // success
                 }
-                else
+                catch (Exception ex)
                 {
-                    compile = Editor.Generate(editFileToken.File, Pathmap.ImportFromText(editFileToken.Text), ConfigurationHandler.OutputLanguage);
+                    return new PathmapEditorResult(ex.Message);
                 }
-
-                Clipboard.SetText(compile.WorkshopCode);
-
-                return true;
             }));
 
             // semantic tokens

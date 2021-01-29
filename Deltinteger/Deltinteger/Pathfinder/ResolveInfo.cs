@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public DeltinScript DeltinScript { get; set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
         public bool PotentiallyNullNodes { get; set; } // Determines if nodes can potentially be null.
+        public bool TrackNextAttribute { get; set; } // Determines if nodes can potentially be null.
 
         // Class Instances
         private PathResolveClass PathResolveInstance;
@@ -24,6 +25,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public IndexReference ParentArray { get; set; } // Stores the parent path array.
         private IndexReference Destination { get; set; } // The destination to walk to after all nodes have been transversed.
         public IndexReference CurrentAttribute { get; set; } // The current pathfinding attribute.
+        public IndexReference NextAttribute { get; set; } // The current pathfinding attribute.
 
         // Stuck dection workshop variables. These are only assigned if 'TrackTimeSinceLastNode' is true.
         private IndexReference DistanceToNextNode { get; set; } // The distance from the player to the next node.
@@ -53,6 +55,9 @@ namespace Deltin.Deltinteger.Pathfinder
                 DistanceToNextNode = DeltinScript.VarCollection.Assign("distanceToNextNode", false, assignExtended);
                 TimeSinceLastNode = DeltinScript.VarCollection.Assign("timeSinceLastNode", false, assignExtended);
             }
+
+            if (TrackNextAttribute)
+                NextAttribute = DeltinScript.VarCollection.Assign("nextAttribute", false, assignExtended);
 
             // Get the PathResolve instance and the Pathmap instance.
             PathResolveInstance = DeltinScript.Types.GetInstance<PathResolveClass>();
@@ -112,7 +117,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 actionSet.AddAction(If(Compare(Current.Get(player), Operator.NotEqual, Num(-1))));
 
             // Get last attribute.
-            actionSet.AddAction(CurrentAttribute.SetVariable(NextSegmentAttribute(player), targetPlayer: player));
+            actionSet.AddAction(CurrentAttribute.SetVariable(GetCurrentSegmentAttribute(player), targetPlayer: player));
+
+            if (TrackNextAttribute)
+                actionSet.AddAction(NextAttribute.SetVariable(GetNextSegmentAttribute(player), targetPlayer: player));
 
             // Set current as the current's parent.
             actionSet.AddAction(Current.SetVariable(ParentArray.Get(player)[Current.Get(player)] - 1, targetPlayer: player));
@@ -144,16 +152,16 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <summary>Gets the closest node from a position.</summary>
         public Element ClosestNode(ActionSet actionSet, Element position) => PathmapInstance.GetNodeFromPositionHandler(actionSet, PathmapReference.Get()).NodeFromPosition(position);
 
-        /// <summary>The position of the current node the player is walking towards.</summary>
-        public Element CurrentPosition(Element player = null) => PathmapInstance.Nodes.Get()[PathmapReference.Get(player)][Current.Get(player)];
+        public Element CurrentPositionWithDestination(Element player = null) => PositionAtOrDestination(Current.Get(player), player);
+        public Element NextPositionWithDestination(Element player = null) => PositionAtOrDestination(ParentArray.Get(player)[Current.GetVariable(player)] - 1, player);
 
-        public Element CurrentPositionWithDestination(Element player = null) => Element.TernaryConditional(
+        Element PositionAtOrDestination(Element node, Element player = null) => Element.TernaryConditional(
             // Current will be -1 if the player reached the last node.
-            Element.Compare(Current.GetVariable(player), Operator.Equal, Element.Num(-1)),
+            Element.Compare(node, Operator.Equal, Element.Num(-1)),
             // If so, go to the destination.
             Destination.GetVariable(player),
             // Otherwise, go to the current node.
-            CurrentPosition(player)
+            PathmapInstance.Nodes.Get()[PathmapReference.Get(player)][node]
         );
 
         /// <summary>The position of the current player: `Position Of(Event Player)`</summary>
@@ -242,16 +250,19 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         /// <summary>Gets the next pathfinding attribute.</summary>
-        // public Element NextSegmentAttribute(Element player) => Element.TernaryConditional(
-        //     Element.Part<V_And>(IsPathfinding(player), new V_Compare(Current.GetVariable(player), Operators.NotEqual, Element.Num(-1))),
-        //     AttributeArray.Get(player)[Current.Get(player)],
-        //     Element.Num(-1)
-        // );
-        public Element NextSegmentAttribute(Element player) => Element.Map(Element.Filter(
+        Element GetCurrentSegmentAttribute(Element player) => Element.Map(Element.Filter(
             PathmapInstance.Attributes.Get()[PathmapReference.Get(player)],
             Element.And(
                 Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, Current.Get(player)),
                 Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1)
+            )
+        ), Element.ZOf(Element.ArrayElement()));
+
+        Element GetNextSegmentAttribute(Element player) => Element.Map(Element.Filter(
+            PathmapInstance.Attributes.Get()[PathmapReference.Get(player)],
+            Element.And(
+                Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1),
+                Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[ParentArray.Get(player)[Current.Get(player)] - 1] - 1)
             )
         ), Element.ZOf(Element.ArrayElement()));
     
