@@ -105,11 +105,18 @@ namespace Deltin.Deltinteger.Parse
                 _type = new ArrayType(parseInfo.TranslateInfo.Types, parseInfo.TranslateInfo.Types.Any());
             else
             {
+                // The type of the array is the type of the first value.
                 var sourceType = Values[0].Type();
                 _type = new ArrayType(parseInfo.TranslateInfo.Types, sourceType);
 
                 // Struct array
                 _isStructArray = sourceType is StructInstance;
+
+                // If this is a struct array, the types are strict.
+                if (_isStructArray)
+                    for (int i = 0; i < Values.Length; i++)
+                        if (!Values[i].Type().Implements(sourceType))
+                            parseInfo.Script.Diagnostics.Error($"Expected a value of type '" + sourceType.GetName() + "'", createArrayContext.Values[i].Range);
             }
         }
 

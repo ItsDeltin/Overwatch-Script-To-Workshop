@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Deltin.Deltinteger.Elements;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
@@ -75,23 +76,37 @@ namespace Deltin.Deltinteger.Parse
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
-            var structValue = (IAssignedStructDictionary)reference;
+            var structValue = (IStructValue)reference;
 
             foreach (var variable in Variables)
-                assigner.Add(variable.Provider, structValue[variable.Name]);
+                assigner.Add(variable.Provider, structValue.GetValue(variable.Name));
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
             => GetGettableAssigner(null).GetValue(new GettableAssignerValueInfo(actionSet)).GetVariable();
 
-        public override IGettableAssigner GetGettableAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable).InitialValue, false);
-        IGettableAssigner IAdditionalArray.GetArrayAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable).InitialValue, true);
-        void IAdditionalArray.OverrideArray(ArrayType array) {}
         public override CompletionItem GetCompletion() => throw new System.NotImplementedException();
-
         void ThrowIfNotReady()
         {
             if (!_isReady) throw new Exception("You are but a fool.");
         }
+
+        public override IGettableAssigner GetGettableAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable).InitialValue, false);
+
+        IGettableAssigner IAdditionalArray.GetArrayAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable).InitialValue, true);
+        void IAdditionalArray.OverrideArray(ArrayType array) {}
+        void IAdditionalArray.AssignLength(IVariable lengthVariable, VarIndexAssigner assigner, IWorkshopTree reference)
+        {
+            while (reference is IStructValue structValue)
+                reference = structValue.GetArbritraryValue();
+
+            assigner.Add(lengthVariable, reference);
+        }
+
+        void IAdditionalArray.AssignFirstOf(IVariable firstOfVariable, VarIndexAssigner assigner, IWorkshopTree reference)
+            => assigner.Add(firstOfVariable, new BridgeGetStructValue((IStructValue)reference, v => Element.FirstOf(v)));
+
+        void IAdditionalArray.AssignLastOf(IVariable lastOfVariable, VarIndexAssigner assigner, IWorkshopTree reference)
+            => assigner.Add(lastOfVariable, new BridgeGetStructValue((IStructValue)reference, v => Element.LastOf(v)));
     }
 }

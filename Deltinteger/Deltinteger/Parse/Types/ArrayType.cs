@@ -224,9 +224,18 @@ namespace Deltin.Deltinteger.Parse
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
-            assigner.Add(_length, Element.CountOf(reference));
-            assigner.Add(_last, Element.LastOf(reference));
-            assigner.Add(_first, Element.FirstOf(reference));
+            if (ArrayOfType is IAdditionalArray addition)
+            {
+                addition.AssignLength(_length, assigner, reference);
+                addition.AssignFirstOf(_first, assigner, reference);
+                addition.AssignLastOf(_last, assigner, reference);
+            }
+            else
+            {
+                assigner.Add(_length, Element.CountOf(reference));
+                assigner.Add(_first, Element.FirstOf(reference));
+                assigner.Add(_last, Element.LastOf(reference));
+            }
         }
 
         // public override bool Implements(CodeType type) => (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType)) || (ArrayOfType is IAdditionalArray additon && additon.AlternateImplements(type));
@@ -294,6 +303,9 @@ namespace Deltin.Deltinteger.Parse
     {
         void OverrideArray(ArrayType array);
         IGettableAssigner GetArrayAssigner(IVariable variable);
+        void AssignLength(IVariable lengthVariable, VarIndexAssigner assigner, IWorkshopTree reference) => assigner.Add(lengthVariable, Element.CountOf(reference));
+        void AssignFirstOf(IVariable firstOfVariable, VarIndexAssigner assigner, IWorkshopTree reference) => assigner.Add(firstOfVariable, Element.FirstOf(reference));
+        void AssignLastOf(IVariable lastOfVariable, VarIndexAssigner assigner, IWorkshopTree reference) => assigner.Add(lastOfVariable, Element.LastOf(reference));
     }
 
     class SourceVariableResolver

@@ -126,7 +126,7 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", _initalValueContext.Range);
 
                 // If the variable's type is constant, make sure the value's type matches.
-                else if (CodeType != null && CodeType.IsConstant() && (InitialValue.Type() == null || !InitialValue.Type().Implements(CodeType)))
+                else if (!InitialValue.Type().Implements(CodeType))
                     parseInfo.Script.Diagnostics.Error($"Expected a value of type '" + CodeType.GetName() + "'", _initalValueContext.Range);
 
                 // Check restricted calls.

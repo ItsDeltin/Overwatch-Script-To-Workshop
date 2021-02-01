@@ -93,6 +93,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public void Set() => Variable.Set(ActionSet.SetNextComment(_comment), Value, Target, Index);
-        public void Modify(Operation operation) => Variable.Modify(ActionSet.SetNextComment(_comment), operation, (Element)Value, Target, Index);
+        public void Modify(Operation operation) => Variable.Modify(ActionSet.SetNextComment(_comment), operation, Value, Target, Index);
     }
 }

@@ -117,6 +117,8 @@ namespace Deltin.Deltinteger.Parse
             
             return new StructAssignerValue(values);
         }
+
+        public IWorkshopTree GetArbritraryValue() => _children.First().Value.GetVariable();
     }
 
     /*
@@ -135,6 +137,7 @@ namespace Deltin.Deltinteger.Parse
     public interface IStructValue : IWorkshopTree
     {
         IWorkshopTree GetValue(string variableName);
+        IWorkshopTree GetArbritraryValue();
         bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new NotImplementedException();
         void IWorkshopTree.ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => throw new NotImplementedException();
     }
@@ -158,6 +161,7 @@ namespace Deltin.Deltinteger.Parse
         public Dictionary<string, IWorkshopTree> Values { get; }
         public IWorkshopTree this[string variableName] => Values[variableName];
         public IWorkshopTree GetValue(string variableName) => Values[variableName];
+        public IWorkshopTree GetArbritraryValue() => Values.First().Value;
 
         public LinkedStructAssigner(Dictionary<string, IWorkshopTree> values)
         {
@@ -194,6 +198,8 @@ namespace Deltin.Deltinteger.Parse
             // Otherwise, create a normal workshop array.
             return Element.CreateArray(Children.Select(c => c.GetValue(variableName)).ToArray());
         }
+
+        public IWorkshopTree GetArbritraryValue() => Children[0];
     }
 
     /// <summary>Gets a value in a struct array by an index.</summary>
@@ -210,7 +216,42 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree GetValue(string variableName)
         {
-            return Element.ValueInArray(_structValue.GetValue(variableName), _index);
+            // Get the struct value.
+            var value = _structValue.GetValue(variableName);
+
+            // Check if we need to do a value-in-array subsection.
+            if (value is IInlineStructDictionary subvalue)
+                return new ValueInStructArray(subvalue, _index);
+
+            // Otherwise, get the value in the array normally.
+            return Element.ValueInArray(value, _index);
         }
+
+        public IWorkshopTree GetArbritraryValue() => _structValue;
+    }
+
+    class BridgeGetStructValue : IStructValue
+    {
+        private readonly IStructValue _structValue;
+        private readonly Func<IWorkshopTree, IWorkshopTree> _bridge;
+
+        public BridgeGetStructValue(IStructValue structValue, Func<IWorkshopTree, IWorkshopTree> bridge)
+        {
+            _structValue = structValue;
+            _bridge = bridge;
+        }
+
+        public IWorkshopTree GetValue(string variableName)
+        {
+            // Get the struct value.
+            var value = _structValue.GetValue(variableName);
+
+            // Check if we need to do a subsection.
+            if (value is IInlineStructDictionary subvalue)
+                return new BridgeGetStructValue(subvalue, _bridge);
+
+            return _bridge(value);
+        }
+        public IWorkshopTree GetArbritraryValue() => _structValue;
     }
 }

@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
             _deltinScript = deltinScript;
         }
 
-        public void ResolveElements()
+        public override void ResolveElements()
         {
             Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(_deltinScript.Types, TypeOperator.Equal, this),
@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             Operations.AddTypeOperation(AssignmentOperation.GetNumericOperations(this));
         }
 
-        public override bool Implements(CodeType type) => !type.IsConstant();
+        public override bool Implements(CodeType type) => !type.IsConstant() && type is StructInstance == false;
         public override bool Is(CodeType type) => !type.IsConstant();
         public override CompletionItem GetCompletion() => GetTypeCompletion(this);
         public override Scope GetObjectScope() => _deltinScript.PlayerVariableScope;
