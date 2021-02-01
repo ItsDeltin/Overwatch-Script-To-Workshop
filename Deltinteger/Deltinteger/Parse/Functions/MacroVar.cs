@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetupBlock()
         {
-            Value = _parseInfo.GetExpression(_scope, _expressionContext);
+            Value = _parseInfo.SetCallInfo(CallInfo).GetExpression(_scope, _expressionContext);
             _applyBlock.Apply();
         }
 

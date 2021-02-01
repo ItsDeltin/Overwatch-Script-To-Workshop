@@ -50,6 +50,8 @@ namespace Deltin.Deltinteger.Parse
         IVariableInstance IVariable.GetDefaultInstance() => this;
         IScopeable IElementProvider.AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
         void IElementProvider.AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
+
+        void IVariableInstance.Call(ParseInfo parseInfo, DocRange callRange) {}
     }
 
     public class CallMethodGroup : ICallVariable, IExpression, ILambdaApplier, ILambdaInvocable, IWorkshopTree
