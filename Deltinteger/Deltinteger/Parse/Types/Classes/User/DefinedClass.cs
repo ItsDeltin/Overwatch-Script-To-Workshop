@@ -18,6 +18,9 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedClass(ParseInfo parseInfo, DefinedClassInitializer initializer, CodeType[] generics) : base(initializer.Name, initializer)
         {
+            CanBeExtended = true;
+            CanBeDeleted = true;
+
             _parseInfo = parseInfo;
             _definedInitializer = initializer;
             Generics = generics;
