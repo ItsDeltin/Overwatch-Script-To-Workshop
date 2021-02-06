@@ -12,160 +12,105 @@ namespace Deltin.Deltinteger.Lobby
 {
     public class ModesRoot
     {
-        public WorkshopValuePair All { get; set; }
+        public ModeSettings[] Modes { get; set; }
+        public SettingPairCollection GeneralSettings { get; set; }
 
-        public ModeSettings Assault { get; set; }
+        public ModesRoot(IList<ModeSettings> modes)
+        {
+            Modes = modes.ToArray();
+        }
 
-        public ModeSettings Control { get; set; }
-
-        public ModeSettings Escort { get; set; }
-
-        public ModeSettings Hybrid { get; set; }
-
-        [JsonProperty("Capture The Flag")]
-        public ModeSettings CaptureTheFlag { get; set; }
-
-        public ModeSettings Deathmatch { get; set; }
-
-        public ModeSettings Elimination { get; set; }
-
-        [JsonProperty("Team Deathmatch")]
-        public ModeSettings TeamDeathmatch { get; set; }
-
-        public ModeSettings Skirmish { get; set; }
-
-        [JsonProperty("Practice Range")]
-        public ModeSettings PracticeRange { get; set; }
-
-        [JsonProperty("Freezethaw Elimination")]
-        public ModeSettings FreezethawElimination { get; set; }
-
-        public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
+        public void ToWorkshop(WorkshopBuilder builder, IReadOnlyCollection<LobbySetting> allSettings)
         {
             builder.AppendKeywordLine("modes");
             builder.AppendLine("{");
             builder.Indent();
 
-            if (All != null)
-            {
-                builder.AppendKeywordLine("General");
-                builder.AppendLine("{");
-                builder.Indent();
-                All.ToWorkshop(builder, allSettings);
-                builder.Outdent();
-                builder.AppendLine("}");
-            }
-
-            Assault?.ToWorkshop(builder, allSettings, "Assault");
-            CaptureTheFlag?.ToWorkshop(builder, allSettings, "CaptureTheFlag");
-            Control?.ToWorkshop(builder, allSettings, "Control");
-            Deathmatch?.ToWorkshop(builder, allSettings, "Deathmatch");
-            Elimination?.ToWorkshop(builder, allSettings, "Elimination");
-            Escort?.ToWorkshop(builder, allSettings, "Escort");
-            Hybrid?.ToWorkshop(builder, allSettings, "Hybrid");
-            PracticeRange?.ToWorkshop(builder, allSettings, "PracticeRange");
-            Skirmish?.ToWorkshop(builder, allSettings, "Skirmish");
-            TeamDeathmatch?.ToWorkshop(builder, allSettings, "TeamDeathmatch");
-            FreezethawElimination?.ToWorkshop(builder, allSettings, "FreezethawElimination");
+            foreach (var mode in Modes)
+                mode.ToWorkshop(builder, allSettings);
 
             builder.Outdent();
             builder.AppendLine("}");
-        }
-
-        public ModeSettings SettingsFromModeCollection(ModeSettingCollection collection)
-        {
-            switch (collection.ModeName)
-            {
-                case "Assault":
-                    if (Assault == null) Assault = new ModeSettings();
-                    return Assault;
-                case "Capture The Flag":
-                    if (CaptureTheFlag == null) CaptureTheFlag = new ModeSettings();
-                    return CaptureTheFlag;
-                case "Control":
-                    if (Control == null) Control = new ModeSettings();
-                    return Control;
-                case "Deathmatch":
-                    if (Deathmatch == null) Deathmatch = new ModeSettings();
-                    return Deathmatch;
-                case "Elimination":
-                    if (Elimination == null) Elimination = new ModeSettings();
-                    return Elimination;
-                case "Escort":
-                    if (Escort == null) Escort = new ModeSettings();
-                    return Escort;
-                case "Hybrid":
-                    if (Hybrid == null) Hybrid = new ModeSettings();
-                    return Hybrid;
-                case "Practice Range":
-                    if (PracticeRange == null) PracticeRange = new ModeSettings();
-                    return PracticeRange;
-                case "Skirmish":
-                    if (Skirmish == null) Skirmish = new ModeSettings();
-                    return Skirmish;
-                case "Team Deathmatch":
-                    if (TeamDeathmatch == null) TeamDeathmatch = new ModeSettings();
-                    return TeamDeathmatch;
-                case "Freezethaw Elimination":
-                    if (FreezethawElimination == null) FreezethawElimination = new ModeSettings();
-                    return FreezethawElimination;
-            }
-            throw new NotImplementedException(collection.ModeName);
         }
     }
 
     public class ModeSettings
     {
-        [JsonProperty("Enabled Maps")]
+        public string ModeName { get; set; }
         public string[] EnabledMaps { get; set; }
-
-        [JsonProperty("Disabled Maps")]
         public string[] DisabledMaps { get; set; }
+        public SettingPair[] Settings { get; set; }
+        public bool Enabled { get; set; }
+        bool IsGeneral => ModeName == "All";
 
-        [JsonExtensionData]
-        public Dictionary<string, object> Settings { get; set; } = new Dictionary<string, object>();
-
-        public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings, string modeName)
+        public ModeSettings(string modeName)
         {
-            bool enabled = Settings == null || !Settings.TryGetValue("Enabled", out object value) || (value is bool b && b);
-            Settings?.Remove("Enabled");
+            ModeName = modeName;
+        }
+        public ModeSettings(string modeName, string[] enabledMaps, string[] disabledMaps, SettingPair[] settings)
+        {
+            ModeName = modeName;
+            EnabledMaps = enabledMaps;
+            DisabledMaps = disabledMaps;
+            Settings = settings;
+        }
 
-            if (!enabled) builder.AppendKeyword("disabled").Append(" ");
-            builder.AppendKeywordLine(modeName);
-
-            if (EnabledMaps != null || DisabledMaps != null || (Settings != null && Settings.Count > 0))
+        public void ToWorkshop(WorkshopBuilder builder, IReadOnlyCollection<LobbySetting> allSettings)
+        {
+            // General settings.
+            if (IsGeneral)
             {
+                builder.AppendKeywordLine("General");
                 builder.AppendLine("{");
                 builder.Indent();
-
-                if (Settings != null) WorkshopValuePair.ToWorkshop(Settings, builder, allSettings);
-
-                if (EnabledMaps != null)
-                {
-                    builder.AppendKeywordLine("enabled maps");
-                    Ruleset.WriteList(builder, EnabledMaps);
-                }
-                if (DisabledMaps != null)
-                {
-                    builder.AppendKeywordLine("disabled maps");
-                    Ruleset.WriteList(builder, DisabledMaps);
-                }
+                
+                // Write settings.
+                if (Settings != null)
+                    foreach (var setting in Settings)
+                        setting.ToWorkshop(builder, allSettings);
 
                 builder.Outdent();
                 builder.AppendLine("}");
             }
-        }
+            else // Mode settings
+            {
+                bool enabled = Settings == null || !SettingPair.TryGetValue(Settings, "Enabled", out object value) || (value is bool b && b);
 
-        public static void WriteList(WorkshopBuilder builder, string[] maps)
-        {
-            builder.AppendLine("{");
-            builder.Indent();
+                if (!enabled) builder.AppendKeyword("disabled").Append(" ");
+                builder.AppendKeywordLine(ModeName);
 
-            foreach (string map in maps)
-                builder.AppendLine(builder.Translate(map).RemoveStructuralChars());
+                if (EnabledMaps != null || DisabledMaps != null || (Settings != null && Settings.Length > 0))
+                {
+                    builder.AppendLine("{");
+                    builder.Indent();
 
-            builder.Outdent();
-            builder.AppendLine("}");
+                    // Write settings.
+                    if (Settings != null)
+                        foreach (var setting in Settings)
+                        {
+                            // Do not write the enabled setting.
+                            if (setting.Name == "Enabled") continue;
+                            setting.ToWorkshop(builder, allSettings);
+                        }
+
+                    // Write enabled maps.
+                    if (EnabledMaps != null)
+                    {
+                        builder.AppendKeywordLine("enabled maps");
+                        Ruleset.WriteList(builder, EnabledMaps);
+                    }
+
+                    // Write disabled maps.
+                    if (DisabledMaps != null)
+                    {
+                        builder.AppendKeywordLine("disabled maps");
+                        Ruleset.WriteList(builder, DisabledMaps);
+                    }
+
+                    builder.Outdent();
+                    builder.AppendLine("}");
+                }
+            }
         }
     }
 
@@ -208,24 +153,20 @@ namespace Deltin.Deltinteger.Lobby
 
         public static ModeSettingCollection[] AllModeSettings { get; private set; }
 
-        public string ModeName { get; }
-
-        public ModeSettingCollection(string title)
+        public ModeSettingCollection(string title) : base(title)
         {
-            ModeName = title;
             Title = title;
-            AddRange(DefaultModeSettings);
+            AddAll(DefaultModeSettings);
         }
 
-        public ModeSettingCollection(string modeName, bool defaultEnabled)
+        public ModeSettingCollection(string modeName, bool defaultEnabled) : base(modeName)
         {
-            ModeName = modeName;
-            Title = $"{ModeName} settings.";
+            Title = $"{CollectionName} settings.";
 
             if (defaultEnabled) Add(Enabled_DefaultOn);
             else Add(Enabled_DefaultOff);
 
-            AddRange(DefaultModeSettings);
+            AddAll(DefaultModeSettings);
         }
 
         public ModeSettingCollection AddCaptureSpeed()
@@ -255,7 +196,7 @@ namespace Deltin.Deltinteger.Lobby
             schema.AdditionalProperties = false;
 
             // Get the mode's maps.
-            string[] modeMaps = LobbyMap.AllMaps.Where(map => map.GameModes.Any(mode => mode.ToLower() == ModeName.ToLower())).Select(map => map.Name).ToArray();
+            string[] modeMaps = LobbyMap.AllMaps.Where(map => map.GameModes.Any(mode => mode.ToLower() == CollectionName.ToLower())).Select(map => map.Name).ToArray();
             if (modeMaps.Length == 0) return schema;
 
             // Create the map schema.
@@ -270,18 +211,18 @@ namespace Deltin.Deltinteger.Lobby
                 }
             };
             // Add the map schema to the list of definitions.
-            generate.Definitions.Add(ModeName + " Maps", maps);
+            generate.Definitions.Add(CollectionName + " Maps", maps);
 
             // Add the map schema reference to the current schema. 
-            schema.Properties.Add("Enabled Maps", GetMapReference("An array of enabled maps for the '" + ModeName + "' mode."));
-            schema.Properties.Add("Disabled Maps", GetMapReference("An array of disabled maps for the '" + ModeName + "' mode."));
+            schema.Properties.Add("Enabled Maps", GetMapReference("An array of enabled maps for the '" + CollectionName + "' mode."));
+            schema.Properties.Add("Disabled Maps", GetMapReference("An array of disabled maps for the '" + CollectionName + "' mode."));
 
             return schema;
         }
 
         private RootSchema GetMapReference(string description)
         {
-            return new RootSchema(description) { Ref = "#/definitions/" + ModeName + " Maps" };
+            return new RootSchema(description) { Ref = "#/definitions/" + CollectionName + " Maps" };
         }
 
         public static void Init()
@@ -304,12 +245,27 @@ namespace Deltin.Deltinteger.Lobby
                 new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500),
                 new ModeSettingCollection("Freezethaw Elimination", false).Elimination()
             };
+
+            // Get re-occurring settings.
+            var encountered = new HashSet<string>(); // Setting keys that were encountered.
+            var reoccuring = new HashSet<LobbySetting>(); // Setting keys that were repeatedly encountered.
+            var ignore = new LobbySetting[] { Enabled_DefaultOn, Enabled_DefaultOff };
+
+            foreach (var modeCollection in AllModeSettings)
+                foreach (var setting in modeCollection)
+                    // Make sure that the setting is not inside the 'ignored' array.
+                    // 'encountered' will return false if the key was already added to the HashSet. In this case, we can just 
+                    if (!ignore.Contains(setting) && !encountered.Add(setting.ReferenceName))
+                        reoccuring.Add(setting);
+
+            // Add reocurring settings to general.
+            AllModeSettings[0].AddAll(reoccuring);
         }
 
         public static void Validate(SettingValidation validation, JObject modes)
         {
             foreach (var modeCollection in AllModeSettings)
-                if (modes.TryGetValue(modeCollection.ModeName, out JToken modeSettingsToken))
+                if (modes.TryGetValue(modeCollection.CollectionName, out JToken modeSettingsToken))
                     Ruleset.ValidateSetting(validation, modeCollection, modeSettingsToken, "Enabled Maps", "Disabled Maps");
         }
     }

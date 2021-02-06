@@ -1,8 +1,76 @@
 using System.Linq;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.Lobby
 {
+    public class HeroTeamGroup
+    {
+        public HeroSettingGroup[] Heroes { get; set; }
+        public string[] EnabledHeroes { get; set; }
+        public string[] DisabledHeroes { get; set; }
+
+        public HeroTeamGroup() {}
+
+        public HeroTeamGroup(HeroSettingGroup[] heroes, string[] enabledHeroes, string[] disabledHeroes)
+        {
+            Heroes = heroes;
+            EnabledHeroes = enabledHeroes;
+            DisabledHeroes = disabledHeroes;
+        }
+
+        public void ToWorkshop(WorkshopBuilder builder, IReadOnlyCollection<LobbySetting> allSettings)
+        {
+            if (Heroes != null)
+                foreach (var hero in Heroes)
+                    hero.ToWorkshop(builder, allSettings);
+
+            if (EnabledHeroes != null)
+            {
+                builder.AppendLine();
+                builder.AppendKeywordLine("enabled heroes");
+                Ruleset.WriteList(builder, EnabledHeroes);
+            }
+            if (DisabledHeroes != null)
+            {
+                builder.AppendLine();
+                builder.AppendKeywordLine("disabled heroes");
+                Ruleset.WriteList(builder, DisabledHeroes);
+            }
+        }
+    }
+
+    public class HeroSettingGroup
+    {
+        public string HeroName { get; set; }
+        public SettingPairCollection Settings { get; set; }
+
+        public HeroSettingGroup(string heroName)
+        {
+            HeroName = heroName;
+        }
+
+        public HeroSettingGroup(string heroName, SettingPairCollection settings)
+        {
+            HeroName = heroName;
+            Settings = settings;
+        }
+
+        public void ToWorkshop(WorkshopBuilder builder, IReadOnlyCollection<LobbySetting> allSettings)
+        {
+            if (HeroName != "General")
+            {
+                builder.AppendLine($"{HeroName}");
+                builder.AppendLine("{");
+                builder.Indent();
+                Settings.ToWorkshop(builder, allSettings);
+                builder.Outdent();
+                builder.AppendLine("}");
+            }
+            else Settings.ToWorkshop(builder, allSettings);
+        }
+    }
+
     public class HeroSettingCollection : LobbySettingCollection<HeroSettingCollection>
     {
         // ***********
@@ -46,13 +114,9 @@ namespace Deltin.Deltinteger.Lobby
         public static HeroSettingCollection[] AllHeroSettings { get; private set; }
 
 
-        /// <summary>The name of the hero.</summary>
-        public string HeroName { get; }
-
-        public HeroSettingCollection(string heroName)
+        public HeroSettingCollection(string heroName) : base(heroName)
         {
-            HeroName = heroName;
-            Title = $"'{HeroName}' hero settings.";
+            Title = $"'{CollectionName}' hero settings.";
             AddGlobals();
         }
 
@@ -232,7 +296,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (JProperty property in heroes.Properties())
             {
                 if (property.Name == "Enabled Heroes" || property.Name == "Disabled Heroes") continue;
-                HeroSettingCollection relatedHeroCollection = AllHeroSettings.FirstOrDefault(hs => hs.HeroName == property.Name);
+                HeroSettingCollection relatedHeroCollection = AllHeroSettings.FirstOrDefault(hs => hs.CollectionName == property.Name);
 
                 if (relatedHeroCollection == null) validation.InvalidSetting(property.Name);
                 else Ruleset.ValidateSetting(validation, relatedHeroCollection, property.Value);

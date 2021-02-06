@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Compiler;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
-
+using System.Collections;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -29,7 +29,9 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Data Center Preference", "Best Available", "USA - Central", "Brazil", "Singapore", "USA - West", "Australia 3")
         };
 
-        public WorkshopValuePair Lobby { get; set; }
+        public static LobbySetting[] AllSettings { get; } = GetAllSettings();
+
+        public SettingPairCollection Lobby { get; set; }
         public ModesRoot Modes { get; set; }
         public HeroesRoot Heroes { get; set; }
         public string Description { get; set; }
@@ -37,8 +39,6 @@ namespace Deltin.Deltinteger.Lobby
 
         public void ToWorkshop(WorkshopBuilder builder)
         {
-            List<LobbySetting> allSettings = GetAllSettings();
-
             builder.AppendKeywordLine("settings");
             builder.AppendLine("{");
             builder.Indent();
@@ -60,16 +60,16 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendKeywordLine("lobby");
                 builder.AppendLine("{");
                 builder.Indent();
-                Lobby.ToWorkshop(builder, allSettings);
+                Lobby.ToWorkshop(builder, LobbySettings);
                 builder.Outdent();
                 builder.AppendLine("}");
             }
 
             // Get the mode settings.
-            if (Modes != null) Modes.ToWorkshop(builder, allSettings);
+            if (Modes != null) Modes.ToWorkshop(builder, AllSettings);
 
             // Get the hero settings.
-            if (Heroes != null) Heroes.ToWorkshop(builder, allSettings);
+            if (Heroes != null) Heroes.ToWorkshop(builder, AllSettings);
 
             // Get the custom workshop settings.
             if (Workshop != null)
@@ -86,7 +86,7 @@ namespace Deltin.Deltinteger.Lobby
             builder.AppendLine("}");
         }
 
-        public static List<LobbySetting> GetAllSettings()
+        private static LobbySetting[] GetAllSettings()
         {
             List<LobbySetting> settings = new List<LobbySetting>();
             settings.AddRange(LobbySettings);
@@ -94,14 +94,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (var heroSettings in HeroSettingCollection.AllHeroSettings) settings.AddRange(heroSettings);
             foreach (var modeSettings in ModeSettingCollection.AllModeSettings) settings.AddRange(modeSettings);
 
-            return settings;
-        }
-
-        public static Ruleset Parse(JObject json)
-        {
-            Ruleset result = json.ToObject<Ruleset>();
-            //result.Modes?.MergeModeSettings();
-            return result;
+            return settings.ToArray();
         }
 
         public static void GenerateSchema()
@@ -162,8 +155,8 @@ namespace Deltin.Deltinteger.Lobby
             List<string> heroNames = new List<string>();
             foreach (var heroSettings in HeroSettingCollection.AllHeroSettings)
             {
-                schema.Properties.Add(heroSettings.HeroName, heroSettings.GetSchema(generate));
-                heroNames.Add(heroSettings.HeroName);
+                schema.Properties.Add(heroSettings.CollectionName, heroSettings.GetSchema(generate));
+                heroNames.Add(heroSettings.CollectionName);
             }
 
             // Create the map schema.
@@ -201,7 +194,7 @@ namespace Deltin.Deltinteger.Lobby
         {
             RootSchema schema = new RootSchema().InitProperties();
             schema.AdditionalProperties = false;
-            foreach (var mode in ModeSettingCollection.AllModeSettings) schema.Properties.Add(mode.ModeName, mode.GetSchema(generate));
+            foreach (var mode in ModeSettingCollection.AllModeSettings) schema.Properties.Add(mode.CollectionName, mode.GetSchema(generate));
             return schema;
         }
 
@@ -252,7 +245,7 @@ namespace Deltin.Deltinteger.Lobby
             // Get mode keywords.
             foreach (var modeCollection in ModeSettingCollection.AllModeSettings)
             {
-                keywords.Add(modeCollection.ModeName);
+                keywords.Add(modeCollection.CollectionName);
                 keywords.AddRange(modeCollection.GetKeywords());
             }
 
@@ -331,15 +324,15 @@ namespace Deltin.Deltinteger.Lobby
     public class HeroesRoot
     {
         [JsonProperty("General")]
-        public HeroList General { get; set; }
+        public HeroTeamGroup General { get; set; }
 
         [JsonProperty("Team 1")]
-        public HeroList Team1 { get; set; }
+        public HeroTeamGroup Team1 { get; set; }
 
         [JsonProperty("Team 2")]
-        public HeroList Team2 { get; set; }
+        public HeroTeamGroup Team2 { get; set; }
 
-        public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
+        public void ToWorkshop(WorkshopBuilder builder, IReadOnlyCollection<LobbySetting> allSettings)
         {
             builder.AppendKeywordLine("heroes");
             builder.AppendLine("{");
@@ -418,86 +411,72 @@ namespace Deltin.Deltinteger.Lobby
         }
     }
 
-    public class HeroList
+    interface ILobbySettingList : IReadOnlyCollection<LobbySetting>
     {
-        [JsonProperty("Enabled Heroes")]
-        public string[] EnabledHeroes { get; set; }
-
-        [JsonProperty("Disabled Heroes")]
-        public string[] DisabledHeroes { get; set; }
-
-        [JsonExtensionData]
-        public Dictionary<string, object> Settings { get; set; }
-
-        public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
-        {
-            if (Settings != null)
-                foreach (var hero in Settings)
-                {
-                    if (hero.Key != "General")
-                    {
-                        builder.AppendLine($"{hero.Key}");
-                        builder.AppendLine("{");
-                        builder.Indent();
-                        WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
-                        builder.Outdent();
-                        builder.AppendLine("}");
-                    }
-                    else WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
-                }
-            if (EnabledHeroes != null)
-            {
-                builder.AppendLine();
-                builder.AppendKeywordLine("enabled heroes");
-                Ruleset.WriteList(builder, EnabledHeroes);
-            }
-            if (DisabledHeroes != null)
-            {
-                builder.AppendLine();
-                builder.AppendKeywordLine("disabled heroes");
-                Ruleset.WriteList(builder, DisabledHeroes);
-            }
-        }
+        string CollectionName { get; }
     }
 
-    public abstract class LobbySettingCollection<T> : List<LobbySetting>
+    public abstract class LobbySettingCollection<T> : ILobbySettingList
     {
+        public string CollectionName { get; }
         protected string Title;
+        private readonly List<LobbySetting> _settings = new List<LobbySetting>();
+        int IReadOnlyCollection<LobbySetting>.Count => _settings.Count;
+        T This => (T)(object)this;
 
-        public new T Add(LobbySetting lobbySetting)
+        protected LobbySettingCollection(string collectionName)
         {
-            base.Add(lobbySetting);
-            return (T)(object)this;
+            CollectionName = collectionName;
+        }
+
+        public T Add(LobbySetting lobbySetting)
+        {
+            _settings.Add(lobbySetting);
+            return This;
+        }
+
+        protected T AddAll(IEnumerable<LobbySetting> settings)
+        {
+            foreach (var setting in settings)
+                if (!_settings.Contains(setting))
+                    _settings.Add(setting);
+            return This;
+        }
+
+        protected T Remove(LobbySetting value)
+        {
+            _settings.Remove(value);
+            return This;
         }
 
         public T AddRange(string name, double min = 0, double max = 500, double defaultValue = 100)
         {
             Add(new RangeValue(false, true, name, min, max, defaultValue));
-            return (T)(object)this;
+            return This;
         }
 
         public T AddIntRange(string name, bool percentage, int min, int max, int defaultValue, string referenceName = null)
         {
             Add(new RangeValue(true, percentage, name, min, max, defaultValue) { ReferenceName = referenceName ?? name });
-            return (T)(object)this;
+            return This;
         }
 
         public T AddSwitch(string name, bool defaultValue)
         {
             Add(new SwitchValue(name, defaultValue));
-            return (T)(object)this;
+            return This;
         }
 
         public T AddSelectRef(string referenceName, string name, params string[] values)
         {
             Add(new SelectValue(name, values) { ReferenceName = referenceName });
-            return (T)(object)this;
+            return This;
         }
 
         public T AddSelect(string name, params string[] values)
         {
             Add(new SelectValue(name, values));
-            return (T)(object)this;
+            return This;
         }
 
         public virtual RootSchema GetSchema(SchemaGenerate generate)
@@ -520,34 +499,8 @@ namespace Deltin.Deltinteger.Lobby
 
             return keywords.ToArray();
         }
-    }
 
-    public class SettingValidation
-    {
-        private readonly List<string> _errors = new List<string>();
-
-        public SettingValidation() { }
-
-        public void Error(string error)
-        {
-            _errors.Add(error);
-        }
-
-        public void InvalidSetting(string propertyName)
-        {
-            _errors.Add($"The setting '{propertyName}' is not valid.");
-        }
-
-        public void IncorrectType(string propertyName, string expectedType)
-        {
-            _errors.Add($"The setting '{propertyName}' requires a value of type " + expectedType + ".");
-        }
-
-        public bool HasErrors() => _errors.Count > 0;
-
-        public void Dump(FileDiagnostics diagnostics, DocRange range)
-        {
-            foreach (string error in _errors) diagnostics.Error(error, range);
-        }
+        IEnumerator<LobbySetting> IEnumerable<LobbySetting>.GetEnumerator() => _settings.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _settings.GetEnumerator();
     }
 }

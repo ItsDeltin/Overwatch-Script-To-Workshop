@@ -297,7 +297,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the custom game settings.
             if (Importer.MergedLobbySettings != null)
             {
-                Ruleset settings = Ruleset.Parse(Importer.MergedLobbySettings);
+                Ruleset settings = Deltin.Deltinteger.Lobby.Deserializer.RulesetDeserializer.Deserialize(Importer.MergedLobbySettings);
                 settings.ToWorkshop(result);
                 result.AppendLine();
             }

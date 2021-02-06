@@ -18,9 +18,7 @@ namespace Deltin.Deltinteger.Lobby
 
         public static string[] Keywords(string title)
         {
-            List<LobbySetting> allSettings = Ruleset.GetAllSettings();
-
-            foreach (LobbySetting setting in allSettings)
+            foreach (var setting in Ruleset.AllSettings)
                 if (setting.Name == title)
                 {
                     if (setting.TitleResolver == null) return new string[] { title };

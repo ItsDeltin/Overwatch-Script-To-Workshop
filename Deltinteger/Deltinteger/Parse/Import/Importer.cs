@@ -125,9 +125,6 @@ namespace Deltin.Deltinteger.Parse
                                 // Convert the json to a jobject.
                                 lobbySettings = JObject.Parse(file.Content);
 
-                                // An exception will be thrown if the jobject cannot be converted to a Ruleset.
-                                lobbySettings.ToObject(typeof(Ruleset));
-
                                 if (!Ruleset.Validate(lobbySettings, script.Diagnostics, stringRange)) break;
                             }
                             catch
