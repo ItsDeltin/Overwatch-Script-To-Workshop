@@ -183,6 +183,7 @@ namespace Deltin.Deltinteger.Lobby.Deserializer
         // * "Workshop": { ... } *
         void ReadWorkshop(JToken value) => throw new NotImplementedException();
 
+        // Executes the action with each property child in the provided JToken.
         void ForEachObjectChildProperty(JToken obj, Action<JProperty> onProp)
         {
             // Execute on every child.
@@ -191,13 +192,6 @@ namespace Deltin.Deltinteger.Lobby.Deserializer
                 if (child is JProperty prop)
                     onProp(prop);
                 // todo: error when not a property.
-        }
-
-        T[] ForEachObjectChildProperty<T>(JToken obj, Func<JProperty, T> onProp)
-        {
-            var list = new List<T>();
-            ForEachObjectChildProperty(obj, prop => list.Add(onProp(prop)));
-            return list.ToArray();
         }
 
         string[] ExtractStringArray(JToken token, Func<string, bool> isValid)
@@ -229,21 +223,6 @@ namespace Deltin.Deltinteger.Lobby.Deserializer
                 }
             
             setting = null;
-            return false;
-        }
-
-        bool IsValidSetting(LobbySetting[] lobbySettings, string name) => lobbySettings.Any(ls => ls.Name == name);
-
-        bool TryGetPropertyValue(JToken token, string name, out JToken value)
-        {
-            foreach (var child in token)
-                if (child is JProperty prop && prop.Name == name)
-                {
-                    value = prop.Value;
-                    return true;
-                }
-            
-            value = null;
             return false;
         }
     }
