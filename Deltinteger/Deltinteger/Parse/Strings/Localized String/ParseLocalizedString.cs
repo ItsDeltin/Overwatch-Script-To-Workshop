@@ -9,6 +9,8 @@ namespace Deltin.Deltinteger.Parse.Strings
 {
     class ParseLocalizedString : StringParseBase
     {
+        private int _argCount;
+
         private static readonly string[] searchOrder = Constants.Strings
             .OrderByDescending(str => str.Contains("{0}"))
             .ThenByDescending(str => str.IndexOfAny("-></*-+=()!?".ToCharArray()) != -1)
@@ -17,10 +19,7 @@ namespace Deltin.Deltinteger.Parse.Strings
 
         public ParseLocalizedString(StringParseInfo stringParseinfo) : base(stringParseinfo) {}
 
-        protected override IStringParse DoParse()
-        {
-            return RecursiveParse(0, Value);
-        }
+        protected override IStringParse DoParse() => RecursiveParse(0, Value);
 
         LocalizedString RecursiveParse(int charOffset, string value, int depth = 0)
         {
@@ -67,7 +66,7 @@ namespace Deltin.Deltinteger.Parse.Strings
                             int index = int.Parse(parameterString.Groups[FormatGroupNumber].Value);
                             formatParameters.Add(new LocalizedStringOrExpression(index));
 
-                            str.ArgCount = Math.Max(str.ArgCount, index + 1);
+                            _argCount = Math.Max(_argCount, index + 1);
                         }
                         else
                         {
@@ -81,6 +80,7 @@ namespace Deltin.Deltinteger.Parse.Strings
                             formatParameters.Add(new LocalizedStringOrExpression(p));
                         }
                     }
+                    str.ArgCount = _argCount;
                     str.ParameterValues = formatParameters.ToArray();
 
                     if (!valid)
