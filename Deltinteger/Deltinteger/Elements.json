@@ -612,7 +612,7 @@
       }
     },
     {
-      "type": "any",
+      "type": "any[]",
       "name": "Filtered Array",
       "documentation": "A copy of the specified array with any values that do not match the specified condition removed.",
       "parameters": {
@@ -2112,7 +2112,7 @@
       }
     },
     {
-      "type": "number",
+      "type": "any[]",
       "name": "Sorted Array",
       "documentation": "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.",
       "parameters": {
@@ -6891,7 +6891,8 @@
         "name": "Workshop Green Screen",
         "alias": "Workshop_Green_Screen"
       },
-      "Kanezaka"
+      "Kanezaka",
+      "Practice Range"
     ],
     "GameMode": [
       "Assault",

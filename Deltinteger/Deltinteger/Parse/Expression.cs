@@ -192,7 +192,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type()
         {
             if (Consequent.Type() == Alternative.Type()) return Consequent.Type();
-            return null;
+            return parseInfo.Types.Any();
         }
         public IWorkshopTree Parse(ActionSet actionSet) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
     }
