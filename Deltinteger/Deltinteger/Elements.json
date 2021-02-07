@@ -6882,7 +6882,12 @@
       {
         "name": "Workshop Island (Night)",
         "alias": "Workshop_Island_Night"
-      }
+      },
+      {
+        "name": "Workshop Green Screen",
+        "alias": "Workshop_Green_Screen"
+      },
+      "Kanezaka"
     ],
     "GameMode": [
       "Assault",
@@ -6909,7 +6914,8 @@
       "Team Deathmatch",
       "Yeti Hunter",
       "Snowball Deathmatch",
-      "Freezethaw Elimination"
+      "Freezethaw Elimination",
+      "Bounty Hunter"
     ],
     "HealthType": [
       "Health",

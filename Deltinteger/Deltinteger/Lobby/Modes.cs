@@ -40,6 +40,9 @@ namespace Deltin.Deltinteger.Lobby
         [JsonProperty("Freezethaw Elimination")]
         public ModeSettings FreezethawElimination { get; set; }
 
+        [JsonProperty("Bounty Hunter")]
+        public ModeSettings BountyHunter { get; set; }
+
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
             builder.AppendKeywordLine("modes");
@@ -67,6 +70,7 @@ namespace Deltin.Deltinteger.Lobby
             Skirmish?.ToWorkshop(builder, allSettings, "Skirmish");
             TeamDeathmatch?.ToWorkshop(builder, allSettings, "TeamDeathmatch");
             FreezethawElimination?.ToWorkshop(builder, allSettings, "FreezethawElimination");
+            BountyHunter?.ToWorkshop(builder, allSettings, "BountyHunter");
 
             builder.Outdent();
             builder.AppendLine("}");
@@ -109,6 +113,9 @@ namespace Deltin.Deltinteger.Lobby
                 case "Freezethaw Elimination":
                     if (FreezethawElimination == null) FreezethawElimination = new ModeSettings();
                     return FreezethawElimination;
+                case "Bounty Hunter":
+                    if (BountyHunter == null) BountyHunter = new ModeSettings();
+                    return BountyHunter;
             }
             throw new NotImplementedException(collection.ModeName);
         }
@@ -286,8 +293,9 @@ namespace Deltin.Deltinteger.Lobby
 
         public static void Init()
         {
+            var all = new ModeSettingCollection("All");
             AllModeSettings = new ModeSettingCollection[] {
-                new ModeSettingCollection("All"),
+                all,
                 new ModeSettingCollection("Assault", true).Competitive().AddCaptureSpeed(),
                 new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", false, 1, 3, 2, "Score To Win 1-3").AddRange("Scoring Speed Modifier", 10, 500),
                 new ModeSettingCollection("Escort", true).Competitive().AddPayloadSpeed(),
@@ -302,8 +310,27 @@ namespace Deltin.Deltinteger.Lobby
                     .AddIntRange("Team 1 Score To Win", false, 1, 200, 30).AddIntRange("Team 2 Score To Win", false, 1, 200, 30),
                 new ModeSettingCollection("Skirmish", false).Add(LimitValidControlPoints),
                 new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500),
-                new ModeSettingCollection("Freezethaw Elimination", false).Elimination()
+                new ModeSettingCollection("Freezethaw Elimination", false).Elimination(),
+                new ModeSettingCollection("Bounty Hunter").Add(Enabled_DefaultOff).AddIntRange("Base Score For Killing A Bounty Target", false, 0, 100, 300).AddIntRange("Bounty Increase Per Kill As Bounty Target", false, 0, 1000, 0).AddIntRange("Bounty Target Count", false, 1, 1, 1).AddIntRange("Score Per Kill", false, 0, 1000, 100).AddIntRange("Score Per Kill As Bounty Target", false, 0, 1000, 300)
+                    .Add(GameLengthInMinutes).AddIntRange("Score To Win", false, 1, 5000, 20, "Score To Win 1-5000").Add(SelfInitiatedRespawn)
             };
+
+            // Get re-occurring settings.
+            var encountered = new HashSet<string>(); // Setting keys that were encountered.
+            var reoccurring = new HashSet<LobbySetting>(); // Setting keys that were repeatedly encountered.
+            var ignore = new LobbySetting[] { Enabled_DefaultOn, Enabled_DefaultOff };
+
+            foreach (var modeCollection in AllModeSettings)
+                foreach (var setting in modeCollection)
+                    // Make sure that the setting is not inside the 'ignored' array.
+                    // 'encountered' will return false if the key was already added to the HashSet. In this case, we can just 
+                    if (!ignore.Contains(setting) && !encountered.Add(setting.ReferenceName))
+                        reoccurring.Add(setting);
+
+            // Add reocurring settings to All.
+            foreach (var shared in reoccurring)
+                if (!all.Contains(shared))
+                    all.Add(shared);
         }
 
         public static void Validate(SettingValidation validation, JObject modes)
