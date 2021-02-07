@@ -1,6 +1,6 @@
 $configuration = 'Release'
 $framework = 'netcoreapp3.0'
-$ostw_version = 'v2.0-beta.10'
+$ostw_version = 'v2.0-beta.11'
 
 # Cross platform, no runtime included.
 '* Publishing self-contained'
