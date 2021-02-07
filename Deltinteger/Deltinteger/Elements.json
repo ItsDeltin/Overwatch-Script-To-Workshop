@@ -1743,7 +1743,7 @@
       "hidden": true
     },
     {
-      "type": "player[]",
+      "type": "players",
       "name": "Players In Slot",
       "documentation": "The player or array of players who occupy a specific slot in the game.",
       "parameters": {
