@@ -1316,23 +1316,23 @@
       "documentation": "A reference to the last effect or icon entity created by the event player (or created at the global level)."
     },
     {
-      "type": "number",
+      "type": "any",
       "name": "Last Damage Modification ID"
     },
     {
-      "type": "number",
+      "type": "any",
       "name": "Last Damage Over Time ID",
       "documentation": "An ID representing the most recent damage over time action that was executed by the event player (or executed at the global level).",
       "alias": "LastDamageOverTime"
     },
     {
-      "type": "number",
+      "type": "any",
       "name": "Last Heal Over Time ID",
       "documentation": "An ID representing the most recent heal over time action that was executed by the event player (or executed at the global level).",
       "alias": "LastHealOverTime"
     },
     {
-      "type": "number",
+      "type": "any",
       "name": "Last Healing Modification ID"
     },
     {
@@ -2400,7 +2400,7 @@
       }
     },
     {
-      "type": "vector",
+      "type": "number",
       "name": "Vertical Angle From Direction",
       "documentation": "The vertical angle in degrees corresponding to the specified direction vector.",
       "parameters": {
@@ -5155,7 +5155,7 @@
       "parameters": {
         "Damage modification ID": {
           "documentation": "Specifies which damage modification instance to stop, this ID may be the last damage modification ID or a variable into which last damage modification ID was earlier stored. Can use most Number based Value Syntax.",
-          "type": "number"
+          "type": "any"
         }
       }
     },
@@ -5165,7 +5165,7 @@
       "parameters": {
         "Damage Over Time ID": {
           "documentation": "Specifies which damage over time instance to stop, this ID may be the last damage over time ID or a variable into which last damage over time ID was earlier stored. Can use most Number based Value Syntax.",
-          "type": "number"
+          "type": "any"
         }
       }
     },
@@ -5219,7 +5219,7 @@
       "documentation": "Stops an instance of heal over time that was started by the start heal over time action",
       "parameters": {
         "Stop Heal Over Time": {
-          "type": "players",
+          "type": "any",
           "defaultValue": "Event Player"
         }
       }

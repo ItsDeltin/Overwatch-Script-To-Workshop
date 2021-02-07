@@ -114,7 +114,8 @@ namespace Deltin.Deltinteger.Parse
             other.IterateElements(true, true, iterate =>
             {
                 // Add the element.
-                if (iterate.Element is IVariable variable) _variables.Add(variable);
+                if (iterate.Element is IVariable variable && !_variables.Contains(variable))
+                    _variables.Add(variable);
 
                 if (iterate.Container.PrivateCatch || iterate.Container.CompletionCatch) return ScopeIterateAction.StopAfterScope;
                 return ScopeIterateAction.Continue;
