@@ -1933,7 +1933,8 @@
         },
         "Players To Include": {
           "documentation": "Which players can be hit by this ray cast. Can use most Player based Value Syntax to provide this value.",
-          "type": "players"
+          "type": "players",
+          "defaultValue": "All Players"
         },
         "Players To Exclude": {
           "documentation": "Which players cannot be hit by this ray cast. This list takes precedence over players to include. Can use most Player based Value Syntax to provide this value.",
@@ -1964,7 +1965,8 @@
         },
         "Players To Include": {
           "documentation": "Which players can be hit by this ray cast. Can use most Player based Value Syntax to provide this value.",
-          "type": "players"
+          "type": "players",
+          "defaultValue": "All Players"
         },
         "Players To Exclude": {
           "documentation": "Which players cannot be hit by this ray cast. This list takes precedence over players to include. Can use most Player based Value Syntax to provide this value.",
@@ -1995,7 +1997,8 @@
         },
         "Players To Include": {
           "documentation": "Which players can be hit by this ray cast. Can use most Player based Value Syntax to provide this value.",
-          "type": "players"
+          "type": "players",
+          "defaultValue": "All Players"
         },
         "Players To Exclude": {
           "documentation": "Which players cannot be hit by this ray cast. This list takes precedence over players to include. Can use most Player based Value Syntax to provide this value.",
@@ -3910,7 +3913,8 @@
         },
         "Killer": {
           "documentation": "The player who will receive credit for the kill. A killer of null indicates no player will receive credit. Can use most Player based Value Syntax for this value.",
-          "type": "player"
+          "type": "player",
+          "defaultValue": null
         }
       }
     },
@@ -4117,7 +4121,7 @@
         },
         "Hero": {
           "documentation": "The hero or heroes to begin preloading for the specified player or players. When multiple heroes are specified in an array, the Heroes towards the beginning of the array are prioritized. Can use most Hero based Value Syntax for this value.",
-          "type": "hero",
+          "type": "hero | hero[]",
           "defaultValue": "Hero"
         }
       }
@@ -4441,7 +4445,7 @@
         },
         "Hero": {
           "documentation": "The hero or heroes that will be available. If no heroes are provided, the action has no effect. Can use most Hero based Value Syntax for this value including compatible Arrays.",
-          "type": "hero"
+          "type": "hero | hero[]"
         }
       },
       "alias": "SetAllowedHeroes"
@@ -5416,7 +5420,7 @@
           "defaultValue": "Last Created Entity"
         },
         "Offset": {
-          "type": "player",
+          "type": "vector",
           "defaultValue": "Vector"
         }
       }
