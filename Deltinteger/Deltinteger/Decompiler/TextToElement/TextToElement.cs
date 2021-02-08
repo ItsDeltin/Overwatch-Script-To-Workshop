@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return result;
         }
 
-        public Workshop Get()
+        public TTEWorkshop Get()
         {
             // Match lobby settings, variables, and subroutines.
             MatchSettings();
@@ -64,19 +64,19 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
             // Match action copy
             if (ActionGroup(out var actions))
-                return new Workshop(Variables.ToArray(), Subroutines.ToArray(), actions.ToArray());
+                return new TTEWorkshop(Variables.ToArray(), Subroutines.ToArray(), actions.ToArray());
             // Match condition copy
             else if (ConditionGroup(out var conditions))
-                return new Workshop(Variables.ToArray(), Subroutines.ToArray(), conditions.ToArray());
+                return new TTEWorkshop(Variables.ToArray(), Subroutines.ToArray(), conditions.ToArray());
             else
             {
                 // Match rules
                 while (Rule(out TTERule rule)) Rules.Add(rule);
-                return new Workshop(Variables.ToArray(), Subroutines.ToArray(), Rules.ToArray(), LobbySettings);
+                return new TTEWorkshop(Variables.ToArray(), Subroutines.ToArray(), Rules.ToArray(), LobbySettings);
             }
         }
 
-        public Workshop GetActionList()
+        public TTEWorkshop GetActionList()
         {
             // Match variables and subroutines.
             MatchVariables();
@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
             // Match actions.
             if (ActionGroup(out var actions))
-                return new Workshop(Variables.ToArray(), Subroutines.ToArray(), actions.ToArray());
+                return new TTEWorkshop(Variables.ToArray(), Subroutines.ToArray(), actions.ToArray());
             return null;
         }
 

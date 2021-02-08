@@ -12,13 +12,13 @@ namespace Deltin.Deltinteger.Dump
             "deDE", "enUS", "esES", "esMX", "frFR", "itIT", "jaJP", "koKR", "plPL", "ptBR", "ruRU", "zhCN", "zhTW"
         };
 
-        readonly string datatoolPath;
-        readonly string overwatchPath;
+        public string DatatoolPath { get; }
+        public string OverwatchPath { get; }
 
         public DataTool(string datatoolPath, string overwatchPath)
         {
-            this.datatoolPath = datatoolPath;
-            this.overwatchPath = overwatchPath;
+            DatatoolPath = datatoolPath;
+            OverwatchPath = overwatchPath;
         }
 
         /// <summary>Runs a command in DataTool.exe.</summary>
@@ -31,14 +31,14 @@ namespace Deltin.Deltinteger.Dump
 
             var startInfo = new ProcessStartInfo();
             startInfo.FileName = "cmd.exe";
-            startInfo.Arguments = $"/C datatool \"{overwatchPath}\" {arguments} > {outName}";
-            startInfo.WorkingDirectory = Path.GetDirectoryName(datatoolPath);
+            startInfo.Arguments = $"/C datatool \"{OverwatchPath}\" {arguments} > {outName}";
+            startInfo.WorkingDirectory = Path.GetDirectoryName(DatatoolPath);
             startInfo.WindowStyle = ProcessWindowStyle.Hidden;
 
             using (Process dataToolProcess = Process.Start(startInfo))
                 dataToolProcess.WaitForExit();
 
-            string outFile = Path.Join(Path.GetDirectoryName(datatoolPath), outName);
+            string outFile = Path.Join(Path.GetDirectoryName(DatatoolPath), outName);
             return File.ReadAllText(outFile);
         }
 

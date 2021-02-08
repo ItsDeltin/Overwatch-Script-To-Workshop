@@ -1,5 +1,7 @@
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using static Deltin.Deltinteger.Lobby.LobbyConstants;
+using static Deltin.Deltinteger.I18n.Keyword;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -107,10 +109,10 @@ namespace Deltin.Deltinteger.Lobby
             }
 
             // i18n name resolvers.
-            AbilityNameResolver enabledResolver = new AbilityNameResolver(AbilityNameType.UltimateSwitchSetting, isEnabled, name ?? isEnabled); // Toggle
-            AbilityNameResolver generationResolver = new AbilityNameResolver(AbilityNameType.UltimateGeneration, generation, name ?? generation); // Generation
-            AbilityNameResolver passiveGenerationResolver = new AbilityNameResolver(AbilityNameType.UltimateGenerationPassive, passive, name ?? passive); // Passive Generation
-            AbilityNameResolver combatGenerationResolver = new AbilityNameResolver(AbilityNameType.UltimateGenerationCombat, combat, name ?? combat); // Combat Generation
+            AbilityNameResolver enabledResolver = new AbilityNameResolver(KEYWORD_I18N_ULTIMATE_ABILITY, isEnabled, name ?? isEnabled); // Toggle
+            AbilityNameResolver generationResolver = new AbilityNameResolver(KEYWORD_I18N_ULTIMATE_GENERATION, generation, name ?? generation); // Generation
+            AbilityNameResolver passiveGenerationResolver = new AbilityNameResolver(KEYWORD_I18N_ULTIMATE_GENERATION_PASSIVE, passive, name ?? passive); // Passive Generation
+            AbilityNameResolver combatGenerationResolver = new AbilityNameResolver(KEYWORD_I18N_ULTIMATE_GENERATION_COMBAT, combat, name ?? combat); // Combat Generation
 
             // Add the settings.
             Add(new SwitchValue(isEnabled, true) { TitleResolver = enabledResolver });
@@ -138,7 +140,7 @@ namespace Deltin.Deltinteger.Lobby
             if (hasCooldown)
             {
                 string cooldownTimeTitle = name + " Cooldown Time";
-                Add(RangeValue.NewPercentage(cooldownTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name), min:0, max:500));
+                Add(RangeValue.NewPercentage(cooldownTimeTitle, new AbilityNameResolver(KEYWORD_I18N_COOLDOWN_TIME, cooldownTimeTitle, name), min:0, max:500));
             }
 
             // If the ability has a knockback scalar, add the knockback option.
@@ -157,12 +159,12 @@ namespace Deltin.Deltinteger.Lobby
             if (rechargeable)
             {
                 string rechargeRateTitle = name + " Recharge Rate";
-                Add(RangeValue.NewPercentage(rechargeRateTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name), min:0, max:500));
+                Add(RangeValue.NewPercentage(rechargeRateTitle, new AbilityNameResolver(KEYWORD_I18N_RECHARGE_RATE, rechargeRateTitle, name), min:0, max:500));
 
                 if (!noMaximumTime)
                 {
                     string maximumTimeTitle = name + " Maximum Time";
-                    Add(RangeValue.NewPercentage(maximumTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name), min:20, max:500));
+                    Add(RangeValue.NewPercentage(maximumTimeTitle, new AbilityNameResolver(KEYWORD_I18N_MAXIMUM_TIME, maximumTimeTitle, name), min:20, max:500));
                 }
             }
             return this;

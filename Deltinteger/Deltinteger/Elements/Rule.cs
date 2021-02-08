@@ -1,4 +1,4 @@
-using Deltin.Deltinteger.I18n;
+using static Deltin.Deltinteger.I18n.Keyword;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -50,15 +50,15 @@ namespace Deltin.Deltinteger.Elements
         {
             if (Disabled)
             {
-                builder.AppendKeyword("disabled")
+                builder.AppendKeyword(KEYWORD_RULE_DISABLED)
                     .Append(" ");
             }
-            builder.AppendKeyword("rule")
+            builder.AppendKeyword(KEYWORD_RULE)
                 .AppendLine("(\"" + Name + "\")")
                 .AppendLine("{")
                 .AppendLine()
                 .Indent()
-                .AppendKeywordLine("event")
+                .AppendKeywordLine(KEYWORD_EVENT)
                 .AppendLine("{")
                 .Indent();
             
@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Elements
             if (Conditions?.Length > 0)
             {
                 builder.AppendLine()
-                    .AppendKeywordLine("conditions")
+                    .AppendKeywordLine(KEYWORD_CONDITIONS)
                     .AppendLine("{")
                     .Indent();
 
@@ -102,7 +102,7 @@ namespace Deltin.Deltinteger.Elements
             {
                 builder.AppendLine()
                     .AppendLine("// Action count: " + Actions.Length) // Action count comment.
-                    .AppendKeywordLine("actions")
+                    .AppendKeywordLine(KEYWORD_ACTIONS)
                     .AppendLine("{")
                     .Indent();
 

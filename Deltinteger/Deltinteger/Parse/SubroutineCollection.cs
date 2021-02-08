@@ -23,20 +23,6 @@ namespace Deltin.Deltinteger.Parse
             return newRoutine;
         }
 
-        public void ToWorkshop(WorkshopBuilder builder)
-        {
-            if (Subroutines.Count == 0) return;
-
-            builder.AppendKeywordLine("subroutines");
-            builder.AppendLine("{");
-            builder.Indent();
-
-            foreach (Subroutine routine in Subroutines)
-                builder.AppendLine(routine.ID.ToString() + ": " + routine.Name);
-
-            builder.Outdent();
-            builder.AppendLine("}");
-            builder.AppendLine();
-        }
+        public void ToWorkshop(WorkshopBuilder builder) => new SubroutineSet(Subroutines.ToArray()).ToWorkshop(builder);
     }
 }

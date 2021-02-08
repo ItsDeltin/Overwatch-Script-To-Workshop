@@ -3,27 +3,25 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Xml.Serialization;
 using Deltin.Deltinteger.Elements;
+using Newtonsoft.Json;
 
 namespace Deltin.Deltinteger.I18n
 {
     public class LanguageInfo
     {
-        public static OutputLanguage CurrentLanguage { get; private set; } = OutputLanguage.enUS;
+        public static OutputLanguage? CurrentLanguage { get; private set; } = null;
         private static I18nLanguage Language;
         private static object LanguageLock = new object();
 
         public static string Translate(OutputLanguage language, string methodName)
         {
-            if (language == OutputLanguage.enUS) return methodName;
+            // if (language == OutputLanguage.enUS) return methodName;
 
             lock (LanguageLock)
             {
-                if (CurrentLanguage != language)
-                    throw new Exception($"The '{language.ToString()}' language is not loaded.");
-
-                string translation = Language.Methods.FirstOrDefault(m => m.EnglishName == methodName)?.Translation;
+                LoadLanguage(language);
+                string translation = Language.Translations.FirstOrDefault(m => m.ID.ToLower() == methodName.ToLower())?.Translation;
                 if (translation != null) return translation;
                 throw new Exception($"Could not find '{methodName}' in the language file.");
             }
@@ -33,8 +31,8 @@ namespace Deltin.Deltinteger.I18n
         {
             lock (LanguageLock)
             {
-                if (CurrentLanguage == OutputLanguage.enUS) return true;
-                return Language.Methods.Any(m => m.EnglishName == keyword);
+                // if (CurrentLanguage == OutputLanguage.enUS) return true;
+                return Language.Translations.Any(m => m.ID == keyword);
             }
         }
 
@@ -42,13 +40,10 @@ namespace Deltin.Deltinteger.I18n
         {
             lock (LanguageLock)
             {
-                if (CurrentLanguage != language && language != OutputLanguage.enUS)
+                if (CurrentLanguage != language /*&& language != OutputLanguage.enUS*/)
                 {
-                    string languageFile = Path.Combine(Program.ExeFolder, "Languages", "i18n-" + language.ToString() + ".xml");
-                    XmlSerializer serializer = new XmlSerializer(typeof(I18nLanguage));
-
-                    using (var fileStream = File.OpenRead(languageFile))
-                        Language = (I18nLanguage)serializer.Deserialize(fileStream);
+                    string languageFile = Path.Combine(Program.ExeFolder, "Languages", "i18n-" + language.ToString() + ".json");
+                    Language = JsonConvert.DeserializeObject<I18nLanguage>(File.ReadAllText(languageFile));
                 }
                 CurrentLanguage = language;
             }
@@ -59,7 +54,7 @@ namespace Deltin.Deltinteger.I18n
             if (outputLanguage == OutputLanguage.enUS) return;
             builder.AppendLine($"// Outputting to the language {outputLanguage.ToString()}.");
             builder.AppendLine($"// Not all languages are tested. If a value is not outputting correctly, you can change");
-            builder.AppendLine($"// the keyword info in the Languages/i18n-{outputLanguage.ToString()}.xml file.");
+            builder.AppendLine($"// the keyword info in the Languages/i18n-{outputLanguage.ToString()}.json file.");
             builder.AppendLine();
         }
     }
@@ -68,22 +63,22 @@ namespace Deltin.Deltinteger.I18n
     {
         public I18nLanguage() { }
 
-        [XmlArrayItem("method")]
-        public List<I18nMethod> Methods { get; } = new List<I18nMethod>();
+        [JsonProperty("translations")]
+        public IList<I18nTranslation> Translations { get; set; } = new List<I18nTranslation>();
     }
 
-    public class I18nMethod
+    public class I18nTranslation
     {
-        public I18nMethod() { }
-        public I18nMethod(string englishName, string translation)
+        public I18nTranslation() { }
+        public I18nTranslation(string id, string translation)
         {
-            EnglishName = englishName;
+            ID = id;
             Translation = translation;
         }
 
-        [XmlAttribute("name")]
-        public string EnglishName { get; set; }
-        [XmlAttribute("alt")]
+        [JsonProperty("id")]
+        public string ID { get; set; }
+        [JsonProperty("translation")]
         public string Translation { get; set; }
     }
 }

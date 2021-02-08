@@ -92,12 +92,16 @@ namespace Deltin.Deltinteger.Elements
         public override string ToString() => Name + (Parameters == null ? "" : "(" + string.Join(", ", Parameters.Select(v => v.ToString())) + ")");
 
         public string CodeName() => Alias ?? Name.Replace(" ", "").Replace("-", "");
+
+        public abstract string GetI18nIdentifier();
     }
 
     public class ElementJsonValue : ElementBaseJson
     {
         [JsonProperty("type")]
         public string ReturnType;
+
+        public override string GetI18nIdentifier() => $"value.{Name}";
     }
 
     public class ElementJsonAction : ElementBaseJson
@@ -107,6 +111,8 @@ namespace Deltin.Deltinteger.Elements
 
         [JsonProperty("indent")]
         public string Indentation;
+
+        public override string GetI18nIdentifier() => $"action.{Name}";
     }
 
     public class ElementParameter
@@ -181,15 +187,21 @@ namespace Deltin.Deltinteger.Elements
     {
         public string Name;
         public string Alias;
+        public string I18n;
         public ElementEnum Enum;
 
         public override string ToString() => Name;
 
-        public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => builder.AppendKeyword(WorkshopName());
+        public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => builder.Append(builder.Kw(I18nIdentifier()).Replace(",", ""));
 
         public string CodeName() => Alias ?? Name.Replace(" ", "");
         public string DecompileName() => Name.Replace("(", "").Replace(")", "").Replace(",", "");
-        public string WorkshopName() => Name.Replace(",", "");
+        public string I18nIdentifier()
+        {
+            if (Enum.Name == "Player" && Name.StartsWith("Slot"))
+                return "enum.Player.Slot";
+            return $"enum.{Enum.Name}.{I18n}";
+        }
 
         public bool EqualTo(IWorkshopTree other) => other is ElementEnumMember enumMember && Enum == enumMember.Enum && Name == enumMember.Name;
 

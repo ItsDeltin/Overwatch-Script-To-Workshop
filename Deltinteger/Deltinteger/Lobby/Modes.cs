@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.I18n;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
+using static Deltin.Deltinteger.I18n.Keyword;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -45,13 +43,13 @@ namespace Deltin.Deltinteger.Lobby
 
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
-            builder.AppendKeywordLine("modes");
+            builder.AppendKeywordLine(KEYWORD_MODES);
             builder.AppendLine("{");
             builder.Indent();
 
             if (All != null)
             {
-                builder.AppendKeywordLine("General");
+                builder.AppendKeywordLine(KEYWORD_GENERAL);
                 builder.AppendLine("{");
                 builder.Indent();
                 All.ToWorkshop(builder, allSettings);
@@ -60,17 +58,17 @@ namespace Deltin.Deltinteger.Lobby
             }
 
             Assault?.ToWorkshop(builder, allSettings, "Assault");
-            CaptureTheFlag?.ToWorkshop(builder, allSettings, "CaptureTheFlag");
+            CaptureTheFlag?.ToWorkshop(builder, allSettings, "Capture The Flag");
             Control?.ToWorkshop(builder, allSettings, "Control");
             Deathmatch?.ToWorkshop(builder, allSettings, "Deathmatch");
             Elimination?.ToWorkshop(builder, allSettings, "Elimination");
             Escort?.ToWorkshop(builder, allSettings, "Escort");
             Hybrid?.ToWorkshop(builder, allSettings, "Hybrid");
-            PracticeRange?.ToWorkshop(builder, allSettings, "PracticeRange");
+            PracticeRange?.ToWorkshop(builder, allSettings, "Practice Range");
             Skirmish?.ToWorkshop(builder, allSettings, "Skirmish");
-            TeamDeathmatch?.ToWorkshop(builder, allSettings, "TeamDeathmatch");
-            FreezethawElimination?.ToWorkshop(builder, allSettings, "FreezethawElimination");
-            BountyHunter?.ToWorkshop(builder, allSettings, "BountyHunter");
+            TeamDeathmatch?.ToWorkshop(builder, allSettings, "Team Deathmatch");
+            FreezethawElimination?.ToWorkshop(builder, allSettings, "Freezethaw Elimination");
+            BountyHunter?.ToWorkshop(builder, allSettings, "Bounty Hunter");
 
             builder.Outdent();
             builder.AppendLine("}");
@@ -137,8 +135,8 @@ namespace Deltin.Deltinteger.Lobby
             bool enabled = Settings == null || !Settings.TryGetValue("Enabled", out object value) || (value is bool b && b);
             Settings?.Remove("Enabled");
 
-            if (!enabled) builder.AppendKeyword("disabled").Append(" ");
-            builder.AppendKeywordLine(modeName);
+            if (!enabled) builder.AppendKeyword(KEYWORD_RULE_DISABLED).Append(" ");
+            builder.AppendKeywordLine("mode." + modeName);
 
             if (EnabledMaps != null || DisabledMaps != null || (Settings != null && Settings.Count > 0))
             {
@@ -149,13 +147,13 @@ namespace Deltin.Deltinteger.Lobby
 
                 if (EnabledMaps != null)
                 {
-                    builder.AppendKeywordLine("enabled maps");
-                    Ruleset.WriteList(builder, EnabledMaps);
+                    builder.AppendKeywordLine(KEYWORD_ENABLED_MAPS);
+                    Ruleset.WriteList(builder, EnabledMaps.Select(m => $"map.{m}"));
                 }
                 if (DisabledMaps != null)
                 {
-                    builder.AppendKeywordLine("disabled maps");
-                    Ruleset.WriteList(builder, DisabledMaps);
+                    builder.AppendKeywordLine(KEYWORD_DISABLED_MAPS);
+                    Ruleset.WriteList(builder, DisabledMaps.Select(m => $"map.{m}"));
                 }
 
                 builder.Outdent();

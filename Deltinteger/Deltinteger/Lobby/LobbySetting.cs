@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Deltin.Deltinteger.Decompiler.TextToElement;
+using Deltin.Deltinteger.I18n;
+using static Deltin.Deltinteger.I18n.Keyword;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -18,6 +20,7 @@ namespace Deltin.Deltinteger.Lobby
         {
             Name = name;
             ReferenceName = Name;
+            TitleResolver = new SettingNameResolver(Name);
         }
 
         public RootSchema GetSchema(SchemaGenerate generate)
@@ -41,14 +44,10 @@ namespace Deltin.Deltinteger.Lobby
         public abstract string GetValue(WorkshopBuilder builder, object value);
 
         /// <summary>Resolves the actual name of the setting that will be used in the workshop output.</summary>
-        public string ResolveName(WorkshopBuilder builder)
-        {
-            if (TitleResolver == null) return builder.Translate(Name);
-            else return TitleResolver.ResolveName(builder);
-        }
+        public string ResolveName(WorkshopBuilder builder) => TitleResolver.ResolveName(builder);
 
         /// <summary>The keywords that the setting's value could be.</summary>
-        public virtual string[] AdditionalKeywords() => new string[0];
+        public virtual Keyword[] AdditionalKeywords() => new Keyword[0];
 
         /// <summary>Validates the json value.</summary>
         public abstract void CheckValue(SettingValidation validation, JToken value);
@@ -61,10 +60,12 @@ namespace Deltin.Deltinteger.Lobby
     class SelectValue : LobbySetting
     {
         public string[] Values { get; }
+        private readonly Keyword[] _valueKeywords;
 
         public SelectValue(string name, params string[] values) : base(name)
         {
             Values = values;
+            _valueKeywords = Values.Select(v => new Keyword($"{TitleResolver.GetKeyword().ID}.{v}", v)).ToArray();
         }
 
         protected override RootSchema GetSchema()
@@ -76,9 +77,14 @@ namespace Deltin.Deltinteger.Lobby
             return schema;
         }
 
-        public override string GetValue(WorkshopBuilder builder, object value) => builder.Translate(value.ToString());
+        public override string GetValue(WorkshopBuilder builder, object value)
+        {
+            var keywordIndex = Array.IndexOf(Values, value.ToString());
+            var keyword = _valueKeywords[keywordIndex];
+            return builder.Translate(keyword.ID);
+        }
 
-        public override string[] AdditionalKeywords() => Values;
+        public override Keyword[] AdditionalKeywords() => _valueKeywords;
 
         public override void CheckValue(SettingValidation validation, JToken value)
         {
@@ -161,16 +167,16 @@ namespace Deltin.Deltinteger.Lobby
 
         private string EnabledKey()
         {
-            if (SwitchType == SwitchType.OnOff) return "On";
-            else if (SwitchType == SwitchType.YesNo) return "Yes";
-            else return "Enabled";
+            if (SwitchType == SwitchType.OnOff) return KEYWORD_ON;
+            else if (SwitchType == SwitchType.YesNo) return KEYWORD_YES;
+            else return KEYWORD_ENABLED;
         }
 
         private string DisabledKey()
         {
-            if (SwitchType == SwitchType.OnOff) return "Off";
-            else if (SwitchType == SwitchType.YesNo) return "No";
-            else return "Disabled";
+            if (SwitchType == SwitchType.OnOff) return KEYWORD_OFF;
+            else if (SwitchType == SwitchType.YesNo) return KEYWORD_NO;
+            else return KEYWORD_DISABLED;
         }
     }
 

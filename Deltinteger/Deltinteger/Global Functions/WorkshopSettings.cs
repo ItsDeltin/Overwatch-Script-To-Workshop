@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
             Action = (actionSet, methodCall) => Element.Part("Workshop Setting Hero",
                 Element.CustomString((string)methodCall.AdditionalParameterData[0]),
                 Element.CustomString((string)methodCall.AdditionalParameterData[1]),
-                new AnonymousWorkshopValue(((ConstHeroValueResolver)methodCall.AdditionalParameterData[2]).Hero, true),
+                new AnonymousWorkshopValue(((ConstHeroValueResolver)methodCall.AdditionalParameterData[2]).Hero.I18nIdentifier(), true),
                 Element.Num((double)methodCall.AdditionalParameterData[3])
             )
         };

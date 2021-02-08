@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Debugger
                 {
                     // As workshop actions
                     ConvertTextToElement tte = new ConvertTextToElement(clipboard);
-                    Workshop workshop = tte.GetActionList();
+                    TTEWorkshop workshop = tte.GetActionList();
 
                     if (workshop != null) // Determines if the clipboard is an action list.
                     {
@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Debugger
         public DebuggerActionStreamSet Set { get; }
         public StreamVariable[] Variables { get; }
 
-        public DebuggerActionSetResult(Workshop workshop)
+        public DebuggerActionSetResult(TTEWorkshop workshop)
         {
             // Get the variables.
             Variables = new StreamVariable[workshop.Variables.Length];

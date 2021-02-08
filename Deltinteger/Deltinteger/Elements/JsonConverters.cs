@@ -57,17 +57,25 @@ namespace Deltin.Deltinteger.Elements
         private ElementEnumMember[] GetEnumMembers(ElementEnum newEnum, JToken[] members) => members.Select(v => {
             // String
             if (v.Type == JTokenType.String)
+            {
+                string name = v.ToObject<string>();
                 return new ElementEnumMember() {
-                    Name = v.ToObject<string>(),
+                    Name = name,
+                    I18n = name,
                     Enum = newEnum
                 };
+            }
             // Object
             else if (v.Type == JTokenType.Object)
+            {
+                string name = v["name"].ToObject<string>();
                 return new ElementEnumMember() {
-                    Name = v["name"].ToObject<string>(),
-                    Alias = v["alias"].ToObject<string>(),
+                    Name = name,
+                    Alias = v["alias"]?.ToObject<string>(),
+                    I18n = v["i18n"]?.ToObject<string>() ?? name,
                     Enum = newEnum
                 };
+            }
             // Unknown
             throw new NotImplementedException(v.Type.ToString());
         }).ToArray();

@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
-            b.AppendKeyword(Localized ? "String" : "Custom String");
+            b.AppendKeyword(Localized ? "value.String" : "value.Custom String");
             b.Append("(\"" + (Localized ? b.Kw(Value) : Value) + "\"");
 
             if (ParameterValues.Length > 0)

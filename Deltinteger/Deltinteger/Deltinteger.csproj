@@ -24,9 +24,6 @@
     <Content Include="Fonts\BigNoodleTooOblique.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Wiki.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Maps.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

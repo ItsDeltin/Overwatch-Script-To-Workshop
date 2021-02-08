@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public static Pathmap ImportFromActionSet(string text, IPathmapErrorHandler errorHandler)
         {
             ConvertTextToElement tte = new ConvertTextToElement(text);
-            Workshop workshop = tte.GetActionList();
+            TTEWorkshop workshop = tte.GetActionList();
 
             Vertex[] nodeArray = null;
             Vertex[] segmentArray = null;

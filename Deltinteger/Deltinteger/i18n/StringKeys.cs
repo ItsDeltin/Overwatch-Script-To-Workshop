@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using Deltin.Deltinteger.Dump;
 
 namespace Deltin.Deltinteger.I18n
@@ -42,8 +43,9 @@ namespace Deltin.Deltinteger.I18n
             if (language == null) throw new ArgumentNullException(nameof(language));
 
             log?.Write(LogLevel.Normal, $"Getting {language} keys...");
-            string commandResult = dataTool.DumpStrings(language);
 
+            string existing = Path.Join(Path.GetDirectoryName(dataTool.DatatoolPath), $"out_strings_{language}.txt");
+            string commandResult = File.Exists(existing) ? File.ReadAllText(existing) : dataTool.DumpStrings(language);
             string[] lines = commandResult.Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None

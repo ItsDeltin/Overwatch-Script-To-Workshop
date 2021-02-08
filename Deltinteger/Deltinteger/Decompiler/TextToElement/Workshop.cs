@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Lobby;
 
 namespace Deltin.Deltinteger.Decompiler.TextToElement
 {
-    public class Workshop
+    public class TTEWorkshop
     {
         public WorkshopVariable[] Variables { get; }
         public Subroutine[] Subroutines { get; }
@@ -12,20 +12,20 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public ITTEAction[] Actions { get; }
         public TTECondition[] Conditions { get; }
 
-        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTERule[] rules, Ruleset settings)
+        public TTEWorkshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTERule[] rules, Ruleset settings)
         {
             Variables = variables;
             Subroutines = subroutines;
             Rules = rules;
             LobbySettings = settings;
         }
-        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, ITTEAction[] actions)
+        public TTEWorkshop(WorkshopVariable[] variables, Subroutine[] subroutines, ITTEAction[] actions)
         {
             Variables = variables;
             Subroutines = subroutines;
             Actions = actions;
         }
-        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTECondition[] conditions)
+        public TTEWorkshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTECondition[] conditions)
         {
             Variables = variables;
             Subroutines = subroutines;

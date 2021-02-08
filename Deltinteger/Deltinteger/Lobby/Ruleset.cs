@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Compiler;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
-
+using static Deltin.Deltinteger.I18n.Keyword;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -18,8 +18,8 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Return To Lobby", "After A Mirror Match", "After A Game", "Never"),
             new SelectValue("Team Balancing", "Off", "After A Mirror Match", "After A Game"),
             new SwitchValue("Swap Teams After Match", true, SwitchType.YesNo),
-            new RangeValue(true, false, "Max Team 1 Players", 0, 12, 6),
-            new RangeValue(true, false, "Max Team 2 Players", 0, 12, 6),
+            new RangeValue(true, false, "Max Team 1 Players", 0, 12, 6) { TitleResolver = new AbilityNameResolver(KEYWORD_I18N_MAX_TEAM_PLAYERS, "Max Team 1 Players", "Team 1") },
+            new RangeValue(true, false, "Max Team 2 Players", 0, 12, 6) { TitleResolver = new AbilityNameResolver(KEYWORD_I18N_MAX_TEAM_PLAYERS, "Max Team 2 Players", "Team 2") },
             new RangeValue(true, false, "Max FFA Players", 0, 12, 0),
             new RangeValue(true, false, "Max Spectators", 0, 12, 2),
             new SwitchValue("Allow Players Who Are In Queue", false, SwitchType.YesNo),
@@ -39,17 +39,17 @@ namespace Deltin.Deltinteger.Lobby
         {
             List<LobbySetting> allSettings = GetAllSettings();
 
-            builder.AppendKeywordLine("settings");
+            builder.AppendKeywordLine(KEYWORD_SETTINGS);
             builder.AppendLine("{");
             builder.Indent();
 
             // Get the description
             if (Description != null)
             {
-                builder.AppendKeywordLine("main")
+                builder.AppendKeywordLine(KEYWORD_MAIN)
                     .AppendLine("{")
                     .Indent()
-                    .AppendKeyword("Description").Append(": \"" + Description + "\"").AppendLine()
+                    .AppendKeyword(KEYWORD_DESCRIPTION).Append(": \"" + Description + "\"").AppendLine()
                     .Outdent()
                     .AppendLine("}");
             }
@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Lobby
             // Get the lobby settings.
             if (Lobby != null)
             {
-                builder.AppendKeywordLine("lobby");
+                builder.AppendKeywordLine(KEYWORD_LOBBY);
                 builder.AppendLine("{");
                 builder.Indent();
                 Lobby.ToWorkshop(builder, allSettings);
@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Lobby
             // Get the custom workshop settings.
             if (Workshop != null)
             {
-                builder.AppendKeywordLine("workshop");
+                builder.AppendKeywordLine(KEYWORD_WORKSHOP);
                 builder.AppendLine("{");
                 builder.Indent();
                 Workshop.ToWorkshopCustom(builder);
@@ -213,59 +213,13 @@ namespace Deltin.Deltinteger.Lobby
             return schema;
         }
 
-        /// <summary>Gets the keywords used for translation.</summary>
-        public static string[] Keywords()
-        {
-            List<string> keywords = new List<string>();
-
-            keywords.Add("settings");
-            keywords.Add("lobby");
-            keywords.Add("modes");
-            keywords.Add("heroes");
-            keywords.Add("General");
-            keywords.Add("Team 1");
-            keywords.Add("Team 2");
-            keywords.Add("enabled maps");
-            keywords.Add("disabled maps");
-            keywords.Add("enabled heroes");
-            keywords.Add("disabled heroes");
-            keywords.Add("Enabled");
-            keywords.Add("Disabled");
-            keywords.Add("On");
-            keywords.Add("Off");
-            keywords.Add("Yes");
-            keywords.Add("No");
-            keywords.Add("main");
-            keywords.Add("Description");
-            keywords.Add(AbilityNameResolver.CooldownTime);
-            keywords.Add(AbilityNameResolver.RechargeRate);
-            keywords.Add(AbilityNameResolver.MaximumTime);
-            keywords.Add(AbilityNameResolver.UltimateAbility);
-            keywords.Add(AbilityNameResolver.UltimateGeneration);
-            keywords.Add(AbilityNameResolver.UltimateGenerationCombat);
-            keywords.Add(AbilityNameResolver.UltimateGenerationPassive);
-
-            // Get hero keywords.
-            foreach (var heroCollection in HeroSettingCollection.AllHeroSettings)
-                keywords.AddRange(heroCollection.GetKeywords());
-
-            // Get mode keywords.
-            foreach (var modeCollection in ModeSettingCollection.AllModeSettings)
-            {
-                keywords.Add(modeCollection.ModeName);
-                keywords.AddRange(modeCollection.GetKeywords());
-            }
-
-            return keywords.ToArray();
-        }
-
-        public static void WriteList(WorkshopBuilder builder, string[] maps)
+        public static void WriteList(WorkshopBuilder builder, IEnumerable<string> keywords)
         {
             builder.AppendLine("{");
             builder.Indent();
 
-            foreach (string map in maps)
-                builder.AppendLine(builder.Translate(map).RemoveStructuralChars());
+            foreach (string kw in keywords)
+                builder.AppendLine(builder.Translate(kw).RemoveStructuralChars());
 
             builder.Outdent();
             builder.AppendLine("}");
@@ -341,13 +295,13 @@ namespace Deltin.Deltinteger.Lobby
 
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
-            builder.AppendKeywordLine("heroes");
+            builder.AppendKeywordLine(KEYWORD_HEROES);
             builder.AppendLine("{");
             builder.Indent();
 
             if (General != null)
             {
-                builder.AppendKeywordLine("General");
+                builder.AppendKeywordLine(KEYWORD_GENERAL);
                 builder.AppendLine("{");
                 builder.Indent();
                 General.ToWorkshop(builder, allSettings);
@@ -356,7 +310,7 @@ namespace Deltin.Deltinteger.Lobby
             }
             if (Team1 != null)
             {
-                builder.AppendKeywordLine("Team 1");
+                builder.AppendKeywordLine(KEYWORD_TEAM1);
                 builder.AppendLine("{");
                 builder.Indent();
                 Team1.ToWorkshop(builder, allSettings);
@@ -365,7 +319,7 @@ namespace Deltin.Deltinteger.Lobby
             }
             if (Team2 != null)
             {
-                builder.AppendKeywordLine("Team 2");
+                builder.AppendKeywordLine(KEYWORD_TEAM2);
                 builder.AppendLine("{");
                 builder.Indent();
                 Team2.ToWorkshop(builder, allSettings);
@@ -448,14 +402,14 @@ namespace Deltin.Deltinteger.Lobby
             if (EnabledHeroes != null)
             {
                 builder.AppendLine();
-                builder.AppendKeywordLine("enabled heroes");
-                Ruleset.WriteList(builder, EnabledHeroes);
+                builder.AppendKeywordLine(KEYWORD_ENABLED_HEROES);
+                Ruleset.WriteList(builder, EnabledHeroes.Select(h => $"hero.{h}"));
             }
             if (DisabledHeroes != null)
             {
                 builder.AppendLine();
-                builder.AppendKeywordLine("disabled heroes");
-                Ruleset.WriteList(builder, DisabledHeroes);
+                builder.AppendKeywordLine(KEYWORD_DISABLED_HEROES);
+                Ruleset.WriteList(builder, DisabledHeroes.Select(h => $"hero.{h}"));
             }
         }
     }
@@ -506,19 +460,6 @@ namespace Deltin.Deltinteger.Lobby
             schema.AdditionalProperties = false;
             foreach (var value in this) schema.Properties.Add(value.Name, value.GetSchema(generate));
             return schema;
-        }
-
-        public string[] GetKeywords()
-        {
-            List<string> keywords = new List<string>();
-
-            foreach (LobbySetting setting in this)
-            {
-                keywords.AddRange(SettingNameResolver.Keywords(setting.Name));
-                keywords.AddRange(setting.AdditionalKeywords());
-            }
-
-            return keywords.ToArray();
         }
     }
 

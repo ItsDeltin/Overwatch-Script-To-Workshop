@@ -6352,8 +6352,14 @@
     ],
     "Team": [
       "All",
-      "Team1",
-      "Team2"
+      {
+        "name": "Team1",
+        "i18n": "Team 1"
+      },
+      {
+        "name": "Team2",
+        "i18n": "Team 2"
+      }
     ],
     "WaitBehavior": [
       "Ignore Condition",
@@ -6409,13 +6415,18 @@
     "EffectRev": [
       {
         "name": "Visible To Position Radius and Color",
+        "i18n": "Visible To, Position, Radius, and Color",
         "alias": "VisibleToPositionRadiusAndColor"
       },
       {
         "name": "Visible To Position and Radius",
+        "i18n": "Visible To, Position, and Radius",
         "alias": "VisibleToPositionAndRadius"
       },
-      "Position Radius And Color",
+      {
+        "name": "Position Radius and Color",
+        "i18n": "Position, Radius, and Color"
+      },
       "Position And Radius",
       "Visible To And Color",
       "Visible To",
@@ -6479,14 +6490,17 @@
       "String And Color",
       {
         "name": "Visible To Sort Order String and Color",
+        "i18n": "Visible To, Sort Order, String, and Color",
         "alias": "VisibleToSortOrderStringAndColor"
       },
       {
         "name": "Visible To Sort Order and String",
+        "i18n": "Visible To, Sort Order, and String",
         "alias": "VisibleToSortOrderAndString"
       },
       {
         "name": "Visible To String and Color",
+        "i18n": "Visible To, String, and Color",
         "alias": "VisibleToStringAndColor"
       },
       "Sort Order And String",
@@ -6580,6 +6594,7 @@
     "AccelerateRev": [
       {
         "name": "Direction Rate and Max Speed",
+        "i18n": "Direction, Rate, and Max Speed",
         "alias": "DirectionRateAndMaxSpeed"
       },
       "None"
@@ -6645,19 +6660,23 @@
     ],
     "InworldTextRev": [
       {
-        "name": "Visible To, Position, String, and Color",
+        "name": "Visible To Position String and Color",
+        "i18n": "Visible To, Position, String, and Color",
         "alias": "VisibleToPositionStringAndColor"
       },
       {
-        "name": "Visible To, String, and Color",
+        "name": "Visible To String and Color",
+        "i18n": "Visible To, String, and Color",
         "alias": "VisibleToStringAndColor"
       },
       {
-        "name": "Visible To, Position, and Color",
+        "name": "Visible To Position and Color",
+        "i18n": "Visible To, Position, and Color",
         "alias": "VisibleToPositionAndColor"
       },
       {
         "name": "Visible To Position and String",
+        "i18n": "Visible To, Position, and String",
         "alias": "VisibleToPositionAndString"
       },
       "Visible To And String",
@@ -6937,7 +6956,10 @@
       "None"
     ],
     "ProgressBarEvaluation": [
-      "Visible To Values And Color",
+      {
+        "name": "Visible To Values And Color",
+        "i18n": "Visible To, Values, And Color"
+      },
       "Visible To And Values",
       "Visible To And Color",
       "Visible To",

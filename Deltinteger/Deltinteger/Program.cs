@@ -31,6 +31,8 @@ namespace Deltin.Deltinteger
             new RunGenerateLobbySchema(),
             new RunEditor(),
             new RunDecompileClipboard(),
+            new RunI18nLink(),
+            new RunI18nGenerate(),
             new RunDefault()
         };
 
@@ -209,6 +211,26 @@ namespace Deltin.Deltinteger
             }
 
             // Done.
+            return true;
+        }
+    }
+
+    class RunI18nLink : ArgRunner
+    {
+        public override bool Run()
+        {
+            if (!IsArg("--i18nlink")) return false;
+            I18n.GenerateI18n.GenerateKeyLink();
+            return true;
+        }
+    }
+
+    class RunI18nGenerate : ArgRunner
+    {
+        public override bool Run()
+        {
+            if (!IsArg("--i18n")) return false;
+            I18n.GenerateI18n.Generate(Args);
             return true;
         }
     }

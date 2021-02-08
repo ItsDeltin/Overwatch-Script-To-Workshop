@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Models;
+using static Deltin.Deltinteger.I18n.Keyword;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -40,10 +41,10 @@ namespace Deltin.Deltinteger.Elements
             if (Comment != null) b.Append($"\"{Comment}\"");
 
             // Add the disabled tag if the element is disabled.
-            if (Function is ElementJsonAction && Disabled) b.AppendKeyword("disabled").Append(" ");
+            if (Function is ElementJsonAction && Disabled) b.AppendKeyword(KEYWORD_RULE_DISABLED).Append(" ");
 
             // Add the name of the element.
-            b.AppendKeyword(Function.Name);
+            b.AppendKeyword(Function.GetI18nIdentifier());
 
             // Add the parameters.
             AddMissingParameters();

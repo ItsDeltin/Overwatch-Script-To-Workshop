@@ -1,6 +1,5 @@
 using System.Text;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;

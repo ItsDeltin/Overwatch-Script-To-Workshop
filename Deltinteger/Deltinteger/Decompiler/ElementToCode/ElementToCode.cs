@@ -17,14 +17,14 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
 
     public class WorkshopDecompiler
     {
-        public Workshop Workshop { get; }
+        public TTEWorkshop Workshop { get; }
         public CodeFormattingOptions Options { get; }
         public int IndentLevel { get; private set; }
         private readonly IDecompilerLobbySettingsResolver _settingsResolver;
         private readonly StringBuilder _builder = new StringBuilder();
         private bool _space = false;
 
-        public WorkshopDecompiler(Workshop workshop, IDecompilerLobbySettingsResolver settingsResolver, CodeFormattingOptions options)
+        public WorkshopDecompiler(TTEWorkshop workshop, IDecompilerLobbySettingsResolver settingsResolver, CodeFormattingOptions options)
         {
             Workshop = workshop;
             Options = options;

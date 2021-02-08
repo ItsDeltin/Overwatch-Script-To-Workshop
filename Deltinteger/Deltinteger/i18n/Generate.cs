@@ -2,11 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Xml.Serialization;
-using System.Diagnostics;
 using System.Text;
-using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Dump;
+using Newtonsoft.Json;
 
 namespace Deltin.Deltinteger.I18n
 {
@@ -16,43 +13,8 @@ namespace Deltin.Deltinteger.I18n
         static readonly string syntax = "deltinteger i18n \"datatool file location\" language \"output file\" \"[overwatch file location]\"";
 
         static readonly string[] ProcLanguages = new string[] {
-            "deDE", "esES", "esMX", "frFR", "itIT", "jaJP", "koKR", "plPL", "ptBR", "ruRU", "zhCN", "zhTW"
+            "enUS", "deDE", "esES", "esMX", "frFR", "itIT", "jaJP", "koKR", "plPL", "ptBR", "ruRU", "zhCN", "zhTW"
         };
-
-        public static string[] Keywords()
-        {
-            var keywords = new List<string>();
-            // Add keywords
-            keywords.AddRange(new string[] {
-                "variables",
-                "global",
-                "player",
-                "rule",
-                "event",
-                "conditions",
-                "actions",
-                "disabled",
-                "subroutines"
-            });
-
-            // Add actions
-            keywords.AddRange(ElementRoot.Instance.Actions.Select(e => e.Name));
-
-            // Add values
-            keywords.AddRange(ElementRoot.Instance.Values.Select(e => e.Name));
-
-            // Add enums
-            // TODO: Update
-            throw new NotImplementedException();
-            // foreach(var enumData in ElementRoot.Instance.Enumerators)
-            //     foreach (var member in enumData.Members)
-            //         keywords.Add(member.GetI18nKeyword());
-            
-            // Add settings
-            keywords.AddRange(Lobby.Ruleset.Keywords());
-
-            return keywords.Distinct().Where(k => k != null).ToArray();
-        }
 
         public static void Generate(string[] args)
         {
@@ -86,31 +48,30 @@ namespace Deltin.Deltinteger.I18n
                 return;
             }
 
+            // Create the datatool instance.
             var datatool = new Dump.DataTool(datatoolPath, overwatchPath);
+            // Get the key links.
+            KeyLink[] keyLinks = JsonConvert.DeserializeObject<KeyLinkList>(File.ReadAllText(keyLinkFile)).Links;
+            // Get all keywords.
+            var keywords = Keyword.GetKeywords();
 
-            XmlSerializer linkSerializer = new XmlSerializer(typeof(KeyLinkList));
-            KeyLink[] keyLinks;
-            using (var fileStream = File.OpenRead(keyLinkFile))
-                keyLinks = ((KeyLinkList)linkSerializer.Deserialize(fileStream)).Methods;
-
-            XmlSerializer serializer = new XmlSerializer(typeof(I18nLanguage));
             foreach (string lang in ProcLanguages)
             {
                 // Dump the strings for the language.
                 StringKeyGroup strings = new StringKeyGroup();
                 strings.DumpStrings(datatool, lang, true, Log);
 
-                I18nLanguage xml = new I18nLanguage();
+                I18nLanguage result = new I18nLanguage();
 
                 // Translate
-                foreach (var keyword in Keywords())
-                    xml.Methods.Add(new I18nMethod(
-                        keyword,
-                        strings.ValueFromKeyAndLang(keyLinks.First(m => m.MethodName.ToLower() == keyword.ToLower()).Key, lang)
+                foreach (var keyword in keywords)
+                    result.Translations.Add(new I18nTranslation(
+                        keyword.ID,
+                        strings.ValueFromKeyAndLang(keyLinks.First(m => m.ID.ToLower() == keyword.ID.ToLower()).Key, lang)
                     ));
 
                 // Get the file
-                string file = Path.Combine(outputFile, "i18n-" + lang + ".xml");
+                string file = Path.Combine(outputFile, "i18n-" + lang + ".json");
 
                 if (File.Exists(file))
                     File.Delete(file);
@@ -118,7 +79,7 @@ namespace Deltin.Deltinteger.I18n
                 // Serialize
                 using (var fileStream = File.Create(file))
                 using (StreamWriter writer = new StreamWriter(fileStream))
-                    serializer.Serialize(writer, xml);
+                    writer.Write(JsonConvert.SerializeObject(result));
 
                 Log.Write(LogLevel.Normal, "Finished " + lang + ".");
             }
@@ -128,7 +89,7 @@ namespace Deltin.Deltinteger.I18n
         {
             string datatoolPath = "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe";
             string overwatchPath = "C:/Program Files (x86)/Overwatch";
-            string previous = "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.0/Languages/key_links.xml";
+            string previous = "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/Languages/key_links.json";
             string saveAt = previous;
 
             Console.OutputEncoding = System.Text.Encoding.Unicode;
@@ -138,20 +99,21 @@ namespace Deltin.Deltinteger.I18n
 
             strings.DumpStrings(datatool, "enUS", true, Log);
             strings.DumpStrings(datatool, "esES", false, Log);
+            strings.DumpStrings(datatool, "esMX", false, Log);
             strings.DumpStrings(datatool, "itIT", false, Log);
 
             List<KeyLink> links = new List<KeyLink>();
-            var serializer = new XmlSerializer(typeof(KeyLinkList));
 
-            if (previous != null)
-                using (var lastStream = File.OpenRead(previous))
-                {
-                    var last = ((KeyLinkList)serializer.Deserialize(lastStream)).Methods;
-                    links.AddRange(last);
-                }
+            if (previous != null && File.Exists(previous))
+            {
+                var last = JsonConvert.DeserializeObject<KeyLinkList>(File.ReadAllText(previous)).Links;
+                links.AddRange(last);
+            }
 
-            foreach (var keyword in Keywords())
-                if (!links.Any(link => link.MethodName.ToLower() == keyword.ToLower()))
+            var keywords = Keyword.GetKeywords();
+
+            foreach (var keyword in keywords)
+                if (!links.Any(link => link.ID.ToLower() == keyword.ID.ToLower()))
                     GetKeyLink(links, keyword, 5, strings);
 
             while (true)
@@ -160,26 +122,31 @@ namespace Deltin.Deltinteger.I18n
                 string input = Console.ReadLine();
                 if (input == "") break;
 
-                KeyLink link = links.FirstOrDefault(l => l.MethodName == input);
-                if (link == null) Console.WriteLine($"No keywords by that name exists.");
+                var existing = keywords.FirstOrDefault(k => k.ID == input);
+
+                if (existing == null) Console.WriteLine($"No keywords by that name exists.");
                 else
                 {
+                    var link = links.FirstOrDefault(l => l.ID.ToLower() == input.ToLower());
                     links.Remove(link);
-                    GetKeyLink(links, input, 5, strings);
+                    GetKeyLink(links, existing, 5, strings);
                 }
             }
 
             using (var fileStream = File.Create(saveAt))
             using (StreamWriter writer = new StreamWriter(fileStream))
-                serializer.Serialize(writer, new KeyLinkList(links.ToArray()));
+                writer.Write(JsonConvert.SerializeObject(new KeyLinkList(links.ToArray())));
         }
 
-        static void GetKeyLink(List<KeyLink> links, string name, int surroundRange, StringKeyGroup strings)
+        static void GetKeyLink(List<KeyLink> links, Keyword keyword, int surroundRange, StringKeyGroup strings)
         {
+            string name = keyword.Name;
+
             var pairs = strings.KeysFromEnglishName(name);
             int chosen = 0;
             if (pairs.Length > 1)
             {
+                // Make sure there are no duplicate strings.
                 bool allEqual = true;
                 for (int i = 1; i < pairs.Length && allEqual; i++)
                     for (int c = 0; c < pairs[i].Translations.Count && allEqual; c++)
@@ -188,6 +155,10 @@ namespace Deltin.Deltinteger.I18n
                                 allEqual = false;
                 if (!allEqual)
                 {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine(keyword.ID);
+                    Console.ForegroundColor = ConsoleColor.White;
+
                     List<KeyLinkRow> rows = new List<KeyLinkRow>();
 
                     for (int i = 0; i < pairs.Length; i++)
@@ -208,7 +179,7 @@ namespace Deltin.Deltinteger.I18n
                 Console.ReadLine();
                 return;
             }
-            links.Add(new KeyLink(name, pairs[chosen].Key));
+            links.Add(new KeyLink(keyword.ID, pairs[chosen].Key));
         }
 
         class KeyLinkRow
@@ -278,28 +249,28 @@ namespace Deltin.Deltinteger.I18n
 
     public class KeyLinkList
     {
-        [XmlElement("method")]
-        public KeyLink[] Methods { get; set; }
+        [JsonProperty("links")]
+        public KeyLink[] Links { get; set; }
 
         public KeyLinkList()
         {
         }
-        public KeyLinkList(KeyLink[] methods)
+        public KeyLinkList(KeyLink[] links)
         {
-            Methods = methods;
+            Links = links;
         }
     }
     public class KeyLink
     {
-        [XmlAttribute("name")]
-        public string MethodName { get; set; }
-        [XmlAttribute("key")]
+        [JsonProperty("id")]
+        public string ID { get; set; }
+        [JsonProperty("key")]
         public string Key { get; set; }
 
         public KeyLink() { }
-        public KeyLink(string methodName, string key)
+        public KeyLink(string id, string key)
         {
-            MethodName = methodName;
+            ID = id;
             Key = key;
         }
     }
