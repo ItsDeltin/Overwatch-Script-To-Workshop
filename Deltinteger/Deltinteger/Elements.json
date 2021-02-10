@@ -3040,6 +3040,91 @@
           "type": "PlayerHeroStat"
         }
       }
+    },
+    {
+      "name": "Damage Over Time Count",
+      "type": "number"
+    },
+    {
+      "name": "Heal Over Time Count",
+      "type": "number"
+    },
+    {
+      "name": "Text Count",
+      "type": "number"
+    },
+    {
+      "name": "Damage Modification Count",
+      "type": "number"
+    },
+    {
+      "name": "Healing Modification Count",
+      "type": "number"
+    },
+    {
+      "name": "Assist Count",
+      "type": "number"
+    },
+    {
+      "name": "Entity Count",
+      "type": "number"
+    },
+    {
+      "name": "Local Player",
+      "type": "player",
+      "documentation": "The Player being controlled on the user's computer. This Value is different for each end user and thus can only be accessed in Actions which effect visuals or the HUD. This value cannot be stored in Variables."
+    },
+    {
+      "name": "Char In String",
+      "type": "string",
+      "documenation": "The character found at a specified index of a String.",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Index": {
+          "type": "number"
+        }
+      }
+    },
+    {
+      "name": "Index Of String Char",
+      "type": "number",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Character": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "name": "String Split",
+      "type": "string[]",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Seperator": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "name": "String Replace",
+      "type": "string",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Pattern": {
+          "type": "string"
+        },
+        "Replacement": {
+          "type": "string"
+        }
+      }
     }
   ],
   "actions": [
@@ -6089,6 +6174,88 @@
     },
     {
       "name": "Destroy All Progress Bar In-World Text"
+    },
+    {
+      "name": "Enable Text Chat",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
+    },
+    {
+      "name": "Disable Text Chat",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
+    },
+    {
+      "name": "Enable Voice Chat",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
+    },
+    {
+      "name": "Disable Voice Chat",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
+    },
+    {
+      "name": "Start Game Mode"
+    },
+    {
+      "name": "Return To Lobby"
+    },
+    {
+      "name": "Restart Match"
+    },
+    {
+      "name": "Move Player To Team",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        },
+        "Team": {
+          "type": "team"
+        },
+        "Slot": {
+          "type": "number"
+        }
+      }
+    },
+    {
+      "name": "Remove Player",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
+    },
+    {
+      "name": "Start Forcing Dummy Bot Name",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        },
+        "Name": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "name": "Stop Forcing Dummy Bot Name",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
     }
   ],
   "enumerators": {
@@ -6379,7 +6546,76 @@
       "Sparkles Sound",
       "Smoke Sound",
       "Decal Sound",
-      "Beacon Sound"
+      "Beacon Sound",
+      "Echo Focusing Beam Sound",
+      "Junkrat Trap Chain Sound",
+      "Mercy Heal Beam Sound",
+      "Mercy Boost Beam Sound",
+      "Moira Grasp Connected Sound",
+      "Moira Orb Damage Sound",
+      "Moira Orb Heal Sound",
+      "Moira Coalescence Sound",
+      "Orisa Amplifier Sound",
+      "Orisa Halt Tendril Sound",
+      "Symmetra Projector Sound",
+      "Winston Tesla Cannon Sound",
+      "Zarya Particle Beam Sound",
+      "Omnic Slicer Beam Sound",
+      "Heal Target Active Effect",
+      "Heal Target Effect",
+      "Ana Biotic Grenade Increased Healing Effect",
+      "Ana Nano Boosted Effect",
+      "Baptiste Immortality Field Protected Effect",
+      "Echo Cloning Effect",
+      {
+        "name": "Lúcio Sound Barrier Protected Effect",
+        "alias": "LucioSoundBarrierProtectedEffect"
+      },
+      "Mercy Damage Boosted Effect",
+      "Reaper Wraith Form Effect",
+      {
+        "name": "Soldier: 76 Sprinting Effect",
+        "alias": "Soldier76SprintingEffect"
+      },
+      {
+        "name": "Torbjörn Overloading Effect",
+        "alias": "TorbjornOverloadingEffect"
+      },
+      "Winston Primal Rage Effect",
+      "Wrecking Ball Adaptive Shield Target Effect",
+      "Wrecking Ball Piledriver Fire Effect",
+      "Ana Biotic Grenade No Healing Effect",
+      "Ana Sleeping Effect",
+      "Ashe Dynamite Burning Particle Effect",
+      "Ashe Dynamite Burning Material Effect",
+      "McCree Flashbang Stunned Effect",
+      "Mei Frozen Effect",
+      "Sigma Gravitic Flux Target Effect",
+      "Sombra Hacked Looping Effect",
+      "Widowmaker Venom Mine Target Effect",
+      "Winston Tesla Cannon Target Effect",
+      "Zenyatta Orb Of Discord Target Effect",
+      "Ana Nano Boosted Sound",
+      "Baptiste Immortality Field Protected Sound",
+      "Echo Cloning Sound",
+      {
+        "name": "Lúcio Sound Barrier Protected Sound",
+        "alias": "LucioSoundBarrierProtectedSound"
+      },
+      "Mei Frozen Sound",
+      "Mercy Damage Boosted Sound",
+      "Sigma Gravitic Flux Target Sound",
+      "Sombra Hacking Sound",
+      "Sombra Hacked Sound",
+      {
+        "name": "Torbjörn Overloading Sound",
+        "alias": "TorbjornOverloadingSound"
+      },
+      "Winston Tesla Cannon Target Sound",
+      "Winston Primal Rage Sound",
+      "Wrecking Ball Adaptive Shield Target Sound",
+      "Wrecking Ball Piledriver Fire Sound",
+      "Zenyatta Orb Of Discord Target Sound"
     ],
     "Color": [
       "White",
@@ -6570,7 +6806,106 @@
       "Buff Impact Sound",
       "Ring Explosion Sound",
       "Buff Explosion Sound",
-      "Explosion Sound"
+      "Explosion Sound",
+      "Heal Target Active Effect",
+      "Sombra Translocating Material Effect",
+      "McCree Flashbang Stunned Effect",
+      "Sombra Hacked Starting Effect",
+      "Ana Biotic Grenade Increased Healing Sound",
+      "Ana Biotic Grenage No Healing Sound",
+      "Ana Sleeping Sound",
+      "Reaper Wraith Form Sound",
+      "Sombra Translocating Sound",
+      {
+        "name": "Soldier: 76 Sprint Start Sound",
+        "alias": "Soldier76SprintStartSound"
+      },
+      "Brigitte Repair Pack Impact Effect",
+      "Brigitte Repair Pack Armor Effect",
+      "Brigitte Whip Shot Heal Area Effect",
+      "Dva Micro Missiles Explosion Effect",
+      "Dva Self Destruct Explosion Effect",
+      "Echo Sticky Bomb Explosion Effect",
+      "Hanzo Sonic Arrow Initial Pulse Effect",
+      {
+        "name": "Lúcio Sound Barrier Cast Effect",
+        "alias": "LucioSoundBarrierCastEffect"
+      },
+      "Moira Fade Disappear Effect",
+      "Moira Fade Reappear Effect",
+      "Orisa Halt Implosion Effect",
+      "Sigma Hypersphere Implosion Effect",
+      "Sombra Logo Effect",
+      "Sombra Translocator Disappear Effect",
+      "Sombra Translocator Reappear Effect",
+      "Sombra Emp Explosion effect",
+      "Symmetra Teleporter Reappear Effect",
+      "Tracer Recall Disappear Effect",
+      "Tracer Recall Reappear Effect",
+      "Zarya Particle Cannon Explosion Effect",
+      "Ana Biotic Grenade Explosion Effect",
+      "Ashe Dynamite Explosion Effect",
+      "Baptiste Biotic Launcher Explosion Effect",
+      "Bastion Tank Cannon Explosion Effect",
+      "Doomfist Rising Uppercut Leap Effect",
+      "Doomfist Rising Uppercut Impact Effect",
+      "Doomfist Meteor Strike Impact Effect",
+      "Junkrat Frag Launcher Explosion Effect",
+      "Junkrat Concussion Mine Explosion Effect",
+      "Junkrat Rip Tire Explosion Effect",
+      "McCree Flashbang Explosion Effect",
+      "Pharah Rocket Launcher Explosion Effect",
+      "Pharah Concussive Blast Effect",
+      "Pharah Barrage Explosion Effect",
+      "Reinhardt Fire Strike Target Impact Effect",
+      "Sigma Accretion Impact Effect",
+      "Widowmaker Venom Mine Explosion Effect",
+      "Winston Jump Pack Landing Effect",
+      "Wrecking Ball Piledriver Impact Effect",
+      "Wrecking Ball Minefield Explosion Effect",
+      "Ana Biotic Grenade Explosion Sound",
+      "Ashe Dynamite Explosion Sound",
+      "Baptiste Biotic Launcher Explosion Sound",
+      "Bastion Tank Cannon Explosion Sound",
+      "Brigitte Whip Shot Heal Area Sound",
+      "Brigitte Repair Pack Impact Sound",
+      "Brigitte Repair Pack Armor Sound",
+      "Dva Micro Missiles Explosion Sound",
+      "Dva Self Destruct Explosion Sound",
+      "Doomfist Rising Uppercut Leap Sound",
+      "Doomfist Rising Uppercut Impact Sound",
+      "Doomfist Meteor Strike Impact Sound",
+      "Echo Sticky Bomb Explosion Sound",
+      "Junkrat Frag Launcher Explosion Sound",
+      "Junkrat Concussion Mine Explosion Sound",
+      "Junkrat Rip Tire Explosion Sound",
+      "Hanzo Sonic Arrow Initial Pulse Sound",
+      {
+        "name": "Lúcio Sound Barrier Cast Sound",
+        "alias": "LucioSoundBarrierCastSound"
+      },
+      "McCree Flashband Explosion Sound",
+      "Moira Fade Disappear Sound"
+      "Moira Fade Reappear Sound"
+      "Orisa Halt Implosion Sound"
+      "Pharah Rocket Launcher Explosion Sound"
+      "Pharah Concussive Blast Sound"
+      "Pharah Barrage Explosion Sound"
+      "Reinhardt Fire Strike Target Impact Sound",
+      "Sigma Hypersphere Implosion Sound"
+      "Sigma Accretion Impact Sound",
+      "Sombra Logo Sound",
+      "Sombra Translocator Disappear Sound",
+      "Sombra Translocator Reappear Sound",
+      "Sombra Emp Explosion Sound",
+      "Symmetra Teleporter Reappear Sound",
+      "Tracer Recall Disappear Sound",
+      "Tracer Recall Reappear Sound"
+      "Widowmaker Venom Mine Explosion Sound",
+      "Winston Jump Pack Landing Sound",
+      "Wrecking Ball Piledriver Impact Sound",
+      "Wrecking Ball Piledriver Impact Sound",
+      "Zarya Particle Cannon Explosion Sound"
     ],
     "InvisibleTo": [
       "All",
@@ -6670,7 +7005,27 @@
     "BeamType": [
       "Good Beam",
       "Bad Beam",
-      "Grapple Beam"
+      "Grapple Beam",
+      "Brigitte Flail Chain Beam",
+      "Echo Focusing Beam",
+      "Junkrat Trap Chain Beam",
+      "Mercy Heal Beam",
+      "Mercy Boost Beam",
+      "Moira Orb Heal Beam",
+      "Moira Orb Damage Beam",
+      "Moira Grasp Connected Beam",
+      "Moira Coalescence Beam",
+      "Orisa Halt Tendril Beam",
+      "Orisa Amplifier Beam",
+      "Symmetra Projector Beam",
+      "Symmetra Turret Beam",
+      {
+        "name": "Torbjörn Turret Sight Beam",
+        "alias": "TorbjornTurretSightBeam"
+      },
+      "Winston Tesla Cannon Beam",
+      "Zarya Particle Beam",
+      "Omnic Slicer Beam"
     ],
     "Spectators": [
       "Default Visibility",
