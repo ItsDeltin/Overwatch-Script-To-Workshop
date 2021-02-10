@@ -867,7 +867,7 @@
     "Projectile Speed": {
       "default": 100.0,
       "type": "number",
-      "maximum": 300.0
+      "maximum": 500.0
     },
     "Projectile Gravity": {
       "default": 100.0,
@@ -6361,6 +6361,61 @@
       "properties": {},
       "type": "object",
       "additionalProperties": true
+    },
+    "Extensions": {
+      "properties": {
+        "Beam Effects": {
+          "description": "The 'Beam Effects' extension costs 2 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Beam Sounds": {
+          "description": "The 'Beam Sounds' extension costs 1 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Buff Status Effects": {
+          "description": "The 'Buff Status Effects' extension costs 2 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Debuff Status Effects": {
+          "description": "The 'Debuff Status Effects' extension costs 2 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Buff and Debuff Sounds": {
+          "description": "The 'Buff and Debuff Sounds' extension costs 2 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Energy Explosion Effects": {
+          "description": "The 'Energy Explosion Effects' extension costs 4 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Kinetic Explosion Effects": {
+          "description": "The 'Kinetic Explosion Effects' extension costs 4 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Explosion Sounds": {
+          "description": "The 'Explosion Sounds' extension costs 2 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Play More Effects": {
+          "description": "The 'Play More Effects' extension costs 1 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Spawn More Dummy Bots": {
+          "description": "The 'Spawn More Dummy Bots' extension costs 2 extension points.",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "type": "object",
