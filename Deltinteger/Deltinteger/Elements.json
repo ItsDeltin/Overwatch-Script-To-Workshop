@@ -3090,6 +3090,7 @@
     {
       "name": "Index Of String Char",
       "type": "number",
+      "documentation": "The index of a character within a String or -1 of no such character can be found.",
       "parameters": {
         "String": {
           "type": "string"
@@ -3102,6 +3103,7 @@
     {
       "name": "String Split",
       "type": "string[]",
+      "documentation": "Results in an Array of String Values. These String Values will be built from the specified String Value, split around the seperator String.",
       "parameters": {
         "String": {
           "type": "string"
@@ -3114,6 +3116,7 @@
     {
       "name": "String Replace",
       "type": "string",
+      "documentation": "Results in a String Value. This String Value will be built from the specified String Value, where all occurrences of the pattern String are replaced with the replacement String.",
       "parameters": {
         "String": {
           "type": "string"
@@ -6885,14 +6888,14 @@
         "alias": "LucioSoundBarrierCastSound"
       },
       "McCree Flashband Explosion Sound",
-      "Moira Fade Disappear Sound"
-      "Moira Fade Reappear Sound"
-      "Orisa Halt Implosion Sound"
-      "Pharah Rocket Launcher Explosion Sound"
-      "Pharah Concussive Blast Sound"
-      "Pharah Barrage Explosion Sound"
+      "Moira Fade Disappear Sound",
+      "Moira Fade Reappear Sound",
+      "Orisa Halt Implosion Sound",
+      "Pharah Rocket Launcher Explosion Sound",
+      "Pharah Concussive Blast Sound",
+      "Pharah Barrage Explosion Sound",
       "Reinhardt Fire Strike Target Impact Sound",
-      "Sigma Hypersphere Implosion Sound"
+      "Sigma Hypersphere Implosion Sound",
       "Sigma Accretion Impact Sound",
       "Sombra Logo Sound",
       "Sombra Translocator Disappear Sound",
@@ -6900,7 +6903,7 @@
       "Sombra Emp Explosion Sound",
       "Symmetra Teleporter Reappear Sound",
       "Tracer Recall Disappear Sound",
-      "Tracer Recall Reappear Sound"
+      "Tracer Recall Reappear Sound",
       "Widowmaker Venom Mine Explosion Sound",
       "Winston Jump Pack Landing Sound",
       "Wrecking Ball Piledriver Impact Sound",

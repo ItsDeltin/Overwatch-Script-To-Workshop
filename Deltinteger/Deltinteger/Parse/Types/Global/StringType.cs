@@ -30,6 +30,10 @@ namespace Deltin.Deltinteger.Parse
             _scope.AddNativeMethod(FormatFunction(_typeSupplier));
             _scope.AddNativeMethod(ContainsFunction(_typeSupplier));
             _scope.AddNativeMethod(SliceFunction(_typeSupplier));
+            _scope.AddNativeMethod(CharInStringFunction(_typeSupplier));
+            _scope.AddNativeMethod(IndexOfFunction(_typeSupplier));
+            _scope.AddNativeMethod(SplitFunction(_typeSupplier));
+            _scope.AddNativeMethod(ReplaceFunction(_typeSupplier));
             _scope.AddNativeVariable(_length);
         }
 
@@ -66,6 +70,51 @@ namespace Deltin.Deltinteger.Parse
                 new CodeParameter("length", "The length of the substring.", supplier.Number())
             },
             Action = (actionSet, methodCall) => Element.Part("String Slice", actionSet.CurrentObject, methodCall.Get(0), methodCall.Get(1))
+        };
+
+        // String Slice function
+        FuncMethod CharInStringFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+            Name = "CharAt",
+            Documentation = "The character found at a specified index of a String.",
+            ReturnType = supplier.String(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("index", "The index of the character.", supplier.Number()),
+            },
+            Action = (actionSet, methodCall) => Element.Part("Char In String", actionSet.CurrentObject, methodCall.Get(0))
+        };
+
+        // String Slice function
+        FuncMethod IndexOfFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+            Name = "IndexOf",
+            Documentation = "The index of a character within a String or -1 of no such character can be found.",
+            ReturnType = supplier.Number(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("character", "The character for which to search.", supplier.String()),
+            },
+            Action = (actionSet, methodCall) => Element.Part("Index Of String Char", actionSet.CurrentObject, methodCall.Get(0))
+        };
+
+        // String Split function
+        FuncMethod SplitFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+            Name = "Split",
+            Documentation = "Results in an Array of String Values. These String Values will be built from the specified String Value, split around the seperator String.",
+            ReturnType = supplier.Array(supplier.String()),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("seperator", "The seperator String with which to split the String Value.", supplier.String()),
+            },
+            Action = (actionSet, methodCall) => Element.Part("String Split", actionSet.CurrentObject, methodCall.Get(0))
+        };
+
+        // String Replace function
+        FuncMethod ReplaceFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+            Name = "Replace",
+            Documentation = "Results in a String Value. This String Value will be built from the specified String Value, where all occurrences of the pattern String are replaced with the replacement String.",
+            ReturnType = supplier.String(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("pattern", "The String pattern to be replaced.", supplier.String()),
+                new CodeParameter("replacement", "The String Value in which to replace the pattern String.", supplier.String())
+            },
+            Action = (actionSet, methodCall) => Element.Part("String Replace", actionSet.CurrentObject, methodCall.Get(0), methodCall.Get(1))
         };
 
         // String Format function
