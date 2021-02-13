@@ -214,7 +214,7 @@ async function gotVersion(version: string)
 
 function setElementCount(count)
 {
-	elementCountStatus.text = "Element count: " + count + " / 20000";
+	elementCountStatus.text = "Element count: " + count + " / 32000";
 }
 
 export function resetLastWorkshopOutput()
