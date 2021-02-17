@@ -136,10 +136,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public ElementEnumMember Member { get; }
 
-        public EnumValuePair(ElementEnumMember member, bool constant, CodeType type) : base(member.CodeName(), constant ? CompletionItemKind.Constant : CompletionItemKind.EnumMember)
+        public EnumValuePair(ElementEnumMember member, bool constant, CodeType type) : base(member.CodeName(), type, constant ? CompletionItemKind.Constant : CompletionItemKind.EnumMember)
         {
             Member = member;
-            CodeType = type;
             TokenType = Deltin.Deltinteger.Parse.SemanticTokenType.EnumMember;
         }
     }

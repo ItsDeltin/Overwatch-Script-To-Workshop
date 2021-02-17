@@ -554,7 +554,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
         public void Finish(Rule rule)
         {
-            var codeLens = new ElementCountCodeLens(_method.DefinedAt.range, _parseInfo.TranslateInfo.OptimizeOutput);
+            var codeLens = new ElementCountCodeLens(_method.DefinedAt.range);
             _parseInfo.Script.AddCodeLensRange(codeLens);
             codeLens.RuleParsed(rule);
         }

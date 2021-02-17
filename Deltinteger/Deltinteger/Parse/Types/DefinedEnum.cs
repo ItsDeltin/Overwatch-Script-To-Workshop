@@ -72,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static => true;
         public bool WholeContext => true;
         public bool CanBeIndexed => false;
-        public ICodeTypeSolver CodeType => null;
+        public ICodeTypeSolver CodeType => Enum;
 
         public ExpressionOrWorkshopValue ValueExpression { get; private set; }
 

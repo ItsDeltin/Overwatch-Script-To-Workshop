@@ -87,6 +87,9 @@ namespace Deltin.Deltinteger.Elements
         [JsonProperty("restricted")]
         public string Restricted;
 
+        [JsonProperty("additionalElementCount")]
+        public int AdditionalElementCount;
+
         public bool ShouldSerializeIsHidden() => IsHidden;
 
         public override string ToString() => Name + (Parameters == null ? "" : "(" + string.Join(", ", Parameters.Select(v => v.ToString())) + ")");
@@ -188,8 +191,8 @@ namespace Deltin.Deltinteger.Elements
         public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => builder.AppendKeyword(WorkshopName());
 
         public string CodeName() => Alias ?? Name.Replace(" ", "");
-        public string DecompileName() => Name.Replace("(", "").Replace(")", "").Replace(",", "");
-        public string WorkshopName() => Name.Replace(",", "");
+        public string WorkshopName() => Name.Replace("(", "").Replace(")", "").Replace(",", "");
+        public string DecompileName() => WorkshopName();
 
         public bool EqualTo(IWorkshopTree other) => other is ElementEnumMember enumMember && Enum == enumMember.Enum && Name == enumMember.Name;
 

@@ -27,12 +27,6 @@ namespace Deltin.Deltinteger.Elements
 
         public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
-            if (CustomConverters.Converters.TryGetValue(Function.Name, out var converter))
-            {
-                converter(b, this);
-                return;
-            }
-
             var action = Function as ElementJsonAction;
             if (action != null && action.Indentation == "outdent") b.Outdent();
 
@@ -107,7 +101,7 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        public Element Optimize()
+        public Element Optimized()
         {
             OptimizeChildren();
 
@@ -122,7 +116,7 @@ namespace Deltin.Deltinteger.Elements
             AddMissingParameters();
             for (int i = 0; i < ParameterValues.Length; i++)
                 if (ParameterValues[i] is Element element)
-                    ParameterValues[i] = element.Optimize();
+                    ParameterValues[i] = element.Optimized();
         }
 
         public bool TryGetConstant(out Vertex vertex)
@@ -176,10 +170,12 @@ namespace Deltin.Deltinteger.Elements
         public virtual int ElementCount()
         {
             AddMissingParameters();
-            int count = 1;
-            
+
+            int count = 1 + Function.AdditionalElementCount;
+            int parameterOffset = Function is ElementJsonAction ? -1 : 0;
+
             foreach (var parameter in ParameterValues)
-                count += parameter.ElementCount();
+                count += parameter.ElementCount() + parameterOffset;
             
             return count;
         }
