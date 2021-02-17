@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
                 ).EndCodeLine().ToMarkup()
         };
 
-        public IGettableAssigner GetAssigner() => throw new NotImplementedException();
+        public IGettableAssigner GetAssigner(ActionSet actionSet) => throw new NotImplementedException();
 
         ICallVariable IVariableInstance.GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs)
             => new CallMethodGroup(parseInfo, callRange, this, typeArgs);

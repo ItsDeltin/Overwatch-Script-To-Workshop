@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetArrayStore(DeltinScript deltinScript, int stackOffset)
         {
-            ArrayStore = Variable.GetAssigner().AssignClassStacks(new GetClassStacks(deltinScript, stackOffset));
+            ArrayStore = Variable.GetAssigner(null).AssignClassStacks(new GetClassStacks(deltinScript, stackOffset));
         }
 
         public void AddToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)

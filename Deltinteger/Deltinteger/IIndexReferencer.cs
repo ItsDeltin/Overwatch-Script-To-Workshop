@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger
         bool UseDefaultVariableAssigner => true;
         IVariable Provider { get; }
         MarkupBuilder Documentation { get; }
-        IGettableAssigner GetAssigner();
+        IGettableAssigner GetAssigner(ActionSet actionSet);
         IWorkshopTree ToWorkshop(ActionSet actionSet) => actionSet.IndexAssigner.Get(Provider).GetVariable();
         ICallVariable GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(parseInfo, this, index);
         void Call(ParseInfo parseInfo, DocRange callRange) => Call(this, parseInfo, callRange);
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger
             return this;
         }
         public void AddDefaultInstance(IScopeAppender scopeAppender) => scopeAppender.Add(this, Static);
-        public IGettableAssigner GetAssigner() => Assigner;
+        public IGettableAssigner GetAssigner(ActionSet actionSet) => Assigner;
         public bool CanBeAmbiguous() => Ambiguous;
     }
 }

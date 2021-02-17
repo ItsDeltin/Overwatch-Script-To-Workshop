@@ -5,7 +5,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class VarIndexAssigner
     {
-        private readonly Dictionary<IVariable, IGettable> _references = new Dictionary<IVariable, IGettable>();
+        private readonly Dictionary<string, IGettable> _references = new Dictionary<string, IGettable>();
         private readonly List<VarIndexAssigner> _children = new List<VarIndexAssigner>();
         private readonly VarIndexAssigner _parent = null;
 
@@ -17,21 +17,21 @@ namespace Deltin.Deltinteger.Parse
 
         private void CheckIfAdded(IVariable var)
         {
-            if (_references.ContainsKey(var))
+            if (_references.ContainsKey(var.Name))
                 throw new Exception(var.Name + " was already added into the variable index assigner.");
         }
 
         public void Add(IVariable variable, IGettable value)
         {
             CheckIfAdded(variable);
-            _references.Add(variable, value);
+            _references.Add(variable.Name, value);
         }
 
         public WorkshopElementReference Add(IVariable variable, IWorkshopTree value)
         {
             CheckIfAdded(variable);
             var created = new WorkshopElementReference(value);
-            _references.Add(variable, created);
+            _references.Add(variable.Name, created);
             return created;
         }
 
@@ -59,9 +59,9 @@ namespace Deltin.Deltinteger.Parse
             VarIndexAssigner current = this;
             while (current != null)
             {
-                if (current._references.ContainsKey(variable))
+                if (current._references.ContainsKey(variable.Name))
                 {
-                    gettable = current._references[variable];
+                    gettable = current._references[variable.Name];
                     return true;
                 }
 

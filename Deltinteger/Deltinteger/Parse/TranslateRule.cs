@@ -144,10 +144,10 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree This { get; private set; }
         public bool IsRecursive { get; private set; }
         public ActionComment CommentNext { get; private set; }
+        public InstanceAnonymousTypeLinker ThisTypeLinker { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
-        public InstanceAnonymousTypeLinker ThisTypeLinker { get; }
 
         public int ActionCount => ActionList.Count;
 
@@ -180,10 +180,7 @@ namespace Deltin.Deltinteger.Parse
             This = other.This;
             IsRecursive = other.IsRecursive;
             CommentNext = other.CommentNext;
-        }
-        private ActionSet Clone()
-        {
-            return new ActionSet(this);
+            ThisTypeLinker = other.ThisTypeLinker;
         }
 
         public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this)
@@ -200,6 +197,7 @@ namespace Deltin.Deltinteger.Parse
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
         public ActionSet SetNextComment(string comment) => new ActionSet(this) { CommentNext = new ActionComment(comment) };
+        public ActionSet SetThisTypeLinker(InstanceAnonymousTypeLinker thisTypeLinker) => new ActionSet(this) { ThisTypeLinker = thisTypeLinker };
 
         public void AddAction(string comment, params IWorkshopTree[] actions)
         {

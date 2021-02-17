@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
                 // Get the child gettable.
-                values.Add(var.Name, var.GetAssigner().GetValue(new GettableAssignerValueInfo(info.ActionSet) {
+                values.Add(var.Name, var.GetAssigner(info.ActionSet).GetValue(new GettableAssignerValueInfo(info.ActionSet) {
                     InitialValueOverride = initialValue?.GetValue(var.Name),
                     Inline = info.Inline // Copy inline status
                 }));
@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Link the variable values to their names.
             foreach (var variable in _variables)
-                values.Add(variable.Name, variable.GetAssigner().GetValue(new GettableAssignerValueInfo(actionSet) { Inline = true }).GetVariable());
+                values.Add(variable.Name, variable.GetAssigner(actionSet).GetValue(new GettableAssignerValueInfo(actionSet) { Inline = true }).GetVariable());
             
             return new LinkedStructAssigner(values);
         }
@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
             {
-                var assigner = var.GetAssigner();
+                var assigner = var.GetAssigner(null);
                 values.Add(var.Name, assigner.AssignClassStacks(new GetClassStacks(info.DeltinScript, offset)));
                 offset += assigner.StackDelta();
             }
@@ -72,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
         {
             int delta = 0;
             for (int i = 0; i < _variables.Length; i++)
-                delta += _variables[i].GetAssigner().StackDelta();
+                delta += _variables[i].GetAssigner(null).StackDelta();
             return delta;
         }
     }
@@ -252,6 +252,16 @@ namespace Deltin.Deltinteger.Parse
 
             return _bridge(value);
         }
+
         public IWorkshopTree GetArbritraryValue() => _structValue;
+
+        public IWorkshopTree GetWorkshopValue()
+        {
+            IWorkshopTree current = _structValue;
+            while (current is IStructValue structValue)
+                current = structValue.GetArbritraryValue();
+
+            return _bridge(current);
+        }
     }
 }

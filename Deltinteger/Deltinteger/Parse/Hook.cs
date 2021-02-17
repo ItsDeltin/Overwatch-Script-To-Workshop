@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
-        public IGettableAssigner GetAssigner() => throw new NotImplementedException();
+        public IGettableAssigner GetAssigner(ActionSet actionSet) => throw new NotImplementedException();
         public IVariableInstance GetDefaultInstance() => this;
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
         public void AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();

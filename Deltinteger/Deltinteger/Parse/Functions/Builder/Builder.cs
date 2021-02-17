@@ -307,18 +307,16 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     {
         private readonly IVariableInstance[] _variables;
         private readonly bool _recursive;
-        private readonly IGettableAssigner _assigner;
 
         public DefinedParameterHandler(IVariableInstance[] variables, bool recursive)
         {
             _variables = variables;
             _recursive = recursive;
-            _assigner = variables[0].GetAssigner();
         }
 
         public void Set(ActionSet actionSet, IWorkshopTree value)
         {
-            IGettable indexResult = _assigner.GetValue(actionSet);
+            IGettable indexResult = _variables[0].GetAssigner(actionSet).GetValue(actionSet);
             CopyToAll(actionSet, indexResult);
             indexResult.Set(actionSet, value, null, null);
         }
@@ -328,7 +326,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public IGettable GetSubroutineStack(ActionSet actionSet, bool defaultGlobal)
         {
             // Create the workshop variable the parameter will be stored as.
-            IGettable indexResult = _assigner.GetValue(actionSet);
+            IGettable indexResult = _variables[0].GetAssigner(actionSet).GetValue(actionSet);
             CopyToAll(actionSet, indexResult);
             return indexResult;
         }
@@ -381,6 +379,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     public interface ICallHandler
     {
         IWorkshopTree[] ParameterValues { get; }
+        InstanceAnonymousTypeLinker TypeArgs { get; }
         CallParallel ParallelMode { get; }
     }
 
@@ -388,6 +387,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
     {
         public IWorkshopTree[] ParameterValues { get; set; }
         public CallParallel ParallelMode { get; set; }
+        public InstanceAnonymousTypeLinker TypeArgs { get; set; }
 
         public CallHandler()
         {

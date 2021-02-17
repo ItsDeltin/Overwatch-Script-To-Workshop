@@ -245,11 +245,9 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        MarkupBuilder ILabeled.GetLabel(DeltinScript deltinScript, LabelInfo labelInfo1) => ((IMethod)this).GetLabel(deltinScript, LabelInfo.Hover);
-
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(methodCall.TypeArgs);
             var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(GetOverrideFunctionHandlers()));
             return controller.Call();
         }

@@ -189,6 +189,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet = actionSet.SetNextComment(_comment);
             return Function.Parse(actionSet, new MethodCall(((IInvokeResult)this).GetParameterValuesAsWorkshop(actionSet), AdditionalParameterData)
             {
+                TypeArgs = _match.TypeArgLinker,
                 ParallelMode = _asyncInfo?.ParallelMode ?? CallParallel.NoParallel,
                 ActionComment = _comment,
                 AdditionalData = _additionalData

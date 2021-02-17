@@ -195,7 +195,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Get the reference.
                     var reference = currentAssigner.Get(callVariableAction.Calling.Provider);
-                    current = reference.GetVariable((Element)target);
+                    current = reference.GetVariable(target as Element);
 
                     // Get the index.
                     resultIndex = new Element[callVariableAction.Index.Length];
@@ -223,7 +223,7 @@ namespace Deltin.Deltinteger.Parse
                 currentObject = current;
                 if (Tree[i].Type() != null)
                 {
-                    var type = Tree[i].Type();
+                    var type = Tree[i].Type().GetRealType(actionSet.ThisTypeLinker);
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
                     type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
                 }

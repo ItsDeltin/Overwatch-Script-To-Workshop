@@ -96,12 +96,13 @@ namespace Deltin.Deltinteger.Parse
         IGettableAssigner IAdditionalArray.GetArrayAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable).InitialValue, true);
         void IAdditionalArray.OverrideArray(ArrayType array) {}
         void IAdditionalArray.AssignLength(IVariable lengthVariable, VarIndexAssigner assigner, IWorkshopTree reference)
-        {
-            while (reference is IStructValue structValue)
-                reference = structValue.GetArbritraryValue();
+            => assigner.Add(lengthVariable, new BridgeGetStructValue((IStructValue)reference, v => Element.CountOf(v)).GetWorkshopValue());
+        // {
+        //     while (reference is IStructValue structValue)
+        //         reference = structValue.GetArbritraryValue();
 
-            assigner.Add(lengthVariable, reference);
-        }
+        //     assigner.Add(lengthVariable, reference);
+        // }
 
         void IAdditionalArray.AssignFirstOf(IVariable firstOfVariable, VarIndexAssigner assigner, IWorkshopTree reference)
             => assigner.Add(firstOfVariable, new BridgeGetStructValue((IStructValue)reference, v => Element.FirstOf(v)));

@@ -46,11 +46,12 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class InstanceAnonymousTypeLinker
+    public class InstanceAnonymousTypeLinker : IReadOnlyTypeLinker
     {
         public static readonly InstanceAnonymousTypeLinker Empty = new InstanceAnonymousTypeLinker(); 
 
         public Dictionary<AnonymousType, CodeType> Links { get; } = new Dictionary<AnonymousType, CodeType>();
+        IReadOnlyDictionary<AnonymousType, CodeType> IReadOnlyTypeLinker.Links => Links;
 
         public InstanceAnonymousTypeLinker(AnonymousType[] typeArgs, CodeType[] generics)
         {
@@ -59,5 +60,10 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public InstanceAnonymousTypeLinker() {}
+    }
+
+    public interface IReadOnlyTypeLinker
+    {
+        IReadOnlyDictionary<AnonymousType, CodeType> Links { get; }
     }
 }

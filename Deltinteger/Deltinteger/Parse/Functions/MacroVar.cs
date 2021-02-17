@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
             Provider = provider;
         }
 
-        public IGettableAssigner GetAssigner() => new ConstantWorkshopValueAssigner(Provider.Value);
+        public IGettableAssigner GetAssigner(ActionSet actionSet) => new ConstantWorkshopValueAssigner(Provider.Value);
         public IWorkshopTree ToWorkshop(ActionSet actionSet) => Provider.Value.Parse(actionSet);
     }
 }
