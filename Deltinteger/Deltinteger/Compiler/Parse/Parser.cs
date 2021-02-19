@@ -189,9 +189,24 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return result;
         }
 
-        bool Is(TokenType type) => Kind == type;
+        bool Is(TokenType type)
+        {
+            switch (type)
+            {
+                default: return Kind == type;
+                case TokenType.Identifier: return Kind.IsIdentifier();
+            }
+        }
 
-        bool Is(TokenType type, int lookahead) => type == Lexer.ScanTokenAt(Token + lookahead).TokenType;
+        bool Is(TokenType type, int lookahead)
+        {
+            TokenType currentTokenType = Lexer.ScanTokenAt(Token + lookahead).TokenType;
+            switch (type)
+            {
+                default: return type == currentTokenType;
+                case TokenType.Identifier: return currentTokenType.IsIdentifier();
+            }
+        }
 
         Token TokenAtOrEnd(int position) => Lexer.ScanTokenAt(position) ?? Lexer.Tokens.Last();
 

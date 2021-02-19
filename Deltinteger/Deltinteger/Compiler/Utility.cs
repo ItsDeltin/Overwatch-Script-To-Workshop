@@ -293,7 +293,7 @@ namespace Deltin.Deltinteger.Compiler
                     return true;
 
                 default:
-                    return tokenType.IsStartOfType(); // Lambdas
+                    return tokenType.IsStartOfType() || tokenType.IsIdentifier(); // Lambdas
             }
         }
 
@@ -364,6 +364,29 @@ namespace Deltin.Deltinteger.Compiler
 
                 default:
                     return tokenType.IsStartOfType() || tokenType.IsStartOfExpression();
+            }
+        }
+
+        public static bool IsIdentifier(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Identifier:
+                case TokenType.As:
+                case TokenType.Async:
+                case TokenType.Case:
+                case TokenType.Default:
+                case TokenType.Disabled:
+                case TokenType.GlobalVar:
+                case TokenType.Import:
+                case TokenType.In:
+                case TokenType.PlayerVar:
+                case TokenType.Ref:
+                case TokenType.Type:
+                    return true;
+
+                default:
+                    return false;
             }
         }
 
