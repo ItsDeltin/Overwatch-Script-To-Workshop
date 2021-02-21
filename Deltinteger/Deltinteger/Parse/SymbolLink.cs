@@ -7,11 +7,9 @@ namespace Deltin.Deltinteger.Parse
 {
     public class SymbolLinkComponent : IComponent
     {
-        public DeltinScript DeltinScript { get; set; }
-
         private Dictionary<ISymbolLink, SymbolLinkCollection> callRanges { get; } = new Dictionary<ISymbolLink, SymbolLinkCollection>();
 
-        public void Init() { }
+        public void Init(DeltinScript deltinScript) { }
 
         public void AddSymbolLink(ISymbolLink callable, Location calledFrom, bool isDeclarer = false)
         {

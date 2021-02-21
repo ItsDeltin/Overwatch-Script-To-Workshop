@@ -10,8 +10,6 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class CompressedBakeComponent : IComponent
     {
-        public DeltinScript DeltinScript { get; set; }
-
         public Element Result { get; private set; }
 
         private int _maxNodeCount;
@@ -22,7 +20,7 @@ namespace Deltin.Deltinteger.Pathfinder
             _maxNodeCount = maxNodesValue;
         }
 
-        public void Init() {}
+        public void Init(DeltinScript deltinScript) {}
 
         public void Build(ActionSet actionSet, Element compressedNodeArray, Action<Element> printProgress, ILambdaInvocable onLoop)
         {

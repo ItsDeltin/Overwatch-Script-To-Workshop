@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public const double DefaultMoveToNext = 0.4;
 
-        public DeltinScript DeltinScript { get; set; }
+        public DeltinScript DeltinScript { get; private set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
         public bool PotentiallyNullNodes { get; set; } // Determines if nodes can potentially be null.
 
@@ -34,8 +34,10 @@ namespace Deltin.Deltinteger.Pathfinder
         public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines wether or not the current node was reached.
         public LambdaAction ApplicableNodeDeterminer { get; set; } // The function used to get the closest node to the player.
 
-        public void Init()
+        public void Init(DeltinScript deltinScript)
         {
+            DeltinScript = deltinScript;
+
             bool assignExtended = false;
 
             // Assign workshop variables.

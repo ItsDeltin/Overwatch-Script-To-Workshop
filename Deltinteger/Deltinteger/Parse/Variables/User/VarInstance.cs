@@ -22,6 +22,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CompletionItem GetCompletion() => _var.GetCompletion();
-        public IGettableAssigner GetAssigner(ActionSet actionSet) => CodeType.GetRealType(actionSet.ThisTypeLinker).GetGettableAssigner(_var);
+        public IGettableAssigner GetAssigner(ActionSet actionSet) => CodeType.GetRealType(actionSet?.ThisTypeLinker).GetGettableAssigner(_var);
     }
 }

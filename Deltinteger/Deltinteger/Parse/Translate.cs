@@ -74,7 +74,6 @@ namespace Deltin.Deltinteger.Parse
         private T AddComponent<T>() where T: IComponent, new()
         {
             T newT = new T();
-            newT.DeltinScript = this;
 
             for (int i = InitComponent.Count - 1; i >= 0; i--)
                 if (typeof(T) == InitComponent[i].ComponentType)
@@ -84,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
             Components.Add(newT);
-            newT.Init();
+            newT.Init(this);
 
             return newT;
         }
@@ -463,8 +462,7 @@ namespace Deltin.Deltinteger.Parse
 
     public interface IComponent
     {
-        DeltinScript DeltinScript { get; set; }
-        void Init();
+        void Init(DeltinScript deltinScript);
     }
 
     class InitComponent

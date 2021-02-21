@@ -14,8 +14,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         private int _functionIdentifier = 0;
         private SubroutineInfo _subroutineInfo = null;
 
-        public LambdaGroup() { }
-        public void Init() { }
+        public void Init(DeltinScript deltinScript) { }
 
         public int Add(IFunctionHandler lambda)
         {

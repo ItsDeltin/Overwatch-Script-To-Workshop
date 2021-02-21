@@ -12,8 +12,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
         private IndexReference _waitAsyncQueue;
 
         // IComponent
-        public void Init()
+        public void Init(DeltinScript deltinScript)
         {
+            DeltinScript = deltinScript;
+
             _waitAsyncQueue = DeltinScript.VarCollection.Assign("waitAsync_queue", true, false);
             DeltinScript.InitialGlobal.ActionSet.AddAction(_waitAsyncQueue.SetVariable(Element.EmptyArray()));
 

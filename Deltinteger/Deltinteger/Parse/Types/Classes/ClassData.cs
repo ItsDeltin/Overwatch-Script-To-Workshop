@@ -8,15 +8,14 @@ namespace Deltin.Deltinteger.Parse
     {
         public const string ObjectVariableTag = "_objectVariable_";
         public const string ClassIndexesTag = "_classIndexes";
-        public DeltinScript DeltinScript { get; set; }
         public IndexReference ClassIndexes { get; private set; }
         private List<IndexReference> VariableStacks { get; } = new List<IndexReference>();
         private int AssignClassID = 0;
 
-        public void Init()
+        public void Init(DeltinScript deltinScript)
         {
-            ClassIndexes = DeltinScript.VarCollection.Assign(ClassIndexesTag, true, false);
-            DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
+            ClassIndexes = deltinScript.VarCollection.Assign(ClassIndexesTag, true, false);
+            deltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
         }
 
         public IndexReference CreateObject(int classIdentifier, ActionSet actionSet, string internalName)
