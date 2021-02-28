@@ -445,12 +445,12 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 if (determiner.IsRecursive())
                 {
                     actionSet.InitialSet().AddAction(objectStore.SetVariable(Element.EmptyArray()));
-                    _context.ContainingType()?.AddObjectVariablesToAssigner(Element.LastOf(objectStore.GetVariable()), actionSet.IndexAssigner);
+                    _context.ContainingType()?.AddObjectVariablesToAssigner(actionSet.ToWorkshop, Element.LastOf(objectStore.GetVariable()), actionSet.IndexAssigner);
                     actionSet = actionSet.New(Element.LastOf(objectStore.Get())).PackThis().New(objectStore.CreateChild(Element.CountOf(objectStore.Get()) - 1));
                 }
                 else
                 {
-                    _context.ContainingType()?.AddObjectVariablesToAssigner(objectStore.GetVariable(), actionSet.IndexAssigner);
+                    _context.ContainingType()?.AddObjectVariablesToAssigner(actionSet.ToWorkshop, objectStore.GetVariable(), actionSet.IndexAssigner);
                     actionSet = actionSet.New(objectStore.Get()).PackThis().New(objectStore);
                 }
             }
@@ -709,7 +709,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
                 ActionSet optionSet = builder.ActionSet.New(builder.ActionSet.IndexAssigner.CreateContained());
 
                 // Add the object variables of the selected method.
-                option.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
+                option.ContainingType.AddObjectVariablesToAssigner(optionSet.ToWorkshop, optionSet.CurrentObject, optionSet.IndexAssigner);
 
                 // Go to next case then parse the block.
                 typeSwitch.NextCase(Element.Num(((ClassType)option.ContainingType).Identifier));

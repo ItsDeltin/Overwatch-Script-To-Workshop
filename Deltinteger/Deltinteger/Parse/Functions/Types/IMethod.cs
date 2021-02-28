@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Parse
     public interface IMethod : IScopeable, IParameterCallable
     {
         MethodAttributes Attributes { get; }
-        IMethodInfo MethodInfo { get; }
+        IMethodExtensions MethodInfo { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         bool DoesReturnValue => CodeType != null;
         CompletionItem IScopeable.GetCompletion(DeltinScript deltinScript) => GetFunctionCompletion(deltinScript, this);
@@ -41,32 +41,46 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
-    public interface IMethodInfo
+    public interface IMethodExtensions
     {
         AnonymousType[] GenericTypes { get; }
+        ITypeArgTrackee Tracker { get; }
         int TypeArgCount => GenericTypes == null ? 0 : GenericTypes.Length;
         void Override(IMethodProvider overridenBy) => throw new NotImplementedException();
         InstanceAnonymousTypeLinker GetInstanceInfo(CodeType[] typeArgs) => new InstanceAnonymousTypeLinker(GenericTypes, typeArgs);
     }
 
-    public interface IMethodProvider : IMethodInfo
+    public interface IMethodProvider : IMethodExtensions
     {
         string Name { get; }
         IMethod GetDefaultInstance();
     }
 
-    class MethodInfo : IMethodInfo
+    class MethodInfo : IMethodExtensions
     {
         public AnonymousType[] GenericTypes { get; }
+        public ITypeArgTrackee Tracker { get; }
 
         public MethodInfo()
         {
             GenericTypes = new AnonymousType[0];
+            Tracker = new MethodTypeArgTrackee(0);
         }
 
         public MethodInfo(AnonymousType[] generics)
         {
             GenericTypes = generics;
+            Tracker = new MethodTypeArgTrackee(GenericTypes.Length);
+        }
+    }
+
+    class MethodTypeArgTrackee : ITypeArgTrackee
+    {
+        public int GenericsCount { get; }
+
+        public MethodTypeArgTrackee(int genericsCount)
+        {
+            GenericsCount = genericsCount;
         }
     }
 

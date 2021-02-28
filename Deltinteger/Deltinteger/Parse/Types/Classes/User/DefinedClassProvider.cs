@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly Scope _scope;
         private IConstructorProvider<Constructor>[] _constructors;
         public AnonymousType[] AnonymousTypes { get; private set; }
+
         private Scope _operationalObjectScope;
         private Scope _operationalStaticScope;
 
@@ -54,9 +55,11 @@ namespace Deltin.Deltinteger.Parse
                 {
                     inheriting.Call(_parseInfo, inheritContext.Range);
 
+                    // Make sure the type being extended can actually be extended.
                     if (CodeTypeHelpers.CanExtend(WorkingInstance, inheriting, _parseInfo.Script.Diagnostics, inheritContext.Range))
                     {
-                        Extends = inheriting;
+                        // CanExtend will return false if 'inheriting' is not a ClassType so we can safely cast here.
+                        Extends = (ClassType)inheriting;
                         Extends.ResolveElements();
                     }
                 }
@@ -138,5 +141,7 @@ namespace Deltin.Deltinteger.Parse
         {
             throw new NotImplementedException();
         }
+
+        public override int TypeArgIndexFromAnonymousType(AnonymousType anonymousType) => Array.IndexOf(AnonymousTypes, anonymousType);
     }
 }

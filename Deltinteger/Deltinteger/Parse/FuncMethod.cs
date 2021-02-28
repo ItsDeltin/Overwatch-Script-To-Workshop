@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         public MarkupBuilder Documentation { get; set; }
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        IMethodInfo IMethod.MethodInfo { get; } = new MethodInfo();
+        IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
 
         private readonly Func<ActionSet, MethodCall, IWorkshopTree> _action;
         private readonly Func<ParseInfo, DocRange, object> _onCall;

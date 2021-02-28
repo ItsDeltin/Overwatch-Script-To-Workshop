@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var option in options)
             {
                 var optionSet = ActionSet.New(ActionSet.IndexAssigner.CreateContained());
-                option.Type().AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
+                option.Type().AddObjectVariablesToAssigner(optionSet.ToWorkshop, optionSet.CurrentObject, optionSet.IndexAssigner);
 
                 int currentIndex = expElements.Count;
                 expElements.Add(option.Parse(optionSet));

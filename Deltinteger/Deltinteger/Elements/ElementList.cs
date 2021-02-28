@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Elements
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public MarkupBuilder Documentation { get; }
         public ICodeTypeSolver CodeType { get; private set; }
-        IMethodInfo IMethod.MethodInfo { get; } = new MethodInfo();
+        IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
         private readonly RestrictedCallType? _restricted;
         private readonly ElementBaseJson _function;
         private readonly Element _actionReturnValue;

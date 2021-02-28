@@ -6,7 +6,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedMacroProvider : IElementProvider, IMethodProvider, IApplyBlock
+    public class DefinedMacroProvider : IElementProvider, IMethodProvider, ITypeArgTrackee, IApplyBlock
     {
         public string Name => Context.Identifier.Text;
         public AnonymousType[] GenericTypes { get; }
@@ -21,6 +21,10 @@ namespace Deltin.Deltinteger.Parse
         public IMethod Overriding { get; }
 
         public CallInfo CallInfo { get; }
+
+        int ITypeArgTrackee.GenericsCount => GenericTypes.Length;
+        ITypeArgTrackee IMethodExtensions.Tracker => this;
+
         private readonly RecursiveCallHandler _recursiveHandler;
         private readonly ApplyBlock _applyBlock = new ApplyBlock();
 
@@ -96,7 +100,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel => Provider.Attributes.Accessor;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => throw new NotImplementedException();
-        IMethodInfo IMethod.MethodInfo { get; } = new MethodInfo();
+        IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
 
         public DefinedMacroInstance(DefinedMacroProvider provider, InstanceAnonymousTypeLinker genericsLinker)
         {

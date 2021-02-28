@@ -74,12 +74,12 @@ namespace Deltin.Deltinteger.Parse
             return _objectScope;
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             var structValue = (IStructValue)reference;
 
             foreach (var variable in Variables)
-                assigner.Add(variable.Provider, structValue.GetValue(variable.Name));
+                assigner.Add(variable.Provider, structValue.GetGettable(variable.Name));
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)

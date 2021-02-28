@@ -12,13 +12,15 @@ namespace Deltin.Deltinteger.Parse
         public Scope ServeObjectScope { get; set; }
 
         public int Identifier { get; set; }
-
         public ObjectVariable[] ObjectVariables { get; protected set; }
+        public IVariableInstance[] Variables { get; protected set; }
 
+        public IClassInitializer Provider { get; }
         private readonly IResolveElements _resolveElements;
 
-        public ClassType(string name, IResolveElements resolveElements = null) : base(name)
+        public ClassType(string name, IClassInitializer provider, IResolveElements resolveElements = null) : base(name)
         {
+            Provider = provider;
             _resolveElements = resolveElements;
         }
 
@@ -106,11 +108,13 @@ namespace Deltin.Deltinteger.Parse
             //     ));
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
-            Extends?.AddObjectVariablesToAssigner(reference, assigner);
-            foreach (var objectVariable in ObjectVariables)
-                objectVariable.AddToAssigner(reference, assigner);
+            Extends?.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
+
+            var classInitializer = toWorkshop.GetComponent<ClassWorkshopInitializerComponent>();
+            var initInfo = classInitializer.InitializedClassFromProvider(Provider);
+            initInfo.AddVariableInstancesToAssigner(Variables, reference, assigner);
         }
 
         public override Scope GetObjectScope() => ServeObjectScope;

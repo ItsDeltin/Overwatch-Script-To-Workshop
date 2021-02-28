@@ -74,9 +74,9 @@ namespace Deltin.Deltinteger.Parse
             ObjectVariables = setup.ObjectVariables.ToArray();
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
-            base.AddObjectVariablesToAssigner(reference, assigner);
+            base.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
             _classInfo.AddObjectVariablesToAssigner(reference, assigner);
         }
 

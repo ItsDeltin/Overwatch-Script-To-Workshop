@@ -11,25 +11,30 @@ namespace Deltin.Deltinteger.Parse
         {
             if (extend == null) throw new ArgumentNullException(nameof(extend));
 
-            string errorMessage = null;
+            string errorMessage;
 
             // Can actually be extended.
             if (!extend.CanBeExtended)
                 errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
-            // TODO: Replace with extend.Is
-            else if (extend == type)
+
+            // Self
+            else if (extend.Is(type))
                 errorMessage = "Cannot extend self.";
+
             // Circular
             else if (extend.Implements(type))
                 errorMessage = $"The class {extend.Name} extends this class.";
+            
+            // Is class
+            else if (extend is ClassType == false)
+                errorMessage = $"Must override a class";
+            
+            // No errors
+            else return true;
 
-            // Add diagnostic if there is an error.
-            if (errorMessage != null)
-            {
-                diagnostics.Error(errorMessage, range);
-                return false;
-            }
-            return true;
+            // Add diagnostic then return false.
+            diagnostics.Error(errorMessage, range);
+            return false;
         }
 
         public static ICodeTypeInitializer[] TypesFromName(this Scope scope, string name)

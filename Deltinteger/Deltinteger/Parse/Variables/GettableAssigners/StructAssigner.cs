@@ -84,6 +84,7 @@ namespace Deltin.Deltinteger.Parse
         IWorkshopTree IInlineStructDictionary.this[string variableName] => _children[variableName].GetVariable();
         IGettable IAssignedStructDictionary.this[string variableName] => _children[variableName];
         IWorkshopTree IStructValue.GetValue(string variableName) => _children[variableName].GetVariable();
+        IGettable IStructValue.GetGettable(string variableName) => _children[variableName];
 
         public StructAssignerValue(Dictionary<string, IGettable> children)
         {
@@ -137,6 +138,7 @@ namespace Deltin.Deltinteger.Parse
     public interface IStructValue : IWorkshopTree
     {
         IWorkshopTree GetValue(string variableName);
+        IGettable GetGettable(string variableName);
         IWorkshopTree GetArbritraryValue();
         bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new NotImplementedException();
         void IWorkshopTree.ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => throw new NotImplementedException();
@@ -162,6 +164,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree this[string variableName] => Values[variableName];
         public IWorkshopTree GetValue(string variableName) => Values[variableName];
         public IWorkshopTree GetArbritraryValue() => Values.First().Value;
+        public IGettable GetGettable(string variableName) => new WorkshopElementReference(Values[variableName]);
 
         public LinkedStructAssigner(Dictionary<string, IWorkshopTree> values)
         {
@@ -199,6 +202,8 @@ namespace Deltin.Deltinteger.Parse
             return Element.CreateArray(Children.Select(c => c.GetValue(variableName)).ToArray());
         }
 
+        public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
+
         public IWorkshopTree GetArbritraryValue() => Children[0];
     }
 
@@ -227,6 +232,8 @@ namespace Deltin.Deltinteger.Parse
             return Element.ValueInArray(value, _index);
         }
 
+        public IGettable GetGettable(string variableName) => _structValue.GetGettable(variableName).ChildFromClassReference(_index);
+
         public IWorkshopTree GetArbritraryValue() => _structValue;
     }
 
@@ -252,6 +259,8 @@ namespace Deltin.Deltinteger.Parse
 
             return _bridge(value);
         }
+
+        public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
 
         public IWorkshopTree GetArbritraryValue() => _structValue;
 

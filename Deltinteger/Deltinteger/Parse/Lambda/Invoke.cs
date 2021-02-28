@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public bool DoesReturnValue => LambdaType.ReturnsValue;
 
         public PortableLambdaType LambdaType { get; }
-        IMethodInfo IMethod.MethodInfo { get; } = new MethodInfo();
+        IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
 
         public LambdaInvoke(PortableLambdaType lambdaType)
         {

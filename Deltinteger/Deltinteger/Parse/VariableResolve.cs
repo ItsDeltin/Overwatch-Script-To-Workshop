@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the variable.
                 var = treeParseResult.ResultingVariable;
                 // Get the target.
-                target = (Element)treeParseResult.Target;
+                target = treeParseResult.Target as Element;
                 // Get the index.
                 index = treeParseResult.ResultingIndex;
             }

@@ -886,7 +886,7 @@ namespace Deltin.Deltinteger.Pathfinder
             _scope.AddNativeVariable(Node_B);
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             assigner.Add(Node_A, PathfindAlgorithmBuilder.Node1((Element)reference));
             assigner.Add(Node_B, PathfindAlgorithmBuilder.Node2((Element)reference));

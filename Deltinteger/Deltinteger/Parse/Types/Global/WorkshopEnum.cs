@@ -119,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
             _objectScope.AddNativeVariable(OnOffense);
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             assigner.Add(Opposite, Element.Part("Opposite Team Of", reference));
             assigner.Add(Score, Element.Part("Team Score", reference));

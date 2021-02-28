@@ -51,6 +51,9 @@ namespace Deltin.Deltinteger.Parse
             {
                 result.ReturnType = callingMethod.CodeType?.GetCodeType(parseInfo.TranslateInfo).GetRealType(typeArgLinker);
 
+                // Track the generics used in the function.
+                parseInfo.TranslateInfo.GetComponent<TypeTrackerComponent>().Track(callingMethod.MethodInfo.Tracker, groupCall.TypeArgs);
+
                 // If the function's block needs to be applied, check optional restricted calls when 'Applied()' runs.
                 if (callingMethod is IApplyBlock applyBlock)
                     applyBlock.OnBlockApply(result);

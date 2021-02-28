@@ -148,6 +148,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
+        public ToWorkshop ToWorkshop { get => new ToWorkshop(DeltinScript); }
 
         public int ActionCount => ActionList.Count;
 

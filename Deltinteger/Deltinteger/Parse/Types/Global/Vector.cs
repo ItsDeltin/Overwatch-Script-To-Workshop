@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
             translateInfo.DefaultIndexAssigner.Add(Zero, Element.Vector(0, 0, 0));
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             assigner.Add(X, Element.XOf(reference));
             assigner.Add(Y, Element.YOf(reference));

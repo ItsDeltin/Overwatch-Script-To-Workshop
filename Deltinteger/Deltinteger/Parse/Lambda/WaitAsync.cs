@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public AccessLevel AccessLevel => AccessLevel.Public;
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public CodeParameter[] Parameters { get; }
-        IMethodInfo IMethod.MethodInfo { get; } = new MethodInfo();
+        IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
 
         public WaitAsyncFunction(ITypeSupplier types)
         {

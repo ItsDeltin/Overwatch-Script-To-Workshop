@@ -65,6 +65,8 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // TODO: Check ambiguities
+                // Get the type instance.
+                parseInfo.TranslateInfo.GetComponent<TypeTrackerComponent>().Track(providers[0], typeArgs.Select(t => t.GenericUsage).ToArray());
                 type = providers[0].GetInstance(instanceInfo);
                 type.Call(parseInfo, typeContext.Identifier.Range);
             }

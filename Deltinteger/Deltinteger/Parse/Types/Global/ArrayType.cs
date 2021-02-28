@@ -222,7 +222,7 @@ namespace Deltin.Deltinteger.Parse
             return new DataTypeAssigner((Var)variable);
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             if (ArrayOfType is IAdditionalArray addition)
             {

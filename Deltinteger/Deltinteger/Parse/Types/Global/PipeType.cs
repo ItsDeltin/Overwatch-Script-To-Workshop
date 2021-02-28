@@ -52,10 +52,10 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
         public override CodeType[] UnionTypes() => IncludedTypes;
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             foreach (CodeType included in IncludedTypes)
-                included.AddObjectVariablesToAssigner(reference, assigner);
+                included.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
         }
 
         public override CompletionItem GetCompletion() => throw new NotImplementedException();

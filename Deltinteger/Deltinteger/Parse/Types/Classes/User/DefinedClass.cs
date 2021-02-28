@@ -1,12 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -32,6 +27,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Add elements to scope.
             ObjectVariables = new ObjectVariable[initializer.ObjectVariables.Count];
+            var initializedVariables = new List<IVariableInstance>();
             foreach (var element in initializer.DeclaredElements)
             {
                 var instance = element.AddInstance(this, anonymousTypeLinker);
@@ -43,11 +39,15 @@ namespace Deltin.Deltinteger.Parse
                 // Variable
                 else if (instance is IVariableInstance variableInstance)
                 {
+                    initializedVariables.Add(variableInstance);
+
                     int objectVariableIndex = Array.IndexOf(initializer.ObjectVariables.ToArray(), variableInstance.Provider);
                     ObjectVariables[objectVariableIndex] = new ObjectVariable(variableInstance);
                 }
             }
-            
+
+            Variables = initializedVariables.ToArray();
+
             Constructors = new[] {
                 new Constructor(this, initializer.DefinedAt, AccessLevel.Public)
             };
@@ -58,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
             // Run the constructor.
-            AddObjectVariablesToAssigner((Element)newClassInfo.ObjectReference.GetVariable(), actionSet.IndexAssigner);
+            AddObjectVariablesToAssigner(actionSet.ToWorkshop, (Element)newClassInfo.ObjectReference.GetVariable(), actionSet.IndexAssigner);
             newClassInfo.Constructor.Parse(actionSet.New((Element)newClassInfo.ObjectReference.GetVariable()), newClassInfo.ConstructorValues, null);
         }
 

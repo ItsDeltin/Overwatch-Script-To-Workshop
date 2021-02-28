@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
         }
     
         public IGettable AssignClassStacks(GetClassStacks info) =>
-            info.ClassData.GetClassVariableStack(info.VarCollection, info.StackOffset);
+            info.ClassData.ObjectVariableFromIndex(info.StackOffset);
 
         public int StackDelta() => 1;
     }
@@ -123,26 +123,13 @@ namespace Deltin.Deltinteger.Parse
     {
         public DeltinScript DeltinScript { get; }
         public int StackOffset { get; }
-        public ClassData ClassData { get; }
-        public VarCollection VarCollection => DeltinScript.VarCollection;
+        public ClassWorkshopInitializerComponent ClassData { get; }
 
         public GetClassStacks(DeltinScript deltinScript, int stackOffset)
         {
             DeltinScript = deltinScript;
             StackOffset = stackOffset;
-            ClassData = DeltinScript.GetComponent<ClassData>();
-        }
-    }
-
-    public class AssignClassStacksResult
-    {
-        public IGettable Stack { get; }
-        public int StackOffsetDelta { get; }
-
-        public AssignClassStacksResult(IGettable stack, int stackOffsetDelta)
-        {
-            Stack = stack;
-            StackOffsetDelta = stackOffsetDelta;
+            ClassData = DeltinScript.GetComponent<ClassWorkshopInitializerComponent>();
         }
     }
 }

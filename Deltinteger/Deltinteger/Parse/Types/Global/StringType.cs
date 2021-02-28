@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
             _scope.AddNativeVariable(_length);
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             assigner.Add(_length, Element.Part("String Length", reference));
         }

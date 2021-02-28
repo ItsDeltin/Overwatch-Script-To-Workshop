@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Json
             return false;
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             foreach (var p in Properties)
             {
@@ -208,7 +208,7 @@ namespace Deltin.Deltinteger.Json
         public Deltin.Deltinteger.LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         private JsonType ContainingType { get; }
-        IMethodInfo IMethod.MethodInfo { get; } = new MethodInfo();
+        IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
 
         public GetJsonPropertyFunction(JsonType containingType)
         {

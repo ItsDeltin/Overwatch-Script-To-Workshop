@@ -31,6 +31,8 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
+        public IGenericUsage GenericUsage { get; protected set; }
+
         protected List<IMethod> VirtualFunctions { get; } = new List<IMethod>();
         protected List<IVariableInstance> VirtualVariables { get; } = new List<IVariableInstance>();
         public TypeOperatorInfo Operations { get; protected set; }
@@ -39,6 +41,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = name;
             Operations = new TypeOperatorInfo(this);
+            GenericUsage = new AddToGenericsUsage(this);
         }
 
         protected void Inherit(CodeType extend, FileDiagnostics diagnostics, DocRange range)
@@ -130,7 +133,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Adds the class objects to the index assigner.</summary>
         /// <param name="source">The source of the type.</param>
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
-        public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) { }
+        public virtual void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner) { }
 
         /// <summary>Deletes a variable from memory.</summary>
         /// <param name="actionSet">The action set to add the actions to.</param>

@@ -6,12 +6,18 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class ClassInitializer : ICodeTypeInitializer, IResolveElements
+    public interface IClassInitializer : ITypeArgTrackee
+    {
+        ClassType Extends { get; }
+        IReadOnlyList<IVariable> ObjectVariables { get; }
+        int TypeArgIndexFromAnonymousType(AnonymousType anonymousType);
+    }
+
+    public abstract class ClassInitializer : ICodeTypeInitializer, IResolveElements, IClassInitializer
     {
         public string Name { get; }
         public string Documentation { get; protected set; }
         public virtual int GenericsCount { get; protected set; }
-        public CodeType Extends { get; protected set; }
         public Constructor[] Constructors { get; protected set; }
         public CodeType WorkingInstance { get; protected set; }
 
@@ -20,6 +26,8 @@ namespace Deltin.Deltinteger.Parse
 
         protected List<IVariable> _objectVariables = new List<IVariable>();
         public IReadOnlyList<IVariable> ObjectVariables => _objectVariables;
+
+        public ClassType Extends { get; protected set; }
 
         public ClassInitializer(string name)
         {
@@ -44,5 +52,7 @@ namespace Deltin.Deltinteger.Parse
         };
 
         public void AddVariable(IVariable var) => _objectVariables.Add(var);
+
+        public abstract int TypeArgIndexFromAnonymousType(AnonymousType anonymousType);
     }
 }

@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 var callerObject = ((Element)builder.ActionSet.CurrentObject)[1];
 
                 // Add the class objects.
-                option.ContainingType?.AddObjectVariablesToAssigner(callerObject, optionSet.IndexAssigner);
+                option.ContainingType?.AddObjectVariablesToAssigner(optionSet.ToWorkshop, callerObject, optionSet.IndexAssigner);
 
                 // then parse the block.
                 builder.Subcall(optionSet.SetThis(callerObject).New(builder.ActionSet.CurrentObject), option);

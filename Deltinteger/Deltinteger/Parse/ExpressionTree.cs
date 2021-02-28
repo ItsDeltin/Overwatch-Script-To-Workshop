@@ -225,7 +225,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     var type = Tree[i].Type().GetRealType(actionSet.ThisTypeLinker);
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
-                    type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
+                    type.AddObjectVariablesToAssigner(actionSet.ToWorkshop, currentObject, currentAssigner);
                 }
 
                 // If this isn't the last in the tree, set it as the target.

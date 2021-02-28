@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
 
     public interface IScopeHandler : IScopeProvider, IScopeAppender {}
 
-    public class DefinedMethodProvider : IElementProvider, IMethodProvider, IApplyBlock
+    public class DefinedMethodProvider : IElementProvider, IMethodProvider, ITypeArgTrackee, IApplyBlock
     {
         public string Name => Context.Identifier.GetText();
         public LanguageServer.Location DefinedAt => new LanguageServer.Location(_parseInfo.Script.Uri, Context.Identifier.GetRange(Context.Range));
@@ -70,6 +70,9 @@ namespace Deltin.Deltinteger.Parse
         public IExpression SingleReturnValue { get; private set; }
 
         public SubroutineInfo SubroutineInfo { get; set; }
+
+        ITypeArgTrackee IMethodExtensions.Tracker => this;
+        int ITypeArgTrackee.GenericsCount => GenericTypes.Length;
 
         private readonly ParseInfo _parseInfo;
         private readonly Scope _containingScope;
@@ -227,7 +230,7 @@ namespace Deltin.Deltinteger.Parse
         public LanguageServer.Location DefinedAt => Provider.DefinedAt;
         public AccessLevel AccessLevel => Provider.AccessLevel;
         public DefinedMethodProvider Provider { get; }
-        IMethodInfo IMethod.MethodInfo => Provider;
+        IMethodExtensions IMethod.MethodInfo => Provider;
 
         public DefinedMethodInstance(string name, DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo)
         {
