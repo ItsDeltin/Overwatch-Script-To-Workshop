@@ -23,7 +23,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
                 Element.CustomString((string)methodCall.AdditionalParameterData[1]),
                 new AnonymousWorkshopValue(((ConstHeroValueResolver)methodCall.AdditionalParameterData[2]).Hero, true),
                 Element.Num((double)methodCall.AdditionalParameterData[3])
-            )
+            ),
+            ReturnType = ((ITypeSupplier)deltinScript.Types).Hero()
         };
 
         public static FuncMethod WorkshopSettingCombo(DeltinScript deltinScript) => new FuncMethodBuilder()
@@ -43,7 +44,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
                 Element.Num((double)methodCall.AdditionalParameterData[2]),
                 Element.CreateArray(((List<string>)methodCall.AdditionalParameterData[3]).Select(a => Element.CustomString(a)).ToArray()),
                 Element.Num((double)methodCall.AdditionalParameterData[4])
-            )
+            ),
+            ReturnType = deltinScript.Types.Number()
         };
     }
 }
