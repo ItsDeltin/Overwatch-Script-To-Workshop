@@ -4891,7 +4891,7 @@
         },
         "Damagers": {
           "documentation": "The player or players whose outgoing damage will be modified (when attacking the receivers). Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Damage Percent": {
@@ -5046,7 +5046,7 @@
           "defaultValue": "Event Player"
         },
         "Healers": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Healing Percent": {
@@ -5997,7 +5997,7 @@
       "name": "Log To Inspector",
       "parameters": {
         "Text": {
-          "type": "string"
+          "type": "any"
         }
       }
     },
@@ -6216,7 +6216,24 @@
       "name": "Disable Voice Chat",
       "parameters": {
         "Player": {
-          "type": "players"
+          "type": "players",
+          "documentation": "The Player or Players who will have their voice chat disabled.",
+          "defaultValue": "Event Player"
+        },
+        "Team Voice Chat": {
+          "type": "boolean",
+          "documentation": "Wether or not Team Voice Chat will be disabled.",
+          "defaultValue": true
+        },
+        "Match Voice Chat": {
+          "type": "boolean",
+          "documentation": "Wether or not Match Voice Chat will be disabled.",
+          "defaultValue": true
+        },
+        "Group Voice Chat": {
+          "type": "boolean",
+          "documentation": "Wether or not Group Voice Chat will be disabled.",
+          "defaultValue": true
         }
       }
     },
