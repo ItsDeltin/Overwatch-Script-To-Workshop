@@ -91,9 +91,9 @@ namespace Deltin.Deltinteger.Parse
             if (!_isReady) throw new Exception("You are but a fool.");
         }
 
-        public override IGettableAssigner GetGettableAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable).InitialValue, false);
+        public override IGettableAssigner GetGettableAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable), false);
 
-        IGettableAssigner IAdditionalArray.GetArrayAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable).InitialValue, true);
+        IGettableAssigner IAdditionalArray.GetArrayAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable), true);
         void IAdditionalArray.OverrideArray(ArrayType array) {}
         void IAdditionalArray.AssignLength(IVariable lengthVariable, VarIndexAssigner assigner, IWorkshopTree reference)
             => assigner.Add(lengthVariable, new BridgeGetStructValue((IStructValue)reference, v => Element.CountOf(v)).GetWorkshopValue());

@@ -57,12 +57,8 @@ namespace Deltin.Deltinteger.Parse
                 //     diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", VariableRange);
                 
                 // Check if the variable is a whole workshop variable.
-                if (options.FullVariable)
-                {
-                    Var asVar = SetVariable.Calling as Var;
-                    if (asVar == null || asVar.StoreType != StoreType.FullVariable)
-                        diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
-                }
+                if (options.FullVariable && SetVariable.Calling.Attributes.StoreType != StoreType.FullVariable)
+                    diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
 
                 // Check for indexers.
                 if (!options.CanBeIndexed && SetVariable.Index.Length != 0)

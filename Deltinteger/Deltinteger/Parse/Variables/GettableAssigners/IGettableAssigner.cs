@@ -48,6 +48,8 @@ namespace Deltin.Deltinteger.Parse
 
         public GettableAssignerResult GetResult(GettableAssignerValueInfo info)
         {
+            var inline = _var.StoreType == StoreType.None || info.Inline;
+
             // Get the initial value.
             IWorkshopTree initialValue = Element.Num(0);
 
@@ -60,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
                 initialValue = _var.InitialValue.Parse(info.ActionSet);
 
             // Inline
-            if (info.Inline) return new GettableAssignerResult(new WorkshopElementReference(initialValue), initialValue);
+            if (inline) return new GettableAssignerResult(new WorkshopElementReference(initialValue), initialValue);
             
             // Assign the index reference
             var value = info.VarCollection.Assign(_var.Name, _var.VariableType, info.ActionSet.IsGlobal, _var.InExtendedCollection, _var.ID);

@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Parse
             RejectAttributes(
                 new RejectAttributeComponent(
                     AttributeType.GlobalVar, AttributeType.PlayerVar,
-                    AttributeType.Ref
+                    AttributeType.Ref, AttributeType.In
                 ),
                 new RejectComponent<WorkshopIndexComponent>(),
                 new RejectComponent<ExtendedCollectionComponent>()

@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         IParameterCallable Value { get; }
         bool RestrictedValuesAreFatal { get; }
         InstanceAnonymousTypeLinker GetTypeLinker(CodeType[] typeArgs);
+        int TypeArgIndexFromAnonymousType(AnonymousType anonymousType);
         MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo);
     }
 
@@ -29,6 +30,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         }
 
         public InstanceAnonymousTypeLinker GetTypeLinker(CodeType[] typeArgs) => _function.MethodInfo.GetInstanceInfo(typeArgs);
+        public int TypeArgIndexFromAnonymousType(AnonymousType anonymousType) => _function.MethodInfo.TypeArgIndexFromAnonymousType(anonymousType);
         public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => _function.GetLabel(deltinScript, labelInfo);
     }
 
@@ -43,10 +45,11 @@ namespace Deltin.Deltinteger.Parse.Overload
 
         public ConstructorOverload(Constructor constructor)
         {
-            _constructor = constructor;
+            _constructor = constructor ?? throw new NullReferenceException(nameof(constructor));
         }
 
         public InstanceAnonymousTypeLinker GetTypeLinker(CodeType[] typeArgs) => throw new NotImplementedException();
+        public int TypeArgIndexFromAnonymousType(AnonymousType anonymousType) => throw new NotImplementedException();
         public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => _constructor.GetLabel(deltinScript, labelInfo);
     }
 }

@@ -12,13 +12,19 @@ namespace Deltin.Deltinteger.Parse
         IVariable IVariableInstance.Provider => _var;
         public MarkupBuilder Documentation { get; set; }
         ICodeTypeSolver IScopeable.CodeType => CodeType;
+        public IVariableInstanceAttributes Attributes { get; }
 
         private readonly Var _var;
 
         public VariableInstance(Var var, InstanceAnonymousTypeLinker instanceInfo)
         {
             _var = var;
-            CodeType = _var.CodeType.GetRealType(instanceInfo);
+            CodeType = var.CodeType.GetRealType(instanceInfo);
+            Attributes = new VariableInstanceAttributes()
+            {
+                CanBeSet = var.StoreType != StoreType.None,
+                StoreType = var.StoreType
+            };
         }
 
         public CompletionItem GetCompletion() => _var.GetCompletion();

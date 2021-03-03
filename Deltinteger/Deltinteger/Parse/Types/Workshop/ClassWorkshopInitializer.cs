@@ -109,57 +109,52 @@ namespace Deltin.Deltinteger.Parse
             // The number of object variables assigned to this variable.
             int stackDelta = 0;
 
+            // Extract every anonymous type that the type or it's type args use.
+            var anonymousTypes = originalType.ExtractAnonymousTypes();
+
             // Get each potential variable type for T
-            if (originalType is AnonymousType anonymous)
-            {
-                int typeArgIndex = Provider.TypeArgIndexFromAnonymousType(anonymous);
-
-                foreach (var type in Info.TypeArgTracker[typeArgIndex].UsedTypes)
-                {
-                    // Get the assigner from the type.
-                    var assigner = type.GetGettableAssigner(objectVariable);
-
-                    /* Get the stackDelta of the object variable.
-                     * Example:
-                    class Axe<T> {
-                        T myValue;
-                    }
-                    struct Bash {
-                        String myValue;
-                        Number myOtherValue;
-                    }
-                     * If Axe is used with these generics 'Axe<String>' and 'Axe<Bash>'
-                     * 'Axe' will need 2 object variables assigned to it.
-                     * 'String' requires 1, while 'Bash' requires 2.
-                     * The higher value is used. */
-                    stackDelta = Math.Max(stackDelta, assigner.StackDelta());
-
-                    /*
-                     * TODO: This is not compatible in this scenario:
-                    class Axe<T> { Bash<T> myBash; }
-                    struct Bash<T> { T myValue; }
-                    struct Fooly { String value1; String value2; }
-                    
-                    Axe<Fooly> axeFooly;
-                     * StackDelta may need the ProviderTrackerInfo
-                     * Or we can just not support structs w/ generics, because I want to live my life I guess.
-                    */
-                }
-            }
-            else
+            if (anonymousTypes.Length == 0)
                 // Use the default stackDelta.
                 stackDelta = originalType.GetGettableAssigner(objectVariable).StackDelta();
+            else
+                foreach (var anonymous in anonymousTypes)
+                {
+                    int typeArgIndex = Provider.TypeArgIndexFromAnonymousType(anonymous);
+
+                    foreach (var type in Info.TypeArgTracker[typeArgIndex].UsedTypes)
+                    {
+                        // Get the assigner from the type.
+                        var assigner = type.GetGettableAssigner(objectVariable);
+
+                        /* Get the stackDelta of the object variable.
+                        * Example:
+                        class Axe<T> {
+                            T myValue;
+                        }
+                        struct Bash {
+                            String myValue;
+                            Number myOtherValue;
+                        }
+                        * If Axe is used with these generics 'Axe<String>' and 'Axe<Bash>'
+                        * 'Axe' will need 2 object variables assigned to it.
+                        * 'String' requires 1, while 'Bash' requires 2.
+                        * The higher value is used. */
+                        stackDelta = Math.Max(stackDelta, assigner.StackDelta());
+
+                        /*
+                        * TODO: This is not compatible in this scenario:
+                        class Axe<T> { Bash<T> myBash; }
+                        struct Bash<T> { T myValue; }
+                        struct Fooly { String value1; String value2; }
+                        
+                        Axe<Fooly> axeFooly;
+                        * StackDelta may need the ProviderTrackerInfo
+                        * Or we can just not support structs w/ generics, because I want to live my life I guess.
+                        */
+                    }
+                }
 
             return stackDelta;
-        }
-
-        public IGettable GetGettableFromVariableInstance(IVariableInstance variableInstance, int variableIndex)
-        {
-            int stack = Offset;
-            for (int i = 0; i < variableIndex; i++)
-                stack += StackDeltas[i];
-
-            return variableInstance.GetAssigner(null).AssignClassStacks(new GetClassStacks(_deltinScript, stack));
         }
 
         public void AddVariableInstancesToAssigner(IVariableInstance[] instances, IWorkshopTree reference, VarIndexAssigner assigner)

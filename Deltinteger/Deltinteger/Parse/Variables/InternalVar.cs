@@ -1,53 +1,7 @@
-using System;
-using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.Compiler;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
-namespace Deltin.Deltinteger
+namespace Deltin.Deltinteger.Parse
 {
-    public interface IVariable : IElementProvider
-    {
-        string Name { get; }
-        bool RequiresCapture => false;
-        VariableType VariableType { get; }
-        IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker);
-        IVariableInstance GetDefaultInstance();
-    }
-
-    public interface IVariableInstance : IScopeable
-    {
-        bool UseDefaultVariableAssigner => true;
-        IVariable Provider { get; }
-        MarkupBuilder Documentation { get; }
-        IGettableAssigner GetAssigner(ActionSet actionSet);
-        IWorkshopTree ToWorkshop(ActionSet actionSet) => actionSet.IndexAssigner.Get(Provider).GetVariable();
-        ICallVariable GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(parseInfo, this, index);
-        void Call(ParseInfo parseInfo, DocRange callRange) => Call(this, parseInfo, callRange);
-
-        MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeVariableLabel(CodeType.GetCodeType(deltinScript), Name);
-
-        string GetLabel(DeltinScript deltinScript) => CodeType.GetCodeType(deltinScript) + " " + Name;
-
-        CompletionItem IScopeable.GetCompletion(DeltinScript deltinScript) => new CompletionItem() {
-            Label = Name,
-            Documentation = Documentation,
-            Kind = CompletionItemKind.Variable,
-            Detail = CodeType.GetCodeType(deltinScript).GetName() + " " + Name
-        };
-        
-        static void Call(IVariableInstance variable, ParseInfo parseInfo, DocRange callRange)
-        {
-            parseInfo.Script.AddHover(callRange, variable.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover).ToString());
-        }
-    }
-
-    public interface ICallVariable : IExpression
-    {
-        void Accept();
-    }
-
     public class InternalVar : IVariable, IVariableInstance, IAmbiguityCheck
     {
         public string Name { get; }
@@ -63,6 +17,7 @@ namespace Deltin.Deltinteger
         public bool RequiresCapture => false;
         public IVariable Provider => this;
         public CompletionItemKind CompletionItemKind { get; set; } = CompletionItemKind.Property;
+        public IVariableInstanceAttributes Attributes { get; set; } = new VariableInstanceAttributes();
 
         public InternalVar(string name)
         {

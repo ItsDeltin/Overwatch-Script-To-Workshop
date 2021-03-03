@@ -4,15 +4,13 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
 {
     public class EmptyConstructorProvider : IConstructorProvider<Constructor>
     {
-        private readonly CodeType _type;
         private readonly Location _definedAt;
 
-        public EmptyConstructorProvider(CodeType type, Location definedAt)
+        public EmptyConstructorProvider(Location definedAt)
         {
-            _type = type;
             _definedAt = definedAt;
         }
 
-        public Constructor GetInstance(InstanceAnonymousTypeLinker genericsLinker) => new Constructor(_type, _definedAt, AccessLevel.Public);
+        public Constructor GetInstance(CodeType initializedType, InstanceAnonymousTypeLinker genericsLinker) => new Constructor(initializedType, _definedAt, AccessLevel.Public);
     }
 }

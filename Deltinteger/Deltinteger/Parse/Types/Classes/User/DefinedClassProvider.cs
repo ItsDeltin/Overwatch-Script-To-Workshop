@@ -16,7 +16,8 @@ namespace Deltin.Deltinteger.Parse
         private readonly ClassContext _typeContext;
         private readonly List<Var> _staticVariables = new List<Var>();
         private readonly Scope _scope;
-        private IConstructorProvider<Constructor>[] _constructors;
+        // todo: do not hide???
+        public new IConstructorProvider<Constructor>[] Constructors { get; private set; }
         public AnonymousType[] AnonymousTypes { get; private set; }
 
         private Scope _operationalObjectScope;
@@ -88,22 +89,22 @@ namespace Deltin.Deltinteger.Parse
             foreach (var declaration in _typeContext.Declarations)
                 DeclaredElements.Add(((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo));
 
-            WorkingInstance = GetInstance();
-
             // Get the constructors.
             if (_typeContext.Constructors.Count > 0)
             {
-                _constructors = new IConstructorProvider<Constructor>[_typeContext.Constructors.Count];
-                for (int i = 0; i < _constructors.Length; i++)
-                    _constructors[i] = new DefinedConstructorProvider(_parseInfo, _operationalObjectScope, WorkingInstance, _typeContext.Constructors[i]);
+                Constructors = new IConstructorProvider<Constructor>[_typeContext.Constructors.Count];
+                for (int i = 0; i < Constructors.Length; i++)
+                    Constructors[i] = new DefinedConstructorProvider(this, _parseInfo, _operationalObjectScope, _typeContext.Constructors[i]);
             }
             else
             {
                 // If there are no constructors, create a default constructor.
-                _constructors = new IConstructorProvider<Constructor>[] {
-                    new EmptyConstructorProvider(WorkingInstance, DefinedAt)
+                Constructors = new IConstructorProvider<Constructor>[] {
+                    new EmptyConstructorProvider(DefinedAt)
                 };
             }
+
+            // WorkingInstance = GetInstance();
 
             // TODO: update these
             // If the extend token exists, add completion that only contains all extendable classes.

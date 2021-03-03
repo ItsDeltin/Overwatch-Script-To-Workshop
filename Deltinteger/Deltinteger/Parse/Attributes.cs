@@ -36,6 +36,7 @@ namespace Deltin.Deltinteger.Parse
             CheckAttribute(diagnostics, _attributes.Public, AttributeType.Public);
             CheckAttribute(diagnostics, _attributes.Recursive, AttributeType.Recursive);
             CheckAttribute(diagnostics, _attributes.Ref, AttributeType.Ref);
+            CheckAttribute(diagnostics, _attributes.In, AttributeType.In);
             CheckAttribute(diagnostics, _attributes.Static, AttributeType.Static);
             CheckAttribute(diagnostics, _attributes.Virtual, AttributeType.Virtual);
         }
@@ -156,6 +157,7 @@ namespace Deltin.Deltinteger.Parse
     {
         GlobalVar,
         PlayerVar,
+        In,
         Ref,
         Public,
         Private,

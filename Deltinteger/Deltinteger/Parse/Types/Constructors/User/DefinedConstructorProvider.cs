@@ -8,17 +8,15 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
 {
     public class DefinedConstructorProvider : IConstructorProvider<DefinedConstructorInstance>, IApplyBlock, ISymbolLink
     {
-        public string Name => Type.Name;
-        public CodeType Type { get; }
+        public string Name => "TODO_CONSTRUCTOR_PROVIDER";
         public string SubroutineName { get; }
         public CallInfo CallInfo { get; }
         public Location DefinedAt { get; }
+        public ICodeTypeInitializer TypeProvider { get; }
         public ParameterProvider[] ParameterProviders { get; private set; }
         public CodeType[] ParameterTypes { get; private set; }
         public BlockAction Block { get; private set; }
         public SubroutineInfo SubroutineInfo { get; set; }
-
-        CallInfo IApplyBlock.CallInfo => throw new System.NotImplementedException();
 
         private readonly ParseInfo _parseInfo;
         private readonly Scope _scope;
@@ -26,19 +24,20 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         private readonly RecursiveCallHandler _recursiveCallHandler;
         private readonly ApplyBlock _applyBlock = new ApplyBlock();
 
-        public DefinedConstructorProvider(ParseInfo parseInfo, Scope scope, CodeType type, ConstructorContext context)
+        public DefinedConstructorProvider(ICodeTypeInitializer provider, ParseInfo parseInfo, Scope scope, ConstructorContext context)
         {
-            Type = type;
             _parseInfo = parseInfo;
             _scope = scope.Child();
             _context = context;
+            TypeProvider = provider;
 
             _recursiveCallHandler = new RecursiveCallHandler(this, "constructor");
             CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
             SubroutineName = context.SubroutineName?.Text.RemoveQuotes();
             DefinedAt = parseInfo.Script.GetLocation(context.LocationToken.Range);
 
-            type.AddLink(DefinedAt);
+            // TODO: Type provider link!
+            // type.AddLink(DefinedAt);
             
             parseInfo.TranslateInfo.ApplyBlock(this);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
@@ -61,21 +60,21 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         {
             if (SubroutineInfo == null)
             {
-                var determiner = new ConstructorDeterminer(GetInstance(InstanceAnonymousTypeLinker.Empty));
+                // TODO
+                var determiner = new ConstructorDeterminer(GetInstance(null, InstanceAnonymousTypeLinker.Empty));
                 var builder = new SubroutineBuilder(_parseInfo.TranslateInfo, determiner);
                 builder.SetupSubroutine();
             }
             return SubroutineInfo;
         }
     
-        // TODO: Set access level
-        public DefinedConstructorInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker)
-            => new DefinedConstructorInstance(this, genericsLinker, DefinedAt, AccessLevel.Public);
+        public DefinedConstructorInstance GetInstance(CodeType typeInstance, InstanceAnonymousTypeLinker genericsLinker)
+            => new DefinedConstructorInstance(typeInstance, this, genericsLinker, DefinedAt);
 
         MarkupBuilder ILabeled.GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)
         {
             var builder = new MarkupBuilder();
-            builder.StartCodeLine().Add("new " + Type.GetName() + "(");
+            builder.StartCodeLine().Add("new TODO_TYPE_NAME_HERE()");
 
             for (int i = 0; i < ParameterProviders.Length; i++)
             {

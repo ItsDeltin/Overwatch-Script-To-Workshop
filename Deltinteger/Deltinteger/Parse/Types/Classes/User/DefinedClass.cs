@@ -48,11 +48,26 @@ namespace Deltin.Deltinteger.Parse
 
             Variables = initializedVariables.ToArray();
 
-            Constructors = new[] {
-                new Constructor(this, initializer.DefinedAt, AccessLevel.Public)
-            };
+            // Add constructors.
+            Constructors = new Constructor[_definedInitializer.Constructors.Length];
+            for (int i = 0; i < _definedInitializer.Constructors.Length; i++)
+                Constructors[i] = _definedInitializer.Constructors[i].GetInstance(this, anonymousTypeLinker);
 
             parseInfo.TranslateInfo.AddWorkshopInit(this);
+        }
+
+        public override bool Is(CodeType other)
+        {
+            // Make sure the other is a DefinedClass with the same provider.
+            if (!(other is DefinedClass definedClass && definedClass._definedInitializer == _definedInitializer))
+                return false;
+
+            // Check if the generics match.
+            for (int i = 0; i < Generics.Length; i++)
+                if (!Generics[i].Is(other.Generics[i]))
+                    return false;
+
+            return true;
         }
 
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)

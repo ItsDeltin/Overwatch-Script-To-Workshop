@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
 namespace Deltin.Deltinteger.Parse
@@ -56,6 +57,16 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (CodeType included in IncludedTypes)
                 included.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
+        }
+        public override AnonymousType[] ExtractAnonymousTypes()
+        {
+            var types = new HashSet<AnonymousType>();
+
+            foreach (var type in IncludedTypes)
+                foreach (var extractedUnionType in type.ExtractAnonymousTypes())
+                    types.Add(extractedUnionType);
+
+            return types.ToArray();
         }
 
         public override CompletionItem GetCompletion() => throw new NotImplementedException();

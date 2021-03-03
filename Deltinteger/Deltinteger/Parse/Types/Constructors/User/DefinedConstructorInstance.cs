@@ -9,11 +9,11 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         public IVariableInstance[] ParameterVars { get; }
 
         public DefinedConstructorInstance(
+            CodeType typeInstance,
             DefinedConstructorProvider provider,
             InstanceAnonymousTypeLinker genericsLinker,
-            Location definedAt,
-            AccessLevel accessLevel
-        ) : base(provider.Type, definedAt, accessLevel)
+            Location definedAt
+        ) : base(typeInstance, definedAt, AccessLevel.Public)
         {
             Provider = provider;
             

@@ -68,6 +68,7 @@ namespace Deltin.Deltinteger.Parse
         public MarkupBuilder Documentation { get; }
         public LanguageServer.Location DefinedAt { get; }
         public DefinedEnum Enum { get; }
+        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes() { CanBeSet = false, StoreType = StoreType.None };
 
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool WholeContext => true;
@@ -75,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
 
         public ExpressionOrWorkshopValue ValueExpression { get; private set; }
 
-        private DeltinScript _translateInfo { get; }
+        readonly DeltinScript _deltinScript;
         public VariableType VariableType => VariableType.Dynamic;
         public IVariable Provider => this;
 
@@ -84,10 +85,10 @@ namespace Deltin.Deltinteger.Parse
             Enum = type;
             Name = name;
             DefinedAt = definedAt;
-            _translateInfo = parseInfo.TranslateInfo;
+            _deltinScript = parseInfo.TranslateInfo;
             ValueExpression = value;
 
-            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
+            _deltinScript.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.EnumValue, DefinedAt.range));
         }
 
@@ -104,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+            _deltinScript.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
         public Scope ReturningScope() => null;

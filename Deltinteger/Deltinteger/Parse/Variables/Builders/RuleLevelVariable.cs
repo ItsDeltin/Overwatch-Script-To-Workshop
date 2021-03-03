@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void CheckComponents()
         {
-            RejectAttributes(new RejectAttributeComponent(AttributeType.Ref, AttributeType.Static));
+            RejectAttributes(new RejectAttributeComponent(AttributeType.Ref, AttributeType.In, AttributeType.Static));
             // Syntax error if both the globalvar and playervar attributes are missing.
             if (!_components.IsComponent<MacroComponent>() &&
                 !_components.IsAttribute(AttributeType.GlobalVar) &&

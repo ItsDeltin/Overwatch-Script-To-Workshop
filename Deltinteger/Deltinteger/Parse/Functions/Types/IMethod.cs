@@ -48,6 +48,7 @@ namespace Deltin.Deltinteger.Parse
         int TypeArgCount => GenericTypes == null ? 0 : GenericTypes.Length;
         void Override(IMethodProvider overridenBy) => throw new NotImplementedException();
         InstanceAnonymousTypeLinker GetInstanceInfo(CodeType[] typeArgs) => new InstanceAnonymousTypeLinker(GenericTypes, typeArgs);
+        int TypeArgIndexFromAnonymousType(AnonymousType anonymousType) => Array.IndexOf(GenericTypes, anonymousType);
     }
 
     public interface IMethodProvider : IMethodExtensions

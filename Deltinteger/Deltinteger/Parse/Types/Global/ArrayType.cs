@@ -238,6 +238,8 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        public override AnonymousType[] ExtractAnonymousTypes() => ArrayOfType.ExtractAnonymousTypes();
+
         // public override bool Implements(CodeType type) => (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType)) || (ArrayOfType is IAdditionalArray additon && additon.AlternateImplements(type));
         public override Scope GetObjectScope() => Scope;
         protected override bool DoesImplement(CodeType type) => type is AnyType || ArrayOfType is AnyType || (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType));

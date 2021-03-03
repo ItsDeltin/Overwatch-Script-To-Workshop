@@ -19,6 +19,9 @@ namespace Deltin.Deltinteger.Parse
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public MarkupBuilder Documentation { get; set; }
+        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes() {
+            CanBeSet = false, StoreType = StoreType.None
+        };
 
         public HookVar(string name, CodeType type, Action<IExpression> setHook)
         {

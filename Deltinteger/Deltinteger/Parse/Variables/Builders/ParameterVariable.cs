@@ -38,11 +38,15 @@ namespace Deltin.Deltinteger.Parse
         protected override void TypeCheck()
         {
             // Get the 'ref' attribute.
-            var refAttribute = _components.FirstOrDefault(attribute => attribute is AttributeComponent attributeComponent && attributeComponent.Attribute == AttributeType.Ref);
+            var inAttribute = _components.FirstOrDefault(
+                attribute => attribute is AttributeComponent attributeComponent &&
+                (attributeComponent.Attribute == AttributeType.Ref ||
+                attributeComponent.Attribute == AttributeType.In)
+            );
 
             // If the type is constant and the variable has the ref parameter, show a warning.
-            if (refAttribute != null && _varInfo.Type != null && _varInfo.Type.IsConstant())
-                _diagnostics.Warning("Constant workshop types have the 'ref' attribute by default.", refAttribute.Range);
+            if (inAttribute != null && _varInfo.Type != null && _varInfo.Type.IsConstant())
+                _diagnostics.Warning("Constant workshop types have the 'in' attribute by default.", inAttribute.Range);
         }
     }
 }

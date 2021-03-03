@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void CheckComponents()
         {
             base.CheckComponents();
-            RejectAttributes(new RejectAttributeComponent(AttributeType.Ref));
+            RejectAttributes(new RejectAttributeComponent(AttributeType.Ref, AttributeType.In));
         }
 
         protected override void ApplyCodeType(CodeType type)

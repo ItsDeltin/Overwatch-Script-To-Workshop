@@ -316,9 +316,9 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
         public void Set(ActionSet actionSet, IWorkshopTree value)
         {
-            IGettable indexResult = _variables[0].GetAssigner(actionSet).GetValue(actionSet);
+            IGettable indexResult = _variables[0].GetAssigner(actionSet).GetValue(new GettableAssignerValueInfo(actionSet) { InitialValueOverride = value });
             CopyToAll(actionSet, indexResult);
-            indexResult.Set(actionSet, value, null, null);
+            // indexResult.Set(actionSet, value, null, null);
         }
 
         public void SetSubroutine(ActionSet actionSet, IGettable parameterStore, IWorkshopTree value) => parameterStore.Set(actionSet, value);
@@ -326,7 +326,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
         public IGettable GetSubroutineStack(ActionSet actionSet, bool defaultGlobal)
         {
             // Create the workshop variable the parameter will be stored as.
-            IGettable indexResult = _variables[0].GetAssigner(actionSet).GetValue(actionSet);
+            IGettable indexResult = _variables[0].GetAssigner(actionSet).GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false });
             CopyToAll(actionSet, indexResult);
             return indexResult;
         }
@@ -339,7 +339,7 @@ namespace Deltin.Deltinteger.Parse.FunctionBuilder
 
         private void CopyToAll(ActionSet actionSet, IGettable gettable)
         {
-            for (int i = 1; i < _variables.Length; i++)
+            for (int i = 0; i < _variables.Length; i++)
                 actionSet.IndexAssigner.Add(_variables[i].Provider, gettable);
         }
 

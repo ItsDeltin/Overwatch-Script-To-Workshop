@@ -115,13 +115,13 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree GetVariable(Element targetPlayer) => WorkshopElement;
 
-        public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
-            => throw new NotImplementedException();
-
-        public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
-            => throw new NotImplementedException();
-
+        void Throw() => throw new Exception("Cannot modify WorkshopElementReference");
+        public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index) => Throw();
+        public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index) => Throw();
         IGettable IGettable.ChildFromClassReference(IWorkshopTree reference)
-            => throw new NotImplementedException();
+        {
+            Throw();
+            return null;
+        }
     }
 }

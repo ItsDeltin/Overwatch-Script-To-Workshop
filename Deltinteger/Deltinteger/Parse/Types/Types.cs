@@ -155,6 +155,17 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddHover(callRange, hover);
         }
 
+        public virtual AnonymousType[] ExtractAnonymousTypes()
+        {
+            var types = new HashSet<AnonymousType>();
+
+            foreach (var typeArg in Generics)
+                foreach (var typeArgExtracted in typeArg.ExtractAnonymousTypes())
+                    types.Add(typeArgExtracted);
+
+            return types.ToArray();
+        }
+
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
 

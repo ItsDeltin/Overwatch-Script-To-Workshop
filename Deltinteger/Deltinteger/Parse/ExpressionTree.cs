@@ -191,7 +191,7 @@ namespace Deltin.Deltinteger.Parse
                 IWorkshopTree current = null;
 
                 // TODO: Make this an interface function.
-                if (Tree[i] is CallVariableAction callVariableAction && callVariableAction.Calling.UseDefaultVariableAssigner)
+                if (Tree[i] is CallVariableAction callVariableAction && callVariableAction.Calling.Attributes.UseDefaultVariableAssigner)
                 {
                     // Get the reference.
                     var reference = currentAssigner.Get(callVariableAction.Calling.Provider);

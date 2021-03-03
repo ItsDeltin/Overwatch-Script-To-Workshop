@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
 namespace Deltin.Deltinteger.Parse
@@ -37,5 +38,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Generics = generics;
         }
+
+        public static implicit operator GetInstanceInfo(InstanceAnonymousTypeLinker linker) => new GetInstanceInfo(linker.Links.Keys.ToArray());
     }
 }

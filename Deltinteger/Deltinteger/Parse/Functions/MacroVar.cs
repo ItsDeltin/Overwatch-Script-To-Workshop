@@ -83,6 +83,10 @@ namespace Deltin.Deltinteger.Parse
         public MarkupBuilder Documentation { get; }
         public bool UseDefaultVariableAssigner => false;
         ICodeTypeSolver IScopeable.CodeType => CodeType;
+        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes()
+        {
+            CanBeSet = false, StoreType = StoreType.None, UseDefaultVariableAssigner = false
+        };
 
         public MacroVarInstance(MacroVarProvider provider)
         {

@@ -21,6 +21,11 @@ namespace Deltin.Deltinteger.Parse
         public List<IMethod> Functions { get; } = new List<IMethod>();
         IVariable IVariableInstance.Provider => this;
         VariableType IVariable.VariableType => VariableType.ElementReference;
+        IVariableInstanceAttributes IVariableInstance.Attributes { get; } = new VariableInstanceAttributes()
+        {
+            CanBeSet = false,
+            StoreType = StoreType.None,
+        };
 
         public MethodGroup(string name)
         {

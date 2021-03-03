@@ -8,13 +8,13 @@ namespace Deltin.Deltinteger.Parse
     public class StructAssigner : IGettableAssigner
     {
         private readonly IVariableInstance[] _variables;
-        private readonly IExpression _defaultInitialValue;
+        private readonly Var _var;
         private readonly bool _isArray;
 
-        public StructAssigner(StructInstance structInstance, IExpression initialValue, bool isArray)
+        public StructAssigner(StructInstance structInstance, Var var, bool isArray)
         {
             _variables = structInstance.Variables;
-            _defaultInitialValue = initialValue;
+            _var = var;
             _isArray = isArray;
         }
 
@@ -27,16 +27,18 @@ namespace Deltin.Deltinteger.Parse
             if (info.InitialValueOverride != null)
                 initialValue = ValueInArrayToWorkshop.ExtractStructValue(info.InitialValueOverride);
             // Otherwise, use the default initial value if it exists.
-            else if (_defaultInitialValue != null)
-                initialValue = ValueInArrayToWorkshop.ExtractStructValue(_defaultInitialValue.Parse(info.ActionSet));
+            else if (_var?.InitialValue != null)
+                initialValue = ValueInArrayToWorkshop.ExtractStructValue(_var.InitialValue.Parse(info.ActionSet));
             // 'initialValue' may still be null.
+
+            bool inline = info.Inline || (_var != null && _var.StoreType == StoreType.None);
 
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
                 // Get the child gettable.
                 values.Add(var.Name, var.GetAssigner(info.ActionSet).GetValue(new GettableAssignerValueInfo(info.ActionSet) {
                     InitialValueOverride = initialValue?.GetValue(var.Name),
-                    Inline = info.Inline // Copy inline status
+                    Inline = inline
                 }));
             
             return new GettableAssignerResult(new StructAssignerValue(values), null);

@@ -22,6 +22,8 @@ namespace Deltin.Deltinteger.Parse
             Kind = CompletionItemKind.TypeParameter
         };
 
+        public override AnonymousType[] ExtractAnonymousTypes() => new[] { this };
+
         public static AnonymousType[] GetGenerics(List<Token> typeArgs)
         {
             var generics = new AnonymousType[typeArgs.Count];

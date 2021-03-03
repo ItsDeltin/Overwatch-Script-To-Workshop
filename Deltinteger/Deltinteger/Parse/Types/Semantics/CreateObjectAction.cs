@@ -17,6 +17,12 @@ namespace Deltin.Deltinteger.Parse
 
         public CreateObjectAction(ParseInfo parseInfo, Scope scope, NewExpression context)
         {
+            if (!context.Type.Valid)
+            {
+                CreatingObjectOf = parseInfo.Types.Any();
+                return;
+            }
+
             // Get the type. Syntax error if there is no type name.
             CreatingObjectOf = TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, context.Type);
             

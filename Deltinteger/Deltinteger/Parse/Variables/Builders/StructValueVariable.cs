@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                     AttributeType.Public, AttributeType.Protected, AttributeType.Private,
                     AttributeType.Static,
                     AttributeType.GlobalVar, AttributeType.PlayerVar,
-                    AttributeType.Ref
+                    AttributeType.Ref, AttributeType.In
                 ),
                 new RejectComponent<WorkshopIndexComponent>(),
                 new RejectComponent<ExtendedCollectionComponent>(),

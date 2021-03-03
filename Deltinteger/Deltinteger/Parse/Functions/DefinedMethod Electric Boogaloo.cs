@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
             DocRange nameRange = context.Identifier.Range;
 
             // Get the attributes.
-            var attributeResult = new GenericAttributeAppender(AttributeType.Ref, AttributeType.GlobalVar, AttributeType.PlayerVar);
+            var attributeResult = new GenericAttributeAppender(AttributeType.Ref, AttributeType.In, AttributeType.GlobalVar, AttributeType.PlayerVar);
             var attributeGetter = new AttributesGetter(context.Attributes, attributeResult);
             attributeGetter.GetAttributes(parseInfo.Script.Diagnostics);
 

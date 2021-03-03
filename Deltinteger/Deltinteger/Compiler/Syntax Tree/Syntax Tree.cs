@@ -54,6 +54,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         bool IsVoid { get; }
         bool DefinitelyType { get; }
         bool Infer => false;
+        bool Valid { get; }
     }
     public interface ITypeContextHandler
     {
@@ -91,6 +92,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool Infer => Identifier && Identifier.TokenType == TokenType.Define;
         public bool DefinitelyType => IsVoid || Identifier.TokenType == TokenType.Define || TypeArgs.Count > 0;
         Token IParseType.GenericToken => Identifier;
+        public bool Valid => Identifier;
     }
 
     public class LambdaType : Node, IParseType
@@ -116,6 +118,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool LookaheadValid => ArrowToken && ReturnType.LookaheadValid;
         public bool IsVoid => false;
         public bool DefinitelyType => true;
+        public bool Valid => ArrowToken;
         Token IParseType.GenericToken => throw new NotImplementedException();
     }
 
@@ -134,6 +137,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool IsVoid => Type.IsVoid;
         public bool DefinitelyType => Type.DefinitelyType;
         Token IParseType.GenericToken => Type.GenericToken;
+        public bool Valid => Type.Valid;
     }
 
     public class PipeTypeContext : Node, IParseType
@@ -151,6 +155,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool LookaheadValid => true;
         public bool IsVoid => false;
         public bool DefinitelyType => true;
+        public bool Valid => true;
     }
 
     public class RuleContext : Node

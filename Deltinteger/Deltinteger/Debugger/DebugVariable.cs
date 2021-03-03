@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.Debugger.Protocol;
 using Deltin.Deltinteger.Csv;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Debugger
 {
