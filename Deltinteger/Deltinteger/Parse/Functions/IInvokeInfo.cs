@@ -74,7 +74,14 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.AsyncInfo.Accept();
                 }
 
-                parseInfo.Script.AddHover(invokeInfo.Context.Range, callingMethod.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
+                // Add the function hover.
+                parseInfo.Script.AddHover(invokeInfo.Context.Range, callingMethod.GetLabel(parseInfo.TranslateInfo, new LabelInfo() {
+                    IncludeDocumentation = true,
+                    IncludeParameterNames = true,
+                    IncludeParameterTypes = true,
+                    IncludeReturnType = true,
+                    AnonymousLabelInfo = new AnonymousLabelInfo(typeArgLinker)
+                }));
             }
 
             return result;

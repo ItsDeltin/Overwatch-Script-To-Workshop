@@ -202,7 +202,7 @@ namespace Deltin.Deltinteger
         }
         public MarkupBuilder Indent() => Add("    ");
 
-        public override string ToString() => result.ToString();
+        public override string ToString() => noMarkup.ToString();
         public string ToString(bool markup) => markup ? result.ToString() : noMarkup.ToString();
         public MarkupContent ToMarkup() => new MarkupContent()
         {
