@@ -19,10 +19,10 @@ namespace Deltin.Deltinteger.Parse
             
             // Add return type.
             if (labelInfo.IncludeReturnType)
-                markup.Add(ICodeTypeSolver.GetNameOrVoid(deltinScript, function.CodeType)).Add(" ");
+                markup.Add(labelInfo.AnonymousLabelInfo.NameFromSolver(deltinScript, function.CodeType)).Add(" ");
             
             // Add function name and parameters.
-            markup.Add(function.Name + CodeParameter.GetLabels(deltinScript, function.Parameters))
+            markup.Add(function.Name + CodeParameter.GetLabels(deltinScript, labelInfo.AnonymousLabelInfo, function.Parameters))
                 .EndCodeLine();
             
             // Add documentation.
@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Label = function.Name,
             Kind = CompletionItemKind.Method,
-            Detail = ICodeTypeSolver.GetNameOrVoid(deltinScript, function.CodeType) + " " + function.Name + CodeParameter.GetLabels(deltinScript, function.Parameters),
+            Detail = ICodeTypeSolver.GetNameOrVoid(deltinScript, function.CodeType) + " " + function.Name + CodeParameter.GetLabels(deltinScript, AnonymousLabelInfo.Default, function.Parameters),
             Documentation = Extras.GetMarkupContent(function.Documentation)
         };
     }

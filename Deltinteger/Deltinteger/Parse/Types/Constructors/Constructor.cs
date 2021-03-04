@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
         public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)
         {
             var builder = new MarkupBuilder().StartCodeLine().Add("new " + Type.GetName());
-            builder.Add(CodeParameter.GetLabels(deltinScript, Parameters)).EndCodeLine();
+            builder.Add(CodeParameter.GetLabels(deltinScript, labelInfo.AnonymousLabelInfo, Parameters)).EndCodeLine();
 
             if (labelInfo.IncludeDocumentation)
                 builder.NewSection().Add(Documentation);

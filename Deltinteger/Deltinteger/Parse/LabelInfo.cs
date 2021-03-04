@@ -6,6 +6,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IncludeParameterTypes;
         public bool IncludeParameterNames;
         public bool IncludeDocumentation;
+        public AnonymousLabelInfo AnonymousLabelInfo = AnonymousLabelInfo.Default;
 
         public static readonly LabelInfo Hover = new LabelInfo() {
             IncludeDocumentation = true,
@@ -50,17 +51,49 @@ namespace Deltin.Deltinteger.Parse
             var builder = new MarkupBuilder().StartCodeLine();
 
             if (IncludeReturnType)
-                builder.Add(type.GetName() + " ");
+                builder.Add(AnonymousLabelInfo.NameFromSolver(deltinScript, type) + " ");
             
             builder.Add(name + "(");
 
             for (int i = 0; i < parameters.Length; i++)
             {
                 if (i != 0) builder.Add(", ");
-                builder.Add(parameters[i].GetLabel(deltinScript));
+                builder.Add(parameters[i].GetLabel(deltinScript, AnonymousLabelInfo));
             }
             
             return builder.Add(")").EndCodeLine();
+        }
+    }
+
+    public class AnonymousLabelInfo
+    {
+        public static readonly AnonymousLabelInfo Default = new AnonymousLabelInfo();
+
+        public AnonymousLabelInfo() {}
+        public AnonymousLabelInfo(InstanceAnonymousTypeLinker typeLinker)
+        {
+            TypeLinker = typeLinker;
+            MakeAnonymousTypesUnkown = true;
+        }
+
+        public InstanceAnonymousTypeLinker TypeLinker = null;
+        public bool MakeAnonymousTypesUnkown = false;
+
+        public string NameFromSolver(DeltinScript deltinScript, ICodeTypeSolver solver)
+        {
+            // null: return void
+            if (solver == null)
+                return "void";
+
+            // Get the type from the type provider.
+            var type = solver.GetCodeType(deltinScript);
+
+            // If a type linker is provider, get the real type.
+            if (TypeLinker != null)
+                type = type.GetRealType(TypeLinker);
+
+            // Get the type name. If MakeAnonymousTypesUnkown and the type is an anonymous type, set the type name to 'unknown'.
+            return MakeAnonymousTypesUnkown && type is AnonymousType ? "unknown" : type.GetName();
         }
     }
 }

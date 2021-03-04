@@ -79,9 +79,9 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType GetCodeType(DeltinScript deltinScript) => _type.GetCodeType(deltinScript);
 
-        public string GetLabel(DeltinScript deltinScript)
+        public string GetLabel(DeltinScript deltinScript, AnonymousLabelInfo labelInfo)
         {
-            string result = _type.GetCodeType(deltinScript).GetName() + " " + Name;
+            string result = labelInfo.NameFromSolver(deltinScript, _type) + " " + Name;
             if (DefaultValue != null) result = "[" + result + "]";
             return result;
         }
@@ -121,9 +121,9 @@ namespace Deltin.Deltinteger.Parse
             return new ParameterParseResult(parameters, vars);
         }
 
-        public static string GetLabels(DeltinScript deltinScript, CodeParameter[] parameters)
+        public static string GetLabels(DeltinScript deltinScript, AnonymousLabelInfo labelInfo, CodeParameter[] parameters)
         {
-            return "(" + string.Join(", ", parameters.Select(p => p.GetLabel(deltinScript))) + ")";
+            return "(" + string.Join(", ", parameters.Select(p => p.GetLabel(deltinScript, labelInfo))) + ")";
         }
     }
 

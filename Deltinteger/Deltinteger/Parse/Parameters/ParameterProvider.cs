@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.Parse
             return parameters;
         }
 
-        public string GetLabel(DeltinScript deltinScript)
+        public string GetLabel(DeltinScript deltinScript, AnonymousLabelInfo labelInfo)
         {
             string result = Type.GetName() + " " + Name;
             if (DefaultValue != null) result = "[" + result + "]";

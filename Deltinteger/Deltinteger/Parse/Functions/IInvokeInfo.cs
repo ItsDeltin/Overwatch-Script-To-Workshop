@@ -51,8 +51,10 @@ namespace Deltin.Deltinteger.Parse
             {
                 result.ReturnType = callingMethod.CodeType?.GetCodeType(parseInfo.TranslateInfo).GetRealType(typeArgLinker);
 
-                // Track the generics used in the function.
-                parseInfo.TranslateInfo.GetComponent<TypeTrackerComponent>().Track(callingMethod.MethodInfo.Tracker, overloadChooser.Match.TypeArgs);
+                // Do not track if any of the generics are null.
+                if (overloadChooser.Match.TypeArgs.All(t => t != null))
+                    // Track the generics used in the function.
+                    parseInfo.TranslateInfo.GetComponent<TypeTrackerComponent>().Track(callingMethod.MethodInfo.Tracker, overloadChooser.Match.TypeArgs);
 
                 // If the function's block needs to be applied, check optional restricted calls when 'Applied()' runs.
                 if (callingMethod is IApplyBlock applyBlock)

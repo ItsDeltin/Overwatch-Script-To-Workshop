@@ -37,6 +37,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         bool _genericsProvided;
         int _providedParameterCount;
         DocRange _extraneousParameterRange;
+        OverloadMatch[] _matches;
 
         public OverloadChooser(IOverload[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange targetRange, DocRange callRange, DocRange fullRange, OverloadError errorMessages)
         {
@@ -58,14 +59,14 @@ namespace Deltin.Deltinteger.Parse.Overload
             PickyParameter[] inputParameters = ParametersFromContext(context);
 
             // Match overloads.
-            OverloadMatch[] matches = new OverloadMatch[_overloads.Length];
-            for (int i = 0; i < matches.Length; i++) matches[i] = MatchOverload(_overloads[i], inputParameters, context);
+            _matches = new OverloadMatch[_overloads.Length];
+            for (int i = 0; i < _matches.Length; i++) _matches[i] = MatchOverload(_overloads[i], inputParameters, context);
 
             // Do nothing else if the number of matches is 0.
-            if (matches.Length == 0) return;
+            if (_matches.Length == 0) return;
 
             // Choose the best option.
-            Match = BestOption(matches);
+            Match = BestOption();
             Values = Match.OrderedParameters.Select(op => op?.Value).ToArray();
             ParameterRanges = Match.OrderedParameters.Select(op => op?.ExpressionRange).ToArray();
 
@@ -215,10 +216,10 @@ namespace Deltin.Deltinteger.Parse.Overload
                     match.Error(couldNotInfer, _targetRange);
         }
 
-        private OverloadMatch BestOption(OverloadMatch[] matches)
+        private OverloadMatch BestOption()
         {
             // If there are any methods with no errors, set that as the best option.
-            OverloadMatch bestOption = matches.FirstOrDefault(match => !match.HasError) ?? matches.FirstOrDefault();
+            OverloadMatch bestOption = _matches.FirstOrDefault(match => !match.HasError) ?? _matches.FirstOrDefault();
 
             // Add the diagnostics of the best option.
             bestOption.AddDiagnostics(_parseInfo.Script.Diagnostics);
@@ -280,32 +281,42 @@ namespace Deltin.Deltinteger.Parse.Overload
                         activeParameter = i;
 
             // Get the signature information.
-            SignatureInformation[] overloads = new SignatureInformation[_overloads.Length];
+            SignatureInformation[] signatureInformations = new SignatureInformation[_matches.Length];
             int activeSignature = -1;
-            for (int i = 0; i < overloads.Length; i++)
+            for (int i = 0; i < signatureInformations.Length; i++)
             {
-                if (Overload == _overloads[i].Value)
+                var match = _matches[i];
+                var overload = match.Option;
+
+                // If the chosen overload matches the overload being iterated upon, set the active signature.
+                if (Overload == overload.Value)
                     activeSignature = i;
 
                 // Get the parameter information for the signature.
-                var parameters = new ParameterInformation[_overloads[i].Parameters.Length];
+                var parameters = new ParameterInformation[overload.Parameters.Length];
 
                 // Convert parameters to parameter information.
                 for (int p = 0; p < parameters.Length; p++)
                     parameters[p] = new ParameterInformation()
                     {
                         // Get the label to show in the signature.
-                        Label = _overloads[i].Parameters[p].GetLabel(_parseInfo.TranslateInfo),
+                        Label = overload.Parameters[p].GetLabel(_parseInfo.TranslateInfo, new AnonymousLabelInfo(match.TypeArgLinker)),
                         // Get the documentation.
-                        Documentation = Extras.GetMarkupContent(_overloads[i].Parameters[p].Documentation)
+                        Documentation = overload.Parameters[p].Documentation
                     };
 
                 // Create the signature information.
-                overloads[i] = new SignatureInformation()
+                signatureInformations[i] = new SignatureInformation()
                 {
-                    Label = _overloads[i].GetLabel(_parseInfo.TranslateInfo, LabelInfo.SignatureOverload),
+                    Label = overload.GetLabel(_parseInfo.TranslateInfo, new LabelInfo() {
+                        IncludeDocumentation = false,
+                        IncludeParameterNames = true,
+                        IncludeParameterTypes = true,
+                        IncludeReturnType = true,
+                        AnonymousLabelInfo = new AnonymousLabelInfo(match.TypeArgLinker)
+                    }),
                     Parameters = parameters,
-                    Documentation = _overloads[i].Documentation
+                    Documentation = overload.Documentation
                 };
             }
 
@@ -313,7 +324,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             {
                 ActiveParameter = activeParameter,
                 ActiveSignature = activeSignature,
-                Signatures = overloads
+                Signatures = signatureInformations
             };
         }
     }
