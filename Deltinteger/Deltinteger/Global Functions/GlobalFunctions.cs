@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
             Destination(deltinScript),
             DestroyDummyBot(deltinScript),
             DoesLineIntersectSphere(deltinScript),
+            EvaluateOnce(deltinScript),
             InsertValueInArray(deltinScript),
             LinearInterpolate(deltinScript),
             LinearInterpolateDistance(deltinScript),
@@ -35,8 +36,9 @@ namespace Deltin.Deltinteger.GlobalFunctions
             RemoveFromArrayAtIndex(deltinScript),
             SphereHitboxRaycast(deltinScript),
             StopChasingVariable(deltinScript),
+            UpdateEveryFrame(deltinScript),
             WorkshopSettingCombo(deltinScript),
-            WorkshopSettingHero(deltinScript)
+            WorkshopSettingHero(deltinScript),
         };
     }
 }

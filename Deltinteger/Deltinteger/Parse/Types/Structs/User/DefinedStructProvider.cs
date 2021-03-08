@@ -7,6 +7,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DefinedStructInitializer : StructInitializer, IDefinedTypeInitializer, IResolveElements
     {
+        public CodeType WorkingInstance => throw new NotImplementedException();
         private readonly ParseInfo _parseInfo;
         private readonly ClassContext _context;
         private readonly Scope _scope;

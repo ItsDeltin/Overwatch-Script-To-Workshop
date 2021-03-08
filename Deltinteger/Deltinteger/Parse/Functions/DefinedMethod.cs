@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
         public LanguageServer.Location DefinedAt => new LanguageServer.Location(_parseInfo.Script.Uri, Context.Identifier.GetRange(Context.Range));
 
         public FunctionContext Context { get; }
-        public ICodeTypeInitializer ContainingType { get; }
+        public IDefinedTypeInitializer ContainingType { get; }
 
         public bool Static { get; }
         public bool IsSubroutine { get; }
@@ -81,7 +81,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<IOnBlockApplied> _listeners = new List<IOnBlockApplied>();
         private bool _wasApplied;
 
-        private DefinedMethodProvider(ParseInfo parseInfo, IScopeProvider scopeProvider, FunctionContext context, ICodeTypeInitializer containingType)
+        private DefinedMethodProvider(ParseInfo parseInfo, IScopeProvider scopeProvider, FunctionContext context, IDefinedTypeInitializer containingType)
         {
             _parseInfo = parseInfo;
             Context = context;
@@ -142,6 +142,7 @@ namespace Deltin.Deltinteger.Parse
         public void SetupParameters() {}
         public void SetupBlock()
         {
+            _methodScope.This = ContainingType?.WorkingInstance;
             Block = new BlockAction(_parseInfo, _methodScope, Context.Block);
 
             // Validate returns.
@@ -211,7 +212,7 @@ namespace Deltin.Deltinteger.Parse
             _overriders.Add(overridenBy);
         }
 
-        public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeProvider scopeHandler, FunctionContext context, ICodeTypeInitializer containingType)
+        public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeProvider scopeHandler, FunctionContext context, IDefinedTypeInitializer containingType)
             => new DefinedMethodProvider(parseInfo, scopeHandler, context, containingType);
 
         public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeFunctionLabel(deltinScript, ReturnType, Name, ParameterProviders);

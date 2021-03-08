@@ -70,8 +70,8 @@ namespace Deltin.Deltinteger.Parse
 
         public MethodInfo(AnonymousType[] generics)
         {
-            GenericTypes = generics;
-            Tracker = new MethodTypeArgTrackee(GenericTypes.Length);
+            GenericTypes = generics ?? new AnonymousType[0];
+            Tracker = new MethodTypeArgTrackee(GenericTypes?.Length ?? 0);
         }
     }
 

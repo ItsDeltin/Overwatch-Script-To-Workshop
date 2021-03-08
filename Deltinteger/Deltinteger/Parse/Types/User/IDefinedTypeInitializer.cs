@@ -5,6 +5,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public interface IDefinedTypeInitializer : ICodeTypeInitializer, IScopeHandler
     {
+        CodeType WorkingInstance { get; }
         void AddVariable(IVariable var);
         void AddMacro(MacroVarProvider macro);
 

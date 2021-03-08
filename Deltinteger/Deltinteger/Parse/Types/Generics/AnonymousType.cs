@@ -8,12 +8,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class AnonymousType : CodeType
     {
-        private readonly int _index;
-
-        public AnonymousType(string name, int index) : base(name)
-        {
-            _index = index;
-        }
+        public AnonymousType(string name) : base(name) {}
         
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => instanceInfo != null && instanceInfo.Links.TryGetValue(this, out CodeType result) ? result : this;
 
@@ -29,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
             var generics = new AnonymousType[typeArgs.Count];
             for (int i = 0; i < typeArgs.Count; i++)
             {
-                var anonymousType = new AnonymousType(typeArgs[i].GetText(), i);
+                var anonymousType = new AnonymousType(typeArgs[i].GetText());
                 generics[i] = anonymousType;
             }
             return generics;

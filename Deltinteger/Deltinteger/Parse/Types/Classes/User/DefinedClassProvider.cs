@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Parse
                 };
             }
 
-            // WorkingInstance = GetInstance();
+            WorkingInstance = GetInstance();
 
             // TODO: update these
             // If the extend token exists, add completion that only contains all extendable classes.
