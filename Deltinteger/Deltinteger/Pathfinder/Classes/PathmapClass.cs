@@ -260,7 +260,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public INodeFromPosition GetNodeFromPositionHandler(ActionSet actionSet, Element pathmapObject) => ApplicableNodeDeterminer.HookValue == null ?
             (INodeFromPosition)new ClosestNodeFromPosition(actionSet, this, pathmapObject) :
-            new NodeFromInvocable(actionSet, this, pathmapObject, (ILambdaInvocable)ApplicableNodeDeterminer.HookValue);
+            new NodeFromInvocable(actionSet, this, pathmapObject, (ILambdaInvocable)ApplicableNodeDeterminer.HookValue.Parse(actionSet));
 
         // Object Functions
         // Pathfind(player, destination, [attributes])
