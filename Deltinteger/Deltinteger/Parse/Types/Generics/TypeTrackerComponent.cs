@@ -24,10 +24,6 @@ namespace Deltin.Deltinteger.Parse
             // Make sure the number of generics in the provider and the number of generics in the parameter match.
             if (provider.GenericsCount != generics.Length)
                 throw new Exception("Generic count do not match.");
-            
-            // Do not continue if there are no generics.
-            if (generics.Length == 0)
-                return;
 
             // Get the tracker for the provider.
             if (!_trackers.TryGetValue(provider, out ProviderTrackerInfo trackerInfo))
