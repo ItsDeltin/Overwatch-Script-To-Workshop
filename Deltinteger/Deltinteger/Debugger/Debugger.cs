@@ -154,10 +154,10 @@ namespace Deltin.Deltinteger.Debugger
                     // Vector
                     case "Vector":
                         return new CsvVector(new Models.Vertex(
-             ExtractComponent(func, 0, "X"),
-             ExtractComponent(func, 1, "Y"),
-             ExtractComponent(func, 2, "Z")
-         ));
+                            ExtractComponent(func, 0, "X"),
+                            ExtractComponent(func, 1, "Y"),
+                            ExtractComponent(func, 2, "Z")
+                        ));
                     // Default
                     default:
                         Error("Unsure of how to handle function '" + func.Function.Name);

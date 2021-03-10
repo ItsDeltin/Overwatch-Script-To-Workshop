@@ -14,7 +14,5 @@ namespace Deltin.Deltinteger.Parse
                 new Constructor(this, _provider.DefinedAt, AccessLevel.Public)
             };
         }
-
-        public override Scope GetObjectScope() => _provider.ObjectScope;
     }
 }

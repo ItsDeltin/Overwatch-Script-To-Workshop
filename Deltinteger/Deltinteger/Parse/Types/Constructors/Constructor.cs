@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
             if (labelInfo.IncludeDocumentation)
                 builder.NewSection().Add(Documentation);
 
-            return builder.EndCodeLine();
+            return builder;
         }
     }
 

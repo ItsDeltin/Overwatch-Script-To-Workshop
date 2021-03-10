@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
         int TypeArgIndexFromAnonymousType(AnonymousType anonymousType) => Array.IndexOf(GenericTypes, anonymousType);
     }
 
-    public interface IMethodProvider : IMethodExtensions
+    public interface IMethodProvider : IMethodExtensions, IElementProvider
     {
         string Name { get; }
         IMethod GetDefaultInstance();

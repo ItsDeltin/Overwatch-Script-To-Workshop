@@ -1,8 +1,7 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
+using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -16,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IExpression Expression { get; private set; }
 
+        public Location DefinedAt { get; }
         public MacroFunctionContext Context { get; }
         public GenericAttributeAppender Attributes { get; } = new GenericAttributeAppender();
         public IMethod Overriding { get; }
@@ -38,6 +38,7 @@ namespace Deltin.Deltinteger.Parse
             Context = context;
             _recursiveHandler = new RecursiveCallHandler(this);
             CallInfo = new CallInfo(_recursiveHandler, parseInfo.Script);
+            DefinedAt = parseInfo.Script.GetLocation(context.Identifier.Range);
 
             // Get the attributes.
             var attributeGetter = new AttributesGetter(context.Attributes, Attributes);
@@ -48,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
             _methodScope = _containingScope.Child();
             
             // Get the generics.
-            GenericTypes = AnonymousType.GetGenerics(context.TypeArguments);
+            GenericTypes = AnonymousType.GetGenerics(context.TypeArguments, AnonymousTypeContext.Function);
 
             foreach (var type in GenericTypes)
                 _methodScope.AddType(new GenericCodeTypeInitializer(type));
@@ -99,7 +100,7 @@ namespace Deltin.Deltinteger.Parse
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public AccessLevel AccessLevel => Provider.Attributes.Accessor;
         public bool WholeContext => true;
-        public LanguageServer.Location DefinedAt => throw new NotImplementedException();
+        public LanguageServer.Location DefinedAt => Provider.DefinedAt;
         IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
 
         public DefinedMacroInstance(DefinedMacroProvider provider, InstanceAnonymousTypeLinker genericsLinker)
@@ -120,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             // Assign the parameters.
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(methodCall.TypeArgs);
             return AbstractMacroBuilder.Call(actionSet, this, methodCall);
         }
     }

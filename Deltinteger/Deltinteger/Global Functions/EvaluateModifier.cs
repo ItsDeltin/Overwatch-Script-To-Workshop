@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
         )
         {
             // The return type and the parameter type of the evaluation modifier.
-            var parameterAndReturnType = new AnonymousType("T");
+            var parameterAndReturnType = new AnonymousType("T", AnonymousTypeContext.Function);
 
             // Create a new FuncMethod.
             return new FuncMethodBuilder()

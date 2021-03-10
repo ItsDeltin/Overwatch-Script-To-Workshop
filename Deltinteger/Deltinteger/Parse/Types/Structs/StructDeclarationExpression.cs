@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; private set; }
         public IVariable[] Variables { get; private set; }
+        public IMethodProvider[] Methods { get; } = new IMethodProvider[0];
         public StructInstance Type { get; private set; }
         public IValueSolve OnReady { get; } = new ValueSolveSource(true);
         private readonly ParseInfo _parseInfo;

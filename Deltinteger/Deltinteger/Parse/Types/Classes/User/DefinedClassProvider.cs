@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.AddResolve(this);
 
             // Get the generics.
-            AnonymousTypes = AnonymousType.GetGenerics(_typeContext.Generics);
+            AnonymousTypes = AnonymousType.GetGenerics(_typeContext.Generics, AnonymousTypeContext.Type);
         }
 
         public override bool BuiltInTypeMatches(Type type) => false;

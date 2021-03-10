@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
 {
     public class DefinedConstructorProvider : IConstructorProvider<DefinedConstructorInstance>, IApplyBlock, ISymbolLink
     {
-        public string Name => "TODO_CONSTRUCTOR_PROVIDER";
+        public string Name => TypeProvider.Name;
         public string SubroutineName { get; }
         public CallInfo CallInfo { get; }
         public Location DefinedAt { get; }
@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         MarkupBuilder ILabeled.GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)
         {
             var builder = new MarkupBuilder();
-            builder.StartCodeLine().Add("new TODO_TYPE_NAME_HERE()");
+            builder.StartCodeLine().Add("new " + Name + "(");
 
             for (int i = 0; i < ParameterProviders.Length; i++)
             {

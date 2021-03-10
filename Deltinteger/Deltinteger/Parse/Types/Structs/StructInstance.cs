@@ -5,25 +5,31 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class StructInstance : CodeType, IAdditionalArray
+    public class StructInstance : CodeType, IAdditionalArray, IScopeAppender
     {
         public IVariableInstance[] Variables { get; private set; }
-        private readonly IStructProvider _provider;
-        private readonly Scope _objectScope;
+        public IMethod[] Methods { get; private set; }
+        protected Scope ObjectScope { get; }
+        protected Scope StaticScope { get; }
         private bool _isReady;
 
         public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker genericsLinker) : base(provider.Name)
         {
-            _provider = provider;
-            _objectScope = new Scope("struct " + Name);
+            ObjectScope = new Scope("struct " + Name);
 
             provider.OnReady.OnReady(() => {
+                // Variables
                 Variables = new IVariableInstance[provider.Variables.Length];
                 for (int i = 0; i < Variables.Length; i++)
                 {
                     Variables[i] = provider.Variables[i].GetInstance(genericsLinker);
-                    _objectScope.AddNativeVariable(Variables[i]);
+                    ObjectScope.AddNativeVariable(Variables[i]);
                 }
+
+                // Functions
+                foreach (var method in provider.Methods)
+                    method.AddInstance(this, genericsLinker);
+
                 _isReady = true;
             });
         }
@@ -71,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
         public override Scope GetObjectScope()
         {
             ThrowIfNotReady();
-            return _objectScope;
+            return ObjectScope;
         }
 
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
@@ -109,5 +115,10 @@ namespace Deltin.Deltinteger.Parse
 
         void IAdditionalArray.AssignLastOf(IVariable lastOfVariable, VarIndexAssigner assigner, IWorkshopTree reference)
             => assigner.Add(lastOfVariable, new BridgeGetStructValue((IStructValue)reference, v => Element.LastOf(v)));
+
+        void IScopeAppender.AddObjectBasedScope(IMethod function) => ObjectScope.AddNativeMethod(function);
+        void IScopeAppender.AddStaticBasedScope(IMethod function) => StaticScope.AddNativeMethod(function);
+        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => ObjectScope.AddNativeVariable(variable);
+        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => StaticScope.AddNativeVariable(variable);
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.LanguageServer;
@@ -8,13 +9,15 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedStructInitializer : StructInitializer, IDefinedTypeInitializer, IResolveElements
     {
         public CodeType WorkingInstance => throw new NotImplementedException();
-        private readonly ParseInfo _parseInfo;
-        private readonly ClassContext _context;
-        private readonly Scope _scope;
         public Location DefinedAt { get; }
         public Scope StaticScope { get; private set; }
         public Scope ObjectScope { get; private set; }
-        private readonly ValueSolveSource _onReady = new ValueSolveSource();
+        public AnonymousType[] TypeArgs { get; private set; }
+        readonly ParseInfo _parseInfo;
+        readonly ClassContext _context;
+        readonly Scope _scope;
+        readonly ValueSolveSource _onReady = new ValueSolveSource();
+        public override int GenericsCount => TypeArgs.Length;
 
         public DefinedStructInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
@@ -24,6 +27,9 @@ namespace Deltin.Deltinteger.Parse
             DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
             parseInfo.TranslateInfo.AddResolve(this);
             OnReady = _onReady;
+
+            // Get the type args.
+            TypeArgs = AnonymousType.GetGenerics(typeContext.Generics, AnonymousTypeContext.Type);
         }
 
         public void ResolveElements()
@@ -31,9 +37,23 @@ namespace Deltin.Deltinteger.Parse
             StaticScope = _scope.Child();
             ObjectScope = StaticScope.Child();
 
+            // Add type args to scopes.
+            foreach (var type in TypeArgs)
+            {
+                StaticScope.AddType(new GenericCodeTypeInitializer(type));
+                ObjectScope.AddType(new GenericCodeTypeInitializer(type));
+            }
+
+            var methods = new List<IMethodProvider>();
+
             // Get declarations.
             foreach (var declaration in _context.Declarations)
-                ((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo);
+            {
+                var element = ((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo);
+
+                if (element is IMethodProvider method)
+                    Methods.Add(method);
+            }
             
             _onReady.Set();
         }
@@ -43,8 +63,7 @@ namespace Deltin.Deltinteger.Parse
         // public void AddMacro(MacroVarProvider macro) => ObjectScope.AddNativeVariable(macro.GetDefaultInstance());
 
         public override CodeType GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
-        // TODO: generics support for structs.
-        public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
+        public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedStructInstance(this, new InstanceAnonymousTypeLinker(TypeArgs, instanceInfo.Generics));
         
         public override bool BuiltInTypeMatches(Type type) => false;
         public Scope GetObjectBasedScope() => ObjectScope;

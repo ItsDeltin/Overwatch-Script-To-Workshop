@@ -189,7 +189,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             string couldNotInfer = $"The type arguments for method '{match.Option.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)}' cannot be inferred from the usage. Try specifying the type arguments explicitly.";
 
             // If the parameter type is an AnonymousType, add the link for the expression type if it doesn't already exist.
-            if (parameterType is AnonymousType pat)
+            if (parameterType is AnonymousType pat && pat.Context == AnonymousTypeContext.Function)
             {
                 var typeLinker = match.TypeArgLinker;
 

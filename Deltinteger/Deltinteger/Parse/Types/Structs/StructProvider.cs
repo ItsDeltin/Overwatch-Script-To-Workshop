@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
@@ -8,6 +9,7 @@ namespace Deltin.Deltinteger.Parse
     {
         string Name { get; }
         IVariable[] Variables { get; }
+        IMethodProvider[] Methods { get; }
         IValueSolve OnReady { get; }
     }
 
@@ -15,9 +17,12 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public IValueSolve OnReady { get; protected set; } = new ValueSolveSource(true);
-        public int GenericsCount { get; }
-        public List<IVariable> Variables { get; } = new List<IVariable>();
+        public virtual int GenericsCount { get; }
+        protected IList<IVariable> Variables { get; } = new List<IVariable>();
+        protected IList<IMethodProvider> Methods { get; } = new List<IMethodProvider>();
+
         IVariable[] IStructProvider.Variables => Variables.ToArray();
+        IMethodProvider[] IStructProvider.Methods => Methods.ToArray();
 
         public StructInitializer(string name)
         {
