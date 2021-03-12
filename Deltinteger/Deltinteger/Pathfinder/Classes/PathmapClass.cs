@@ -68,6 +68,8 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(SegmentFromNodes);
             serveObjectScope.AddNativeMethod(Bake);
             serveObjectScope.AddNativeMethod(BakeCompressed);
+            staticScope.AddNativeMethod(GetCompressedData);
+            serveObjectScope.AddNativeMethod(DecompressBakemapData);
 
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(SkipNode);
@@ -663,25 +665,72 @@ namespace Deltin.Deltinteger.Pathfinder
                 var onLoop = methodCall.ParameterValues[3] as ILambdaInvocable;
 
                 // Get the compressed bakemap.
-                var compressed = Cache.CacheWatcher.Global.Get<Element>(new CompressedBakeCacheObject(map, attributes));
+                var compressed = CompressedBakemapFromPathmapAndAttributes(map, attributes);
 
-                // Get the CompressedBakeComponent.
-                var component = actionSet.DeltinScript.GetComponent<CompressedBakeComponent>();
-
-                // Call the decompresser.
-                component.Build(actionSet, compressed, p => printProgress.Invoke(actionSet, p), onLoop);
-
-                // Get the bakemapClass instance.
-                var bakemapClass = actionSet.DeltinScript.Types.GetInstance<BakemapClass>();
-
-                // Create a new Bakemap class instance.
-                var newBakemap = bakemapClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
-                bakemapClass.Pathmap.Set(actionSet, newBakemap.Get(), (Element)actionSet.CurrentObject);
-                bakemapClass.NodeBake.Set(actionSet, newBakemap.Get(), component.Result);
-                
-                return newBakemap.Get();
+                return DecompressBakemap(actionSet, compressed, printProgress, onLoop);
             }
         };
+
+        private FuncMethod GetCompressedData => new FuncMethodBuilder()
+        {
+            Name = "GetCompressedData",
+            Documentation = new MarkupBuilder().Add("Gets the compressed bakemap data. This value can be used with ").Code("Pathmap.DecompressBakemapData").Add(" to get a Bakemap."),
+            ReturnType = _supplier.Any(),
+            Parameters = new CodeParameter[] {
+                new PathmapFileParameter("pathmapFile", "The file of the pathmap to create the bakemap from.", _supplier),
+                new ConstIntegerArrayParameter("attributes", AttributesDocumentation, _supplier, true)
+            },
+            Action = (actionSet, methodCall) => {
+                // Get the pathmap.
+                var map = (Pathmap)methodCall.AdditionalParameterData[0];
+                var attributes = ((List<int>)methodCall.AdditionalParameterData[1]).ToArray();
+
+                // Get the compressed bakemap.
+                return CompressedBakemapFromPathmapAndAttributes(map, attributes);
+            }
+        };
+
+        private FuncMethod DecompressBakemapData => new FuncMethodBuilder()
+        {
+            Name = "DecompressBakemapData",
+            Documentation = new MarkupBuilder().Add("Decompresses bakemap data from ").Code("Pathmap.GetCompressedData").Add(" to get a Bakemap."),
+            ReturnType = DeltinScript.Types.GetInstance<BakemapClass>(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("compressedBakemapData", _supplier.Any()),
+                PrintProgress,
+                OnLoopStartParameter
+            },
+            Action = (actionSet, methodCall) => {
+                return DecompressBakemap(
+                    actionSet,
+                    compressedBakemap: methodCall.Get(0),
+                    printProgress: methodCall.ParameterValues[1] as ILambdaInvocable,
+                    onLoopStart: methodCall.ParameterValues[2] as ILambdaInvocable
+                );
+            }
+        };
+
+        Element DecompressBakemap(ActionSet actionSet, Element compressedBakemap, ILambdaInvocable printProgress, ILambdaInvocable onLoopStart)
+        {
+            // Get the CompressedBakeComponent.
+            var component = actionSet.DeltinScript.GetComponent<CompressedBakeComponent>();
+
+            // Call the decompresser.
+            component.Build(actionSet, compressedBakemap, p => printProgress.Invoke(actionSet, p), onLoopStart);
+
+            // Get the bakemapClass instance.
+            var bakemapClass = actionSet.DeltinScript.Types.GetInstance<BakemapClass>();
+
+            // Create a new Bakemap class instance.
+            var newBakemap = bakemapClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
+            bakemapClass.Pathmap.Set(actionSet, newBakemap.Get(), (Element)actionSet.CurrentObject);
+            bakemapClass.NodeBake.Set(actionSet, newBakemap.Get(), component.Result);
+            
+            return newBakemap.Get();
+        }
+
+        static Element CompressedBakemapFromPathmapAndAttributes(Pathmap pathmap, int[] attributes)
+            => Cache.CacheWatcher.Global.Get<Element>(new CompressedBakeCacheObject(pathmap, attributes));
 
         // Static functions
         // StopPathfind(players)
