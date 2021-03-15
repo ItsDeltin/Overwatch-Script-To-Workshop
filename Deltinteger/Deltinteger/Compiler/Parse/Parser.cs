@@ -562,8 +562,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
             while (TryParseBinaryOperator(out OperatorInfo op))
             {
                 PushOperator(op);
-                op.Operator.RhsHandler.Get(this);
+                op.Operator.RhsHandler.Get(op, this);
             }
+
+            PopAllOperators();
+        }
+
+        public void PopAllOperators()
+        {
             while (Operators.Peek().Source.Precedence > 0)
                 PopOperator();
         }
