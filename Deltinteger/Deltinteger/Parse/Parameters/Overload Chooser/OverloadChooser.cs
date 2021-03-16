@@ -211,7 +211,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                 // Make sure the expression's type's structure is usable.
                 if (i < expressionType.Generics.Length)
                     // Recursively check the generics.
-                    ExtractInferredGenerics(match, parameterType, expressionType);
+                    ExtractInferredGenerics(match, parameterType.Generics[i], expressionType.Generics[i]);
                 else
                     match.Error(couldNotInfer, _targetRange);
         }
