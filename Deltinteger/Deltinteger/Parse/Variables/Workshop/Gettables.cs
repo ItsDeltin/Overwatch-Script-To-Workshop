@@ -118,10 +118,11 @@ namespace Deltin.Deltinteger.Parse
         void Throw() => throw new Exception("Cannot modify WorkshopElementReference");
         public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index) => Throw();
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index) => Throw();
-        IGettable IGettable.ChildFromClassReference(IWorkshopTree reference)
-        {
-            Throw();
-            return null;
-        }
+        IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => new WorkshopElementReference(Element.ValueInArray(WorkshopElement, reference));
+        // IGettable IGettable.ChildFromClassReference(IWorkshopTree reference)
+        // {
+        //     Throw();
+        //     return null;
+        // }
     }
 }

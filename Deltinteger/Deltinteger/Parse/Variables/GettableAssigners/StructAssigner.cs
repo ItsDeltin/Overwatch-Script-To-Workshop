@@ -142,8 +142,19 @@ namespace Deltin.Deltinteger.Parse
         IWorkshopTree GetValue(string variableName);
         IGettable GetGettable(string variableName);
         IWorkshopTree GetArbritraryValue();
+        BridgeGetStructValue Bridge(Func<IWorkshopTree, IWorkshopTree> bridge) => new BridgeGetStructValue(this, bridge);
+        BridgeGetStructValue BridgeArbritrary(Func<IWorkshopTree, IWorkshopTree> bridge) => Bridge(bridge);
         bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new NotImplementedException();
         void IWorkshopTree.ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => throw new NotImplementedException();
+
+        public static IWorkshopTree ExtractArbritraryValue(IStructValue structValue)
+        {
+            IWorkshopTree current = structValue;
+            while (current is IStructValue step)
+                current = step.GetArbritraryValue();
+            
+            return current;
+        }
     }
 
     /// <summary>The interface for variable-linked struct values. 'this[variableName]' will get the struct variable's value.</summary>
@@ -239,7 +250,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree GetArbritraryValue() => _structValue;
     }
 
-    class BridgeGetStructValue : IStructValue
+    public class BridgeGetStructValue : IStructValue
     {
         private readonly IStructValue _structValue;
         private readonly Func<IWorkshopTree, IWorkshopTree> _bridge;
@@ -273,6 +284,52 @@ namespace Deltin.Deltinteger.Parse
                 current = structValue.GetArbritraryValue();
 
             return _bridge(current);
+        }
+    }
+
+    class IndexedStructArray : IStructValue
+    {
+        public IStructValue StructArray { get; }
+        public Element IndexedArray { get; private set; }
+        readonly bool _operationModifiesLength;
+
+        public IndexedStructArray(IStructValue structArray, Element indexedArray, bool operationModifiesLength)
+        {
+            StructArray = structArray;
+            IndexedArray = indexedArray;
+            _operationModifiesLength = operationModifiesLength;
+        }
+
+        public IWorkshopTree GetArbritraryValue() => StructArray;
+
+        public IGettable GetGettable(string variableName) => new WorkshopElementReference(IndexedArray);
+
+        public IWorkshopTree GetValue(string variableName)
+        {
+            // Get the struct value.
+            var value = StructArray.GetValue(variableName);
+
+            // Check if we need to do a subsection.
+            if (value is IInlineStructDictionary subvalue)
+                return new IndexedStructArray(subvalue, IndexedArray, _operationModifiesLength);
+            
+            return value;
+        }
+
+        public void AppendModification(Func<(IStructValue structArray, Element indexArray), Element> append) =>
+            IndexedArray = append((new ValueInStructArray(StructArray, Element.ArrayElement()), IndexedArray));
+
+        // Hook the bridge so that it is being used with the indexed array rather than the struct value 'v'.
+        public BridgeGetStructValue Bridge(Func<IWorkshopTree, IWorkshopTree> bridge) => new BridgeGetStructValue(this, v => Element.ValueInArray(v, bridge(IndexedArray)));
+        public BridgeGetStructValue BridgeArbritrary(Func<IWorkshopTree, IWorkshopTree> bridge)
+        {
+            // In typical scenarios, this will equal true.
+            if (_operationModifiesLength)
+                return new BridgeGetStructValue(this, v => bridge(IndexedArray));
+
+            // It is completely useless for the user to do something like this, but if an arbritrary value is needed and
+            // the length won't change, we can optimize and just use the original array.
+            return new BridgeGetStructValue(this, bridge);
         }
     }
 }

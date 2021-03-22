@@ -172,5 +172,6 @@ namespace Deltin.Deltinteger.Parse
         };
 
         IGettableAssigner IAdditionalArray.GetArrayAssigner(IVariable variable) => null;
+        public ArrayFunctionHandler GetFunctionHandler() => new ArrayFunctionHandler();
     }
 }
