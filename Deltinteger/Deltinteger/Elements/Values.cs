@@ -454,8 +454,8 @@ namespace Deltin.Deltinteger.Elements
                 double v = b.Value * (Math.PI / 180);
 
                 double x = Math.Sin(h) * Math.Cos(v);
-                double y = -Math.Sin(v);
-                double z = Math.Cos(h) * Math.Cos(v);
+                double y = Math.Sin(h)*Math.Sin(v);
+                double z = Math.Cos(h);
 
                 if (y == -0)
                     y = 0;
