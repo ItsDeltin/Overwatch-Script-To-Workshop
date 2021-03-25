@@ -5,7 +5,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class PlayerType : CodeType, IAdditionalArray, IResolveElements
+    public class PlayerType : CodeType, ITypeArrayHandler, IResolveElements
     {
         // These functions are shared with both Player and Player[] types.
         // * Teleport *
@@ -64,6 +64,7 @@ namespace Deltin.Deltinteger.Parse
         public PlayerType(ITypeSupplier typeSupplier) : base("Player")
         {
             CanBeExtended = false;
+            ArrayHandler = this;
             _supplier = typeSupplier;
         }
 
@@ -171,7 +172,7 @@ namespace Deltin.Deltinteger.Parse
             Action = (actionSet, methodCall) => Element.Part("Set " + abilityName + " Enabled", actionSet.CurrentObject, methodCall.Get(0))
         };
 
-        IGettableAssigner IAdditionalArray.GetArrayAssigner(IVariable variable) => null;
+        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(IVariable variable) => null;
         public ArrayFunctionHandler GetFunctionHandler() => new ArrayFunctionHandler();
     }
 }

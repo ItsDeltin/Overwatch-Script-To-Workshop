@@ -1,12 +1,14 @@
 using Deltin.Deltinteger.Elements;
+using static Deltin.Deltinteger.Elements.Element;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class ArrayFunctionHandler
     {
-        public virtual void AssignLength(IVariable lengthVariable, VarIndexAssigner assigner, IWorkshopTree reference) => assigner.Add(lengthVariable, Element.CountOf(reference));
-        public virtual void AssignFirstOf(IVariable firstOfVariable, VarIndexAssigner assigner, IWorkshopTree reference) => assigner.Add(firstOfVariable, Element.FirstOf(reference));
-        public virtual void AssignLastOf(IVariable lastOfVariable, VarIndexAssigner assigner, IWorkshopTree reference) => assigner.Add(lastOfVariable, Element.LastOf(reference));
+        public virtual IWorkshopTree Length(IWorkshopTree reference) => CountOf(reference);
+        public virtual IWorkshopTree FirstOf(IWorkshopTree reference) => FirstOf(reference);
+        public virtual IWorkshopTree LastOf(IWorkshopTree reference) => LastOf(reference);
+        public virtual IWorkshopTree Contains(IWorkshopTree reference, IWorkshopTree value) => Contains(reference, value);
         public virtual ISortFunctionExecutor SortedArray() => new GeneralSortFunctionExecutor();
         public virtual ISortFunctionExecutor FilteredArray() => new GeneralSortFunctionExecutor();
         public virtual ISortFunctionExecutor Any() => new GeneralSortFunctionExecutor();

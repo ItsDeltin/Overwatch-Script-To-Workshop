@@ -31,45 +31,26 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
+        /// <summary>Determines if the type is a struct or struct array.</summary>
+        public bool IsStruct { get; protected set; }
+
+        /// <summary>Tracks type arg usage.</summary>
         public IGenericUsage GenericUsage { get; protected set; }
+
+        /// <summary>Overrides execution of array functions when this type is used in an array.</summary>
+        public virtual ITypeArrayHandler ArrayHandler { get; protected set; } = new DefaultArrayHandler();
+
+        /// <summary>Type operations for assignment, comparison, etc.</summary>
+        public TypeOperatorInfo Operations { get; protected set; }
 
         protected List<IMethod> VirtualFunctions { get; } = new List<IMethod>();
         protected List<IVariableInstance> VirtualVariables { get; } = new List<IVariableInstance>();
-        public TypeOperatorInfo Operations { get; protected set; }
 
         public CodeType(string name)
         {
             Name = name;
             Operations = new TypeOperatorInfo(this);
             GenericUsage = new AddToGenericsUsage(this);
-        }
-
-        protected void Inherit(CodeType extend, FileDiagnostics diagnostics, DocRange range)
-        {
-            if (extend == null) throw new ArgumentNullException(nameof(extend));
-
-            string errorMessage = null;
-
-            if (!extend.CanBeExtended)
-                errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
-
-            else if (extend == this)
-                errorMessage = "Cannot extend self.";
-
-            else if (extend.Implements(this))
-                errorMessage = $"The class {extend.Name} extends this class.";
-
-            if (errorMessage != null)
-            {
-                if (diagnostics == null || range == null) throw new Exception(errorMessage);
-                else
-                {
-                    diagnostics.Error(errorMessage, range);
-                    return;
-                }
-            }
-
-            Extends = extend;
         }
 
         public virtual bool Implements(CodeType type)

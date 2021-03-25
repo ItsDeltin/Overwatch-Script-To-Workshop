@@ -1,11 +1,12 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class StructInstance : CodeType, IAdditionalArray, IScopeAppender
+    public class StructInstance : CodeType, ITypeArrayHandler, IScopeAppender
     {
         public IVariableInstance[] Variables { get; private set; }
         public IMethod[] Methods { get; private set; }
@@ -16,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker genericsLinker) : base(provider.Name)
         {
             ObjectScope = new Scope("struct " + Name);
+            IsStruct = true;
 
             provider.OnReady.OnReady(() => {
                 // Variables
@@ -32,6 +34,8 @@ namespace Deltin.Deltinteger.Parse
 
                 _isReady = true;
             });
+
+            ArrayHandler = this;
         }
 
         public override bool Is(CodeType other)
@@ -99,26 +103,53 @@ namespace Deltin.Deltinteger.Parse
 
         public override IGettableAssigner GetGettableAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable), false);
 
-        IGettableAssigner IAdditionalArray.GetArrayAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable), true);
-        void IAdditionalArray.OverrideArray(ArrayType array) {}
-        ArrayFunctionHandler IAdditionalArray.GetFunctionHandler() => new StructArrayFunctionHandler();
+        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable), true);
+        void ITypeArrayHandler.OverrideArray(ArrayType array) {}
+        ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler() => new StructArrayFunctionHandler();
 
         void IScopeAppender.AddObjectBasedScope(IMethod function) => ObjectScope.AddNativeMethod(function);
         void IScopeAppender.AddStaticBasedScope(IMethod function) => StaticScope.AddNativeMethod(function);
         void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => ObjectScope.AddNativeVariable(variable);
         void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => StaticScope.AddNativeVariable(variable);
 
+        // Overrides default array function implementation to support structs, since the default won't work with parallel variables.
         class StructArrayFunctionHandler : ArrayFunctionHandler
         {
-            public override void AssignLength(IVariable lengthVariable, VarIndexAssigner assigner, IWorkshopTree reference)
-                => assigner.Add(lengthVariable, ((IStructValue)reference).BridgeArbritrary(v => Element.CountOf(v)).GetWorkshopValue());
+            // Since all variables in a struct array will be of the same length, we can use BridgeArbritrary instead.
+            public override IWorkshopTree Length(IWorkshopTree reference) => str(reference).BridgeArbritrary(v => Element.CountOf(v)).GetWorkshopValue();
+            public override IWorkshopTree FirstOf(IWorkshopTree reference) => str(reference).Bridge(v => Element.FirstOf(v));
+            public override IWorkshopTree LastOf(IWorkshopTree reference) => str(reference).Bridge(v => Element.LastOf(v));
+            public override IWorkshopTree Contains(IWorkshopTree reference, IWorkshopTree value)
+            {
+                // Extract the values from both structs.
+                var arrayValues = str(reference).GetAllValues();
+                var contains = str(value).GetAllValues();
 
-            public override void AssignFirstOf(IVariable firstOfVariable, VarIndexAssigner assigner, IWorkshopTree reference)
-                => assigner.Add(firstOfVariable, ((IStructValue)reference).Bridge(v => Element.FirstOf(v)));
+                if (arrayValues.Length != contains.Length)
+                    throw new Exception("Lengths of struct pair do not match.");
 
-            public override void AssignLastOf(IVariable lastOfVariable, VarIndexAssigner assigner, IWorkshopTree reference)
-                => assigner.Add(lastOfVariable, ((IStructValue)reference).Bridge(v => Element.LastOf(v)));
+                // The list of struct comparisons.
+                var comparisons = new Queue<IWorkshopTree>();
 
+                // Add the comparisons to the queue.
+                for (int i = 0; i < arrayValues.Length; i++)
+                {
+                    // Later in this function, 'Is True For Any's array is arrayValues[0], so for the first struct value, just use Array Element.
+                    // Otherwise, it will result in 'Is True For Any(x, x[Array Index] == ...' when 'Array Element' would suffice for 'x[Array Index]'
+                    var compareFrom = i == 0 ?
+                        Element.ArrayElement() :
+                        Element.ValueInArray(arrayValues[i], Element.ArrayIndex());
+
+                    comparisons.Enqueue(Element.Compare(compareFrom, Operator.Equal, contains[i]));
+                }
+
+                // Convert the list of comparisons into an && sequence.
+                var condition = comparisons.Dequeue();
+                while (comparisons.Count > 0)
+                    condition = Element.And(condition, comparisons.Dequeue());
+
+                return Element.Any(arrayValues[0], condition);
+            }
             public override ISortFunctionExecutor SortedArray() => new StructSortExecutorReturnsArray(false);
             public override ISortFunctionExecutor FilteredArray() => new StructSortExecutorReturnsArray(true);
             public override ISortFunctionExecutor All() => new StructSortExecutorReturnsBoolean();
@@ -200,6 +231,9 @@ namespace Deltin.Deltinteger.Parse
                         invoke(arrayed));
                 }
             }
+        
+            // Simply casts an IWorkshopTree to an IStructValue.
+            private static IStructValue str(IWorkshopTree reference) => (IStructValue)reference;
         }
     }
 }

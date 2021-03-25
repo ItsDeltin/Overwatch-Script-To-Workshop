@@ -122,6 +122,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IWorkshopTree GetArbritraryValue() => _children.First().Value.GetVariable();
+
+        public IWorkshopTree[] GetAllValues() => IStructValue.ExtractAllValues(_children.Select(child => child.Value.GetVariable()));
     }
 
     /*
@@ -142,6 +144,7 @@ namespace Deltin.Deltinteger.Parse
         IWorkshopTree GetValue(string variableName);
         IGettable GetGettable(string variableName);
         IWorkshopTree GetArbritraryValue();
+        IWorkshopTree[] GetAllValues();
         BridgeGetStructValue Bridge(Func<IWorkshopTree, IWorkshopTree> bridge) => new BridgeGetStructValue(this, bridge);
         BridgeGetStructValue BridgeArbritrary(Func<IWorkshopTree, IWorkshopTree> bridge) => Bridge(bridge);
         bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new NotImplementedException();
@@ -154,6 +157,21 @@ namespace Deltin.Deltinteger.Parse
                 current = step.GetArbritraryValue();
             
             return current;
+        }
+
+        public static IWorkshopTree[] ExtractAllValues(IEnumerable<IWorkshopTree> children)
+        {
+            var values = new List<IWorkshopTree>();
+
+            foreach (var child in children)
+            {
+                if (child is IStructValue structValue)
+                    values.AddRange(structValue.GetAllValues());
+                else
+                    values.Add(child);
+            }
+
+            return values.ToArray();
         }
     }
 
@@ -177,6 +195,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree this[string variableName] => Values[variableName];
         public IWorkshopTree GetValue(string variableName) => Values[variableName];
         public IWorkshopTree GetArbritraryValue() => Values.First().Value;
+        public IWorkshopTree[] GetAllValues() => IStructValue.ExtractAllValues(Values.Select(v => v.Value));
         public IGettable GetGettable(string variableName) => new WorkshopElementReference(Values[variableName]);
 
         public LinkedStructAssigner(Dictionary<string, IWorkshopTree> values)
@@ -198,7 +217,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree GetValue(string variableName)
         {
             // Check if we need to do an array subsection.
-            if (Children.Length > 0 && Children[0].GetValue(variableName) is IInlineStructDictionary)
+            if (Children.Length > 0 && Children[0].GetValue(variableName) is IStructValue)
             {
                 // If we do, create a new StructArray with the target variable.
                 // This will convert the data structure like so:
@@ -216,8 +235,54 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
-
         public IWorkshopTree GetArbritraryValue() => Children[0];
+        public IWorkshopTree[] GetAllValues()
+        {
+            // This isn't possible, but if it was, we would return an empty array.
+            if (Children.Length == 0) return new IWorkshopTree[0];
+    
+            // The first child is used as a reference for the other children, 'Children[x].GetAllValues().Length' will all equal the same thing.
+            var primaryStructValues = Children[0].GetAllValues();
+            int valueCount = primaryStructValues.Length;
+            int arrayCount = Children.Length;
+
+            // 'transposed' is the struct values shifted into their respective arrays.
+            // The data we recieve from the children's GetAllValues will look something like this:
+            // [x1, y1], [x2, y2]
+            // We want to change that into:
+            // [x1, x2], [y1, y2]
+            var transposed = new IWorkshopTree[valueCount, arrayCount];
+
+            // Add the primary values (Children[0]).
+            for (int v = 0; v < valueCount; v++)
+                transposed[v, 0] = primaryStructValues[v];
+            
+            // Add other values. Start at 1 since 0 was added earlier.
+            for (int c = 1; c < arrayCount; c++)
+            {
+                var childValues = Children[c].GetAllValues();
+                for (int v = 0; v < valueCount; v++)
+                    transposed[v, c] = childValues[v];
+            }
+
+            // 'transposed' is now a 2d array where the first dimension represents the workshop array
+            // and the second dimension represents that array's values.
+
+            // Return transposed converted to a range of workshop arrays.
+            var arrays = new IWorkshopTree[valueCount];
+            for (int v = 0; v < valueCount; v++)
+            {
+                // Convert the v'th dimension into its own array.
+                var array = new IWorkshopTree[arrayCount];
+                for (int a = 0; a < arrayCount; a++)
+                    array[a] = transposed[v, a];
+                
+                // Turn that array into a singular element.
+                arrays[v] = Element.CreateArray(array);
+            }
+
+            return arrays;
+        }
     }
 
     /// <summary>Gets a value in a struct array by an index.</summary>
@@ -246,8 +311,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IGettable GetGettable(string variableName) => _structValue.GetGettable(variableName).ChildFromClassReference(_index);
-
         public IWorkshopTree GetArbritraryValue() => _structValue;
+        public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues();
     }
 
     public class BridgeGetStructValue : IStructValue
@@ -273,10 +338,6 @@ namespace Deltin.Deltinteger.Parse
             return _bridge(value);
         }
 
-        public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
-
-        public IWorkshopTree GetArbritraryValue() => _structValue;
-
         public IWorkshopTree GetWorkshopValue()
         {
             IWorkshopTree current = _structValue;
@@ -285,8 +346,13 @@ namespace Deltin.Deltinteger.Parse
 
             return _bridge(current);
         }
+
+        public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
+        public IWorkshopTree GetArbritraryValue() => _structValue;
+        public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues();
     }
 
+    // Represents a struct array converted into a single array of indices with the same length of the struct array.
     class IndexedStructArray : IStructValue
     {
         public IStructValue StructArray { get; }
@@ -301,8 +367,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IWorkshopTree GetArbritraryValue() => StructArray;
-
         public IGettable GetGettable(string variableName) => new WorkshopElementReference(IndexedArray);
+        public IWorkshopTree[] GetAllValues() => throw new NotImplementedException();
 
         public IWorkshopTree GetValue(string variableName)
         {

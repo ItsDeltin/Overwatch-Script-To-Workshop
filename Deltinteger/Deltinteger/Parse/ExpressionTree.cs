@@ -203,7 +203,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         var workshopIndex = callVariableAction.Index[ai].Parse(actionSet);
                         resultIndex[ai] = (Element)workshopIndex;
-                        current = Element.ValueInArray(current, workshopIndex);
+                        current = ValueInArrayToWorkshop.ValueInArray(current, workshopIndex);
                     }
 
                     // Set the resulting variable.

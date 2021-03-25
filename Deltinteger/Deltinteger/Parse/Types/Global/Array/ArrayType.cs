@@ -19,7 +19,8 @@ namespace Deltin.Deltinteger.Parse
         public ArrayType(ITypeSupplier supplier, CodeType arrayOfType) : base(arrayOfType.GetNameOrAny() + "[]")
         {
             ArrayOfType = arrayOfType;
-            var functionHandler = ArrayOfType is IAdditionalArray add ? add.GetFunctionHandler() : new ArrayFunctionHandler();
+            ArrayHandler = arrayOfType.ArrayHandler;
+            IsStruct = arrayOfType.IsStruct;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
 
             Generics = new[] { arrayOfType };
@@ -34,6 +35,7 @@ namespace Deltin.Deltinteger.Parse
             Scope.AddNativeVariable(_first);
 
             var pipeType = new PipeType(ArrayOfType, this);
+            var functionHandler = ArrayOfType.ArrayHandler.GetFunctionHandler();
 
             // Filtered Array
             new GenericSortFunction()
@@ -104,7 +106,8 @@ namespace Deltin.Deltinteger.Parse
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value that is being looked for in the array.", ArrayOfType)
                 },
-                Action = (actionSet, methodCall) => Element.Contains(actionSet.CurrentObject, methodCall.ParameterValues[0])
+                Action = (actionSet, methodCall) => functionHandler.Contains(actionSet.CurrentObject, methodCall.ParameterValues[0])
+                // Action = (actionSet, methodCall) => Element.Contains(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Random
             Func(new FuncMethodBuilder()
@@ -215,8 +218,7 @@ namespace Deltin.Deltinteger.Parse
                 new AssignmentOperation(AssignmentOperator.SubtractEqual, pipeType, info => info.Modify(Operation.RemoveFromArrayByValue))
             });
 
-            if (arrayOfType is IAdditionalArray addition)
-                addition.OverrideArray(this);
+            arrayOfType.ArrayHandler.OverrideArray(this);
         }
 
         private void Func(FuncMethodBuilder builder)
@@ -226,30 +228,19 @@ namespace Deltin.Deltinteger.Parse
 
         public override IGettableAssigner GetGettableAssigner(IVariable variable)
         {
-            if (ArrayOfType is IAdditionalArray addition)
-            {
-                var overrideAssigner = addition.GetArrayAssigner(variable);
-                if (overrideAssigner != null)
-                    return overrideAssigner;
-            }
+            var overrideAssigner = ArrayOfType.ArrayHandler.GetArrayAssigner(variable);
+            if (overrideAssigner != null)
+                return overrideAssigner;
+
             return new DataTypeAssigner((Var)variable);
         }
 
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
-            if (ArrayOfType is IAdditionalArray addition)
-            {
-                var functionHandler = addition.GetFunctionHandler();
-                functionHandler.AssignLength(_length, assigner, reference);
-                functionHandler.AssignFirstOf(_first, assigner, reference);
-                functionHandler.AssignLastOf(_last, assigner, reference);
-            }
-            else
-            {
-                assigner.Add(_length, Element.CountOf(reference));
-                assigner.Add(_first, Element.FirstOf(reference));
-                assigner.Add(_last, Element.LastOf(reference));
-            }
+            var functionHandler = ArrayOfType.ArrayHandler.GetFunctionHandler();
+            assigner.Add(_length, functionHandler.Length(reference));
+            assigner.Add(_first, functionHandler.FirstOf(reference));
+            assigner.Add(_last, functionHandler.LastOf(reference));
         }
 
         public override AnonymousType[] ExtractAnonymousTypes() => ArrayOfType.ExtractAnonymousTypes();
