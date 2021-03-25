@@ -1128,7 +1128,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public static readonly V_Number LargeArbitraryNumber = new V_Number(9999);
 
-        private const int MAX_LENGTH = 10;
+        private const int MAX_FRACTIONAL_DIGITS = 3;
 
         public double Value { get; set; }
 
@@ -1142,7 +1142,7 @@ namespace Deltin.Deltinteger.Elements
         {
             if (double.IsNaN(Value))
                 Value = 0;
-            return Math.Round(Value, MAX_LENGTH).ToString();
+            return Math.Round(Value, MAX_FRACTIONAL_DIGITS).ToString();
         }
 
         override public bool ConstantSupported<T>() =>
