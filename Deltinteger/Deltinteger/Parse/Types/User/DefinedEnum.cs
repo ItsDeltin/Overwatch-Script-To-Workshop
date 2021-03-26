@@ -68,11 +68,11 @@ namespace Deltin.Deltinteger.Parse
         public MarkupBuilder Documentation { get; }
         public LanguageServer.Location DefinedAt { get; }
         public DefinedEnum Enum { get; }
-        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes() { CanBeSet = false, StoreType = StoreType.None };
+        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes() { CanBeSet = false, StoreType = StoreType.None, CanBeIndexed = false };
 
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool WholeContext => true;
-        public ICodeTypeSolver CodeType => null;
+        public ICodeTypeSolver CodeType => Enum;
 
         public ExpressionOrWorkshopValue ValueExpression { get; private set; }
 

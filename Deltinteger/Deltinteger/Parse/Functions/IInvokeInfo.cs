@@ -252,7 +252,7 @@ namespace Deltin.Deltinteger.Parse
         public LambdaInvokeResult(DeltinScript deltinScript, LambdaInvoke function, IExpression[] parameterValues, IExpression target)
         {
             Function = function;
-            ReturnType = function.CodeType.GetCodeType(deltinScript);
+            ReturnType = function.CodeType?.GetCodeType(deltinScript);
             ParameterValues = parameterValues;
             AdditionalParameterData = new object[parameterValues?.Length ?? 0];
             _target = target;

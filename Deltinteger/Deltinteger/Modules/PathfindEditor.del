@@ -516,7 +516,7 @@ if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlay
     LoopIfConditionIsTrue();
 }
 
-rule: "CSV out"
+rule: "Compile"
 Event.OngoingPlayer
 if (IsCommunicating(EventPlayer(), b_compile))
 {
@@ -549,7 +549,7 @@ if (IsCommunicating(EventPlayer(), b_compile))
 
     SmallMessage(AllPlayers(), "Compile Finished!");
     EnableInspectorRecording();
-    # Pathmap is compiled. Copy the current global action set to the clipboard. In vscode, press ctrl+shift+p to open the command pallete, then run the 'Create pathmap from CSV clipboard' command.
+    # Pathmap is compiled. Copy the current global action set to the clipboard. In vscode, press ctrl+shift+p to open the command pallete, then run the 'Create pathmap from action-set clipboard' command.
     DisableInspectorRecording();
     compiling = false;
 }

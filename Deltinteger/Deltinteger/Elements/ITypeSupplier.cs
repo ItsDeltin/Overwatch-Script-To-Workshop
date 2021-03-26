@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Elements
         CodeType NumberArray() => new ArrayType(this, Number());
         CodeType VectorArray() => new ArrayType(this, Vector());
         CodeType PlayerArray() => new ArrayType(this, Player());
-        CodeType Players() => new PipeType(PlayerArray(), Player());
+        CodeType Players() => new PipeType(Player(), PlayerArray());
         CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         CodeType Hero() => EnumType("Hero");
         CodeType Map() => EnumType("Map");
@@ -52,6 +52,7 @@ namespace Deltin.Deltinteger.Elements
                 case "color": return EnumType("Color");
                 case "hero[]": return new ArrayType(this, Hero());
                 case "string[]": return new ArrayType(this, String());
+                case "hero | hero[]": return new PipeType(Hero(), Array(Hero()));
                 default: return EnumType(value) ?? throw new NotImplementedException("Type '" + value + "' not handled.");
             }
         }

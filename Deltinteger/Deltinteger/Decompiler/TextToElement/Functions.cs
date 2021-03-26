@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             if (Disabled)
                 decompiler.Append("// ");
 
-            if (WorkshopFunctionDecompileHook.Convert.TryGetValue(Function.CodeName(), out var action))
+            if (WorkshopFunctionDecompileHook.Convert.TryGetValue(Function.Name, out var action))
                 action.Invoke(decompiler, this);
             else
                 Default(decompiler, end);
@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public void Default(DecompileRule decompiler, bool end)
         {
-            decompiler.Append(Function.Name + "(");
+            decompiler.Append(Function.CodeName() + "(");
 
             for (int i = 0; i < Values.Length; i++)
             {

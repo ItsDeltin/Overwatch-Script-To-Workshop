@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public void SetNodesValue(int maxNodesValue)
         {
-            _maxNodeCount = maxNodesValue;
+            _maxNodeCount = Math.Max(_maxNodeCount, maxNodesValue);
         }
 
         public void Init(DeltinScript deltinScript) {}

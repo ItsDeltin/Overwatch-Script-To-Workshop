@@ -37,6 +37,7 @@ namespace Deltin.Deltinteger.Parse
         bool UseDefaultVariableAssigner { get; }
         bool CanBeSet { get; }
         StoreType StoreType { get; }
+        bool CanBeIndexed { get; }
     }
 
     class VariableInstanceAttributes : IVariableInstanceAttributes
@@ -44,5 +45,6 @@ namespace Deltin.Deltinteger.Parse
         public bool UseDefaultVariableAssigner { get; set; } = true;
         public bool CanBeSet { get; set; } = true;
         public StoreType StoreType { get; set; } = StoreType.None;
+        public bool CanBeIndexed { get; set; } = true;
     }
 }

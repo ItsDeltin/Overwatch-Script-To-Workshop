@@ -1,17 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Models;
-using Deltin.Deltinteger.I18n;
-using Deltin.Deltinteger.Compiler;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -37,12 +27,6 @@ namespace Deltin.Deltinteger.Elements
 
         public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
-            if (CustomConverters.Converters.TryGetValue(Function.Name, out var converter))
-            {
-                converter(b, this);
-                return;
-            }
-
             var action = Function as ElementJsonAction;
             if (action != null && action.Indentation == "outdent") b.Outdent();
 
@@ -117,7 +101,7 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        public Element Optimize()
+        public Element Optimized()
         {
             OptimizeChildren();
 
@@ -132,7 +116,7 @@ namespace Deltin.Deltinteger.Elements
             AddMissingParameters();
             for (int i = 0; i < ParameterValues.Length; i++)
                 if (ParameterValues[i] is Element element)
-                    ParameterValues[i] = element.Optimize();
+                    ParameterValues[i] = element.Optimized();
         }
 
         public bool TryGetConstant(out Vertex vertex)
@@ -186,10 +170,12 @@ namespace Deltin.Deltinteger.Elements
         public virtual int ElementCount()
         {
             AddMissingParameters();
-            int count = 1;
-            
+
+            int count = 1 + Function.AdditionalElementCount;
+            int parameterOffset = Function is ElementJsonAction ? -1 : 0;
+
             foreach (var parameter in ParameterValues)
-                count += parameter.ElementCount();
+                count += parameter.ElementCount() + parameterOffset;
             
             return count;
         }
@@ -390,7 +376,7 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(Value.ToString());
+        public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(((decimal)Value).ToString());
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
     }
 }

@@ -612,7 +612,7 @@
       }
     },
     {
-      "type": "any",
+      "type": "any[]",
       "name": "Filtered Array",
       "documentation": "A copy of the specified array with any values that do not match the specified condition removed.",
       "parameters": {
@@ -1316,23 +1316,23 @@
       "documentation": "A reference to the last effect or icon entity created by the event player (or created at the global level)."
     },
     {
-      "type": "number",
+      "type": "any",
       "name": "Last Damage Modification ID"
     },
     {
-      "type": "number",
+      "type": "any",
       "name": "Last Damage Over Time ID",
       "documentation": "An ID representing the most recent damage over time action that was executed by the event player (or executed at the global level).",
       "alias": "LastDamageOverTime"
     },
     {
-      "type": "number",
+      "type": "any",
       "name": "Last Heal Over Time ID",
       "documentation": "An ID representing the most recent heal over time action that was executed by the event player (or executed at the global level).",
       "alias": "LastHealOverTime"
     },
     {
-      "type": "number",
+      "type": "any",
       "name": "Last Healing Modification ID"
     },
     {
@@ -1536,7 +1536,8 @@
       "type": "number",
       "name": "Number",
       "documentation": "A real number constant.",
-      "hidden": true
+      "hidden": true,
+      "additionalElementCount": 1
     },
     {
       "type": "number",
@@ -1743,7 +1744,7 @@
       "hidden": true
     },
     {
-      "type": "player[]",
+      "type": "players",
       "name": "Players In Slot",
       "documentation": "The player or array of players who occupy a specific slot in the game.",
       "parameters": {
@@ -1933,7 +1934,8 @@
         },
         "Players To Include": {
           "documentation": "Which players can be hit by this ray cast. Can use most Player based Value Syntax to provide this value.",
-          "type": "players"
+          "type": "players",
+          "defaultValue": "All Players"
         },
         "Players To Exclude": {
           "documentation": "Which players cannot be hit by this ray cast. This list takes precedence over players to include. Can use most Player based Value Syntax to provide this value.",
@@ -1964,7 +1966,8 @@
         },
         "Players To Include": {
           "documentation": "Which players can be hit by this ray cast. Can use most Player based Value Syntax to provide this value.",
-          "type": "players"
+          "type": "players",
+          "defaultValue": "All Players"
         },
         "Players To Exclude": {
           "documentation": "Which players cannot be hit by this ray cast. This list takes precedence over players to include. Can use most Player based Value Syntax to provide this value.",
@@ -1995,7 +1998,8 @@
         },
         "Players To Include": {
           "documentation": "Which players can be hit by this ray cast. Can use most Player based Value Syntax to provide this value.",
-          "type": "players"
+          "type": "players",
+          "defaultValue": "All Players"
         },
         "Players To Exclude": {
           "documentation": "Which players cannot be hit by this ray cast. This list takes precedence over players to include. Can use most Player based Value Syntax to provide this value.",
@@ -2109,7 +2113,7 @@
       }
     },
     {
-      "type": "number",
+      "type": "any[]",
       "name": "Sorted Array",
       "documentation": "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.",
       "parameters": {
@@ -2185,7 +2189,8 @@
           "type": "any",
           "defaultValue": null
         }
-      }
+      },
+      "additionalElementCount": 1
     },
     {
       "type": "string",
@@ -2203,7 +2208,8 @@
           "type": "any",
           "defaultValue": null
         }
-      }
+      },
+      "additionalElementCount": 1
     },
     {
       "type": "string",
@@ -2397,7 +2403,7 @@
       }
     },
     {
-      "type": "vector",
+      "type": "number",
       "name": "Vertical Angle From Direction",
       "documentation": "The vertical angle in degrees corresponding to the specified direction vector.",
       "parameters": {
@@ -2519,7 +2525,8 @@
     {
       "type": "any",
       "name": "Array",
-      "hidden": true
+      "hidden": true,
+      "additionalElementCount": 1
     },
     {
       "type": "any",
@@ -2804,7 +2811,8 @@
           "type": "number",
           "defaultValue": 0
         }
-      }
+      },
+      "additionalElementCount": -3
     },
     {
       "type": "number",
@@ -2829,7 +2837,8 @@
           "type": "number",
           "defaultValue": 0
         }
-      }
+      },
+      "additionalElementCount": -3
     },
     {
       "type": "boolean",
@@ -2870,7 +2879,9 @@
           "type": "number",
           "defaultValue": 0
         }
-      }
+      },
+      "hidden": true,
+      "additionalElementCount": -1
     },
     {
       "type": "boolean",
@@ -2889,7 +2900,8 @@
           "type": "number",
           "defaultValue": 0
         }
-      }
+      },
+      "hidden": true
     },
     {
       "type": "any",
@@ -2931,7 +2943,8 @@
           "type": "any"
         }
       },
-      "hidden": true
+      "hidden": true,
+      "additionalElementCount": 1
     },
     {
       "name": "Update Every Frame",
@@ -3037,6 +3050,94 @@
         },
         "Stat": {
           "type": "PlayerHeroStat"
+        }
+      }
+    },
+    {
+      "name": "Damage Over Time Count",
+      "type": "number"
+    },
+    {
+      "name": "Heal Over Time Count",
+      "type": "number"
+    },
+    {
+      "name": "Text Count",
+      "type": "number"
+    },
+    {
+      "name": "Damage Modification Count",
+      "type": "number"
+    },
+    {
+      "name": "Healing Modification Count",
+      "type": "number"
+    },
+    {
+      "name": "Assist Count",
+      "type": "number"
+    },
+    {
+      "name": "Entity Count",
+      "type": "number"
+    },
+    {
+      "name": "Local Player",
+      "type": "player",
+      "documentation": "The Player being controlled on the user's computer. This Value is different for each end user and thus can only be accessed in Actions which effect visuals or the HUD. This value cannot be stored in Variables."
+    },
+    {
+      "name": "Char In String",
+      "type": "string",
+      "documenation": "The character found at a specified index of a String.",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Index": {
+          "type": "number"
+        }
+      }
+    },
+    {
+      "name": "Index Of String Char",
+      "type": "number",
+      "documentation": "The index of a character within a String or -1 of no such character can be found.",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Character": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "name": "String Split",
+      "type": "string[]",
+      "documentation": "Results in an Array of String Values. These String Values will be built from the specified String Value, split around the seperator String.",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Seperator": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "name": "String Replace",
+      "type": "string",
+      "documentation": "Results in a String Value. This String Value will be built from the specified String Value, where all occurrences of the pattern String are replaced with the replacement String.",
+      "parameters": {
+        "String": {
+          "type": "string"
+        },
+        "Pattern": {
+          "type": "string"
+        },
+        "Replacement": {
+          "type": "string"
         }
       }
     }
@@ -3912,7 +4013,8 @@
         },
         "Killer": {
           "documentation": "The player who will receive credit for the kill. A killer of null indicates no player will receive credit. Can use most Player based Value Syntax for this value.",
-          "type": "player"
+          "type": "player",
+          "defaultValue": null
         }
       }
     },
@@ -4119,7 +4221,7 @@
         },
         "Hero": {
           "documentation": "The hero or heroes to begin preloading for the specified player or players. When multiple heroes are specified in an array, the Heroes towards the beginning of the array are prioritized. Can use most Hero based Value Syntax for this value.",
-          "type": "hero",
+          "type": "hero | hero[]",
           "defaultValue": "Hero"
         }
       }
@@ -4443,7 +4545,7 @@
         },
         "Hero": {
           "documentation": "The hero or heroes that will be available. If no heroes are provided, the action has no effect. Can use most Hero based Value Syntax for this value including compatible Arrays.",
-          "type": "hero"
+          "type": "hero | hero[]"
         }
       },
       "alias": "SetAllowedHeroes"
@@ -4791,7 +4893,7 @@
         },
         "Damagers": {
           "documentation": "The player or players whose outgoing damage will be modified (when attacking the receivers). Can use most Player based Value Syntax.",
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Damage Percent": {
@@ -4946,7 +5048,7 @@
           "defaultValue": "Event Player"
         },
         "Healers": {
-          "type": "player",
+          "type": "players",
           "defaultValue": "All Players"
         },
         "Healing Percent": {
@@ -5153,7 +5255,7 @@
       "parameters": {
         "Damage modification ID": {
           "documentation": "Specifies which damage modification instance to stop, this ID may be the last damage modification ID or a variable into which last damage modification ID was earlier stored. Can use most Number based Value Syntax.",
-          "type": "number"
+          "type": "any"
         }
       }
     },
@@ -5163,7 +5265,7 @@
       "parameters": {
         "Damage Over Time ID": {
           "documentation": "Specifies which damage over time instance to stop, this ID may be the last damage over time ID or a variable into which last damage over time ID was earlier stored. Can use most Number based Value Syntax.",
-          "type": "number"
+          "type": "any"
         }
       }
     },
@@ -5217,7 +5319,7 @@
       "documentation": "Stops an instance of heal over time that was started by the start heal over time action",
       "parameters": {
         "Stop Heal Over Time": {
-          "type": "players",
+          "type": "any",
           "defaultValue": "Event Player"
         }
       }
@@ -5418,7 +5520,7 @@
           "defaultValue": "Last Created Entity"
         },
         "Offset": {
-          "type": "player",
+          "type": "vector",
           "defaultValue": "Vector"
         }
       }
@@ -5897,7 +5999,7 @@
       "name": "Log To Inspector",
       "parameters": {
         "Text": {
-          "type": "string"
+          "type": "any"
         }
       }
     },
@@ -6087,6 +6189,105 @@
     },
     {
       "name": "Destroy All Progress Bar In-World Text"
+    },
+    {
+      "name": "Enable Text Chat",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
+    },
+    {
+      "name": "Disable Text Chat",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
+    },
+    {
+      "name": "Enable Voice Chat",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
+    },
+    {
+      "name": "Disable Voice Chat",
+      "parameters": {
+        "Player": {
+          "type": "players",
+          "documentation": "The Player or Players who will have their voice chat disabled.",
+          "defaultValue": "Event Player"
+        },
+        "Team Voice Chat": {
+          "type": "boolean",
+          "documentation": "Wether or not Team Voice Chat will be disabled.",
+          "defaultValue": true
+        },
+        "Match Voice Chat": {
+          "type": "boolean",
+          "documentation": "Wether or not Match Voice Chat will be disabled.",
+          "defaultValue": true
+        },
+        "Group Voice Chat": {
+          "type": "boolean",
+          "documentation": "Wether or not Group Voice Chat will be disabled.",
+          "defaultValue": true
+        }
+      }
+    },
+    {
+      "name": "Start Game Mode"
+    },
+    {
+      "name": "Return To Lobby"
+    },
+    {
+      "name": "Restart Match"
+    },
+    {
+      "name": "Move Player To Team",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        },
+        "Team": {
+          "type": "team"
+        },
+        "Slot": {
+          "type": "number"
+        }
+      }
+    },
+    {
+      "name": "Remove Player",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
+    },
+    {
+      "name": "Start Forcing Dummy Bot Name",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        },
+        "Name": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "name": "Stop Forcing Dummy Bot Name",
+      "parameters": {
+        "Player": {
+          "type": "players"
+        }
+      }
     }
   ],
   "enumerators": {
@@ -6310,10 +6511,7 @@
       "Melee",
       "Reload"
     ],
-    "Relative": [
-      "To World",
-      "To Player"
-    ],
+    "Relative": ["To World", "To Player"],
     "ContraryMotion": [
       {
         "name": "Cancel Contrary Motion",
@@ -6328,14 +6526,8 @@
         "alias": "Incorporate"
       }
     ],
-    "RateChaseReevaluation": [
-      "Destination And Rate",
-      "None"
-    ],
-    "TimeChaseReevaluation": [
-      "Destination And Duration",
-      "None"
-    ],
+    "RateChaseReevaluation": ["Destination And Rate", "None"],
+    "TimeChaseReevaluation": ["Destination And Duration", "None"],
     "Status": [
       "Hacked",
       "Burning",
@@ -6348,11 +6540,7 @@
       "Rooted",
       "Stunned"
     ],
-    "Team": [
-      "All",
-      "Team1",
-      "Team2"
-    ],
+    "Team": ["All", "Team1", "Team2"],
     "WaitBehavior": [
       "Ignore Condition",
       "Abort When False",
@@ -6377,7 +6565,76 @@
       "Sparkles Sound",
       "Smoke Sound",
       "Decal Sound",
-      "Beacon Sound"
+      "Beacon Sound",
+      "Echo Focusing Beam Sound",
+      "Junkrat Trap Chain Sound",
+      "Mercy Heal Beam Sound",
+      "Mercy Boost Beam Sound",
+      "Moira Grasp Connected Sound",
+      "Moira Orb Damage Sound",
+      "Moira Orb Heal Sound",
+      "Moira Coalescence Sound",
+      "Orisa Amplifier Sound",
+      "Orisa Halt Tendril Sound",
+      "Symmetra Projector Sound",
+      "Winston Tesla Cannon Sound",
+      "Zarya Particle Beam Sound",
+      "Omnic Slicer Beam Sound",
+      "Heal Target Active Effect",
+      "Heal Target Effect",
+      "Ana Biotic Grenade Increased Healing Effect",
+      "Ana Nano Boosted Effect",
+      "Baptiste Immortality Field Protected Effect",
+      "Echo Cloning Effect",
+      {
+        "name": "Lúcio Sound Barrier Protected Effect",
+        "alias": "LucioSoundBarrierProtectedEffect"
+      },
+      "Mercy Damage Boosted Effect",
+      "Reaper Wraith Form Effect",
+      {
+        "name": "Soldier: 76 Sprinting Effect",
+        "alias": "Soldier76SprintingEffect"
+      },
+      {
+        "name": "Torbjörn Overloading Effect",
+        "alias": "TorbjornOverloadingEffect"
+      },
+      "Winston Primal Rage Effect",
+      "Wrecking Ball Adaptive Shield Target Effect",
+      "Wrecking Ball Piledriver Fire Effect",
+      "Ana Biotic Grenade No Healing Effect",
+      "Ana Sleeping Effect",
+      "Ashe Dynamite Burning Particle Effect",
+      "Ashe Dynamite Burning Material Effect",
+      "McCree Flashbang Stunned Effect",
+      "Mei Frozen Effect",
+      "Sigma Gravitic Flux Target Effect",
+      "Sombra Hacked Looping Effect",
+      "Widowmaker Venom Mine Target Effect",
+      "Winston Tesla Cannon Target Effect",
+      "Zenyatta Orb Of Discord Target Effect",
+      "Ana Nano Boosted Sound",
+      "Baptiste Immortality Field Protected Sound",
+      "Echo Cloning Sound",
+      {
+        "name": "Lúcio Sound Barrier Protected Sound",
+        "alias": "LucioSoundBarrierProtectedSound"
+      },
+      "Mei Frozen Sound",
+      "Mercy Damage Boosted Sound",
+      "Sigma Gravitic Flux Target Sound",
+      "Sombra Hacking Sound",
+      "Sombra Hacked Sound",
+      {
+        "name": "Torbjörn Overloading Sound",
+        "alias": "TorbjornOverloadingSound"
+      },
+      "Winston Tesla Cannon Target Sound",
+      "Winston Primal Rage Sound",
+      "Wrecking Ball Adaptive Shield Target Sound",
+      "Wrecking Ball Piledriver Fire Sound",
+      "Zenyatta Orb Of Discord Target Sound"
     ],
     "Color": [
       "White",
@@ -6466,11 +6723,7 @@
       "Spray Right",
       "Spray Down"
     ],
-    "Location": [
-      "Left",
-      "Top",
-      "Right"
-    ],
+    "Location": ["Left", "Top", "Right"],
     "HudTextRev": [
       "Visible To And String",
       "String",
@@ -6568,13 +6821,108 @@
       "Buff Impact Sound",
       "Ring Explosion Sound",
       "Buff Explosion Sound",
-      "Explosion Sound"
+      "Explosion Sound",
+      "Heal Target Active Effect",
+      "Sombra Translocating Material Effect",
+      "McCree Flashbang Stunned Effect",
+      "Sombra Hacked Starting Effect",
+      "Ana Biotic Grenade Increased Healing Sound",
+      "Ana Biotic Grenade No Healing Sound",
+      "Ana Sleeping Sound",
+      "Reaper Wraith Form Sound",
+      "Sombra Translocating Sound",
+      {
+        "name": "Soldier: 76 Sprint Start Sound",
+        "alias": "Soldier76SprintStartSound"
+      },
+      "Brigitte Repair Pack Impact Effect",
+      "Brigitte Repair Pack Armor Effect",
+      "Brigitte Whip Shot Heal Area Effect",
+      "Dva Micro Missiles Explosion Effect",
+      "Dva Self Destruct Explosion Effect",
+      "Echo Sticky Bomb Explosion Effect",
+      "Hanzo Sonic Arrow Initial Pulse Effect",
+      {
+        "name": "Lúcio Sound Barrier Cast Effect",
+        "alias": "LucioSoundBarrierCastEffect"
+      },
+      "Moira Fade Disappear Effect",
+      "Moira Fade Reappear Effect",
+      "Orisa Halt Implosion Effect",
+      "Sigma Hypersphere Implosion Effect",
+      "Sombra Logo Effect",
+      "Sombra Translocator Disappear Effect",
+      "Sombra Translocator Reappear Effect",
+      "Sombra Emp Explosion effect",
+      "Symmetra Teleporter Reappear Effect",
+      "Tracer Recall Disappear Effect",
+      "Tracer Recall Reappear Effect",
+      "Zarya Particle Cannon Explosion Effect",
+      "Ana Biotic Grenade Explosion Effect",
+      "Ashe Dynamite Explosion Effect",
+      "Baptiste Biotic Launcher Explosion Effect",
+      "Bastion Tank Cannon Explosion Effect",
+      "Doomfist Rising Uppercut Leap Effect",
+      "Doomfist Rising Uppercut Impact Effect",
+      "Doomfist Meteor Strike Impact Effect",
+      "Junkrat Frag Launcher Explosion Effect",
+      "Junkrat Concussion Mine Explosion Effect",
+      "Junkrat Rip Tire Explosion Effect",
+      "McCree Flashbang Explosion Effect",
+      "Pharah Rocket Launcher Explosion Effect",
+      "Pharah Concussive Blast Effect",
+      "Pharah Barrage Explosion Effect",
+      "Reinhardt Fire Strike Target Impact Effect",
+      "Sigma Accretion Impact Effect",
+      "Widowmaker Venom Mine Explosion Effect",
+      "Winston Jump Pack Landing Effect",
+      "Wrecking Ball Piledriver Impact Effect",
+      "Wrecking Ball Minefield Explosion Effect",
+      "Ana Biotic Grenade Explosion Sound",
+      "Ashe Dynamite Explosion Sound",
+      "Baptiste Biotic Launcher Explosion Sound",
+      "Bastion Tank Cannon Explosion Sound",
+      "Brigitte Whip Shot Heal Area Sound",
+      "Brigitte Repair Pack Impact Sound",
+      "Brigitte Repair Pack Armor Sound",
+      "Dva Micro Missiles Explosion Sound",
+      "Dva Self Destruct Explosion Sound",
+      "Doomfist Rising Uppercut Leap Sound",
+      "Doomfist Rising Uppercut Impact Sound",
+      "Doomfist Meteor Strike Impact Sound",
+      "Echo Sticky Bomb Explosion Sound",
+      "Junkrat Frag Launcher Explosion Sound",
+      "Junkrat Concussion Mine Explosion Sound",
+      "Junkrat Rip Tire Explosion Sound",
+      "Hanzo Sonic Arrow Initial Pulse Sound",
+      {
+        "name": "Lúcio Sound Barrier Cast Sound",
+        "alias": "LucioSoundBarrierCastSound"
+      },
+      "McCree Flashbang Explosion Sound",
+      "Moira Fade Disappear Sound",
+      "Moira Fade Reappear Sound",
+      "Orisa Halt Implosion Sound",
+      "Pharah Rocket Launcher Explosion Sound",
+      "Pharah Concussive Blast Sound",
+      "Pharah Barrage Explosion Sound",
+      "Reinhardt Fire Strike Target Impact Sound",
+      "Sigma Hypersphere Implosion Sound",
+      "Sigma Accretion Impact Sound",
+      "Sombra Logo Sound",
+      "Sombra Translocator Disappear Sound",
+      "Sombra Translocator Reappear Sound",
+      "Sombra Emp Explosion Sound",
+      "Symmetra Teleporter Reappear Sound",
+      "Tracer Recall Disappear Sound",
+      "Tracer Recall Reappear Sound",
+      "Widowmaker Venom Mine Explosion Sound",
+      "Winston Jump Pack Landing Sound",
+      "Wrecking Ball Piledriver Impact Sound",
+      "Wrecking Ball Piledriver Impact Sound",
+      "Zarya Particle Cannon Explosion Sound"
     ],
-    "InvisibleTo": [
-      "All",
-      "Enemies",
-      "None"
-    ],
+    "InvisibleTo": ["All", "Enemies", "None"],
     "AccelerateRev": [
       {
         "name": "Direction Rate and Max Speed",
@@ -6600,15 +6948,9 @@
     ],
     "IfAlreadyExecuting": {
       "hidden": true,
-      "members": [
-        "Restart Rule",
-        "Do Nothing"
-      ]
+      "members": ["Restart Rule", "Do Nothing"]
     },
-    "FacingRev": [
-      "Direction And Turn Rate",
-      "None"
-    ],
+    "FacingRev": ["Direction And Turn Rate", "None"],
     "BarrierLOS": [
       {
         "name": "Barriers Do Not Block LOS",
@@ -6623,24 +6965,15 @@
         "alias": "AllBarriersBlock"
       }
     ],
-    "Transformation": [
-      "Rotation",
-      "Rotation And Translation"
-    ],
+    "Transformation": ["Rotation", "Rotation And Translation"],
     "RadiusLOS": [
       "Off",
       "Surfaces",
       "Surfaces And Enemy Barriers",
       "Surfaces And All Barriers"
     ],
-    "LocalVector": [
-      "Rotation",
-      "Rotation And Translation"
-    ],
-    "Clipping": [
-      "Clip Against Surfaces",
-      "Do Not Clip"
-    ],
+    "LocalVector": ["Rotation", "Rotation And Translation"],
+    "Clipping": ["Clip Against Surfaces", "Do Not Clip"],
     "InworldTextRev": [
       {
         "name": "Visible To, Position, String, and Color",
@@ -6668,21 +7001,34 @@
     "BeamType": [
       "Good Beam",
       "Bad Beam",
-      "Grapple Beam"
+      "Grapple Beam",
+      "Brigitte Flail Chain Beam",
+      "Echo Focusing Beam",
+      "Junkrat Trap Chain Beam",
+      "Mercy Heal Beam",
+      "Mercy Boost Beam",
+      "Moira Orb Heal Beam",
+      "Moira Orb Damage Beam",
+      "Moira Grasp Connected Beam",
+      "Moira Coalescence Beam",
+      "Orisa Halt Tendril Beam",
+      "Orisa Amplifier Beam",
+      "Symmetra Projector Beam",
+      "Symmetra Turret Beam",
+      {
+        "name": "Torbjörn Turret Sight Beam",
+        "alias": "TorbjornTurretSightBeam"
+      },
+      "Winston Tesla Cannon Beam",
+      "Zarya Particle Beam",
+      "Omnic Slicer Beam"
     ],
-    "Spectators": [
-      "Default Visibility",
-      "Visible Always",
-      "Visible Never"
-    ],
+    "Spectators": ["Default Visibility", "Visible Always", "Visible Never"],
     "ThrottleBehavior": [
       "Replace Existing Throttle",
       "Add To Existing Throttle"
     ],
-    "ThrottleRev": [
-      "Direction And Magnitude",
-      "None"
-    ],
+    "ThrottleRev": ["Direction And Magnitude", "None"],
     "Map": [
       "Ayutthaya",
       {
@@ -6884,7 +7230,13 @@
       {
         "name": "Workshop Island (Night)",
         "alias": "Workshop_Island_Night"
-      }
+      },
+      {
+        "name": "Workshop Green Screen",
+        "alias": "Workshop_Green_Screen"
+      },
+      "Kanezaka",
+      "Practice Range"
     ],
     "GameMode": [
       "Assault",
@@ -6911,22 +7263,12 @@
       "Team Deathmatch",
       "Yeti Hunter",
       "Snowball Deathmatch",
-      "Freezethaw Elimination"
+      "Freezethaw Elimination",
+      "Bounty Hunter"
     ],
-    "HealthType": [
-      "Health",
-      "Armor",
-      "Shields"
-    ],
-    "OutlineType": [
-      "Default",
-      "Occluded",
-      "Always"
-    ],
-    "Assist": [
-      "Assisters And Targets",
-      "None"
-    ],
+    "HealthType": ["Health", "Armor", "Shields"],
+    "OutlineType": ["Default", "Occluded", "Always"],
+    "Assist": ["Assisters And Targets", "None"],
     "ProgressBarEvaluation": [
       "Visible To Values And Color",
       "Visible To And Values",

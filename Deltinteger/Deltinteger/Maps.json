@@ -5,7 +5,8 @@
       "Assault",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -14,7 +15,8 @@
       "Hybrid",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -23,7 +25,8 @@
       "Assault",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -55,7 +58,8 @@
       "Hybrid",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -64,7 +68,8 @@
       "Escort",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -104,7 +109,6 @@
   {
     "Name": "Practice Range",
     "GameModes": [
-      "Practice Range",
       "Practice Range"
     ]
   },
@@ -114,7 +118,8 @@
       "Hybrid",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -141,7 +146,8 @@
       "Hybrid",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -157,7 +163,8 @@
       "Assault",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -165,7 +172,8 @@
     "Workshop": "Lijiang Tower Lunar New Year",
     "GameModes": [
       "Control",
-      "Skirmish"
+      "Skirmish",
+      "Bounty Hunter"
     ]
   },
   {
@@ -181,7 +189,8 @@
       "Elimination",
       "Team Deathmatch",
       "Deathmatch",
-      "Freezethaw Elimination"
+      "Freezethaw Elimination",
+      "Bounty Hunter"
     ]
   },
   {
@@ -190,7 +199,8 @@
       "Assault",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -199,7 +209,8 @@
       "Elimination",
       "Deathmatch",
       "Team Deathmatch",
-      "Freezethaw Elimination"
+      "Freezethaw Elimination",
+      "Bounty Hunter"
     ]
   },
   {
@@ -208,7 +219,8 @@
       "Elimination",
       "Deathmatch",
       "Team Deathmatch",
-      "Freezethaw Elimination"
+      "Freezethaw Elimination",
+      "Bounty Hunter"
     ]
   },
   {
@@ -220,7 +232,8 @@
       "Deathmatch",
       "Mei's Snowball Offensive",
       "Snowball Deathmatch",
-      "Freezethaw Elimination"
+      "Freezethaw Elimination",
+      "Bounty Hunter"
     ]
   },
   {
@@ -230,7 +243,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -240,7 +254,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -249,7 +264,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -259,7 +275,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -268,7 +285,8 @@
       "Elimination",
       "Deathmatch",
       "Team Deathmatch",
-      "Freezethaw Elimination"
+      "Freezethaw Elimination",
+      "Bounty Hunter"
     ]
   },
   {
@@ -277,7 +295,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -286,7 +305,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -295,7 +315,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -304,7 +325,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -313,7 +335,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -322,7 +345,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -331,7 +355,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -340,7 +365,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -349,7 +375,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -358,7 +385,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -367,7 +395,8 @@
       "Capture the Flag",
       "Elimination",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -383,7 +412,8 @@
       "Hybrid",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -410,7 +440,8 @@
     "Name": "Château Guillard",
     "GameModes": [
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -427,7 +458,8 @@
       "Hybrid",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -439,7 +471,8 @@
       "Team Deathmatch",
       "Mei's Snowball Offensive",
       "Snowball Deathmatch",
-      "Freezethaw Elimination"
+      "Freezethaw Elimination",
+      "Bounty Hunter"
     ]
   },
   {
@@ -454,14 +487,16 @@
     "Workshop": "Château Guillard Halloween",
     "GameModes": [
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
     "Name": "Petra",
     "GameModes": [
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -470,7 +505,8 @@
       "Assault",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -485,7 +521,8 @@
       "Escort",
       "Skirmish",
       "Storm Rising",
-      "Deathmatch"
+      "Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -495,7 +532,8 @@
       "Hybrid",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch"
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -518,7 +556,8 @@
       "Elimination",
       "Deathmatch",
       "Team Deathmatch",
-      "Skirmish"
+      "Skirmish",
+      "Bounty Hunter"
     ]
   },
   {
@@ -527,7 +566,8 @@
       "Elimination",
       "Deathmatch",
       "Team Deathmatch",
-      "Skirmish"
+      "Skirmish",
+      "Bounty Hunter"
     ]
   },
   {
@@ -536,7 +576,8 @@
       "Elimination",
       "Deathmatch",
       "Team Deathmatch",
-      "Skirmish"
+      "Skirmish",
+      "Bounty Hunter"
     ]
   },
   {
@@ -546,7 +587,8 @@
       "Elimination",
       "Deathmatch",
       "Team Deathmatch",
-      "Skirmish"
+      "Skirmish",
+      "Bounty Hunter"
     ]
   },
   {
@@ -556,7 +598,26 @@
       "Elimination",
       "Deathmatch",
       "Team Deathmatch",
+      "Skirmish",
+      "Bounty Hunter"
+    ]
+  },
+  {
+    "Name": "Workshop Green Screen",
+    "GameModes": [
+      "Bounty Hunter",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch",
       "Skirmish"
+    ]
+  },
+  {
+    "Name": "Kanezaka",
+    "GameModes": [
+      "Bounty Hunter",
+      "Deathmatch",
+      "Team Deathmatch"
     ]
   }
 ]

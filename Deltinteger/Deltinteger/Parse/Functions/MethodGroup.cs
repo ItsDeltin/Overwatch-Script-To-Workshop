@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse.FunctionBuilder;
 using Deltin.Deltinteger.Parse.Lambda;
@@ -18,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt => null; // Doesn't matter.
         public AccessLevel AccessLevel => AccessLevel.Public; // Doesn't matter.
         public ICodeTypeSolver CodeType => null;
-        public List<IMethod> Functions { get; } = new List<IMethod>();
+        public IMethod[] Functions { get; }
         IVariable IVariableInstance.Provider => this;
         VariableType IVariable.VariableType => VariableType.ElementReference;
         IVariableInstanceAttributes IVariableInstance.Attributes { get; } = new VariableInstanceAttributes()
@@ -27,13 +28,11 @@ namespace Deltin.Deltinteger.Parse
             StoreType = StoreType.None,
         };
 
-        public MethodGroup(string name)
+        public MethodGroup(string name, IMethod[] functions)
         {
             Name = name;
+            Functions = functions;
         }
-
-        public bool MethodIsValid(IMethod method) => method.Name == Name;
-        public void AddMethod(IMethod method) => Functions.Add(method);
 
         public CompletionItem GetCompletion(DeltinScript deltinScript) => new CompletionItem()
         {
@@ -42,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = new MarkupBuilder()
                 .StartCodeLine()
                 .Add(
-                    Functions[0].GetLabel(deltinScript, LabelInfo.SignatureOverload) + (Functions.Count == 1 ? "" : " (+" + (Functions.Count - 1) + " overloads)")
+                    Functions[0].GetLabel(deltinScript, LabelInfo.SignatureOverload) + (Functions.Length == 1 ? "" : " (+" + (Functions.Length - 1) + " overloads)")
                 ).EndCodeLine().ToMarkup()
         };
 

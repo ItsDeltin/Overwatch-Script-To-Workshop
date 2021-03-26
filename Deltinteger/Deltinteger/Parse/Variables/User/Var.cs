@@ -175,7 +175,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
-    
+
         public CompletionItem GetCompletion() => new CompletionItem()
         {
             Label = Name,

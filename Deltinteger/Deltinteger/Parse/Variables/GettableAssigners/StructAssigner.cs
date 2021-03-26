@@ -315,6 +315,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues();
     }
 
+    /// <summary>Applies a modification to a struct value.</summary>
     public class BridgeGetStructValue : IStructValue
     {
         private readonly IStructValue _structValue;
@@ -352,7 +353,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues();
     }
 
-    // Represents a struct array converted into a single array of indices with the same length of the struct array.
+    /// <summary>Represents a struct array converted into a single array of indices with the same length of the struct array.</summary>
     class IndexedStructArray : IStructValue
     {
         public IStructValue StructArray { get; }

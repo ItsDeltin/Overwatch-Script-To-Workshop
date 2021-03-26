@@ -122,21 +122,6 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
-            // Get the reserved variables and IDs
-            // foreach (ScriptFile script in Importer.ScriptFiles)
-            // {
-            //     if (script.Context.reserved_global()?.reserved_list() != null)
-            //     {
-            //         foreach (var name in script.Context.reserved_global().reserved_list().PART()) VarCollection.Reserve(name.GetText(), true);
-            //         foreach (var id in script.Context.reserved_global().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), true, null, null);
-            //     }
-            //     if (script.Context.reserved_player()?.reserved_list() != null)
-            //     {
-            //         foreach (var name in script.Context.reserved_player().reserved_list().PART()) VarCollection.Reserve(name.GetText(), false);
-            //         foreach (var id in script.Context.reserved_player().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), false, null, null);
-            //     }
-            // }
-
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var enumContext in script.Context.Enums)
@@ -179,7 +164,6 @@ namespace Deltin.Deltinteger.Parse
                         VarCollection.Reserve(text, false);
                 }
             }
-
             // Get variable declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var declaration in script.Context.Declarations)
@@ -266,7 +250,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(this, rule);
-                Rule newRule = translate.GetRule();
+                Rule newRule = GetRule(translate.GetRule());
                 WorkshopRules.Add(newRule);
                 rule.ElementCountLens.RuleParsed(newRule);
             }
@@ -274,11 +258,11 @@ namespace Deltin.Deltinteger.Parse
             // Add built-in rules.
             // Initial player
             if (InitialPlayer.Actions.Count > 0)
-                WorkshopRules.Insert(0, InitialPlayer.GetRule());
+                WorkshopRules.Insert(0, GetRule(InitialPlayer.GetRule()));
 
             // Initial global
             if (InitialGlobal.Actions.Count > 0)
-                WorkshopRules.Insert(0, InitialGlobal.GetRule());
+                WorkshopRules.Insert(0, GetRule(InitialGlobal.GetRule()));
 
             // Additional
             if (addRules != null)
@@ -312,12 +296,19 @@ namespace Deltin.Deltinteger.Parse
             // Get the rules.
             for (int i = 0; i < WorkshopRules.Count; i++)
             {
-                WorkshopRules[i].ToWorkshop(result, OptimizeOutput);
-                ElementCount += WorkshopRules[i].ElementCount(OptimizeOutput);
+                WorkshopRules[i].ToWorkshop(result);
+                ElementCount += WorkshopRules[i].ElementCount();
                 if (i != WorkshopRules.Count - 1) result.AppendLine();
             }
             
             WorkshopCode = result.GetResult();
+        }
+
+        Rule GetRule(Rule rule)
+        {
+            if (OptimizeOutput)
+                rule = rule.Optimized();
+            return rule;
         }
 
         public ScriptFile ScriptFromUri(Uri uri) => Importer.ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));

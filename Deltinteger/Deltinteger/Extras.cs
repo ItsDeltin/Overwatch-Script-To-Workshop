@@ -156,10 +156,16 @@ namespace Deltin.Deltinteger
             noMarkup.Append(value);
         }
 
-        public MarkupBuilder Add(string line)
+        public MarkupBuilder Add(string text)
         {
-            result.Append(line);
-            noMarkup.Append(line);
+            result.Append(text);
+            noMarkup.Append(text);
+            return this;
+        }
+        public MarkupBuilder Italicize(string text)
+        {
+            result.Append("*" + text + "*");
+            noMarkup.Append(text);
             return this;
         }
         public MarkupBuilder Code(string line)

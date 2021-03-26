@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Elements
         public RuleEvent RuleEvent { get; }
         public Team Team { get; }
         public PlayerSelector Player { get; }
-        public Subroutine Subroutine { get; }
+        public Subroutine Subroutine { get; set; }
         public RuleType RuleType { get; }
 
         public Condition[] Conditions { get; set; }
@@ -41,12 +41,9 @@ namespace Deltin.Deltinteger.Elements
             Subroutine = subroutine;
         }
 
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => Name;
 
-        public void ToWorkshop(WorkshopBuilder builder, bool optimize)
+        public void ToWorkshop(WorkshopBuilder builder)
         {
             if (Disabled)
             {
@@ -92,7 +89,7 @@ namespace Deltin.Deltinteger.Elements
                     .Indent();
 
                 foreach (var condition in Conditions)
-                    condition.ToWorkshop(builder, optimize);
+                    condition.ToWorkshop(builder);
                 
                 builder.Outdent().AppendLine("}");
             }
@@ -107,34 +104,54 @@ namespace Deltin.Deltinteger.Elements
                     .Indent();
 
                 foreach (var action in Actions)
-                    if (optimize)
-                        action.Optimize().ToWorkshop(builder, ToWorkshopContext.Action);
-                    else
-                        action.ToWorkshop(builder, ToWorkshopContext.Action);
+                    action.ToWorkshop(builder, ToWorkshopContext.Action);
                 
                 builder.Outdent().AppendLine("}");
             }
             builder.Outdent().AppendLine("}");
         }
 
-        public int ElementCount(bool optimized)
+        public int ElementCount()
         {
             int count = 1;
 
             if (Conditions != null)
                 foreach (Condition condition in Conditions)
-                    count += condition.ElementCount(optimized);
+                    count += condition.ElementCount();
 
             if (Actions != null)
                 foreach (Element action in Actions)
-                {
-                    if (optimized)
-                        count += action.Optimize().ElementCount();
-                    else
-                        count += action.ElementCount();
-                }
+                    count += action.ElementCount();
 
             return count;
+        }
+
+        public Rule Optimized()
+        {
+            // Get new rule.
+            Rule optimized = RuleType == RuleType.Subroutine ? new Rule(Name, Subroutine) : new Rule(Name, RuleEvent, Team, Player);
+
+            // Copy other settings.
+            optimized.Disabled = Disabled;
+            optimized.Priority = Priority;
+
+            // Optimize conditions.
+            if (Conditions != null)
+            {
+                optimized.Conditions = new Condition[Conditions.Length];
+                for (int i = 0; i < optimized.Conditions.Length; i++)
+                    optimized.Conditions[i] = Conditions[i].Optimized();
+            }
+
+            // Optimize actions.
+            if (Actions != null)
+            {
+                optimized.Actions = new Element[Actions.Length];
+                for (int i = 0; i < optimized.Actions.Length; i++)
+                    optimized.Actions[i] = Actions[i].Optimized();
+            }
+
+            return optimized;
         }
     }
 

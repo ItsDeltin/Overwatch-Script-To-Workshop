@@ -197,7 +197,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     _scriptReady.SetResult(Unit.Value);
 
                 // Publish the diagnostics.
-                var publishDiagnostics = diagnostics.GetDiagnostics();
+                var publishDiagnostics = diagnostics.GetPublishDiagnostics();
                 foreach (var publish in publishDiagnostics)
                     _languageServer.Server.TextDocument.PublishDiagnostics(publish);
 

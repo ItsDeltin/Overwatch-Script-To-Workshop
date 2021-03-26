@@ -248,6 +248,7 @@ namespace Deltin.Deltinteger.Parse
         // public override bool Implements(CodeType type) => (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType)) || (ArrayOfType is IAdditionalArray additon && additon.AlternateImplements(type));
         public override Scope GetObjectScope() => Scope;
         protected override bool DoesImplement(CodeType type) => type is AnyType || ArrayOfType is AnyType || (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType));
+        public override bool Is(CodeType type) => type is ArrayType other && ArrayOfType.Is(other.ArrayOfType);
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
 
