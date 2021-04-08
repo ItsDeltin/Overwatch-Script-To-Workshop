@@ -132,7 +132,13 @@ namespace Deltin.Deltinteger.Parse.Overload
             // Iterate through the option's parameters.
             for (int i = 0; i < inputParameters.Length; i++)
             {
-                if (inputParameters[i].ParameterOrdered(option.Parameters[i]))
+                // Out of range
+                if (i >= option.Parameters.Length)
+                {
+                    continue;
+                }
+                // Non-picky
+                else if (inputParameters[i].ParameterOrdered(option.Parameters[i]))
                 {
                     // If the picky parameters end but there is an additional picky parameter, throw a syntax error.
                     if (lastPicky != null && inputParameters[i].Name == null)
@@ -150,7 +156,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                             match.LastContextualParameterIndex = i + 1;
                     }
                 }
-                else
+                else // Picky
                 {
                     // Picky parameter ends.
                     lastPicky = inputParameters[i];
