@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
         
         static void Call(IVariableInstance variable, ParseInfo parseInfo, DocRange callRange)
         {
-            parseInfo.Script.AddHover(callRange, variable.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover).ToString());
+            parseInfo.Script.AddHover(callRange, variable.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
         }
     }
 
