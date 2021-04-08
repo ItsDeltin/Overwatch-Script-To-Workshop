@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public AnonymousType(string name, AnonymousTypeContext context) : base(name)
         {
             Context = context;
+            Attributes.ContainsGenerics = true;
         }
         
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => instanceInfo != null && instanceInfo.Links.TryGetValue(this, out CodeType result) ? result : this;

@@ -237,7 +237,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             {
                 // If the CodeParameter type is a lambda type, get the lambda statement with it.
                 if (bestOption.Option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo) is PortableLambdaType portableLambda)
-                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers(portableLambda);
+                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers((PortableLambdaType)portableLambda.GetRealType(bestOption.TypeArgLinker));
                 // Otherwise, get the lambda statement with the default.
                 else
                     bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers();

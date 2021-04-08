@@ -21,6 +21,12 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnsValue = returnsValue;
             ReturnType = returnType;
             ParameterTypesKnown = parameterTypesKnown;
+
+            Attributes.ContainsGenerics = parameters.Any(p => p.Attributes.ContainsGenerics) || (returnsValue && returnType.Attributes.ContainsGenerics);
+
+            // Add operations.
+            Operations.AddAssignmentOperator();
+
             AddInvokeFunction();
         }
 
@@ -34,6 +40,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
             LambdaKind = lambdaKind;
             ParameterTypesKnown = true;
             Parameters = parameters;
+
+            Attributes.ContainsGenerics = parameters.Any(p => p.Attributes.ContainsGenerics);
+
             AddInvokeFunction();
         }
 
@@ -69,8 +78,13 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return other.ReturnsValue == ReturnsValue && (((ReturnType == null) == (other.ReturnType == null)) || (ReturnType != null && ReturnType.Implements(other.ReturnType)));
         }
 
-        public override CompletionItem GetCompletion() => throw new NotImplementedException();
-        public override Scope ReturningScope() => null;
+        public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
+        {
+            if (!Attributes.ContainsGenerics)
+                return this;
+            
+            return new PortableLambdaType(LambdaKind, Parameters.Select(p => p.GetRealType(instanceInfo)).ToArray(), ReturnsValue, ReturnType?.GetRealType(instanceInfo), true);
+        }
 
         public override string GetName()
         {

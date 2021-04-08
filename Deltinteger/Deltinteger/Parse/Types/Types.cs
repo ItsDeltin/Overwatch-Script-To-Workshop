@@ -31,8 +31,8 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
-        /// <summary>Determines if the type is a struct or struct array.</summary>
-        public bool IsStruct { get; protected set; }
+        /// <summary>The attributes of the type. Determines if the type is a struct or struct array and more.</summary>
+        public TypeAttributes Attributes { get; protected set; } = new TypeAttributes();
 
         /// <summary>Tracks type arg usage.</summary>
         public IGenericUsage GenericUsage { get; protected set; }
@@ -148,7 +148,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
-        public abstract CompletionItem GetCompletion();
+        public virtual CompletionItem GetCompletion() => throw new NotImplementedException();
 
         public static CompletionItem GetTypeCompletion(CodeType type) => new CompletionItem() {
             Label = type.GetName(),

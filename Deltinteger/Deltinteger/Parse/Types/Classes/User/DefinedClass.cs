@@ -52,8 +52,6 @@ namespace Deltin.Deltinteger.Parse
             Constructors = new Constructor[_definedInitializer.Constructors.Length];
             for (int i = 0; i < _definedInitializer.Constructors.Length; i++)
                 Constructors[i] = _definedInitializer.Constructors[i].GetInstance(this, anonymousTypeLinker);
-
-            parseInfo.TranslateInfo.AddWorkshopInit(this);
         }
 
         public override bool Is(CodeType other)

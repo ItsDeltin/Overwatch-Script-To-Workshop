@@ -7,14 +7,14 @@ namespace Deltin.Deltinteger.Parse.Lambda
 {
     class LambdaGroup : IComponent, IGroupDeterminer, ISubroutineContext, IFunctionLookupTable
     {
-        public DeltinScript DeltinScript { get; set; }
-        private readonly List<IFunctionHandler> _functionHandlers = new List<IFunctionHandler>();
-        private readonly Dictionary<object, int> _identifiers = new Dictionary<object, int>();
-        private int _parameterCount;
-        private int _functionIdentifier = 0;
-        private SubroutineInfo _subroutineInfo = null;
+        readonly List<IFunctionHandler> _functionHandlers = new List<IFunctionHandler>();
+        readonly Dictionary<object, int> _identifiers = new Dictionary<object, int>();
+        DeltinScript _deltinScript;
+        int _parameterCount;
+        int _functionIdentifier = 0;
+        SubroutineInfo _subroutineInfo = null;
 
-        public void Init(DeltinScript deltinScript) { }
+        public void Init(DeltinScript deltinScript) => _deltinScript = deltinScript;
 
         public int Add(IFunctionHandler lambda)
         {
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             if (_subroutineInfo == null)
             {
-                var builder = new SubroutineBuilder(DeltinScript, this);
+                var builder = new SubroutineBuilder(_deltinScript, this);
                 builder.SetupSubroutine();
                 _subroutineInfo = builder.SubroutineInfo;
             }

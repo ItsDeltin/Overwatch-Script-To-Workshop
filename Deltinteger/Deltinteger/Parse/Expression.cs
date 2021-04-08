@@ -110,7 +110,7 @@ namespace Deltin.Deltinteger.Parse
                 _type = new ArrayType(parseInfo.TranslateInfo.Types, sourceType);
 
                 // Struct array
-                _isStructArray = sourceType.IsStruct;
+                _isStructArray = sourceType.Attributes.IsStruct;
 
                 // If this is a struct array, the types are strict.
                 if (_isStructArray)

@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker genericsLinker) : base(provider.Name)
         {
             ObjectScope = new Scope("struct " + Name);
-            IsStruct = true;
+            Attributes = new TypeAttributes(true, Generics.Any(g => g.Attributes.ContainsGenerics));
 
             provider.OnReady.OnReady(() => {
                 // Variables

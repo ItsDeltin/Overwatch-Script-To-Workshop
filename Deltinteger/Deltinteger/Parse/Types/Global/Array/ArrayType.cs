@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
         {
             ArrayOfType = arrayOfType;
             ArrayHandler = arrayOfType.ArrayHandler;
-            IsStruct = arrayOfType.IsStruct;
+            Attributes = arrayOfType.Attributes;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
 
             Generics = new[] { arrayOfType };

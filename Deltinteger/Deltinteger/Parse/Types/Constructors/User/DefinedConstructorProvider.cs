@@ -36,6 +36,10 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             SubroutineName = context.SubroutineName?.Text.RemoveQuotes();
             DefinedAt = parseInfo.Script.GetLocation(context.LocationToken.Range);
 
+            // Setup the parameters.
+            ParameterProviders = ParameterProvider.GetParameterProviders(_parseInfo, _scope, _context.Parameters, SubroutineName != null);
+            ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
+
             // TODO: Type provider link!
             // type.AddLink(DefinedAt);
             
@@ -46,10 +50,6 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
 
         public void SetupBlock()
         {
-            // Setup the parameters.
-            ParameterProviders = ParameterProvider.GetParameterProviders(_parseInfo, _scope, _context.Parameters, SubroutineName != null);
-            ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
-
             Block = new BlockAction(_parseInfo.SetCallInfo(CallInfo), _scope, _context.Block);
             _applyBlock.Apply();
         }
