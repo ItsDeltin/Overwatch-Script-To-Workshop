@@ -1,8 +1,9 @@
-namespace Deltin.Deltinteger.Parse
+namespace Deltin.Deltinteger.Parse.Workshop
 {
     public class ToWorkshop
     {
         readonly DeltinScript _deltinScript;
+        public CompileRelations Relations { get; }
 
         public ToWorkshop(DeltinScript deltinScript)
         {

@@ -195,17 +195,29 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
+    public class TypeArgContext
+    {
+        public Token Identifier { get; }
+        public Token Single { get; }
+
+        public TypeArgContext(Token identifier, Token single)
+        {
+            Identifier = identifier;
+            Single = single;
+        }
+    }
+
     public class ClassContext : Node
     {
         public Token DeclaringToken { get; }
         public Token Identifier { get; }
-        public List<Token> Generics { get; }
+        public List<TypeArgContext> Generics { get; }
         public Token InheritToken { get; }
         public List<IParseType> Inheriting { get; }
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
         public List<ConstructorContext> Constructors { get; } = new List<ConstructorContext>();
 
-        public ClassContext(Token declaringToken, Token identifier, List<Token> generics, Token inheritToken, List<IParseType> inheriting)
+        public ClassContext(Token declaringToken, Token identifier, List<TypeArgContext> generics, Token inheritToken, List<IParseType> inheriting)
         {
             DeclaringToken = declaringToken;
             Identifier = identifier;
@@ -244,14 +256,14 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public AttributeTokens Attributes { get; }
         public IParseType Type { get; }
         public Token Identifier { get; }
-        public List<Token> TypeArguments { get; }
+        public List<TypeArgContext> TypeArguments { get; }
         public List<VariableDeclaration> Parameters { get; }
         public Block Block { get; }
         public Token GlobalVar { get; }
         public Token PlayerVar { get; }
         public Token Subroutine { get; }
 
-        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<Token> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
+        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
         {
             Attributes = attributes;
             Type = type;
@@ -270,11 +282,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public AttributeTokens Attributes { get; }
         public IParseType Type { get; }
         public Token Identifier { get; }
-        public List<Token> TypeArguments { get; }
+        public List<TypeArgContext> TypeArguments { get; }
         public List<VariableDeclaration> Parameters { get; }
         public IParseExpression Expression { get; }
 
-        public MacroFunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<Token> typeArgs, List<VariableDeclaration> parameters, IParseExpression expression)
+        public MacroFunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, IParseExpression expression)
         {
             Attributes = attributes;
             Type = type;

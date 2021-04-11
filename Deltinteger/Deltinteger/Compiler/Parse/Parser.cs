@@ -1590,12 +1590,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return generics;
         }
 
-        List<Token> ParseOptionalTypeArguments(out bool anyGenerics)
+        List<TypeArgContext> ParseOptionalTypeArguments(out bool anyGenerics)
         {
-            var generics = new List<Token>();
+            var generics = new List<TypeArgContext>();
             if (ParseOptional(TokenType.LessThan))
             {
-                generics = ParseDelimitedList(TokenType.GreaterThan, () => Kind == TokenType.Identifier, () => ParseExpected(TokenType.Identifier));
+                generics = ParseDelimitedList(
+                    TokenType.GreaterThan,
+                    () => Kind.IsIdentifier(),
+                    () => {
+                        Token single = ParseOptional(TokenType.Single);
+                        Token identifier = ParseExpected(TokenType.Identifier);
+                        return new TypeArgContext(identifier, single);
+                    }
+                );
                 ParseExpected(TokenType.GreaterThan);
                 anyGenerics = true;
             }
@@ -1720,7 +1728,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Class
                 case TokenType.Class:
                 case TokenType.Struct:
-                    context.Classes.Add(ParseClass());
+                    context.Classes.Add(ParseClassOrStruct());
                     break;
 
                 // Enum
@@ -1830,7 +1838,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 		}
 
         /// <summary>Parses a class.</summary>
-        ClassContext ParseClass()
+        ClassContext ParseClassOrStruct()
         {
             StartTokenCapture();
             if (GetIncrementalNode(out ClassContext @class)) return EndTokenCapture(@class);

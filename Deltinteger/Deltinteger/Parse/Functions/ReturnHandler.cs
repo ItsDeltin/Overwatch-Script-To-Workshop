@@ -13,18 +13,26 @@ namespace Deltin.Deltinteger.Parse
         private readonly bool _multiplePaths;
 
         // If `MultiplePaths` is true, use `ReturnStore`. Else use `ReturningValue`.
-        private readonly IndexReference _returnStore;
+        private readonly IGettable _returnStore;
         private IWorkshopTree _returningValue;
         private bool _valueWasReturned;
         private readonly List<SkipStartMarker> _skips = new List<SkipStartMarker>();
 
-        public ReturnHandler(ActionSet actionSet, string methodName, bool multiplePaths)
+        public ReturnHandler(ActionSet actionSet, string methodName, CodeType returnType, bool multiplePaths)
         {
             _actionSet = actionSet;
             _multiplePaths = multiplePaths;
 
             if (multiplePaths)
+            {
+                _returnStore = returnType.GetGettableAssigner(null).GetValue(new GettableAssignerValueInfo(actionSet));
                 _returnStore = actionSet.VarCollection.Assign("_" + methodName + "ReturnValue", actionSet.IsGlobal, true);
+            }
+        }
+
+        protected ReturnHandler(ActionSet actionSet)
+        {
+            _actionSet = actionSet;
         }
 
         public virtual void ReturnValue(IWorkshopTree value)
@@ -35,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Multiple return paths.
             if (_multiplePaths)
-                _actionSet.AddAction(_returnStore.SetVariable((Element)value));
+                _returnStore.Set(_actionSet, value);
             // One return path.
             else
                 _returningValue = value;
@@ -76,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class RuleReturnHandler : ReturnHandler
     {
-        public RuleReturnHandler(ActionSet actionSet) : base(actionSet, null, false) { }
+        public RuleReturnHandler(ActionSet actionSet) : base(actionSet) { }
 
         public override void ApplyReturnSkips() => throw new Exception("Can't apply return skips in a rule.");
         public override IWorkshopTree GetReturnedValue() => throw new Exception("Can't get the returned value of a rule.");

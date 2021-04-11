@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.FunctionBuilder;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -61,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
         public ParameterProvider[] ParameterProviders { get; }
         public CodeType[] ParameterTypes { get; }
 
-        public IMethod OverridingFunction { get; }
+        public DefinedMethodInstance OverridingFunction { get; }
 
         public CallInfo CallInfo { get; }
 
@@ -128,7 +126,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Override
             if (attributeResult.IsOverride)
-                OverridingFunction = scopeProvider.GetOverridenFunction(parseInfo.TranslateInfo, new FunctionOverrideInfo(Name, ParameterTypes));
+                OverridingFunction = (DefinedMethodInstance)scopeProvider.GetOverridenFunction(parseInfo.TranslateInfo, new FunctionOverrideInfo(Name, ParameterTypes));
 
             // TODO Add the hover info.
             // parseInfo.Script.AddHover(nameRange, GetLabel(true));
@@ -173,6 +171,7 @@ namespace Deltin.Deltinteger.Parse
         }
     
         public IMethod GetDefaultInstance() => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes));
+        public DefinedMethodInstance CreateInstance(InstanceAnonymousTypeLinker genericsLinker) => new DefinedMethodInstance(Name, this, genericsLinker);
         public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(), Static);
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
@@ -206,12 +205,6 @@ namespace Deltin.Deltinteger.Parse
             return SubroutineInfo;
         }
 
-        public void Override(IMethodProvider overridenBy)
-        {
-            OverridingFunction?.MethodInfo.Override(overridenBy);
-            _overriders.Add(overridenBy);
-        }
-
         public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeProvider scopeHandler, FunctionContext context, IDefinedTypeInitializer containingType)
             => new DefinedMethodProvider(parseInfo, scopeHandler, context, containingType);
 
@@ -226,11 +219,12 @@ namespace Deltin.Deltinteger.Parse
         public IVariableInstance[] ParameterVars { get; }
         public CodeParameter[] Parameters { get; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
+        public DefinedMethodProvider Provider { get; }
+        public InstanceAnonymousTypeLinker InstanceInfo { get; }
         public bool Static => Provider.Static;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => Provider.DefinedAt;
         public AccessLevel AccessLevel => Provider.AccessLevel;
-        public DefinedMethodProvider Provider { get; }
         IMethodExtensions IMethod.MethodInfo => Provider;
 
         public DefinedMethodInstance(string name, DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo)
@@ -238,6 +232,7 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
             Provider = provider;
             CodeType = provider.ReturnType?.GetRealType(instanceInfo);
+            InstanceInfo = instanceInfo;
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             ParameterVars = new IVariableInstance[Parameters.Length];

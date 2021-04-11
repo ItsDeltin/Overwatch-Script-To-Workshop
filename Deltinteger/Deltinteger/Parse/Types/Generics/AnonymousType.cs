@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using TypeArgContext = Deltin.Deltinteger.Compiler.SyntaxTree.TypeArgContext;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class AnonymousType : CodeType
     {
         public AnonymousTypeContext Context { get; }
+        public AnonymousTypeAttributes AnonymousTypeAttributes { get; }
 
-        public AnonymousType(string name, AnonymousTypeContext context) : base(name)
+        public AnonymousType(string name, AnonymousTypeContext context, AnonymousTypeAttributes attributes) : base(name)
         {
             Context = context;
+            AnonymousTypeAttributes = attributes;
             Attributes.ContainsGenerics = true;
         }
         
@@ -25,12 +28,12 @@ namespace Deltin.Deltinteger.Parse
 
         public override AnonymousType[] ExtractAnonymousTypes() => new[] { this };
 
-        public static AnonymousType[] GetGenerics(List<Token> typeArgs, AnonymousTypeContext context)
+        public static AnonymousType[] GetGenerics(List<TypeArgContext> typeArgs, AnonymousTypeContext context)
         {
             var generics = new AnonymousType[typeArgs.Count];
             for (int i = 0; i < typeArgs.Count; i++)
             {
-                var anonymousType = new AnonymousType(typeArgs[i].GetText(), context);
+                var anonymousType = new AnonymousType(typeArgs[i].Identifier.GetText(), context, new(single: typeArgs[i].Single));
                 generics[i] = anonymousType;
             }
             return generics;
@@ -41,5 +44,15 @@ namespace Deltin.Deltinteger.Parse
     {
         Type,
         Function
+    }
+
+    public class AnonymousTypeAttributes
+    {
+        public bool Single { get; }
+
+        public AnonymousTypeAttributes(bool single)
+        {
+            Single = single;
+        }
     }
 }

@@ -25,13 +25,6 @@ namespace Deltin.Deltinteger.Parse
         {
             if (typeContext == null) return parseInfo.TranslateInfo.Types.Any();
 
-            // Get the type arguments.
-            var typeArgs = new CodeType[typeContext.TypeArgs?.Count ?? 0];
-            for (int i = 0; i < typeArgs.Length; i++)
-                typeArgs[i] = GetCodeTypeFromContext(parseInfo, scope, typeContext.TypeArgs[i]);
-            
-            var instanceInfo = new GetInstanceInfo(typeArgs);
-
             CodeType type;
             if (typeContext.IsDefault)
             {
@@ -65,9 +58,17 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // TODO: Check ambiguities
-                // Get the type instance.
-                parseInfo.TranslateInfo.GetComponent<TypeTrackerComponent>().Track(providers[0], typeArgs.Select(t => t.GenericUsage).ToArray());
-                type = providers[0].GetInstance(instanceInfo);
+                var provider = providers[0];
+
+                // Get the type arguments.
+                var typeArgs = GetAndValidateTypeArgs(parseInfo, scope, provider.GenericTypes, typeContext.TypeArgs);
+                var instanceInfo = new GetInstanceInfo(typeArgs);
+
+                // Track the type args being used.
+                parseInfo.TranslateInfo.GetComponent<TypeTrackerComponent>().Track(provider, typeArgs.Select(t => t.GenericUsage).ToArray());
+
+                // Create the type instance and call it.
+                type = provider.GetInstance(instanceInfo);
                 type.Call(parseInfo, typeContext.Identifier.Range);
             }
             
@@ -122,6 +123,40 @@ namespace Deltin.Deltinteger.Parse
             if (right.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Right.Range);
 
             return new PipeType(left, right);
+        }
+
+        public static CodeType[] GetAndValidateTypeArgs(ParseInfo parseInfo, Scope scope, AnonymousType[] typeArgs, List<IParseType> context)
+        {
+            CodeType[] provided = new CodeType[typeArgs.Length];
+
+            for (int i = 0; i < typeArgs.Length; i++)
+                ValidateTypeArg(parseInfo, typeArgs[i], provided[i], context[i].Range);
+
+            return provided;
+        }
+
+        public static void ValidateTypeArg(ParseInfo parseInfo, AnonymousType typeArg, CodeType type, DocRange errorRange)
+        {
+            // 'single' attribute, type-arg is not parallelable.
+            if (typeArg.AnonymousTypeAttributes.Single)
+            {
+                // Bad struct
+                if (type.Attributes.IsStruct)
+                {
+                    parseInfo.Script.Diagnostics.Error("Struct types cannot be used with 'single' type args", errorRange);
+                    return;
+                }
+
+                // Extract anonymous types.
+                var subtypes = type.ExtractAnonymousTypes();
+
+                foreach (var subtype in subtypes)
+                    if (!subtype.AnonymousTypeAttributes.Single)
+                    {
+                        parseInfo.Script.Diagnostics.Error("The anonymous type used here as a type arg needs to be marked as 'single'", errorRange);
+                        return;
+                    }
+            }
         }
     }
 

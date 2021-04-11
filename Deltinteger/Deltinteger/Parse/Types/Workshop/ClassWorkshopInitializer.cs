@@ -12,7 +12,8 @@ namespace Deltin.Deltinteger.Parse
         DeltinScript _deltinScript;
         TypeTrackerComponent _typeTracker;
         int _stackCount; // The number of object variables that need to be assigned.
-        IndexReference[] _stacks;
+        IndexReference[] _stacks; // The object variables.
+        int _newClassID = 1; // Counts up from 0 assigning classes identifiers.
         readonly Dictionary<IClassInitializer, WorkshopInitializedClass> _initialized = new Dictionary<IClassInitializer, WorkshopInitializedClass>();
 
         public void Init(DeltinScript deltinScript)
@@ -51,7 +52,8 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Create the WorkshopInitializedClass.
-            var wic = new WorkshopInitializedClass(_deltinScript, provider, info, stackOffset);
+            var wic = new WorkshopInitializedClass(_deltinScript, provider, info, stackOffset, _newClassID);
+            _newClassID++;
 
             // Add to _initialized
             _initialized.Add(provider, wic);
@@ -72,6 +74,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public WorkshopInitializedClass InitializedClassFromProvider(IClassInitializer provider) => _initialized[provider];
+        public int GetIdentifier(IClassInitializer provider) => _initialized[provider].ID;
         public IndexReference ObjectVariableFromIndex(int i) => _stacks[i];
     }
 
@@ -83,18 +86,21 @@ namespace Deltin.Deltinteger.Parse
         public int Offset { get; }
         public int[] StackDeltas { get; }
         public int StackLength { get; }
+        public int ID { get; }
 
         public WorkshopInitializedClass(
             DeltinScript deltinScript,
             IClassInitializer provider,
             ProviderTrackerInfo info,
-            int stackOffset
+            int stackOffset,
+            int id
         )
         {
             _deltinScript = deltinScript;
             Provider = provider;
             Info = info;
             Offset = stackOffset;
+            ID = id;
 
             StackDeltas = provider.ObjectVariables.Select(ov => GetObjectVariableStackCount(ov)).ToArray();
             StackLength = StackDeltas.Sum();

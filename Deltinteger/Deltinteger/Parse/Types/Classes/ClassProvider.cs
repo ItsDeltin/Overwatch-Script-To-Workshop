@@ -16,9 +16,7 @@ namespace Deltin.Deltinteger.Parse
     public abstract class ClassInitializer : ICodeTypeInitializer, IResolveElements, IClassInitializer
     {
         public string Name { get; }
-        public string Documentation { get; protected set; }
         public virtual int GenericsCount { get; protected set; }
-        public Constructor[] Constructors { get; protected set; }
         public CodeType WorkingInstance { get; protected set; }
 
         /// <summary>Determines if the class elements were resolved.</summary>

@@ -404,6 +404,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.PlayerVar:
                 case TokenType.Ref:
                 case TokenType.Type:
+                case TokenType.Single:
                     return true;
 
                 default:
@@ -479,7 +480,6 @@ namespace Deltin.Deltinteger.Compiler
         Continue,
         Return,
         Rule,
-		Type,
         Disabled,
         For,
         While,
@@ -500,6 +500,9 @@ namespace Deltin.Deltinteger.Compiler
         Root,
         As,
         Async,
+        // Keywords/identifiers
+        Type,
+        Single,
         // Attributes
         Public,
         Private,

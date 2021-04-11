@@ -294,6 +294,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("async", TokenType.Async) ||
                     MatchKeyword("as", TokenType.As) ||
 					MatchKeyword("type", TokenType.Type) ||
+                    MatchKeyword("single", TokenType.Single) ||
                     MatchIdentifier() ||
                     MatchString();
                 

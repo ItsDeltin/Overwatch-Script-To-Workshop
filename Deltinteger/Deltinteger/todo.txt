@@ -1,0 +1,41 @@
+Update to new systems
+- Fix rename for variables and functions.
+- Declaration provider hover.
+
+New features
+- Return parallel values.
+
+- Support parallel indexed-converted struct array contains 'parallelStructArray.FilteredArray(...).Contains(...)'
+
+- Strict on the status of empty structs.
+
+- Inline structs.
+
+- Fix tmlanguage for new with generics.
+
+- Struct completion.
+
+- Differentiate blocks and inline struct declarations in the contexts where either is excepted. '() => {}'
+  This will result in a true ambiguity for empty blocks and empty structs.
+  Workaround is to do '({...})' for struct values.
+
+Code health
+- Move stuff to Parse/Workshop/ToWorkshop.
+
+Code health (cosmetic)
+- Rename ITypeOperator and similar to IBinaryOperator.
+- Make provider/instance naming patterns consistent for types, functions, and variables.
+
+        class A
+        {
+            protected virtual void Ah() {}
+        }
+
+        class B<T> : A {
+            protected override void Ah()
+            {
+                T t = default(T);
+            }
+        }
+
+        What is T???????????????????????????????????????????????????????????????????????????????????????????????????????????????????????!
