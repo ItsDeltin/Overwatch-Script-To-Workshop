@@ -7,10 +7,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
     class VirtualContentBuilder
     {
         readonly ActionSet _actionSet;
-        readonly IVirtualFunctionHandler[] _functions;
+        readonly IEnumerable<IVirtualFunctionHandler> _functions;
         readonly ClassWorkshopInitializerComponent _classInitializer;
 
-        public VirtualContentBuilder(ActionSet actionSet, IVirtualFunctionHandler[] functions)
+        public VirtualContentBuilder(ActionSet actionSet, IEnumerable<IVirtualFunctionHandler> functions)
         {
             _actionSet = actionSet;
             _functions = functions;
@@ -20,9 +20,9 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         public void Build()
         {
             // Only parse the first option if there is only one.
-            if (_functions.Length == 1)
+            if (_functions.Count() == 1)
             {
-                _functions[0].Build(_actionSet);
+                _functions.First().Build(_actionSet);
                 return;
             }
 
@@ -37,18 +37,20 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                 // The action set for the overload.
                 ActionSet optionSet = _actionSet.New(_actionSet.IndexAssigner.CreateContained());
 
+                var containingType = option.ContainingType();
+
                 // Add the object variables of the selected method.
-                option.ContainingType().AddObjectVariablesToAssigner(optionSet.ToWorkshop, optionSet.CurrentObject, optionSet.IndexAssigner);
+                containingType.AddObjectVariablesToAssigner(optionSet.ToWorkshop, optionSet.CurrentObject, optionSet.IndexAssigner);
 
                 // Go to next case then parse the block.
-                typeSwitch.NextCase(Element.Num(_classInitializer.GetIdentifier(option.ContainingType().Provider)));
+                typeSwitch.NextCase(Element.Num(_classInitializer.GetIdentifier(containingType.Provider)));
 
                 // Iterate through every type that extends the current function's class.
-                foreach (IClassInitializer type in _actionSet.ToWorkshop.Relations.GetAllExtendersOf(option.ContainingType()))
+                foreach (IClassInitializer type in _actionSet.ToWorkshop.Relations.GetAllExtendersOf(containingType))
                     // If 'type' does not equal the current virtual option's containing class...
-                    if (option.ContainingType().Provider != type
+                    if (containingType.Provider != type
                         // ...and 'type' does not have their own function implementation...
-                        && AutoImplemented(option.ContainingType(), allContainingTypes, type))
+                        && AutoImplemented(containingType.Provider, allContainingTypes, type))
                         // ...then add an additional case for 'type's class identifier.
                         typeSwitch.NextCase(Element.Num(_classInitializer.GetIdentifier(type)));
                 
@@ -65,7 +67,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         /// <param name="virtualFunction">The virtual function to check overrides of.</param>
         /// <param name="options">All potential virtual functions.</param>
         /// <param name="type">The type to check.</param>
-        public static bool AutoImplemented(CodeType virtualType, IEnumerable<IClassInitializer> allOptionTypes, IClassInitializer type)
+        public static bool AutoImplemented(IClassInitializer virtualType, IEnumerable<IClassInitializer> allOptionTypes, IClassInitializer type)
         {
             // Go through each class in the inheritance tree and check if it implements the function.
             IClassInitializer current = type;

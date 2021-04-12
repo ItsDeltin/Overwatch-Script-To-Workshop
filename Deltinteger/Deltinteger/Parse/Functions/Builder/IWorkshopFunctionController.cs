@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         object StackIdentifier();
 
         /// <summary>Build the inner functions.</summary>
-        void Build();
+        void Build(ActionSet actionSet);
     }
 
     public class WorkshopFunctionControllerAttributes

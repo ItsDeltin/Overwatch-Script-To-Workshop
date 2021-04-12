@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse.Workshop;
+using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Functions.Builder.User
 {
@@ -13,12 +14,15 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
 
         readonly DefinedMethodInstance _function;
         readonly DeltinScript _deltinScript;
-        readonly List<DefinedMethodInstance> _overriders = new List<DefinedMethodInstance>();
+        readonly List<DefinedMethodInstance> _allVirtualOptions = new List<DefinedMethodInstance>();
 
         public UserFunctionController(DeltinScript deltinScript, ToWorkshop toWorkshop, DefinedMethodInstance function)
         {
             _function = function;
             _deltinScript = deltinScript;
+
+            _allVirtualOptions.Add(function);
+            GetOverridersOf(toWorkshop.Relations, function);
         }
 
         void GetOverridersOf(CompileRelations relations, DefinedMethodInstance method)
@@ -32,7 +36,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
 
             foreach (var overrider in overriders)
             {
-                _overriders.Add(overrider);
+                _allVirtualOptions.Add(overrider);
 
                 // Recursively get the overrider's overriders.
                 GetOverridersOf(relations, overrider);
@@ -70,16 +74,30 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 return null;
             
             // Get or create the subroutine.
-            return _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(_function.Provider, () => {
+            return _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(_function.Provider, () =>
                 // Create the subroutine.
-            });
+                new SubroutineBuilder(_deltinScript, new() {
+                    Controller = this,
+                    ElementName = _function.Name,
+                    RuleName = _function.Provider.SubroutineName,
+                    ObjectStackName = _function.Name + "Stack",
+                    VariableGlobalDefault = _function.Provider.SubroutineDefaultGlobal,
+                    // TODO: use _function.ContainingType (when that is ready)
+                    ContainingType = _function.Provider.ContainingType.GetInstance(_function.InstanceInfo)
+                }).SetupSubroutine()
+            );
         }
 
         public object StackIdentifier() => _function;
 
-        public void Build()
+        public void Build(ActionSet actionSet)
         {
-            throw new System.NotImplementedException();
+            // Create the function builder.
+            var virtualContentBuilder = new VirtualContentBuilder(
+                actionSet: actionSet,
+                functions: from virtualOption in _allVirtualOptions select new UserFunctionBuilder(virtualOption, _deltinScript)
+            );
+            virtualContentBuilder.Build();
         }
 
         class UserParameterHandler : ParameterHandler
@@ -96,6 +114,21 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 foreach (var linked in _linkedVariables)
                     assigner.Add(linked, _gettable);
             }
+        }
+
+        class UserFunctionBuilder : IVirtualFunctionHandler
+        {
+            readonly DefinedMethodInstance _method;
+            readonly ClassType _type;
+
+            public UserFunctionBuilder(DefinedMethodInstance method, DeltinScript deltinScript)
+            {
+                _method = method;
+                _type = (ClassType)_method.Provider.ContainingType.GetInstance(_method.InstanceInfo);
+            }
+
+            public void Build(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet);
+            public ClassType ContainingType() => _type;
         }
     }
 }

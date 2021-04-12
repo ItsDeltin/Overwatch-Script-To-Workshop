@@ -8,32 +8,30 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         // Creates and calls a WorkshopFunctionBuilder.
         public static IWorkshopTree Call(ActionSet actionSet, ICallInfo call, IWorkshopFunctionController controller)
         {
-            var builder = new WorkshopFunctionBuilder(actionSet, call, controller);
-            return builder.Call();
+            var builder = new WorkshopFunctionBuilder(actionSet, controller);
+            return builder.Call(call);
         }
 
         public ActionSet ActionSet { get; private set; }
-        public ICallInfo CallInfo { get; }
         public IWorkshopFunctionController Controller { get; }
         public IParameterHandler[] ParameterHandlers { get; private set; }
+        public ReturnHandler ReturnHandler { get; private set; }
         SubroutineCatalogItem _subroutine;
-        ReturnHandler _returnHandler;
 
-        private WorkshopFunctionBuilder(ActionSet actionSet, ICallInfo call, IWorkshopFunctionController controller)
+        public WorkshopFunctionBuilder(ActionSet actionSet, IWorkshopFunctionController controller)
         {
             ActionSet = actionSet;
-            CallInfo = call;
             Controller = controller;
         }
 
-        public IWorkshopTree Call()
+        public IWorkshopTree Call(ICallInfo call)
         {
             // Get the subroutine.
             _subroutine = Controller.GetSubroutine();
             if (_subroutine)
             {
                 ParameterHandlers = _subroutine.Parameters;
-                SetParameters();
+                SetParameters(call);
 
                 // Store the object the subroutine is executing with.
                 if (Controller.Attributes.IsInstance)
@@ -59,27 +57,23 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
                     // Function is not yet on the stack.
                     if (lastCall == null)
-                        return BuildInline();
+                        return BuildInline(call);
                     else // Recursive call.
                     {
-                        lastCall.RecursiveCall(CallInfo, ActionSet);
+                        lastCall.RecursiveCall(call, ActionSet);
                         return ActionSet.ReturnHandler.GetReturnedValue();
                     }
                 }
                 else
-                    return BuildInline();
+                    return BuildInline(call);
             }
         }
 
-        IWorkshopTree BuildInline()
+        IWorkshopTree BuildInline(ICallInfo call)
         {
             // Create parameter handlers
             ParameterHandlers = Controller.CreateParameterHandlers(ActionSet);
-            return Build();
-        }
 
-        public IWorkshopTree Build()
-        {
             // Setup inline-recursive handler.
             RecursiveStack stack = null;
             if (!_subroutine && Controller.Attributes.IsRecursive)
@@ -91,49 +85,45 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
             ModifySet(a => a.PackThis());
             SetupReturnHandler(); // Setup the return handler.
-            SetParameters(); // Set the parameters.
+            SetParameters(call); // Set the parameters.
             stack?.StartRecursiveLoop(); // Start the recursion loop.
-            Controller.Build(); // Build the function contents.
-            _returnHandler.ApplyReturnSkips(); // Returns will skip to this point, right before the recursive loop ends.
+            Controller.Build(ActionSet); // Build the function contents.
+            ReturnHandler.ApplyReturnSkips(); // Returns will skip to this point, right before the recursive loop ends.
             stack?.EndRecursiveLoop(); // End the recursive loop.
 
             if (stack != null) ActionSet.Translate.MethodStack.Remove(stack); // Remove recursion info from the stack.
 
-            return _returnHandler.GetReturnedValue();
+            return ReturnHandler.GetReturnedValue();
         }
 
-        void SetupReturnHandler()
+        public void SetupReturnHandler()
         {
-            _returnHandler = Controller.GetReturnHandler(ActionSet);
-            ModifySet(a => a.New(_returnHandler));
+            ReturnHandler = Controller.GetReturnHandler(ActionSet);
+            ModifySet(a => a.New(ReturnHandler));
         }
 
-        void SetParameters()
+        void SetParameters(ICallInfo call)
         {
             // Ensure the parameter counts are the same.
-            if (ParameterHandlers.Length != CallInfo.Parameters.Length)
+            if (ParameterHandlers.Length != call.Parameters.Length)
                 throw new Exception("Parameter count mismatch");
 
             for (int i = 0; i < ParameterHandlers.Length; i++)
-                ParameterHandlers[i].Set(ActionSet, CallInfo.Parameters[i]);
+                ParameterHandlers[i].Set(ActionSet, call.Parameters[i]);
         }
 
-        public void PushParameters(ICallInfo callInfo)
+        public void PushParameters(ICallInfo call)
         {
             // Ensure the parameter counts are the same.
-            if (ParameterHandlers.Length != CallInfo.Parameters.Length)
+            if (ParameterHandlers.Length != call.Parameters.Length)
                 throw new Exception("Parameter count mismatch");
 
             for (int i = 0; i < ParameterHandlers.Length; i++)
-                ParameterHandlers[i].Push(ActionSet, callInfo.Parameters[i]);
+                ParameterHandlers[i].Push(ActionSet, call.Parameters[i]);
         }
 
         public void PopParameters()
         {
-            // Ensure the parameter counts are the same.
-            if (ParameterHandlers.Length != CallInfo.Parameters.Length)
-                throw new Exception("Parameter count mismatch");
-
             for (int i = 0; i < ParameterHandlers.Length; i++)
                 ParameterHandlers[i].Pop(ActionSet);
         }

@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         public void EndRecursiveLoop()
         {
             // Pop the object store array.
-            if (_builder.Determiner.IsVirtual())
+            if (_builder.Controller.Attributes.IsInstance)
                 actionSet.AddAction(_objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(_objectStore.GetVariable()) - 1));
             
             // Pop the parameters.

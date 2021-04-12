@@ -170,7 +170,7 @@ namespace Deltin.Deltinteger.Parse
             else _listeners.Add(onBlockApplied);
         }
     
-        public IMethod GetDefaultInstance() => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes));
+        public DefinedMethodInstance GetDefaultInstance() => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes), ContainingType.WorkingInstance);
         public DefinedMethodInstance CreateInstance(InstanceAnonymousTypeLinker genericsLinker) => new DefinedMethodInstance(Name, this, genericsLinker);
         public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(), Static);
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
@@ -197,7 +197,7 @@ namespace Deltin.Deltinteger.Parse
                     new DefinedSubroutineContext(
                         _parseInfo,
                         this,
-                        ((DefinedMethodInstance)GetDefaultInstance()).GetOverrideFunctionHandlers()
+                        GetDefaultInstance().GetOverrideFunctionHandlers()
                     )
                 );
                 builder.SetupSubroutine();
@@ -221,18 +221,20 @@ namespace Deltin.Deltinteger.Parse
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public DefinedMethodProvider Provider { get; }
         public InstanceAnonymousTypeLinker InstanceInfo { get; }
+        public CodeType ContainingType { get; }
         public bool Static => Provider.Static;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => Provider.DefinedAt;
         public AccessLevel AccessLevel => Provider.AccessLevel;
         IMethodExtensions IMethod.MethodInfo => Provider;
 
-        public DefinedMethodInstance(string name, DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo)
+        public DefinedMethodInstance(string name, DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo, CodeType containingType)
         {
             Name = name;
             Provider = provider;
             CodeType = provider.ReturnType?.GetRealType(instanceInfo);
             InstanceInfo = instanceInfo;
+            ContainingType = containingType;
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             ParameterVars = new IVariableInstance[Parameters.Length];
