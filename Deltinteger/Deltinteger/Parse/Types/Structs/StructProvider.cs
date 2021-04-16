@@ -17,7 +17,8 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public IValueSolve OnReady { get; protected set; } = new ValueSolveSource(true);
-        public virtual int GenericsCount { get; }
+        public int GenericsCount => GenericTypes.Length;
+        public AnonymousType[] GenericTypes { get; protected set; }
         protected IList<IVariable> Variables { get; } = new List<IVariable>();
         protected IList<IMethodProvider> Methods { get; } = new List<IMethodProvider>();
 

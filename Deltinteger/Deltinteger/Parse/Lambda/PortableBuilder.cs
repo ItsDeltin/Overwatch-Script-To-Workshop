@@ -1,147 +1,188 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
+using Deltin.Deltinteger.Parse.Functions.Builder;
+using Deltin.Deltinteger.Parse.Functions.Builder.User;
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
-    class LambdaGroup : IComponent, IGroupDeterminer, ISubroutineContext, IFunctionLookupTable
+    class LambdaGroup : IComponent, IWorkshopFunctionController
     {
-        readonly List<IFunctionHandler> _functionHandlers = new List<IFunctionHandler>();
+        readonly List<LambdaAction> _lambdas = new List<LambdaAction>();
         readonly Dictionary<object, int> _identifiers = new Dictionary<object, int>();
         DeltinScript _deltinScript;
         int _parameterCount;
         int _functionIdentifier = 0;
-        SubroutineInfo _subroutineInfo = null;
+        RecycleWorkshopVariableAssigner _recycler;
 
         public void Init(DeltinScript deltinScript) => _deltinScript = deltinScript;
 
-        public int Add(IFunctionHandler lambda)
+        public int Add(LambdaAction lambda)
         {
-            if (_identifiers.TryGetValue(lambda.UniqueIdentifier(), out int existingIdentifier))
+            if (_identifiers.TryGetValue(lambda, out int existingIdentifier))
                 return existingIdentifier;
 
             _functionIdentifier++;
-            _identifiers.Add(lambda.UniqueIdentifier(), _functionIdentifier);
+            _identifiers.Add(lambda, _functionIdentifier);
 
             // Update the parameter count.
-            _parameterCount = Math.Max(_parameterCount, lambda.ParameterCount());
+            _parameterCount = Math.Max(_parameterCount, lambda.Parameters.Length);
 
             // Add the function handler.
-            _functionHandlers.Add(lambda);
+            _lambdas.Add(lambda);
             return _functionIdentifier;
         }
 
-        public IWorkshopTree Call(ActionSet actionSet, ICallHandler call)
+        public IWorkshopTree Call(ActionSet actionSet, ICallInfo call)
         {
-            var builder = new FunctionBuildController(actionSet, call, this);
-            return builder.Call();
+            return WorkshopFunctionBuilder.Call(actionSet, call, this);
         }
 
-        // IGroupDeterminer
-        public string GroupName() => "func group";
-        public bool IsRecursive() => true;
-        public bool IsObject() => true;
-        public bool IsSubroutine() => true;
-        public bool MultiplePaths() => true;
-        public bool IsVirtual() => true;
-        public bool ReturnsValue() => true;
-        public IFunctionLookupTable GetLookupTable() => this;
-        public SubroutineInfo GetSubroutineInfo()
-        {
-            if (_subroutineInfo == null)
-            {
-                var builder = new SubroutineBuilder(_deltinScript, this);
-                builder.SetupSubroutine();
-                _subroutineInfo = builder.SubroutineInfo;
-            }
-            return _subroutineInfo;
-        }
-        public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_parameterCount, _functionHandlers.ToArray(), true);
-        public RecursiveStack GetExistingRecursiveStack(List<RecursiveStack> stack) => throw new NotImplementedException();
-        public object GetStackIdentifier() => throw new NotImplementedException();
+        WorkshopFunctionControllerAttributes IWorkshopFunctionController.Attributes { get; } = new WorkshopFunctionControllerAttributes() {
+            IsInstance = true,
+            IsRecursive = true,
+            RecursiveRequiresObjectStack = true
+        };
 
-        // IFunctionLookupTable
-        public void Build(FunctionBuildController builder)
+        ReturnHandler IWorkshopFunctionController.GetReturnHandler(ActionSet actionSet) => new ReturnHandler(actionSet, "func group", null, false);
+        SubroutineCatalogItem IWorkshopFunctionController.GetSubroutine() => _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(this, () =>
+            new SubroutineBuilder(_deltinScript, new SubroutineContext() {
+                Controller = this,
+                ElementName = "func group", ObjectStackName = "func group", RuleName = "lambda",
+                VariableGlobalDefault = true
+            }).SetupSubroutine()
+        );
+        object IWorkshopFunctionController.StackIdentifier() => this;
+
+        void IWorkshopFunctionController.Build(ActionSet actionSet)
         {
             // Create the switch that chooses the lambda.
-            SwitchBuilder lambdaSwitch = new SwitchBuilder(builder.ActionSet);
+            SwitchBuilder lambdaSwitch = new SwitchBuilder(actionSet);
 
-            foreach (IFunctionHandler option in _functionHandlers)
+            foreach (var option in _lambdas)
             {
                 // The action set for the overload.
-                ActionSet optionSet = builder.ActionSet.New(builder.ActionSet.IndexAssigner.CreateContained());
+                ActionSet optionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
 
                 // Go to next case
-                lambdaSwitch.NextCase(Element.Num(_identifiers[option.UniqueIdentifier()]));
+                lambdaSwitch.NextCase(Element.Num(_identifiers[option]));
 
                 // Add the object variables of the selected method.
-                var callerObject = ((Element)builder.ActionSet.CurrentObject)[1];
+                var callerObject = ((Element)optionSet.CurrentObject)[1];
 
                 // Add the class objects.
-                option.ContainingType?.AddObjectVariablesToAssigner(optionSet.ToWorkshop, callerObject, optionSet.IndexAssigner);
+                option.This?.AddObjectVariablesToAssigner(optionSet.ToWorkshop, callerObject, optionSet.IndexAssigner);
 
                 // then parse the block.
-                builder.Subcall(optionSet.SetThis(callerObject).New(builder.ActionSet.CurrentObject), option);
+                option.Statement.Translate(optionSet.SetThis(callerObject).New(actionSet.CurrentObject));
+                // Create a new contained action set.
+                //     actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+
+                //     var infoSaver = actionSet.VarCollection.Assign("funcSaver", true, false);
+                //     actionSet.AddAction(infoSaver.SetVariable((Element)actionSet.CurrentObject));
+
+                //     actionSet = actionSet.New(infoSaver.Get());
+
+                //     // Add the contained variables.
+                //     for (int i = 0; i < _lambda.CapturedVariables.Count; i++)
+                //         actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 2));
+
+                //     if (_lambda.Expression != null)
+                //         actionSet.ReturnHandler.ReturnValue(_lambda.Expression.Parse(actionSet));
+                //     else
+                //         _lambda.Statement.Translate(actionSet);
             }
 
             // Finish the switch.
-            lambdaSwitch.Finish(((Element)builder.ActionSet.CurrentObject)[0]);
+            lambdaSwitch.Finish(((Element)actionSet.CurrentObject)[0]);
         }
 
-        // ISubroutineContext
-        string ISubroutineContext.RuleName() => "func group";
-        string ISubroutineContext.ElementName() => "func group";
-        string ISubroutineContext.ThisArrayName() => "func group";
-        bool ISubroutineContext.VariableGlobalDefault() => true;
-        IParameterHandler[] ISubroutineContext.Parameters() => Parameters();
-        CodeType ISubroutineContext.ContainingType() => null;
-        void ISubroutineContext.Finish(Rule rule) { }
-        IGroupDeterminer ISubroutineContext.GetDeterminer() => this;
-        void ISubroutineContext.SetSubroutineInfo(SubroutineInfo subroutineInfo) => _subroutineInfo = subroutineInfo;
+        public IParameterHandler CreateParameterHandler(ActionSet actionSet) => new LambdaParameterHandler(_recycler);
+
+        class LambdaParameterHandler : IParameterHandler
+        {
+            readonly RecycleWorkshopVariableAssigner _recycler;
+
+            public LambdaParameterHandler(RecycleWorkshopVariableAssigner recycler)
+            {
+                _recycler = recycler;
+            }
+
+            public void Set(ActionSet actionSet, IWorkshopTree[] parameterValues)
+            {
+                parameterValues = ExtractStructs(parameterValues);
+
+                for (int i = 0; i < parameterValues.Length; i++)
+                    _recycler.Created[i].Set(actionSet, (Element)parameterValues[i]);
+            }
+
+            public void Push(ActionSet actionSet, IWorkshopTree[] parameterValues)
+            {
+                parameterValues = ExtractStructs(parameterValues);
+                throw new NotImplementedException();
+            }
+
+            static IWorkshopTree[] ExtractStructs(IWorkshopTree[] parameterValues)
+            {
+                var extracted = new List<IWorkshopTree>();
+
+                // Extract all values from the parameters.
+                foreach (var parameter in parameterValues)
+                {
+                    // Unfold struct.
+                    if (parameter is IStructValue structValue)
+                        extracted.AddRange(structValue.GetAllValues());
+                    else // Normal
+                        extracted.Add(parameter);
+                }
+
+                return extracted.ToArray();
+            }
+
+            public void Pop(ActionSet actionSet)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AddParametersToAssigner(VarIndexAssigner assigner)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        class LambdaParameterInfo
+        {
+            public IGettable[] Parameters { get; }
+            public LambdaAction Action { get; }
+            readonly RecycleWorkshopVariableAssigner _recycler;
+
+            public LambdaParameterInfo(LambdaAction action, RecycleWorkshopVariableAssigner recycler)
+            {
+                Action = action;
+                _recycler = recycler;
+                Parameters = action.Parameters.Select(p => _recycler.Create(p, true)).ToArray();
+            }
+        }
     }
 
-    public class LambdaHandler : IFunctionHandler
-    {
-        public CodeType ContainingType => _lambda.This;
-        private readonly LambdaAction _lambda;
+    // public void ParseInner(ActionSet actionSet)
+    // {
+    //     // Create a new contained action set.
+    //     actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
 
-        public LambdaHandler(LambdaAction lambda)
-        {
-            _lambda = lambda;
-        }
+    //     var infoSaver = actionSet.VarCollection.Assign("funcSaver", true, false);
+    //     actionSet.AddAction(infoSaver.SetVariable((Element)actionSet.CurrentObject));
 
-        public bool DoesReturnValue() => _lambda.LambdaType.ReturnsValue;
-        public IVariableInstance GetParameterVar(int index) => index < _lambda.Parameters.Length ? _lambda.Parameters[index].GetDefaultInstance() : null;
-        public int ParameterCount() => _lambda.Parameters.Length;
+    //     actionSet = actionSet.New(infoSaver.Get());
 
-        public SubroutineInfo GetSubroutineInfo() => throw new NotImplementedException();
-        public bool IsSubroutine() => false;
+    //     // Add the contained variables.
+    //     for (int i = 0; i < _lambda.CapturedVariables.Count; i++)
+    //         actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 2));
 
-        public string GetName() => throw new NotImplementedException();
-        public bool IsObject() => throw new NotImplementedException();
-        public bool IsRecursive() => throw new NotImplementedException();
-        public bool MultiplePaths() => throw new NotImplementedException();
-        public object UniqueIdentifier() => _lambda;
-
-        public void ParseInner(ActionSet actionSet)
-        {
-            // Create a new contained action set.
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-
-            var infoSaver = actionSet.VarCollection.Assign("funcSaver", true, false);
-            actionSet.AddAction(infoSaver.SetVariable((Element)actionSet.CurrentObject));
-
-            actionSet = actionSet.New(infoSaver.Get());
-
-            // Add the contained variables.
-            for (int i = 0; i < _lambda.CapturedVariables.Count; i++)
-                actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 2));
-
-            if (_lambda.Expression != null)
-                actionSet.ReturnHandler.ReturnValue(_lambda.Expression.Parse(actionSet));
-            else
-                _lambda.Statement.Translate(actionSet);
-        }
-    }
+    //     if (_lambda.Expression != null)
+    //         actionSet.ReturnHandler.ReturnValue(_lambda.Expression.Parse(actionSet));
+    //     else
+    //         _lambda.Statement.Translate(actionSet);
+    // }
 }

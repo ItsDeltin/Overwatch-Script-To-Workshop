@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                 actionSet.AddAction(_objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(_objectStore.GetVariable()) - 1));
             
             // Pop the parameters.
-            _builder.PopParameters();
+            _builder.ParameterHandler.Pop(_builder.ActionSet);
 
             // Restart the method from the specified position if there are any elements in the continue array.
             actionSet.AddAction(Element.SkipIf(Element.Compare(
@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                 actionSet.AddAction(_objectStore.ModifyVariable(Operation.AppendToArray, (Element)callerSet.CurrentObject));
 
             // Push new parameters.
-            _builder.PushParameters(callInfo);
+            _builder.ParameterHandler.Push(_builder.ActionSet, callInfo.ParameterValues);
 
             // Add to the continue skip array.
             var skipLength = new NumberElement();

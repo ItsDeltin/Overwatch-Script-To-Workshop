@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name => _type.Name;
         public int GenericsCount => 0;
+        public AnonymousType[] GenericTypes => new AnonymousType[0];
         private readonly CodeType _type;
 
         public GenericCodeTypeInitializer(CodeType type)

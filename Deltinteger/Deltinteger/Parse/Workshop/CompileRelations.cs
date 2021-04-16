@@ -12,10 +12,21 @@ namespace Deltin.Deltinteger.Parse.Workshop
         readonly Dictionary<IMethod, LinkedFunctions> _functionRelations = new Dictionary<IMethod, LinkedFunctions>();
         readonly Dictionary<ClassType, LinkedClasses> _classRelations = new Dictionary<ClassType, LinkedClasses>();
 
-        public CompileRelations()
+        public CompileRelations(DeltinScript deltinScript)
         {
+            CollectElements(deltinScript);
             CompileFunctions();
             CompileClasses();
+        }
+
+        void CollectElements(DeltinScript deltinScript)
+        {
+            var allScripts = deltinScript.Importer.ScriptFiles;
+            foreach (var script in allScripts)
+            {
+                _allFunctions.AddRange(script.Elements.DefinedMethods);
+                _allClasses.AddRange(script.Elements.DefinedClasses);
+            }
         }
 
         void CompileFunctions()
@@ -23,7 +34,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
             foreach (var function in _allFunctions)
             {
                 // Function does not override anything.
-                if (function.Overriding == null) return;
+                if (function.Overriding == null) continue;
 
                 // Get the LinkedFunctions for the overriden function.
                 if (!_functionRelations.TryGetValue(function.Overriding, out LinkedFunctions links))
@@ -63,6 +74,32 @@ namespace Deltin.Deltinteger.Parse.Workshop
                     return relation.Value.OverridenBy.ToArray();
 
             return new IMethodProvider[0];
+        }
+
+        public DefinedMethodInstance[] GetAllOverridersOf(DefinedMethodInstance definedMethod)
+        {
+            var overriders = new List<DefinedMethodInstance>();
+            overriders.Add(definedMethod);
+            GetAllOverridersOfInternal(overriders, definedMethod);
+            return overriders.ToArray();
+        }
+
+        void GetAllOverridersOfInternal(List<DefinedMethodInstance> overriders, DefinedMethodInstance method)
+        {
+            // Get the overrider's instances.
+            var children =
+                // Get the overriders and convert them to DefinedMethodProviders.
+                Array.ConvertAll(GetOverridersOf(method.Provider), p => (DefinedMethodProvider)p)
+                // Create instances from the provider. Use the original method's instance info.
+                .Select(provider => provider.CreateInstance(method.InstanceInfo));
+
+            foreach (var child in children)
+            {
+                overriders.Add(child);
+
+                // Recursively get the overrider's overriders.
+                GetAllOverridersOfInternal(overriders, child);
+            }
         }
 
         public IClassInitializer[] GetExtendersOf(ClassType type)

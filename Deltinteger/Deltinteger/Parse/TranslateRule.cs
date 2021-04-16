@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
+using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
@@ -149,16 +149,10 @@ namespace Deltin.Deltinteger.Parse
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
-        public ToWorkshop ToWorkshop { get => new ToWorkshop(DeltinScript); }
+        public ToWorkshop ToWorkshop { get => Translate.DeltinScript.WorkshopConverter; }
 
         public int ActionCount => ActionList.Count;
 
-        public ActionSet(bool isGlobal, VarCollection varCollection)
-        {
-            IsGlobal = isGlobal;
-            VarCollection = varCollection;
-            ActionList = new List<IActionList>();
-        }
         public ActionSet(TranslateRule translate, DocRange genericErrorRange, List<IActionList> actions)
         {
             Translate = translate;

@@ -44,9 +44,6 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Type operations for assignment, comparison, etc.</summary>
         public TypeOperatorInfo Operations { get; protected set; }
 
-        protected List<IMethod> VirtualFunctions { get; } = new List<IMethod>();
-        protected List<IVariableInstance> VirtualVariables { get; } = new List<IVariableInstance>();
-
         public CodeType(string name)
         {
             Name = name;
@@ -172,42 +169,6 @@ namespace Deltin.Deltinteger.Parse
         public virtual CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => this;
 
         public override string ToString() => GetName();
-
-        public IMethod GetVirtualFunction(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
-        {
-            // Loop through each virtual function.
-            foreach (var virtualFunction in VirtualFunctions)
-                // If the function's name matches and the parameter lengths are the same.
-                if (virtualFunction.Name == name && parameterTypes.Length == virtualFunction.Parameters.Length)
-                {
-                    bool matches = true;
-                    // Loop though the parameters.
-                    for (int i = 0; i < parameterTypes.Length; i++)
-                        // Make sure the parameter types match.
-                        if (!parameterTypes[i].Is(virtualFunction.Parameters[i].GetCodeType(deltinScript)))
-                        {
-                            matches = false;
-                            break;
-                        }
-                    
-                    if (matches)
-                        return virtualFunction;
-                }
-            
-            if (Extends != null) return Extends.GetVirtualFunction(deltinScript, name, parameterTypes);
-            return null;
-        }
-
-        public IVariableInstance GetVirtualVariable(string name)
-        {
-            // Loop through each virtual variable.
-            foreach (var virtualVariable in VirtualVariables)
-                if (virtualVariable.Name == name)
-                    return virtualVariable;
-            
-            if (Extends != null) return Extends.GetVirtualVariable(name);
-            return null;
-        }
 
         CodeType ICodeTypeSolver.GetCodeType(DeltinScript deltinScript) => this;
     }

@@ -10,12 +10,14 @@ namespace Deltin.Deltinteger.Parse
         public bool SetInitialValue { get; set; } = true;
         public IWorkshopTree InitialValueOverride { get; set; }
         public bool Inline { get; set; }
+        public WorkshopVariableAssigner IndexReferenceCreator { get; set; }
 
         public GettableAssignerValueInfo(ActionSet actionSet, VarCollection varCollection, VarIndexAssigner assigner)
         {
             ActionSet = actionSet;
             VarCollection = varCollection;
             Assigner = assigner;
+            IndexReferenceCreator = new WorkshopVariableAssigner(varCollection);
         }
 
         public GettableAssignerValueInfo(ActionSet actionSet)
@@ -23,6 +25,7 @@ namespace Deltin.Deltinteger.Parse
             ActionSet = actionSet;
             VarCollection = actionSet.VarCollection;
             Assigner = actionSet.IndexAssigner;
+            IndexReferenceCreator = new WorkshopVariableAssigner(actionSet.VarCollection);
         }
 
         public static implicit operator GettableAssignerValueInfo(ActionSet actionSet) => new GettableAssignerValueInfo(actionSet);
@@ -65,7 +68,9 @@ namespace Deltin.Deltinteger.Parse
             if (inline) return new GettableAssignerResult(new WorkshopElementReference(initialValue), initialValue);
             
             // Assign the index reference
-            var value = info.VarCollection.Assign(_var.Name, _var.VariableType, info.ActionSet.IsGlobal, _var.InExtendedCollection, _var.ID);
+            // Todo: remove commented lines if everything is a-o-k
+            // var value = info.VarCollection.Assign(_var.Name, _var.VariableType, info.ActionSet.IsGlobal, _var.InExtendedCollection, _var.ID);
+            var value = info.IndexReferenceCreator.Create(_var, info.ActionSet.IsGlobal);
 
             // Add the variable to the assigner.
             // info.Assigner.Add(_var, value);

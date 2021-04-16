@@ -38,7 +38,8 @@ namespace Deltin.Deltinteger.Parse
                 // Get the child gettable.
                 values.Add(var.Name, var.GetAssigner(info.ActionSet).GetValue(new GettableAssignerValueInfo(info.ActionSet) {
                     InitialValueOverride = initialValue?.GetValue(var.Name),
-                    Inline = inline
+                    Inline = inline,
+                    IndexReferenceCreator = info.IndexReferenceCreator
                 }));
             
             return new GettableAssignerResult(new StructAssignerValue(values), null);

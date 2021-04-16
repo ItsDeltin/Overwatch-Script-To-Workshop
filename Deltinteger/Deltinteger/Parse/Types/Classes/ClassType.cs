@@ -11,23 +11,27 @@ namespace Deltin.Deltinteger.Parse
         public Scope StaticScope { get; set; }
         /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
         public Scope ServeObjectScope { get; set; }
+        /// <summary></summary>
+        public Scope OperationalScope { get; set; }
 
+        // TODO: remove this bad boy
         public int Identifier { get; set; }
+
         public ObjectVariable[] ObjectVariables { get; protected set; }
         public IVariableInstance[] Variables { get; protected set; }
 
+        // The provider that created this ClassType.
         public IClassInitializer Provider { get; }
-        private readonly IResolveElements _resolveElements;
 
-        public ClassType(string name, IClassInitializer provider, IResolveElements resolveElements = null) : base(name)
+        // The virtual functions in the class.
+        readonly List<IMethod> _virtualMethods = new List<IMethod>();
+
+        public ClassType(string name, IClassInitializer provider) : base(name)
         {
             Provider = provider;
-            _resolveElements = resolveElements;
         }
 
         public ClassType(string name) : base(name) {}
-
-        public override void ResolveElements() => _resolveElements?.ResolveElements();
 
         public override void WorkshopInit(DeltinScript translateInfo)
         {
@@ -130,5 +134,66 @@ namespace Deltin.Deltinteger.Parse
         public virtual void AddStaticBasedScope(IMethod function) => StaticScope.CopyMethod(function);
         public virtual void AddObjectBasedScope(IVariableInstance variable) => ServeObjectScope.CopyVariable(variable);
         public virtual void AddStaticBasedScope(IVariableInstance variable) => StaticScope.CopyVariable(variable);
+
+        public void AddVirtualFunction(IMethod method) => _virtualMethods.Add(method);
+
+        public IMethod GetVirtualFunction(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
+        {
+            // Loop through each virtual function.
+            foreach (var virtualFunction in _virtualMethods)
+                // If the function's name matches and the parameter lengths are the same.
+                if (virtualFunction.Name == name && parameterTypes.Length == virtualFunction.Parameters.Length)
+                {
+                    bool matches = true;
+                    // Loop though the parameters.
+                    for (int i = 0; i < parameterTypes.Length; i++)
+                        // Make sure the parameter types match.
+                        if (!parameterTypes[i].Is(virtualFunction.Parameters[i].GetCodeType(deltinScript)))
+                        {
+                            matches = false;
+                            break;
+                        }
+                    
+                    if (matches)
+                        return virtualFunction;
+                }
+            
+            if (Extends != null) return ((ClassType)Extends).GetVirtualFunction(deltinScript, name, parameterTypes);
+            return null;
+        }
+    }
+
+    class ClassElements
+    {
+        readonly List<IMethod> _methods;
+        readonly List<IMethod> _virtualMethods;
+        readonly List<IVariableInstance> _variables;
+
+        public void AddVirtualFunction(IMethod method) => _virtualMethods.Add(method);
+
+        public IMethod GetVirtualFunction(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
+        {
+            // Loop through each virtual function.
+            foreach (var virtualFunction in _virtualMethods)
+                // If the function's name matches and the parameter lengths are the same.
+                if (virtualFunction.Name == name && parameterTypes.Length == virtualFunction.Parameters.Length)
+                {
+                    bool matches = true;
+                    // Loop though the parameters.
+                    for (int i = 0; i < parameterTypes.Length; i++)
+                        // Make sure the parameter types match.
+                        if (!parameterTypes[i].Is(virtualFunction.Parameters[i].GetCodeType(deltinScript)))
+                        {
+                            matches = false;
+                            break;
+                        }
+                    
+                    if (matches)
+                        return virtualFunction;
+                }
+            
+            if (Extends != null) return ((ClassType)Extends).GetVirtualFunction(deltinScript, name, parameterTypes);
+            return null;
+        }
     }
 }

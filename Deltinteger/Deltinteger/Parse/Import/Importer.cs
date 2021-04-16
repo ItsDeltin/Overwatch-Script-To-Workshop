@@ -14,7 +14,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    class Importer
+    public class Importer
     {
         public List<Uri> ImportedFiles { get; } = new List<Uri>();
         public List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();

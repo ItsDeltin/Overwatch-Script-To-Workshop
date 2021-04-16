@@ -1,12 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
-using Deltin.Deltinteger.Parse.Types.Constructors;
 using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
-using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -41,74 +33,5 @@ namespace Deltin.Deltinteger.Parse
 
             return builder;
         }
-    }
-
-    interface ISubroutineSaver : IFunctionHandler
-    {
-        void SetSubroutineInfo(SubroutineInfo subroutineInfo);
-    }
-
-    class ConstructorDeterminer : IGroupDeterminer, IFunctionLookupTable, ISubroutineContext
-    {
-        private readonly ISubroutineSaver _function;
-
-        public ConstructorDeterminer(ISubroutineSaver function)
-        {
-            _function = function;
-        }
-        public ConstructorDeterminer(DefinedConstructorInstance constructor) : this(new DefinedConstructorHandler(constructor)) { }
-
-        // IGroupDeterminer
-        public IFunctionLookupTable GetLookupTable() => this;
-        public string GroupName() => _function.GetName();
-        public bool IsObject() => true;
-        public bool IsRecursive() => false;
-        public bool IsVirtual() => false;
-        public bool IsSubroutine() => _function.IsSubroutine();
-        public SubroutineInfo GetSubroutineInfo() => _function.GetSubroutineInfo();
-        public bool MultiplePaths() => false;
-        public bool ReturnsValue() => false;
-        public object GetStackIdentifier() => _function.UniqueIdentifier();
-        public RecursiveStack GetExistingRecursiveStack(List<RecursiveStack> stack) => null;
-        public IParameterHandler[] Parameters() => DefinedParameterHandler.GetDefinedParameters(_function.ParameterCount(), new IFunctionHandler[] { _function }, false);
-
-        // IFunctionLookupTable
-        public void Build(FunctionBuildController builder) => _function.ParseInner(builder.ActionSet);
-
-        // ISubroutineContext
-        public string RuleName() => "Constuctor " + GroupName();
-        public string ElementName() => GroupName();
-        public string ThisArrayName() => GroupName();
-        public bool VariableGlobalDefault() => true;
-        public CodeType ContainingType() => _function.ContainingType;
-        public void Finish(Rule rule) { }
-        public IGroupDeterminer GetDeterminer() => this;
-        public void SetSubroutineInfo(SubroutineInfo subroutineInfo) => _function.SetSubroutineInfo(subroutineInfo);
-    }
-
-    class DefinedConstructorHandler : ISubroutineSaver
-    {
-        private readonly DefinedConstructorInstance _constructor;
-
-        public DefinedConstructorHandler(DefinedConstructorInstance constructor)
-        {
-            _constructor = constructor;
-        }
-
-        public CodeType ContainingType => _constructor.Type;
-        public string GetName() => _constructor.Name;
-        public bool DoesReturnValue() => false;
-        public bool IsObject() => false;
-        public bool IsRecursive() => false;
-        public bool MultiplePaths() => false;
-        public IVariableInstance GetParameterVar(int index) => _constructor.ParameterVars[index];
-        public int ParameterCount() => _constructor.Parameters.Length;
-        public void SetSubroutineInfo(SubroutineInfo subroutineInfo) => _constructor.Provider.SubroutineInfo = subroutineInfo;
-
-        public bool IsSubroutine() => _constructor.Provider.SubroutineName != null;
-        public SubroutineInfo GetSubroutineInfo() => _constructor.Provider.GetSubroutineInfo();
-        public void ParseInner(ActionSet actionSet) => _constructor.Provider.Block.Translate(actionSet.PackThis());
-
-        public object UniqueIdentifier() => _constructor;
     }
 }

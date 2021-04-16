@@ -7,7 +7,6 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DefinedClass : ClassType
     {
-        public Scope OperationalScope { get; }
         private readonly ParseInfo _parseInfo;
         private readonly DefinedClassInitializer _definedInitializer;
 
@@ -19,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             _definedInitializer = initializer;
             Generics = generics;
-            var anonymousTypeLinker = new InstanceAnonymousTypeLinker(initializer.AnonymousTypes, generics);
+            var anonymousTypeLinker = new InstanceAnonymousTypeLinker(initializer.GenericTypes, generics);
 
             OperationalScope = new Scope(); // todooo
             ServeObjectScope = new Scope();
@@ -33,8 +32,8 @@ namespace Deltin.Deltinteger.Parse
                 var instance = element.AddInstance(this, anonymousTypeLinker);
 
                 // Function
-                if (instance is IMethod method && method.Attributes.Virtual)
-                    VirtualFunctions.Add(method);
+                if (element is DefinedMethodProvider provider && provider.Virtual)
+                    AddVirtualFunction((IMethod)instance);
                 
                 // Variable
                 else if (instance is IVariableInstance variableInstance)

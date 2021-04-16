@@ -1,7 +1,5 @@
 using System.Linq;
-using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
 using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse.Types.Constructors
@@ -16,7 +14,6 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         public ParameterProvider[] ParameterProviders { get; private set; }
         public CodeType[] ParameterTypes { get; private set; }
         public BlockAction Block { get; private set; }
-        public SubroutineInfo SubroutineInfo { get; set; }
 
         private readonly ParseInfo _parseInfo;
         private readonly Scope _scope;
@@ -55,18 +52,6 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         }
 
         public void OnBlockApply(IOnBlockApplied onBlockApplied) => _applyBlock.OnBlockApply(onBlockApplied);
-        
-        public SubroutineInfo GetSubroutineInfo()
-        {
-            if (SubroutineInfo == null)
-            {
-                // TODO
-                var determiner = new ConstructorDeterminer(GetInstance(null, InstanceAnonymousTypeLinker.Empty));
-                var builder = new SubroutineBuilder(_parseInfo.TranslateInfo, determiner);
-                builder.SetupSubroutine();
-            }
-            return SubroutineInfo;
-        }
     
         public DefinedConstructorInstance GetInstance(CodeType typeInstance, InstanceAnonymousTypeLinker genericsLinker)
             => new DefinedConstructorInstance(typeInstance, this, genericsLinker, DefinedAt);

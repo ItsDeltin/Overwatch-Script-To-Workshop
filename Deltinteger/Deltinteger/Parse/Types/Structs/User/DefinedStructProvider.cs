@@ -12,12 +12,10 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public Scope StaticScope { get; private set; }
         public Scope ObjectScope { get; private set; }
-        public AnonymousType[] TypeArgs { get; private set; }
         readonly ParseInfo _parseInfo;
         readonly ClassContext _context;
         readonly Scope _scope;
         readonly ValueSolveSource _onReady = new ValueSolveSource();
-        public override int GenericsCount => TypeArgs.Length;
 
         public DefinedStructInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
@@ -29,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
             OnReady = _onReady;
 
             // Get the type args.
-            TypeArgs = AnonymousType.GetGenerics(typeContext.Generics, AnonymousTypeContext.Type);
+            GenericTypes = AnonymousType.GetGenerics(typeContext.Generics, AnonymousTypeContext.Type);
         }
 
         public void ResolveElements()
@@ -38,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
             ObjectScope = StaticScope.Child();
 
             // Add type args to scopes.
-            foreach (var type in TypeArgs)
+            foreach (var type in GenericTypes)
             {
                 StaticScope.AddType(new GenericCodeTypeInitializer(type));
                 ObjectScope.AddType(new GenericCodeTypeInitializer(type));
@@ -63,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
         // public void AddMacro(MacroVarProvider macro) => ObjectScope.AddNativeVariable(macro.GetDefaultInstance());
 
         public override CodeType GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
-        public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedStructInstance(this, new InstanceAnonymousTypeLinker(TypeArgs, instanceInfo.Generics));
+        public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedStructInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));
         
         public override bool BuiltInTypeMatches(Type type) => false;
         public Scope GetObjectBasedScope() => ObjectScope;

@@ -4,7 +4,8 @@ using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
+using Deltin.Deltinteger.Parse.Functions.Builder;
+using Deltin.Deltinteger.Parse.Functions.Builder.User;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -67,10 +68,9 @@ namespace Deltin.Deltinteger.Parse
         public bool MultiplePaths { get; private set; }
         public IExpression SingleReturnValue { get; private set; }
 
-        public SubroutineInfo SubroutineInfo { get; set; }
-
         ITypeArgTrackee IMethodExtensions.Tracker => this;
         int ITypeArgTrackee.GenericsCount => GenericTypes.Length;
+        IMethod IMethodProvider.Overriding => OverridingFunction;
 
         private readonly ParseInfo _parseInfo;
         private readonly Scope _containingScope;
@@ -135,6 +135,7 @@ namespace Deltin.Deltinteger.Parse
             //     parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
 
             parseInfo.TranslateInfo.ApplyBlock(this);
+            parseInfo.Script.Elements.AddMethod(this);
         }
 
         public void SetupParameters() {}
@@ -170,7 +171,7 @@ namespace Deltin.Deltinteger.Parse
             else _listeners.Add(onBlockApplied);
         }
     
-        public DefinedMethodInstance GetDefaultInstance() => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes), ContainingType.WorkingInstance);
+        public IMethod GetDefaultInstance() => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes));
         public DefinedMethodInstance CreateInstance(InstanceAnonymousTypeLinker genericsLinker) => new DefinedMethodInstance(Name, this, genericsLinker);
         public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(), Static);
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
@@ -185,24 +186,6 @@ namespace Deltin.Deltinteger.Parse
                 scopeHandler.AddObjectBasedScope(instance);
             
             return instance;
-        }
-
-        public SubroutineInfo GetSubroutineInfo()
-        {
-            if (!IsSubroutine) return null;
-            if (SubroutineInfo == null)
-            {
-                var builder = new SubroutineBuilder(
-                    _parseInfo.TranslateInfo,
-                    new DefinedSubroutineContext(
-                        _parseInfo,
-                        this,
-                        GetDefaultInstance().GetOverrideFunctionHandlers()
-                    )
-                );
-                builder.SetupSubroutine();
-            }
-            return SubroutineInfo;
         }
 
         public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeProvider scopeHandler, FunctionContext context, IDefinedTypeInitializer containingType)
@@ -221,20 +204,17 @@ namespace Deltin.Deltinteger.Parse
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public DefinedMethodProvider Provider { get; }
         public InstanceAnonymousTypeLinker InstanceInfo { get; }
-        public CodeType ContainingType { get; }
-        public bool Static => Provider.Static;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => Provider.DefinedAt;
         public AccessLevel AccessLevel => Provider.AccessLevel;
         IMethodExtensions IMethod.MethodInfo => Provider;
 
-        public DefinedMethodInstance(string name, DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo, CodeType containingType)
+        public DefinedMethodInstance(string name, DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo)
         {
             Name = name;
             Provider = provider;
             CodeType = provider.ReturnType?.GetRealType(instanceInfo);
             InstanceInfo = instanceInfo;
-            ContainingType = containingType;
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             ParameterVars = new IVariableInstance[Parameters.Length];
@@ -249,13 +229,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(methodCall.TypeArgs);
-            var controller = new FunctionBuildController(actionSet, methodCall, new DefaultGroupDeterminer(GetOverrideFunctionHandlers()));
-            return controller.Call();
+            return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.DeltinScript, actionSet.ToWorkshop, this));
         }
-
-        public DefinedFunctionHandler[] GetOverrideFunctionHandlers()
-            => new DefinedFunctionHandler[] { new DefinedFunctionHandler(this, true) };
-            // TODO: overriders
-            // => _overriders.Select(op => new DefinedFunctionHandler((DefinedMethodProvider)op, false)).Prepend(new DefinedFunctionHandler(this, true)).ToArray();
     }
 }

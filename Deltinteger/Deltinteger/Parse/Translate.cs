@@ -8,13 +8,14 @@ using Deltin.Deltinteger.I18n;
 using Deltin.Deltinteger.Debugger;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class DeltinScript : IScopeProvider, IScopeAppender
     {
         private FileGetter FileGetter { get; }
-        private Importer Importer { get; }
+        public Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public ScriptTypes Types { get; }
         public Scope PlayerVariableScope { get; set; }
@@ -31,6 +32,9 @@ namespace Deltin.Deltinteger.Parse
         private List<IComponent> Components { get; } = new List<IComponent>();
         private List<InitComponent> InitComponent { get; } = new List<InitComponent>();
         public DebugVariableLinkCollection DebugVariables { get; } = new DebugVariableLinkCollection();
+
+        // TODO: Move workshopconverter outta here
+        public ToWorkshop WorkshopConverter { get; private set; }
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -222,6 +226,8 @@ namespace Deltin.Deltinteger.Parse
 
         void ToWorkshop(Func<VarCollection, Rule[]> addRules)
         {
+            WorkshopConverter = new ToWorkshop(this);
+
             // Set up the variable collection.
             VarCollection.Setup();
 

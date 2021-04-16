@@ -9,19 +9,17 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DefinedClassInitializer : ClassInitializer, IResolveElements, IDefinedTypeInitializer
     {
-        public override int GenericsCount => AnonymousTypes?.Length ?? 0;
         public Location DefinedAt { get; }
         public List<IElementProvider> DeclaredElements { get; } = new List<IElementProvider>();
-        private readonly ParseInfo _parseInfo;
-        private readonly ClassContext _typeContext;
-        private readonly List<Var> _staticVariables = new List<Var>();
-        private readonly Scope _scope;
-        // todo: do not hide???
-        public new IConstructorProvider<Constructor>[] Constructors { get; private set; }
-        public AnonymousType[] AnonymousTypes { get; private set; }
+        public IConstructorProvider<Constructor>[] Constructors { get; private set; }
 
-        private Scope _operationalObjectScope;
-        private Scope _operationalStaticScope;
+        readonly ParseInfo _parseInfo;
+        readonly ClassContext _typeContext;
+        readonly List<Var> _staticVariables = new List<Var>();
+        readonly Scope _scope;
+
+        Scope _operationalObjectScope;
+        Scope _operationalStaticScope;
 
         public DefinedClassInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
@@ -33,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.AddResolve(this);
 
             // Get the generics.
-            AnonymousTypes = AnonymousType.GetGenerics(_typeContext.Generics, AnonymousTypeContext.Type);
+            GenericTypes = AnonymousType.GetGenerics(_typeContext.Generics, AnonymousTypeContext.Type);
         }
 
         public override bool BuiltInTypeMatches(Type type) => false;
@@ -57,12 +55,13 @@ namespace Deltin.Deltinteger.Parse
                     inheriting.Call(_parseInfo, inheritContext.Range);
 
                     // Make sure the type being extended can actually be extended.
-                    if (CodeTypeHelpers.CanExtend(WorkingInstance, inheriting, _parseInfo.Script.Diagnostics, inheritContext.Range))
-                    {
+                    // TODO: update CanExtend!
+                    // if (CodeTypeHelpers.CanExtend(WorkingInstance, inheriting, _parseInfo.Script.Diagnostics, inheritContext.Range))
+                    // {
                         // CanExtend will return false if 'inheriting' is not a ClassType so we can safely cast here.
                         Extends = (ClassType)inheriting;
                         Extends.ResolveElements();
-                    }
+                    // }
                 }
             }
 
@@ -75,11 +74,11 @@ namespace Deltin.Deltinteger.Parse
             }
             else
             {
-                // TODO
-                throw new NotImplementedException();
+                _operationalObjectScope = Extends.OperationalScope.Child(Name);
+                _operationalStaticScope = Extends.StaticScope.Child(Name);
             }
 
-            foreach (var type in AnonymousTypes)
+            foreach (var type in GenericTypes)
             {
                 _operationalStaticScope.AddType(new GenericCodeTypeInitializer(type));
                 _operationalObjectScope.AddType(new GenericCodeTypeInitializer(type));
@@ -123,7 +122,7 @@ namespace Deltin.Deltinteger.Parse
             // _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, CodeLensSourceType.Type, _definedAt.range));
         }
         
-        public override CodeType GetInstance() => new DefinedClass(_parseInfo, this, AnonymousTypes);
+        public override CodeType GetInstance() => new DefinedClass(_parseInfo, this, GenericTypes);
         public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedClass(_parseInfo, this, instanceInfo.Generics);
         public IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo overrideInfo) => Extends.GetVirtualFunction(deltinScript, overrideInfo.Name, overrideInfo.ParameterTypes);
         Scope IScopeProvider.GetObjectBasedScope() => _operationalObjectScope;
@@ -143,6 +142,6 @@ namespace Deltin.Deltinteger.Parse
             throw new NotImplementedException();
         }
 
-        public override int TypeArgIndexFromAnonymousType(AnonymousType anonymousType) => Array.IndexOf(AnonymousTypes, anonymousType);
+        public override int TypeArgIndexFromAnonymousType(AnonymousType anonymousType) => Array.IndexOf(GenericTypes, anonymousType);
     }
 }

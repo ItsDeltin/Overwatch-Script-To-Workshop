@@ -8,7 +8,6 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 using LocationLink = OmniSharp.Extensions.LanguageServer.Protocol.Models.LocationLink;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using ColorInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ColorInformation;
-using DocumentColor = OmniSharp.Extensions.LanguageServer.Protocol.Models.DocumentColor;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -18,14 +17,15 @@ namespace Deltin.Deltinteger.Parse
         public RootContext Context => Document.Syntax;
         public FileDiagnostics Diagnostics { get; }
         public Document Document { get; }
+        public ScriptElements Elements { get; } = new ScriptElements();
 
-        private readonly List<CompletionRange> _completionRanges = new List<CompletionRange>();
-        private readonly List<OverloadChooser> _overloads = new List<OverloadChooser>();
-        private readonly List<LocationLink> _callLinks = new List<LocationLink>();
-        private readonly List<HoverRange> _hoverRanges = new List<HoverRange>();
-        private readonly List<CodeLensRange> _codeLensRanges = new List<CodeLensRange>();
-        private readonly List<SemanticToken> _semanticTokens = new List<SemanticToken>();
-        private readonly List<ColorInformation> _colorRanges = new List<ColorInformation>();
+        readonly List<CompletionRange> _completionRanges = new List<CompletionRange>();
+        readonly List<OverloadChooser> _overloads = new List<OverloadChooser>();
+        readonly List<LocationLink> _callLinks = new List<LocationLink>();
+        readonly List<HoverRange> _hoverRanges = new List<HoverRange>();
+        readonly List<CodeLensRange> _codeLensRanges = new List<CodeLensRange>();
+        readonly List<SemanticToken> _semanticTokens = new List<SemanticToken>();
+        readonly List<ColorInformation> _colorRanges = new List<ColorInformation>();
 
         public ScriptFile(Diagnostics diagnostics, Document document)
         {
@@ -198,15 +198,21 @@ namespace Deltin.Deltinteger.Parse
         Async, Modification, Documentation, DefaultLibrary
     }
     
-    public class ColorRange
+    public class ScriptElements
     {
-        public DocRange Range { get; }
-        public DocumentColor Color { get; }
+        // Lists
+        readonly List<DefinedMethodProvider> _definedMethods = new List<DefinedMethodProvider>();
+        readonly List<DefinedClassInitializer> _definedClasses = new List<DefinedClassInitializer>();
+        readonly List<DefinedStructInitializer> _definedStructs = new List<DefinedStructInitializer>();
+        
+        // Public reading
+        public IReadOnlyList<DefinedMethodProvider> DefinedMethods => _definedMethods;
+        public IReadOnlyList<DefinedClassInitializer> DefinedClasses => _definedClasses;
+        public IReadOnlyList<DefinedStructInitializer> DefinedStructs => _definedStructs;
 
-        public ColorRange(DocRange range, DocumentColor color)
-        {
-            Range = range;
-            Color = color;
-        }
+        // Public adding
+        public void AddMethod(DefinedMethodProvider definedMethod) => _definedMethods.Add(definedMethod);
+        public void AddClass(DefinedClassInitializer definedClass) => _definedClasses.Add(definedClass);
+        public void AddStruct(DefinedStructInitializer definedStruct) => _definedStructs.Add(definedStruct);
     }
 }

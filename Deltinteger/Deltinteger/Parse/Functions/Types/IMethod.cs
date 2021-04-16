@@ -66,23 +66,31 @@ namespace Deltin.Deltinteger.Parse
         public MethodInfo()
         {
             GenericTypes = new AnonymousType[0];
-            Tracker = new MethodTypeArgTrackee(0);
+            Tracker = new MethodTypeArgTrackee();
         }
 
         public MethodInfo(AnonymousType[] generics)
         {
             GenericTypes = generics ?? new AnonymousType[0];
-            Tracker = new MethodTypeArgTrackee(GenericTypes?.Length ?? 0);
+            Tracker = new MethodTypeArgTrackee(GenericTypes);
         }
     }
 
     class MethodTypeArgTrackee : ITypeArgTrackee
     {
         public int GenericsCount { get; }
+        public AnonymousType[] GenericTypes { get; }
 
-        public MethodTypeArgTrackee(int genericsCount)
+        public MethodTypeArgTrackee()
         {
-            GenericsCount = genericsCount;
+            GenericTypes = new AnonymousType[0];
+            GenericsCount = 0;
+        }
+
+        public MethodTypeArgTrackee(AnonymousType[] genericTypes)
+        {
+            GenericTypes = genericTypes;
+            GenericsCount = genericTypes?.Length ?? 0;
         }
     }
 

@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             var controller = _context.Controller;
 
             // Create the parameter handlers.
-            var parameterHandlers = controller.CreateParameterHandlers(actionSet);
+            var parameterHandler = controller.CreateParameterHandler(actionSet);
             
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             IndexReference objectStore = null;
@@ -63,6 +63,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             var functionBuilder = new WorkshopFunctionBuilder(actionSet, controller);
             functionBuilder.ModifySet(a => a.PackThis()); // TODO: is this required?
             functionBuilder.SetupReturnHandler();
+            parameterHandler.AddParametersToAssigner(actionSet.IndexAssigner);
             functionBuilder.Controller.Build(functionBuilder.ActionSet); 
             functionBuilder.ReturnHandler.ApplyReturnSkips();
 
@@ -77,7 +78,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             // Done.
             return Result = new SubroutineCatalogItem(
                 subroutine: subroutine,
-                parameters: functionBuilder.ParameterHandlers,
+                parameterHandler: parameterHandler,
                 objectStack: objectStore,
                 returnHandler: functionBuilder.ReturnHandler);
         }

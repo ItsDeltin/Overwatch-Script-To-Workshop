@@ -1,4 +1,5 @@
-using Deltin.Deltinteger.Parse.FunctionBuilder;
+using Deltin.Deltinteger.Parse.Functions.Builder;
+using Deltin.Deltinteger.Parse.Functions.Builder.User;
 using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse.Types.Constructors
@@ -29,8 +30,10 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
 
         public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
-            var builder = new FunctionBuildController(actionSet.PackThis(), new CallHandler(parameterValues), new ConstructorDeterminer(this));
-            builder.Call();
+            WorkshopFunctionBuilder.Call(
+                actionSet,
+                new Functions.Builder.CallInfo(parameterValues),
+                new UserConstructorController(this, actionSet.DeltinScript));
         }
 
         /*
@@ -41,5 +44,41 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             Type.AddLink(parseInfo.GetLocation(callRange));
         }
         */
+
+        class UserConstructorController : IWorkshopFunctionController
+        {
+            public WorkshopFunctionControllerAttributes Attributes { get; }
+            readonly DefinedConstructorInstance _instance;
+            readonly DeltinScript _deltinScript;
+
+            public UserConstructorController(DefinedConstructorInstance instance, DeltinScript deltinScript)
+            {
+                _instance = instance;
+                _deltinScript = deltinScript;
+            }
+
+            // Build the constructor's block.
+            public void Build(ActionSet actionSet) => _instance.Provider.Block.Translate(actionSet);
+
+            // Create the parameter handler for the constructor.
+            public IParameterHandler CreateParameterHandler(ActionSet actionSet) => new UserFunctionParameterHandler(actionSet, _instance.Parameters, _instance.ParameterVars);
+            
+            // Create the return handler for the constructor.
+            public ReturnHandler GetReturnHandler(ActionSet actionSet) => new ReturnHandler(actionSet);
+            
+            // Gets the subroutine, or creates it if it does not exist yet.
+            public SubroutineCatalogItem GetSubroutine() => _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(_instance, () =>
+                new SubroutineBuilder(_deltinScript, new() {
+                    ContainingType = _instance.Type,
+                    Controller = this,
+                    RuleName = _instance.Provider.SubroutineName,
+                    ElementName = _instance.Type.GetName() + "_constructor",
+                    VariableGlobalDefault = true
+                }).SetupSubroutine());
+
+            // Unique stack identifier for recursive constructors.
+            // This doesn't matter right now since recursive constructors are not supported.
+            public object StackIdentifier() => _instance.Provider;
+        }
     }
 }

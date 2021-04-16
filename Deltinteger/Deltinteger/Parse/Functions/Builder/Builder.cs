@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Functions.Builder
@@ -14,7 +15,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
         public ActionSet ActionSet { get; private set; }
         public IWorkshopFunctionController Controller { get; }
-        public IParameterHandler[] ParameterHandlers { get; private set; }
+        public IParameterHandler ParameterHandler { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
         SubroutineCatalogItem _subroutine;
 
@@ -30,7 +31,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             _subroutine = Controller.GetSubroutine();
             if (_subroutine)
             {
-                ParameterHandlers = _subroutine.Parameters;
+                ParameterHandler = _subroutine.ParameterHandler;
                 SetParameters(call);
 
                 // Store the object the subroutine is executing with.
@@ -44,7 +45,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                         ActionSet.AddAction(_subroutine.ObjectStack.ModifyVariable(Operation.AppendToArray, Element.CreateArray(ActionSet.CurrentObject)));
                 }
 
-                ExecuteSubroutine(_subroutine.Subroutine, CallHandler.ParallelMode);
+                call.ExecuteSubroutine(ActionSet, _subroutine.Subroutine);
                 return _subroutine.ReturnHandler.GetReturnedValue();
             }
             else
@@ -72,7 +73,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         IWorkshopTree BuildInline(ICallInfo call)
         {
             // Create parameter handlers
-            ParameterHandlers = Controller.CreateParameterHandlers(ActionSet);
+            ParameterHandler = Controller.CreateParameterHandler(ActionSet);
 
             // Setup inline-recursive handler.
             RecursiveStack stack = null;
@@ -86,6 +87,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             ModifySet(a => a.PackThis());
             SetupReturnHandler(); // Setup the return handler.
             SetParameters(call); // Set the parameters.
+            AddParametersToAssigner();
             stack?.StartRecursiveLoop(); // Start the recursion loop.
             Controller.Build(ActionSet); // Build the function contents.
             ReturnHandler.ApplyReturnSkips(); // Returns will skip to this point, right before the recursive loop ends.
@@ -102,36 +104,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             ModifySet(a => a.New(ReturnHandler));
         }
 
-        void SetParameters(ICallInfo call)
-        {
-            // Ensure the parameter counts are the same.
-            if (ParameterHandlers.Length != call.Parameters.Length)
-                throw new Exception("Parameter count mismatch");
+        public void AddParametersToAssigner() => ParameterHandler.AddParametersToAssigner(ActionSet.IndexAssigner);
 
-            for (int i = 0; i < ParameterHandlers.Length; i++)
-                ParameterHandlers[i].Set(ActionSet, call.Parameters[i]);
-        }
-
-        public void PushParameters(ICallInfo call)
-        {
-            // Ensure the parameter counts are the same.
-            if (ParameterHandlers.Length != call.Parameters.Length)
-                throw new Exception("Parameter count mismatch");
-
-            for (int i = 0; i < ParameterHandlers.Length; i++)
-                ParameterHandlers[i].Push(ActionSet, call.Parameters[i]);
-        }
-
-        public void PopParameters()
-        {
-            for (int i = 0; i < ParameterHandlers.Length; i++)
-                ParameterHandlers[i].Pop(ActionSet);
-        }
-
+        void SetParameters(ICallInfo call) => ParameterHandler.Set(ActionSet, call.ParameterValues);
         public void ModifySet(Func<ActionSet, ActionSet> modify) => ActionSet = modify(ActionSet);
-
-        RecursiveStack GetExistingStack()
-        {
-        }
+        RecursiveStack GetExistingStack() => ActionSet.Translate.MethodStack.FirstOrDefault(stack => stack.Identifier == Controller.StackIdentifier());
     }
 }

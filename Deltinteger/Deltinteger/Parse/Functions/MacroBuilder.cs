@@ -1,9 +1,5 @@
-﻿using Deltin.Deltinteger;
-using Deltin.Deltinteger.Parse;
-using System;
+﻿using System.Linq;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
@@ -72,8 +68,8 @@ namespace Deltin.Deltinteger.Parse
                         && type is ClassType
                         // ...and 'type' implements the containing class...
                         && type.Implements(option.Type())
-                        // ...and 'type' does not have their own function implementation...
-                        && Deltin.Deltinteger.Parse.FunctionBuilder.VirtualLookupTable.AutoImplemented(option.Type(), options.Select(option => option.Type()).ToArray(), type))
+                        )// TODO ...and 'type' does not have their own function implementation...
+                        // && Deltin.Deltinteger.Parse.FunctionBuilder.VirtualLookupTable.AutoImplemented(option.Type(), options.Select(option => option.Type()).ToArray(), type))
                     // ...then add an additional case for 'type's class identifier.
                     {
                         needsResolve = true;

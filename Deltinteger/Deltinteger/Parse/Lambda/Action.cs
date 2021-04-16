@@ -1,27 +1,27 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
-using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
     public class LambdaAction : IExpression, IWorkshopTree, IApplyBlock, IVariableTracker, ILambdaApplier
     {
-        private readonly LambdaExpression _context;
-        private readonly Scope _lambdaScope;
-        private readonly ParseInfo _parseInfo;
-        private CodeType[] _argumentTypes;
-        private readonly bool _isExplicit;
-        private bool _resolved;
+        readonly LambdaExpression _context;
+        readonly Scope _lambdaScope;
+        readonly ParseInfo _parseInfo;
+        readonly bool _isExplicit;
+        CodeType[] _argumentTypes;
+        bool _resolved;
+        CodeType _returnType;
 
         /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
         public PortableLambdaType LambdaType { get; private set; }
 
         /// <summary>The parameters of the lambda.</summary>
-        public IVariable[] Parameters { get; private set; }
+        public Var[] Parameters { get; private set; }
 
         private IVariableInstance _parameterInstances;
 
@@ -100,13 +100,12 @@ namespace Deltin.Deltinteger.Parse.Lambda
                     _parseInfo.Script.Diagnostics.Error("Inconsistent lambda parameter usage; parameter types must be all explicit or all implicit", _context.Parameters[i].Range);
 
                 InvokedState[i] = new SubLambdaInvoke();
-                Parameters[i] = new LambdaVariable(i, expectingType, _lambdaScope, new LambdaContextHandler(_parseInfo, _context.Parameters[i]), InvokedState[i]).GetVar();
+                Parameters[i] = (Var)new LambdaVariable(i, expectingType, _lambdaScope, new LambdaContextHandler(_parseInfo, _context.Parameters[i]), InvokedState[i]).GetVar();
                 _argumentTypes[i] = Parameters[i].GetDefaultInstance().CodeType.GetCodeType(_parseInfo.TranslateInfo);
             }
 
             ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).AddVariableTracker(this).SetExpectingLambda(expectingType?.ReturnType);
 
-            CodeType returnType = null;
             bool returnsValue = false;
 
             // Get the statements.
@@ -121,7 +120,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
                 if (validation.ReturnsValue)
                 {
-                    returnType = validation.ReturnType;
+                    _returnType = validation.ReturnType;
                     MultiplePaths = validation.MultiplePaths;
                     returnsValue = true;
                 }
@@ -130,7 +129,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             {
                 // Get the lambda expression.
                 Expression = parser.GetExpression(_lambdaScope, exprStatement.Expression);
-                returnType = Expression.Type();
+                _returnType = Expression.Type();
                 returnsValue = true;
             }
             else
@@ -140,18 +139,18 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 if (Statement is IExpression expr)
                 {
                     Expression = expr;
-                    returnType = expr.Type();
+                    _returnType = expr.Type();
                     returnsValue = true;
                 }
             }
 
-            LambdaType = new PortableLambdaType(expectingType?.LambdaKind ?? LambdaKind.Anonymous, _argumentTypes, returnsValue, returnType, _isExplicit);
+            LambdaType = new PortableLambdaType(expectingType?.LambdaKind ?? LambdaKind.Anonymous, _argumentTypes, returnsValue, _returnType, _isExplicit);
 
             // Add so the lambda can be recursive-checked.
             _parseInfo.TranslateInfo.RecursionCheck(CallInfo);
 
             if (!LambdaType.IsConstant())
-                Identifier = _parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(new LambdaHandler(this));
+                Identifier = _parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(this);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet)
@@ -225,7 +224,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         /// <summary>Outputs a constant block.</summary>
         private IWorkshopTree OutputContantBlock(VarIndexAssigner lambdaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            ReturnHandler returnHandler = new ReturnHandler(actionSet, "lambda", MultiplePaths);
+            ReturnHandler returnHandler = new ReturnHandler(actionSet, "lambda", _returnType.GetGettableAssigner(null), MultiplePaths);
             actionSet = AssignContainedParameters(lambdaAssigner, actionSet, parameterValues).New(returnHandler);
 
             if (Expression != null)
@@ -241,9 +240,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         /// <summary>Outputs a portable lambda.</summary>
         private IWorkshopTree OutputPortable(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            var determiner = actionSet.DeltinScript.GetComponent<LambdaGroup>();
-            var builder = new FunctionBuildController(actionSet, new CallHandler(parameterValues), determiner);
-            return builder.Call();
+            var controller = actionSet.DeltinScript.GetComponent<LambdaGroup>();
+            return WorkshopFunctionBuilder.Call(actionSet, new Functions.Builder.CallInfo(parameterValues), controller);
         }
 
         public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)

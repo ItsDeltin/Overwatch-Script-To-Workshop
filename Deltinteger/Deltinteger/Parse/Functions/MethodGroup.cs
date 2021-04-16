@@ -1,7 +1,8 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
+using Deltin.Deltinteger.Parse.Functions.Builder;
+using Deltin.Deltinteger.Parse.Functions.Builder.User;
 using Deltin.Deltinteger.Parse.Lambda;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
@@ -143,14 +144,14 @@ namespace Deltin.Deltinteger.Parse
         {
             // If the chosen function is a DefinedMethod, use the DefinedFunctionHandler.
             if (function is DefinedMethodInstance definedMethod)
-                return new FunctionMethodGroupInvoker(new DefinedFunctionHandler(definedMethod, false));
+                return new DefinedMethodInvoker(definedMethod);
             
             // If the chosen function is a macro.
             if (function is DefinedMacroInstance definedMacro)
                 return new MacroMethodGroupInvoker(definedMacro);
 
             // Otherwise, use the generic function handler.
-            return new FunctionMethodGroupInvoker(new GenericMethodHandler(function));
+            return new GenericFunctionInvoker(function);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet)
@@ -178,29 +179,9 @@ namespace Deltin.Deltinteger.Parse
         IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues);
     }
 
-    class FunctionMethodGroupInvoker : IMethodGroupInvoker
-    {
-        private readonly IFunctionHandler _functionHandler;
-
-        public FunctionMethodGroupInvoker(IFunctionHandler functionHandler)
-        {
-            _functionHandler = functionHandler;
-        }
-
-        public int GetIdentifier(ParseInfo parseInfo) => parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(_functionHandler);
-        public IVariable GetParameterVar(int index) => _functionHandler.GetParameterVar(index).Provider;
-        public int ParameterCount() => _functionHandler.ParameterCount();
-
-        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
-        {
-            var buildController = new FunctionBuildController(actionSet, new CallHandler(parameterValues), new DefaultGroupDeterminer(new IFunctionHandler[] { _functionHandler }));
-            return buildController.Build();
-        }
-    }
-
     class MacroMethodGroupInvoker : IMethodGroupInvoker
     {
-        private readonly DefinedMacroInstance _macro;
+        readonly DefinedMacroInstance _macro;
 
         public MacroMethodGroupInvoker(DefinedMacroInstance macro)
         {
@@ -212,41 +193,35 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _macro.Parse(actionSet, new MethodCall(parameterValues));
     }
 
-    class GenericMethodHandler : IFunctionHandler
+    class DefinedMethodInvoker : IMethodGroupInvoker
     {
-        public CodeType ContainingType => null;
-        private readonly IMethod _method;
-        private readonly IVariableInstance[] _parameterSavers;
+        readonly DefinedMethodInstance _method;
 
-        public GenericMethodHandler(IMethod method)
+        public DefinedMethodInvoker(DefinedMethodInstance method)
         {
             _method = method;
-
-            _parameterSavers = new IVariableInstance[_method.Parameters.Length];
-            for (int i = 0; i < _parameterSavers.Length; i++)
-                _parameterSavers[i] = new InternalVar(_method.Parameters[i].Name);
         }
 
-        public string GetName() => _method.Name;
-        public bool DoesReturnValue() => _method.DoesReturnValue;
-        public IVariableInstance GetParameterVar(int index) => _parameterSavers[index];
-        public SubroutineInfo GetSubroutineInfo() => throw new NotImplementedException();
-        public bool IsObject() => false;
-        public bool IsRecursive() => false;
-        public bool IsSubroutine() => false;
-        public bool MultiplePaths() => false;
-        public int ParameterCount() => _method.Parameters.Length;
+        public IVariable GetParameterVar(int index) => _method.ParameterVars[index].Provider;
+        public int ParameterCount() => _method.ParameterVars.Length;
+        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) =>
+            WorkshopFunctionBuilder.Call(
+                actionSet,
+                new Functions.Builder.CallInfo(parameterValues),
+                new UserFunctionController(actionSet.DeltinScript, actionSet.ToWorkshop, _method));
+    }
 
-        public void ParseInner(ActionSet actionSet)
+    class GenericFunctionInvoker : IMethodGroupInvoker
+    {
+        readonly IMethod _method;
+
+        public GenericFunctionInvoker(IMethod method)
         {
-            var parameterValues = new IWorkshopTree[_parameterSavers.Length];
-            for (int i = 0; i < _parameterSavers.Length; i++)   
-                parameterValues[i] = actionSet.IndexAssigner[_parameterSavers[i].Provider].GetVariable();
-
-            var result = _method.Parse(actionSet, new MethodCall(parameterValues, new object[parameterValues.Length]));
-            if (_method.DoesReturnValue)
-                actionSet.ReturnHandler.ReturnValue(result);
+            _method = method;
         }
-        public object UniqueIdentifier() => _method;
+
+        public IVariable GetParameterVar(int index) => null;
+        public int ParameterCount() => _method.Parameters.Length;
+        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _method.Parse(actionSet, new MethodCall(parameterValues, new object[0]));
     }
 }
