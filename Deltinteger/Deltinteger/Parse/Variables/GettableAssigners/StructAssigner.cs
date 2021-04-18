@@ -36,10 +36,18 @@ namespace Deltin.Deltinteger.Parse
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
                 // Get the child gettable.
-                values.Add(var.Name, var.GetAssigner(info.ActionSet).GetValue(new GettableAssignerValueInfo(info.ActionSet) {
-                    InitialValueOverride = initialValue?.GetValue(var.Name),
-                    Inline = inline,
-                    IndexReferenceCreator = info.IndexReferenceCreator
+                values.Add(
+                    var.Name,
+                    var.GetAssigner(info.ActionSet)
+                        .GetValue(new GettableAssignerValueInfo(
+                            actionSet: info.ActionSet,
+                            varCollection: info.VarCollection,
+                            setInitialValue: info.SetInitialValue,
+                            initialValue: initialValue?.GetValue(var.Name),
+                            inline: inline,
+                            indexReferenceCreator: info.IndexReferenceCreator,
+                            isGlobal: info.IsGlobal
+                            ) {
                 }));
             
             return new GettableAssignerResult(new StructAssignerValue(values), null);

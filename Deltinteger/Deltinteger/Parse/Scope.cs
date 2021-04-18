@@ -343,6 +343,13 @@ namespace Deltin.Deltinteger.Parse
 
         public void AddType(ICodeTypeInitializer initializer) => _types.Add(initializer);
 
+        public void AddNative(IScopeable scopeable)
+        {
+            if (scopeable is IMethod method) AddNativeMethod(method);
+            if (scopeable is IVariableInstance variable) AddNativeVariable(variable);
+            if (scopeable is ICodeTypeInitializer type) AddType(type);
+        }
+
         public bool AccessorMatches(IScopeable element)
         {
             if (element.AccessLevel == AccessLevel.Public) return true;

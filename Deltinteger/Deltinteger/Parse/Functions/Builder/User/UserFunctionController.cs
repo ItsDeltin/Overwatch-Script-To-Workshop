@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 var gettable = parameters[i]
                     .GetCodeType(actionSet.DeltinScript)
                     .GetGettableAssigner(parameterVariables[i].Provider)
-                    .GetValue(new GettableAssignerValueInfo(actionSet));
+                    .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false });
 
                 _parameters[i] = new UserFunctionParameter(gettable, new[] { parameterVariables[i].Provider }); //todo: linkedVariables for virtual
             }

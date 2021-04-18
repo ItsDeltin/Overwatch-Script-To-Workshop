@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Function
                 if (element is DefinedMethodProvider provider && provider.Virtual)
-                    AddVirtualFunction((IMethod)instance);
+                    Elements.AddVirtualFunction((IMethod)instance);
                 
                 // Variable
                 else if (instance is IVariableInstance variableInstance)

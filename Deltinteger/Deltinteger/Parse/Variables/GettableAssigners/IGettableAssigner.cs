@@ -6,26 +6,51 @@ namespace Deltin.Deltinteger.Parse
     {
         public ActionSet ActionSet { get; }
         public VarCollection VarCollection { get; }
-        public VarIndexAssigner Assigner { get; }
         public bool SetInitialValue { get; set; } = true;
         public IWorkshopTree InitialValueOverride { get; set; }
         public bool Inline { get; set; }
         public WorkshopVariableAssigner IndexReferenceCreator { get; set; }
+        public bool IsGlobal { get; set; }
+
+        public GettableAssignerValueInfo(
+            ActionSet actionSet,
+            VarCollection varCollection,
+            bool setInitialValue,
+            IWorkshopTree initialValue,
+            bool inline,
+            WorkshopVariableAssigner indexReferenceCreator,
+            bool isGlobal)
+        {
+            ActionSet = actionSet;
+            VarCollection = varCollection;
+            SetInitialValue = setInitialValue;
+            InitialValueOverride = initialValue;
+            Inline = inline;
+            IndexReferenceCreator = indexReferenceCreator;
+            IsGlobal = isGlobal;
+        }
 
         public GettableAssignerValueInfo(ActionSet actionSet, VarCollection varCollection, VarIndexAssigner assigner)
         {
             ActionSet = actionSet;
             VarCollection = varCollection;
-            Assigner = assigner;
             IndexReferenceCreator = new WorkshopVariableAssigner(varCollection);
+            IsGlobal = actionSet.IsGlobal;
         }
 
         public GettableAssignerValueInfo(ActionSet actionSet)
         {
             ActionSet = actionSet;
             VarCollection = actionSet.VarCollection;
-            Assigner = actionSet.IndexAssigner;
             IndexReferenceCreator = new WorkshopVariableAssigner(actionSet.VarCollection);
+            IsGlobal = actionSet.IsGlobal;
+        }
+
+        public GettableAssignerValueInfo(VarCollection varCollection)
+        {
+            VarCollection = varCollection;
+            IndexReferenceCreator = new WorkshopVariableAssigner(varCollection);
+            IsGlobal = true;
         }
 
         public static implicit operator GettableAssignerValueInfo(ActionSet actionSet) => new GettableAssignerValueInfo(actionSet);
@@ -70,7 +95,7 @@ namespace Deltin.Deltinteger.Parse
             // Assign the index reference
             // Todo: remove commented lines if everything is a-o-k
             // var value = info.VarCollection.Assign(_var.Name, _var.VariableType, info.ActionSet.IsGlobal, _var.InExtendedCollection, _var.ID);
-            var value = info.IndexReferenceCreator.Create(_var, info.ActionSet.IsGlobal);
+            var value = info.IndexReferenceCreator.Create(_var, info.IsGlobal);
 
             // Add the variable to the assigner.
             // info.Assigner.Add(_var, value);

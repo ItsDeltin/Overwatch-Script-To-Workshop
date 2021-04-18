@@ -67,16 +67,12 @@ namespace Deltin.Deltinteger.Parse
 
             base.ResolveElements();
 
-            if (Extends == null)
-            {   
-                _operationalStaticScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
-                _operationalObjectScope = _operationalStaticScope.Child(Name);
-            }
-            else
-            {
-                _operationalObjectScope = Extends.OperationalScope.Child(Name);
-                _operationalStaticScope = Extends.StaticScope.Child(Name);
-            }
+            // Setup scopes.
+            _operationalStaticScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
+            _operationalObjectScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
+
+            (Extends as ClassType)?.Elements.AddToScope(_operationalStaticScope, false);
+            (Extends as ClassType)?.Elements.AddToScope(_operationalObjectScope, true);
 
             foreach (var type in GenericTypes)
             {
@@ -124,7 +120,7 @@ namespace Deltin.Deltinteger.Parse
         
         public override CodeType GetInstance() => new DefinedClass(_parseInfo, this, GenericTypes);
         public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedClass(_parseInfo, this, instanceInfo.Generics);
-        public IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo overrideInfo) => Extends.GetVirtualFunction(deltinScript, overrideInfo.Name, overrideInfo.ParameterTypes);
+        public IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo overrideInfo) => Extends.Elements.GetVirtualFunction(deltinScript, overrideInfo.Name, overrideInfo.ParameterTypes);
         Scope IScopeProvider.GetObjectBasedScope() => _operationalObjectScope;
         Scope IScopeProvider.GetStaticBasedScope() => _operationalStaticScope;
         void IScopeAppender.AddObjectBasedScope(IMethod function) => _operationalObjectScope.CopyMethod(function);

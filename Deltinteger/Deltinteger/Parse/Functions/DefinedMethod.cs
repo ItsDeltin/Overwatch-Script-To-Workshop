@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.Subroutine)
             {
                 IsSubroutine = true;
-                SubroutineName = context.Subroutine.Text;
+                SubroutineName = context.Subroutine.Text.RemoveQuotes();
                 SubroutineDefaultGlobal = !context.PlayerVar;
             }
 

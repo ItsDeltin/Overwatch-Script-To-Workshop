@@ -23,12 +23,12 @@ namespace Deltin.Deltinteger.Parse
         // The provider that created this ClassType.
         public IClassInitializer Provider { get; }
 
-        // The virtual functions in the class.
-        readonly List<IMethod> _virtualMethods = new List<IMethod>();
+        public ClassElements Elements { get; }
 
         public ClassType(string name, IClassInitializer provider) : base(name)
         {
             Provider = provider;
+            Elements = new ClassElements(this);
         }
 
         public ClassType(string name) : base(name) {}
@@ -130,70 +130,91 @@ namespace Deltin.Deltinteger.Parse
             Kind = CompletionItemKind.Class
         };
 
-        public virtual void AddObjectBasedScope(IMethod function) => ServeObjectScope.CopyMethod(function);
-        public virtual void AddStaticBasedScope(IMethod function) => StaticScope.CopyMethod(function);
-        public virtual void AddObjectBasedScope(IVariableInstance variable) => ServeObjectScope.CopyVariable(variable);
-        public virtual void AddStaticBasedScope(IVariableInstance variable) => StaticScope.CopyVariable(variable);
-
-        public void AddVirtualFunction(IMethod method) => _virtualMethods.Add(method);
-
-        public IMethod GetVirtualFunction(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
+        public virtual void AddObjectBasedScope(IMethod function)
         {
-            // Loop through each virtual function.
-            foreach (var virtualFunction in _virtualMethods)
-                // If the function's name matches and the parameter lengths are the same.
-                if (virtualFunction.Name == name && parameterTypes.Length == virtualFunction.Parameters.Length)
-                {
-                    bool matches = true;
-                    // Loop though the parameters.
-                    for (int i = 0; i < parameterTypes.Length; i++)
-                        // Make sure the parameter types match.
-                        if (!parameterTypes[i].Is(virtualFunction.Parameters[i].GetCodeType(deltinScript)))
-                        {
-                            matches = false;
-                            break;
-                        }
-                    
-                    if (matches)
-                        return virtualFunction;
-                }
-            
-            if (Extends != null) return ((ClassType)Extends).GetVirtualFunction(deltinScript, name, parameterTypes);
-            return null;
+            Elements.Add(function, true);
+            ServeObjectScope.CopyMethod(function);
         }
-    }
-
-    class ClassElements
-    {
-        readonly List<IMethod> _methods;
-        readonly List<IMethod> _virtualMethods;
-        readonly List<IVariableInstance> _variables;
-
-        public void AddVirtualFunction(IMethod method) => _virtualMethods.Add(method);
-
-        public IMethod GetVirtualFunction(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
+        public virtual void AddStaticBasedScope(IMethod function)
         {
-            // Loop through each virtual function.
-            foreach (var virtualFunction in _virtualMethods)
-                // If the function's name matches and the parameter lengths are the same.
-                if (virtualFunction.Name == name && parameterTypes.Length == virtualFunction.Parameters.Length)
+            Elements.Add(function, false);
+            StaticScope.CopyMethod(function);
+        }
+        public virtual void AddObjectBasedScope(IVariableInstance variable)
+        {
+            Elements.Add(variable, true);
+            ServeObjectScope.CopyVariable(variable);
+        }
+        public virtual void AddStaticBasedScope(IVariableInstance variable)
+        {
+            Elements.Add(variable, false);
+            StaticScope.CopyVariable(variable);
+        }
+    
+        public class ClassElements
+        {
+            readonly ClassType _classType;
+            readonly List<IMethod> _virtualMethods = new List<IMethod>();
+            readonly List<ClassElement> _scopeableElements = new List<ClassElement>();
+
+            public ClassElements(ClassType classType)
+            {
+                _classType = classType;
+            }
+
+            public void AddVirtualFunction(IMethod method) => _virtualMethods.Add(method);
+
+            public IMethod GetVirtualFunction(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
+            {
+                // Loop through each virtual function.
+                foreach (var virtualFunction in _virtualMethods)
+                    // If the function's name matches and the parameter lengths are the same.
+                    if (virtualFunction.Name == name && parameterTypes.Length == virtualFunction.Parameters.Length)
+                    {
+                        bool matches = true;
+                        // Loop though the parameters.
+                        for (int i = 0; i < parameterTypes.Length; i++)
+                            // Make sure the parameter types match.
+                            if (!parameterTypes[i].Is(virtualFunction.Parameters[i].GetCodeType(deltinScript)))
+                            {
+                                matches = false;
+                                break;
+                            }
+                        
+                        if (matches)
+                            return virtualFunction;
+                    }
+                
+                if (_classType.Extends != null) return ((ClassType)_classType.Extends).Elements.GetVirtualFunction(deltinScript, name, parameterTypes);
+                return null;
+            }
+
+            public void Add(IScopeable scopeable, bool instance) => _scopeableElements.Add(new ClassElement(scopeable, instance));
+
+            public void AddToScope(Scope scope, bool instance)
+            {
+                // Add elements from this class.
+                foreach (var scopeable in _scopeableElements)
+                    if (ValidAccessLevel(scopeable.Scopeable.AccessLevel) && (!scopeable.IsInstance || instance))
+                        scope.AddNative(scopeable.Scopeable);
+                
+                // Add parent elements.
+                (_classType.Extends as ClassType)?.Elements.AddToScope(scope, instance);
+            }
+
+            static bool ValidAccessLevel(AccessLevel accessLevel) => accessLevel == AccessLevel.Public || accessLevel == AccessLevel.Protected;
+
+            struct ClassElement
+            {
+                public IScopeable Scopeable;
+                public bool IsInstance;
+
+                public ClassElement(IScopeable scopeable, bool isInstance)
                 {
-                    bool matches = true;
-                    // Loop though the parameters.
-                    for (int i = 0; i < parameterTypes.Length; i++)
-                        // Make sure the parameter types match.
-                        if (!parameterTypes[i].Is(virtualFunction.Parameters[i].GetCodeType(deltinScript)))
-                        {
-                            matches = false;
-                            break;
-                        }
-                    
-                    if (matches)
-                        return virtualFunction;
+                    Scopeable = scopeable;
+                    IsInstance = isInstance;
                 }
-            
-            if (Extends != null) return ((ClassType)Extends).GetVirtualFunction(deltinScript, name, parameterTypes);
-            return null;
+            }
         }
     }
 }

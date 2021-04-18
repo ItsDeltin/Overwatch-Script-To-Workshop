@@ -7,6 +7,7 @@ using Deltin.Deltinteger.Parse.Functions.Builder.User;
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
+    // TODO: Either switch this to IWorkshopComponent or split it into 2.
     class LambdaGroup : IComponent, IWorkshopFunctionController
     {
         readonly List<LambdaAction> _lambdas = new List<LambdaAction>();
@@ -16,7 +17,11 @@ namespace Deltin.Deltinteger.Parse.Lambda
         int _functionIdentifier = 0;
         RecycleWorkshopVariableAssigner _recycler;
 
-        public void Init(DeltinScript deltinScript) => _deltinScript = deltinScript;
+        public void Init(DeltinScript deltinScript)
+        {
+            _deltinScript = deltinScript;
+            _recycler = new RecycleWorkshopVariableAssigner(_deltinScript.VarCollection);
+        }
 
         public int Add(LambdaAction lambda)
         {
@@ -98,15 +103,57 @@ namespace Deltin.Deltinteger.Parse.Lambda
             lambdaSwitch.Finish(((Element)actionSet.CurrentObject)[0]);
         }
 
-        public IParameterHandler CreateParameterHandler(ActionSet actionSet) => new LambdaParameterHandler(_recycler);
+        public IParameterHandler CreateParameterHandler(ActionSet actionSet) => new LambdaParameterHandler(_deltinScript.VarCollection, _recycler, _lambdas.ToArray());
 
         class LambdaParameterHandler : IParameterHandler
         {
             readonly RecycleWorkshopVariableAssigner _recycler;
+            readonly LambdaAction[] _lambdas;
+            readonly List<AssignedParameter> _assignedParameters = new List<AssignedParameter>();
 
-            public LambdaParameterHandler(RecycleWorkshopVariableAssigner recycler)
+            public LambdaParameterHandler(VarCollection varCollection, RecycleWorkshopVariableAssigner recycler, LambdaAction[] lambdas)
             {
                 _recycler = recycler;
+                _lambdas = lambdas;
+
+                // Loop through each lambda.
+                foreach (var lambda in lambdas)
+                {
+                    // Assign the variables.
+                    foreach (var parameter in lambda.Parameters)
+                    {
+                        // Assign the parameter.
+                        var gettable = parameter.CodeType
+                            .GetGettableAssigner(parameter)
+                            .GetValue(new GettableAssignerValueInfo(varCollection) {
+                                IndexReferenceCreator = recycler,
+                                SetInitialValue = false
+                            });
+
+                        _assignedParameters.Add(new AssignedParameter(parameter, gettable));
+                    }
+
+                    // Reset.
+                    _recycler.Reset();
+                }
+            }
+
+            public void AddParametersToAssigner(VarIndexAssigner assigner)
+            {
+                foreach (var assignedParameter in _assignedParameters)
+                    assigner.Add(assignedParameter.Variable, assignedParameter.Gettable);
+            }
+
+            struct AssignedParameter
+            {
+                public IVariable Variable;
+                public IGettable Gettable;
+
+                public AssignedParameter(IVariable variable, IGettable gettable)
+                {
+                    Variable = variable;
+                    Gettable = gettable;
+                }
             }
 
             public void Set(ActionSet actionSet, IWorkshopTree[] parameterValues)
@@ -144,45 +191,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
             {
                 throw new NotImplementedException();
             }
-
-            public void AddParametersToAssigner(VarIndexAssigner assigner)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        class LambdaParameterInfo
-        {
-            public IGettable[] Parameters { get; }
-            public LambdaAction Action { get; }
-            readonly RecycleWorkshopVariableAssigner _recycler;
-
-            public LambdaParameterInfo(LambdaAction action, RecycleWorkshopVariableAssigner recycler)
-            {
-                Action = action;
-                _recycler = recycler;
-                Parameters = action.Parameters.Select(p => _recycler.Create(p, true)).ToArray();
-            }
         }
     }
-
-    // public void ParseInner(ActionSet actionSet)
-    // {
-    //     // Create a new contained action set.
-    //     actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-
-    //     var infoSaver = actionSet.VarCollection.Assign("funcSaver", true, false);
-    //     actionSet.AddAction(infoSaver.SetVariable((Element)actionSet.CurrentObject));
-
-    //     actionSet = actionSet.New(infoSaver.Get());
-
-    //     // Add the contained variables.
-    //     for (int i = 0; i < _lambda.CapturedVariables.Count; i++)
-    //         actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 2));
-
-    //     if (_lambda.Expression != null)
-    //         actionSet.ReturnHandler.ReturnValue(_lambda.Expression.Parse(actionSet));
-    //     else
-    //         _lambda.Statement.Translate(actionSet);
-    // }
 }
