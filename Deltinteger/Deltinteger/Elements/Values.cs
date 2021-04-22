@@ -56,6 +56,9 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
+    [ElementData("All Damage Heroes", ValueType.Hero)]
+    public class V_AllDamageHeroes : Element {}
+
     [ElementData("All Dead Players", ValueType.Player)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllDeadPlayers : Element { }
@@ -81,9 +84,6 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("All Tank Heroes", ValueType.Hero)]
     public class V_AllTankHeroes : Element { }
-
-    [ElementData("All Damage Heroes", ValueType.Hero)]
-    public class V_AllDamageHeroes : Element { }
 
     [ElementData("All Support Heroes", ValueType.Hero)]
     public class V_AllSupportHeroes : Element { }
@@ -623,14 +623,22 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("First Of", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_FirstOf : Element {
+    public class V_FirstOf : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
 
-        public override Element Optimize() {
-            Element array = (Element)ParameterValues[0];
-            if(array is V_Array arr) {
-                return (Element)arr.ParameterValues[0];
+            if (ParameterValues[0] is V_Array array)
+            {
+                if (array.ParameterValues.Length > 0)
+                    return (Element)array.ParameterValues[0];
+                else
+                    return new V_Null();
             }
-            else return this;
+
+            return this;
+
         }
     }
 
@@ -919,14 +927,21 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Last Of", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_LastOf : Element { 
+    public class V_LastOf : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
 
-        public override Element Optimize() {
-            Element array = (Element)ParameterValues[0];
-            if(array is V_Array arr) {
-                return (Element)arr.ParameterValues[arr.ParameterValues.Count() - 1];
+            if (ParameterValues[0] is V_Array array)
+            {
+                if (array.ParameterValues.Length > 0)
+                    return (Element)array.ParameterValues.Last();
+                else
+                    return new V_Null();
             }
-            else return this;
+
+            return this;
         }
     }
 
@@ -1671,8 +1686,8 @@ namespace Deltin.Deltinteger.Elements
             Element array = (Element)ParameterValues[0];
             Element index = (Element)ParameterValues[1];
 
-
-            if (index is V_Number num)
+            if (index is V_Number num) 
+            {
                 if(array is V_Array arr)
                 {
                     return (Element)arr.ParameterValues[(int)num.Value];
@@ -1681,6 +1696,7 @@ namespace Deltin.Deltinteger.Elements
                 {
                     return Element.Part<V_FirstOf>(array);
                 }
+            }
 
             return this;
         }
