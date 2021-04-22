@@ -48,8 +48,8 @@ namespace Deltin.Deltinteger.CustomMethods
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool WholeContext => true;
         public bool Static => true;
-        
-        public CodeType ReturnType => null;
+
+        public CodeType CodeType => null;
 
         public string Documentation { get; }
 
@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.CustomMethods
             return GetObject().Get(actionSet, methodCall.ParameterValues, methodCall.AdditionalParameterData);
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(CustomMethodType == CustomMethodType.Action ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(CustomMethodType == CustomMethodType.Action ? null : CodeType?.Name ?? "define", Name, Parameters, markdown, Documentation);
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
 
         static CustomMethodData[] _customMethodData = null;
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.CustomMethods
             }
             return _customMethodData;
         }
-        public static CustomMethodData GetCustomMethod<T>() where T: CustomMethodBase
+        public static CustomMethodData GetCustomMethod<T>() where T : CustomMethodBase
         {
             foreach (CustomMethodData customMethod in GetCustomMethods())
                 if (customMethod.Type == typeof(T))

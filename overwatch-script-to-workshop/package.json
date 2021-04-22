@@ -2,7 +2,7 @@
     "name": "overwatch-script-to-workshop",
     "displayName": "Overwatch Script To Workshop",
     "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-    "version": "2.1.0",
+    "version": "3.0.1",
     "publisher": "Deltin",
     "engines": {
         "vscode": "^1.47.0"
@@ -56,6 +56,12 @@
                     ".overwatch"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "json",
+                "extensions": [
+                    ".lobby"
+                ]
             }
         ],
         "grammars": [
@@ -157,6 +163,18 @@
                     ],
                     "default": "off",
                     "description": "Traces the communication between VS Code and the language server."
+                },
+                "ostw.dev.deltintegerWatchBuild": {
+                    "scope": "machine",
+                    "type": "string",
+                    "description": "Restarts the language server when the provided file changes.",
+                    "default": null
+                },
+                "ostw.dev.waitForDebugger": {
+                    "scope": "machine",
+                    "type": "boolean",
+                    "description": "Will not start the language server until a debugger is attached.",
+                    "default": false
                 }
             }
         },
@@ -200,6 +218,11 @@
                 "command": "ostw.decompile.clipboard",
                 "title": "Decompile from clipboard to file",
                 "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.restartLanguageServer",
+                "title": "Restart OSTW Language Server",
+                "category": "Overwatch Script To Workshop"
             }
         ],
         "keybindings": [
@@ -214,7 +237,11 @@
         ],
         "jsonValidation": [
             {
-                "fileMatch": "customGameSettings.json",
+                "fileMatch": [
+                    "customGameSettings.json",
+                    "*.lobby.json",
+                    "*.lobby"
+                ],
                 "url": "./LobbySettingValidation.json"
             }
         ],
@@ -283,7 +310,8 @@
     },
     "dependencies": {
         "async": "^3.2.0",
-        "axios": "^0.19.2",
+        "axios": "^0.21.1",
+        "chokidar": "^3.4.3",
         "glob": "^7.1.6",
         "vscode-debugadapter": "^1.41.1",
         "vscode-debugprotocol": "^1.41.0",

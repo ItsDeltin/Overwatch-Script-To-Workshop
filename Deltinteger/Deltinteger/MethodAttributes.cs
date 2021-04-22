@@ -26,6 +26,9 @@ namespace Deltin.Deltinteger
         ///<summary>If true, the method is overriding another method.</summary>
         public bool Override { get; set; } = false;
 
+        /// <summary>The overriden method.</summary>
+        public IMethod Overriding { get; set; }
+
         ///<summary>Determines if the method can be overriden. This will return true if the method is virtual, abstract, or overriding another method.</summary>
         public bool IsOverrideable => Virtual || Abstract || Override;
 
@@ -40,7 +43,7 @@ namespace Deltin.Deltinteger
 
         private readonly List<IMethod> _overriders = new List<IMethod>();
 
-        public MethodAttributes() {}
+        public MethodAttributes() { }
 
         public MethodAttributes(bool isParallelable, bool isVirtual, bool isAbstract)
         {
@@ -62,7 +65,7 @@ namespace Deltin.Deltinteger
 
             foreach (var overrider in _overriders)
                 options.AddRange(overrider.Attributes.AllOverrideOptions());
-            
+
             return options.ToArray();
         }
 
@@ -70,22 +73,28 @@ namespace Deltin.Deltinteger
         {
             Label = function.Name,
             Kind = CompletionItemKind.Method,
-            Detail = (!function.DoesReturnValue ? "void" : (function.ReturnType == null ? "define" : function.ReturnType.GetName())) + " " + function.GetLabel(false),
+            Detail = (!function.DoesReturnValue ? "void" : (function.CodeType == null ? "define" : function.CodeType.GetName())) + " " + function.GetLabel(false),
             Documentation = Extras.GetMarkupContent(function.Documentation)
         };
     }
 
-    public class MethodCall
+    public class MethodCall : Deltin.Deltinteger.Parse.FunctionBuilder.ICallHandler
     {
         public IWorkshopTree[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
-        public CallParallel CallParallel { get; set; } = CallParallel.NoParallel;
+        public CallParallel ParallelMode { get; set; } = CallParallel.NoParallel;
         public string ActionComment { get; set; }
 
         public MethodCall(IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             ParameterValues = parameterValues;
             AdditionalParameterData = additionalParameterData;
+        }
+
+        public MethodCall(IWorkshopTree[] parameterValues)
+        {
+            ParameterValues = parameterValues;
+            AdditionalParameterData = new object[parameterValues.Length];
         }
 
         /// <summary>Gets a parameter as an element.</summary>
@@ -171,9 +180,9 @@ namespace Deltin.Deltinteger
                 default: return type.ToString();
             }
         }
-        
+
         public static bool EventPlayerDefaultCall(IIndexReferencer referencer, IExpression parent, ParseInfo parseInfo)
-            => referencer.VariableType == VariableType.Player && (parent == null || parent.ReturningScope() != parseInfo.TranslateInfo.PlayerVariableScope);
+            => referencer.VariableType == VariableType.Player && (parent == null && (parent.ReturningScope() != null && parent.ReturningScope() != parseInfo.TranslateInfo.PlayerVariableScope));
     }
 
     public enum RestrictedCallType

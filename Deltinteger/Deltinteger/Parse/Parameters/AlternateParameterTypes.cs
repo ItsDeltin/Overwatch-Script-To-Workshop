@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -34,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
             // Syntax error if the expression is not a variable.
             if (!resolvedVariable.DoesResolveToVariable)
                 parseInfo.Script.Diagnostics.Error("Expected a variable.", valueRange);
-                        
+
             else if (VariableType != VariableType.Dynamic && resolvedVariable.SetVariable.Calling.VariableType != VariableType)
             {
                 if (VariableType == VariableType.Global)
@@ -42,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
                 else
                     parseInfo.Script.Diagnostics.Error($"Expected a player variable.", valueRange);
             }
-            
+
             else return resolvedVariable;
             return null;
         }
@@ -54,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private bool DefaultConstValue { get; }
 
-        public ConstBoolParameter(string name, string documentation) : base(name, documentation) {}
+        public ConstBoolParameter(string name, string documentation) : base(name, documentation) { }
         public ConstBoolParameter(string name, string documentation, bool defaultValue)
             : base(name, documentation, new ExpressionOrWorkshopValue(defaultValue ? (Element)new V_True() : new V_False()))
         {
@@ -80,7 +81,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private double DefaultConstValue { get; }
 
-        public ConstNumberParameter(string name, string documentation) : base(name, documentation) {}
+        public ConstNumberParameter(string name, string documentation) : base(name, documentation) { }
         public ConstNumberParameter(string name, string documentation, double defaultValue) : base(name, documentation, new ExpressionOrWorkshopValue(new V_Number(defaultValue)))
         {
             DefaultConstValue = defaultValue;
@@ -102,16 +103,50 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstStringParameter : CodeParameter
     {
-        public ConstStringParameter(string name, string documentation) : base(name, documentation) {}
+        public ConstStringParameter(string name, string documentation) : base(name, documentation) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             StringAction str = value as StringAction;
-            if (str == null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
+            if (str == null && valueRange != null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
             return str?.Value;
         }
 
         public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
+    }
+
+    class ConstHeroParameter : CodeParameter
+    {
+        public ConstHeroParameter(string name, string documentation) : base(name, documentation) { }
+
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        {
+            // ConstantExpressionResolver.Resolve's callback will be called after this function runs,
+            // so we store the value in an object reference whose value will be set later.
+            var promise = new ConstHeroValueResolver();
+
+            // Resolve the expression.
+            ConstantExpressionResolver.Resolve(value, expr =>
+            {
+                // If the resulting expression is an EnumValuePair and the EnumValuePair's enum is Hero,
+                if (expr is CallVariableAction call && call.Calling is EnumValuePair pair && pair.Member.Enum.Type == typeof(Hero))
+                    // Resolve the value.
+                    promise.Resolve((Hero)pair.Member.Value);
+                // Otherwise, add an error.
+                else if (valueRange != null)
+                    parseInfo.Script.Diagnostics.Error("Expected hero constant", valueRange);
+            });
+
+            return promise;
+        }
+
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
+    }
+
+    class ConstHeroValueResolver
+    {
+        public Hero Hero { get; private set; }
+        public void Resolve(Hero hero) => Hero = hero;
     }
 
     class FileParameter : CodeParameter
@@ -144,8 +179,8 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
 
-            string resultingPath = Extras.CombinePathWithDotNotation(parseInfo.Script.Uri.FilePath(), str.Value);
-            
+            string resultingPath = Extras.CombinePathWithDotNotation(parseInfo.Script.Uri.LocalPath, str.Value);
+
             if (resultingPath == null)
             {
                 parseInfo.Script.Diagnostics.Error("File path contains invalid characters.", valueRange);
@@ -168,7 +203,7 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
 
-            parseInfo.Script.AddDefinitionLink(valueRange, new Location(Extras.Definition(resultingPath), DocRange.Zero));
+            parseInfo.Script.AddDefinitionLink(valueRange, new Location(new Uri(resultingPath), DocRange.Zero));
             parseInfo.Script.AddHover(valueRange, resultingPath);
 
             return resultingPath;

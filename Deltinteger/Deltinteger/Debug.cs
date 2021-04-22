@@ -115,7 +115,7 @@ namespace Deltin.Deltinteger
         }
 
         public Progress()
-        {}
+        { }
 
         private int completed;
 
@@ -125,7 +125,7 @@ namespace Deltin.Deltinteger
 
             completed++;
 
-            double percentageCompleted = ((double)completed/(double)actions)*100;
+            double percentageCompleted = ((double)completed / (double)actions) * 100;
 
             if (percentageCompleted - lastWritten >= 1)
                 Write(percentageCompleted);

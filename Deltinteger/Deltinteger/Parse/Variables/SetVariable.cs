@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
@@ -9,85 +10,100 @@ namespace Deltin.Deltinteger.Parse
     public class SetVariableAction : IStatement
     {
         private VariableResolve VariableResolve { get; }
-        private string Operation { get; }
+        private Token Operation { get; }
         private IExpression Value { get; }
         private string Comment;
 
-        public SetVariableAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.VarsetContext varsetContext)
+        public SetVariableAction(ParseInfo parseInfo, Scope scope, Assignment assignmentContext)
         {
-            IExpression variableExpression = parseInfo.GetExpression(scope, varsetContext.var);
+            IExpression variableExpression = parseInfo.GetExpression(scope, assignmentContext.VariableExpression);
 
             // Get the variable being set.
-            VariableResolve = new VariableResolve(new VariableResolveOptions(), variableExpression, DocRange.GetRange(varsetContext), parseInfo.Script.Diagnostics);
-            
-            // Get the operation.
-            if (varsetContext.statement_operation() != null)
-            {
-                Operation = varsetContext.statement_operation().GetText();
+            VariableResolve = new VariableResolve(new VariableResolveOptions(), variableExpression, assignmentContext.VariableExpression.Range, parseInfo.Script.Diagnostics);
 
-                // If there is no value, syntax error.
-                if (varsetContext.val == null)
-                    parseInfo.Script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(varsetContext).end.ToRange());
-                
-                // Parse the value.
-                else
-                    Value = parseInfo.GetExpression(scope, varsetContext.val);
-            }
-            else if (varsetContext.INCREMENT() != null) Operation = "++";
-            else if (varsetContext.DECREMENT() != null) Operation = "--";
+            // Get the operation.
+            Operation = assignmentContext.AssignmentToken;
+
+            Value = parseInfo.GetExpression(scope, assignmentContext.Value);
         }
 
         public void Translate(ActionSet actionSet)
         {
             VariableElements elements = VariableResolve.ParseElements(actionSet);
-
-            Element value = null;
-            if (Value != null) value = (Element)Value.Parse(actionSet);
+            Element value = (Element)Value.Parse(actionSet);
 
             Elements.Operation? modifyOperation = null;
-            switch (Operation)
+            switch (Operation.Text)
             {
                 case "=": break;
                 case "^=": modifyOperation = Elements.Operation.RaiseToPower; break;
-                case "*=": modifyOperation = Elements.Operation.Multiply;     break;
-                case "/=": modifyOperation = Elements.Operation.Divide;       break;
-                case "%=": modifyOperation = Elements.Operation.Modulo;       break;
-                case "+=": modifyOperation = Elements.Operation.Add;          break;
-                case "-=": modifyOperation = Elements.Operation.Subtract;     break;
-                case "++": value = 1; modifyOperation = Elements.Operation.Add;      break;
-                case "--": value = 1; modifyOperation = Elements.Operation.Subtract; break;
+                case "*=": modifyOperation = Elements.Operation.Multiply; break;
+                case "/=": modifyOperation = Elements.Operation.Divide; break;
+                case "%=": modifyOperation = Elements.Operation.Modulo; break;
+                case "+=": modifyOperation = Elements.Operation.Add; break;
+                case "-=": modifyOperation = Elements.Operation.Subtract; break;
                 default: throw new Exception($"Unknown operation {Operation}.");
             }
 
-            // The actions used to set the variable.
-            Element[] actions;
-
             // Set Variable actions
             if (modifyOperation == null)
-                actions = elements.IndexReference.SetVariable(value, elements.Target, elements.Index);
+                actionSet.AddAction(CommentAll(Comment, elements.IndexReference.SetVariable(value, elements.Target, elements.Index)));
             // Modify Variable actions
             else
-                actions = elements.IndexReference.ModifyVariable((Elements.Operation)modifyOperation, value, elements.Target, elements.Index);
-            
-            // Add the actions to the action set.
-            actionSet.AddAction(actions);
-
-            // Set action comments
-            if (Comment != null)
-            {
-                // If there is just one action used to set or modify the variable, set that action's comment.
-                if (actions.Length == 1)
-                    actions[0].Comment = Comment;
-                // If multiple actions are required, precede the comment with (#) where # is the order of the relevent action.
-                else
-                    for (int i = 0; i < actions.Length; i++)
-                        actions[i].Comment = "(" + i + ") " + Comment;
-            }
+                actionSet.AddAction(CommentAll(Comment, elements.IndexReference.ModifyVariable((Elements.Operation)modifyOperation, value, elements.Target, elements.Index)));
         }
 
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
         {
             Comment = comment;
+        }
+
+        public static Element[] CommentAll(string comment, Element[] actions)
+        {
+            if (comment != null)
+            {
+                // If there is just one action used to set or modify the variable, set that action's comment.
+                if (actions.Length == 1)
+                    actions[0].Comment = comment;
+                // If multiple actions are required, precede the comment with (#) where # is the order of the relevent action.
+                else
+                    for (int i = 0; i < actions.Length; i++)
+                        actions[i].Comment = "(" + i + ") " + comment;
+            }
+            return actions;
+        }
+    }
+
+    public class IncrementAction : IStatement
+    {
+        private readonly VariableResolve _resolve;
+        private readonly bool _decrement;
+        private string _comment;
+
+        public IncrementAction(ParseInfo parseInfo, Scope scope, Increment increment)
+        {
+            _decrement = increment.Decrement;
+
+            // Get the variable.
+            IExpression variableExpr = parseInfo.GetExpression(scope, increment.VariableExpression);
+            _resolve = new VariableResolve(new VariableResolveOptions(), variableExpr, increment.VariableExpression.Range, parseInfo.Script.Diagnostics);
+        }
+
+        public void Translate(ActionSet actionSet)
+        {
+            VariableElements elements = _resolve.ParseElements(actionSet);
+
+            // Increment
+            if (!_decrement)
+                actionSet.AddAction(SetVariableAction.CommentAll(_comment, elements.IndexReference.ModifyVariable(Operation.Add, 1, elements.Target, elements.Index)));
+            // Decrement
+            else
+                actionSet.AddAction(SetVariableAction.CommentAll(_comment, elements.IndexReference.ModifyVariable(Operation.Subtract, 1, elements.Target, elements.Index)));
+        }
+
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
+        {
+            _comment = comment;
         }
     }
 }

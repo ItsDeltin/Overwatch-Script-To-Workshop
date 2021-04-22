@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopVariable = workshopVariable;
             Index = index;
         }
-        protected IndexReference() {}
+        protected IndexReference() { }
 
         public virtual IWorkshopTree GetVariable(Element targetPlayer = null)
         {

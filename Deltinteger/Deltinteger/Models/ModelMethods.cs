@@ -2,13 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.IO;
-using Deltin.Deltinteger;
-using Deltin.Deltinteger.Models.Import;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.CustomMethods;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
@@ -24,15 +22,16 @@ namespace Deltin.Deltinteger.Models
         public AssetClass() : base("Asset")
         {
             Description = "Contains functions for displaying assets in the world.";
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<ShowModel>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextWithFont>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextFancy>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateText>(), null, null);
+            StaticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<ShowModel>());
+            StaticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CreateTextWithFont>());
+            StaticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CreateTextFancy>());
+            StaticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CreateText>());
         }
 
         public override Scope ReturningScope() => StaticScope;
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = "Asset",
             Kind = CompletionItemKind.Class
         };
@@ -84,14 +83,14 @@ namespace Deltin.Deltinteger.Models
                 // Double constant scale
                 if (scale.ConstantSupported<double>())
                     constantScale = (double)scale.GetConstant();
-                
+
                 // Null constant rotation
                 else if (scale is V_Null)
                     constantScale = 1;
 
                 if (constantScale == 1)
                     scaleSet = true;
-                
+
                 if (!scaleSet && constantScale != null)
                 {
                     vertex1 = vertex1.Scale((double)constantScale);
@@ -107,18 +106,18 @@ namespace Deltin.Deltinteger.Models
                 // Vector constant rotation
                 if (rotation.ConstantSupported<Vertex>())
                     rotationConstant = (Vertex)rotation.GetConstant();
-                
+
                 // Double constant rotation
                 else if (rotation.ConstantSupported<double>())
                     rotationConstant = new Vertex(0, (double)rotation.GetConstant(), 0);
-                
+
                 // Null constant rotation
                 else if (rotation is V_Null)
                     rotationConstant = new Vertex(0, 0, 0);
-                
+
                 if (rotationConstant != null && rotationConstant.EqualTo(new Vertex(0, 0, 0)))
                     rotationSet = true;
-                
+
                 if (rotationConstant != null && !rotationSet)
                 {
                     vertex1 = vertex1.Rotate(rotationConstant);
@@ -154,7 +153,7 @@ namespace Deltin.Deltinteger.Models
                 var Ayz = sina * sinb;
 
                 var Azx = -sinb;
-                
+
                 pos1 = Element.Part<V_Vector>(
                     Axx * pos1X +
                     Axy * pos1Y +
@@ -214,9 +213,9 @@ namespace Deltin.Deltinteger.Models
                 effects = actionSet.VarCollection.Assign("_modelEffects", actionSet.IsGlobal, true);
                 actionSet.AddAction(effects.SetVariable(new V_EmptyArray()));
             }
-            
+
             RenderModel(actionSet, model, visibleTo, location, rotation, scale, effectRev, getIds);
-            
+
             return effects?.GetVariable();
         }
 
@@ -252,12 +251,12 @@ namespace Deltin.Deltinteger.Models
 
                 return family;
             }
-            
+
             if (!FontFamily.Families.Any(fam => fam.Name.ToLower() == name.ToLower()))
             {
                 script.Diagnostics.Error($"The font {name} does not exist.", range);
                 return null;
-            }   
+            }
             return new FontFamily(name);
         }
 
@@ -279,13 +278,13 @@ namespace Deltin.Deltinteger.Models
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
-            Model model           = (Model)additionalParameterData[0];
-            Element visibleTo           = (Element)parameterValues[1];
-            Element location            = (Element)parameterValues[2];
-            Element rotation            = (Element)parameterValues[3];
-            Element scale               = (Element)parameterValues[4];
-            EnumMember effectRev     = (EnumMember)parameterValues[5];
-            bool getIds            = (bool)additionalParameterData[6];
+            Model model = (Model)additionalParameterData[0];
+            Element visibleTo = (Element)parameterValues[1];
+            Element location = (Element)parameterValues[2];
+            Element rotation = (Element)parameterValues[3];
+            Element scale = (Element)parameterValues[4];
+            EnumMember effectRev = (EnumMember)parameterValues[5];
+            bool getIds = (bool)additionalParameterData[6];
 
             return RenderModel(actionSet, model, visibleTo, location, rotation, scale, effectRev, getIds);
         }
@@ -293,8 +292,8 @@ namespace Deltin.Deltinteger.Models
 
     class ModelParameter : FileParameter
     {
-        public ModelParameter(string parameterName, string description) : base(parameterName, description, ".obj") {}
-    
+        public ModelParameter(string parameterName, string description) : base(parameterName, description, ".obj") { }
+
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             string filepath = base.Validate(parseInfo, value, valueRange) as string;
@@ -348,7 +347,7 @@ namespace Deltin.Deltinteger.Models
 
     class FontParameter : ConstStringParameter
     {
-        public FontParameter(string name, string documentation) : base(name, documentation) {}
+        public FontParameter(string name, string documentation) : base(name, documentation) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
@@ -414,7 +413,7 @@ namespace Deltin.Deltinteger.Models
 
     class EconomicTextParameter : ConstStringParameter
     {
-        public EconomicTextParameter(string name, string documentation) : base(name, documentation) {}
+        public EconomicTextParameter(string name, string documentation) : base(name, documentation) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
@@ -429,7 +428,7 @@ namespace Deltin.Deltinteger.Models
 
     class VertexParameter : CodeParameter
     {
-        public VertexParameter(string name, string documentation) : base(name, documentation) {}
+        public VertexParameter(string name, string documentation) : base(name, documentation) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Lambda;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
 using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
 using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ParameterInformation;
@@ -47,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddOverloadData(this);
         }
 
-        public void Apply(DeltinScriptParser.Call_parametersContext context)
+        public void Apply(List<ParameterValue> context)
         {
             PickyParameter[] inputParameters = ParametersFromContext(context);
 
@@ -66,48 +68,41 @@ namespace Deltin.Deltinteger.Parse
             GetAdditionalData();
         }
 
-        private PickyParameter[] ParametersFromContext(DeltinScriptParser.Call_parametersContext context)
+        private PickyParameter[] ParametersFromContext(List<ParameterValue> context)
         {
             // Return empty if context is null.
             if (context == null) return new PickyParameter[0];
 
             // Create the parameters array with the same length as the number of input parameters.
-            PickyParameter[] parameters = new PickyParameter[context.call_parameter().Length];
+            PickyParameter[] parameters = new PickyParameter[context.Count];
             for (int i = 0; i < parameters.Length; i++)
             {
                 PickyParameter parameter = new PickyParameter(false);
                 parameters[i] = parameter;
 
-                // Get the picky name.
-                // A is not picky, B is picky.
-                // 'name' will be null depending on how the parameter is written. A is null, B is not null.
-                // A: '5'
-                // B: 'parameter: 5'
-                parameter.Name = context.call_parameter(i).PART()?.GetText();
-                parameter.Picky = parameter.Name != null;
-
-                if (parameter.Picky) parameter.NameRange = DocRange.GetRange(context.call_parameter(i).PART()); // Get the name range if picky.
-
-                // If the expression context exists, set expression and expressionRange.
-                if (context.call_parameter(i).expr() != null)
+                if (parameter.Picky = context[i].PickyParameter != null)
                 {
-                    parameter.Value = parseInfo.GetExpression(getter, context.call_parameter(i).expr());
-                    parameter.ExpressionRange = DocRange.GetRange(context.call_parameter(i).expr());
-                }
-                else if (parameter.Picky) // TODO: remove condition so only 'else' remains if parameter-quick-skip is not implemented.
-                    // Throw a syntax error if picky.
-                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.call_parameter(i).TERNARY_ELSE()));
+                    // Get the picky name.
+                    parameter.Name = context[i].PickyParameter.Text;
+                    // Get the name range
+                    parameter.NameRange = context[i].PickyParameter.Range;
 
-                // Check if there are any duplicate names.
-                if (parameter.Picky && parameters.Any(p => p != null && p.Picky && p != parameter && p.Name == parameter.Name))
-                    // If there are, syntax error
-                    parseInfo.Script.Diagnostics.Error($"The parameter {parameter.Name} was already set.", parameter.NameRange);
+                    // Check if there are any duplicate names.
+                    if (parameters.Any(p => p != null && p.Picky && p != parameter && p.Name == parameter.Name))
+                        // If there are, syntax error
+                        parseInfo.Script.Diagnostics.Error($"The parameter {parameter.Name} was already set.", parameter.NameRange);
+                }
+
+                // Set expression and expressionRange.
+                parameter.LambdaInfo = new ExpectingLambdaInfo();
+                parameter.Value = parseInfo.SetLambdaInfo(parameter.LambdaInfo).GetExpression(getter, context[i].Expression);
+                parameter.ExpressionRange = context[i].Expression.Range;
             }
 
             return parameters;
         }
 
-        private OverloadMatch MatchOverload(IParameterCallable option, PickyParameter[] inputParameters, DeltinScriptParser.Call_parametersContext context)
+        private OverloadMatch MatchOverload(IParameterCallable option, PickyParameter[] inputParameters, List<ParameterValue> context)
         {
             PickyParameter lastPicky = null;
 
@@ -143,7 +138,7 @@ namespace Deltin.Deltinteger.Parse
                             match.OrderedParameters[p] = inputParameters[i];
                             nameFound = true;
                         }
-                    
+
                     // If the named argument's name is not found, throw an error.
                     if (!nameFound)
                         match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.GetLabel(false)}'.", inputParameters[i].NameRange);
@@ -170,6 +165,18 @@ namespace Deltin.Deltinteger.Parse
             bestOption.AddDiagnostics(parseInfo.Script.Diagnostics);
             CheckAccessLevel();
 
+            // Apply the lambdas and method group parameters.
+            // Iterate through each parameter.
+            for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
+            {
+                // If the CodeParameter type is a lambda type, get the lambda statement with it.
+                if (bestOption.Option.Parameters[i].Type is PortableLambdaType portableLambda)
+                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers(portableLambda);
+                // Otherwise, get the lambda statement with the default.
+                else
+                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers();
+            }
+
             return bestOption;
         }
 
@@ -192,11 +199,11 @@ namespace Deltin.Deltinteger.Parse
             Overload = AllOverloads
                 .OrderBy(o => Math.Abs(numberOfParameters - o.Parameters.Length))
                 .FirstOrDefault();
-            
+
             CurrentOptions = CurrentOptions
                 .Where(o => numberOfParameters <= o.Parameters.Length)
                 .ToList();
-                        
+
             if (CurrentOptions.Count == 0)
             {
                 parseInfo.Script.Diagnostics.Error(
@@ -207,7 +214,7 @@ namespace Deltin.Deltinteger.Parse
             }
             return true;
         }
-    
+
         private void GetAdditionalData()
         {
             AdditionalParameterData = new object[Overload.Parameters.Length];
@@ -215,7 +222,7 @@ namespace Deltin.Deltinteger.Parse
                 AdditionalParameterData[i] = Overload.Parameters[i].Validate(parseInfo, Values[i], ParameterRanges.ElementAtOrDefault(i));
         }
 
-        public SignatureHelp GetSignatureHelp(Pos caretPos)
+        public SignatureHelp GetSignatureHelp(DocPos caretPos)
         {
             // Get the active parameter.
             int activeParameter = -1;
@@ -225,7 +232,7 @@ namespace Deltin.Deltinteger.Parse
                     // If the proved caret position is inside the parameter range, set it as the active parameter.
                     if (ParameterRanges[i] != null && ParameterRanges[i].IsInside(caretPos))
                         activeParameter = i;
-            
+
             // Get the signature information.
             SignatureInformation[] overloads = new SignatureInformation[AllOverloads.Length];
             for (int i = 0; i < overloads.Length; i++)
@@ -235,7 +242,8 @@ namespace Deltin.Deltinteger.Parse
 
                 // Convert parameters to parameter information.
                 for (int p = 0; p < parameters.Length; p++)
-                    parameters[p] = new ParameterInformation() {
+                    parameters[p] = new ParameterInformation()
+                    {
                         // Get the label to show in the signature.
                         Label = AllOverloads[i].Parameters[p].GetLabel(false),
                         // Get the documentation.
@@ -243,7 +251,8 @@ namespace Deltin.Deltinteger.Parse
                     };
 
                 // Create the signature information.
-                overloads[i] = new SignatureInformation() {
+                overloads[i] = new SignatureInformation()
+                {
                     Label = AllOverloads[i].GetLabel(false),
                     Parameters = parameters,
                     Documentation = AllOverloads[i].Documentation
@@ -273,6 +282,10 @@ namespace Deltin.Deltinteger.Parse
         public bool Picky { get; set; }
         /// <summary>If `Prefilled` is true, this parameter was filled by a default value.</summary>
         public bool Prefilled { get; set; }
+        /// <summary>When the parameter expressions are parsed, the parameter types are unknown. Lambda and method groups will behave
+        /// differently depending on the parameter type, so some components will not be parsed until the parameter type is known.
+        /// Use this to apply the lambda/method group data when the overload is chosen.</summary>
+        public ExpectingLambdaInfo LambdaInfo { get; set; }
 
         public PickyParameter(bool prefilled)
         {
@@ -306,21 +319,24 @@ namespace Deltin.Deltinteger.Parse
             if (value == null) return;
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
 
-            if (parameterType != null && ((parameterType.IsConstant() && value.Type() == null) || (value.Type() != null && !value.Type().Implements(parameterType))))
+            if (parameterType is PortableLambdaType && value is PortableLambdaType portableType && portableType.LambdaKind == LambdaKind.Anonymous)
             {
-                // The parameter type does not match.
-                string msg = string.Format("Expected a value of type {0}.", Option.Parameters[parameter].Type.GetName());
-                Error(msg, errorRange);
-            }
-            else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
-            {
-                string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
-                Error(msg, errorRange);
+                if (parameterType.CodeTypeParameterInvalid(value.Type()))
+                {
+                    // The parameter type does not match.
+                    string msg = string.Format("Expected a value of type {0}.", Option.Parameters[parameter].Type.GetName());
+                    Error(msg, errorRange);
+                }
+                else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
+                {
+                    string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
+                    Error(msg, errorRange);
+                }
             }
         }
 
         /// <summary>Determines if there are any missing parameters.</summary>
-        public void GetMissingParameters(DocRange genericErrorRange, OverloadError messageHandler, DeltinScriptParser.Call_parametersContext context, DocRange functionCallRange)
+        public void GetMissingParameters(DocRange genericErrorRange, OverloadError messageHandler, List<ParameterValue> context, DocRange functionCallRange)
         {
             for (int i = 0; i < OrderedParameters.Length; i++)
                 if (OrderedParameters[i]?.Value == null)
@@ -338,34 +354,22 @@ namespace Deltin.Deltinteger.Parse
                 }
         }
 
-        private void AddContextualParameter(DeltinScriptParser.Call_parametersContext context, DocRange functionCallRange, int parameter)
+        private void AddContextualParameter(List<ParameterValue> context, DocRange functionCallRange, int parameter)
         {
             // No parameters set, set range for first parameter to callRange.
             if (parameter == 0 && OrderedParameters.All(p => p?.Value == null))
-            {
                 OrderedParameters[0].ExpressionRange = functionCallRange;
-            }
             // If this is the last contextual parameter and the context contains comma, set the expression range so signature help works with the last comma when there is no set expression.
-            else if (LastContextualParameterIndex == parameter && context.COMMA().Length > 0)
-            {
-                // Get the last comma in the context.
-                var lastComma = context.COMMA().Last();
-
-                // Set the expression range if the last child in the context is a comma.
-                if (lastComma == context.children.Last())
-                    // Set the range to be the end of the comma to the start of the call range.
-                    OrderedParameters[parameter].ExpressionRange = new DocRange(
-                        DocRange.GetRange(lastComma).end,
-                        functionCallRange.end
-                    );
-            }
+            else if (LastContextualParameterIndex == parameter && parameter < context.Count && context[parameter].NextComma != null)
+                // Set the range to be the end of the comma to the start of the call range.
+                OrderedParameters[parameter].ExpressionRange = context[parameter].NextComma.Range.End + functionCallRange.End;
         }
 
         public void AddDiagnostics(FileDiagnostics diagnostics)
         {
             foreach (OverloadMatchError error in Errors) diagnostics.Error(error.Message, error.Range);
         }
-    
+
         ///<summary>Gets the restricted calls from the unfilled optional parameters.</summary>
         public void CheckOptionalsRestrictedCalls(ParseInfo parseInfo, DocRange callRange)
         {
@@ -405,9 +409,9 @@ namespace Deltin.Deltinteger.Parse
 
         public OverloadError(string errorName)
         {
-            BadParameterCount    = $"No overloads for the {errorName} has {{0}} parameters.";
+            BadParameterCount = $"No overloads for the {errorName} has {{0}} parameters.";
             ParameterDoesntExist = $"The parameter '{{0}}' does not exist in the {errorName}.";
-            MissingParameter     = $"The {{0}} parameter is missing in the {errorName}.";
+            MissingParameter = $"The {{0}} parameter is missing in the {errorName}.";
         }
     }
 }

@@ -20,12 +20,14 @@ namespace Deltin.Deltinteger.Decompiler.Json
 
         public static Rule Generate(DeltinScript deltinScript)
         {
-            DecompilerMeta obj = new DecompilerMeta() {
+            DecompilerMeta obj = new DecompilerMeta()
+            {
                 ExtendedGlobalVariables = deltinScript.VarCollection.ExtendedVariableList(true).Select(v => v.DebugName).ToArray(),
                 ExtendedPlayerVariables = deltinScript.VarCollection.ExtendedVariableList(false).Select(v => v.DebugName).ToArray()
             };
 
-            string json = JsonConvert.SerializeObject(obj, new JsonSerializerSettings() {
+            string json = JsonConvert.SerializeObject(obj, new JsonSerializerSettings()
+            {
                 NullValueHandling = NullValueHandling.Ignore
             });
             int start = 0;
@@ -38,7 +40,7 @@ namespace Deltin.Deltinteger.Decompiler.Json
                     split.Add(json.Substring(start, i + 1 - start));
                     start = i;
                 }
-            
+
             // Create the actions.
             List<Element> actions = new List<Element>();
             for (int i = 0; i < split.Count; i++)
@@ -51,10 +53,10 @@ namespace Deltin.Deltinteger.Decompiler.Json
                 element.Comment = split[i] // Set the comment.
                     .Replace("\"", "\\\"") // Escape quotes
                     ;
-                
+
                 actions.Add(element);
             }
-            
+
             // Create and return the generated rule.
             return new Rule(MetaRuleName) { Disabled = true, Priority = -1, Actions = actions.ToArray() };
         }

@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
             if (index == null || index.Length == 0)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part<A_SetGlobalVariable>(              variable, value) };
+                    return new Element[] { Element.Part<A_SetGlobalVariable>(variable, value) };
                 else
                     return new Element[] { Element.Part<A_SetPlayerVariable>(targetPlayer, variable, value) };
             }
@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
             if (index.Length == 1)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part<A_SetGlobalVariableAtIndex>(              variable, index[0], value) };
+                    return new Element[] { Element.Part<A_SetGlobalVariableAtIndex>(variable, index[0], value) };
                 else
                     return new Element[] { Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, variable, index[0], value) };
             }
@@ -118,13 +118,13 @@ namespace Deltin.Deltinteger.Parse
         {
             if (index.Length == 0)
                 return array;
-            
+
             if (index.Length == 1)
                 return Element.Part<V_ValueInArray>(array, index[0]);
-            
+
             return Element.Part<V_ValueInArray>(ValueInArrayPath(array, index.Take(index.Length - 1).ToArray()), index.Last());
         }
-        
+
         private static Element GetRoot(Element targetPlayer, WorkshopVariable variable)
         {
             if (variable.IsGlobal)
@@ -132,13 +132,13 @@ namespace Deltin.Deltinteger.Parse
             else
                 return Element.Part<V_PlayerVariable>(targetPlayer, variable);
         }
-    
+
         public static Element[] ModifyVariable(WorkshopArrayBuilder builder, Operation operation, Element value, Element targetPlayer, WorkshopVariable variable, params Element[] index)
         {
             if (index == null || index.Length == 0)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part<A_ModifyGlobalVariable>(              variable, EnumData.GetEnumValue(operation), value) };
+                    return new Element[] { Element.Part<A_ModifyGlobalVariable>(variable, EnumData.GetEnumValue(operation), value) };
                 else
                     return new Element[] { Element.Part<A_ModifyPlayerVariable>(targetPlayer, variable, EnumData.GetEnumValue(operation), value) };
             }
@@ -146,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
             if (index.Length == 1)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part<A_ModifyGlobalVariableAtIndex>(              variable, index[0], EnumData.GetEnumValue(operation), value) };
+                    return new Element[] { Element.Part<A_ModifyGlobalVariableAtIndex>(variable, index[0], EnumData.GetEnumValue(operation), value) };
                 else
                     return new Element[] { Element.Part<A_ModifyPlayerVariableAtIndex>(targetPlayer, variable, index[0], EnumData.GetEnumValue(operation), value) };
             }

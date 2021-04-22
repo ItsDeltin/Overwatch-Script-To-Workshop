@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.CustomMethods
@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.CustomMethods
 
     class MapParameter : CodeParameter
     {
-        public MapParameter() : base("map", "The map to compare.") {}
+        public MapParameter() : base("map", "The map to compare.") { }
 
         public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData)
         {

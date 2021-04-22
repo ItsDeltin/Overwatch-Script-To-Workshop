@@ -34,27 +34,31 @@ namespace Deltin.Deltinteger.LanguageServer
             if (_languageServer.LastParse == null) return new CompletionList();
             List<CompletionItem> items = new List<CompletionItem>();
 
-            // Add the user defined types.
-            foreach (var definedType in _languageServer.LastParse.Types.AllTypes)
-                items.Add(definedType.GetCompletion());
+            // Add snippets.
+            Snippet.AddSnippets(items);
+
+            // Add types.
+            foreach (var type in _languageServer.LastParse.Types.AllTypes)
+                items.Add(type.GetCompletion());
 
             // Get the script from the uri. If it isn't parsed, return the default completion. 
             var script = _languageServer.LastParse.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
             if (script == null) return items;
 
+            // Get valid completion ranges.
             var completions = script.GetCompletionRanges();
             List<CompletionRange> inRange = new List<CompletionRange>();
             foreach (var completion in completions)
                 if (completion.Range.IsInside(completionParams.Position))
                     inRange.Add(completion);
-            
+
             if (inRange.Count > 0)
             {
                 inRange = inRange
                     // Order by the size of the ranges.
                     .OrderBy(range => range.Range)
                     .ToList();
-                
+
                 for (int i = 0; i < inRange.Count; i++)
                 {
                     // Additive

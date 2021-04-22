@@ -20,10 +20,12 @@ namespace Deltin.Deltinteger.Elements
         public virtual bool EqualTo(IWorkshopTree other)
         {
             if (this.GetType() != other.GetType()) return false;
-            
+
             WorkshopVariable bAsMeta = (WorkshopVariable)other;
             return Name == bAsMeta.Name && ID == bAsMeta.ID;
         }
+
+        public override string ToString() => Name;
 
         public static string WorkshopNameFromCodeName(string name, string[] takenNames)
         {
@@ -35,7 +37,7 @@ namespace Deltin.Deltinteger.Elements
                     valid.Append('_');
                 else if (MetaElement.ValidVariableCharacters.Contains(name[i]))
                     valid.Append(name[i]);
-                
+
             string newName = valid.ToString();
 
             if (newName.Length > Constants.MAX_VARIABLE_NAME_LENGTH)

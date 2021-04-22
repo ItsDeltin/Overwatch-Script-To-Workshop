@@ -89,12 +89,14 @@ namespace Deltin.Deltinteger.Parse
         public override Scope GetObjectScope() => objectScope;
         public override Scope ReturningScope() => staticScope;
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Struct
         };
 
-        private static FuncMethod DistanceTo = new FuncMethodBuilder() {
+        private static FuncMethod DistanceTo = new FuncMethodBuilder()
+        {
             Name = "DistanceTo",
             Documentation = "Gets the distance between 2 vectors.",
             DoesReturnValue = true,
@@ -102,7 +104,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_DistanceBetween>(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod CrossProduct = new FuncMethodBuilder() {
+        private static FuncMethod CrossProduct = new FuncMethodBuilder()
+        {
             Name = "CrossProduct",
             Documentation = "The cross product of the specified vector.",
             DoesReturnValue = true,
@@ -111,7 +114,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_CrossProduct>(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod DotProduct = new FuncMethodBuilder() {
+        private static FuncMethod DotProduct = new FuncMethodBuilder()
+        {
             Name = "DotProduct",
             Documentation = "Returns what amount of one vector goes in the direction of another.",
             DoesReturnValue = true,
@@ -119,7 +123,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_DotProduct>(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod Normalize = new FuncMethodBuilder() {
+        private static FuncMethod Normalize = new FuncMethodBuilder()
+        {
             Name = "Normalize",
             Documentation = "The unit-length normalization of the vector.",
             DoesReturnValue = true,
@@ -127,7 +132,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_Normalize>(actionSet.CurrentObject)
         };
 
-        private static FuncMethod DirectionTowards = new FuncMethodBuilder() {
+        private static FuncMethod DirectionTowards = new FuncMethodBuilder()
+        {
             Name = "DirectionTowards",
             Documentation = "The unit-length direction vector to another vector.",
             DoesReturnValue = true,
@@ -136,7 +142,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_DirectionTowards>(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod FarthestPlayer = new FuncMethodBuilder() {
+        private static FuncMethod FarthestPlayer = new FuncMethodBuilder()
+        {
             Name = "FarthestPlayer",
             Documentation = "The farthest player from the vector, optionally restricted by team.",
             DoesReturnValue = true,
@@ -144,7 +151,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_FarthestPlayerFrom>(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod ClosestPlayer = new FuncMethodBuilder() {
+        private static FuncMethod ClosestPlayer = new FuncMethodBuilder()
+        {
             Name = "ClosestPlayer",
             Documentation = "The closest player to the vector, optionally restricted by team.",
             DoesReturnValue = true,
@@ -152,7 +160,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_ClosestPlayerTo>(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod IsInLineOfSight = new FuncMethodBuilder() {
+        private static FuncMethod IsInLineOfSight = new FuncMethodBuilder()
+        {
             Name = "IsInLineOfSight",
             Documentation = "Whether the vector has line of sight with the specified vector.",
             DoesReturnValue = true,
@@ -163,7 +172,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_IsInLineOfSight>(actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
         };
 
-        private static FuncMethod Towards = new FuncMethodBuilder() {
+        private static FuncMethod Towards = new FuncMethodBuilder()
+        {
             Name = "Towards",
             Documentation = "The displacement vector from the vector to another.",
             DoesReturnValue = true,
@@ -172,7 +182,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_VectorTowards>(actionSet.CurrentObject, call.ParameterValues[0])
         };
 
-        private static FuncMethod AsLocalVector = new FuncMethodBuilder() {
+        private static FuncMethod AsLocalVector = new FuncMethodBuilder()
+        {
             Name = "AsLocalVector",
             Documentation = "The vector in local coordinates corresponding to the vector in world coordinates.",
             DoesReturnValue = true,
@@ -184,7 +195,8 @@ namespace Deltin.Deltinteger.Parse
             Action = (ActionSet actionSet, MethodCall call) => Element.Part<V_LocalVectorOf>(actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
         };
 
-        private static FuncMethod AsWorldVector = new FuncMethodBuilder() {
+        private static FuncMethod AsWorldVector = new FuncMethodBuilder()
+        {
             Name = "AsWorldVector",
             Documentation = "The vector in world coordinates corresponding to the vector in local coordinates.",
             DoesReturnValue = true,

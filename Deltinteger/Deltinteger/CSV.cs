@@ -32,12 +32,12 @@ namespace Deltin.Deltinteger.Csv
                 progress.ActionCompleted();
             }
             progress.Finish();
-            
+
             for (int i = 1; i < frames.Length; i++)
                 for (int v = 0; v < Constants.NUMBER_OF_VARIABLES; v++)
                     if (!frames[i].VariableValues[v].EqualTo(frames[i - 1].VariableValues[v]))
                         frames[i].VariableValues[v].Changed = true;
-            
+
             return frames;
         }
 
@@ -50,10 +50,10 @@ namespace Deltin.Deltinteger.Csv
             const int expectedLength = Constants.NUMBER_OF_VARIABLES + 2; // Every letter of the alphabet plus the time and variable set owner.
             if (infoSplit.Length != expectedLength)
                 throw new CsvParseFailedException("Expected " + expectedLength + " nodes, got " + infoSplit.Length + " instead.");
-            
+
             if (!double.TryParse(infoSplit[0], out double time))
                 throw new CsvParseFailedException("Failed to get the time.");
-            
+
             string owner = infoSplit[1];
 
             CsvPart[] variableValues = new CsvPart[Constants.NUMBER_OF_VARIABLES];
@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Csv
                 {
                     // Trim the {}
                     string work = infoSplit[i + 2].Substring(1, infoSplit[i + 2].Length - 2);
-                    
+
                     // Split the array.
                     var splitAt = Regex.Matches(work, @";(?![^(]*\))");
                     string[] arrayElements = new string[splitAt.Count + 1];
@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Csv
                             start = splitAt[s - 1].Index + 1;
                         if (s < splitAt.Count)
                             end = splitAt[s].Index;
-                        
+
                         arrayElements[s] = work.Substring(start, end - start).Trim();
                     }
 
@@ -94,7 +94,7 @@ namespace Deltin.Deltinteger.Csv
                         for (int a = 0; a < array.Length; a++)
                             array[a] = ParseValue(arrayElements[a]);
                     }
-                    
+
                     variableValues[i] = new CsvArray(array);
                 }
                 else variableValues[i] = ParseValue(infoSplit[i + 2]);
@@ -120,7 +120,7 @@ namespace Deltin.Deltinteger.Csv
                 if (!double.TryParse(split[2], out double z))
                     throw new CsvParseFailedException("Failed to get vector Z value.");
 
-                return new CsvVector(new Vertex(x,y,z));
+                return new CsvVector(new Vertex(x, y, z));
             }
             // Element is a number
             else if (double.TryParse(value, out double number))
@@ -150,7 +150,7 @@ namespace Deltin.Deltinteger.Csv
 
     public abstract class CsvPart
     {
-        public bool Changed { get; set; } 
+        public bool Changed { get; set; }
 
         public bool EqualTo(CsvPart other)
         {
@@ -180,7 +180,7 @@ namespace Deltin.Deltinteger.Csv
             for (int i = 0; i < Values.Length; i++)
                 if (!Values[i].EqualTo(array.Values[i]))
                     return false;
-            
+
             return true;
         }
 
@@ -269,6 +269,6 @@ namespace Deltin.Deltinteger.Csv
 
     public class CsvParseFailedException : Exception
     {
-        public CsvParseFailedException(string message) : base(message) {}
+        public CsvParseFailedException(string message) : base(message) { }
     }
 }

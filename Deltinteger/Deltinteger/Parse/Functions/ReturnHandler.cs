@@ -1,45 +1,44 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class ReturnHandler
     {
-        protected readonly ActionSet ActionSet;
-        private readonly bool MultiplePaths;
+        public List<RecursiveIndexReference> AdditionalPopOnReturn { get; } = new List<RecursiveIndexReference>();
+
+        protected readonly ActionSet _actionSet;
+        private readonly bool _multiplePaths;
 
         // If `MultiplePaths` is true, use `ReturnStore`. Else use `ReturningValue`.
-        private readonly IndexReference ReturnStore;
-        private IWorkshopTree ReturningValue;
-
-        private bool ValueWasReturned;
-
-        private readonly List<SkipStartMarker> skips = new List<SkipStartMarker>();
-
-        public List<RecursiveIndexReference> AdditionalPopOnReturn { get; } = new List<RecursiveIndexReference>();
+        private readonly IndexReference _returnStore;
+        private IWorkshopTree _returningValue;
+        private bool _valueWasReturned;
+        private readonly List<SkipStartMarker> _skips = new List<SkipStartMarker>();
 
         public ReturnHandler(ActionSet actionSet, string methodName, bool multiplePaths)
         {
-            ActionSet = actionSet;
-            MultiplePaths = multiplePaths;
+            _actionSet = actionSet;
+            _multiplePaths = multiplePaths;
 
             if (multiplePaths)
-                ReturnStore = actionSet.VarCollection.Assign("_" + methodName + "ReturnValue", actionSet.IsGlobal, true);
+                _returnStore = actionSet.VarCollection.Assign("_" + methodName + "ReturnValue", actionSet.IsGlobal, true);
         }
 
         public virtual void ReturnValue(IWorkshopTree value)
         {
-            if (!MultiplePaths && ValueWasReturned)
+            if (!_multiplePaths && _valueWasReturned)
                 throw new Exception("_multiplePaths is set as false and 2 expressions were returned.");
-            ValueWasReturned = true;
+            _valueWasReturned = true;
 
             // Multiple return paths.
-            if (MultiplePaths)
-                ActionSet.AddAction(ReturnStore.SetVariable((Element)value));
+            if (_multiplePaths)
+                _actionSet.AddAction(_returnStore.SetVariable((Element)value));
             // One return path.
             else
-                ReturningValue = value;
+                _returningValue = value;
         }
 
         public virtual void Return(Scope returningFromScope, ActionSet returningSet)
@@ -54,30 +53,30 @@ namespace Deltin.Deltinteger.Parse
 
             SkipStartMarker returnSkipStart = new SkipStartMarker(returningSet);
             returningSet.AddAction(returnSkipStart);
-            skips.Add(returnSkipStart);
+            _skips.Add(returnSkipStart);
         }
 
         public virtual void ApplyReturnSkips()
         {
             SkipEndMarker methodEndMarker = new SkipEndMarker();
-            ActionSet.AddAction(methodEndMarker);
+            _actionSet.AddAction(methodEndMarker);
 
-            foreach (var returnSkip in skips)
+            foreach (var returnSkip in _skips)
                 returnSkip.SetEndMarker(methodEndMarker);
         }
 
         public virtual IWorkshopTree GetReturnedValue()
         {
-            if (MultiplePaths)
-                return ReturnStore.GetVariable();
+            if (_multiplePaths)
+                return _returnStore.GetVariable();
             else
-                return ReturningValue;
+                return _returningValue;
         }
     }
 
     public class RuleReturnHandler : ReturnHandler
     {
-        public RuleReturnHandler(ActionSet actionSet) : base(actionSet, null, false) {}
+        public RuleReturnHandler(ActionSet actionSet) : base(actionSet, null, false) { }
 
         public override void ApplyReturnSkips() => throw new Exception("Can't apply return skips in a rule.");
         public override IWorkshopTree GetReturnedValue() => throw new Exception("Can't get the returned value of a rule.");
@@ -85,7 +84,53 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Return(Scope returningFromScope, ActionSet returningSet)
         {
-            ActionSet.AddAction(Element.Part<A_Abort>());
+            _actionSet.AddAction(Element.Part<A_Abort>());
+        }
+    }
+
+    public interface IParseReturnHandler
+    {
+        void Validate(DocRange range, IExpression value);
+    }
+
+    public class ParseReturnHandler : IParseReturnHandler
+    {
+        public CodeType ExpectedType { get; }
+        public bool AllowMultiple { get; }
+        public bool MustReturnValue { get; }
+        private readonly ParseInfo _parseInfo;
+        private bool _returnFound;
+        // Errors
+        public string MustReturnValueMessage { get; set; } = "Must return a value.";
+        public string MoreThanOneReturnMessage { get; set; } = "Cannot have more than one return statement if the function's return type is constant.";
+        public string VoidReturnValueMessage { get; set; }
+
+        public ParseReturnHandler(ParseInfo parseInfo)
+        {
+            _parseInfo = parseInfo;
+        }
+
+        public ParseReturnHandler(ParseInfo parseInfo, string objectName) : this(parseInfo)
+        {
+            VoidReturnValueMessage = objectName + " is void, so no value can be returned.";
+        }
+
+        public void Validate(DocRange range, IExpression value)
+        {
+            // Error if a value must be returned.
+            if (MustReturnValue && value == null)
+            {
+                _parseInfo.Script.Diagnostics.Error(MustReturnValueMessage, range);
+                return;
+            }
+
+            // Multiple return statements when not allowed.
+            if (!AllowMultiple && _returnFound)
+            {
+                _parseInfo.Script.Diagnostics.Error(MoreThanOneReturnMessage, range);
+                return;
+            }
+            _returnFound = true;
         }
     }
 }

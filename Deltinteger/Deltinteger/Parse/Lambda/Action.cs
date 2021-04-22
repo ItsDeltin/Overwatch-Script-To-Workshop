@@ -1,109 +1,246 @@
 using System;
 using System.Linq;
-using Deltin.Deltinteger.LanguageServer;
+using System.Collections.Generic;
+using Deltin.Deltinteger.Parse.FunctionBuilder;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
-    public class LambdaAction : IExpression, IWorkshopTree, IApplyBlock
+    public class LambdaAction : IExpression, IWorkshopTree, IApplyBlock, IVariableTracker, ILambdaApplier
     {
+        private readonly LambdaExpression _context;
+        private readonly Scope _lambdaScope;
+        private readonly ParseInfo _parseInfo;
+        private readonly CodeType[] _argumentTypes;
+        private readonly bool _isExplicit;
+        private readonly bool _contextualParameterTypesKnown;
+
         /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
-        private readonly BaseLambda LambdaType;
+        public PortableLambdaType LambdaType { get; private set; }
+
         /// <summary>The parameters of the lambda.</summary>
         public Var[] Parameters { get; }
+
         /// <summary>The invocation status of the lambda parameters/</summary>
-        public SubLambdaInvoke[] InvokedState { get; }
+        public IBridgeInvocable[] InvokedState { get; }
+
         /// <summary>Determines if the lambda has multiple return statements. LambdaType will be ValueBlockLambda if this is true.</summary>
-        public bool MultiplePaths { get; }
+        public bool MultiplePaths { get; private set; }
 
         /// <summary>The block of the lambda. This will be null if LambdaType is MacroLambda.</summary>
-        public BlockAction Block { get; }
+        public IStatement Statement { get; private set; }
+
         /// <summary>The expression of the lambda. This will be null if LambdaType is BlockLambda or ValueBlockLambda.</summary>
-        public IExpression Expression { get; }
+        public IExpression Expression { get; private set; }
+
+        /// <summary>The captured local variables.</summary>
+        public List<IIndexReferencer> CapturedVariables { get; } = new List<IIndexReferencer>();
+
+        /// <summary>The lambda's identifier.</summary>
+        public int Identifier { get; set; }
+
+        ///<summary> The parent type that the lambda is defined in.</summary>
+        public CodeType This { get; }
 
         public CallInfo CallInfo { get; }
         public IRecursiveCallHandler RecursiveCallHandler { get; }
+        public bool ResolvedSource => true;
 
-        public LambdaAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.LambdaContext context)
+        public LambdaAction(ParseInfo parseInfo, Scope scope, LambdaExpression context)
         {
-            Scope lambdaScope = scope.Child();
+            _context = context;
+            _lambdaScope = scope.Child();
+            _parseInfo = parseInfo;
+            _contextualParameterTypesKnown = _parseInfo.ExpectingLambda != null && _parseInfo.ExpectingLambda.Type.ParameterTypesKnown;
             RecursiveCallHandler = new LambdaRecursionHandler(this);
             CallInfo = new CallInfo(RecursiveCallHandler, parseInfo.Script);
+            This = scope.GetThis();
+
+            _isExplicit = context.Parameters.Any(p => p.Type != null);
+            var parameterState = context.Parameters.Count == 0 || _isExplicit ? ParameterState.CountAndTypesKnown : ParameterState.CountKnown;
 
             // Get the lambda parameters.
-            Parameters = new Var[context.define().Length];
+            Parameters = new Var[context.Parameters.Count];
             InvokedState = new SubLambdaInvoke[Parameters.Length];
+            _argumentTypes = new CodeType[Parameters.Length];
+
             for (int i = 0; i < Parameters.Length; i++)
             {
-                InvokedState[i] = new SubLambdaInvoke();
-                // TODO: Make custom builder.
-                Parameters[i] = new ParameterVariable(lambdaScope, new DefineContextHandler(parseInfo, context.define(i)), InvokedState[i]);
-            }
-            
-            CodeType[] argumentTypes = Parameters.Select(arg => arg.CodeType).ToArray();
+                if (_isExplicit && context.Parameters[i].Type == null)
+                    parseInfo.Script.Diagnostics.Error("Inconsistent lambda parameter usage; parameter types must be all explicit or all implicit", context.Parameters[i].Range);
 
-            // context.block() will not be null if the lambda is a block.
-            // () => {}
-            if (context.block() != null)
+                InvokedState[i] = new SubLambdaInvoke();
+                Parameters[i] = new LambdaVariable(i, _parseInfo.ExpectingLambda?.Type, _lambdaScope, new LambdaContextHandler(parseInfo, context.Parameters[i]), InvokedState[i]);
+                _argumentTypes[i] = Parameters[i].CodeType;
+            }
+
+            new CheckLambdaContext(
+                parseInfo,
+                this,
+                "Cannot determine lambda in the current context",
+                context.Range,
+                parameterState
+            ).Check();
+
+            // Add hover info
+            // parseInfo.Script.AddHover(context.Arrow.Range, new MarkupBuilder().StartCodeLine().Add(LambdaType.GetName()).EndCodeLine().ToString());
+        }
+
+        public void GetLambdaStatement(PortableLambdaType expecting)
+        {
+            _getLambdaStatement(expecting);
+
+            // Check if the current lambda implements the expected type.
+            if (!LambdaType.Implements(expecting))
+                _parseInfo.Script.Diagnostics.Error("Expected lambda of type '" + expecting.GetName() + "'", _context.Arrow.Range);
+        }
+
+        public void GetLambdaStatement() => _getLambdaStatement(null);
+
+        private void _getLambdaStatement(PortableLambdaType expectingType)
+        {
+            ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).AddVariableTracker(this).SetExpectingLambda(expectingType?.ReturnType);
+
+            CodeType returnType = null;
+            bool returnsValue = false;
+
+            // Get the statements.
+            if (_context.Statement is Block block)
             {
                 // Parse the block.
-                Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), lambdaScope, context.block());
+                Statement = new BlockAction(parser, _lambdaScope, block);
 
                 // Validate the block.
-                BlockTreeScan validation = new BlockTreeScan(parseInfo, Block, "lambda", DocRange.GetRange(context.INS()));
+                BlockTreeScan validation = new BlockTreeScan(_parseInfo, (BlockAction)Statement, "lambda", _context.Arrow.Range);
                 validation.ValidateReturns();
 
                 if (validation.ReturnsValue)
                 {
-                    LambdaType = new ValueBlockLambda(validation.ReturnType, argumentTypes);
+                    returnType = validation.ReturnType;
                     MultiplePaths = validation.MultiplePaths;
+                    returnsValue = true;
                 }
-                else
-                    LambdaType = new BlockLambda(argumentTypes);
             }
-            // context.expr() will not be null if the lambda is an expression.
-            // () => 2 * x
-            else if (context.expr() != null)
+            else if (_context.Statement is ExpressionStatement exprStatement)
             {
                 // Get the lambda expression.
-                Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(lambdaScope, context.expr());
-                LambdaType = new MacroLambda(Expression.Type(), argumentTypes);
+                Expression = parser.GetExpression(_lambdaScope, exprStatement.Expression);
+                returnType = Expression.Type();
+                returnsValue = true;
+            }
+            else
+            {
+                // Statement
+                Statement = parser.GetStatement(_lambdaScope, _context.Statement);
+                if (Statement is IExpression expr)
+                {
+                    Expression = expr;
+                    returnType = expr.Type();
+                    returnsValue = true;
+                }
             }
 
-            // Add so the lambda can be recursive-checked.
-            parseInfo.TranslateInfo.RecursionCheck(CallInfo);
+            LambdaType = new PortableLambdaType(expectingType?.LambdaKind ?? LambdaKind.Anonymous, _argumentTypes, returnsValue, returnType, _isExplicit);
 
-            // Add hover info
-            parseInfo.Script.AddHover(DocRange.GetRange(context.INS()), new MarkupBuilder().StartCodeLine().Add(LambdaType.GetName()).EndCodeLine().ToString());
+            // Add so the lambda can be recursive-checked.
+            _parseInfo.TranslateInfo.RecursionCheck(CallInfo);
+
+            if (!LambdaType.IsConstant())
+                Identifier = _parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(new LambdaHandler(this));
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet) => this;
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            // If the lambda type is constant, return the lambda itself.
+            if (LambdaType.IsConstant())
+                return new LambdaActionWorkshopInstance(actionSet, this);
+
+            // Otherwise, return an array containing data of the lambda.
+            var lambdaMeta = new List<IWorkshopTree>();
+
+            // The first element is the lambda's identifier. 
+            lambdaMeta.Add(new V_Number(Identifier));
+
+            // The second element is the 'this' if applicable.
+            lambdaMeta.Add(actionSet.This ?? new V_Null());
+
+            // Every proceeding element is a captured local variable.
+            foreach (var capture in CapturedVariables)
+                lambdaMeta.Add(actionSet.IndexAssigner[capture].GetVariable());
+
+            // Return the array.
+            return Element.CreateArray(lambdaMeta.ToArray());
+        }
         public Scope ReturningScope() => LambdaType.GetObjectScope();
         public CodeType Type() => LambdaType;
 
         public string ToWorkshop(OutputLanguage outputLanguage, ToWorkshopContext context) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
 
-        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
+        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => Invoke(null, actionSet, parameterValues);
+
+        public IWorkshopTree Invoke(VarIndexAssigner lambaAssigner, ActionSet actionSet, params IWorkshopTree[] parameterValues)
         {
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            switch (LambdaType.LambdaKind)
+            {
+                // Constant macro
+                case LambdaKind.ConstantMacro:
+                    return OutputConstantMacro(lambaAssigner, actionSet, parameterValues);
+
+                // Constant block
+                case LambdaKind.ConstantBlock:
+                case LambdaKind.ConstantValue:
+                    return OutputContantBlock(lambaAssigner, actionSet, parameterValues);
+
+                // Portable
+                case LambdaKind.Portable:
+                    return OutputPortable(actionSet, parameterValues);
+
+                // Unknown
+                case LambdaKind.Anonymous:
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>Assigns the parameter values to the action set for the constant lambdas.</summary>
+        private ActionSet AssignContainedParameters(VarIndexAssigner lambaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            var newSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            actionSet.IndexAssigner.CopyAll(lambaAssigner);
 
             for (int i = 0; i < parameterValues.Length; i++)
-                actionSet.IndexAssigner.Add(Parameters[i], parameterValues[i]);
-            
-            if (Block != null)
-            {
-                ReturnHandler returnHandler = new ReturnHandler(actionSet, "lambda", MultiplePaths);
-                Block.Translate(actionSet.New(returnHandler));
-                returnHandler.ApplyReturnSkips();
-                
-                return returnHandler.GetReturnedValue();
-            }
-            else if (Expression != null)
-            {
-                return Expression.Parse(actionSet);
-            }
-            else throw new NotImplementedException();
+                newSet.IndexAssigner.Add(Parameters[i], parameterValues[i]);
+
+            return newSet;
+        }
+        /// <summary>Outputs a constant macro lambda.</summary>
+        private IWorkshopTree OutputConstantMacro(VarIndexAssigner lambaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues) => Expression.Parse(AssignContainedParameters(lambaAssigner, actionSet, parameterValues));
+
+        /// <summary>Outputs a constant block.</summary>
+        private IWorkshopTree OutputContantBlock(VarIndexAssigner lambdaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            ReturnHandler returnHandler = new ReturnHandler(actionSet, "lambda", MultiplePaths);
+            actionSet = AssignContainedParameters(lambdaAssigner, actionSet, parameterValues).New(returnHandler);
+
+            if (Expression != null)
+                returnHandler.ReturnValue(Expression.Parse(actionSet));
+            else
+                Statement.Translate(actionSet);
+
+            returnHandler.ApplyReturnSkips();
+
+            return returnHandler.GetReturnedValue();
+        }
+
+        /// <summary>Outputs a portable lambda.</summary>
+        private IWorkshopTree OutputPortable(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            var determiner = actionSet.DeltinScript.GetComponent<LambdaGroup>();
+            var builder = new FunctionBuildController(actionSet, new CallHandler(parameterValues), determiner);
+            return builder.Call();
         }
 
         public string GetLabel(bool markdown)
@@ -123,18 +260,24 @@ namespace Deltin.Deltinteger.Parse.Lambda
             }
             label += " => ";
 
-            if (LambdaType is MacroLambda macroLambda) label += macroLambda.ReturnType?.GetName() ?? "define";
-            else if (LambdaType is ValueBlockLambda vbl) label += "{" + (vbl.ReturnType?.GetName() ?? "define") + "}";
-            else if (LambdaType is BlockLambda) label += "{}";
+            // if (LambdaType is MacroLambda macroLambda) label += macroLambda.ReturnType?.GetName() ?? "define";
+            // else if (LambdaType is ValueBlockLambda vbl) label += "{" + (vbl.ReturnType?.GetName() ?? "define") + "}";
+            // else if (LambdaType is BlockLambda) label += "{}";
 
             return label;
         }
 
-        public void SetupParameters() {}
-        public void SetupBlock() {}
+        public void SetupParameters() { }
+        public void SetupBlock() { }
         public void OnBlockApply(IOnBlockApplied onBlockApplied) => onBlockApplied.Applied();
 
-        public bool EmptyBlock => Block == null || Block.Statements.Length == 0;
+        public void LocalVariableAccessed(IIndexReferencer variable)
+        {
+            if (!CapturedVariables.Contains(variable) && _lambdaScope.Parent.ScopeContains(variable))
+                CapturedVariables.Add(variable);
+        }
+
+        public bool EmptyBlock => Statement == null || (Statement is BlockAction block && block.Statements.Length == 0);
 
         class LambdaRecursionHandler : IRecursiveCallHandler
         {

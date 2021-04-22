@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Compiler;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 using BaseRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.RenameHandler;
@@ -27,7 +28,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     // TODO-URI: Should use Uri.Compare?
                     if (link.Location.uri == uri && link.Location.range.IsInside(position))
                         return new RenameLink(linkPair, link.Location.range);
-            
+
             return null;
         }
     }
@@ -36,7 +37,8 @@ namespace Deltin.Deltinteger.LanguageServer
     {
         private DeltintegerLanguageServer _languageServer;
 
-        public DoRenameHandler(DeltintegerLanguageServer languageServer) : base (new RenameRegistrationOptions() {
+        public DoRenameHandler(DeltintegerLanguageServer languageServer) : base(new RenameRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
             PrepareProvider = true
         })
@@ -46,49 +48,57 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public override async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
         {
-            var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
-            if (link == null) return new WorkspaceEdit();
-
-            var grouped = link.Group();
-            var documentChanges = new List<WorkspaceEditDocumentChange>();
-            foreach (var group in grouped)
+            return await Task.Run(() =>
             {
-                List<TextEdit> edits = new List<TextEdit>();
+                var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
+                if (link == null) return new WorkspaceEdit();
 
-                foreach (var renameRange in group.Links)
+                var grouped = link.Group();
+                var documentChanges = new List<WorkspaceEditDocumentChange>();
+                foreach (var group in grouped)
                 {
-                    edits.Add(new TextEdit() {
-                        NewText = request.NewName,
-                        Range = renameRange.ToLsRange()
-                    });
-                }
+                    List<TextEdit> edits = new List<TextEdit>();
 
-                var document = _languageServer.DocumentHandler.TextDocumentFromUri(group.Uri);
-
-                // document will be null if the editor doesn't have the document of the group opened.
-                if (document == null)
-                {
-                    ImportedScript importedScript = _languageServer.FileGetter.GetImportedFile(group.Uri);
-                    document = new TextDocumentItem() {
-                        Uri = group.Uri,
-                        Text = importedScript.Content,
-                        LanguageId = "ostw"
-                    };
-                }
-
-                WorkspaceEditDocumentChange edit = new WorkspaceEditDocumentChange(new TextDocumentEdit() {
-                    Edits = edits.ToArray(),
-                    TextDocument = new VersionedTextDocumentIdentifier() {
-                        Version = document.Version,
-                        Uri = document.Uri
+                    foreach (var renameRange in group.Links)
+                    {
+                        edits.Add(new TextEdit()
+                        {
+                            NewText = request.NewName,
+                            Range = renameRange
+                        });
                     }
-                });
-                documentChanges.Add(edit);
-            }
 
-            return new WorkspaceEdit() {
-                DocumentChanges = documentChanges
-            };
+                    var document = _languageServer.DocumentHandler.TextDocumentFromUri(group.Uri)?.AsItem();
+
+                    // document will be null if the editor doesn't have the document of the group opened.
+                    if (document == null)
+                    {
+                        ImportedScript importedScript = _languageServer.FileGetter.GetImportedFile(group.Uri);
+                        document = new TextDocumentItem()
+                        {
+                            Uri = group.Uri,
+                            Text = importedScript.Content,
+                            LanguageId = "ostw"
+                        };
+                    }
+
+                    WorkspaceEditDocumentChange edit = new WorkspaceEditDocumentChange(new TextDocumentEdit()
+                    {
+                        Edits = edits.ToArray(),
+                        TextDocument = new VersionedTextDocumentIdentifier()
+                        {
+                            Version = document.Version,
+                            Uri = document.Uri
+                        }
+                    });
+                    documentChanges.Add(edit);
+                }
+
+                return new WorkspaceEdit()
+                {
+                    DocumentChanges = documentChanges
+                };
+            });
         }
 
         public override void SetCapability(RenameCapability capability)
@@ -115,12 +125,16 @@ namespace Deltin.Deltinteger.LanguageServer
         // IPrepareRename
         public async Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken)
         {
-            var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
-            if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
+            return await Task.Run(() =>
+            {
+                var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
+                if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
 
-            return new RangeOrPlaceholderRange(new PlaceholderRange() {
-                Range = link.Range.ToLsRange(),
-                Placeholder = link.Name
+                return new RangeOrPlaceholderRange(new PlaceholderRange()
+                {
+                    Range = link.Range,
+                    Placeholder = link.Name
+                });
             });
         }
 
@@ -147,7 +161,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public SymbolLinkUriGroup[] Group()
         {
-            var groups = new Dictionary<Uri, List<DocRange>>();   
+            var groups = new Dictionary<Uri, List<DocRange>>();
             foreach (var link in Links)
             {
                 if (!groups.ContainsKey(link.uri)) groups.Add(link.uri, new List<DocRange>());

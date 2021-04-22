@@ -6,7 +6,7 @@ using System.Text;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Parse.Functions
+namespace Deltin.Deltinteger.Parse
 {
     abstract class AbstractMacroBuilder
     {
@@ -71,8 +71,8 @@ namespace Deltin.Parse.Functions
                         // ...and 'type' implements the containing class...
                         && type.Implements(option.Type())
                         // ...and 'type' does not have their own function implementation...
-                        && MethodBuilder.AutoImplemented(option.Type(), options.Select(option => option.Type()).ToArray(), type))
-                        // ...then add an additional case for 'type's class identifier.
+                        && Deltin.Deltinteger.Parse.FunctionBuilder.VirtualLookupTable.AutoImplemented(option.Type(), options.Select(option => option.Type()).ToArray(), type))
+                    // ...then add an additional case for 'type's class identifier.
                     {
                         needsResolve = true;
                         resolves.Add(currentIndex);
@@ -179,7 +179,7 @@ namespace Deltin.Parse.Functions
     interface IMacroOption
     {
         IWorkshopTree Parse(ActionSet actionSet);
-        CodeType Type(); 
+        CodeType Type();
     }
 
     class ParameterMacroOption : IMacroOption
@@ -200,7 +200,7 @@ namespace Deltin.Parse.Functions
     class MacroVarOption : IMacroOption
     {
         private readonly MacroVar _macroVar;
-        
+
         public MacroVarOption(MacroVar macroVar)
         {
             _macroVar = macroVar;

@@ -25,10 +25,12 @@ namespace Deltin.Deltinteger.Pathfinder
         protected IndexReference parentArray { get; set; }
         protected static bool assignExtended = false;
 
-        public Action<ActionSet> OnLoop { get; set; } = actionSet => {
+        public Action<ActionSet> OnLoop { get; set; } = actionSet =>
+        {
             actionSet.AddAction(A_Wait.MinimumWait);
         };
-        public Action<ActionSet> OnConnectLoop { get; set; } = actionSet => {
+        public Action<ActionSet> OnConnectLoop { get; set; } = actionSet =>
+        {
             actionSet.AddAction(A_Wait.MinimumWait);
         };
         public Func<ActionSet, Element, Element, Element> GetClosestNode { get; set; }
@@ -60,15 +62,15 @@ namespace Deltin.Deltinteger.Pathfinder
             var firstNode = GetClosestNode(actionSet, Nodes, Source);
 
             Assign();
-            
-            current                          = actionSet.VarCollection.Assign("Dijkstra: Current", actionSet.IsGlobal, assignExtended);
-            distances                        = actionSet.VarCollection.Assign("Dijkstra: Distances", actionSet.IsGlobal, false);
-            unvisited                        = actionSet.VarCollection.Assign("Dijkstra: Unvisited", actionSet.IsGlobal, false);
+
+            current = actionSet.VarCollection.Assign("Dijkstra: Current", actionSet.IsGlobal, assignExtended);
+            distances = actionSet.VarCollection.Assign("Dijkstra: Distances", actionSet.IsGlobal, false);
+            unvisited = actionSet.VarCollection.Assign("Dijkstra: Unvisited", actionSet.IsGlobal, false);
             IndexReference connectedSegments = actionSet.VarCollection.Assign("Dijkstra: Connected Segments", actionSet.IsGlobal, assignExtended);
-            IndexReference neighborIndex     = actionSet.VarCollection.Assign("Dijkstra: Neighbor Index", actionSet.IsGlobal, assignExtended);
-            IndexReference neighborDistance  = actionSet.VarCollection.Assign("Dijkstra: Distance", actionSet.IsGlobal, assignExtended);
+            IndexReference neighborIndex = actionSet.VarCollection.Assign("Dijkstra: Neighbor Index", actionSet.IsGlobal, assignExtended);
+            IndexReference neighborDistance = actionSet.VarCollection.Assign("Dijkstra: Distance", actionSet.IsGlobal, assignExtended);
             IndexReference neighborSegmentAttributes = actionSet.VarCollection.Assign("Dijkstra: Neighbor Attributes", actionSet.IsGlobal, assignExtended);
-            parentArray                      = GetParentArray();
+            parentArray = GetParentArray();
 
             // Set the current variable as the first node.
             actionSet.AddAction(current.SetVariable(firstNode));
@@ -147,7 +149,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     Element.Part<V_IsTrueForAny>(
                         neighborSegmentAttributes.Get(),
                         Element.Part<V_ArrayContains>(attributes, Element.Part<V_ZOf>(new V_ArrayElement()))
-                    ) 
+                    )
                 )
             )));
 
@@ -182,7 +184,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected abstract Element LoopCondition();
         protected abstract void GetResult();
 
-        protected virtual void EndLoop() {}
+        protected virtual void EndLoop() { }
 
         protected virtual IndexReference GetParentArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Array", actionSet.IsGlobal, false);
         protected virtual IndexReference GetParentAttributeArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Attribute Info", actionSet.IsGlobal, false);
@@ -261,7 +263,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // If any of the nodes are null, destroy them.
             if (resolveInfo.PotentiallyNullNodes)
                 array = Element.Part<V_FilteredArray>(array, new V_Compare(Nodes[new V_ArrayElement()], Operators.NotEqual, new V_Null()));
-            
+
             actionSet.AddAction(unvisited.SetVariable(array));
         }
 
@@ -364,7 +366,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         protected override Element LoopCondition() => AnyAccessableUnvisited();
     }
-    
+
     public class DijkstraMultiSource : DijkstraBase
     {
         private Element players { get; }
@@ -461,7 +463,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             Element next = parentArray.Get()[backTracker.Get()] - 1;
 
-            actionSet.AddAction(newParentArray.SetVariable(index:next, value: backTracker.Get() + 1));
+            actionSet.AddAction(newParentArray.SetVariable(index: next, value: backTracker.Get() + 1));
 
             actionSet.AddAction(backTracker.SetVariable(next));
             actionSet.AddAction(A_Wait.MinimumWait); // TODO: Should there be a minwait here?
@@ -499,7 +501,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             Destination = destination;
         }
-        
+
         protected override Element LoopCondition()
         {
             if (Destination == null)
@@ -547,7 +549,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         protected override void GetResult()
         {
-             // Save parent arrays.
+            // Save parent arrays.
             PathResolveClass.ParentArray.Set(actionSet, ClassReference.Get(), parentArray.Get());
         }
     }

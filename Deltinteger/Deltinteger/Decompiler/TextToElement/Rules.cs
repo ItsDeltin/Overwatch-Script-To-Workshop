@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Disabled = disabled;
         }
 
-        public override string ToString() => Name + " [" + Actions.Length + " actions]"; 
+        public override string ToString() => Name + " [" + Actions.Length + " actions]";
     }
 
     public class TTECondition

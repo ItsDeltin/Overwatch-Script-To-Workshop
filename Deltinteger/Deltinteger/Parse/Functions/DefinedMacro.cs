@@ -1,25 +1,23 @@
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Parse.Functions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class DefinedMacro : DefinedFunction
     {
         public IExpression Expression { get; private set; }
-        private DeltinScriptParser.ExprContext ExpressionToParse { get; }
-        private DeltinScriptParser.Define_macroContext context { get; }
+        private readonly MacroFunctionContext _context;
 
-        public DefinedMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext context, CodeType returnType)
-            : base(parseInfo, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
+        public DefinedMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, MacroFunctionContext context, CodeType returnType)
+            : base(parseInfo, context.Identifier.Text, new LanguageServer.Location(parseInfo.Script.Uri, context.Identifier.Range))
         {
-            this.context = context;
-            DocRange nameRange = DocRange.GetRange(context.name);
-            Attributes.ContainingType = (Static ? staticScope: objectScope).This;
-            
+            _context = context;
+            DocRange nameRange = context.Identifier.Range;
+            Attributes.ContainingType = (Static ? staticScope : objectScope).This;
+
             // Get the attributes.
             MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
             FunctionAttributesGetter attributeInfo = new MacroAttributesGetter(context, attributeResult);
@@ -28,13 +26,12 @@ namespace Deltin.Deltinteger.Parse
             // Copy attribute results
             Static = attributeResult.Static;
             AccessLevel = attributeResult.AccessLevel;
-            
+
             SetupScope(Static ? staticScope : objectScope);
-            ReturnType = returnType;
-            ExpressionToParse = context.expr();
+            CodeType = returnType;
             DoesReturnValue = true;
 
-            SetupParameters(context.setParameters(), false);
+            SetupParameters(context.Parameters, false);
 
             if (Attributes.Override)
             {
@@ -67,12 +64,12 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SetupParameters()
         {
-            parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+            parseInfo.Script.AddHover(_context.Identifier.Range, GetLabel(true));
         }
 
         override public void SetupBlock()
         {
-            if (ExpressionToParse != null) Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(methodScope, ExpressionToParse);
+            Expression = parseInfo.SetCallInfo(CallInfo).SetExpectingLambda(CodeType).GetExpression(methodScope, _context.Expression);
             WasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }
@@ -92,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
                 IGettable result = actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
 
                 //if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
-                    //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
+                //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
 
                 foreach (Var virtualParameterOption in VirtualVarGroup(i))
                     actionSet.IndexAssigner.Add(virtualParameterOption, result);

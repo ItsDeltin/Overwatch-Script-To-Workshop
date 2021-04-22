@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.CustomMethods
             new VariableParameter("variable", "The variable to manipulate. Player variables will chase the event player's variable. Must be a variable defined on the rule level.", VariableType.Dynamic, new VariableResolveOptions() { CanBeIndexed = false, FullVariable = true }),
             new CodeParameter("destination", "The value that the variable will eventually reach. The type of this value may be either a number or a vector, through the variable’s existing value must be of the same type before the chase begins. Can use number or vector based values."),
             new CodeParameter("rate", "The amount of change that will happen to the variable’s value each second."),
-            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<RateChaseReevaluation>())
+            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<RateChaseReevaluation>(), new ExpressionOrWorkshopValue(EnumData.GetEnumValue(RateChaseReevaluation.DestinationAndRate)))
         };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.CustomMethods
             Element destination = (Element)parameterValues[1];
             Element rate = (Element)parameterValues[2];
             IWorkshopTree reevaluation = parameterValues[3];
-            
+
             if (variable.IsGlobal)
                 actionSet.AddAction(Element.Part<A_ChaseGlobalVariableAtRate>(
                     variable,
@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.CustomMethods
             new VariableParameter("variable", "The variable to manipulate. Player variables will chase the event player's variable. Must be a variable defined on the rule level.", VariableType.Dynamic, new VariableResolveOptions() { CanBeIndexed = false, FullVariable = true }),
             new CodeParameter("destination", "The value that the variable will eventually reach. The type of this value may be either a number or a vector, through the variable’s existing value must be of the same type before the chase begins. Can use number or vector based values."),
             new CodeParameter("duration", "The amount of time, in seconds, over which the variable's value will approach the destination."),
-            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<TimeChaseReevaluation>())
+            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<TimeChaseReevaluation>(), new ExpressionOrWorkshopValue(EnumData.GetEnumValue(TimeChaseReevaluation.DestinationAndDuration)))
         };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.CustomMethods
             Element destination = (Element)parameterValues[1];
             Element duration = (Element)parameterValues[2];
             IWorkshopTree reevaluation = parameterValues[3];
-            
+
             if (variable.IsGlobal)
                 actionSet.AddAction(Element.Part<A_ChaseGlobalVariableOverTime>(
                     variable,

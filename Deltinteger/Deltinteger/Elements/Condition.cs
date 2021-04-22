@@ -27,9 +27,9 @@ namespace Deltin.Deltinteger.Elements
             Value2 = value2;
         }
 
-        public Condition(Element value1, Elements.Operators compareOperator, Element value2) : this(value1, EnumData.GetEnumValue(compareOperator), value2) {}
-        public Condition(V_Compare condition) : this((Element)condition.ParameterValues[0], (EnumMember)condition.ParameterValues[1], (Element)condition.ParameterValues[2]) {}
-        public Condition(Element condition) : this(condition, Operators.Equal, new V_True()) {}
+        public Condition(Element value1, Elements.Operators compareOperator, Element value2) : this(value1, EnumData.GetEnumValue(compareOperator), value2) { }
+        public Condition(V_Compare condition) : this((Element)condition.ParameterValues[0], (EnumMember)condition.ParameterValues[1], (Element)condition.ParameterValues[2]) { }
+        public Condition(Element condition) : this(condition, Operators.Equal, new V_True()) { }
 
         public string ToWorkshop(OutputLanguage language, bool optimize)
         {
@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Elements
                 a = a.Optimize();
                 b = b.Optimize();
             }
-            
+
             return a.ToWorkshop(language, ToWorkshopContext.ConditionValue) + " " + CompareOperator.ToWorkshop(language, ToWorkshopContext.Other) + " " + b.ToWorkshop(language, ToWorkshopContext.ConditionValue);
         }
 

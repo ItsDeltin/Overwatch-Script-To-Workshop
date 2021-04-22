@@ -10,7 +10,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 namespace Deltin.Deltinteger.Elements
 {
     [AttributeUsage(AttributeTargets.Enum)]
-    public class WorkshopEnum : Attribute {}
+    public class WorkshopEnum : Attribute { }
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Enum)]
     public class EnumOverride : Attribute
@@ -60,12 +60,14 @@ namespace Deltin.Deltinteger.Elements
         {
             // This converts enums with special properties to an Element.
 
-            switch(enumMember.Enum.CodeName)
+            switch (enumMember.Enum.CodeName)
             {
-                case "Hero": return Element.Part<V_HeroVar>(enumMember);
+                case "Hero": return Element.Part<V_HeroValue>(enumMember);
                 case "Team": return Element.Part<V_TeamVar>(enumMember);
                 case "Map": return Element.Part<V_MapVar>(enumMember);
                 case "GameMode": return Element.Part<V_GameModeVar>(enumMember);
+                case "Color": return Element.Part<V_ColorValue>(enumMember);
+                case "Button": return Element.Part<V_ButtonValue>(enumMember);
                 default: return null;
             }
         }
@@ -90,7 +92,7 @@ namespace Deltin.Deltinteger.Elements
             for (int v = 0; v < Members.Length; v++)
             {
                 EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
-                string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
+                string fieldCodeName = fieldData?.CodeName ?? fields[v].Name;
                 string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name.Replace('_', ' '), false);
                 bool isHidden = fields[v].GetCustomAttribute<HideElement>() != null;
 
@@ -100,7 +102,7 @@ namespace Deltin.Deltinteger.Elements
 
         public bool ConvertableToElement()
         {
-            return new string[] { "Hero", "Team", "Map", "GameMode" }.Contains(CodeName);
+            return new string[] { "Hero", "Team", "Map", "GameMode", "Color", "Button" }.Contains(CodeName);
         }
 
         public bool IsEnumMember(string codeName)
@@ -119,6 +121,7 @@ namespace Deltin.Deltinteger.Elements
         public EnumData @Enum { get; }
         public string CodeName { get; }
         public string WorkshopName { get; }
+        public string DecompileName { get; }
         public object UnderlyingValue { get; }
         public object Value { get; }
         public bool IsHidden { get; }
@@ -128,6 +131,7 @@ namespace Deltin.Deltinteger.Elements
             @Enum = @enum;
             CodeName = codeName;
             WorkshopName = workshopName;
+            DecompileName = WorkshopName.Replace("(", "").Replace(")", "");
             UnderlyingValue = System.Convert.ChangeType(value, @Enum.UnderlyingType);
             Value = value;
             IsHidden = isHidden;
@@ -143,7 +147,7 @@ namespace Deltin.Deltinteger.Elements
             if (@Enum.Type == typeof(PlayerSelector) && WorkshopName.StartsWith("Slot")) return numTranslate("Slot");
             if (@Enum.Type == typeof(Button) && WorkshopName.StartsWith("Ability")) return numTranslate("Ability");
             if ((@Enum.Type == typeof(Team) || @Enum.Type == typeof(Color)) && WorkshopName.StartsWith("Team")) return numTranslate("Team");
-            
+
             return LanguageInfo.Translate(language, WorkshopName).RemoveStructuralChars();
         }
 
@@ -361,6 +365,8 @@ namespace Deltin.Deltinteger.Elements
     {
         [EnumOverride(null, "Cancel Contrary Motion")]
         Cancel,
+        [EnumOverride(null, "Cancel Contrary Motion XYZ")]
+        CancelXYZ,
         [EnumOverride(null, "Incorporate Contrary Motion")]
         Incorporate
     }
@@ -450,16 +456,25 @@ namespace Deltin.Deltinteger.Elements
         Orange,
         SkyBlue,
         Turquoise,
-        LimeGreen
+        LimeGreen,
+        Black,
+        Gray,
+        Rose,
+        Violet
     }
 
     [WorkshopEnum]
     public enum EffectRev
     {
+        [EnumOverride(null, "Visible To Position Radius and Color")]
+        VisibleToPositionRadiusAndColor,
         [EnumOverride(null, "Visible To Position and Radius")]
         VisibleToPositionAndRadius,
+        PositionRadiusAndColor,
         PositionAndRadius,
+        VisibleToAndColor,
         VisibleTo,
+        Color,
         None
     }
 
@@ -507,6 +522,10 @@ namespace Deltin.Deltinteger.Elements
         NeedHelp,
         Sorry,
         Countdown,
+        SprayUp,
+        SprayLeft,
+        SprayRight,
+        SprayDown
     }
 
     [WorkshopEnum]
@@ -519,32 +538,24 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum ObjectiveRev
-    {
-        [EnumOverride(null, "Visible To and String")]
-        VisibleToAndString,
-        String,
-        [EnumOverride(null, "Visible To Sort Order and String")]
-        VisibleToSortOrderAndString,
-        SortOrderAndString,
-        VisibleToAndSortOrder,
-        VisibleTo,
-        SortOrder,
-        None
-    }
-
-    [WorkshopEnum]
     public enum HudTextRev
     {
         [EnumOverride(null, "Visible To and String")]
         VisibleToAndString,
         String,
+        StringAndColor,
+        [EnumOverride(null, "Visible To Sort Order String and Color")]
+        VisibleToSortOrderStringAndColor,
         [EnumOverride(null, "Visible To Sort Order and String")]
         VisibleToSortOrderAndString,
+        [EnumOverride(null, "Visible To String and Color")]
+        VisibleToStringAndColor,
         SortOrderAndString,
         VisibleToAndSortOrder,
+        VisibleToAndColor,
         VisibleTo,
         SortOrder,
+        SortOrderAndColor,
         None
     }
 
@@ -597,9 +608,13 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum IconRev
     {
+        [EnumOverride(null, "Visible To, Position, and Color")]
+        VisibleToPositionAndColor,
         VisibleToAndPosition,
         Position,
+        PositionAndColor,
         VisibleTo,
+        VisibleToAndColor,
         None
     }
 
@@ -711,10 +726,19 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum InworldTextRev
     {
+        [EnumOverride(null, "Visible To, Position, String, and Color")]
+        VisibleToPositionStringAndColor,
+        [EnumOverride(null, "Visible To, String, and Color")]
+        VisibleToStringAndColor,
+        [EnumOverride(null, "Visible To, Position, and Color")]
+        VisibleToPositionAndColor,
         [EnumOverride(null, "Visible To Position and String")]
         VisibleToPositionAndString,
         [EnumOverride(null, "Visible To and String")]
         VisibleToAndString,
+        [EnumOverride(null, "Visible To and Color")]
+        VisibleToAndColor,
+        Color,
         String,
         VisibleToAndPosition,
         VisibleTo,
@@ -871,5 +895,96 @@ namespace Deltin.Deltinteger.Elements
         Health,
         Armor,
         Shields
+    }
+
+    [WorkshopEnum]
+    enum OutlineType
+    {
+        Default,
+        Occluded,
+        Always
+    }
+
+    [WorkshopEnum]
+    public enum Assist
+    {
+        AssistersAndTargets,
+        None
+    }
+
+    [WorkshopEnum]
+    public enum ProgressBarEvaluation
+    {
+        VisibleToValuesAndColor,
+        VisibleToAndValues,
+        VisibleToAndColor,
+        VisibleTo,
+        ValuesAndColor,
+        Values,
+        Color,
+        None,
+    }
+
+    [WorkshopEnum]
+    public enum PlayerStat
+    {
+        AllDamageDealt,
+        BarrierDamageDealt,
+        DamageBlocked,
+        DamageTaken,
+        Deaths,
+        DefensiveAssists,
+        Eliminations,
+        FinalBlows,
+        EnvironmentalDeaths,
+        EnvironmentalKills,
+        HeroDamageDealt,
+        HealingDealt,
+        MultikillBest,
+        Multikills,
+        ObjectiveKills,
+        OffensiveAssists,
+        SoloKills,
+        UltimatesEarned,
+        UltimatesUsed,
+        WeaponAccuracy
+    }
+
+    [WorkshopEnum]
+    public enum PlayerHeroStat
+    {
+        AllDamageDealt,
+        BarrierDamageDealt,
+        CriticalHitAccuracy,
+        CriticalHits,
+        DamageBlocked,
+        DamageTaken,
+        Deaths,
+        DefensiveAssists,
+        Eliminations,
+        EnvironmentalDeaths,
+        EnvironmentalKills,
+        FinalBlows,
+        HealingDealt,
+        HealingReceived,
+        HeroDamageDealt,
+        MultikillBest,
+        Multikills,
+        ObjectiveKills,
+        OffensiveAssists,
+        ScopedAccuracy,
+        ScopedCriticalHitAccuracy,
+        ScopedCriticalHitKills,
+        ScopedCriticalHits,
+        ScopedHits,
+        ScopedShots,
+        SelfHealing,
+        ShotsFired,
+        ShotsHit,
+        ShotsMissed,
+        SoloKills,
+        UltimatesEarned,
+        UltimatesUsed,
+        WeaponAccuracy
     }
 }

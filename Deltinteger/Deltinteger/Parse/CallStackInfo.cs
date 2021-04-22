@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 using RuleEvent = Deltin.Deltinteger.Elements.RuleEvent;
 
 namespace Deltin.Deltinteger.Parse

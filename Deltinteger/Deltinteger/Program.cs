@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v1.7";
+        public const string VERSION = "v2.0";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -36,10 +36,14 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
-            if (args.ElementAtOrDefault(0) == "--ping") {
+            if (args.ElementAtOrDefault(0) == "--ping")
+            {
                 Console.Write("Hello!");
                 return;
             }
+
+            if (args.Contains("--waitfordebugger") && !WaitForDebugger())
+                return;
 
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
@@ -53,7 +57,7 @@ namespace Deltin.Deltinteger
                 Log.LogLevel = LogLevel.Verbose;
             if (args.Contains("-quiet"))
                 Log.LogLevel = LogLevel.Quiet;
-            
+
             foreach (var runner in ArgRunners)
             {
                 runner.Args = args;
@@ -62,15 +66,24 @@ namespace Deltin.Deltinteger
             }
         }
 
-        static void WaitForDebugger()
+        static bool WaitForDebugger()
         {
-            while (!System.Diagnostics.Debugger.IsAttached) Thread.Sleep(100);
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+
+            while (!System.Diagnostics.Debugger.IsAttached)
+            {
+                Thread.Sleep(100);
+
+                if (stopwatch.ElapsedMilliseconds > 30000)
+                    return false;
+            }
+            return true;
         }
 
         public static void Script(string parseFile)
         {
             string text = File.ReadAllText(parseFile);
-
             Diagnostics diagnostics = new Diagnostics();
             ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
             DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root));
@@ -99,7 +112,8 @@ namespace Deltin.Deltinteger
         protected int CurrentArg { get; private set; }
         public abstract bool Run();
         protected bool IsArg(string arg) => Args.ElementAtOrDefault(CurrentArg) == arg;
-        protected void NextArg() {
+        protected void NextArg()
+        {
             CurrentArg++;
         }
         protected string GetCurrentArg() => Args.ElementAtOrDefault(CurrentArg);
@@ -109,7 +123,8 @@ namespace Deltin.Deltinteger
     {
         public override bool Run()
         {
-            if (IsArg("--ping")) {
+            if (IsArg("--ping"))
+            {
                 Console.Write("Hello!");
                 return true;
             }
@@ -136,8 +151,8 @@ namespace Deltin.Deltinteger
         {
             if (IsArg("--schema"))
             {
-               Deltin.Deltinteger.Lobby.Ruleset.GenerateSchema();
-               return true;
+                Deltin.Deltinteger.Lobby.Ruleset.GenerateSchema();
+                return true;
             }
             return false;
         }
@@ -172,7 +187,8 @@ namespace Deltin.Deltinteger
             try
             {
                 // Parse the workshop code.
-                var workshop = new ConvertTextToElement(Clipboard.GetText()).Get();
+                var tte = new ConvertTextToElement(Clipboard.GetText());
+                var workshop = tte.Get();
 
                 // Decompile the parsed workshop code.
                 var workshopToCode = new WorkshopDecompiler(workshop, new FileLobbySettingsResolver(file, workshop.LobbySettings), new CodeFormattingOptions());
@@ -182,8 +198,12 @@ namespace Deltin.Deltinteger
                 using (var writer = File.CreateText(file))
                     // Write the code to the file.
                     writer.Write(result);
-                
+
                 Console.Write("Success");
+
+                // Warning if the end of the file was not reached.
+                if (!tte.ReachedEnd)
+                    Console.Write("End of file not reached, stuck at: '" + tte.LocalStream.Substring(0, Math.Min(tte.LocalStream.Length, 50)) + "'");
             }
             catch (Exception ex)
             {
@@ -205,21 +225,21 @@ namespace Deltin.Deltinteger
 
             if (script != null && File.Exists(script))
             {
-                #if DEBUG == false
+#if DEBUG == false
                 try
                 {
-                #endif
+#endif
 
                 RunFile(script);
-                
-                #if DEBUG == false
+
+#if DEBUG == false
                 }
                 catch (Exception ex)
                 {
-                    Log.Write(LogLevel.Normal, "Internal exception.");
-                    Log.Write(LogLevel.Normal, ex.ToString());
+                    Program.Log.Write(LogLevel.Normal, "Internal exception.");
+                    Program.Log.Write(LogLevel.Normal, ex.ToString());
                 }
-                #endif
+#endif
                 return true;
             }
             return false;

@@ -29,12 +29,13 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = true;
-            _varInfo.OperationalScope = _operationalScope; // Set the operational scope.
             _varInfo.AccessLevel = AccessLevel.Public; // Set the access level.
             _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock; // Get the inital value after elements have been resolved.
             _varInfo.CodeLensType = CodeLensSourceType.RuleVariable; // Set the code lens type.
             _varInfo.HandleRestrictedCalls = true; // Handle restricted calls.
         }
+
+        protected override Scope OperationalScope() => _operationalScope;
     }
 
     class ScopedVariable : VarBuilder
@@ -59,12 +60,14 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = false;
-            _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
+            _varInfo.RequiresCapture = true;
 
             if (_varInfo.IsWorkshopReference && _varInfo.InitialValueContext == null)
                 _diagnostics.Error("Variables with the 'ref' attribute must have an initial value.", _nameRange);
         }
+
+        protected override Scope OperationalScope() => _operationalScope;
     }
 
     class ClassVariable : VarBuilder
@@ -93,10 +96,11 @@ namespace Deltin.Deltinteger.Parse
                 _diagnostics.Error("Non-static variables with workshop constant types are not allowed.", _typeRange);
 
             _varInfo.WholeContext = true;
-            _varInfo.OperationalScope = _varInfo.Static ? _staticScope : _objectScope;
             _varInfo.CodeLensType = CodeLensSourceType.ClassVariable;
             _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock;
         }
+
+        protected override Scope OperationalScope() => _varInfo.Static ? _staticScope : _objectScope;
     }
 
     class ParameterVariable : VarBuilder
@@ -123,10 +127,10 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = true; // Shouldn't matter.
-            _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
             _varInfo.TokenType = TokenType.Parameter;
             _varInfo.BridgeInvocable = _bridgeInvocable;
+            _varInfo.RequiresCapture = true;
         }
 
         protected override void TypeCheck()
@@ -138,6 +142,8 @@ namespace Deltin.Deltinteger.Parse
             if (refAttribute != null && _varInfo.Type != null && _varInfo.Type.IsConstant())
                 _diagnostics.Warning("Constant workshop types have the 'ref' attribute by default.", refAttribute.Range);
         }
+
+        protected override Scope OperationalScope() => _operationalScope;
     }
 
     class SubroutineParameterVariable : ParameterVariable
@@ -156,11 +162,37 @@ namespace Deltin.Deltinteger.Parse
         {
             var context = _contextHandler.GetCodeType();
             CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, context);
-            
+
             if (type != null && type.IsConstant())
-                _diagnostics.Error($"Constant types cannot be used in subroutine parameters.", DocRange.GetRange(context));
-            
+                _diagnostics.Error($"Constant types cannot be used in subroutine parameters.", context.Range);
+
             _varInfo.Type = type;
+        }
+    }
+
+    class LambdaVariable : ParameterVariable
+    {
+        private readonly int _parameter;
+        private readonly Lambda.PortableLambdaType _contextualLambdaType;
+
+        public LambdaVariable(int parameter, Lambda.PortableLambdaType contextualLambdaType, Scope operationalScope, IVarContextHandler contextHandler, Lambda.IBridgeInvocable invocable)
+            : base(operationalScope, contextHandler, invocable)
+        {
+            _parameter = parameter;
+            _contextualLambdaType = contextualLambdaType;
+        }
+
+        protected override void GetCodeType()
+        {
+            // If the lambda type derived from the current context is null,
+            // or the parameter types of the contextual lambda type is unknown,
+            // or the contextual lambda type does not have a type for our parameter index,
+            if (_contextualLambdaType == null || !_contextualLambdaType.ParameterTypesKnown || _parameter >= _contextualLambdaType.Parameters.Length)
+                // then use the default GetCodeType implementation.
+                base.GetCodeType();
+            // Otherwise, we can supply the parameter code type from the contextual lambda type.
+            else
+                ApplyCodeType(_contextualLambdaType.Parameters[_parameter]);
         }
     }
 
@@ -190,41 +222,14 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = false;
             _varInfo.IsWorkshopReference = true;
-            _varInfo.OperationalScope = _operationalScope;
+            _varInfo.RequiresCapture = true;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
 
             _varInfo.TokenType = TokenType.Variable;
             _varInfo.TokenModifiers.Add(TokenModifier.Declaration);
             _varInfo.TokenModifiers.Add(TokenModifier.Readonly);
         }
-    }
 
-    class AutoForVariable : VarBuilder
-    {
-        private readonly Scope _operationalScope;
-
-        public AutoForVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
-        {
-            _operationalScope = operationalScope;
-        }
-
-        protected override void CheckAttributes()
-        {
-            RejectAttributes(
-                AttributeType.Public, AttributeType.Protected, AttributeType.Private,
-                AttributeType.Static,
-                AttributeType.Globalvar, AttributeType.Playervar,
-                AttributeType.ID,
-                AttributeType.Ext,
-                AttributeType.Ref
-            );
-        }
-
-        protected override void Apply()
-        {
-            _varInfo.WholeContext = false;
-            _varInfo.OperationalScope = _operationalScope;
-            _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
-        }
+        protected override Scope OperationalScope() => _operationalScope;
     }
 }

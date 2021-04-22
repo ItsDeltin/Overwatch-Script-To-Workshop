@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -14,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public ImportedFile(Uri uri)
         {
             Uri = uri;
-            
+
             using (FileStream stream = GetStream())
             {
                 // Get the file hash and content.
@@ -25,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private FileStream GetStream() => new FileStream(Uri.FilePath(), FileMode.Open, FileAccess.Read);
+        private FileStream GetStream() => new FileStream(Uri.LocalPath, FileMode.Open, FileAccess.Read);
 
         private byte[] GetFileHash(FileStream stream)
         {
@@ -44,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
             using (FileStream stream = GetStream())
             {
                 byte[] newHash = GetFileHash(stream);
-            
+
                 if (!Hash.SequenceEqual(newHash))
                 {
                     Hash = newHash;
@@ -58,18 +59,23 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        protected virtual void OnUpdate() {}
+        protected virtual void OnUpdate() { }
     }
 
     public class ImportedScript : ImportedFile
     {
-        public ScriptParseInfo ScriptParseInfo { get; } = new ScriptParseInfo();
+        public Document Document { get; }
 
-        public ImportedScript(Uri uri) : base(uri) {}
+        public ImportedScript(Uri uri) : base(uri)
+        {
+            Document = new Document(uri, Content);
+            Document.Update(Content);
+        }
 
         protected override void OnUpdate()
         {
-            ScriptParseInfo.Update(Content);
+            if (Document != null)
+                Document.Update(Content);
         }
     }
 }

@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Elements;
-using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
+using Deltin.Deltinteger.Compiler;
 
 using PublishDiagnosticsParams = OmniSharp.Extensions.LanguageServer.Protocol.Models.PublishDiagnosticsParams;
 // TODO: Maybe switch from using `Deltin.LanguageServer.Diagnostic` to using `OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic`
@@ -17,8 +15,8 @@ namespace Deltin.Deltinteger.Parse
 {
     public class Diagnostics
     {
-        public static readonly ConsoleColor[] SeverityColors = new ConsoleColor[] 
-        { 
+        public static readonly ConsoleColor[] SeverityColors = new ConsoleColor[]
+        {
             ConsoleColor.Red,
             ConsoleColor.Yellow,
             ConsoleColor.DarkGreen,
@@ -27,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly List<FileDiagnostics> diagnosticFiles = new List<FileDiagnostics>();
 
-        public Diagnostics() {}
+        public Diagnostics() { }
 
         public bool ContainsErrors()
         {
@@ -37,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
         public FileDiagnostics FromUri(Uri uri)
         {
             ThrowIfFileIsAlreadyAdded(uri);
-            
+
             FileDiagnostics fileDiagnostics = new FileDiagnostics(uri);
             diagnosticFiles.Add(fileDiagnostics);
             return fileDiagnostics;
@@ -83,16 +81,16 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (var file in diagnosticFiles)
                 file.OutputDiagnostics(builder);
-            
+
             return builder.ToString();
         }
     }
 
     public class FileDiagnostics
     {
-        public Uri Uri { get;}
+        public Uri Uri { get; }
         private List<Diagnostic> _diagnostics { get; } = new List<Diagnostic>();
-        public Diagnostic[] Diagnostics { get { return _diagnostics.ToArray(); }}
+        public Diagnostic[] Diagnostics { get { return _diagnostics.ToArray(); } }
 
         public FileDiagnostics(Uri uri)
         {
@@ -128,7 +126,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _diagnostics.AddRange(diagnostics);
         }
-    
+
         public PublishDiagnosticsParams GetDiagnostics()
         {
             LSDiagnostic[] lsDiagnostics = new LSDiagnostic[_diagnostics.Count];
@@ -136,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
                 lsDiagnostics[i] = new LSDiagnostic()
                 {
                     Message = _diagnostics[i].message,
-                    Range = _diagnostics[i].range?.ToLsRange(),
+                    Range = _diagnostics[i].range ?? null,
                     Severity = (DiagnosticSeverity)_diagnostics[i].severity,
                     Source = _diagnostics[i].source
                     // TODO: Fix this if RelatedInformation is ever used.
@@ -144,31 +142,19 @@ namespace Deltin.Deltinteger.Parse
                     // TODO: Fix this if Code is ever used.
                     // Code = (DiagnosticCode)_diagnostics[i].code,
                 };
-            
+
             return new PublishDiagnosticsParams()
             {
                 Uri = Uri,
                 Diagnostics = lsDiagnostics
             };
         }
-    
+
         public void OutputDiagnostics(StringBuilder builder)
         {
             var sorted = Diagnostics.OrderBy(d => d.severity);
             foreach (var diagnostic in sorted)
                 builder.AppendLine(diagnostic.Info(Uri.AbsolutePath));
-        }
-    }
-
-    public class ErrorListener : BaseErrorListener
-    {
-        public List<Diagnostic> Diagnostics { get; } = new List<Diagnostic>();
-
-        public ErrorListener() {}
-
-        public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
-        {
-            Diagnostics.Add(new Diagnostic(msg, DocRange.GetRange(offendingSymbol), Diagnostic.Error));
         }
     }
 }
