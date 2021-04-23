@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // public IWorkshopTree Parse(ActionSet actionSet) => new StructAssigner(Type, null, false).GetResult(new GettableAssignerValueInfo(actionSet) { Inline = true }).Gettable.GetVariable();
-        public IWorkshopTree Parse(ActionSet actionSet) => new StructAssigner(Type, null, false).GetValues(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet) => new StructAssigner(Type, new StructAssigningAttributes(), false).GetValues(actionSet);
 
         CodeType IExpression.Type() => Type;
     }

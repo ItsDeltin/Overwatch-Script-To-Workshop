@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             functionBuilder.SetupReturnHandler();
             parameterHandler.AddParametersToAssigner(actionSet.IndexAssigner);
             functionBuilder.Controller.Build(functionBuilder.ActionSet); 
-            functionBuilder.ReturnHandler.ApplyReturnSkips();
+            functionBuilder.ReturnHandler?.ApplyReturnSkips();
 
             // Pop object array if recursive.
             if (controller.Attributes.IsRecursive && controller.Attributes.IsInstance)

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Parse.Functions.Builder.User;
 
@@ -10,38 +11,31 @@ namespace Deltin.Deltinteger.Parse.Lambda
     // TODO: Either switch this to IWorkshopComponent or split it into 2.
     class LambdaGroup : IComponent, IWorkshopFunctionController
     {
-        readonly List<LambdaAction> _lambdas = new List<LambdaAction>();
-        readonly Dictionary<object, int> _identifiers = new Dictionary<object, int>();
         DeltinScript _deltinScript;
-        int _parameterCount;
-        int _functionIdentifier = 0;
-        RecycleWorkshopVariableAssigner _recycler;
+        RecycleWorkshopVariableAssigner _parameterRecycler;
+        RecycleWorkshopVariableAssigner _returnRecycler;
 
         public void Init(DeltinScript deltinScript)
         {
             _deltinScript = deltinScript;
-            _recycler = new RecycleWorkshopVariableAssigner(_deltinScript.VarCollection);
+            _parameterRecycler = new RecycleWorkshopVariableAssigner(_deltinScript.VarCollection);
+            _returnRecycler = new RecycleWorkshopVariableAssigner(_deltinScript.VarCollection);
         }
 
-        public int Add(LambdaAction lambda)
+        public IWorkshopTree Call(ActionSet actionSet, ICallInfo call, CodeType expectedType)
         {
-            if (_identifiers.TryGetValue(lambda, out int existingIdentifier))
-                return existingIdentifier;
+            WorkshopFunctionBuilder.Call(actionSet, call, this);
 
-            _functionIdentifier++;
-            _identifiers.Add(lambda, _functionIdentifier);
+            if (expectedType == null)
+                return null;
 
-            // Update the parameter count.
-            _parameterCount = Math.Max(_parameterCount, lambda.Parameters.Length);
-
-            // Add the function handler.
-            _lambdas.Add(lambda);
-            return _functionIdentifier;
-        }
-
-        public IWorkshopTree Call(ActionSet actionSet, ICallInfo call)
-        {
-            return WorkshopFunctionBuilder.Call(actionSet, call, this);
+            _returnRecycler.Reset();
+            return expectedType.GetGettableAssigner(new AssigningAttributes("todo:name", true, false))
+                .GetValue(new GettableAssignerValueInfo(actionSet) {
+                    IndexReferenceCreator = _returnRecycler,
+                    SetInitialValue = false
+                })
+                .GetVariable();
         }
 
         WorkshopFunctionControllerAttributes IWorkshopFunctionController.Attributes { get; } = new WorkshopFunctionControllerAttributes() {
@@ -50,7 +44,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             RecursiveRequiresObjectStack = true
         };
 
-        ReturnHandler IWorkshopFunctionController.GetReturnHandler(ActionSet actionSet) => new ReturnHandler(actionSet, "func group", null, false);
+        ReturnHandler IWorkshopFunctionController.GetReturnHandler(ActionSet actionSet) => null;
         SubroutineCatalogItem IWorkshopFunctionController.GetSubroutine() => _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(this, () =>
             new SubroutineBuilder(_deltinScript, new SubroutineContext() {
                 Controller = this,
@@ -62,16 +56,30 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         void IWorkshopFunctionController.Build(ActionSet actionSet)
         {
+            var returnHandlers = new List<ReturnHandler>();
+
             // Create the switch that chooses the lambda.
             SwitchBuilder lambdaSwitch = new SwitchBuilder(actionSet);
 
-            foreach (var option in _lambdas)
+            foreach (var option in actionSet.ToWorkshop.PortableAssigner.AssignedPortableFunctions)
             {
+                // Create the return handler for the option.
+                ReturnHandler returnHandler = new ReturnHandler(
+                    actionSet,
+                    option.ReturnType.GetGettableAssigner(new AssigningAttributes("lambdaReturnValue", true, false))
+                        // Get the IGettable
+                        .GetValue(new GettableAssignerValueInfo(actionSet) {
+                            SetInitialValue = false,
+                            IndexReferenceCreator = _returnRecycler
+                        }),
+                    true);
+                returnHandlers.Add(returnHandler);
+
                 // The action set for the overload.
                 ActionSet optionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
 
                 // Go to next case
-                lambdaSwitch.NextCase(Element.Num(_identifiers[option]));
+                lambdaSwitch.NextCase(Element.Num(option.Identifier));
 
                 // Add the object variables of the selected method.
                 var callerObject = ((Element)optionSet.CurrentObject)[1];
@@ -80,7 +88,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 option.This?.AddObjectVariablesToAssigner(optionSet.ToWorkshop, callerObject, optionSet.IndexAssigner);
 
                 // then parse the block.
-                option.Statement.Translate(optionSet.SetThis(callerObject).New(actionSet.CurrentObject));
+                option.Translate(actionSet, returnHandler);
+                // option.Statement.Translate(optionSet.SetThis(callerObject).New(actionSet.CurrentObject));
                 // Create a new contained action set.
                 //     actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
 
@@ -101,17 +110,19 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // Finish the switch.
             lambdaSwitch.Finish(((Element)actionSet.CurrentObject)[0]);
+
+            foreach (var returnHandler in returnHandlers)
+                returnHandler.ApplyReturnSkips();
         }
 
-        public IParameterHandler CreateParameterHandler(ActionSet actionSet) => new LambdaParameterHandler(_deltinScript.VarCollection, _recycler, _lambdas.ToArray());
+        public IParameterHandler CreateParameterHandler(ActionSet actionSet) => new LambdaParameterHandler(_deltinScript.VarCollection, _parameterRecycler, actionSet.ToWorkshop.PortableAssigner.AssignedPortableFunctions);
 
         class LambdaParameterHandler : IParameterHandler
         {
             readonly RecycleWorkshopVariableAssigner _recycler;
-            readonly LambdaAction[] _lambdas;
-            readonly List<AssignedParameter> _assignedParameters = new List<AssignedParameter>();
+            readonly IAssignedPortableFunction[] _lambdas;
 
-            public LambdaParameterHandler(VarCollection varCollection, RecycleWorkshopVariableAssigner recycler, LambdaAction[] lambdas)
+            public LambdaParameterHandler(VarCollection varCollection, RecycleWorkshopVariableAssigner recycler, IAssignedPortableFunction[] lambdas)
             {
                 _recycler = recycler;
                 _lambdas = lambdas;
@@ -119,41 +130,15 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 // Loop through each lambda.
                 foreach (var lambda in lambdas)
                 {
-                    // Assign the variables.
-                    foreach (var parameter in lambda.Parameters)
-                    {
-                        // Assign the parameter.
-                        var gettable = parameter.CodeType
-                            .GetGettableAssigner(parameter)
-                            .GetValue(new GettableAssignerValueInfo(varCollection) {
-                                IndexReferenceCreator = recycler,
-                                SetInitialValue = false
-                            });
-
-                        _assignedParameters.Add(new AssignedParameter(parameter, gettable));
-                    }
-
-                    // Reset.
+                    lambda.AssignParameters(_recycler);
                     _recycler.Reset();
                 }
             }
 
             public void AddParametersToAssigner(VarIndexAssigner assigner)
             {
-                foreach (var assignedParameter in _assignedParameters)
-                    assigner.Add(assignedParameter.Variable, assignedParameter.Gettable);
-            }
-
-            struct AssignedParameter
-            {
-                public IVariable Variable;
-                public IGettable Gettable;
-
-                public AssignedParameter(IVariable variable, IGettable gettable)
-                {
-                    Variable = variable;
-                    Gettable = gettable;
-                }
+                foreach (var lambda in _lambdas)
+                    lambda.AddToAssigner(assigner);
             }
 
             public void Set(ActionSet actionSet, IWorkshopTree[] parameterValues)
@@ -191,6 +176,18 @@ namespace Deltin.Deltinteger.Parse.Lambda
             {
                 throw new NotImplementedException();
             }
+        }
+    }
+
+    public struct AssignedPortableParameter
+    {
+        public IVariable Variable;
+        public IGettable Gettable;
+
+        public AssignedPortableParameter(IVariable variable, IGettable gettable)
+        {
+            Variable = variable;
+            Gettable = gettable;
         }
     }
 }

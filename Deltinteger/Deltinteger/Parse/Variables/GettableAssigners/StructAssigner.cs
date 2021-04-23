@@ -7,14 +7,14 @@ namespace Deltin.Deltinteger.Parse
 {
     public class StructAssigner : IGettableAssigner
     {
-        private readonly IVariableInstance[] _variables;
-        private readonly Var _var;
-        private readonly bool _isArray;
+        readonly IVariableInstance[] _variables;
+        readonly StructAssigningAttributes _attributes;
+        readonly bool _isArray;
 
-        public StructAssigner(StructInstance structInstance, Var var, bool isArray)
+        public StructAssigner(StructInstance structInstance, StructAssigningAttributes attributes, bool isArray)
         {
             _variables = structInstance.Variables;
-            _var = var;
+            _attributes = attributes;
             _isArray = isArray;
         }
 
@@ -27,11 +27,11 @@ namespace Deltin.Deltinteger.Parse
             if (info.InitialValueOverride != null)
                 initialValue = ValueInArrayToWorkshop.ExtractStructValue(info.InitialValueOverride);
             // Otherwise, use the default initial value if it exists.
-            else if (_var?.InitialValue != null)
-                initialValue = ValueInArrayToWorkshop.ExtractStructValue(_var.InitialValue.Parse(info.ActionSet));
+            else if (_attributes.DefaultValue != null)
+                initialValue = ValueInArrayToWorkshop.ExtractStructValue(_attributes.DefaultValue.Parse(info.ActionSet));
             // 'initialValue' may still be null.
 
-            bool inline = info.Inline || (_var != null && _var.StoreType == StoreType.None);
+            bool inline = info.Inline || _attributes.StoreType == StoreType.None;
 
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
@@ -46,9 +46,7 @@ namespace Deltin.Deltinteger.Parse
                             initialValue: initialValue?.GetValue(var.Name),
                             inline: inline,
                             indexReferenceCreator: info.IndexReferenceCreator,
-                            isGlobal: info.IsGlobal
-                            ) {
-                }));
+                            isGlobal: info.IsGlobal)));
             
             return new GettableAssignerResult(new StructAssignerValue(values), null);
         }
@@ -85,6 +83,18 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < _variables.Length; i++)
                 delta += _variables[i].GetAssigner(null).StackDelta();
             return delta;
+        }
+    }
+
+    public struct StructAssigningAttributes
+    {
+        public StoreType StoreType;
+        public IExpression DefaultValue;
+
+        public StructAssigningAttributes(AssigningAttributes attributes)
+        {
+            StoreType = attributes.StoreType;
+            DefaultValue = attributes.DefaultValue;
         }
     }
 

@@ -44,7 +44,6 @@ namespace Deltin.Deltinteger.Parse
         public bool IsStatement() => true;
         public Scope ReturningScope() => null;
         public CodeType Type() => CodeType;
-        public CompletionItem GetCompletion() => throw new NotImplementedException();
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
         public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
         public IVariableInstance GetDefaultInstance() => this;

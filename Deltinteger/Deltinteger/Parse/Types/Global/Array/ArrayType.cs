@@ -227,13 +227,13 @@ namespace Deltin.Deltinteger.Parse
             Scope.AddNativeMethod(new FuncMethod(builder));
         }
 
-        public override IGettableAssigner GetGettableAssigner(IVariable variable)
+        public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
         {
-            var overrideAssigner = ArrayOfType.ArrayHandler.GetArrayAssigner(variable);
+            var overrideAssigner = ArrayOfType.ArrayHandler.GetArrayAssigner(attributes);
             if (overrideAssigner != null)
                 return overrideAssigner;
 
-            return new DataTypeAssigner((Var)variable);
+            return new DataTypeAssigner(attributes);
         }
 
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)

@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
             // Get each potential variable type for T
             if (anonymousTypes.Length == 0)
                 // Use the default stackDelta.
-                stackDelta = originalType.GetGettableAssigner(objectVariable).StackDelta();
+                stackDelta = originalType.GetGettableAssigner(AssigningAttributes.Empty).StackDelta();
             else
                 foreach (var anonymous in anonymousTypes)
                 {
@@ -130,7 +130,7 @@ namespace Deltin.Deltinteger.Parse
                     foreach (var type in Info.TypeArgTracker[typeArgIndex].UsedTypes)
                     {
                         // Get the assigner from the type.
-                        var assigner = type.GetGettableAssigner(objectVariable);
+                        var assigner = type.GetGettableAssigner(AssigningAttributes.Empty);
 
                         /* Get the stackDelta of the object variable.
                         * Example:

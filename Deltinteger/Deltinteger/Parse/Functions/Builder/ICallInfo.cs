@@ -5,12 +5,14 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
     public interface ICallInfo
     {
         IWorkshopTree[] ParameterValues { get; }
+        ReturnHandler ProvidedReturnHandler { get; }
         void ExecuteSubroutine(ActionSet actionSet, Subroutine subroutine);
     }
 
     class CallInfo : ICallInfo
     {
         public IWorkshopTree[] ParameterValues { get; }
+        public ReturnHandler ProvidedReturnHandler { get; set; }
 
         public CallInfo(IWorkshopTree[] parameters)
         {

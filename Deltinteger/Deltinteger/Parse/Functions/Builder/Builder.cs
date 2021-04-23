@@ -46,7 +46,12 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                 }
 
                 call.ExecuteSubroutine(ActionSet, _subroutine.Subroutine);
-                return _subroutine.ReturnHandler.GetReturnedValue();
+
+                // If a return handler was provided, bridge the return value.
+                if (call.ProvidedReturnHandler != null && _subroutine.ReturnHandler != null)
+                    call.ProvidedReturnHandler.ReturnValue(_subroutine.ReturnHandler.GetReturnedValue());
+
+                return _subroutine.ReturnHandler?.GetReturnedValue();
             }
             else
             {
@@ -85,7 +90,16 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             }
 
             ModifySet(a => a.PackThis());
-            SetupReturnHandler(); // Setup the return handler.
+
+            // Setup the return handler.
+            if (call.ProvidedReturnHandler != null)
+            {
+                ReturnHandler = call.ProvidedReturnHandler;
+                ModifySet(a => a.New(call.ProvidedReturnHandler));
+            }
+            else
+                SetupReturnHandler();
+
             SetParameters(call); // Set the parameters.
             AddParametersToAssigner();
             stack?.StartRecursiveLoop(); // Start the recursion loop.
@@ -101,7 +115,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         public void SetupReturnHandler()
         {
             ReturnHandler = Controller.GetReturnHandler(ActionSet);
-            ModifySet(a => a.New(ReturnHandler));
+            if (ReturnHandler != null)
+                ModifySet(a => a.New(ReturnHandler));
         }
 
         public void AddParametersToAssigner() => ParameterHandler.AddParametersToAssigner(ActionSet.IndexAssigner);

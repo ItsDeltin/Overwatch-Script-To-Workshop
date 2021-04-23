@@ -15,15 +15,12 @@ namespace Deltin.Deltinteger.Parse.Lambda
         readonly bool _isExplicit;
         CodeType[] _argumentTypes;
         bool _resolved;
-        CodeType _returnType;
 
         /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
         public PortableLambdaType LambdaType { get; private set; }
 
         /// <summary>The parameters of the lambda.</summary>
         public Var[] Parameters { get; private set; }
-
-        private IVariableInstance _parameterInstances;
 
         /// <summary>The invocation status of the lambda parameters/</summary>
         public IBridgeInvocable[] InvokedState { get; private set; }
@@ -40,11 +37,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
         /// <summary>The captured local variables.</summary>
         public List<IVariable> CapturedVariables { get; } = new List<IVariable>();
 
-        /// <summary>The lambda's identifier.</summary>
-        public int Identifier { get; set; }
-
         ///<summary> The parent type that the lambda is defined in.</summary>
         public CodeType This { get; }
+
+        public CodeType ReturnType { get; private set; }
 
         public CallInfo CallInfo { get; }
         public IRecursiveCallHandler RecursiveCallHandler { get; }
@@ -120,7 +116,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
                 if (validation.ReturnsValue)
                 {
-                    _returnType = validation.ReturnType;
+                    ReturnType = validation.ReturnType;
                     MultiplePaths = validation.MultiplePaths;
                     returnsValue = true;
                 }
@@ -129,7 +125,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             {
                 // Get the lambda expression.
                 Expression = parser.GetExpression(_lambdaScope, exprStatement.Expression);
-                _returnType = Expression.Type();
+                ReturnType = Expression.Type();
                 returnsValue = true;
             }
             else
@@ -139,18 +135,18 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 if (Statement is IExpression expr)
                 {
                     Expression = expr;
-                    _returnType = expr.Type();
+                    ReturnType = expr.Type();
                     returnsValue = true;
                 }
             }
 
-            LambdaType = new PortableLambdaType(expectingType?.LambdaKind ?? LambdaKind.Anonymous, _argumentTypes, returnsValue, _returnType, _isExplicit);
+            LambdaType = new PortableLambdaType(expectingType?.LambdaKind ?? LambdaKind.Anonymous, _argumentTypes, returnsValue, ReturnType, _isExplicit);
 
             // Add so the lambda can be recursive-checked.
             _parseInfo.TranslateInfo.RecursionCheck(CallInfo);
 
             if (!LambdaType.IsConstant())
-                Identifier = _parseInfo.TranslateInfo.GetComponent<LambdaGroup>().Add(this);
+                _parseInfo.Script.Elements.AddLambda(this);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet)
@@ -162,8 +158,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             // Otherwise, return an array containing data of the lambda.
             var lambdaMeta = new List<IWorkshopTree>();
 
-            // The first element is the lambda's identifier. 
-            lambdaMeta.Add(Element.Num(Identifier));
+            // The first element is the lambda's identifier.
+            lambdaMeta.Add(Element.Num(actionSet.ToWorkshop.PortableAssigner.FunctionFromKey(this).Identifier));
 
             // The second element is the 'this' if applicable.
             lambdaMeta.Add(actionSet.This ?? Element.Null());
@@ -224,7 +220,11 @@ namespace Deltin.Deltinteger.Parse.Lambda
         /// <summary>Outputs a constant block.</summary>
         private IWorkshopTree OutputContantBlock(VarIndexAssigner lambdaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            ReturnHandler returnHandler = new ReturnHandler(actionSet, "lambda", _returnType.GetGettableAssigner(null), MultiplePaths);
+            ReturnHandler returnHandler = new ReturnHandler(
+                actionSet,
+                ReturnType.GetGettableAssigner(new AssigningAttributes("lambda", actionSet.IsGlobal, false))
+                          .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false }),
+                MultiplePaths);
             actionSet = AssignContainedParameters(lambdaAssigner, actionSet, parameterValues).New(returnHandler);
 
             if (Expression != null)

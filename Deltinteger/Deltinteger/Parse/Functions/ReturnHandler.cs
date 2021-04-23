@@ -18,16 +18,11 @@ namespace Deltin.Deltinteger.Parse
         private bool _valueWasReturned;
         private readonly List<SkipStartMarker> _skips = new List<SkipStartMarker>();
 
-        public ReturnHandler(ActionSet actionSet, string methodName, IGettableAssigner gettableAssigner, bool multiplePaths)
+        public ReturnHandler(ActionSet actionSet, IGettable gettable, bool multiplePaths)
         {
             _actionSet = actionSet;
             _multiplePaths = multiplePaths;
-
-            if (multiplePaths)
-            {
-                _returnStore = gettableAssigner.GetValue(new GettableAssignerValueInfo(actionSet));
-                _returnStore = actionSet.VarCollection.Assign("_" + methodName + "ReturnValue", actionSet.IsGlobal, true);
-            }
+            _returnStore = gettable;
         }
 
         public ReturnHandler(ActionSet actionSet)

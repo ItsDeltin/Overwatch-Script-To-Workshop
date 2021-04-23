@@ -94,7 +94,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
-            => GetGettableAssigner(null).GetValue(new GettableAssignerValueInfo(actionSet)).GetVariable();
+            => GetGettableAssigner(new AssigningAttributes()).GetValue(new GettableAssignerValueInfo(actionSet)).GetVariable();
 
         public override CompletionItem GetCompletion() => throw new System.NotImplementedException();
         void ThrowIfNotReady()
@@ -102,9 +102,9 @@ namespace Deltin.Deltinteger.Parse
             if (!_isReady) throw new Exception("You are but a fool.");
         }
 
-        public override IGettableAssigner GetGettableAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable), false);
+        public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), false);
 
-        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(IVariable variable) => new StructAssigner(this, ((Var)variable), true);
+        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), true);
         void ITypeArrayHandler.OverrideArray(ArrayType array) {}
         ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler() => new StructArrayFunctionHandler();
 

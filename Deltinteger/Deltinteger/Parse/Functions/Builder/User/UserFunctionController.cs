@@ -26,8 +26,9 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         // Creates a return handler.
         public ReturnHandler GetReturnHandler(ActionSet actionSet) => new ReturnHandler(
             actionSet,
-            _function.Name,
-            _function.CodeType?.GetCodeType(actionSet.DeltinScript).GetGettableAssigner(null),
+            _function.CodeType?.GetCodeType(actionSet.DeltinScript)
+                               .GetGettableAssigner(new AssigningAttributes("returnValue_" + _function.Name, actionSet.IsGlobal, false))
+                               .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false }),
             IsMultiplePaths());
         // Todo: virtual and subroutine checks.
         bool IsMultiplePaths() => _function.Provider.ReturnType != null && (_function.Provider.MultiplePaths || _function.Attributes.Recursive);
@@ -98,10 +99,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             for (int i = 0; i < _parameters.Length; i++)
             {
                 // Create a gettable for the parameter.
-                var gettable = parameters[i]
-                    .GetCodeType(actionSet.DeltinScript)
-                    .GetGettableAssigner(parameterVariables[i].Provider)
-                    .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false });
+                var gettable = parameterVariables[i].GetAssigner(actionSet)
+                                                    .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false });
 
                 _parameters[i] = new UserFunctionParameter(gettable, new[] { parameterVariables[i].Provider }); //todo: linkedVariables for virtual
             }

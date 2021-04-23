@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public CodeParameter[] Parameters { get; }
 
         public MethodAttributes Attributes => new MethodAttributes();
-        public bool Static => false;
         public bool WholeContext => true;
         public MarkupBuilder Documentation => "Invokes the lambda expression.";
         public Location DefinedAt => null;
@@ -35,7 +34,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 ILambdaInvocable lambda = (ILambdaInvocable)actionSet.CurrentObject;
                 return lambda.Invoke(actionSet, methodCall.ParameterValues);
             }
-            return actionSet.DeltinScript.GetComponent<LambdaGroup>().Call(actionSet, methodCall);
+            return actionSet.DeltinScript.GetComponent<LambdaGroup>().Call(actionSet, methodCall, LambdaType.ReturnType);
         }
 
         public void Call(ParseInfo parseInfo, DocRange callRange)

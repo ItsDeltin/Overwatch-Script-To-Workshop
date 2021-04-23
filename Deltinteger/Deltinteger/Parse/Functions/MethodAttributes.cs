@@ -79,6 +79,7 @@ namespace Deltin.Deltinteger
         public InstanceAnonymousTypeLinker TypeArgs { get; set; }
         public CallParallel ParallelMode { get; set; } = CallParallel.NoParallel;
         public string ActionComment { get; set; }
+        public ReturnHandler ProvidedReturnHandler { get; set; }
 
         public MethodCall(IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {

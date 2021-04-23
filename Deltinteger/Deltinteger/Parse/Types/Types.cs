@@ -119,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="reference">The object reference.</param>
         public virtual void Delete(ActionSet actionSet, Element reference) {}
 
-        public virtual IGettableAssigner GetGettableAssigner(IVariable variable) => new DataTypeAssigner((Var)variable);
+        public virtual IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new DataTypeAssigner(attributes);
 
         /// <summary>Calls a type from the specified document range.</summary>
         /// <param name="parseInfo">The script that the type was called from.</param>

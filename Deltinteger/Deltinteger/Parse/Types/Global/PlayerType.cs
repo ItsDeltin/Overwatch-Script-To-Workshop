@@ -172,7 +172,7 @@ namespace Deltin.Deltinteger.Parse
             Action = (actionSet, methodCall) => Element.Part("Set " + abilityName + " Enabled", actionSet.CurrentObject, methodCall.Get(0))
         };
 
-        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(IVariable variable) => null;
+        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes) => null;
         public ArrayFunctionHandler GetFunctionHandler() => new ArrayFunctionHandler();
     }
 }

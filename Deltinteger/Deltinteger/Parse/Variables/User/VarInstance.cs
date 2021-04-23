@@ -28,6 +28,14 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CompletionItem GetCompletion() => _var.GetCompletion();
-        public IGettableAssigner GetAssigner(ActionSet actionSet) => CodeType.GetRealType(actionSet?.ThisTypeLinker).GetGettableAssigner(_var);
+        public IGettableAssigner GetAssigner(ActionSet actionSet) => CodeType.GetRealType(actionSet?.ThisTypeLinker).GetGettableAssigner(new AssigningAttributes() {
+            Name = _var.Name,
+            Extended = _var.InExtendedCollection,
+            ID = _var.ID,
+            IsGlobal = actionSet.IsGlobal,
+            StoreType = _var.StoreType,
+            VariableType = _var.VariableType,
+            DefaultValue = _var.InitialValue
+        });
     }
 }

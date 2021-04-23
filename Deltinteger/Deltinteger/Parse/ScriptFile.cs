@@ -197,22 +197,4 @@ namespace Deltin.Deltinteger.Parse
         Readonly, Static, Deprecated, Abstract,
         Async, Modification, Documentation, DefaultLibrary
     }
-    
-    public class ScriptElements
-    {
-        // Lists
-        readonly List<DefinedMethodProvider> _definedMethods = new List<DefinedMethodProvider>();
-        readonly List<DefinedClassInitializer> _definedClasses = new List<DefinedClassInitializer>();
-        readonly List<DefinedStructInitializer> _definedStructs = new List<DefinedStructInitializer>();
-        
-        // Public reading
-        public IReadOnlyList<DefinedMethodProvider> DefinedMethods => _definedMethods;
-        public IReadOnlyList<DefinedClassInitializer> DefinedClasses => _definedClasses;
-        public IReadOnlyList<DefinedStructInitializer> DefinedStructs => _definedStructs;
-
-        // Public adding
-        public void AddMethod(DefinedMethodProvider definedMethod) => _definedMethods.Add(definedMethod);
-        public void AddClass(DefinedClassInitializer definedClass) => _definedClasses.Add(definedClass);
-        public void AddStruct(DefinedStructInitializer definedStruct) => _definedStructs.Add(definedStruct);
-    }
 }
