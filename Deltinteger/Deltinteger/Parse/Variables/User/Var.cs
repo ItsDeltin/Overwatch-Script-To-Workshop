@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Parse the initial value.
-                InitialValue = parseInfo.SetExpectingLambda(CodeType).GetExpression(_operationalScope, _initalValueContext);
+                InitialValue = parseInfo.SetExpectType(CodeType).GetExpression(_operationalScope, _initalValueContext);
 
                 // Get the inferred type.
                 if (_inferType)

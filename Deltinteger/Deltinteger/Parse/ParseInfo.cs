@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.Parse
         public ITreeContextPart SourceExpression { get; private set; }
         public UsageResolver CurrentUsageResolver { get; private set; }
         public UsageResolver SourceUsageResolver { get; private set; }
+        public CodeType ExpectingType { get; private set; }
 
         // Tail
         public IVariableTracker[] LocalVariableTracker { get; private set; }
@@ -47,6 +48,7 @@ namespace Deltin.Deltinteger.Parse
             SourceExpression = other.SourceExpression;
             CurrentUsageResolver = other.CurrentUsageResolver;
             SourceUsageResolver = other.SourceUsageResolver;
+            ExpectingType = other.ExpectingType;
             LocalVariableTracker = other.LocalVariableTracker;
             ResolveInvokeInfo = other.ResolveInvokeInfo;
             AsyncInfo = other.AsyncInfo;
@@ -77,6 +79,7 @@ namespace Deltin.Deltinteger.Parse
             CurrentUsageResolver = currentUsageResolver,
             SourceUsageResolver = sourceUsageResolver
         };
+        public ParseInfo SetExpectType(CodeType type) => new ParseInfo(this) { ExpectingType = type }.SetExpectingLambda(type);
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
@@ -218,9 +221,14 @@ namespace Deltin.Deltinteger.Parse
             AsyncInfo = null
         };
 
+        public ParseInfo ClearTargetted() => new ParseInfo(this)
+        {
+            ExpectingType = null
+        };
+
         public ParseInfo ClearContextual() => new ParseInfo(this) {
             SourceExpression = null
-        }.ClearTail().ClearHead();
+        }.ClearTail().ClearHead().ClearTargetted();
 
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
     }
