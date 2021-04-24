@@ -42,7 +42,6 @@ namespace Deltin.Deltinteger.Parse
             OverloadChooser.Apply(context.Parameters, false, null);
 
             Constructor = (Constructor)OverloadChooser.Overload;
-            ConstructorValues = OverloadChooser.Values ?? new IExpression[0];
 
             if (Constructor != null)
             {
@@ -70,12 +69,6 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => CreatingObjectOf?.GetObjectScope();
 
         public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            IWorkshopTree[] parameterValues = new IWorkshopTree[ConstructorValues.Length];
-            for (int i = 0; i < parameterValues.Length; i++)
-                parameterValues[i] = ConstructorValues[i].Parse(actionSet);
-
-            return CreatingObjectOf.New(actionSet, Constructor, parameterValues, OverloadChooser.AdditionalParameterData);
-        }
+            => CreatingObjectOf.New(actionSet, Constructor, OverloadChooser.ParameterResults.Select(p => p.ToWorkshop(actionSet)).ToArray());
     }
 }

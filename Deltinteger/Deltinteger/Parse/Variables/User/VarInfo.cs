@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext { get; set; } = true;
         public bool Static { get; set; } = false;
         public bool InExtendedCollection { get; set; } = false;
+        public bool Ref { get; set; }
         public int ID { get; set; } = -1;
         public IParseExpression InitialValueContext { get; set; } = null;
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Private;

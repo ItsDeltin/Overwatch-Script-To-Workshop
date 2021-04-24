@@ -6,7 +6,6 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using Deltin.Deltinteger.Parse.Functions.Builder;
 
 namespace Deltin.Deltinteger
 {
@@ -69,34 +68,6 @@ namespace Deltin.Deltinteger
 
             return options.ToArray();
         }
-    }
-
-    public class MethodCall : Deltin.Deltinteger.Parse.Functions.Builder.ICallInfo
-    {
-        public IWorkshopTree[] ParameterValues { get; }
-        public object[] AdditionalParameterData { get; }
-        public object AdditionalData { get; set; }
-        public InstanceAnonymousTypeLinker TypeArgs { get; set; }
-        public CallParallel ParallelMode { get; set; } = CallParallel.NoParallel;
-        public string ActionComment { get; set; }
-        public ReturnHandler ProvidedReturnHandler { get; set; }
-
-        public MethodCall(IWorkshopTree[] parameterValues, object[] additionalParameterData)
-        {
-            ParameterValues = parameterValues;
-            AdditionalParameterData = additionalParameterData;
-        }
-
-        public MethodCall(IWorkshopTree[] parameterValues)
-        {
-            ParameterValues = parameterValues;
-            AdditionalParameterData = new object[parameterValues.Length];
-        }
-
-        /// <summary>Gets a parameter as an element.</summary>
-        public Element Get(int i) => (Element)ParameterValues[i];
-
-        void ICallInfo.ExecuteSubroutine(ActionSet actionSet, Subroutine subroutine) => ExecuteSubroutine.Execute(actionSet, subroutine, ParallelMode);
     }
 
     public class RestrictedCall

@@ -28,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
         public Var Var { get; private set; }
         public CodeType Type { get; private set; }
         public ExpressionOrWorkshopValue DefaultValue { get; private set; }
+        public ParameterAttributes Attributes { get; private set; }
         private readonly ParameterInvokedInfo _invoked = new ParameterInvokedInfo();
         private readonly List<RestrictedCallType> _restrictedCalls = new List<RestrictedCallType>();
 
@@ -37,6 +38,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public ParameterInstance GetInstance(InstanceAnonymousTypeLinker instanceInfo) => new ParameterInstance(new CodeParameter(Name, Type.GetRealType(instanceInfo), DefaultValue) {
+            Attributes = Attributes,
             Invoked = _invoked,
             RestrictedCalls = _restrictedCalls
         }, Var.GetInstance(instanceInfo));
@@ -70,6 +72,7 @@ namespace Deltin.Deltinteger.Parse
 
                 parameter.Var = newVar;
                 parameter.Type = newVar.CodeType;
+                parameter.Attributes = new ParameterAttributes(newVar.Ref);
 
                 if (newVar.InitialValue != null) parameter.DefaultValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
 

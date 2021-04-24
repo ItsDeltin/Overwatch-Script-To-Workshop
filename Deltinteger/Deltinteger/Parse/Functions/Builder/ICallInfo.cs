@@ -1,28 +1,26 @@
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Functions.Builder
 {
     public interface ICallInfo
     {
-        IWorkshopTree[] ParameterValues { get; }
+        WorkshopParameter[] Parameters { get; }
         ReturnHandler ProvidedReturnHandler { get; }
         void ExecuteSubroutine(ActionSet actionSet, Subroutine subroutine);
     }
 
     class CallInfo : ICallInfo
     {
-        public IWorkshopTree[] ParameterValues { get; }
+        public WorkshopParameter[] Parameters { get; }
         public ReturnHandler ProvidedReturnHandler { get; set; }
 
         public CallInfo(IWorkshopTree[] parameters)
         {
-            ParameterValues = parameters;
+            Parameters = parameters.Select(p => new WorkshopParameter(p)).ToArray();
         }
 
-        public CallInfo()
-        {
-            ParameterValues = new IWorkshopTree[0];
-        }
+        public CallInfo() : this(new IWorkshopTree[0]) {}
 
         public void ExecuteSubroutine(ActionSet actionSet, Subroutine subroutine) => Builder.ExecuteSubroutine.Execute(actionSet, subroutine);
     }

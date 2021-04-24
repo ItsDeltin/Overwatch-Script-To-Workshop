@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
         
             // Get the best function.
             var callingMethod = (IMethod)overloadChooser.Overload;
-            var result = new FunctionInvokeResult(parseInfo, invokeInfo.TargetRange, invokeInfo.UsedAsExpression, callingMethod, overloadChooser.AdditionalData, overloadChooser.Values, overloadChooser.AdditionalParameterData, overloadChooser.Match);
+            var result = new FunctionInvokeResult(parseInfo, invokeInfo.TargetRange, invokeInfo.UsedAsExpression, callingMethod, overloadChooser.AdditionalData, overloadChooser.ParameterResults, overloadChooser.Match);
             var typeArgLinker = overloadChooser.Match?.TypeArgLinker;
 
             // CallingMethod may be null if no good functions are found.
@@ -118,7 +118,7 @@ namespace Deltin.Deltinteger.Parse
             var invoke = (LambdaInvoke)overloadChooser.Overload;
             invoke?.Call(parseInfo, invokeInfo.TargetRange);
 
-            return new LambdaInvokeResult(parseInfo.TranslateInfo, invoke, overloadChooser.Values, invokeInfo.Target);
+            return new LambdaInvokeResult(parseInfo.TranslateInfo, invoke, overloadChooser.ParameterResults, invokeInfo.Target);
         }
     }
 
@@ -151,20 +151,27 @@ namespace Deltin.Deltinteger.Parse
     public interface IInvokeResult
     {
         IMethod Function { get; }
-        IExpression[] ParameterValues { get; }
-        object[] AdditionalParameterData { get; }
+        OverloadParameterResult[] Parameters { get; }
         CodeType ReturnType { get; }
         IWorkshopTree Parse(ActionSet actionSet);
         void SetComment(string comment);
 
-        IWorkshopTree[] GetParameterValuesAsWorkshop(ActionSet actionSet)
+        public static WorkshopParameter[] GetParameterValuesAsWorkshop(ActionSet actionSet, IInvokeResult invokeResult)
         {
-            if (ParameterValues == null) return new IWorkshopTree[0];
+            if (invokeResult.Parameters == null)
+                return new WorkshopParameter[0];
 
-            IWorkshopTree[] parameterValues = new IWorkshopTree[ParameterValues.Length];
-            for (int i = 0; i < ParameterValues.Length; i++)
-                parameterValues[i] = Function.Parameters[i].Parse(actionSet, ParameterValues[i], AdditionalParameterData[i]);
-            return parameterValues;
+            WorkshopParameter[] workshopParameters = new WorkshopParameter[invokeResult.Parameters.Length];
+            for (int i = 0; i < workshopParameters.Length; i++)
+                workshopParameters[i] = new WorkshopParameter(
+                    value: invokeResult.Function.Parameters[i].Parse(
+                        actionSet: actionSet,
+                        expression: invokeResult.Parameters[i].Value,
+                        additionalParameterData: invokeResult.Parameters[i].AdditionalData),
+                    additionalData: invokeResult.Parameters[i].AdditionalData,
+                    refVariableElements: invokeResult.Parameters[i].RefResolvedVariable?.ParseElements(actionSet));
+            
+            return workshopParameters;
         }
     }
 
@@ -172,8 +179,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public IMethod Function { get; }
         public CodeType ReturnType { get; set; }
-        public IExpression[] ParameterValues { get; }
-        public object[] AdditionalParameterData { get; }
+        public OverloadParameterResult[] Parameters { get; }
         private readonly object _additionalData;
         private readonly OverloadMatch _match;
         private readonly ParseInfo _parseInfo;
@@ -182,12 +188,11 @@ namespace Deltin.Deltinteger.Parse
         private readonly AsyncInfo _asyncInfo;
         private string _comment;
 
-        public FunctionInvokeResult(ParseInfo parseInfo, DocRange targetRange, bool usedAsExpression, IMethod function, object additionalData, IExpression[] parameterValues, object[] additionalParameterData, OverloadMatch match)
+        public FunctionInvokeResult(ParseInfo parseInfo, DocRange targetRange, bool usedAsExpression, IMethod function, object additionalData, OverloadParameterResult[] parameters, OverloadMatch match)
         {
             Function = function;
             ReturnType = Function.CodeType?.GetCodeType(parseInfo.TranslateInfo);
-            ParameterValues = parameterValues;
-            AdditionalParameterData = additionalParameterData;
+            Parameters = parameters;
             _additionalData = additionalData;
             _match = match;
             _parseInfo = parseInfo;
@@ -199,7 +204,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet)
         {
             actionSet = actionSet.SetNextComment(_comment);
-            return Function.Parse(actionSet, new MethodCall(((IInvokeResult)this).GetParameterValuesAsWorkshop(actionSet), AdditionalParameterData)
+            return Function.Parse(actionSet, new MethodCall(IInvokeResult.GetParameterValuesAsWorkshop(actionSet, this))
             {
                 TypeArgs = _match.TypeArgLinker,
                 ParallelMode = _asyncInfo?.ParallelMode ?? CallParallel.NoParallel,
@@ -244,27 +249,22 @@ namespace Deltin.Deltinteger.Parse
         public LambdaInvoke Function { get; }
         IMethod IInvokeResult.Function => this.Function;
         public CodeType ReturnType { get; }
-        public IExpression[] ParameterValues { get; }
-        public object[] AdditionalParameterData { get; }
+        public OverloadParameterResult[] Parameters { get; }
         private readonly IExpression _target;
         private string _comment;
 
-        public LambdaInvokeResult(DeltinScript deltinScript, LambdaInvoke function, IExpression[] parameterValues, IExpression target)
+        public LambdaInvokeResult(DeltinScript deltinScript, LambdaInvoke function, OverloadParameterResult[] parameterValues, IExpression target)
         {
             Function = function;
             ReturnType = function.CodeType?.GetCodeType(deltinScript);
-            ParameterValues = parameterValues;
-            AdditionalParameterData = new object[parameterValues?.Length ?? 0];
+            Parameters = parameterValues;
             _target = target;
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) =>
             Function.Parse(
                 actionSet.New(_target.Parse(actionSet)),
-                new MethodCall(
-                    ((IInvokeResult)this).GetParameterValuesAsWorkshop(actionSet),
-                    AdditionalParameterData
-                )
+                new MethodCall(IInvokeResult.GetParameterValuesAsWorkshop(actionSet, this))
             );
 
         public void SetComment(string comment) => _comment = comment;

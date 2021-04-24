@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             Parameters = new CodeParameter[0];
         }
 
-        public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData) { }
+        public virtual void Parse(ActionSet actionSet, WorkshopParameter[] parameters) { }
 
         public virtual void Call(ParseInfo parseInfo, DocRange callRange) { }
 

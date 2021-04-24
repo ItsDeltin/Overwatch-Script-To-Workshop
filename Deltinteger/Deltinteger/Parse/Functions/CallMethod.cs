@@ -9,7 +9,6 @@ namespace Deltin.Deltinteger.Parse
 {
     public class CallMethodAction : IExpression, IStatement
     {
-        public IExpression[] ParameterValues => Result?.ParameterValues;
         public IMethod CallingMethod => Result?.Function;
         public IInvokeResult Result { get; }
         private readonly ParseInfo _parseInfo;

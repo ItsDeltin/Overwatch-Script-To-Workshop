@@ -20,6 +20,9 @@ namespace Deltin.Deltinteger.Parse
         public ITreeContextPart SourceExpression { get; private set; }
         public UsageResolver CurrentUsageResolver { get; private set; }
         public UsageResolver SourceUsageResolver { get; private set; }
+        public CodeType ReturnType { get; private set; }
+
+        // Target
         public CodeType ExpectingType { get; private set; }
 
         // Tail
@@ -47,6 +50,7 @@ namespace Deltin.Deltinteger.Parse
             ExpectingLambda = other.ExpectingLambda;
             SourceExpression = other.SourceExpression;
             CurrentUsageResolver = other.CurrentUsageResolver;
+            ReturnType = other.ReturnType;
             SourceUsageResolver = other.SourceUsageResolver;
             ExpectingType = other.ExpectingType;
             LocalVariableTracker = other.LocalVariableTracker;
@@ -80,6 +84,7 @@ namespace Deltin.Deltinteger.Parse
             SourceUsageResolver = sourceUsageResolver
         };
         public ParseInfo SetExpectType(CodeType type) => new ParseInfo(this) { ExpectingType = type }.SetExpectingLambda(type);
+        public ParseInfo SetReturnType(CodeType type) => new ParseInfo(this) { ReturnType = type };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>

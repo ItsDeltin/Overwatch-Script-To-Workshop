@@ -38,6 +38,8 @@ namespace Deltin.Deltinteger.Pathfinder
         private HookVar OnPathCompleted;
         private HookVar IsNodeReachedDeterminer;
         private HookVar ApplicableNodeDeterminer;
+        private PathmapClassConstructor _pathmapClassConstructor;
+        private Constructor _emptyConstructor;
 
         private ITypeSupplier _supplier => DeltinScript.Types;
 
@@ -50,12 +52,11 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public void Setup(ISetupSelfContainedClass setup)
         {
-            Constructors = new Constructor[] {
-                new PathmapClassConstructor(setup.WorkingInstance, _supplier),
-                new Constructor(setup.WorkingInstance, null, AccessLevel.Public) {
-                    Documentation = "Creates an empty pathmap."
-                }
+            _pathmapClassConstructor = new PathmapClassConstructor(setup.WorkingInstance, _supplier);
+            _emptyConstructor = new Constructor(setup.WorkingInstance, null, AccessLevel.Public) {
+                Documentation = "Creates an empty pathmap."
             };
+            Constructors = new Constructor[] { _pathmapClassConstructor, _emptyConstructor };
 
             setup.ObjectScope.AddNativeMethod(Pathfind);
             setup.ObjectScope.AddNativeMethod(PathfindAll);
@@ -178,7 +179,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             Element index = (Element)newClassInfo.ObjectReference.GetVariable();
 
-            if (newClassInfo.AdditionalParameterData.Length == 0)
+            if (newClassInfo.Constructor == _emptyConstructor)
             {
                 actionSet.AddAction(Nodes.SetVariable(Element.EmptyArray(), index: index));
                 actionSet.AddAction(Segments.SetVariable(Element.EmptyArray(), index: index));
@@ -186,7 +187,7 @@ namespace Deltin.Deltinteger.Pathfinder
             }
 
             // Get the pathmap data.
-            Pathmap pathMap = (Pathmap)newClassInfo.AdditionalParameterData[0];
+            Pathmap pathMap = (Pathmap)newClassInfo.Parameters[0].AdditionalData;
 
             IndexReference nodes = actionSet.VarCollection.Assign("_tempNodes", actionSet.IsGlobal, false);
             IndexReference segments = actionSet.VarCollection.Assign("_tempSegments", actionSet.IsGlobal, false);
@@ -960,7 +961,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Documentation = "Creates a pathmap from a `.pathmap` file.";
         }
 
-        public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData) => throw new NotImplementedException();
+        public override void Parse(ActionSet actionSet, WorkshopParameter[] parameters) => throw new NotImplementedException();
     }
 
     class PathmapFileParameter : FileParameter

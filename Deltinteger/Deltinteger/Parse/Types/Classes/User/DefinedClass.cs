@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Run the constructor.
             AddObjectVariablesToAssigner(actionSet.ToWorkshop, (Element)newClassInfo.ObjectReference.GetVariable(), actionSet.IndexAssigner);
-            newClassInfo.Constructor.Parse(actionSet.New((Element)newClassInfo.ObjectReference.GetVariable()), newClassInfo.ConstructorValues, null);
+            newClassInfo.Constructor.Parse(actionSet.New((Element)newClassInfo.ObjectReference.GetVariable()), newClassInfo.Parameters);
         }
 
         public override void AddObjectBasedScope(IMethod function)

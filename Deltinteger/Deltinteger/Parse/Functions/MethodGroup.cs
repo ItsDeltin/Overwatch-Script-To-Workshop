@@ -223,6 +223,6 @@ namespace Deltin.Deltinteger.Parse
 
         public IVariable GetParameterVar(int index) => null;
         public int ParameterCount() => _method.Parameters.Length;
-        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _method.Parse(actionSet, new MethodCall(parameterValues, new object[0]));
+        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _method.Parse(actionSet, new MethodCall(parameterValues));
     }
 }

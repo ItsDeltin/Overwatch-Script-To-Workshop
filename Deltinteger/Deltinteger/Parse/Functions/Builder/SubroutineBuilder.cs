@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             var controller = _context.Controller;
 
             // Create the parameter handlers.
-            var parameterHandler = controller.CreateParameterHandler(actionSet);
+            var parameterHandler = controller.CreateParameterHandler(actionSet, null);
             
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             IndexReference objectStore = null;

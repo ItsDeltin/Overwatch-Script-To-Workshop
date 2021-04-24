@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         IWorkshopTree BuildInline(ICallInfo call)
         {
             // Create parameter handlers
-            ParameterHandler = Controller.CreateParameterHandler(ActionSet);
+            ParameterHandler = Controller.CreateParameterHandler(ActionSet, call.Parameters);
 
             // Setup inline-recursive handler.
             RecursiveStack stack = null;
@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
         public void AddParametersToAssigner() => ParameterHandler.AddParametersToAssigner(ActionSet.IndexAssigner);
 
-        void SetParameters(ICallInfo call) => ParameterHandler.Set(ActionSet, call.ParameterValues);
+        void SetParameters(ICallInfo call) => ParameterHandler.Set(ActionSet, call.Parameters.Select(p => p.Value).ToArray());
         public void ModifySet(Func<ActionSet, ActionSet> modify) => ActionSet = modify(ActionSet);
         RecursiveStack GetExistingStack() => ActionSet.Translate.MethodStack.FirstOrDefault(stack => stack.Identifier == Controller.StackIdentifier());
     }

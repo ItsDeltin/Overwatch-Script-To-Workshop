@@ -99,7 +99,13 @@ namespace Deltin.Deltinteger.Parse
         {
             Values = new IExpression[createArrayContext.Values.Count];
             for (int i = 0; i < Values.Length; i++)
-                Values[i] = parseInfo.GetExpression(scope, createArrayContext.Values[i]);
+            {
+                var expectingType = parseInfo.ExpectingType;
+                if (expectingType is ArrayType expectingArray)
+                    expectingType = expectingArray.ArrayOfType;
+
+                Values[i] = parseInfo.SetExpectType(expectingType).GetExpression(scope, createArrayContext.Values[i]);
+            }
             
             if (Values.Length == 0)
                 _type = new ArrayType(parseInfo.TranslateInfo.Types, parseInfo.TranslateInfo.Types.Any());

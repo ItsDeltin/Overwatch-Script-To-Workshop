@@ -7,11 +7,6 @@ using Deltin.Deltinteger.Parse.Lambda;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
 using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
 using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ParameterInformation;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
-using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
-using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse.Overload
 {
@@ -19,10 +14,8 @@ namespace Deltin.Deltinteger.Parse.Overload
     {
         public DocRange CallRange { get; }
         public OverloadMatch Match { get; private set; }
-        public IExpression[] Values { get; private set; }
-        public DocRange[] ParameterRanges { get; private set; }
         public object AdditionalData { get; private set; }
-        public object[] AdditionalParameterData { get; private set; }
+        public OverloadParameterResult[] ParameterResults { get; private set; }
         public IParameterCallable Overload => Match?.Option.Value;
 
         readonly ParseInfo _parseInfo;
@@ -67,10 +60,22 @@ namespace Deltin.Deltinteger.Parse.Overload
 
             // Choose the best option.
             Match = BestOption();
-            Values = Match.OrderedParameters.Select(op => op?.Value).ToArray();
-            ParameterRanges = Match.OrderedParameters.Select(op => op?.ExpressionRange).ToArray();
 
-            GetAdditionalData();
+            // Get additional data.
+            AdditionalData = Overload.Call(_parseInfo, _fullRange);
+
+            // Set parameter results;.
+            ParameterResults = new OverloadParameterResult[Overload.Parameters.Length];
+            for (int i = 0; i < ParameterResults.Length; i++)
+            {
+                var pickyParameterInfo = Match.OrderedParameters[i];
+
+                ParameterResults[i] = new OverloadParameterResult(
+                    value: pickyParameterInfo.Value,
+                    additionalData: Overload.Parameters[i].Validate(_parseInfo, pickyParameterInfo.Value, pickyParameterInfo.ExpressionRange, AdditionalData),
+                    refResolvedVariable: pickyParameterInfo.RefVariable,
+                    parameterRange: pickyParameterInfo.ExpressionRange);
+            }
         }
 
         private PickyParameter[] ParametersFromContext(List<ParameterValue> context)
@@ -262,14 +267,6 @@ namespace Deltin.Deltinteger.Parse.Overload
                 _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)), _targetRange);
         }
 
-        private void GetAdditionalData()
-        {
-            AdditionalData = Overload.Call(_parseInfo, _fullRange);
-            AdditionalParameterData = new object[Overload.Parameters.Length];
-            for (int i = 0; i < Overload.Parameters.Length; i++)
-                AdditionalParameterData[i] = Overload.Parameters[i].Validate(_parseInfo, Values[i], ParameterRanges.ElementAtOrDefault(i), AdditionalData);
-        }
-
         public SignatureHelp GetSignatureHelp(DocPos caretPos)
         {
             // Get the active parameter.
@@ -279,11 +276,11 @@ namespace Deltin.Deltinteger.Parse.Overload
             if (_extraneousParameterRange != null && (_extraneousParameterRange.Start + CallRange.End).IsInside(caretPos))
                 activeParameter = _providedParameterCount;
             // Parameter
-            else if (ParameterRanges != null)
+            else if (ParameterResults != null)
                 // Loop through parameter ranges while activeParameter is -1.
-                for (int i = 0; i < ParameterRanges.Length && activeParameter == -1; i++)
+                for (int i = 0; i < ParameterResults.Length && activeParameter == -1; i++)
                     // If the proved caret position is inside the parameter range, set it as the active parameter.
-                    if (ParameterRanges[i] != null && ParameterRanges[i].IsInside(caretPos))
+                    if (ParameterResults[i].ParameterRange != null && ParameterResults[i].ParameterRange.IsInside(caretPos))
                         activeParameter = i;
 
             // Get the signature information.
@@ -353,6 +350,8 @@ namespace Deltin.Deltinteger.Parse.Overload
         /// differently depending on the parameter type, so some components will not be parsed until the parameter type is known.
         /// Use this to apply the lambda/method group data when the overload is chosen.</summary>
         public ExpectingLambdaInfo LambdaInfo { get; set; }
+        /// <summary>The resolved variable for 'ref' parameters.</summary>
+        public VariableResolve RefVariable { get; set; }
 
         public PickyParameter(bool prefilled)
         {
@@ -362,15 +361,15 @@ namespace Deltin.Deltinteger.Parse.Overload
         public bool ParameterOrdered(CodeParameter parameter) => !Picky || parameter.Name == Name;
     }
 
-    public class OverloadMatch
+    public class OverloadMatch : IVariableResolveErrorHandler
     {
         public IOverload Option { get; }
         public PickyParameter[] OrderedParameters { get; set; }
-        public List<OverloadMatchError> Errors { get; } = new List<OverloadMatchError>();
-        public bool HasError => Errors.Count > 0;
+        public bool HasError => _errors.Count > 0;
         public int LastContextualParameterIndex { get; set; } = -1;
         public InstanceAnonymousTypeLinker TypeArgLinker { get; set; }
         public CodeType[] TypeArgs { get; }
+        readonly List<OverloadMatchError> _errors = new List<OverloadMatchError>();
 
         public OverloadMatch(IOverload option)
         {
@@ -378,7 +377,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             TypeArgs = new CodeType[option.TypeArgCount];
         }
 
-        public void Error(string message, DocRange range) => Errors.Add(new OverloadMatchError(message, range));
+        public void Error(string message, DocRange range) => _errors.Add(new OverloadMatchError(message, range));
 
         /// <summary>Confirms that a parameter type matches.</summary>
         public void CompareParameterTypes(DeltinScript deltinScript, int parameter)
@@ -405,6 +404,20 @@ namespace Deltin.Deltinteger.Parse.Overload
                 // Constant used in bad place.
                 else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
                     Error($"The type '{value.Type().Name}' cannot be used here", errorRange);
+                
+                // Invalid ref
+                else if (Option.Parameters[parameter].Attributes.Ref)
+                {
+                    // Resolve the variable.
+                    VariableResolve resolve = new VariableResolve(
+                        // 'ref' variable settings.
+                        options: new VariableResolveOptions() { CanBeIndexed = true, FullVariable = false, ShouldBeSettable = true },
+                        expression: value,
+                        expressionRange: errorRange,
+                        errorHandler: this);
+
+                    OrderedParameters[parameter].RefVariable = resolve;
+                }
             }
         }
 
@@ -440,7 +453,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
         public void AddDiagnostics(FileDiagnostics diagnostics)
         {
-            foreach (OverloadMatchError error in Errors) diagnostics.Error(error.Message, error.Range);
+            foreach (OverloadMatchError error in _errors) diagnostics.Error(error.Message, error.Range);
         }
 
         ///<summary>Gets the restricted calls from the unfilled optional parameters.</summary>
@@ -462,17 +475,17 @@ namespace Deltin.Deltinteger.Parse.Overload
     
         public void IncorrectTypeArgCount(DeltinScript deltinScript, DocRange range) =>
             Error("The function '" + Option.GetLabel(deltinScript, LabelInfo.OverloadError) + "' requires " + Option.TypeArgCount + " type arguments", range);
-    }
-
-    public class OverloadMatchError
-    {
-        public string Message { get; }
-        public DocRange Range { get; }
-
-        public OverloadMatchError(string message, DocRange range)
+        
+        struct OverloadMatchError
         {
-            Message = message;
-            Range = range;
+            public string Message;
+            public DocRange Range;
+
+            public OverloadMatchError(string message, DocRange range)
+            {
+                Message = message;
+                Range = range;
+            }
         }
     }
 

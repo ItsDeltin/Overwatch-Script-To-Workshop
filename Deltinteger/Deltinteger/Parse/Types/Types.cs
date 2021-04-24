@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="constructor">The constuctor that was called.</param>
         /// <param name="constructorValues">The parameter values of the constructor.</param>
         /// <param name="additionalParameterData">Additional parameter data.</param>
-        public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
         {
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();

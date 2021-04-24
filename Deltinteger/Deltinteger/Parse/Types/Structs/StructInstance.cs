@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
                 assigner.Add(variable.Provider, structValue.GetGettable(variable.Name));
         }
 
-        public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
             => GetGettableAssigner(new AssigningAttributes()).GetValue(new GettableAssignerValueInfo(actionSet)).GetVariable();
 
         public override CompletionItem GetCompletion() => throw new System.NotImplementedException();

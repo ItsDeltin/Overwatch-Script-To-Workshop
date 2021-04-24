@@ -16,6 +16,10 @@ namespace Deltin.Deltinteger.Parse
         private ExpressionTree Tree { get; }
 
         public VariableResolve(VariableResolveOptions options, IExpression expression, DocRange expressionRange, FileDiagnostics diagnostics)
+            : this(options, expression, expressionRange, new VariableResolveErrorHandler(diagnostics))
+        {}
+
+        public VariableResolve(VariableResolveOptions options, IExpression expression, DocRange expressionRange, IVariableResolveErrorHandler errorHandler)
         {
             // The expression is a variable.
             if (expression is CallVariableAction)
@@ -47,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
 
             // NotAVariableRange will not be null if the resulting expression is a variable.
             if (NotAVariableRange != null)
-                diagnostics.Error("Expected a variable.", NotAVariableRange);
+                errorHandler.Error("Expected a variable.", NotAVariableRange);
 
             // Make sure the variable can be set to.
             if (SetVariable != null)
@@ -58,11 +62,11 @@ namespace Deltin.Deltinteger.Parse
                 
                 // Check if the variable is a whole workshop variable.
                 if (options.FullVariable && SetVariable.Calling.Attributes.StoreType != StoreType.FullVariable)
-                    diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
+                    errorHandler.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
 
                 // Check for indexers.
                 if (!options.CanBeIndexed && SetVariable.Index.Length != 0)
-                    diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
+                    errorHandler.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
             }
 
             DoesResolveToVariable = SetVariable != null;
@@ -95,29 +99,5 @@ namespace Deltin.Deltinteger.Parse
 
             return new VariableElements(var, target, index);
         }
-    }
-
-    public class VariableElements
-    {
-        public IGettable IndexReference { get; }
-        public Element Target { get; }
-        public Element[] Index { get; }
-
-        public VariableElements(IGettable indexReference, Element target, Element[] index)
-        {
-            IndexReference = indexReference;
-            Target = target;
-            Index = index;
-        }
-    }
-
-    public class VariableResolveOptions
-    {
-        /// <summary>Determines if a variables needs to be an entire workshop variable.</summary>
-        public bool FullVariable = false;
-        /// <summary>Determines if the variable can be set to a value in an array.</summary>
-        public bool CanBeIndexed = true;
-        /// <summary>Determines if the variable should be settable.</summary>
-        public bool ShouldBeSettable = true;
     }
 }

@@ -25,6 +25,7 @@ namespace Deltin.Deltinteger.Parse
         public VariableType VariableType { get; private set; }
         public StoreType StoreType { get; private set; }
         public bool InExtendedCollection { get; }
+        public bool Ref { get; }
         public int ID { get; }
         public bool Static { get; }
         public bool Recursive { get; }
@@ -61,6 +62,7 @@ namespace Deltin.Deltinteger.Parse
             WholeContext = varInfo.WholeContext;
             CodeType = varInfo.Type;
             InExtendedCollection = varInfo.InExtendedCollection;
+            Ref = varInfo.Ref;
             ID = varInfo.ID;
             Static = varInfo.Static;
             Recursive = varInfo.Recursive;

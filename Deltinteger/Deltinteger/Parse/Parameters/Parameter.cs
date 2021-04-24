@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public ExpressionOrWorkshopValue DefaultValue { get; set; }
         public List<RestrictedCallType> RestrictedCalls { get; set; } = new List<RestrictedCallType>();
         public ParameterInvokedInfo Invoked { get; set; } = new ParameterInvokedInfo();
+        public ParameterAttributes Attributes { get; set; }
         private ICodeTypeSolver _type;
 
         private CodeParameter(string name)
@@ -124,6 +125,16 @@ namespace Deltin.Deltinteger.Parse
         public static string GetLabels(DeltinScript deltinScript, AnonymousLabelInfo labelInfo, CodeParameter[] parameters)
         {
             return "(" + string.Join(", ", parameters.Select(p => p.GetLabel(deltinScript, labelInfo))) + ")";
+        }
+    }
+
+    public struct ParameterAttributes
+    {
+        public bool Ref { get; }
+
+        public ParameterAttributes(bool isRef)
+        {
+            Ref = isRef;
         }
     }
 

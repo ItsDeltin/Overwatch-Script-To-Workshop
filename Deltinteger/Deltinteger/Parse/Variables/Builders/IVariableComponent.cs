@@ -85,8 +85,8 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                 
                 // ref
                 case AttributeType.Ref:
-                    varInfo.ParseInfo.Script.Diagnostics.Warning("The 'ref' keyword is being replaced with the 'in' keyword. In the future, 'ref' will have a different functionality.", Range);
-                    goto case AttributeType.In;
+                    varInfo.Ref = true;
+                    break;
 
                 // in
                 case AttributeType.In:

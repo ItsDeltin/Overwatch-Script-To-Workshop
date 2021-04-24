@@ -1,3 +1,4 @@
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Functions.Builder
@@ -99,7 +100,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                 actionSet.AddAction(_objectStore.ModifyVariable(Operation.AppendToArray, (Element)callerSet.CurrentObject));
 
             // Push new parameters.
-            _builder.ParameterHandler.Push(_builder.ActionSet, callInfo.ParameterValues);
+            _builder.ParameterHandler.Push(_builder.ActionSet, callInfo.Parameters.Select(p => p.Value).ToArray());
 
             // Add to the continue skip array.
             var skipLength = new NumberElement();

@@ -115,7 +115,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 returnHandler.ApplyReturnSkips();
         }
 
-        public IParameterHandler CreateParameterHandler(ActionSet actionSet) => new LambdaParameterHandler(_deltinScript.VarCollection, _parameterRecycler, actionSet.ToWorkshop.PortableAssigner.AssignedPortableFunctions);
+        public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
+            => new LambdaParameterHandler(_deltinScript.VarCollection, _parameterRecycler, actionSet.ToWorkshop.PortableAssigner.AssignedPortableFunctions);
 
         class LambdaParameterHandler : IParameterHandler
         {

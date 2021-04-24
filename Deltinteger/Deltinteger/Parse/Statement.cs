@@ -48,8 +48,20 @@ namespace Deltin.Deltinteger.Parse
         public ReturnAction(ParseInfo parseInfo, Scope scope, Return returnContext)
         {
             ErrorRange = returnContext.Range;
-            if (returnContext.Expression != null) ReturningValue = parseInfo.GetExpression(scope, returnContext.Expression);
             ReturningFromScope = scope;
+
+            // Get the expression being returned.
+            if (returnContext.Expression != null)
+            {
+                ReturningValue = parseInfo.SetExpectType(parseInfo.ReturnType).GetExpression(scope, returnContext.Expression);
+
+                // Wrong type.
+                if (!ReturningValue.Type().Implements(parseInfo.ReturnType))
+                    parseInfo.Script.Diagnostics.Error("Expected a value of type '" + parseInfo.ReturnType.GetName() + "'", returnContext.Expression.Range);
+            }
+            // No return value provided, and one was expected.
+            else if (parseInfo.ReturnType != null)
+                parseInfo.Script.Diagnostics.Error("Must return a value of type '" + parseInfo.ReturnType.GetName() + "'", returnContext.Token.Range);
         }
 
         public void Translate(ActionSet actionSet)

@@ -1,3 +1,4 @@
+using System.Linq;
 using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Parse.Functions.Builder.User;
 using Deltin.Deltinteger.LanguageServer;
@@ -28,11 +29,11 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             }
         }
 
-        public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
+        public override void Parse(ActionSet actionSet, WorkshopParameter[] parameters)
         {
             WorkshopFunctionBuilder.Call(
                 actionSet,
-                new Functions.Builder.CallInfo(parameterValues),
+                new Functions.Builder.CallInfo(parameters.Select(p => p.Value).ToArray()),
                 new UserConstructorController(this, actionSet.DeltinScript));
         }
 
@@ -61,7 +62,8 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             public void Build(ActionSet actionSet) => _instance.Provider.Block.Translate(actionSet);
 
             // Create the parameter handler for the constructor.
-            public IParameterHandler CreateParameterHandler(ActionSet actionSet) => new UserFunctionParameterHandler(actionSet, _instance.Parameters, _instance.ParameterVars);
+            public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
+                => new UserFunctionParameterHandler(actionSet, _instance.Parameters, _instance.ParameterVars, providedParameters);
             
             // Create the return handler for the constructor.
             public ReturnHandler GetReturnHandler(ActionSet actionSet) => new ReturnHandler(actionSet);

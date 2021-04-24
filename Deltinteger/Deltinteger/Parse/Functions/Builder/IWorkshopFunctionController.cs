@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         ReturnHandler GetReturnHandler(ActionSet actionSet);
 
         /// <summary>Creates parameter handlers.</summary>
-        IParameterHandler CreateParameterHandler(ActionSet actionSet);
+        IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters);
 
         /// <summary>The function's subroutine. May be null.</summary>
         SubroutineCatalogItem GetSubroutine();

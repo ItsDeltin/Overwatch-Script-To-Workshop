@@ -34,7 +34,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         bool IsMultiplePaths() => _function.Provider.ReturnType != null && (_function.Provider.MultiplePaths || _function.Attributes.Recursive);
 
         // Creates parameters assigned to this function.
-        public IParameterHandler CreateParameterHandler(ActionSet actionSet) => new UserFunctionParameterHandler(actionSet, _function.Parameters, _function.ParameterVars);
+        public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
+            => new UserFunctionParameterHandler(actionSet, _function.Parameters, _function.ParameterVars, providedParameters);
 
         // Create or get the subroutine.
         public SubroutineCatalogItem GetSubroutine()
@@ -92,15 +93,27 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
     class UserFunctionParameterHandler : IParameterHandler
     {
         readonly UserFunctionParameter[] _parameters;
+        readonly CodeParameter[] _codeParameters;
 
-        public UserFunctionParameterHandler(ActionSet actionSet, CodeParameter[] parameters, IVariableInstance[] parameterVariables)
+        public UserFunctionParameterHandler(
+            ActionSet actionSet,
+            CodeParameter[] codeParameters,
+            IVariableInstance[] parameterVariables,
+            WorkshopParameter[] providedParameters)
         {
-            _parameters = new UserFunctionParameter[parameters.Length];
+            _codeParameters = codeParameters;
+            _parameters = new UserFunctionParameter[codeParameters.Length];
             for (int i = 0; i < _parameters.Length; i++)
             {
-                // Create a gettable for the parameter.
-                var gettable = parameterVariables[i].GetAssigner(actionSet)
-                                                    .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false });
+                // Get the gettable provided from the ref parameter.
+                IGettable gettable = providedParameters?[i].RefVariableElements.Childify();
+
+                // Not provided or not a ref parameter.
+                if (gettable == null)
+                    // Create a gettable for the parameter.
+                    gettable = parameterVariables[i]
+                        .GetAssigner(actionSet)
+                        .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false });
 
                 _parameters[i] = new UserFunctionParameter(gettable, new[] { parameterVariables[i].Provider }); //todo: linkedVariables for virtual
             }
@@ -112,7 +125,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 throw new Exception("Parameter count mismatch");
             
             for (int i = 0; i < _parameters.Length; i++)
-                _parameters[i].Set(actionSet, parameterValues[i]);
+                if (!_codeParameters[i].Attributes.Ref)
+                    _parameters[i].Set(actionSet, parameterValues[i]);
         }
 
         public void Push(ActionSet actionSet, IWorkshopTree[] parameterValues)

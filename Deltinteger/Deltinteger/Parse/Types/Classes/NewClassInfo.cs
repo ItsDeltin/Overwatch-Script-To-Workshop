@@ -4,15 +4,13 @@ namespace Deltin.Deltinteger.Parse
     {
         public IndexReference ObjectReference { get; }
         public Constructor Constructor { get; }
-        public IWorkshopTree[] ConstructorValues { get; }
-        public object[] AdditionalParameterData { get; }
+        public WorkshopParameter[] Parameters { get; }
         
-        public NewClassInfo(IndexReference objectReference, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        public NewClassInfo(IndexReference objectReference, Constructor constructor, WorkshopParameter[] parameters)
         {
             ObjectReference = objectReference;
             Constructor = constructor;
-            ConstructorValues = constructorValues;
-            AdditionalParameterData = additionalParameterData;
+            Parameters = parameters;
         }
     }
 }

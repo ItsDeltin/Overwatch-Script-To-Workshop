@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
         public void SetupBlock()
         {
             _methodScope.This = ContainingType?.WorkingInstance;
-            Block = new BlockAction(_parseInfo, _methodScope, Context.Block);
+            Block = new BlockAction(_parseInfo.SetReturnType(ReturnType), _methodScope, Context.Block);
 
             // Validate returns.
             BlockTreeScan validation = new BlockTreeScan(_parseInfo, this);

@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
                 variable.Init(actionSet, reference);
         }
 
-        public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
 
@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Parse
             // this stores the index where the new class is created at.
             var classReference = Create(actionSet, classData);
 
-            New(actionSet, new NewClassInfo(classReference, constructor, constructorValues, additionalParameterData));
+            New(actionSet, new NewClassInfo(classReference, constructor, parameters));
 
             // Return the reference.
             return classReference.GetVariable();
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse
         protected virtual void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
             // Parse the constructor.
-            newClassInfo.Constructor.Parse(actionSet, newClassInfo.ConstructorValues, newClassInfo.AdditionalParameterData);
+            newClassInfo.Constructor.Parse(actionSet, newClassInfo.Parameters);
         }
 
         public override void Delete(ActionSet actionSet, Element reference)

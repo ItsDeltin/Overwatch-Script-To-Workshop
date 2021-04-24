@@ -37,14 +37,13 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void TypeCheck()
         {
-            // Get the 'ref' attribute.
+            // Get the 'in' attribute.
             var inAttribute = _components.FirstOrDefault(
                 attribute => attribute is AttributeComponent attributeComponent &&
-                (attributeComponent.Attribute == AttributeType.Ref ||
-                attributeComponent.Attribute == AttributeType.In)
+                attributeComponent.Attribute == AttributeType.In
             );
 
-            // If the type is constant and the variable has the ref parameter, show a warning.
+            // If the type is constant and the variable has the in parameter, show a warning.
             if (inAttribute != null && _varInfo.Type != null && _varInfo.Type.IsConstant())
                 _diagnostics.Warning("Constant workshop types have the 'in' attribute by default.", inAttribute.Range);
         }
