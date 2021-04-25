@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public LambdaAction OnPathStart { get; set; } // The code to run when a path starts.
         public LambdaAction OnNodeReached { get; set; } // The code to run when a node is reached.
         public LambdaAction OnPathCompleted { get; set; } // The code to run when a path is completed.
-        public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines wether or not the current node was reached.
+        public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines whether or not the current node was reached.
         public LambdaAction ApplicableNodeDeterminer { get; set; } // The function used to get the closest node to the player.
 
         public void Init(DeltinScript deltinScript)

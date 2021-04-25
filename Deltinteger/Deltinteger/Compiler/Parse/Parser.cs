@@ -1713,7 +1713,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Parses a single import, rule, variable, class, etc.</summary>
-        /// <returns>Determines wether an element was parsed.</returns>
+        /// <returns>Determines whether an element was parsed.</returns>
         void ParseScriptRootElement(RootContext context)
         {
             // Return false if the EOF was reached.

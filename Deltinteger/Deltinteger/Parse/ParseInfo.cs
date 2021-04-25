@@ -185,7 +185,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="scope">The scope the variable was called in.</param>
         /// <param name="getter">The getter scope.</param>
         /// <param name="variableContext">The context of the variable.</param>
-        /// <param name="selfContained">Wether the variable was not called in an expression tree.</param>
+        /// <param name="selfContained">Whether the variable was not called in an expression tree.</param>
         /// <returns>An IExpression created from the context.</returns>
         public IExpression GetVariable(Scope scope, Scope getter, Identifier variableContext)
         {

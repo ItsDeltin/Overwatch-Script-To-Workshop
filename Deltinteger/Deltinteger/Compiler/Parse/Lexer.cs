@@ -325,7 +325,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         /// <summary>Matches a keyword.</summary>
         /// <param name="keyword">The name of the keyword that will be matched.</param>
         /// <param name="tokenType">The type of the created token.</param>
-        /// <returns>Wether the keyword was matched.</returns>
+        /// <returns>Whether the keyword was matched.</returns>
         public bool MatchKeyword(string keyword, TokenType tokenType)
         {
             LexScanner scanner = MakeScanner();
@@ -339,7 +339,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Matches a symbol.</summary>
-        /// <returns>Wether a symbol was matched.</returns>
+        /// <returns>Whether a symbol was matched.</returns>
         public bool MatchSymbol(string symbol, TokenType tokenType)
         {
             LexScanner scanner = MakeScanner();
@@ -353,7 +353,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Matches a symbol.</summary>
-        /// <returns>Wether a symbol was matched.</returns>
+        /// <returns>Whether a symbol was matched.</returns>
         public bool MatchSymbol(char symbol, TokenType tokenType)
         {
             LexScanner scanner = MakeScanner();
@@ -367,7 +367,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Matches an identifier.</summary>
-        /// <returns>Wether an identifier was matched.</returns>
+        /// <returns>Whether an identifier was matched.</returns>
         public bool MatchIdentifier()
         {
             LexScanner scanner = MakeScanner();
@@ -386,7 +386,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Matches a string. Works with single or double quotes and escaping.</summary>
-        /// <returns>Wether a string was matched.</returns>
+        /// <returns>Whether a string was matched.</returns>
         public bool MatchString(bool continueInterpolatedString = false, bool single = false)
         {
             LexScanner scanner = MakeScanner();
@@ -434,7 +434,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Matches a number.</summary>
-        /// <returns>Wether a number was matched.</returns>
+        /// <returns>Whether a number was matched.</returns>
         public bool MatchNumber()
         {
             LexScanner scanner = MakeScanner();
@@ -693,7 +693,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public void PushToken(Token token)
         {
             if (_lastInsertWasEqual) return;
-            // This is used to determine wether _stopAt is correctly being incremented as tokens are inserted.
+            // This is used to determine whether _stopAt is correctly being incremented as tokens are inserted.
             // System.Diagnostics.Debug.Assert(_lexUntilEnd || _tokens.IndexOf(_debugEndToken) == _stopAt);
 
             // Check if we have reached the end of the changed token range.

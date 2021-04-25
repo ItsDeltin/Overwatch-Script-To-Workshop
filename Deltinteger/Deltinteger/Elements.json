@@ -6224,17 +6224,17 @@
         },
         "Team Voice Chat": {
           "type": "boolean",
-          "documentation": "Wether or not Team Voice Chat will be disabled.",
+          "documentation": "Whether or not Team Voice Chat will be disabled.",
           "defaultValue": true
         },
         "Match Voice Chat": {
           "type": "boolean",
-          "documentation": "Wether or not Match Voice Chat will be disabled.",
+          "documentation": "Whether or not Match Voice Chat will be disabled.",
           "defaultValue": true
         },
         "Group Voice Chat": {
           "type": "boolean",
-          "documentation": "Wether or not Group Voice Chat will be disabled.",
+          "documentation": "Whether or not Group Voice Chat will be disabled.",
           "defaultValue": true
         }
       }

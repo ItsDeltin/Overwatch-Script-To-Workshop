@@ -102,7 +102,7 @@ namespace Deltin.Deltinteger.Parse
             Func(new FuncMethodBuilder()
             {
                 Name = "Contains",
-                Documentation = "Wether the array contains the specified value.",
+                Documentation = "Whether the array contains the specified value.",
                 ReturnType = supplier.Boolean(),
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value that is being looked for in the array.", ArrayOfType)
