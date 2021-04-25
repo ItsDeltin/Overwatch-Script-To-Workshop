@@ -248,8 +248,8 @@ namespace Deltin.Deltinteger.Parse
                 IGettable value = variable.GetDefaultInstance().GetAssigner(addToInitialRule.ActionSet).GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet, VarCollection, DefaultIndexAssigner));
                 DefaultIndexAssigner.Add(variable, value);
                 
-                // TODO: Don't cast to IndexReference
-                DebugVariables.Add(variable, (IndexReference)value);
+                if (value is IndexReference indexReference)
+                    DebugVariables.Add(variable, indexReference);
             }
 
             // Parse the rules.
