@@ -87,6 +87,7 @@ namespace Deltin.Deltinteger.Parse
                 Executor = functionHandler.All()
             }.Add(Scope, supplier);
             // Mapped
+            if (functionHandler.AllowUnhandled)
             new GenericSortFunction()
             {
                 Name = "Map",
@@ -108,9 +109,9 @@ namespace Deltin.Deltinteger.Parse
                     new CodeParameter("value", "The value that is being looked for in the array.", ArrayOfType)
                 },
                 Action = (actionSet, methodCall) => functionHandler.Contains(actionSet.CurrentObject, methodCall.ParameterValues[0])
-                // Action = (actionSet, methodCall) => Element.Contains(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Random
+            if (functionHandler.AllowUnhandled)
             Func(new FuncMethodBuilder()
             {
                 Name = "Random",
@@ -119,6 +120,7 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => Element.Part("Random Value In Array", actionSet.CurrentObject)
             });
             // Randomize
+            if (functionHandler.AllowUnhandled)
             Func(new FuncMethodBuilder()
             {
                 Name = "Randomize",
@@ -127,6 +129,7 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => Element.Part("Randomized Array", actionSet.CurrentObject)
             });
             // Append
+            if (functionHandler.AllowUnhandled)
             Func(new FuncMethodBuilder()
             {
                 Name = "Append",
@@ -138,6 +141,7 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => Element.Append(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Remove
+            if (functionHandler.AllowUnhandled)
             Func(new FuncMethodBuilder()
             {
                 Name = "Remove",
@@ -149,6 +153,7 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => Element.Part("Remove From Array", actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Slice
+            if (functionHandler.AllowUnhandled)
             Func(new FuncMethodBuilder()
             {
                 Name = "Slice",
@@ -161,6 +166,7 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => Element.Part("Array Slice", actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
             });
             // Index Of
+            if (functionHandler.AllowUnhandled)
             Func(new FuncMethodBuilder()
             {
                 Name = "IndexOf",

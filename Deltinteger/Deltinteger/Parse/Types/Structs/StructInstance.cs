@@ -122,12 +122,37 @@ namespace Deltin.Deltinteger.Parse
             public override IWorkshopTree LastOf(IWorkshopTree reference) => str(reference).Bridge(v => Element.LastOf(v));
             public override IWorkshopTree Contains(IWorkshopTree reference, IWorkshopTree value)
             {
-                // Extract the values from both structs.
-                var arrayValues = str(reference).GetAllValues();
-                var contains = str(value).GetAllValues();
+                // Extract the values from the 'reference' struct array.
+                IWorkshopTree[] arrayValues;
+                IWorkshopTree iterator;
+                IWorkshopTree targetter;
+                bool allowFirstElementQuickSkip;
+
+                // 'Contains' is being executed on an indexed struct array.
+                if (reference is IndexedStructArray indexedStructArray)
+                {
+                    arrayValues = indexedStructArray.StructArray.GetAllValues();
+                    iterator = indexedStructArray.IndexedArray;
+                    targetter = Element.ArrayElement();
+                    allowFirstElementQuickSkip = false;
+                }
+                else
+                {
+                    arrayValues = str(reference).GetAllValues();
+                    iterator = arrayValues[0];
+                    targetter = Element.ArrayIndex();
+                    allowFirstElementQuickSkip = true;
+                }
+
+                // Extract values from the 'value' struct.
+                IWorkshopTree[] contains = str(value).GetAllValues();
 
                 if (arrayValues.Length != contains.Length)
                     throw new Exception("Lengths of struct pair do not match.");
+                
+                // If the struct only has one value, we can just use the default Contains.
+                if (arrayValues.Length == 1 && allowFirstElementQuickSkip)
+                    return Element.Contains(iterator, contains[0]);
 
                 // The list of struct comparisons.
                 var comparisons = new Queue<IWorkshopTree>();
@@ -137,9 +162,9 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Later in this function, 'Is True For Any's array is arrayValues[0], so for the first struct value, just use Array Element.
                     // Otherwise, it will result in 'Is True For Any(x, x[Array Index] == ...' when 'Array Element' would suffice for 'x[Array Index]'
-                    var compareFrom = i == 0 ?
+                    var compareFrom = allowFirstElementQuickSkip && i == 0 ?
                         Element.ArrayElement() :
-                        Element.ValueInArray(arrayValues[i], Element.ArrayIndex());
+                        Element.ValueInArray(arrayValues[i], targetter);
 
                     comparisons.Enqueue(Element.Compare(compareFrom, Operator.Equal, contains[i]));
                 }
@@ -149,12 +174,17 @@ namespace Deltin.Deltinteger.Parse
                 while (comparisons.Count > 0)
                     condition = Element.And(condition, comparisons.Dequeue());
 
-                return Element.Any(arrayValues[0], condition);
+                return Element.Any(iterator, condition);
             }
             public override ISortFunctionExecutor SortedArray() => new StructSortExecutorReturnsArray(false);
             public override ISortFunctionExecutor FilteredArray() => new StructSortExecutorReturnsArray(true);
             public override ISortFunctionExecutor All() => new StructSortExecutorReturnsBoolean();
             public override ISortFunctionExecutor Any() => new StructSortExecutorReturnsBoolean();
+
+            public StructArrayFunctionHandler()
+            {
+                AllowUnhandled = false;
+            }
 
             // For struct array iterators that returns a struct array (Filtered Array, Sorted Array).
             private class StructSortExecutorReturnsArray : ISortFunctionExecutor

@@ -5,10 +5,12 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ArrayFunctionHandler
     {
-        public virtual IWorkshopTree Length(IWorkshopTree reference) => CountOf(reference);
-        public virtual IWorkshopTree FirstOf(IWorkshopTree reference) => FirstOf(reference);
-        public virtual IWorkshopTree LastOf(IWorkshopTree reference) => LastOf(reference);
-        public virtual IWorkshopTree Contains(IWorkshopTree reference, IWorkshopTree value) => Contains(reference, value);
+        public bool AllowUnhandled { get; protected set; } = true;
+
+        public virtual IWorkshopTree Length(IWorkshopTree reference) => Element.CountOf(reference);
+        public virtual IWorkshopTree FirstOf(IWorkshopTree reference) => Element.FirstOf(reference);
+        public virtual IWorkshopTree LastOf(IWorkshopTree reference) => Element.LastOf(reference);
+        public virtual IWorkshopTree Contains(IWorkshopTree reference, IWorkshopTree value) => Element.Contains(reference, value);
         public virtual ISortFunctionExecutor SortedArray() => new GeneralSortFunctionExecutor();
         public virtual ISortFunctionExecutor FilteredArray() => new GeneralSortFunctionExecutor();
         public virtual ISortFunctionExecutor Any() => new GeneralSortFunctionExecutor();
