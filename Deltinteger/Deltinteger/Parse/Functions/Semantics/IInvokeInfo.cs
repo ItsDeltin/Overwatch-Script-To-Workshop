@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Parse
                 // Do not track if any of the generics are null.
                 if (overloadChooser.Match.TypeArgs.All(t => t != null))
                     // Track the generics used in the function.
-                    parseInfo.TranslateInfo.GetComponent<TypeTrackerComponent>().Track(callingMethod.MethodInfo.Tracker, overloadChooser.Match.TypeArgs);
+                    parseInfo.Script.Elements.AddTypeArgCall(new TypeArgCall(callingMethod.MethodInfo.Tracker, overloadChooser.Match.TypeArgs));
 
                 // If the function's block needs to be applied, check optional restricted calls when 'Applied()' runs.
                 if (callingMethod is IApplyBlock applyBlock)

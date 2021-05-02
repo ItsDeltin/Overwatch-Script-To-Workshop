@@ -2,14 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
-using Deltin.Deltinteger.Parse.Lambda;
 using Deltin.Deltinteger.Parse.Workshop;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -76,6 +72,8 @@ namespace Deltin.Deltinteger.Parse
         public virtual CodeType[] UnionTypes() => new[] {this};
 
         public virtual bool Is(CodeType type) => this == type;
+
+        public virtual bool CompatibleWith(CodeType type) => true;
 
         // Static
         public virtual Scope ReturningScope() => null;
@@ -163,8 +161,6 @@ namespace Deltin.Deltinteger.Parse
 
             return result;
         }
-
-        public virtual void AddLink(Location location) {}
 
         public virtual CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => this;
 

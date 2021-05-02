@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
             Context = context;
             AnonymousTypeAttributes = attributes;
             Attributes.ContainsGenerics = true;
+            GenericUsage = new BridgeAnonymousUsage(this);
         }
         
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => instanceInfo != null && instanceInfo.Links.TryGetValue(this, out CodeType result) ? result : this;

@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var var in _variables)
             {
                 var assigner = var.GetAssigner(null);
-                values.Add(var.Name, assigner.AssignClassStacks(new GetClassStacks(info.DeltinScript, offset)));
+                values.Add(var.Name, assigner.AssignClassStacks(new GetClassStacks(info.ClassData, offset)));
                 offset += assigner.StackDelta();
             }
             

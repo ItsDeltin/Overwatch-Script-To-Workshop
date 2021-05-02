@@ -1,25 +1,24 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
 {
-    // TODO: Change IComponent to IWorkshopComponent
-    public class ClassWorkshopInitializerComponent : IComponent
+    public class ClassWorkshopInitializerComponent
     {
         public const string ObjectVariableTag = "_objectVariable_";
 
-        DeltinScript _deltinScript;
-        TypeTrackerComponent _typeTracker;
+        readonly ToWorkshop _toWorkshop;
+        GlobTypeArgCollector _typeTracker => _toWorkshop.TypeArgGlob;
         int _stackCount; // The number of object variables that need to be assigned.
         IndexReference[] _stacks; // The object variables.
         int _newClassID = 1; // Counts up from 0 assigning classes identifiers.
         readonly Dictionary<IClassInitializer, WorkshopInitializedClass> _initialized = new Dictionary<IClassInitializer, WorkshopInitializedClass>();
 
-        public void Init(DeltinScript deltinScript)
+        public ClassWorkshopInitializerComponent(ToWorkshop toWorkshop)
         {
-            _deltinScript = deltinScript;
-            _typeTracker = deltinScript.GetComponent<TypeTrackerComponent>();
+            _toWorkshop = toWorkshop;
 
             // Init classes then assign stacks.
             InitClasses();
@@ -30,7 +29,6 @@ namespace Deltin.Deltinteger.Parse
         void InitClasses()
         {
             foreach (var tracker in _typeTracker.Trackers)
-                // TODO: Do not cast.
                 if (tracker.Key is IClassInitializer classProvider)
                     InitClassProvider(classProvider, tracker.Value);
         }
@@ -52,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Create the WorkshopInitializedClass.
-            var wic = new WorkshopInitializedClass(_deltinScript, provider, info, stackOffset, _newClassID);
+            var wic = new WorkshopInitializedClass(_toWorkshop, provider, info, stackOffset, _newClassID);
             _newClassID++;
 
             // Add to _initialized
@@ -70,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
             _stacks = new IndexReference[_stackCount];
 
             for (int i = 0; i < _stacks.Length; i++)
-                _stacks[i] = _deltinScript.VarCollection.Assign(ObjectVariableTag + i, true, false);
+                _stacks[i] = _toWorkshop.DeltinScript.VarCollection.Assign(ObjectVariableTag + i, true, false);
         }
 
         public WorkshopInitializedClass InitializedClassFromProvider(IClassInitializer provider) => _initialized[provider];
@@ -80,7 +78,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class WorkshopInitializedClass
     {
-        readonly DeltinScript _deltinScript;
+        readonly ToWorkshop _toWorkshop;
         public IClassInitializer Provider { get; }
         public ProviderTrackerInfo Info { get; }
         public int Offset { get; }
@@ -89,14 +87,14 @@ namespace Deltin.Deltinteger.Parse
         public int ID { get; }
 
         public WorkshopInitializedClass(
-            DeltinScript deltinScript,
+            ToWorkshop toWorkshop,
             IClassInitializer provider,
             ProviderTrackerInfo info,
             int stackOffset,
             int id
         )
         {
-            _deltinScript = deltinScript;
+            _toWorkshop = toWorkshop;
             Provider = provider;
             Info = info;
             Offset = stackOffset;
@@ -110,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Create a default instance and get the type of the variable.
             var inst = objectVariable.GetDefaultInstance();
-            var originalType = inst.CodeType.GetCodeType(_deltinScript);
+            var originalType = inst.CodeType.GetCodeType(_toWorkshop.DeltinScript);
 
             // The number of object variables assigned to this variable.
             int stackDelta = 0;
@@ -127,7 +125,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     int typeArgIndex = Provider.TypeArgIndexFromAnonymousType(anonymous);
 
-                    foreach (var type in Info.TypeArgTracker[typeArgIndex].UsedTypes)
+                    foreach (var type in Info.TypeArgs[typeArgIndex].AllTypeArguments)
                     {
                         // Get the assigner from the type.
                         var assigner = type.GetGettableAssigner(AssigningAttributes.Empty);
@@ -148,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
                         stackDelta = Math.Max(stackDelta, assigner.StackDelta());
 
                         /*
-                        * TODO: This is not compatible in this scenario:
+                        TODO: This is not compatible in this scenario:
                         class Axe<T> { Bash<T> myBash; }
                         struct Bash<T> { T myValue; }
                         struct Fooly { String value1; String value2; }
@@ -173,7 +171,7 @@ namespace Deltin.Deltinteger.Parse
 
                 assigner.Add(
                     instances[i].Provider,
-                    instances[i].GetAssigner(null).AssignClassStacks(new GetClassStacks(_deltinScript, stack)).ChildFromClassReference(reference)
+                    instances[i].GetAssigner(null).AssignClassStacks(new GetClassStacks(_toWorkshop.ClassInitializer, stack)).ChildFromClassReference(reference)
                 );
             }
         }

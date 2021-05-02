@@ -79,6 +79,15 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
+        public override bool CompatibleWith(CodeType type)
+        {
+            int stackDelta = GetGettableAssigner(AssigningAttributes.Empty).StackDelta();
+
+            return type is StructInstance structInstance
+                ? stackDelta == structInstance.GetGettableAssigner(AssigningAttributes.Empty).StackDelta()
+                : stackDelta == 1;
+        }
+
         public override Scope GetObjectScope()
         {
             ThrowIfNotReady();

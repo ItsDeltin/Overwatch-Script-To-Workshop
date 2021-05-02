@@ -76,15 +76,13 @@ namespace Deltin.Deltinteger.Parse
 
     public class GetClassStacks
     {
-        public DeltinScript DeltinScript { get; }
-        public int StackOffset { get; }
         public ClassWorkshopInitializerComponent ClassData { get; }
+        public int StackOffset { get; }
 
-        public GetClassStacks(DeltinScript deltinScript, int stackOffset)
+        public GetClassStacks(ClassWorkshopInitializerComponent classData, int stackOffset)
         {
-            DeltinScript = deltinScript;
+            ClassData = classData;
             StackOffset = stackOffset;
-            ClassData = DeltinScript.GetComponent<ClassWorkshopInitializerComponent>();
         }
     }
 }

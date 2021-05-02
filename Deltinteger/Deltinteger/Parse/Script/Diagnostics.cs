@@ -6,9 +6,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 
 using PublishDiagnosticsParams = OmniSharp.Extensions.LanguageServer.Protocol.Models.PublishDiagnosticsParams;
-// TODO: Maybe switch from using `Deltin.LanguageServer.Diagnostic` to using `OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic`
 using LSDiagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic;
-using DiagnosticCode = OmniSharp.Extensions.LanguageServer.Protocol.Models.DiagnosticCode;
 using DiagnosticSeverity = OmniSharp.Extensions.LanguageServer.Protocol.Models.DiagnosticSeverity;
 
 namespace Deltin.Deltinteger.Parse
@@ -147,10 +145,6 @@ namespace Deltin.Deltinteger.Parse
                     Range = _diagnostics[i].range ?? null,
                     Severity = (DiagnosticSeverity)_diagnostics[i].severity,
                     Source = _diagnostics[i].source
-                    // TODO: Fix this if RelatedInformation is ever used.
-                    // RelatedInformation = _diagnostics[i].relatedInformation
-                    // TODO: Fix this if Code is ever used.
-                    // Code = (DiagnosticCode)_diagnostics[i].code,
                 };
 
             return new PublishDiagnosticsParams()

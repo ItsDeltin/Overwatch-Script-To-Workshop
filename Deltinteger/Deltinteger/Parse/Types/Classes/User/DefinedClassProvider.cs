@@ -40,6 +40,17 @@ namespace Deltin.Deltinteger.Parse
         {
             if (_elementsResolved) return;
 
+            // Setup scopes.
+            _operationalStaticScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
+            _operationalObjectScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
+
+            // Add typeargs to scopes.
+            foreach (var type in GenericTypes)
+            {
+                _operationalStaticScope.AddType(new GenericCodeTypeInitializer(type));
+                _operationalObjectScope.AddType(new GenericCodeTypeInitializer(type));
+            }
+
             // Get the type being extended.
             // This is an array for future interface support.
             if (_typeContext.Inheriting.Count > 0)
@@ -47,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
                 var inheritContext = _typeContext.Inheriting[0];
 
                 // Get the type being inherited.
-                var inheriting = TypeFromContext.GetCodeTypeFromContext(_parseInfo, _scope, inheritContext);
+                var inheriting = TypeFromContext.GetCodeTypeFromContext(_parseInfo, _operationalStaticScope, inheritContext);
 
                 // GetCodeType will return null if the type is not found.
                 if (inheriting != null)
@@ -67,18 +78,8 @@ namespace Deltin.Deltinteger.Parse
 
             base.ResolveElements();
 
-            // Setup scopes.
-            _operationalStaticScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
-            _operationalObjectScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
-
             (Extends as ClassType)?.Elements.AddToScope(_operationalStaticScope, false);
             (Extends as ClassType)?.Elements.AddToScope(_operationalObjectScope, true);
-
-            foreach (var type in GenericTypes)
-            {
-                _operationalStaticScope.AddType(new GenericCodeTypeInitializer(type));
-                _operationalObjectScope.AddType(new GenericCodeTypeInitializer(type));
-            }
 
             // Get declarations.
             foreach (var declaration in _typeContext.Declarations)

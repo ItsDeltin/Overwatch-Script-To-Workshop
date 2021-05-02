@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
                 var instanceInfo = new GetInstanceInfo(typeArgs);
 
                 // Track the type args being used.
-                parseInfo.TranslateInfo.GetComponent<TypeTrackerComponent>().Track(provider, typeArgs.Select(t => t.GenericUsage).ToArray());
+                parseInfo.Script.Elements.AddTypeArgCall(new TypeArgCall(provider, typeArgs));
 
                 // Create the type instance and call it.
                 type = provider.GetInstance(instanceInfo);
@@ -130,7 +130,10 @@ namespace Deltin.Deltinteger.Parse
             CodeType[] provided = new CodeType[typeArgs.Length];
 
             for (int i = 0; i < typeArgs.Length; i++)
+            {
+                provided[i] = GetCodeTypeFromContext(parseInfo, scope, context[i]);
                 ValidateTypeArg(parseInfo, typeArgs[i], provided[i], context[i].Range);
+            }
 
             return provided;
         }

@@ -117,7 +117,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Extends?.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
 
-            var classInitializer = toWorkshop.GetComponent<ClassWorkshopInitializerComponent>();
+            var classInitializer = toWorkshop.ClassInitializer;
             var initInfo = classInitializer.InitializedClassFromProvider(Provider);
             initInfo.AddVariableInstancesToAssigner(Variables, reference, assigner);
         }

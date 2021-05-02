@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         {
             _actionSet = actionSet;
             _functions = functions;
-            _classInitializer = _actionSet.ToWorkshop.GetComponent<ClassWorkshopInitializerComponent>();
+            _classInitializer = _actionSet.ToWorkshop.ClassInitializer;
         }
 
         public void Build()

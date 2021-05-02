@@ -135,7 +135,7 @@ namespace Deltin.Deltinteger.Parse
             //     parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
 
             parseInfo.TranslateInfo.ApplyBlock(this);
-            parseInfo.Script.Elements.AddMethod(this);
+            parseInfo.Script.Elements.AddMethodDeclaration(this);
         }
 
         public void SetupParameters() {}

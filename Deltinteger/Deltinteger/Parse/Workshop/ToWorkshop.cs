@@ -2,17 +2,21 @@ namespace Deltin.Deltinteger.Parse.Workshop
 {
     public class ToWorkshop
     {
-        readonly DeltinScript _deltinScript;
+        public DeltinScript DeltinScript { get; }
         public CompileRelations Relations { get; }
+        public GlobTypeArgCollector TypeArgGlob { get; }
         public PortableAssigner PortableAssigner { get; }
+        public ClassWorkshopInitializerComponent ClassInitializer { get; }
 
         public ToWorkshop(DeltinScript deltinScript)
         {
-            _deltinScript = deltinScript;
+            DeltinScript = deltinScript;
             Relations = new CompileRelations(deltinScript);
+            TypeArgGlob = new GlobTypeArgCollector(deltinScript.Importer.ScriptFiles.ToArray());
             PortableAssigner = new PortableAssigner(deltinScript);
+            ClassInitializer = new ClassWorkshopInitializerComponent(this);
         }
 
-        public T GetComponent<T>() where T: IComponent, new() => _deltinScript.GetComponent<T>();
+        public T GetComponent<T>() where T: IComponent, new() => DeltinScript.GetComponent<T>();
     }
 }
