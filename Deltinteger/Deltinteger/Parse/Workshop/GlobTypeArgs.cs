@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Deltin.Deltinteger.Parse.Workshop
@@ -40,11 +41,15 @@ namespace Deltin.Deltinteger.Parse.Workshop
 
             // Add calls.
             foreach (var raw in collected)
+            if (raw.Key.GenericsCount != 0)
             {
                 var tracker = _trackers[raw.Key];
                 foreach (var call in raw.Value.Calls)
-                    for (int i = 0; i < call.TypeArgs.Length; i++)
-                        call.TypeArgs[i].GenericUsage.UsedWithTypeArg(this, tracker.TypeArgs[i]);
+                {
+                    // Create the TypeArgCombo for this call.
+                    var combo = new TypeArgCombo(this, tracker, call.TypeArgs);
+                    combo.StartNext();
+                }
             }
         }
 
@@ -97,6 +102,8 @@ namespace Deltin.Deltinteger.Parse.Workshop
     public class ProviderTrackerInfo
     {
         public TypeArgGlob[] TypeArgs { get; }
+        public IReadOnlyList<TypeArgCombo> TypeArgCombos => _typeArgCombos.AsReadOnly();
+        readonly List<TypeArgCombo> _typeArgCombos = new List<TypeArgCombo>();
 
         public ProviderTrackerInfo(ITypeArgTrackee trackee)
         {
@@ -104,6 +111,8 @@ namespace Deltin.Deltinteger.Parse.Workshop
             for (int i = 0; i < TypeArgs.Length; i++)
                 TypeArgs[i] = new TypeArgGlob(trackee.GenericTypes[i]);
         }
+
+        public void AddCombo(TypeArgCombo combo) => _typeArgCombos.Add(combo);
     }
 
     public class TypeArgGlob
@@ -139,5 +148,80 @@ namespace Deltin.Deltinteger.Parse.Workshop
             
             _actions += action;
         }
+    }
+
+    public class TypeArgCombo
+    {
+        public bool Completed { get; private set; }
+        public ProviderTrackerInfo Tracker { get; }
+        public CodeType[] TypeArgs { get; }
+        readonly CodeType[] _providedTypeArguments;
+        readonly GlobTypeArgCollector _collector;
+        int _current = 0;
+
+        public TypeArgCombo(GlobTypeArgCollector collector, ProviderTrackerInfo tracker, CodeType[] providedArguments)
+        {
+            // Set variables
+            Tracker = tracker;
+            TypeArgs = new CodeType[providedArguments.Length];
+            _providedTypeArguments = providedArguments;
+            _collector = collector;
+        }
+
+        public void StartNext()
+        {
+            // Get the next type arg in the list.
+            if (!Completed)
+                _providedTypeArguments[_current].GetGenericUsage().UsedWithTypeArg(_collector, this);
+        }
+
+        public void SetCurrent(CodeType type)
+        {
+            // Set the current type arg. If _providedTypeArguments[_current] is not an AnonymousType, it will be the same value as type. 
+            TypeArgs[_current] = type;
+            Tracker.TypeArgs[_current].AddCodeType(type);
+
+            _current++;
+            Completed = _current == TypeArgs.Length;
+
+            if (Completed)
+                Tracker.AddCombo(this);
+        }
+
+        public TypeArgCombo Clone() => new TypeArgCombo(this);
+
+        private TypeArgCombo(TypeArgCombo existing)
+        {
+            Completed = existing.Completed;
+            Tracker = existing.Tracker;
+            TypeArgs = (CodeType[])existing.TypeArgs.Clone();
+            _providedTypeArguments = existing._providedTypeArguments;
+            _collector = existing._collector;
+            _current = existing._current;
+        }
+
+        public bool CompatibleWith(TypeArgCombo other)
+        {
+            // Make sure the trackers match. This will also ensure that the type args are the same length. 
+            if (Tracker != other.Tracker)
+                return false;
+
+            // Make sure each pair is compatible with each other.
+            for (int i = 0; i < TypeArgs.Length; i++)
+                if (!TypeArgs[i].CompatibleWith(other.TypeArgs[i]))
+                    return false;
+            
+            return true;
+        }
+
+        public bool CompatibleWith(CodeType[] typeArgs)
+        {
+            for (int i = 0; i < TypeArgs.Length; i++)
+                if (!TypeArgs[i].CompatibleWith(typeArgs[i]))
+                    return false;
+            return true;
+        }
+
+        public override string ToString() => "[" + string.Join(", ", from arg in TypeArgs select arg.GetName()) + "]";
     }
 }

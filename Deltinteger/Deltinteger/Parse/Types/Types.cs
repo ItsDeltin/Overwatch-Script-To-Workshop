@@ -31,9 +31,6 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>The attributes of the type. Determines if the type is a struct or struct array and more.</summary>
         public TypeAttributes Attributes { get; protected set; } = new TypeAttributes();
 
-        /// <summary>Tracks type arg usage.</summary>
-        public IGenericUsage GenericUsage { get; protected set; }
-
         /// <summary>Overrides execution of array functions when this type is used in an array.</summary>
         public virtual ITypeArrayHandler ArrayHandler { get; protected set; } = new DefaultArrayHandler();
 
@@ -44,7 +41,6 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = name;
             Operations = new TypeOperatorInfo(this);
-            GenericUsage = new AddToGenericsUsage(this);
         }
 
         public virtual bool Implements(CodeType type)
@@ -73,7 +69,12 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual bool Is(CodeType type) => this == type;
 
-        public virtual bool CompatibleWith(CodeType type) => true;
+        public virtual bool CompatibleWith(CodeType type)
+        {
+            if (IsConstant() != type.IsConstant()) return false;
+            if (IsConstant() && type.IsConstant()) return true;
+            return type.Attributes.StackLength == 1;
+        }
 
         // Static
         public virtual Scope ReturningScope() => null;
@@ -142,6 +143,8 @@ namespace Deltin.Deltinteger.Parse
 
             return types.ToArray();
         }
+
+        public virtual IGenericUsage GetGenericUsage() => new AddToGenericsUsage(this);
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public virtual CompletionItem GetCompletion() => throw new NotImplementedException();

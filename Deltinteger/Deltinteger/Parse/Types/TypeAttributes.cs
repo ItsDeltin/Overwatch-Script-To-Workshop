@@ -4,6 +4,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public bool IsStruct { get; set; }
         public bool ContainsGenerics { get; set; }
+        public int StackLength { get; set; } = 1;
 
         public TypeAttributes() {}
 
