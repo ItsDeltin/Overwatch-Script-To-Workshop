@@ -14,13 +14,52 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
 
         readonly DefinedMethodInstance _function;
         readonly DeltinScript _deltinScript;
-        readonly DefinedMethodInstance[] _allVirtualOptions;
+        readonly ClassWorkshopRelation _classRelation;
+        readonly List<DefinedMethodInstance> _allVirtualOptions = new List<DefinedMethodInstance>();
 
         public UserFunctionController(DeltinScript deltinScript, ToWorkshop toWorkshop, DefinedMethodInstance function)
         {
             _function = function;
             _deltinScript = deltinScript;
-            _allVirtualOptions = toWorkshop.Relations.GetAllOverridersOf(function);
+            _allVirtualOptions.Add(function);
+
+            // If the function is defined in a type.
+            if (function.DefinedInType != null)
+            {
+                Attributes.IsInstance = true;
+
+                // Get the class relation.
+                _classRelation = toWorkshop.ClassInitializer.RelationFromClassType((ClassType)function.DefinedInType);
+
+                // Get the virtual functions.
+                foreach (var extender in _classRelation.GetAllExtenders())
+                {
+                    // Extract the virtual function.
+                    var methodInstance = extender.Instance.Elements.ScopeableElements.FirstOrDefault(element =>
+                        // Make sure the scopeable is a defined method...
+                        element.Scopeable is DefinedMethodInstance method &&
+                        // ...that overrides the target method.
+                        DoesOverride(function, method)
+                    ).Scopeable as DefinedMethodInstance;
+
+                    // Add the method instance if it exists.
+                    // todo: In _allVirtualOptions, it may be a good idea to include classes that do not override so we don't need to check auto-implementations in the virtual builder.
+                    if (methodInstance != null)
+                    {
+                        _allVirtualOptions.Add(methodInstance);
+                    }
+                }
+            }
+        }
+
+        static bool DoesOverride(DefinedMethodInstance target, DefinedMethodInstance overrider)
+        {
+            while (overrider != null)
+            {
+                if (overrider.Provider == target.Provider) return true;
+                overrider = overrider.Provider.OverridingFunction;
+            }
+            return false;
         }
 
         // Creates a return handler.
@@ -45,7 +84,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 return null;
             
             // Get or create the subroutine.
-            return _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(_function.Provider, () =>
+            return _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(_classRelation.Combo, () =>
                 // Create the subroutine.
                 new SubroutineBuilder(_deltinScript, new() {
                     Controller = this,
@@ -54,7 +93,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                     ObjectStackName = _function.Name + "Stack",
                     VariableGlobalDefault = _function.Provider.SubroutineDefaultGlobal,
                     // TODO: use _function.ContainingType (when that is ready)
-                    ContainingType = _function.Provider.ContainingType?.GetInstance(_function.InstanceInfo)
+                    ContainingType = _function.DefinedInType
+                    // ContainingType = _function.Provider.ContainingType?.GetInstance(_function.InstanceInfo)
                 }).SetupSubroutine()
             );
         }
@@ -66,7 +106,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             // Create the function builder.
             var virtualContentBuilder = new VirtualContentBuilder(
                 actionSet: actionSet,
-                functions: from virtualOption in _allVirtualOptions select new UserFunctionBuilder(virtualOption, _deltinScript)
+                functions: from virtualOption in _allVirtualOptions select new UserFunctionBuilder(virtualOption)
             );
             virtualContentBuilder.Build();
         }
@@ -74,19 +114,14 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         class UserFunctionBuilder : IVirtualFunctionHandler
         {
             readonly DefinedMethodInstance _method;
-            readonly ClassType _type;
 
-            public UserFunctionBuilder(DefinedMethodInstance method, DeltinScript deltinScript)
+            public UserFunctionBuilder(DefinedMethodInstance method)
             {
                 _method = method;
-
-                // Function is inside a class.
-                if (_method.Provider.ContainingType != null)
-                    _type = (ClassType)_method.Provider.ContainingType.GetInstance(_method.InstanceInfo);
             }
 
-            public void Build(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet);
-            public ClassType ContainingType() => _type;
+            public void Build(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet.SetThisTypeLinker(_method.InstanceInfo));
+            public ClassType ContainingType() => (ClassType)_method.DefinedInType;
         }
     }
 

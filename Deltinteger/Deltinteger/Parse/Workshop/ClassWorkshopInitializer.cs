@@ -13,8 +13,10 @@ namespace Deltin.Deltinteger.Parse
         GlobTypeArgCollector _typeTracker => _toWorkshop.TypeArgGlob;
         int _stackCount; // The number of object variables that need to be assigned.
         IndexReference[] _stacks; // The object variables.
-        int _newClassID = 1; // Counts up from 0 assigning classes identifiers.
-        readonly Dictionary<IClassInitializer, WorkshopInitializedClass> _initialized = new Dictionary<IClassInitializer, WorkshopInitializedClass>();
+        int _newClassID; // Counts up from 0 assigning classes identifiers.
+        readonly HashSet<WorkshopInitializedCombo> _initializedCombos = new HashSet<WorkshopInitializedCombo>();
+        readonly List<ClassProviderComboCollection> _providerComboCollections = new List<ClassProviderComboCollection>();
+        readonly List<ClassWorkshopRelation> _relations = new List<ClassWorkshopRelation>();
 
         public ClassWorkshopInitializerComponent(ToWorkshop toWorkshop)
         {
@@ -25,42 +27,54 @@ namespace Deltin.Deltinteger.Parse
             AssignStacks();
         }
 
-        // Initializes all classes in the tracker.
+        // Assigns a unique class identifier.
+        public int AssignID() => ++_newClassID;
+
         void InitClasses()
         {
+            // Collect combos.
             foreach (var tracker in _typeTracker.Trackers)
-                if (tracker.Key is IClassInitializer classProvider)
-                    InitClassProvider(classProvider, tracker.Value);
+                if (tracker.Key is ClassInitializer classProvider)
+                    _providerComboCollections.Add(new ClassProviderComboCollection(this, classProvider, tracker.Value.TypeArgCombos));
+            
+            // Initialize combos.
+            foreach (var comboCollection in _providerComboCollections)
+                comboCollection.Init();
+            
+            // Link relations.
+            foreach (var relations in _relations)
+                relations.Link(this);
         }
 
-        // Initializes a class.
-        WorkshopInitializedClass InitClassProvider(IClassInitializer provider, ProviderTrackerInfo info)
+        public void InitCombo(WorkshopInitializedCombo combo)
         {
-            // Check if the provider value already exists.
-            if (_initialized.TryGetValue(provider, out var wicExisting))
-                return wicExisting;
-
-            int stackOffset = 0;
-
-            // Add offset if the provider is overriding something.
-            if (provider.Extends != null)
+            if (_initializedCombos.Add(combo))
             {
-                var extends = InitClassProvider(provider.Extends.Provider, _typeTracker.Trackers[provider]);
-                stackOffset = extends.Offset + extends.StackLength;
+                // This if block will run if 'combo' was not yet initialized.
+                combo.Init();
+                _stackCount = Math.Max(_stackCount, combo.StackOffset + combo.StackLength);
             }
-
-            // Create the WorkshopInitializedClass.
-            var wic = new WorkshopInitializedClass(_toWorkshop, provider, info, stackOffset, _newClassID);
-            _newClassID++;
-
-            // Add to _initialized
-            _initialized.Add(provider, wic);
-
-            // Set _stackCount
-            _stackCount = Math.Max(_stackCount, wic.Offset + wic.StackLength);
-
-            return wic;
         }
+
+        public WorkshopInitializedCombo ComboFromClassType(ClassType type)
+        {
+            // Get the combo collection from the providers.
+            var providerCollection = CollectionFromProvider(type.Provider);
+
+            // Get the first combo that is compatible with the input type.
+            foreach (var initializedCombo in providerCollection.InitializedCombos)
+                if (initializedCombo.Combo.CompatibleWith(type.Generics))
+                    return initializedCombo;
+            
+            // No combos are compatible.
+            throw new Exception("No combos are acceptable");
+        }
+
+        public ClassWorkshopRelation RelationFromClassType(ClassType type) => _relations.First(relation => relation.Instance.Is(type));
+
+        public void AddRelation(ClassWorkshopRelation relation) => _relations.Add(relation);
+
+        ClassProviderComboCollection CollectionFromProvider(IClassInitializer provider) => _providerComboCollections.First(p => p.Provider == provider);
 
         // Assigns ObjectVariable stacks.
         void AssignStacks()
@@ -71,108 +85,125 @@ namespace Deltin.Deltinteger.Parse
                 _stacks[i] = _toWorkshop.DeltinScript.VarCollection.Assign(ObjectVariableTag + i, true, false);
         }
 
-        public WorkshopInitializedClass InitializedClassFromProvider(IClassInitializer provider) => _initialized[provider];
-        public int GetIdentifier(IClassInitializer provider) => _initialized[provider].ID;
         public IndexReference ObjectVariableFromIndex(int i) => _stacks[i];
     }
 
-    public class WorkshopInitializedClass
+    public class ClassProviderComboCollection
     {
-        readonly ToWorkshop _toWorkshop;
-        public IClassInitializer Provider { get; }
-        public ProviderTrackerInfo Info { get; }
-        public int Offset { get; }
-        public int[] StackDeltas { get; }
-        public int StackLength { get; }
-        public int ID { get; }
+        public ClassInitializer Provider { get; }
+        public IReadOnlyList<WorkshopInitializedCombo> InitializedCombos => _initializedCombos.AsReadOnly();
+        readonly List<WorkshopInitializedCombo> _initializedCombos = new List<WorkshopInitializedCombo>();
+        readonly ClassWorkshopInitializerComponent _initializer;
 
-        public WorkshopInitializedClass(
-            ToWorkshop toWorkshop,
-            IClassInitializer provider,
-            ProviderTrackerInfo info,
-            int stackOffset,
-            int id
-        )
+        public ClassProviderComboCollection(ClassWorkshopInitializerComponent initializer, ClassInitializer provider, IReadOnlyList<TypeArgCombo> combos)
         {
-            _toWorkshop = toWorkshop;
             Provider = provider;
-            Info = info;
-            Offset = stackOffset;
-            ID = id;
+            _initializer = initializer;
 
-            StackDeltas = provider.ObjectVariables.Select(ov => GetObjectVariableStackCount(ov)).ToArray();
-            StackLength = StackDeltas.Sum();
-        }
+            foreach (var combo in combos)
+            {
+                // Instantiate the combo.
+                var instance = (ClassType)Provider.GetInstance(new GetInstanceInfo(combo.TypeArgs));
 
-        int GetObjectVariableStackCount(IVariable objectVariable)
-        {
-            // Create a default instance and get the type of the variable.
-            var inst = objectVariable.GetDefaultInstance();
-            var originalType = inst.CodeType.GetCodeType(_toWorkshop.DeltinScript);
-
-            // The number of object variables assigned to this variable.
-            int stackDelta = 0;
-
-            // Extract every anonymous type that the type or it's type args use.
-            var anonymousTypes = originalType.ExtractAnonymousTypes();
-
-            // Get each potential variable type for T
-            if (anonymousTypes.Length == 0)
-                // Use the default stackDelta.
-                stackDelta = originalType.GetGettableAssigner(AssigningAttributes.Empty).StackDelta();
-            else
-                foreach (var anonymous in anonymousTypes)
+                // No group was created yet.
+                var group = GetCompatible(combo);
+                if (group == null)
                 {
-                    int typeArgIndex = Provider.TypeArgIndexFromAnonymousType(anonymous);
-
-                    foreach (var type in Info.TypeArgs[typeArgIndex].AllTypeArguments)
-                    {
-                        // Get the assigner from the type.
-                        var assigner = type.GetGettableAssigner(AssigningAttributes.Empty);
-
-                        /* Get the stackDelta of the object variable.
-                        * Example:
-                        class Axe<T> {
-                            T myValue;
-                        }
-                        struct Bash {
-                            String myValue;
-                            Number myOtherValue;
-                        }
-                        * If Axe is used with these generics 'Axe<String>' and 'Axe<Bash>'
-                        * 'Axe' will need 2 object variables assigned to it.
-                        * 'String' requires 1, while 'Bash' requires 2.
-                        * The higher value is used. */
-                        stackDelta = Math.Max(stackDelta, assigner.StackDelta());
-
-                        /*
-                        TODO: This is not compatible in this scenario:
-                        class Axe<T> { Bash<T> myBash; }
-                        struct Bash<T> { T myValue; }
-                        struct Fooly { String value1; String value2; }
-                        
-                        Axe<Fooly> axeFooly;
-                        * StackDelta may need the ProviderTrackerInfo
-                        * Or we can just not support structs w/ generics, because I want to live my life I guess.
-                        */
-                    }
+                    group = new WorkshopInitializedCombo(initializer, instance, combo, initializer.AssignID());
+                    _initializedCombos.Add(group);
                 }
 
-            return stackDelta;
+                // Create the relation.
+                initializer.AddRelation(new ClassWorkshopRelation(group, instance));
+            }
+        }
+
+        WorkshopInitializedCombo GetCompatible(TypeArgCombo combo) => _initializedCombos.FirstOrDefault(c => c.Combo.CompatibleWith(combo));
+
+        public void Init()
+        {
+            foreach (var combo in _initializedCombos)
+                _initializer.InitCombo(combo);
+        }
+    }
+
+    public class WorkshopInitializedCombo
+    {
+        public TypeArgCombo Combo { get; }
+        public int ID { get; }
+        public WorkshopInitializedCombo ExtendsCombo { get; private set; }
+        public int StackOffset { get; private set; }
+        public int StackLength { get; }
+
+        readonly ClassWorkshopInitializerComponent _initializer;
+        readonly ClassType _instance;
+
+        public WorkshopInitializedCombo(ClassWorkshopInitializerComponent initializer, ClassType instance, TypeArgCombo combo, int id)
+        {
+            Combo = combo;
+            ID = id;
+            _initializer = initializer;
+            _instance = instance;
+            // StackLength = _instance.Attributes.StackLength;
+            StackLength = instance.Variables.Select(v => v.GetAssigner(null).StackDelta()).Sum();
+        }
+
+        public void Init()
+        {
+            // Add offset if the provider is overriding something.
+            if (_instance.Extends != null)
+            {
+                ExtendsCombo = _initializer.ComboFromClassType((ClassType)_instance.Extends);
+                StackOffset = ExtendsCombo.StackOffset + ExtendsCombo.StackLength;
+            }
         }
 
         public void AddVariableInstancesToAssigner(IVariableInstance[] instances, IWorkshopTree reference, VarIndexAssigner assigner)
         {
+            int stack = StackOffset;
             for (int i = 0; i < instances.Length; i++)
-            {
-                int stack = Offset;
-                for (int s = 0; s < i; s++)
-                    stack += StackDeltas[i];
+            {                
+                var gettableAssigner = instances[i].GetAssigner(null);
 
                 assigner.Add(
                     instances[i].Provider,
-                    instances[i].GetAssigner(null).AssignClassStacks(new GetClassStacks(_toWorkshop.ClassInitializer, stack)).ChildFromClassReference(reference)
+                    gettableAssigner.AssignClassStacks(new GetClassStacks(_initializer, stack)).ChildFromClassReference(reference)
                 );
+
+                stack += gettableAssigner.StackDelta();
+            }
+        }
+    }
+
+    public class ClassWorkshopRelation
+    {
+        public WorkshopInitializedCombo Combo { get; }
+        public ClassType Instance { get; }
+        public ClassWorkshopRelation Extending { get; private set; }
+        readonly List<ClassWorkshopRelation> _extendedBy = new List<ClassWorkshopRelation>();
+
+        public ClassWorkshopRelation(WorkshopInitializedCombo combo, ClassType instance)
+        {
+            Combo = combo;
+            Instance = instance;
+        }
+
+        public void Link(ClassWorkshopInitializerComponent initializer)
+        {
+            if (Instance.Extends != null)
+            {
+                Extending = initializer.RelationFromClassType((ClassType)Instance.Extends);
+                Extending._extendedBy.Add(this);
+            }
+        }
+
+        public IEnumerable<ClassWorkshopRelation> GetAllExtenders()
+        {
+            foreach (var extender in _extendedBy)
+            {
+                yield return extender;
+                foreach (var recursiveExtender in extender.GetAllExtenders())
+                    yield return recursiveExtender;
             }
         }
     }

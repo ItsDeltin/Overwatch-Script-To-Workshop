@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Parse
             Name = _var.Name,
             Extended = _var.InExtendedCollection,
             ID = _var.ID,
-            IsGlobal = actionSet.IsGlobal,
+            IsGlobal = actionSet?.IsGlobal ?? true,
             StoreType = _var.StoreType,
             VariableType = _var.VariableType,
             DefaultValue = _var.InitialValue

@@ -91,7 +91,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
                 // Get the overriders and convert them to DefinedMethodProviders.
                 Array.ConvertAll(GetOverridersOf(method.Provider), p => (DefinedMethodProvider)p)
                 // Create instances from the provider. Use the original method's instance info.
-                .Select(provider => provider.CreateInstance(method.InstanceInfo));
+                .Select(provider => provider.CreateInstance(method.InstanceInfo, null));
 
             foreach (var child in children)
             {

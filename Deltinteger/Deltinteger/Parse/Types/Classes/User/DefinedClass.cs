@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Parse
             Generics = generics;
             var anonymousTypeLinker = new InstanceAnonymousTypeLinker(initializer.GenericTypes, generics);
 
+            Extends = initializer.Extends?.GetRealType(anonymousTypeLinker);
+
             OperationalScope = new Scope(); // todooo
             ServeObjectScope = new Scope();
             StaticScope = new Scope();

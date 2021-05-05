@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Workshop;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -118,8 +119,8 @@ namespace Deltin.Deltinteger.Parse
             Extends?.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
 
             var classInitializer = toWorkshop.ClassInitializer;
-            var initInfo = classInitializer.InitializedClassFromProvider(Provider);
-            initInfo.AddVariableInstancesToAssigner(Variables, reference, assigner);
+            var combo = classInitializer.ComboFromClassType(this);
+            combo.AddVariableInstancesToAssigner(Variables, reference, assigner);
         }
 
         public override Scope GetObjectScope() => ServeObjectScope;
@@ -156,6 +157,7 @@ namespace Deltin.Deltinteger.Parse
             readonly ClassType _classType;
             readonly List<IMethod> _virtualMethods = new List<IMethod>();
             readonly List<ClassElement> _scopeableElements = new List<ClassElement>();
+            public IReadOnlyList<ClassElement> ScopeableElements => _scopeableElements.AsReadOnly();
 
             public ClassElements(ClassType classType)
             {
@@ -204,7 +206,7 @@ namespace Deltin.Deltinteger.Parse
 
             static bool ValidAccessLevel(AccessLevel accessLevel) => accessLevel == AccessLevel.Public || accessLevel == AccessLevel.Protected;
 
-            struct ClassElement
+            public struct ClassElement
             {
                 public IScopeable Scopeable;
                 public bool IsInstance;

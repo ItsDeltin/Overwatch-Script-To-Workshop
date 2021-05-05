@@ -35,6 +35,8 @@ namespace Deltin.Deltinteger.Parse
             if (isStatic) AddStaticBasedScope(variable);
             else AddObjectBasedScope(variable);
         }
+
+        CodeType DefinedIn() => this as CodeType;
     }
 
     public interface IScopeHandler : IScopeProvider, IScopeAppender {}
@@ -171,13 +173,13 @@ namespace Deltin.Deltinteger.Parse
             else _listeners.Add(onBlockApplied);
         }
     
-        public IMethod GetDefaultInstance() => new DefinedMethodInstance(Name, this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes));
-        public DefinedMethodInstance CreateInstance(InstanceAnonymousTypeLinker genericsLinker) => new DefinedMethodInstance(Name, this, genericsLinker);
-        public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(), Static);
+        public IMethod GetDefaultInstance(CodeType definedIn) => new DefinedMethodInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes), definedIn);
+        public DefinedMethodInstance CreateInstance(InstanceAnonymousTypeLinker genericsLinker, CodeType definedIn) => new DefinedMethodInstance(this, genericsLinker, definedIn);
+        public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(scopeHandler.DefinedIn()), Static);
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
             // Get the instance.
-            IMethod instance = new DefinedMethodInstance(Name, this, genericsLinker);
+            IMethod instance = new DefinedMethodInstance(this, genericsLinker, scopeHandler.DefinedIn());
             
             // Add the function to the scope.
             if (Static)
@@ -196,7 +198,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class DefinedMethodInstance : IMethod
     {
-        public string Name { get; }
+        public string Name => Provider.Name;
         public MarkupBuilder Documentation => null;
         public ICodeTypeSolver CodeType { get; }
         public IVariableInstance[] ParameterVars { get; }
@@ -204,17 +206,18 @@ namespace Deltin.Deltinteger.Parse
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public DefinedMethodProvider Provider { get; }
         public InstanceAnonymousTypeLinker InstanceInfo { get; }
+        public CodeType DefinedInType { get; }
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => Provider.DefinedAt;
         public AccessLevel AccessLevel => Provider.AccessLevel;
         IMethodExtensions IMethod.MethodInfo => Provider;
 
-        public DefinedMethodInstance(string name, DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo)
+        public DefinedMethodInstance(DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo, CodeType definedIn)
         {
-            Name = name;
             Provider = provider;
             CodeType = provider.ReturnType?.GetRealType(instanceInfo);
             InstanceInfo = instanceInfo;
+            DefinedInType = definedIn;
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             ParameterVars = new IVariableInstance[Parameters.Length];

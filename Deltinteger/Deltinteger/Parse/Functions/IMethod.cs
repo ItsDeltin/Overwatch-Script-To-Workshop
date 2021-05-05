@@ -55,7 +55,6 @@ namespace Deltin.Deltinteger.Parse
     {
         string Name { get; }
         IMethod Overriding { get; }
-        IMethod GetDefaultInstance();
     }
 
     class MethodInfo : IMethodExtensions

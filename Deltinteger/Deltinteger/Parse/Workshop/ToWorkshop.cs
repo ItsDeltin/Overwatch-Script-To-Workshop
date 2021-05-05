@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
         public ToWorkshop(DeltinScript deltinScript)
         {
             DeltinScript = deltinScript;
-            Relations = new CompileRelations(deltinScript);
+            // Relations = new CompileRelations(deltinScript);
             TypeArgGlob = new GlobTypeArgCollector(deltinScript.Importer.ScriptFiles.ToArray());
             PortableAssigner = new PortableAssigner(deltinScript);
             ClassInitializer = new ClassWorkshopInitializerComponent(this);
