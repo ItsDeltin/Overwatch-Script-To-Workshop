@@ -30,6 +30,14 @@ namespace Deltin.Deltinteger.Parse
 
         public override AnonymousType[] ExtractAnonymousTypes() => new[] { this };
 
+        public override bool Implements(CodeType type)
+        {
+            if (AnonymousTypeAttributes.Single && type.Attributes.StackLength == 1)
+                return true;
+
+            return Object.ReferenceEquals(type, this);
+        }
+
         public static AnonymousType[] GetGenerics(List<TypeArgContext> typeArgs, AnonymousTypeContext context)
         {
             var generics = new AnonymousType[typeArgs.Count];

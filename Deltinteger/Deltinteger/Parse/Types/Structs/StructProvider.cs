@@ -33,8 +33,7 @@ namespace Deltin.Deltinteger.Parse
         public abstract bool BuiltInTypeMatches(Type type);
         public CompletionItem GetCompletion() => new CompletionItem() { Label = Name };
 
-        public virtual CodeType GetInstance() => new StructInstance(this, InstanceAnonymousTypeLinker.Empty);
-        // TODO: generics support for structs.
-        public virtual CodeType GetInstance(GetInstanceInfo instanceInfo) => new StructInstance(this, InstanceAnonymousTypeLinker.Empty);
+        public abstract CodeType GetInstance();
+        public abstract CodeType GetInstance(GetInstanceInfo instanceInfo);
     }
 }

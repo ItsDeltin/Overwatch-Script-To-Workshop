@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
 
             else throw new NotImplementedException();
 
-            // result.AddDefaultInstance(this);
+            result.AddDefaultInstance(this);
             return result;
         }
     }

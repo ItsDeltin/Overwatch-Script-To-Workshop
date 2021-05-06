@@ -77,7 +77,6 @@ namespace Deltin.Deltinteger.Parse
         private readonly ParseInfo _parseInfo;
         private readonly Scope _containingScope;
         private readonly Scope _methodScope;
-        private readonly List<IMethodProvider> _overriders = new List<IMethodProvider>();
         private readonly List<IOnBlockApplied> _listeners = new List<IOnBlockApplied>();
         private bool _wasApplied;
 
