@@ -32,7 +32,10 @@ namespace Deltin.Deltinteger.GlobalFunctions
         )
         {
             // The return type and the parameter type of the evaluation modifier.
-            var parameterAndReturnType = new AnonymousType("T", AnonymousTypeContext.Function, new(single: true));
+            var parameterAndReturnType = new AnonymousType("T", new(single: true));
+
+            var methodInfo = new MethodInfo(new[] { parameterAndReturnType });
+            parameterAndReturnType.Context = methodInfo.Tracker;
 
             // Create a new FuncMethod.
             return new FuncMethodBuilder()
@@ -42,7 +45,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
                 Parameters = new[] {
                     new CodeParameter("value", valueDescription, parameterAndReturnType)
                 },
-                TypeArgs = new[] { parameterAndReturnType },
+                MethodInfo = methodInfo,
                 ReturnType = parameterAndReturnType,
                 Action = (actionSet, methodCall) => Element.Part(workshopFunctionName, methodCall.Get(0)),
             };

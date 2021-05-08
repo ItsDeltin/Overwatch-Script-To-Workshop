@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
             _methodScope = _containingScope.Child();
             
             // Get the generics.
-            GenericTypes = AnonymousType.GetGenerics(context.TypeArguments, AnonymousTypeContext.Function);
+            GenericTypes = AnonymousType.GetGenerics(context.TypeArguments, this);
 
             foreach (var type in GenericTypes)
                 _methodScope.AddType(new GenericCodeTypeInitializer(type));

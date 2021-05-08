@@ -81,7 +81,13 @@ namespace Deltin.Deltinteger.Parse.Workshop
                 assigner.Add(assignedParameter.Variable, assignedParameter.Gettable);
         }
 
-        public void Translate(ActionSet actionSet, ReturnHandler returnHandler) => Lambda.Statement.Translate(actionSet);
+        public void Translate(ActionSet actionSet, ReturnHandler returnHandler)
+        {
+            if (Lambda.Expression != null)
+                returnHandler.ReturnValue(Lambda.Expression.Parse(actionSet));
+            else
+                Lambda.Statement.Translate(actionSet);
+        }
     }
 
     class AssignedMethodFunction : IAssignedPortableFunction

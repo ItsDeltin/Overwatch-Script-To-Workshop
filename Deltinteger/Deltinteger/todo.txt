@@ -3,21 +3,18 @@ Update to new systems
 - Declaration provider hover.
 
 New features
-- Return parallel values.
-
-- Support parallel indexed-converted struct array contains 'parallelStructArray.FilteredArray(...).Contains(...)'
-
 - Strict on the status of empty structs.
 
 - Inline structs.
 
 - Fix tmlanguage for new with generics.
 
-- Struct completion.
-
 - Differentiate blocks and inline struct declarations in the contexts where either is excepted. '() => {}'
   This will result in a true ambiguity for empty blocks and empty structs.
   Workaround is to do '({...})' for struct values.
+
+Bug fixes
+- An inferred lambda in an unexpected position will cause a NRE. This is because ExpectingLambda is null.
 
 Code health
 - Move stuff to Parse/Workshop/ToWorkshop.

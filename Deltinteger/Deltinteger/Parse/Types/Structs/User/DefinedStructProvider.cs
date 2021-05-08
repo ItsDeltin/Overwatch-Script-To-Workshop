@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
             OnReady = _onReady;
 
             // Get the type args.
-            GenericTypes = AnonymousType.GetGenerics(typeContext.Generics, AnonymousTypeContext.Type);
+            GenericTypes = AnonymousType.GetGenerics(typeContext.Generics, this);
         }
 
         public void ResolveElements()

@@ -198,7 +198,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         private void ExtractInferredGenerics(OverloadMatch match, CodeType parameterType, CodeType expressionType)
         {
             // If the parameter type is an AnonymousType, add the link for the expression type if it doesn't already exist.
-            if (parameterType is AnonymousType pat && pat.Context == AnonymousTypeContext.Function)
+            if (parameterType is AnonymousType pat && pat.Context == match.Option.Trackee)
             {
                 var typeLinker = match.TypeArgLinker;
 

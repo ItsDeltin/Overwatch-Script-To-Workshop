@@ -9,12 +9,17 @@ namespace Deltin.Deltinteger.Parse
 {
     public class AnonymousType : CodeType
     {
-        public AnonymousTypeContext Context { get; }
+        ITypeArgTrackee _context;
+        public ITypeArgTrackee Context { get => _context; set {
+            if (_context == null)
+                _context = value;
+            else
+                throw new Exception("AnonymousType context already set");
+        }}
         public AnonymousTypeAttributes AnonymousTypeAttributes { get; }
 
-        public AnonymousType(string name, AnonymousTypeContext context, AnonymousTypeAttributes attributes) : base(name)
+        public AnonymousType(string name, AnonymousTypeAttributes attributes) : base(name)
         {
-            Context = context;
             AnonymousTypeAttributes = attributes;
             Attributes.ContainsGenerics = true;
         }
@@ -38,22 +43,17 @@ namespace Deltin.Deltinteger.Parse
             return Object.ReferenceEquals(type, this);
         }
 
-        public static AnonymousType[] GetGenerics(List<TypeArgContext> typeArgs, AnonymousTypeContext context)
+        public static AnonymousType[] GetGenerics(List<TypeArgContext> typeArgs, ITypeArgTrackee context)
         {
             var generics = new AnonymousType[typeArgs.Count];
             for (int i = 0; i < typeArgs.Count; i++)
             {
-                var anonymousType = new AnonymousType(typeArgs[i].Identifier.GetText(), context, new(single: typeArgs[i].Single));
+                var anonymousType = new AnonymousType(typeArgs[i].Identifier.GetText(), new(single: typeArgs[i].Single));
+                anonymousType.Context = context;
                 generics[i] = anonymousType;
             }
             return generics;
         }
-    }
-
-    public enum AnonymousTypeContext
-    {
-        Type,
-        Function
     }
 
     public class AnonymousTypeAttributes

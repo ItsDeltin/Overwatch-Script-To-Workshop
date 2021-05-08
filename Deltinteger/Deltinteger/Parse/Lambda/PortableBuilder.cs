@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 returnHandlers.Add(returnHandler);
 
                 // The action set for the overload.
-                ActionSet optionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+                ActionSet optionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).New(returnHandler);
 
                 // Go to next case
                 lambdaSwitch.NextCase(Element.Num(option.Identifier));
@@ -88,24 +88,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 option.This?.AddObjectVariablesToAssigner(optionSet.ToWorkshop, callerObject, optionSet.IndexAssigner);
 
                 // then parse the block.
-                option.Translate(actionSet, returnHandler);
-                // option.Statement.Translate(optionSet.SetThis(callerObject).New(actionSet.CurrentObject));
-                // Create a new contained action set.
-                //     actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-
-                //     var infoSaver = actionSet.VarCollection.Assign("funcSaver", true, false);
-                //     actionSet.AddAction(infoSaver.SetVariable((Element)actionSet.CurrentObject));
-
-                //     actionSet = actionSet.New(infoSaver.Get());
-
-                //     // Add the contained variables.
-                //     for (int i = 0; i < _lambda.CapturedVariables.Count; i++)
-                //         actionSet.IndexAssigner.Add(_lambda.CapturedVariables[i], infoSaver.CreateChild(i + 2));
-
-                //     if (_lambda.Expression != null)
-                //         actionSet.ReturnHandler.ReturnValue(_lambda.Expression.Parse(actionSet));
-                //     else
-                //         _lambda.Statement.Translate(actionSet);
+                option.Translate(optionSet, returnHandler);
             }
 
             // Finish the switch.

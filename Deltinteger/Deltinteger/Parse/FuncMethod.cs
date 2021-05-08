@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             Parameters = builder.Parameters ?? new CodeParameter[0];
             CodeType = builder.ReturnType;
             Documentation = builder.Documentation ?? throw new ArgumentNullException(nameof(Documentation));
-            MethodInfo = new MethodInfo(builder.TypeArgs);
+            MethodInfo = builder?.MethodInfo ?? new MethodInfo();
             _action = builder.Action ?? throw new ArgumentNullException(nameof(_action));
             _onCall = builder.OnCall;
         }
@@ -43,10 +43,10 @@ namespace Deltin.Deltinteger.Parse
         public CodeParameter[] Parameters;
         /// <summary>Not required: the return type of the function. Void by default.</summary>
         public CodeType ReturnType;
-        /// <summary>Not required: the type args of the function.</summary>
-        public AnonymousType[] TypeArgs;
         /// <summary>Required: the documentation of the function.</summary>
         public string Documentation;
+        /// <summary>Not required: the additional method options.</summary>
+        public IMethodExtensions MethodInfo;
         /// <summary>Required: the action of the function.</summary>
         public Func<ActionSet, MethodCall, IWorkshopTree> Action;
         /// <summary>Not required: the code to run when the function is called.</summary>

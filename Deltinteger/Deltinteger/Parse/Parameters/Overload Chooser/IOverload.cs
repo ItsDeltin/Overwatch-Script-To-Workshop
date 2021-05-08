@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         int TypeArgCount { get; }
         StringOrMarkupContent Documentation { get; }
         IParameterCallable Value { get; }
+        ITypeArgTrackee Trackee { get; }
         bool RestrictedValuesAreFatal { get; }
         InstanceAnonymousTypeLinker GetTypeLinker(CodeType[] typeArgs);
         int TypeArgIndexFromAnonymousType(AnonymousType anonymousType);
@@ -23,6 +24,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public AnonymousType[] GenericTypes => _function.MethodInfo.GenericTypes;
         public StringOrMarkupContent Documentation => _function.Documentation;
         public IParameterCallable Value => _function;
+        public ITypeArgTrackee Trackee => _function.MethodInfo.Tracker;
         public bool RestrictedValuesAreFatal => _function.RestrictedValuesAreFatal;
         private readonly IMethod _function;
 
@@ -44,6 +46,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public IParameterCallable Value => _constructor;
         public bool RestrictedValuesAreFatal => true;
         public AnonymousType[] GenericTypes => new AnonymousType[0];
+        public ITypeArgTrackee Trackee => null;
         private readonly Constructor _constructor;
 
         public ConstructorOverload(Constructor constructor)
