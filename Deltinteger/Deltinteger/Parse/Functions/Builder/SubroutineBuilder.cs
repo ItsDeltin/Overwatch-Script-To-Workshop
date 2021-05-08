@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             TranslateRule subroutineRule = new TranslateRule(_deltinScript, subroutine, _context.RuleName, _context.VariableGlobalDefault);
 
             // Setup the return handler.
-            ActionSet actionSet = subroutineRule.ActionSet.New(subroutineRule.ActionSet.IndexAssigner.CreateContained());
+            ActionSet actionSet = subroutineRule.ActionSet.New(subroutineRule.ActionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(_context.TypeLinker);
 
             // Create the function builder.
             var controller = _context.Controller;
@@ -92,5 +92,6 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         public bool VariableGlobalDefault;
         public CodeType ContainingType;
         public IWorkshopFunctionController Controller;
+        public InstanceAnonymousTypeLinker TypeLinker;
     }
 }

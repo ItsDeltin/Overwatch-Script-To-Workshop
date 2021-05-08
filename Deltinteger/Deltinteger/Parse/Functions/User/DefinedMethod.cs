@@ -231,7 +231,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(methodCall.TypeArgs);
-            return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.DeltinScript, actionSet.ToWorkshop, this));
+            return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.ToWorkshop, this, methodCall.TypeArgs));
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Deltin.Deltinteger.Parse
@@ -15,5 +16,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public InstanceAnonymousTypeLinker() {}
+
+        public CodeType[] TypeArgsFromAnonymousTypes(AnonymousType[] anonymousTypes) => (from a in anonymousTypes select Links[a]).ToArray();
     }
 }

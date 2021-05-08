@@ -6,6 +6,7 @@ namespace Deltin.Deltinteger.Parse.Overload
     public interface IOverload
     {
         CodeParameter[] Parameters { get; }
+        AnonymousType[] GenericTypes { get; }
         int TypeArgCount { get; }
         StringOrMarkupContent Documentation { get; }
         IParameterCallable Value { get; }
@@ -19,6 +20,7 @@ namespace Deltin.Deltinteger.Parse.Overload
     {
         public CodeParameter[] Parameters => _function.Parameters;
         public int TypeArgCount => _function.MethodInfo.TypeArgCount;
+        public AnonymousType[] GenericTypes => _function.MethodInfo.GenericTypes;
         public StringOrMarkupContent Documentation => _function.Documentation;
         public IParameterCallable Value => _function;
         public bool RestrictedValuesAreFatal => _function.RestrictedValuesAreFatal;
@@ -41,6 +43,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public StringOrMarkupContent Documentation => _constructor.Documentation;
         public IParameterCallable Value => _constructor;
         public bool RestrictedValuesAreFatal => true;
+        public AnonymousType[] GenericTypes => new AnonymousType[0];
         private readonly Constructor _constructor;
 
         public ConstructorOverload(Constructor constructor)

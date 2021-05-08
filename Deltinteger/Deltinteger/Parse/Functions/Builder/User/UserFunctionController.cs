@@ -12,15 +12,17 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         // The attributes of the function.
         public WorkshopFunctionControllerAttributes Attributes { get; } = new WorkshopFunctionControllerAttributes();
 
+        readonly ToWorkshop _toWorkshop;
         readonly DefinedMethodInstance _function;
-        readonly DeltinScript _deltinScript;
+        readonly InstanceAnonymousTypeLinker _typeArgLinker;
         readonly ClassWorkshopRelation _classRelation;
         readonly List<DefinedMethodInstance> _allVirtualOptions = new List<DefinedMethodInstance>();
 
-        public UserFunctionController(DeltinScript deltinScript, ToWorkshop toWorkshop, DefinedMethodInstance function)
+        public UserFunctionController(ToWorkshop toWorkshop, DefinedMethodInstance function, InstanceAnonymousTypeLinker typeArgs)
         {
+            _toWorkshop = toWorkshop;
             _function = function;
-            _deltinScript = deltinScript;
+            _typeArgLinker = typeArgs;
             _allVirtualOptions.Add(function);
 
             // If the function is defined in a type.
@@ -83,18 +85,30 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             if (!_function.Provider.IsSubroutine)
                 return null;
             
+            var providedTypeArgs = _typeArgLinker?.TypeArgsFromAnonymousTypes(_function.Provider.GenericTypes);
+            
+            // The subroutine identifier is used to determine if a compatible subroutine was already created.
+            var identifier = new UniqueSubroutineIdentifier(
+                // The function's provider.
+                _function.Provider,
+                // The combo of the contained class.
+                _classRelation?.Combo,
+                // The combo of the type args.
+                _typeArgLinker == null ? null : _toWorkshop.TypeArgGlob.Trackers[_function.Provider].TypeArgCombos
+                    .FirstOrDefault(combo => combo.CompatibleWith(providedTypeArgs))
+            );
+            
             // Get or create the subroutine.
-            return _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(_classRelation.Combo, () =>
+            return _toWorkshop.DeltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(identifier, () =>
                 // Create the subroutine.
-                new SubroutineBuilder(_deltinScript, new() {
+                new SubroutineBuilder(_toWorkshop.DeltinScript, new() {
                     Controller = this,
                     ElementName = _function.Name,
                     RuleName = _function.Provider.SubroutineName,
                     ObjectStackName = _function.Name + "Stack",
                     VariableGlobalDefault = _function.Provider.SubroutineDefaultGlobal,
-                    // TODO: use _function.ContainingType (when that is ready)
-                    ContainingType = _function.DefinedInType
-                    // ContainingType = _function.Provider.ContainingType?.GetInstance(_function.InstanceInfo)
+                    ContainingType = _function.DefinedInType,
+                    TypeLinker = _typeArgLinker
                 }).SetupSubroutine()
             );
         }
@@ -122,6 +136,32 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
 
             public void Build(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet.SetThisTypeLinker(_method.InstanceInfo));
             public ClassType ContainingType() => (ClassType)_method.DefinedInType;
+        }
+    
+        class UniqueSubroutineIdentifier
+        {
+            readonly DefinedMethodProvider _provider;
+            readonly WorkshopInitializedCombo _classCombo;
+            readonly TypeArgCombo _functionCombo;
+
+            public UniqueSubroutineIdentifier(DefinedMethodProvider provider, WorkshopInitializedCombo classCombo, TypeArgCombo functionCombo)
+            {
+                _provider = provider;
+                _classCombo = classCombo;
+                _functionCombo = functionCombo;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj == null || GetType() != obj.GetType())
+                    return false;
+                
+                var other = (UniqueSubroutineIdentifier)obj;
+                
+                return _provider == other._provider && _classCombo == other._classCombo && _functionCombo == other._functionCombo;
+            }
+            
+            public override int GetHashCode() => HashCode.Combine(_provider, _classCombo, _functionCombo);
         }
     }
 

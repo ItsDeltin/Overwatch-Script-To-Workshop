@@ -209,7 +209,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopFunctionBuilder.Call(
                 actionSet,
                 new Functions.Builder.CallInfo(parameterValues),
-                new UserFunctionController(actionSet.DeltinScript, actionSet.ToWorkshop, _method));
+                new UserFunctionController(actionSet.ToWorkshop, _method, null));
     }
 
     class GenericFunctionInvoker : IMethodGroupInvoker

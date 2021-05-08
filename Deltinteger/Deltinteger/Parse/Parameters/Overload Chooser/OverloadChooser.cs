@@ -122,13 +122,9 @@ namespace Deltin.Deltinteger.Parse.Overload
         {
             PickyParameter lastPicky = null;
 
-            OverloadMatch match = new OverloadMatch(option);
-            match.OrderedParameters = new PickyParameter[option.Parameters.Length];
-
-            // Set the type arg linker.
             // If the generics were provided ('_genericsProvided'), get the type linker from the option.
-            // Otherwise if '_genericsProvided' is false, create an empty type linker.
-            match.TypeArgLinker = _genericsProvided ? option.GetTypeLinker(_generics) : new InstanceAnonymousTypeLinker();
+            OverloadMatch match = new OverloadMatch(option, _genericsProvided ? option.GetTypeLinker(_generics) : null);
+            match.OrderedParameters = new PickyParameter[option.Parameters.Length];
 
             // Check type arg count.
             if (_genericsProvided && _generics.Length != option.TypeArgCount)
@@ -189,6 +185,10 @@ namespace Deltin.Deltinteger.Parse.Overload
             // Compare parameter types.
             for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(_parseInfo.TranslateInfo, i);
 
+            // Make sure every type arg was accounted for.
+            if (!_genericsProvided && option.TypeArgCount != match.TypeArgLinker.Links.Count)
+                match.CouldNotInferTypeArgs(_parseInfo.TranslateInfo, _targetRange);
+
             // Get the missing parameters.
             match.GetMissingParameters(_errorMessages, context, _targetRange, CallRange);
 
@@ -197,8 +197,6 @@ namespace Deltin.Deltinteger.Parse.Overload
 
         private void ExtractInferredGenerics(OverloadMatch match, CodeType parameterType, CodeType expressionType)
         {
-            string couldNotInfer = $"The type arguments for method '{match.Option.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)}' cannot be inferred from the usage. Try specifying the type arguments explicitly.";
-
             // If the parameter type is an AnonymousType, add the link for the expression type if it doesn't already exist.
             if (parameterType is AnonymousType pat && pat.Context == AnonymousTypeContext.Function)
             {
@@ -214,7 +212,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                 }
                 // Otherwise, the link exists. If the expression type is not equal to the link type, add an error.
                 else if (!expressionType.Is(typeLinker.Links[pat]))
-                    match.Error(couldNotInfer, _targetRange);
+                    match.CouldNotInferTypeArgs(_parseInfo.TranslateInfo, _targetRange);
             }
             
             // Recursively match generics.
@@ -224,7 +222,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                     // Recursively check the generics.
                     ExtractInferredGenerics(match, parameterType.Generics[i], expressionType.Generics[i]);
                 else
-                    match.Error(couldNotInfer, _targetRange);
+                    match.CouldNotInferTypeArgs(_parseInfo.TranslateInfo, _targetRange);
         }
 
         private OverloadMatch BestOption()
@@ -371,10 +369,20 @@ namespace Deltin.Deltinteger.Parse.Overload
         public CodeType[] TypeArgs { get; }
         readonly List<OverloadMatchError> _errors = new List<OverloadMatchError>();
 
-        public OverloadMatch(IOverload option)
+        public OverloadMatch(IOverload option, InstanceAnonymousTypeLinker typeArgLinker)
         {
             Option = option;
-            TypeArgs = new CodeType[option.TypeArgCount];
+
+            if (typeArgLinker != null)
+            {
+                TypeArgLinker = typeArgLinker;
+                TypeArgs = typeArgLinker.TypeArgsFromAnonymousTypes(option.GenericTypes);
+            }
+            else
+            {
+                TypeArgLinker = new InstanceAnonymousTypeLinker();
+                TypeArgs = new CodeType[option.TypeArgCount];
+            }
         }
 
         public void Error(string message, DocRange range) => _errors.Add(new OverloadMatchError(message, range));
@@ -475,6 +483,9 @@ namespace Deltin.Deltinteger.Parse.Overload
     
         public void IncorrectTypeArgCount(DeltinScript deltinScript, DocRange range) =>
             Error("The function '" + Option.GetLabel(deltinScript, LabelInfo.OverloadError) + "' requires " + Option.TypeArgCount + " type arguments", range);
+        
+        public void CouldNotInferTypeArgs(DeltinScript deltinScript, DocRange range) =>
+            Error($"The type arguments for method '{Option.GetLabel(deltinScript, LabelInfo.OverloadError)}' cannot be inferred from the usage. Try specifying the type arguments explicitly.", range); 
         
         struct OverloadMatchError
         {
