@@ -140,6 +140,8 @@ namespace Deltin.Deltinteger.Parse
             return new StructAssignerValue(values);
         }
 
+        public bool CanBeSet() => _children.All(c => c.Value.CanBeSet());
+
         public IWorkshopTree GetArbritraryValue() => _children.First().Value.GetVariable();
 
         public IWorkshopTree[] GetAllValues() => IStructValue.ExtractAllValues(_children.Select(child => child.Value.GetVariable()));

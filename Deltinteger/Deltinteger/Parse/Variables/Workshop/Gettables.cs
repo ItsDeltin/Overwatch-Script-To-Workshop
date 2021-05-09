@@ -46,6 +46,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => CreateChild((Element)reference);
+
+        public bool CanBeSet() => true;
     }
 
     public class RecursiveIndexReference : IndexReference
@@ -119,10 +121,6 @@ namespace Deltin.Deltinteger.Parse
         public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index) => Throw();
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index) => Throw();
         IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => new WorkshopElementReference(Element.ValueInArray(WorkshopElement, reference));
-        // IGettable IGettable.ChildFromClassReference(IWorkshopTree reference)
-        // {
-        //     Throw();
-        //     return null;
-        // }
+        public bool CanBeSet() => false;
     }
 }

@@ -48,6 +48,7 @@ namespace Deltin.Deltinteger
 
     public interface IGettable
     {
+        bool CanBeSet();
         IWorkshopTree GetVariable(Element eventPlayer = null);
         void Set(ActionSet actionSet, IWorkshopTree value) => Set(actionSet, value, null, null);
         void Set(ActionSet actionSet, IWorkshopTree value, Element target, params Element[] index);

@@ -188,7 +188,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                     // Create a gettable for the parameter.
                     gettable = parameterVariables[i]
                         .GetAssigner(actionSet)
-                        .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false });
+                        .GetValue(new GettableAssignerValueInfo(actionSet) {
+                            SetInitialValue = false,
+                            InitialValueOverride = providedParameters?[i].Value
+                        });
 
                 _parameters[i] = new UserFunctionParameter(gettable, new[] { parameterVariables[i].Provider }); //todo: linkedVariables for virtual
             }
@@ -237,7 +240,11 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 LinkedVariables = linkedVariables;
             }
 
-            public void Set(ActionSet actionSet, IWorkshopTree value) => Gettable.Set(actionSet, value);
+            public void Set(ActionSet actionSet, IWorkshopTree value) 
+            {
+                if (Gettable.CanBeSet())
+                    Gettable.Set(actionSet, value);
+            }
             public void Push(ActionSet actionSet, IWorkshopTree value)
             {
                 if (Gettable is RecursiveIndexReference recursive)
