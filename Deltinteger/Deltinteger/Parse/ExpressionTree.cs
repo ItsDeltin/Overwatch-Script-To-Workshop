@@ -374,7 +374,7 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var variable in variables)
                 {
                     // Variable handler.
-                    var apply = new VariableApply(tcParseInfo.ParseInfo, tcParseInfo.Getter, variable, _variable);
+                    var apply = new VariableApply(tcParseInfo.ParseInfo, tcParseInfo.Getter, null, variable, _variable);
 
                     // Check accessor.
                     bool accessorMatches = tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel);

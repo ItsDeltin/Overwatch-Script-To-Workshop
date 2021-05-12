@@ -195,7 +195,7 @@ namespace Deltin.Deltinteger.Parse
             if (variable == null)
                 variable = new MissingVariable(TranslateInfo, variableContext.Token.Text);
 
-            var apply = new VariableApply(this, scope, variable, variableContext);
+            var apply = new VariableApply(this, scope, getter, variable, variableContext);
             apply.Accept();
             return apply.VariableCall;
         }
@@ -248,19 +248,20 @@ namespace Deltin.Deltinteger.Parse
         private readonly IExpression[] _index;
         private readonly CodeType[] _generics;
 
-        public VariableApply(ParseInfo parseInfo, Scope scope, IVariableInstance variable, Identifier variableContext)
+        public VariableApply(ParseInfo parseInfo, Scope scope, Scope getter, IVariableInstance variable, Identifier variableContext)
         {
             Variable = variable;
             _parseInfo = parseInfo;
             _name = variableContext.Token.Text;
             CallRange = variableContext.Token.Range;
+            getter = getter ?? scope;
 
             // Get the index.
             if (variableContext.Index != null)
             {
                 _index = new IExpression[variableContext.Index.Count];
                 for (int i = 0; i < _index.Length; i++)
-                    _index[i] = parseInfo.GetExpression(scope, variableContext.Index[i].Expression);
+                    _index[i] = parseInfo.GetExpression(scope, variableContext.Index[i].Expression, getter: getter);
             }
 
             // Get the generics.
@@ -268,7 +269,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 _generics = new CodeType[variableContext.TypeArgs.Count];
                 for (int i = 0; i < _generics.Length; i++)
-                    _generics[i] = TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, variableContext.TypeArgs[i]);
+                    _generics[i] = TypeFromContext.GetCodeTypeFromContext(parseInfo, getter, variableContext.TypeArgs[i]);
             }
 
             VariableCall = Variable.GetExpression(_parseInfo, CallRange, _index, _generics);
