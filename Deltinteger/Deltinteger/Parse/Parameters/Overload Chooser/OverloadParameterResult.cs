@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
         public WorkshopParameter ToWorkshop(ActionSet actionSet) => new WorkshopParameter(
             value: Value.Parse(actionSet),
             additionalData: AdditionalData,
-            refVariableElements: RefResolvedVariable.ParseElements(actionSet));
+            refVariableElements: RefResolvedVariable?.ParseElements(actionSet));
     }
 
     public class WorkshopParameter
