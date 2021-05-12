@@ -22,6 +22,7 @@ namespace Deltin.Deltinteger.Parse
         {
             AnonymousTypeAttributes = attributes;
             Attributes.ContainsGenerics = true;
+            Operations.AddAssignmentOperator();
         }
 
         public override IGenericUsage GetGenericUsage() => new BridgeAnonymousUsage(this);
