@@ -113,6 +113,9 @@ namespace Deltin.Deltinteger.Parse.Workshop
         }
 
         public void AddCombo(TypeArgCombo combo) => _typeArgCombos.Add(combo);
+
+        /// <returns>A TypeArgCombo compatible with the provided type args, or null if none was found.</returns>
+        public TypeArgCombo GetCompatibleCombo(CodeType[] providedTypeArgs) => _typeArgCombos.FirstOrDefault(combo => combo.CompatibleWith(providedTypeArgs));
     }
 
     public class TypeArgGlob

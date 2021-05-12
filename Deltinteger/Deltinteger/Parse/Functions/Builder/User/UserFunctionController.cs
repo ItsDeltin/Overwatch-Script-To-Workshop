@@ -95,12 +95,11 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 // The combo of the contained class.
                 _classRelation?.Combo,
                 // The combo of the type args.
-                _typeArgLinker == null ? null : _toWorkshop.TypeArgGlob.Trackers[_function.Provider].TypeArgCombos
-                    .FirstOrDefault(combo => combo.CompatibleWith(providedTypeArgs))
+                _typeArgLinker == null ? null : _toWorkshop.TypeArgGlob.Trackers[_function.Provider].GetCompatibleCombo(providedTypeArgs)
             );
             
             // Get or create the subroutine.
-            return _toWorkshop.DeltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(identifier, () =>
+            return _toWorkshop.SubroutineCatalog.GetSubroutine(identifier, () =>
                 // Create the subroutine.
                 new SubroutineBuilder(_toWorkshop.DeltinScript, new() {
                     Controller = this,
@@ -135,10 +134,11 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 _method = method;
             }
 
-            public void Build(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet.SetThisTypeLinker(_method.InstanceInfo));
+            public void Build(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet);
             public ClassType ContainingType() => (ClassType)_method.DefinedInType;
         }
     
+        // This class is used as the key for identifying existing compatible subroutines.
         class UniqueSubroutineIdentifier
         {
             readonly DefinedMethodProvider _provider;
@@ -158,10 +158,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                     return false;
                 
                 var other = (UniqueSubroutineIdentifier)obj;
-                
                 return _provider == other._provider && _classCombo == other._classCombo && _functionCombo == other._functionCombo;
             }
             
+            // Create the hash code from the object references of the input fields.
             public override int GetHashCode() => HashCode.Combine(_provider, _classCombo, _functionCombo);
         }
     }

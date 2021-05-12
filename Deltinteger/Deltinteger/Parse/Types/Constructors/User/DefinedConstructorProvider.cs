@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         public string SubroutineName { get; }
         public CallInfo CallInfo { get; }
         public Location DefinedAt { get; }
-        public ICodeTypeInitializer TypeProvider { get; }
+        public IDefinedTypeInitializer TypeProvider { get; }
         public ParameterProvider[] ParameterProviders { get; private set; }
         public CodeType[] ParameterTypes { get; private set; }
         public BlockAction Block { get; private set; }
@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         private readonly RecursiveCallHandler _recursiveCallHandler;
         private readonly ApplyBlock _applyBlock = new ApplyBlock();
 
-        public DefinedConstructorProvider(ICodeTypeInitializer provider, ParseInfo parseInfo, Scope scope, ConstructorContext context)
+        public DefinedConstructorProvider(IDefinedTypeInitializer provider, ParseInfo parseInfo, Scope scope, ConstructorContext context)
         {
             _parseInfo = parseInfo;
             _scope = scope.Child();
@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
 
         public void SetupBlock()
         {
-            Block = new BlockAction(_parseInfo.SetCallInfo(CallInfo), _scope, _context.Block);
+            Block = new BlockAction(_parseInfo.SetCallInfo(CallInfo).SetThisType(TypeProvider.WorkingInstance), _scope, _context.Block);
             _applyBlock.Apply();
         }
 

@@ -142,8 +142,7 @@ namespace Deltin.Deltinteger.Parse
         public void SetupParameters() {}
         public void SetupBlock()
         {
-            _methodScope.This = ContainingType?.WorkingInstance;
-            Block = new BlockAction(_parseInfo.SetReturnType(ReturnType), _methodScope, Context.Block);
+            Block = new BlockAction(_parseInfo.SetReturnType(ReturnType).SetThisType(ContainingType?.WorkingInstance), _methodScope, Context.Block);
 
             // Validate returns.
             BlockTreeScan validation = new BlockTreeScan(_parseInfo, this);
@@ -230,7 +229,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(methodCall.TypeArgs);
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(methodCall.TypeArgs).MergeTypeLinker(InstanceInfo);
             return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.ToWorkshop, this, methodCall.TypeArgs));
         }
     }

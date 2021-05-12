@@ -26,11 +26,15 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             WorkshopFunctionBuilder.Call(actionSet, call, this);
 
+            // No return type expected.
             if (expectedType == null)
                 return null;
 
+            // Make sure the returnRecycler is null.
             _returnRecycler.Reset();
-            return expectedType.GetGettableAssigner(new AssigningAttributes("todo:name", true, false))
+        
+            // todo: AssigningAttributes name.
+            return expectedType.GetRealType(actionSet.ThisTypeLinker).GetGettableAssigner(new AssigningAttributes("todo:name", true, false))
                 .GetValue(new GettableAssignerValueInfo(actionSet) {
                     IndexReferenceCreator = _returnRecycler,
                     SetInitialValue = false
@@ -45,7 +49,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         };
 
         ReturnHandler IWorkshopFunctionController.GetReturnHandler(ActionSet actionSet) => null;
-        SubroutineCatalogItem IWorkshopFunctionController.GetSubroutine() => _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(this, () =>
+        SubroutineCatalogItem IWorkshopFunctionController.GetSubroutine() => _deltinScript.WorkshopConverter.SubroutineCatalog.GetSubroutine(this, () =>
             new SubroutineBuilder(_deltinScript, new SubroutineContext() {
                 Controller = this,
                 ElementName = "func group", ObjectStackName = "func group", RuleName = "lambda",
@@ -66,7 +70,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 // Create the return handler for the option.
                 ReturnHandler returnHandler = new ReturnHandler(
                     actionSet,
-                    option.ReturnType.GetGettableAssigner(new AssigningAttributes("lambdaReturnValue", true, false))
+                    option.ReturnType?.GetGettableAssigner(new AssigningAttributes("lambdaReturnValue", true, false))
                         // Get the IGettable
                         .GetValue(new GettableAssignerValueInfo(actionSet) {
                             SetInitialValue = false,

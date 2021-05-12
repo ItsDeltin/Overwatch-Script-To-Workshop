@@ -245,7 +245,7 @@ namespace Deltin.Deltinteger.Parse
 
         public ThisAction(ParseInfo parseInfo, Scope scope, ThisExpression context)
         {
-            ThisType = scope.GetThis();
+            ThisType = parseInfo.ThisType;
             if (ThisType == null)
                 parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", context.Range);
         }

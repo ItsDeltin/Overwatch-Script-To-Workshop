@@ -138,7 +138,5 @@ namespace Deltin.Deltinteger.Parse
         {
             throw new NotImplementedException();
         }
-
-        public override int TypeArgIndexFromAnonymousType(AnonymousType anonymousType) => Array.IndexOf(GenericTypes, anonymousType);
     }
 }

@@ -4,9 +4,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Functions.Builder
 {
-    // todo: switch to IWorkshopComponent
-    // 
-    class SubroutineCatalog : IComponent
+    public class SubroutineCatalog
     {
         readonly Dictionary<object, SubroutineCatalogItem> _subroutines = new Dictionary<object, SubroutineCatalogItem>();
         
@@ -22,8 +20,6 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             }
             return info;
         }
-
-        public void Init(DeltinScript deltinScript) {}
     }
 
     public class SubroutineCatalogItem

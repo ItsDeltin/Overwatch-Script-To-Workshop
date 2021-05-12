@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Deltin.Deltinteger.Elements;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -10,7 +9,6 @@ namespace Deltin.Deltinteger.Parse
     {
         ClassType Extends { get; }
         IReadOnlyList<IVariable> ObjectVariables { get; }
-        int TypeArgIndexFromAnonymousType(AnonymousType anonymousType);
     }
 
     public abstract class ClassInitializer : ICodeTypeInitializer, IResolveElements, IClassInitializer
@@ -51,7 +49,5 @@ namespace Deltin.Deltinteger.Parse
         };
 
         public void AddVariable(IVariable var) => _objectVariables.Add(var);
-
-        public abstract int TypeArgIndexFromAnonymousType(AnonymousType anonymousType);
     }
 }

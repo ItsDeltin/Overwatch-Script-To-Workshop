@@ -422,7 +422,7 @@ namespace Deltin.Deltinteger.Parse
                 _foreachContext = foreachContext;
             }
 
-            public IVariableComponent[] GetComponents() => new IVariableComponent[0];
+            public void GetComponents(VariableComponentCollection componentCollection) {}
             public IParseType GetCodeType() => _foreachContext.Type;
             public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
             public string GetName() => _foreachContext.Identifier.Text;

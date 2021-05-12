@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _parseInfo = parseInfo;
             RecursiveCallHandler = new LambdaRecursionHandler(this);
             CallInfo = new CallInfo(RecursiveCallHandler, parseInfo.Script);
-            This = scope.GetThis();
+            This = parseInfo.ThisType;
 
             _isExplicit = context.Parameters.Any(p => p.Type != null);
             var parameterState = context.Parameters.Count == 0 || _isExplicit ? ParameterState.CountAndTypesKnown : ParameterState.CountKnown;

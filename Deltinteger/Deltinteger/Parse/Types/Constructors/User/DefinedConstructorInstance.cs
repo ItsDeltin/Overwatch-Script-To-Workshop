@@ -1,4 +1,5 @@
 using System.Linq;
+using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Parse.Functions.Builder.User;
 using Deltin.Deltinteger.LanguageServer;
@@ -9,21 +10,23 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
     {
         public DefinedConstructorProvider Provider { get; }
         public IVariableInstance[] ParameterVars { get; }
+        private InstanceAnonymousTypeLinker _typeLinker;
 
         public DefinedConstructorInstance(
             CodeType typeInstance,
             DefinedConstructorProvider provider,
-            InstanceAnonymousTypeLinker genericsLinker,
+            InstanceAnonymousTypeLinker typeLinker,
             Location definedAt
         ) : base(typeInstance, definedAt, AccessLevel.Public)
         {
             Provider = provider;
+            _typeLinker = typeLinker;
             
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             ParameterVars = new IVariableInstance[Parameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
             {
-                var parameterInstance = provider.ParameterProviders[i].GetInstance(genericsLinker);
+                var parameterInstance = provider.ParameterProviders[i].GetInstance(typeLinker);
                 ParameterVars[i] = parameterInstance.Variable;
                 Parameters[i] = parameterInstance.Parameter;
             }
@@ -34,9 +37,10 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             WorkshopFunctionBuilder.Call(
                 actionSet,
                 new Functions.Builder.CallInfo(parameters.Select(p => p.Value).ToArray()),
-                new UserConstructorController(this, actionSet.DeltinScript));
+                new UserConstructorController(this, actionSet.ToWorkshop));
         }
 
+        // todo
         /*
         public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
@@ -48,18 +52,18 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
 
         class UserConstructorController : IWorkshopFunctionController
         {
-            public WorkshopFunctionControllerAttributes Attributes { get; }
+            public WorkshopFunctionControllerAttributes Attributes { get; } = new WorkshopFunctionControllerAttributes();
             readonly DefinedConstructorInstance _instance;
-            readonly DeltinScript _deltinScript;
+            readonly ToWorkshop _toWorkshop;
 
-            public UserConstructorController(DefinedConstructorInstance instance, DeltinScript deltinScript)
+            public UserConstructorController(DefinedConstructorInstance instance, ToWorkshop toWorkshop)
             {
                 _instance = instance;
-                _deltinScript = deltinScript;
+                _toWorkshop = toWorkshop;
             }
 
             // Build the constructor's block.
-            public void Build(ActionSet actionSet) => _instance.Provider.Block.Translate(actionSet);
+            public void Build(ActionSet actionSet) => _instance.Provider.Block.Translate(actionSet.SetThisTypeLinker(_instance._typeLinker));
 
             // Create the parameter handler for the constructor.
             public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
@@ -69,14 +73,41 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             public ReturnHandler GetReturnHandler(ActionSet actionSet) => new ReturnHandler(actionSet);
             
             // Gets the subroutine, or creates it if it does not exist yet.
-            public SubroutineCatalogItem GetSubroutine() => _deltinScript.GetComponent<SubroutineCatalog>().GetSubroutine(_instance, () =>
-                new SubroutineBuilder(_deltinScript, new() {
-                    ContainingType = _instance.Type,
-                    Controller = this,
-                    RuleName = _instance.Provider.SubroutineName,
-                    ElementName = _instance.Type.GetName() + "_constructor",
-                    VariableGlobalDefault = true
-                }).SetupSubroutine());
+            public SubroutineCatalogItem GetSubroutine()
+            {
+                // Do not create a subroutine if the constructor is not a subroutine.
+                if (_instance.Provider.SubroutineName == null)
+                    return null;
+                
+                // The default key used for identifying the subroutine that is linked to this constructor.
+                // A similiar implementation of this can be found in the UserFunctionController.
+                // Since we are working with just class type-args without the possibility of function type-args,
+                // we can just use the provider for a key if there aren't any type-args, else use the class's linked combo.
+                object key = _instance.Provider;
+
+                if (_instance._typeLinker != null)
+                {
+                    // Type linker converted to an array to be used to identify a compatible combo.
+                    var rawTypeArgs = _instance._typeLinker.TypeArgsFromAnonymousTypes(_instance.Provider.TypeProvider.GenericTypes);
+
+                    // Get a compatible combo from the type-args from the class.
+                    var combo = _toWorkshop.TypeArgGlob.Trackers[_instance.Provider.TypeProvider].GetCompatibleCombo(rawTypeArgs);
+
+                    // Use the combo as a key if it is not null.
+                    if (combo != null)
+                        key = combo;
+                }
+
+                return _toWorkshop.SubroutineCatalog.GetSubroutine(key, () =>
+                    new SubroutineBuilder(_toWorkshop.DeltinScript, new() {
+                        ContainingType = _instance.Type,
+                        Controller = this,
+                        RuleName = _instance.Provider.SubroutineName,
+                        ElementName = _instance.Type.GetName() + "_constructor",
+                        VariableGlobalDefault = true,
+                        TypeLinker = _instance._typeLinker
+                    }).SetupSubroutine());
+            }
 
             // Unique stack identifier for recursive constructors.
             // This doesn't matter right now since recursive constructors are not supported.

@@ -194,6 +194,22 @@ namespace Deltin.Deltinteger.Parse
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
         public ActionSet SetNextComment(string comment) => new ActionSet(this) { CommentNext = new ActionComment(comment) };
         public ActionSet SetThisTypeLinker(InstanceAnonymousTypeLinker thisTypeLinker) => new ActionSet(this) { ThisTypeLinker = thisTypeLinker };
+        public ActionSet MergeTypeLinker(InstanceAnonymousTypeLinker thisTypeLinker)
+        {
+            // Do nothing if the type linker is null.
+            if (thisTypeLinker == null) return this;
+
+            // Clone the ActionSet.
+            var clone = new ActionSet(this);
+            
+            // If there was no type linker to begin with, set the type linker to the one provided.
+            if (clone.ThisTypeLinker == null)
+                clone.ThisTypeLinker = thisTypeLinker;
+            else // Otherwise, merge the existing type linker and the provided type linker.
+                clone.ThisTypeLinker = clone.ThisTypeLinker.CloneMerge(thisTypeLinker);
+
+            return clone;
+        }
 
         public void AddAction(string comment, params IWorkshopTree[] actions)
         {

@@ -21,7 +21,6 @@ namespace Deltin.Deltinteger.Parse
         
         public Scope Parent { get; }
         public string ErrorName { get; set; } = "current scope";
-        public CodeType This { get; set; }
         public bool PrivateCatch { get; set; }
         public bool ProtectedCatch { get; set; }
         public bool CompletionCatch { get; set; }
@@ -325,20 +324,6 @@ namespace Deltin.Deltinteger.Parse
             });
 
             return method;
-        }
-
-        public CodeType GetThis()
-        {
-            CodeType @this = null;
-            Scope current = this;
-
-            while (@this == null && current != null)
-            {
-                @this = current.This;
-                current = current.Parent;
-            }
-
-            return @this;
         }
 
         public void AddType(ICodeTypeInitializer initializer) => _types.Add(initializer);
