@@ -6,22 +6,102 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse.Variables.Build
 {
-    public class VariableComponentsCollection : List<IVariableComponent>
+    public class VariableComponentCollection : IApplyAttribute
     {
+        public IReadOnlyList<IVariableComponent> Components => _components.AsReadOnly();
+        readonly List<IVariableComponent> _components = new List<IVariableComponent>();
+        public FileDiagnostics Diagnostics { get; }
+        bool _finishedObtainingComponents;
+
+        public VariableComponentCollection(FileDiagnostics diagnostics)
+        {
+            Diagnostics = diagnostics;
+        }
+
         /// <summary>Will return true if any of the variable's components are an AttributeComponent whose attribute type
         /// equals the specified type.</summary>
         /// <param name="type">The specified type.</param>
         /// <returns>True if the attribute exists, false otherwise.</returns>
         public bool IsAttribute(AttributeType type)
-            => this.Any(component => component is AttributeComponent attributeComponent && attributeComponent.Attribute == type);
+            => IsComponent(new AttributeComponentIdentifier(type));
         
         /// <summary>Determines if the specified component exists.</summary>
         /// <typeparam name="T">The type of the component. Must be an IVariableComponent.</typeparam>
         /// <returns>True if the component exists, false otherwise.</returns>
         public bool IsComponent<T>() where T: IVariableComponent
-            => this.Any(component => component is T);
+            => IsComponent(new ComponentIdentifier<T>());
         
-        public VariableComponentsCollection(IVariableComponent[] components) : base(components) {}
+        public bool TryGetComponent<T>(out T result) where T: class, IVariableComponent
+        {
+            T r = null;
+            bool didMatch = MatchComponent(new ComponentIdentifier<T>(), component => r = (T)component, true);
+            result = r;
+            return didMatch;
+        }
+
+        public bool IsComponent(IComponentIdentifier identifier)
+        {
+            bool result = false;
+            MatchComponent(identifier, _ => result = true, true);
+            return result;
+        }
+        
+        /// <summary>Adds a component to the list of variable components.</summary>
+        public void AddComponent(IVariableComponent component)
+        {
+            ThrowIfComponentsAlreadyObtained();
+            if (component.CheckConflicts(this))
+                _components.Add(component);
+        }
+
+        /// <summary>Invalidates a component. This will add a diagnostic error and prevent the component from being applied to the variable.</summary>
+        public void RejectComponent(IComponentIdentifier rejectComponent) => MatchComponent(rejectComponent, component => {
+            component.WasRejected = true;
+            Diagnostics.Error(component.RejectMessage(), component.Range);
+        }, false);
+
+        /// <summary>Validates existing components and prevents any more components from being added to the collection.</summary>
+        public void FinishedObtainingComponents()
+        {
+            ThrowIfComponentsAlreadyObtained();
+            _finishedObtainingComponents = true;
+
+            foreach (var component in _components)
+                component.Validate(this);
+        }
+
+        /// <summary>Applies the variable to the builder.</summary>
+        public void Apply(VarInfo varInfo)
+        {
+            foreach (var component in _components)
+                if (!component.WasRejected)
+                    component.Apply(varInfo);
+        }
+
+        void ThrowIfComponentsAlreadyObtained()
+        {
+            if (_finishedObtainingComponents)
+                throw new Exception("The component collection was already completed.");
+        }
+
+        bool MatchComponent(IComponentIdentifier identifier, Action<IVariableComponent> onComponent, bool stopOnFirst)
+        {
+            bool anyMatch = false;
+            foreach (var element in _components)
+                if (identifier.IsMatch(element))
+                {
+                    onComponent(element);
+                    anyMatch = true;
+                    if (stopOnFirst) return true;
+                }
+            return anyMatch;
+        }
+
+        bool IApplyAttribute.Apply(FileDiagnostics diagnostics, AttributeContext attributeContext)
+        {
+            AddComponent(new AttributeComponent(attributeContext.Type, attributeContext.Range));
+            return true;
+        }
     }
 
     // * Components *
@@ -32,6 +112,8 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
         DocRange Range { get; }
         bool WasRejected { get; set; }
         string RejectMessage();
+        bool CheckConflicts(VariableComponentCollection componentCollection);
+        void Validate(VariableComponentCollection componentCollection);
         void Apply(VarInfo varInfo);
     }
 
@@ -103,6 +185,48 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                     throw new NotImplementedException();
             }
         }
+
+        public void Validate(VariableComponentCollection componentCollection)
+        {
+            switch (Attribute)
+            {
+                // Ref variables cannot be used alongside initial values.
+                case AttributeType.Ref:
+                    if (componentCollection.TryGetComponent(out InitialValueComponent initialValueComponent))
+                    {
+                        componentCollection.Diagnostics.Error("'ref' variables cannot have an initial value", initialValueComponent.Range);
+                        initialValueComponent.WasRejected = true;
+                    }
+                    break;
+            }
+        }
+
+        public bool CheckConflicts(VariableComponentCollection componentCollection)
+        {
+            switch (Attribute)
+            {
+                // globalvar conflicting with playervar
+                case AttributeType.GlobalVar:
+                    if (componentCollection.IsAttribute(AttributeType.PlayerVar))
+                    {
+                        componentCollection.Diagnostics.Error("The 'globalvar' attribute cannot be used alongside the 'playervar' attribute.", Range);
+                        WasRejected = true;
+                        return false;
+                    }
+                    break;
+                
+                // playervar conflicting with globalvar
+                case AttributeType.PlayerVar:
+                    if (componentCollection.IsAttribute(AttributeType.GlobalVar))
+                    {
+                        componentCollection.Diagnostics.Error("The 'playervar' attribute cannot be used alongside the 'globalvar' attribute.", Range);
+                        WasRejected = true;
+                        return false;
+                    }
+                    break;
+            }
+            return true;
+        }
     }
 
     /// <summary>Initial variable value component.</summary>
@@ -119,6 +243,8 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 
         public string RejectMessage() => "Variable cannot have an initial value.";
         public void Apply(VarInfo varInfo) => varInfo.InitialValueContext = Expression;
+        public void Validate(VariableComponentCollection componentCollection) {}
+        public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
     }
 
     /// <summary>Variable workshop ID override component.</summary>
@@ -136,6 +262,8 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 
         public string RejectMessage() => "Cannot override workshop variable ID here.";
         public void Apply(VarInfo varInfo) => varInfo.ID = Value;
+        public void Validate(VariableComponentCollection componentCollection) {}
+        public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
     }
 
     /// <summary>Extended collection component.</summary>
@@ -151,6 +279,8 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 
         public string RejectMessage() => "Cannot put variable in the extended collection.";
         public void Apply(VarInfo varInfo) => varInfo.InExtendedCollection = true;
+        public void Validate(VariableComponentCollection componentCollection) {}
+        public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
     }
 
     /// <summary>Macro variable component.</summary>
@@ -164,71 +294,37 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
             Range = symbolRange;
         }
 
-        public void Apply(VarInfo varInfo)
-        {
-            varInfo.VariableTypeHandler.SetWorkshopReference();
-        }
-
+        public void Apply(VarInfo varInfo) => varInfo.VariableTypeHandler.SetWorkshopReference();
         public string RejectMessage() => "Macros cannot be declared here.";
+        public void Validate(VariableComponentCollection componentCollection) {}
+        public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
     }
 
     // * Rejectors *
 
     /// <summary>Rejects an attribute.</summary>
     /// <typeparam name="T">The type of attribute this handles.</typeparam>
-    public interface IRejectComponent
+    public interface IComponentIdentifier
     {
-        void Reject(FileDiagnostics diagnostics, IVariableComponent component);
+        bool IsMatch(IVariableComponent component);
     }
 
-    /// <summary>Reject element attributes (accessors, virtual, etc.)</summary>
-    class RejectAttributeComponent : IRejectComponent
+    /// <summary>Identifies attributes (accessors, virtual, etc.)</summary>
+    class AttributeComponentIdentifier : IComponentIdentifier
     {
-        private readonly AttributeType[] _rejecting;
+        private readonly AttributeType[] _identifying;
 
-        public RejectAttributeComponent(params AttributeType[] rejecting)
+        public AttributeComponentIdentifier(params AttributeType[] identifying)
         {
-            _rejecting = rejecting;
+            _identifying = identifying;
         }
 
-        public void Reject(FileDiagnostics diagnostics, IVariableComponent component)
-        {
-            if (!component.WasRejected && component is AttributeComponent attributeComponent && _rejecting.Contains(attributeComponent.Attribute))
-            {
-                component.WasRejected = true;
-                diagnostics.Error(component.RejectMessage(), component.Range);
-            }
-        }
+        public bool IsMatch(IVariableComponent component) => component is AttributeComponent attributeComponent && _identifying.Contains(attributeComponent.Attribute);
     }
 
-    /// <summary>Reject attributes without special parameters.</summary>
-    class RejectComponent<T> : IRejectComponent where T : IVariableComponent
+    /// <summary>Identifies type components.</summary>
+    class ComponentIdentifier<T> : IComponentIdentifier where T : IVariableComponent
     {
-        public void Reject(FileDiagnostics diagnostics, IVariableComponent component)
-        {
-            if (!component.WasRejected && component is T)
-            {
-                component.WasRejected = true;
-                diagnostics.Error(component.RejectMessage(), component.Range);
-            }
-        }
-    }
-
-    // * Attributes extract *
-    class ExtractAttributeComponents : IApplyAttribute
-    {
-        public List<AttributeComponent> Attributes { get; } = new List<AttributeComponent>();
-        public bool Apply(FileDiagnostics diagnostics, AttributeContext attribute)
-        {
-            Attributes.Add(new AttributeComponent(attribute.Type, attribute.Range));
-            return true;
-        }
-
-        public static AttributeComponent[] Get(FileDiagnostics diagnostics, AttributeTokens context)
-        {
-            var extract = new ExtractAttributeComponents();
-            new AttributesGetter(context, extract).GetAttributes(diagnostics);
-            return extract.Attributes.ToArray();
-        }
+        public bool IsMatch(IVariableComponent component) => component is T;
     }
 }

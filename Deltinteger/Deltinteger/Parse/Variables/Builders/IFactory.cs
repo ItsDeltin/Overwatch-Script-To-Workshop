@@ -2,12 +2,12 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 {
     public interface IVariableFactory
     {
-        IVariable GetVariable(ISaveVariableResult saveResult, VariableComponentsCollection components, VarInfo varInfo);
+        IVariable GetVariable(ISaveVariableResult saveResult, VariableComponentCollection components, VarInfo varInfo);
     }
 
     class VariableFactory : IVariableFactory
     {
-        public IVariable GetVariable(ISaveVariableResult saveResult, VariableComponentsCollection components, VarInfo varInfo)
+        public IVariable GetVariable(ISaveVariableResult saveResult, VariableComponentCollection components, VarInfo varInfo)
         {
             IVariable result;
             // Macro

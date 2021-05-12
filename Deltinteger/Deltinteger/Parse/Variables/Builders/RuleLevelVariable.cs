@@ -10,11 +10,11 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void CheckComponents()
         {
-            RejectAttributes(new RejectAttributeComponent(AttributeType.Ref, AttributeType.In, AttributeType.Static));
+            RejectAttributes(new AttributeComponentIdentifier(AttributeType.Ref, AttributeType.In, AttributeType.Static));
             // Syntax error if both the globalvar and playervar attributes are missing.
-            if (!_components.IsComponent<MacroComponent>() &&
-                !_components.IsAttribute(AttributeType.GlobalVar) &&
-                !_components.IsAttribute(AttributeType.PlayerVar))
+            if (!ComponentCollection.IsComponent<MacroComponent>() &&
+                !ComponentCollection.IsAttribute(AttributeType.GlobalVar) &&
+                !ComponentCollection.IsAttribute(AttributeType.PlayerVar))
                 _diagnostics.Error("Expected the globalvar/playervar attribute.", _nameRange);
             
             RejectVirtualIfNotMacro();

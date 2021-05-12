@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         protected DocRange _nameRange;
         protected DocRange _typeRange;
 
-        protected VariableComponentsCollection _components;
+        protected VariableComponentCollection ComponentCollection { get; private set; }
         protected VarInfo _varInfo;
         protected Scope _scope;
         protected bool _canInferType = false;
@@ -42,9 +42,12 @@ namespace Deltin.Deltinteger.Parse
             _name = _contextHandler.GetName();
 
             // Get then check components.
-            _components = new VariableComponentsCollection(_contextHandler.GetComponents());
+            ComponentCollection = new VariableComponentCollection(_diagnostics);
+            _contextHandler.GetComponents(ComponentCollection);
             CheckComponents();
-            _scope = _scopeHandler.GetScope(_components.IsAttribute(AttributeType.Static));
+            ComponentCollection.FinishedObtainingComponents();
+
+            _scope = _scopeHandler.GetScope(ComponentCollection.IsAttribute(AttributeType.Static));
 
             // Create the varinfo.
             _varInfo = new VarInfo(_name, _contextHandler.GetDefineLocation(), _parseInfo);
@@ -62,18 +65,17 @@ namespace Deltin.Deltinteger.Parse
                 _varInfo.TokenType = SemanticTokenType.Function;
 
             // Apply attributes.
-            foreach (var component in _components)
-                component.Apply(_varInfo);
+            ComponentCollection.Apply(_varInfo);
             
             Apply();
             TypeCheck();
             _varInfo.Recursive = IsRecursive();
 
             // Get the resulting variable.
-            var result = _variableFactory.GetVariable(saveResult, _components, _varInfo);
+            var result = _variableFactory.GetVariable(saveResult, ComponentCollection, _varInfo);
 
             // Add the variable to the operational scope.
-            _scopeHandler.Add(result.GetDefaultInstance(), _components.IsAttribute(AttributeType.Static));
+            _scopeHandler.Add(result.GetDefaultInstance(), ComponentCollection.IsAttribute(AttributeType.Static));
 
             // Done
             return result;
@@ -81,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual void GetCodeType()
         {
-            if (_canInferType && (_contextHandler.GetCodeType() == null || _contextHandler.GetCodeType().Infer) && _components.IsComponent<InitialValueComponent>())
+            if (_canInferType && (_contextHandler.GetCodeType() == null || _contextHandler.GetCodeType().Infer) && ComponentCollection.IsComponent<InitialValueComponent>())
             {
                 _varInfo.InferType = true;
             }
@@ -118,7 +120,7 @@ namespace Deltin.Deltinteger.Parse
         private void GetOverridenVariable()
         {
             // No attribute is being overriden.
-            if (!_components.IsAttribute(AttributeType.Override)) return;
+            if (!ComponentCollection.IsAttribute(AttributeType.Override)) return;
 
             var overriding = _scopeHandler.GetOverridenVariable(_contextHandler.GetName());
             var overridingType = overriding.CodeType.GetCodeType(_parseInfo.TranslateInfo);
@@ -137,20 +139,19 @@ namespace Deltin.Deltinteger.Parse
         
         /// <summary>Rejects variable components.</summary>
         /// <param name="rejectComponents">The rejectors that will be reject the components.</param>
-        protected void RejectAttributes(params IRejectComponent[] rejectComponents)
+        protected void RejectAttributes(params IComponentIdentifier[] rejectComponents)
         {
             // Rejects attributes whos type is in the types array.
             foreach (var reject in rejectComponents)
-                foreach (var component in _components)
-                    reject.Reject(_parseInfo.Script.Diagnostics, component);
+                ComponentCollection.RejectComponent(reject);
         }
         
         /// <summary>If the variable is not a macro, the 'virtual' and 'override' attributes will be rejected.</summary>
         protected void RejectVirtualIfNotMacro()
         {
             // If the variable is not a macro, disallow 'virtual' and 'override'.
-            if (!_components.IsComponent<MacroComponent>())
-                RejectAttributes(new RejectAttributeComponent(AttributeType.Virtual, AttributeType.Override));
+            if (!ComponentCollection.IsComponent<MacroComponent>())
+                RejectAttributes(new AttributeComponentIdentifier(AttributeType.Virtual, AttributeType.Override));
         }
     }
 

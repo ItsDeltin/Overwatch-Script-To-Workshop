@@ -10,15 +10,15 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
         protected override void CheckComponents()
         {
             RejectAttributes(
-                new RejectAttributeComponent(
+                new AttributeComponentIdentifier(
                     AttributeType.Public, AttributeType.Protected, AttributeType.Private,
                     AttributeType.Static,
                     AttributeType.GlobalVar, AttributeType.PlayerVar,
                     AttributeType.Ref, AttributeType.In
                 ),
-                new RejectComponent<WorkshopIndexComponent>(),
-                new RejectComponent<ExtendedCollectionComponent>(),
-                new RejectComponent<MacroComponent>()
+                new ComponentIdentifier<WorkshopIndexComponent>(),
+                new ComponentIdentifier<ExtendedCollectionComponent>(),
+                new ComponentIdentifier<MacroComponent>()
             );
         }
 

@@ -17,12 +17,12 @@ namespace Deltin.Deltinteger.Parse
         protected override void CheckComponents()
         {
             RejectAttributes(
-                new RejectAttributeComponent(
+                new AttributeComponentIdentifier(
                     AttributeType.Public, AttributeType.Protected, AttributeType.Private,
                     AttributeType.Static,
                     AttributeType.GlobalVar, AttributeType.PlayerVar
                 ),
-                new RejectComponent<WorkshopIndexComponent>()
+                new ComponentIdentifier<WorkshopIndexComponent>()
             );
         }
 
@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void TypeCheck()
         {
             // Get the 'in' attribute.
-            var inAttribute = _components.FirstOrDefault(
+            var inAttribute = ComponentCollection.Components.FirstOrDefault(
                 attribute => attribute is AttributeComponent attributeComponent &&
                 attributeComponent.Attribute == AttributeType.In
             );

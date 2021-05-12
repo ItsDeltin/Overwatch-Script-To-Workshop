@@ -17,18 +17,18 @@ namespace Deltin.Deltinteger.Parse
         protected override void CheckComponents()
         {
             RejectAttributes(
-                new RejectAttributeComponent(
+                new AttributeComponentIdentifier(
                     AttributeType.Public, AttributeType.Protected, AttributeType.Private,
                     AttributeType.Static,
                     AttributeType.GlobalVar, AttributeType.PlayerVar
                 ),
-                new RejectComponent<WorkshopIndexComponent>()
+                new ComponentIdentifier<WorkshopIndexComponent>()
             );
 
             if (_canBeMacro)
                 RejectVirtualIfNotMacro();
             else
-                RejectAttributes(new RejectComponent<MacroComponent>());
+                RejectAttributes(new ComponentIdentifier<MacroComponent>());
         }
 
         protected override void Apply()

@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
         Location GetDefineLocation();
         string GetName();
         DocRange GetNameRange();
-        IVariableComponent[] GetComponents();
+        void GetComponents(VariableComponentCollection componentCollection);
         IParseType GetCodeType();
         DocRange GetTypeRange();
     }
@@ -34,30 +34,26 @@ namespace Deltin.Deltinteger.Parse
         public IParseType GetCodeType() => _defineContext.Type;
         public DocRange GetTypeRange() => _defineContext.Type.Range;
 
-        public IVariableComponent[] GetComponents()
-        {
-            var components = new List<IVariableComponent>();
-            
+        public void GetComponents(VariableComponentCollection componentCollection)
+        {            
             // Add attribute components.
-            components.AddRange(ExtractAttributeComponents.Get(ParseInfo.Script.Diagnostics, _defineContext.Attributes));
+            new AttributesGetter(_defineContext.Attributes, componentCollection).GetAttributes(ParseInfo.Script.Diagnostics);
 
             // Add workshop ID
             if (_defineContext.ID)
-                components.Add(new WorkshopIndexComponent(int.Parse(_defineContext.ID.Text), _defineContext.ID.Range));
+                componentCollection.AddComponent(new WorkshopIndexComponent(int.Parse(_defineContext.ID.Text), _defineContext.ID.Range));
             
             // Extended collection
             if (_defineContext.Extended)
-                components.Add(new ExtendedCollectionComponent(_defineContext.Range));
+                componentCollection.AddComponent(new ExtendedCollectionComponent(_defineContext.Range));
             
             // Initial value
             if (_defineContext.InitialValue != null)
-                components.Add(new InitialValueComponent(_defineContext.InitialValue));
+                componentCollection.AddComponent(new InitialValueComponent(_defineContext.InitialValue));
             
             // Macro
             if (_defineContext.MacroSymbol)
-                components.Add(new MacroComponent(_defineContext.MacroSymbol.Range));
-
-            return components.ToArray();
+                componentCollection.AddComponent(new MacroComponent(_defineContext.MacroSymbol.Range));
         }
     }
 }

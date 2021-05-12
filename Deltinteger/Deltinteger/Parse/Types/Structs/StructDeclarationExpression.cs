@@ -91,7 +91,10 @@ namespace Deltin.Deltinteger.Parse
             _context = context;
         }
 
-        public IVariableComponent[] GetComponents() => new[] { new InitialValueComponent(_context.Value) };
+        public void GetComponents(VariableComponentCollection componentCollection)
+        {
+            componentCollection.AddComponent(new InitialValueComponent(_context.Value));
+        }
         public IParseType GetCodeType() => _context.Type;
         public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
         public string GetName() => _context.Identifier.GetText();

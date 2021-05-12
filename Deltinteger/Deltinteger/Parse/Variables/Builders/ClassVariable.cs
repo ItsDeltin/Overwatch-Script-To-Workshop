@@ -9,12 +9,12 @@ namespace Deltin.Deltinteger.Parse
         protected override void CheckComponents()
         {
             RejectAttributes(
-                new RejectAttributeComponent(
+                new AttributeComponentIdentifier(
                     AttributeType.GlobalVar, AttributeType.PlayerVar,
                     AttributeType.Ref, AttributeType.In
                 ),
-                new RejectComponent<WorkshopIndexComponent>(),
-                new RejectComponent<ExtendedCollectionComponent>()
+                new ComponentIdentifier<WorkshopIndexComponent>(),
+                new ComponentIdentifier<ExtendedCollectionComponent>()
             );
             RejectVirtualIfNotMacro();
         }
