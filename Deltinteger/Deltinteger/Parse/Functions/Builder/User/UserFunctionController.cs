@@ -68,6 +68,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         public ReturnHandler GetReturnHandler(ActionSet actionSet) => new ReturnHandler(
             actionSet,
             _function.CodeType?.GetCodeType(actionSet.DeltinScript)
+                               .GetRealType(_typeArgLinker)
                                .GetGettableAssigner(new AssigningAttributes("returnValue_" + _function.Name, actionSet.IsGlobal, false))
                                .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false }),
             IsMultiplePaths());
