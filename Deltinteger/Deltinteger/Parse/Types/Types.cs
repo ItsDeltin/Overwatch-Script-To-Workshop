@@ -128,7 +128,11 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.AddWorkshopInit(this);
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
             
-            var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name).EndCodeLine();
+            var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name);
+            if (Generics.Length != 0)
+                hover.Add("<" + string.Join(", ", Generics.Select(g => g.GetName())) + ">");
+            hover.EndCodeLine();
+
             if (Description != null) hover.NewSection().Add(Description);
             parseInfo.Script.AddHover(callRange, hover);
         }

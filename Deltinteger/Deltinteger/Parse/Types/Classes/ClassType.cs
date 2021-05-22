@@ -30,6 +30,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Provider = provider;
             Elements = new ClassElements(this);
+            Kind = TypeKind.Class;
         }
 
         public ClassType(string name) : base(name) {}
