@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public int Token { get; private set; }
         public Token Current => Lexer.ScanTokenAt(Token);
         public Token CurrentOrLast => Lexer.ScanTokenAt(Token) ?? Lexer.Tokens.Last();
+        public Token Previous => Lexer.ScanTokenAt(Token - 1);
         public TokenType Kind => Current?.TokenType ?? TokenType.EOF;
         public bool IsFinished => Lexer.IsFinished(Token) || Kind == TokenType.EOF;
 
@@ -55,7 +56,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 var capture = TokenCaptureStack.Pop();
                 capture.Finish(Token, node);
-                node.Range = new DocRange(TokenAtOrEnd(capture.StartToken).Range.Start, CurrentOrLast.Range.End);
+                node.Range = new DocRange(TokenAtOrEnd(capture.StartToken).Range.Start, Previous.Range.End);
                 if (capture.IsValid) NodeCaptures.Add(capture);
             }
             return node;
@@ -83,7 +84,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNodeWithoutPopping<T>(T node) where T : INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(Lexer.ScanTokenAt(TokenRangeStart.Peek()).Range.Start, CurrentOrLast.Range.End);
+                node.Range = new DocRange(Lexer.ScanTokenAt(TokenRangeStart.Peek()).Range.Start, Previous.Range.End);
             return node;
         }
 
@@ -852,6 +853,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
+        // Parses a struct or statement without the block/struct conflict. Used in places where either an expression or statement is expected.
+        IParseStatement ParseStructOrStatement() => IsStructDeclaration() ? ExpressionStatement(ParseStructDeclaration(), null) : ParseStatement(false);
+
         Break ParseBreak()
         {
             StartNode();
@@ -1327,7 +1331,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var arrow = ParseExpected(TokenType.Arrow);
 
             // Get the statement.
-            var statement = ParseStatement(false);
+            var statement = ParseStructOrStatement();
 
             // Done.
             return EndNode(new LambdaExpression(parameters, arrow, statement));
@@ -1654,6 +1658,18 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             return EndTokenCapture(new StructDeclarationContext(values));
         }
+
+        bool IsStructDeclaration() => Lookahead(() => {
+            // Start of struct '{'
+            if (!ParseExpected(TokenType.CurlyBracket_Open))
+                return false;
+            
+            var typeOrIdentifier = ParseType();
+            var identifier = ParseOptional(TokenType.Identifier);
+            var colon = ParseExpected(TokenType.Colon);
+            
+            return ((typeOrIdentifier.LookaheadValid && identifier) || (typeOrIdentifier is ITypeContextHandler && !identifier)) && colon;
+        });
 
         InterpolatedStringExpression ParseInterpolatedString()
         {
