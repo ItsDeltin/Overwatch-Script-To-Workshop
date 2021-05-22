@@ -35,12 +35,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     // Create the CodeLens.
                     finalLenses.Add(new CodeLens()
                     {
-                        Command = new Command()
-                        {
-                            Title = lens.GetTitle(),
-                            Name = lens.Command,
-                            Arguments = lens.GetArguments()
-                        },
+                        Command = lens.GetCommand(),
                         Range = lens.Range
                     });
 

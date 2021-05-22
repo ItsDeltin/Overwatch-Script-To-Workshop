@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the type. Syntax error if there is no type name.
             CreatingObjectOf = TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, context.Type);
             
-            DocRange nameRange = context.Type.Range;
+            DocRange nameRange = context.Type.GenericToken.Range;
 
             // Get the constructor to use.
             OverloadChooser = new OverloadChooser(

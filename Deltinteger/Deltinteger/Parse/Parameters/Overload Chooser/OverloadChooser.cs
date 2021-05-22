@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             Match = BestOption();
 
             // Get additional data.
-            AdditionalData = Overload.Call(_parseInfo, _fullRange);
+            AdditionalData = Overload.Call(_parseInfo, _targetRange);
 
             // Set parameter results;.
             ParameterResults = new OverloadParameterResult[Overload.Parameters.Length];

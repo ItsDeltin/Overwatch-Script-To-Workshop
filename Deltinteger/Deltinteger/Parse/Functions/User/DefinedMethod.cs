@@ -134,6 +134,7 @@ namespace Deltin.Deltinteger.Parse
 
             // if (Attributes.IsOverrideable)
             //     parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
 
             parseInfo.TranslateInfo.ApplyBlock(this);
             parseInfo.Script.Elements.AddMethodDeclaration(this);
@@ -231,6 +232,12 @@ namespace Deltin.Deltinteger.Parse
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(methodCall.TypeArgs).MergeTypeLinker(InstanceInfo);
             return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.ToWorkshop, this, methodCall.TypeArgs));
+        }
+
+        public object Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            parseInfo.Script.Elements.AddDeclarationCall(Provider, new DeclarationCall(callRange));
+            return null;
         }
     }
 }

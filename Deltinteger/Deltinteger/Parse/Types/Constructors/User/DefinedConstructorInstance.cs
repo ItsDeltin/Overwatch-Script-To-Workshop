@@ -2,6 +2,7 @@ using System.Linq;
 using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Parse.Functions.Builder.User;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse.Types.Constructors
@@ -40,15 +41,14 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
                 new UserConstructorController(this, actionSet.ToWorkshop));
         }
 
-        // todo
-        /*
         public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
-            Type.AddLink(parseInfo.GetLocation(callRange));
+            parseInfo.Script.Elements.AddDeclarationCall(Provider, new DeclarationCall(callRange));
+            // todo
+            // parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
+            // Type.AddLink(parseInfo.GetLocation(callRange));
         }
-        */
 
         class UserConstructorController : IWorkshopFunctionController
         {

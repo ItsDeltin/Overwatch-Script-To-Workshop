@@ -1,8 +1,11 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.LanguageServer;
 using Newtonsoft.Json.Linq;
+using Command = OmniSharp.Extensions.LanguageServer.Protocol.Models.Command;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -25,43 +28,53 @@ namespace Deltin.Deltinteger.Parse
     {
         public CodeLensSourceType SourceType { get; }
         public DocRange Range { get; }
-        public string Command { get; }
 
-        public CodeLensRange(CodeLensSourceType sourceType, DocRange range, string command)
+        public CodeLensRange(CodeLensSourceType sourceType, DocRange range)
         {
             SourceType = sourceType;
             Range = range;
-            Command = command;
         }
 
-        public abstract string GetTitle();
-
         public virtual bool ShouldUse() => true;
-
-        public virtual JArray GetArguments() => new JArray();
+        public abstract Command GetCommand();
     }
 
     class ReferenceCodeLensRange : CodeLensRange
     {
-        public ISymbolLink Callable { get; }
-        private readonly ParseInfo _parseInfo;
+        public object DeclarationKey { get; }
+        readonly ParseInfo _parseInfo;
 
-        public ReferenceCodeLensRange(ISymbolLink callable, ParseInfo parseInfo, CodeLensSourceType sourceType, DocRange range) : base(sourceType, range, "ostw.showReferences")
+        public ReferenceCodeLensRange(object declarationKey, ParseInfo parseInfo, CodeLensSourceType sourceType, DocRange range) : base(sourceType, range)
         {
-            Callable = callable;
+            DeclarationKey = declarationKey;
             _parseInfo = parseInfo;
         }
 
-        public override string GetTitle() => (_parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().GetSymbolLinks(Callable).Count - 1).ToString() + " references";
+        public override Command GetCommand()
+        {
+            var locations = new List<Location>();
 
-        public override JArray GetArguments() => new JArray {
-            // Uri
-            JToken.FromObject(_parseInfo.Script.Uri.ToString()),
-            // Range
-            JToken.FromObject(Range.Start),
-            // Locations
-            JToken.FromObject(_parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().GetSymbolLinks(Callable).GetSymbolLinks(false).Select(sl => sl.Location))
-        };
+            // Loop through each script.
+            foreach (var script in _parseInfo.TranslateInfo.Importer.ScriptFiles)
+                // Check if said script calls the declaration key.
+                if (script.Elements.DeclarationCalls.TryGetValue(DeclarationKey, out var calls))
+                    // If it does, add the calls.
+                    locations.AddRange(calls.Select(c => script.GetLocation(c.CallRange)));
+
+            return new Command {
+                Name = "ostw.showReferences",
+                Title = locations.Count.ToString() + " references",
+                // todo: add declaration
+                Arguments = new JArray {
+                    // Uri
+                    JToken.FromObject(_parseInfo.Script.Uri.ToString()),
+                    // Range
+                    JToken.FromObject(Range.Start),
+                    // Locations
+                    JToken.FromObject(locations)
+                }
+            };
+        }
     }
 
     class ImplementsCodeLensRange : CodeLensRange
@@ -69,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
         public IMethod Method { get; }
         private readonly ScriptFile _script;
 
-        public ImplementsCodeLensRange(IMethod method, ScriptFile script, CodeLensSourceType sourceType, DocRange range) : base(sourceType, range, "ostw.showReferences")
+        public ImplementsCodeLensRange(IMethod method, ScriptFile script, CodeLensSourceType sourceType, DocRange range) : base(sourceType, range)
         {
             Method = method;
             _script = script;
@@ -81,16 +94,22 @@ namespace Deltin.Deltinteger.Parse
             return Method.Attributes.Overriders.Length > 0;
         }
 
-        public override string GetTitle() => Method.Attributes.Overriders.Length + " implements";
+        // TODO
+        // public override string GetTitle() => Method.Attributes.Overriders.Length + " implements";
 
-        public override JArray GetArguments() => new JArray {
-            // Uri
-            JToken.FromObject(_script.Uri.ToString()),
-            // Range
-            JToken.FromObject(Range.Start),
-            // Locations
-            JToken.FromObject(Method.Attributes.Overriders.Select(overrider => overrider.DefinedAt))
-        };
+        // public override JArray GetArguments() => new JArray {
+        //     // Uri
+        //     JToken.FromObject(_script.Uri.ToString()),
+        //     // Range
+        //     JToken.FromObject(Range.Start),
+        //     // Locations
+        //     JToken.FromObject(Method.Attributes.Overriders.Select(overrider => overrider.DefinedAt))
+        // };
+
+        public override Command GetCommand()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class ElementCountCodeLens : CodeLensRange
@@ -98,7 +117,7 @@ namespace Deltin.Deltinteger.Parse
         private int elementCount = -1;
         private int actionCount = -1;
 
-        public ElementCountCodeLens(DocRange range) : base(CodeLensSourceType.None, range, null)
+        public ElementCountCodeLens(DocRange range) : base(CodeLensSourceType.None, range)
         {
         }
 
@@ -108,10 +127,17 @@ namespace Deltin.Deltinteger.Parse
             actionCount = rule.Actions.Length;
         }
 
-        public override string GetTitle()
+        public override Command GetCommand()
         {
-            if (elementCount == -1) return "- actions, - elements";
-            return actionCount + " actions, " + elementCount + " elements";
+            string title = elementCount == -1 ?
+                "- actions, - elements" :
+                actionCount + " actions, " + elementCount + " elements";
+
+            return new Command {
+                Name = null,
+                Title = title,
+                Arguments = new JArray()
+            };
         }
     }
 }

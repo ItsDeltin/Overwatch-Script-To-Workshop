@@ -423,17 +423,6 @@ namespace Deltin.Deltinteger.Parse
                 scope.AddType(type);
         }
 
-        public void PrintClassIdentifiers(WorkshopBuilder builder)
-        {
-            builder.AppendLine("// Class identifiers:");
-
-            foreach (CodeType type in AllTypes)
-                if (type is ClassType classType && classType.Identifier > 0)
-                    builder.AppendLine("// " + classType.Name + ": " + classType.Identifier);
-
-            builder.AppendLine();
-        }
-
         public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.BuiltInTypeMatches(typeof(T))).GetInstance();
         public CodeType GetInstanceFromInitializer<T>() where T: ICodeTypeInitializer => AllTypes.First(type => type.GetType() == typeof(T)).GetInstance();
         public T GetInitializer<T>() where T: ICodeTypeInitializer => (T)AllTypes.First(type => type.GetType() == typeof(T));

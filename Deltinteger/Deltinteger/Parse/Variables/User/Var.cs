@@ -14,8 +14,6 @@ namespace Deltin.Deltinteger.Parse
 
         // IScopeable
         public string Name { get; }
-        public MarkupBuilder Documentation { get; }
-        public MarkupBuilder MarkupBuilder { get; }
         public AccessLevel AccessLevel { get; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; }
@@ -36,8 +34,6 @@ namespace Deltin.Deltinteger.Parse
         private readonly bool _handleRestrictedCalls;
         private readonly bool _inferType;
         private readonly VariableTypeHandler _variableTypeHandler;
-
-        public bool WasCalled { get; private set; }
 
         /// <summary>The scope the variable and initial value will use.</summary>
         private readonly Scope _operationalScope;
@@ -155,23 +151,9 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public bool Settable()
-        {
-            return (CodeType == null || !CodeType.IsConstant()) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
-        }
-
-        // IExpression
-        public Scope ReturningScope()
-        {
-            if (CodeType == null) return _parseInfo.TranslateInfo.PlayerVariableScope;
-            else return CodeType.GetObjectScope();
-        }
-        public CodeType Type() => CodeType;
-
         // ICallable
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            WasCalled = true;
             parseInfo.Script.AddToken(callRange, _tokenType, _tokenModifiers);
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.Script.AddHover(callRange, GetLabel(true));
