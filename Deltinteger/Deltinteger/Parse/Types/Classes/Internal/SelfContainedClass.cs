@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
         CodeType WorkingInstance { get; }
         Scope ObjectScope { get; }
         Scope StaticScope { get; }
-        ObjectVariable AddObjectVariable(IVariableInstance variableInstance);
+        void AddObjectVariable(IVariableInstance variableInstance);
     }
 
     class SetupSelfContainedClass : ISetupSelfContainedClass
@@ -30,15 +30,13 @@ namespace Deltin.Deltinteger.Parse
         public CodeType WorkingInstance { get; }
         public Scope ObjectScope { get; }
         public Scope StaticScope { get; }
-        public IReadOnlyList<ObjectVariable> ObjectVariables => _objectVariables;
-        private readonly List<ObjectVariable> _objectVariables = new List<ObjectVariable>();
+        public IReadOnlyList<IVariableInstance> ObjectVariables => _objectVariables;
+        private readonly List<IVariableInstance> _objectVariables = new List<IVariableInstance>();
 
-        public ObjectVariable AddObjectVariable(IVariableInstance variableInstance)
+        public void AddObjectVariable(IVariableInstance variableInstance)
         {
-            var newObjectVariable = new ObjectVariable(variableInstance);
-            _objectVariables.Add(newObjectVariable);
+            _objectVariables.Add(variableInstance);
             ObjectScope.AddNativeVariable(variableInstance);
-            return newObjectVariable;
         }
 
         public SetupSelfContainedClass(CodeType workingInstance, Scope objectScope, Scope staticScope)
@@ -71,8 +69,7 @@ namespace Deltin.Deltinteger.Parse
         {
             var setup = new SetupSelfContainedClass(this, ServeObjectScope, StaticScope);
             _classInfo.Setup(setup);
-
-            ObjectVariables = setup.ObjectVariables.ToArray();
+            Variables = setup.ObjectVariables.ToArray();
         }
 
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)

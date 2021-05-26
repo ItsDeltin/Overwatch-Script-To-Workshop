@@ -129,10 +129,15 @@ namespace Deltin.Deltinteger.Parse
 
     public class WorkshopInitializedCombo
     {
+        ///<summary>The source combo that this was initialized from.</summary>
         public TypeArgCombo Combo { get; }
+        ///<summary>The unique ID of the combo. This can be used to identify compatible classes at workshop runtime.</summary>
         public int ID { get; }
+        ///<summary>The initialized combo that this extends. May be null.</summary>
         public WorkshopInitializedCombo ExtendsCombo { get; private set; }
+        ///<summary>The position where data is assigned in the class variable list. This will be 0 if ExtendsCombo == null.</summary>
         public int StackOffset { get; private set; }
+        ///<summary>The number of variables that the class combo requires in order to store its data.</summary>
         public int StackLength { get; }
 
         readonly ClassWorkshopInitializerComponent _initializer;
@@ -144,6 +149,7 @@ namespace Deltin.Deltinteger.Parse
             ID = id;
             _initializer = initializer;
             _instance = instance;
+            // todo
             // StackLength = _instance.Attributes.StackLength;
             StackLength = instance.Variables.Select(v => v.GetAssigner(null).StackDelta()).Sum();
         }
@@ -158,20 +164,32 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public void AddVariableInstancesToAssigner(IVariableInstance[] instances, IWorkshopTree reference, VarIndexAssigner assigner)
+        public void AddVariableInstancesToAssigner(IVariableInstance[] variables, IWorkshopTree reference, VarIndexAssigner assigner)
         {
+            var gettables = GetVariableGettables(variables, reference);
+            for (int i = 0; i < variables.Length; i++)
+                assigner.Add(variables[i].Provider, gettables[i]);
+        }
+
+        public IGettable[] GetVariableGettables(IVariableInstance[] variables, IWorkshopTree reference)
+        {
+            IGettable[] gettables = new IGettable[variables.Length];
+
+            // 'stack' represents an index in the list of class variables.
             int stack = StackOffset;
-            for (int i = 0; i < instances.Length; i++)
-            {                
-                var gettableAssigner = instances[i].GetAssigner(null);
+            for (int i = 0; i < variables.Length; i++)
+            {
+                // Get the gettable assigner.
+                var gettableAssigner = variables[i].GetAssigner(null);
 
-                assigner.Add(
-                    instances[i].Provider,
-                    gettableAssigner.AssignClassStacks(new GetClassStacks(_initializer, stack)).ChildFromClassReference(reference)
-                );
+                // Create the gettable.
+                gettables[i] = gettableAssigner.AssignClassStacks(new GetClassStacks(_initializer, stack)).ChildFromClassReference(reference);
 
+                // Increase stack by the length of the gettable.
                 stack += gettableAssigner.StackDelta();
             }
+
+            return gettables;
         }
     }
 
@@ -197,6 +215,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        /// <summary>Recursively gets every class that extends this.</summary>
         public IEnumerable<ClassWorkshopRelation> GetAllExtenders()
         {
             foreach (var extender in _extendedBy)
@@ -204,6 +223,17 @@ namespace Deltin.Deltinteger.Parse
                 yield return extender;
                 foreach (var recursiveExtender in extender.GetAllExtenders())
                     yield return recursiveExtender;
+            }
+        }
+
+        /// <summary>Extracts overriden elements that match a pattern.</summary>
+        public IEnumerable<T> ExtractOverridenElements<T>(Func<T, bool> isMatch) where T: class, IScopeable
+        {
+            foreach (var extender in GetAllExtenders())
+            {
+                T value = extender.Instance.Elements.ScopeableElements.FirstOrDefault(element => element.Scopeable is T t && isMatch(t)).Scopeable as T;
+                if (value != null)
+                    yield return value;
             }
         }
     }

@@ -1,3 +1,4 @@
+using System;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
@@ -5,44 +6,30 @@ namespace Deltin.Deltinteger.Parse
     public class ObjectVariable
     {
         public IVariableInstance Variable { get; }
-        public IGettable ArrayStore { get; private set; }
-        public int StackCount { get; private set; } = 1;
+        readonly ClassType _classType;
 
-        public ObjectVariable(IVariableInstance variable)
+        public ObjectVariable(ClassType classType, IVariableInstance variable)
         {
+            _classType = classType;
             Variable = variable;
         }
 
-        public void SetArrayStore(DeltinScript deltinScript, int stackOffset)
-        {
-            ArrayStore = Variable.GetAssigner(null).AssignClassStacks(new GetClassStacks(deltinScript.WorkshopConverter.ClassInitializer, stackOffset));
-        }
-
-        public void AddToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
-        {
-            assigner.Add(Variable.Provider, ArrayStore.ChildFromClassReference(reference));
-        }
-
-        public void Init(ActionSet actionSet, Element reference)
-        {
-            if (Variable is Var var && var.InitialValue != null)
-                ArrayStore.Set(
-                    actionSet,
-                    value: (Element)var.InitialValue.Parse(actionSet),
-                    target: null,
-                    index: reference
-                );
-        }
-
-        /// <summary>Gets the value from a reference.</summary>
-        public IWorkshopTree Get(IWorkshopTree reference) => ArrayStore.ChildFromClassReference(reference).GetVariable();
-
         /// <summary>Gets the value from the current context's object reference.</summary>
-        public Element Get(ActionSet actionSet) => (Element)Get(actionSet.CurrentObject);
+        public IWorkshopTree Get(ActionSet actionSet) => GetGettable(actionSet).GetVariable();
 
-        public void Set(ActionSet actionSet, Element reference, Element value)
+        public void Set(ActionSet actionSet, Element reference, Element value) => GetGettable(actionSet, reference).Set(actionSet, value);
+
+        IGettable GetGettable(ActionSet actionSet, IWorkshopTree reference = null)
         {
-            actionSet.AddAction(((IndexReference)ArrayStore).SetVariable(value: value, index: reference));
+            reference = reference ?? actionSet.CurrentObject;
+
+            // Get the gettable from the combo related to _classType.
+            var gettables = actionSet.ToWorkshop.ClassInitializer
+                .ComboFromClassType(_classType)
+                .GetVariableGettables(_classType.Variables, reference);
+            
+            int index = Array.IndexOf(_classType.Variables, Variable);
+            return gettables[index];
         }
     }
 }

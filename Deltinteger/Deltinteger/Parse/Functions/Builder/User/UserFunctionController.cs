@@ -33,24 +33,28 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 // Get the class relation.
                 _classRelation = toWorkshop.ClassInitializer.RelationFromClassType((ClassType)function.DefinedInType);
 
-                // Get the virtual functions.
-                foreach (var extender in _classRelation.GetAllExtenders())
-                {
-                    // Extract the virtual function.
-                    var methodInstance = extender.Instance.Elements.ScopeableElements.FirstOrDefault(element =>
-                        // Make sure the scopeable is a defined method...
-                        element.Scopeable is DefinedMethodInstance method &&
-                        // ...that overrides the target method.
-                        DoesOverride(function, method)
-                    ).Scopeable as DefinedMethodInstance;
+                // Extract the virtual functions.
+                // todo: In _allVirtualOptions, it may be a good idea to include classes that do not override so we don't need to check auto-implementations in the virtual builder.
+                _allVirtualOptions.AddRange(_classRelation.ExtractOverridenElements<DefinedMethodInstance>(extender => DoesOverride(function, extender)));
 
-                    // Add the method instance if it exists.
-                    // todo: In _allVirtualOptions, it may be a good idea to include classes that do not override so we don't need to check auto-implementations in the virtual builder.
-                    if (methodInstance != null)
-                    {
-                        _allVirtualOptions.Add(methodInstance);
-                    }
-                }
+                // // Get the virtual functions.
+                // foreach (var extender in _classRelation.GetAllExtenders())
+                // {
+                //     // Extract the virtual function.
+                //     var methodInstance = extender.Instance.Elements.ScopeableElements.FirstOrDefault(element =>
+                //         // Make sure the scopeable is a defined method...
+                //         element.Scopeable is DefinedMethodInstance method &&
+                //         // ...that overrides the target method.
+                //         DoesOverride(function, method)
+                //     ).Scopeable as DefinedMethodInstance;
+
+                //     // Add the method instance if it exists.
+                //     // todo: In _allVirtualOptions, it may be a good idea to include classes that do not override so we don't need to check auto-implementations in the virtual builder.
+                //     if (methodInstance != null)
+                //     {
+                //         _allVirtualOptions.Add(methodInstance);
+                //     }
+                // }
             }
         }
 
@@ -72,8 +76,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                                .GetGettableAssigner(new AssigningAttributes("returnValue_" + _function.Name, actionSet.IsGlobal, false))
                                .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false }),
             IsMultiplePaths());
-        // Todo: virtual and subroutine checks.
-        bool IsMultiplePaths() => _function.Provider.ReturnType != null && (_function.Provider.MultiplePaths || _function.Attributes.Recursive);
+
+        bool IsMultiplePaths() => _function.Provider.ReturnType != null && (_function.Provider.MultiplePaths || _function.Attributes.Recursive || _function.Provider.SubroutineName != null);
 
         // Creates parameters assigned to this function.
         public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
@@ -115,17 +119,12 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
 
         public object StackIdentifier() => _function;
 
-        public void Build(ActionSet actionSet)
-        {
-            // Create the function builder.
-            var virtualContentBuilder = new VirtualContentBuilder(
-                actionSet: actionSet,
-                functions: from virtualOption in _allVirtualOptions select new UserFunctionBuilder(virtualOption)
-            );
-            virtualContentBuilder.Build();
-        }
+        public void Build(ActionSet actionSet) => new MethodContentBuilder(
+            actionSet: actionSet,
+            functions: from virtualOption in _allVirtualOptions select new UserFunctionBuilder(virtualOption)
+        );
 
-        class UserFunctionBuilder : IVirtualFunctionHandler
+        class UserFunctionBuilder : IVirtualMethodHandler
         {
             readonly DefinedMethodInstance _method;
 

@@ -19,14 +19,17 @@ namespace Deltin.Deltinteger.Pathfinder
             Instance = new SelfContainedClassInstance(this);
         }
 
-        public void Setup(ISetupSelfContainedClass setup)
+        void ISelfContainedClass.Setup(ISetupSelfContainedClass setup)
         {
-            NodeBake = setup.AddObjectVariable(new InternalVar("NodeBake"));
-            Pathmap = setup.AddObjectVariable(new InternalVar("Pathmap"));
-            setup.ObjectScope.AddNativeMethod(Pathfind);
-        }
+            var nodeBake = new InternalVar("NodeBake");
+            var pathmap = new InternalVar("Pathmap");
 
-        void ISelfContainedClass.Setup(ISetupSelfContainedClass setup) {}
+            setup.AddObjectVariable(nodeBake);
+            setup.AddObjectVariable(pathmap);
+
+            NodeBake = new ObjectVariable(Instance, nodeBake);
+            Pathmap = new ObjectVariable(Instance, pathmap);
+        }
         void ISelfContainedClass.WorkshopInit(DeltinScript deltinScript) {}
         void ISelfContainedClass.AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
         void ISelfContainedClass.New(ActionSet actionSet, NewClassInfo newClassInfo) {}
@@ -64,7 +67,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 );
 
                 // For each of the players, get the current.
-                resolveInfo.Pathfind(actionSet, call.Get(0), Pathmap.Get(actionSet), NodeBake.Get(actionSet)[targetNode], destination);
+                resolveInfo.Pathfind(actionSet, call.Get(0), (Element)Pathmap.Get(actionSet), ValueInArray(NodeBake.Get(actionSet), targetNode), destination);
                 return null;
             }
         };

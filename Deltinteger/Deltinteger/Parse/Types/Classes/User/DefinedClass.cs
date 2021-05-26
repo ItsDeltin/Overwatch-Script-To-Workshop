@@ -27,7 +27,6 @@ namespace Deltin.Deltinteger.Parse
             StaticScope = new Scope();
 
             // Add elements to scope.
-            ObjectVariables = new ObjectVariable[initializer.ObjectVariables.Count];
             var initializedVariables = new List<IVariableInstance>();
             foreach (var element in initializer.DeclaredElements)
             {
@@ -39,12 +38,7 @@ namespace Deltin.Deltinteger.Parse
                 
                 // Variable
                 else if (instance is IVariableInstance variableInstance)
-                {
                     initializedVariables.Add(variableInstance);
-
-                    int objectVariableIndex = Array.IndexOf(initializer.ObjectVariables.ToArray(), variableInstance.Provider);
-                    ObjectVariables[objectVariableIndex] = new ObjectVariable(variableInstance);
-                }
             }
 
             Variables = initializedVariables.ToArray();

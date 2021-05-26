@@ -36,20 +36,5 @@ namespace Deltin.Deltinteger.Parse
                 (Element)classReference.GetVariable()
             ));
         }
-
-        public IndexReference GetClassVariableStack(VarCollection collection, int index)
-        {
-            if (index > VariableStacks.Count) throw new Exception("Variable stack skipped");
-            if (index == VariableStacks.Count)
-                VariableStacks.Add(collection.Assign(ObjectVariableTag + index, true, false));
-            
-            return VariableStacks[index];
-        }
-
-        public int AssignID()
-        {
-            AssignClassID++;
-            return AssignClassID;
-        }
     }
 }

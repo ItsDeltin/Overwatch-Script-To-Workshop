@@ -15,10 +15,6 @@ namespace Deltin.Deltinteger.Parse
         /// <summary></summary>
         public Scope OperationalScope { get; set; }
 
-        // TODO: remove this bad boy
-        public int Identifier { get; set; }
-
-        public ObjectVariable[] ObjectVariables { get; protected set; }
         public IVariableInstance[] Variables { get; protected set; }
 
         // The provider that created this ClassType.
@@ -34,38 +30,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public ClassType(string name) : base(name) {}
-
-        public override void WorkshopInit(DeltinScript translateInfo)
-        {
-            ClassData classData = translateInfo.GetComponent<ClassData>();
-            Identifier = classData.AssignID();
-
-            int stackOffset = StackStart(false);
-            Extends?.WorkshopInit(translateInfo);
-
-            foreach (var objectVariable in ObjectVariables)
-            {
-                objectVariable.SetArrayStore(translateInfo, stackOffset);
-                stackOffset += objectVariable.StackCount;
-            }
-        }
-
-        private int StackStart(bool inclusive)
-        {
-            int extStack = 0;
-            if (Extends != null) extStack = ((ClassType)Extends).StackStart(true);
-            if (inclusive) foreach (var variable in ObjectVariables) extStack += variable.StackCount;
-            return extStack;
-        }
-
-        public override void BaseSetup(ActionSet actionSet, Element reference)
-        {
-            if (Extends != null)
-                Extends.BaseSetup(actionSet, reference);
-
-            foreach (ObjectVariable variable in ObjectVariables)
-                variable.Init(actionSet, reference);
-        }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
         {
@@ -88,7 +52,9 @@ namespace Deltin.Deltinteger.Parse
             // Classes are stored in the class array (`classData.ClassArray`),
             // this stores the index where the new class is created at.
             var classReference = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
-            classData.GetClassIndex(Identifier, classReference, actionSet);
+
+            int classID = actionSet.ToWorkshop.ClassInitializer.ComboFromClassType(this).ID;
+            classData.GetClassIndex(classID, classReference, actionSet);
 
             // Get object variables.
             BaseSetup(actionSet, (Element)classReference.GetVariable());

@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Create the variable.
             DBPVariable variable = new DBPVariable(debugVariable, Class.Name);
-            variable.namedVariables = Class.ObjectVariables.Length;
+            variable.namedVariables = Class.Variables.Length;
             variable.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
 
             return variable;
@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
             // Create the evaluation response.
             IDebugVariable.ApplyReference(collection, debugVariable);
             EvaluateResponse response = new EvaluateResponse(collection, debugVariable);
-            response.namedVariables = Class.ObjectVariables.Length;
+            response.namedVariables = Class.Variables.Length;
             
             return response;
         }
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             // The class reference of the parent variable.
             int reference = (int)((CsvNumber)parent.Value).Value;
 
-            IDebugVariable[] variables = new IDebugVariable[Class.ObjectVariables.Length];
+            IDebugVariable[] variables = new IDebugVariable[Class.Variables.Length];
             for (int i = 0; i < variables.Length; i++)
             {
                 CsvPart value = new CsvNull();
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
                 if (objectVariableArray != null && objectVariableArray.Value is Csv.CsvArray csvArray && reference < csvArray.Values.Length)
                     value = csvArray.Values[reference];
                 
-                var type = Class.ObjectVariables[i].Variable.CodeType.GetCodeType(_deltinScript);
+                var type = Class.Variables[i].CodeType.GetCodeType(_deltinScript);
 
                 variables[i] = new ChildDebugVariable(
                     // Child variable resolver
@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
                     // Value
                     value,
                     // Name
-                    Class.ObjectVariables[i].Variable.Name,
+                    Class.Variables[i].Name,
                     // Type
                     type.GetName()
                 );
