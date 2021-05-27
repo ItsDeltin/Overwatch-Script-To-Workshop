@@ -56,9 +56,6 @@ namespace Deltin.Deltinteger.Parse
             int classID = actionSet.ToWorkshop.ClassInitializer.ComboFromClassType(this).ID;
             classData.GetClassIndex(classID, classReference, actionSet);
 
-            // Get object variables.
-            BaseSetup(actionSet, (Element)classReference.GetVariable());
-
             return classReference;
         }
 

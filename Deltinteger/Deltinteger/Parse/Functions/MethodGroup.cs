@@ -147,10 +147,6 @@ namespace Deltin.Deltinteger.Parse
             if (function is DefinedMethodInstance definedMethod)
                 return new DefinedMethodInvoker(definedMethod);
             
-            // If the chosen function is a macro.
-            if (function is DefinedMacroInstance definedMacro)
-                return new MacroMethodGroupInvoker(definedMacro);
-
             // Otherwise, use the generic function handler.
             return new GenericFunctionInvoker(function);
         }
@@ -180,20 +176,6 @@ namespace Deltin.Deltinteger.Parse
         IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues);
     }
 
-    class MacroMethodGroupInvoker : IMethodGroupInvoker
-    {
-        readonly DefinedMacroInstance _macro;
-
-        public MacroMethodGroupInvoker(DefinedMacroInstance macro)
-        {
-            _macro = macro;
-        }
-
-        public IVariable GetParameterVar(int index) => _macro.ParameterVars[index].Provider;
-        public int ParameterCount() => _macro.Parameters.Length;
-        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _macro.Parse(actionSet, new MethodCall(parameterValues));
-    }
-
     class DefinedMethodInvoker : IMethodGroupInvoker
     {
         readonly DefinedMethodInstance _method;
@@ -205,6 +187,8 @@ namespace Deltin.Deltinteger.Parse
 
         public IVariable GetParameterVar(int index) => _method.ParameterVars[index].Provider;
         public int ParameterCount() => _method.ParameterVars.Length;
+
+        // todo: macros
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) =>
             WorkshopFunctionBuilder.Call(
                 actionSet,

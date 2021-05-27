@@ -203,14 +203,6 @@ namespace Deltin.Deltinteger.Parse
             return apply.VariableCall;
         }
 
-        /// <summary>Creates a macro from a Define_macroContext.</summary>
-        /// <param name="objectScope">The scope of the macro if there is no static attribute.</param>
-        /// <param name="staticScope">The scope of the macro if there is a static attribute.</param>
-        /// <param name="macroContext">The context of the macro.</param>
-        /// <returns>A DefinedMacro if the macro has parameters, a MacroVar if there are no parameters.</returns>
-        public DefinedMacroProvider GetMacro(IScopeProvider scopeProvider, MacroFunctionContext macroContext)
-            => new DefinedMacroProvider(this, scopeProvider, macroContext);
-
         public void LocalVariableAccessed(IVariable variable)
         {
             if (LocalVariableTracker != null)

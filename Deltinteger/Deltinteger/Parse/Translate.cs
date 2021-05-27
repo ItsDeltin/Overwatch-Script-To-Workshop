@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
@@ -188,20 +187,12 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 ParseInfo parseInfo = new ParseInfo(script, this);
-
-                // Get the functions.
                 foreach (var declaration in script.Context.Declarations)
-                {
-                    // Function
                     if (declaration is FunctionContext function)
                     {
                         var p = DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, null);
                         p.AddDefaultInstance(this);
                     }
-                    // Macro function
-                    else if (declaration is MacroFunctionContext macroFunction)
-                        parseInfo.GetMacro(this, macroFunction);
-                }
             }
 
             foreach (var resolve in _resolveElements) resolve.ResolveElements();

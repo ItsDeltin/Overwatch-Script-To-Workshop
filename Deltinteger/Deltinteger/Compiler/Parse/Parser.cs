@@ -1398,7 +1398,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Get the macro's value.
                     var value = GetContainExpression();
                     ParseSemicolon();
-                    return EndNode(new MacroFunctionContext(attributes, type, identifier, typeArgs, parameters, value));
+                    return EndNode(new FunctionContext(attributes, type, identifier, typeArgs, parameters, value));
                 }
                 // Normal function
                 else

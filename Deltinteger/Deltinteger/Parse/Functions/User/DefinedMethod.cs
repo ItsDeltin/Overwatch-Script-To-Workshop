@@ -69,6 +69,7 @@ namespace Deltin.Deltinteger.Parse
         public BlockAction Block { get; private set; }
         public bool MultiplePaths { get; private set; }
         public IExpression SingleReturnValue { get; private set; }
+        public IExpression MacroValue { get; private set; }
 
         ITypeArgTrackee IMethodExtensions.Tracker => this;
         int ITypeArgTrackee.GenericsCount => GenericTypes.Length;
@@ -88,15 +89,14 @@ namespace Deltin.Deltinteger.Parse
             DocRange nameRange = context.Identifier.Range;
 
             // Get the attributes.
-            var attributeResult = new GenericAttributeAppender(AttributeType.Ref, AttributeType.In, AttributeType.GlobalVar, AttributeType.PlayerVar);
-            var attributeGetter = new AttributesGetter(context.Attributes, attributeResult);
-            attributeGetter.GetAttributes(parseInfo.Script.Diagnostics);
+            var attributes = new GenericAttributeAppender(AttributeType.Ref, AttributeType.In, AttributeType.GlobalVar, AttributeType.PlayerVar);
+            AttributesGetter.GetAttributes(parseInfo.Script.Diagnostics, context.Attributes, attributes);
 
             // Set the attributes.
-            Static = attributeResult.IsStatic;            
-            Recursive = attributeResult.IsRecursive;
-            Virtual = attributeResult.IsVirtual;
-            AccessLevel = attributeResult.Accessor;
+            Static = attributes.IsStatic;            
+            Recursive = attributes.IsRecursive;
+            Virtual = attributes.IsVirtual;
+            AccessLevel = attributes.Accessor;
 
             // Get subroutine info.
             if (context.Subroutine)
@@ -113,7 +113,6 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the generics.
             GenericTypes = AnonymousType.GetGenerics(context.TypeArguments, this);
-
             foreach (var type in GenericTypes)
                 _methodScope.AddType(new GenericCodeTypeInitializer(type));
 
@@ -126,7 +125,7 @@ namespace Deltin.Deltinteger.Parse
             ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
 
             // Override
-            if (attributeResult.IsOverride)
+            if (attributes.IsOverride)
                 OverridingFunction = (DefinedMethodInstance)scopeProvider.GetOverridenFunction(parseInfo.TranslateInfo, new FunctionOverrideInfo(Name, ParameterTypes));
 
             // TODO Add the hover info.
@@ -143,24 +142,37 @@ namespace Deltin.Deltinteger.Parse
         public void SetupParameters() {}
         public void SetupBlock()
         {
-            Block = new BlockAction(_parseInfo.SetReturnType(ReturnType).SetThisType(ContainingType?.WorkingInstance), _methodScope, Context.Block);
+            if (Context.Block != null)
+            {
+                Block = new BlockAction(_parseInfo.SetReturnType(ReturnType).SetThisType(ContainingType?.WorkingInstance), _methodScope, Context.Block);
 
-            // Validate returns.
-            BlockTreeScan validation = new BlockTreeScan(_parseInfo, this);
-            validation.ValidateReturns();
-            MultiplePaths = validation.MultiplePaths;
+                // Validate returns.
+                BlockTreeScan validation = new BlockTreeScan(_parseInfo, this);
+                validation.ValidateReturns();
+                MultiplePaths = validation.MultiplePaths;
 
-            // If there is only one return statement, set SingleReturnValue.
-            if (validation.Returns.Length == 1) SingleReturnValue = validation.Returns[0].ReturningValue;
+                // If there is only one return statement, set SingleReturnValue.
+                if (validation.Returns.Length == 1) SingleReturnValue = validation.Returns[0].ReturningValue;
 
-            // If the return type is a constant type...
-            if (ReturnType != null && ReturnType.IsConstant())
-                // ... iterate through each return statement ...
-                foreach (ReturnAction returnAction in validation.Returns)
-                    // ... If the current return statement returns a value and that value does not implement the return type ...
-                    if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(ReturnType)))
-                        // ... then add a syntax error.
-                        _parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
+                // If the return type is a constant type...
+                if (ReturnType != null && ReturnType.IsConstant())
+                    // ... iterate through each return statement ...
+                    foreach (ReturnAction returnAction in validation.Returns)
+                        // ... If the current return statement returns a value and that value does not implement the return type ...
+                        if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(ReturnType)))
+                            // ... then add a syntax error.
+                            _parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
+            }
+            else if (Context.MacroValue != null)
+            {
+                MacroValue = _parseInfo
+                    .SetReturnType(ReturnType)
+                    .SetExpectType(ReturnType)
+                    .SetThisType(ContainingType?.WorkingInstance)
+                    .GetExpression(_methodScope, Context.MacroValue);
+                
+                SingleReturnValue = MacroValue;
+            }
             
             _wasApplied = true;
             foreach (var listener in _listeners) listener.Applied();
@@ -230,8 +242,14 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(methodCall.TypeArgs).MergeTypeLinker(InstanceInfo);
-            return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.ToWorkshop, this, methodCall.TypeArgs));
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained())
+                .SetThisTypeLinker(methodCall.TypeArgs)
+                .MergeTypeLinker(InstanceInfo);
+            
+            if (Provider.Block != null)
+                return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.ToWorkshop, this, methodCall.TypeArgs));
+            else
+                return MacroBuilder.CallMacroFunction(actionSet, this, methodCall);
         }
 
         public object Call(ParseInfo parseInfo, DocRange callRange)

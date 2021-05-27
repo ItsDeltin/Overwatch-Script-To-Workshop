@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Deltin.Deltinteger.Parse.Functions.Builder
+namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
 {
     /// <summary>
     /// The AbstractVirtualContentBuilder is for generating workshop output that follows the virtual class selector pattern.
@@ -93,10 +93,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         static bool AutoImplemented(ClassType virtualType, IEnumerable<ClassType> allOptionTypes, ClassType type)
         {
             // Go through each class in the inheritance tree and check if it implements the function...
-            while (type != null && !type.Is(type))
+            while (type != null && !type.Is(virtualType))
             {
                 // ...if it does, return false.
-                if (allOptionTypes.Contains(type)) return false;
+                if (allOptionTypes.Any(t => type.Is(t))) return false;
                 type = (ClassType)type.Extends;
             }
             return true;

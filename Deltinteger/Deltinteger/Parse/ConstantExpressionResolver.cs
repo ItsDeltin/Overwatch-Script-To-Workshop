@@ -23,10 +23,6 @@ namespace Deltin.Deltinteger.Parse
                     // If the function is calling a DefinedMethod, resolve the value.
                     if (callMethod.CallingMethod is DefinedMethodInstance definedMethod && definedMethod.Provider.SingleReturnValue != null)
                         resolve = definedMethod.Provider.SingleReturnValue;
-                    
-                    // If the expression is a parametered macro, resolve the value.
-                    else if (callMethod.CallingMethod is DefinedMacroInstance definedMacro)
-                        resolve = definedMacro.Provider.Expression;
                 }
 
                 // If the expression is a macro variable, resolve the value.

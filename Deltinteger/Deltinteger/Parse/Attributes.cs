@@ -15,30 +15,30 @@ namespace Deltin.Deltinteger.Parse
 
     class AttributesGetter
     {
-        private readonly AttributeTokens _attributes;
         public List<AttributeContext> ObtainedAttributes { get; } = new List<AttributeContext>(); // Attribute context.
         public IApplyAttribute ApplyAttributes { get; protected set; }
 
-        public AttributesGetter(AttributeTokens attributes, IApplyAttribute applyAttributes)
+        private AttributesGetter(IApplyAttribute applyAttributes)
         {
             ApplyAttributes = applyAttributes;
-            _attributes = attributes;
         }
         
-        public void GetAttributes(FileDiagnostics diagnostics)
+        public static void GetAttributes(FileDiagnostics diagnostics, AttributeTokens attributes, IApplyAttribute applyAttributes)
         {
-            if (_attributes == null) return;
-            CheckAttribute(diagnostics, _attributes.GlobalVar, AttributeType.GlobalVar);
-            CheckAttribute(diagnostics, _attributes.Override, AttributeType.Override);
-            CheckAttribute(diagnostics, _attributes.PlayerVar, AttributeType.PlayerVar);
-            CheckAttribute(diagnostics, _attributes.Private, AttributeType.Private);
-            CheckAttribute(diagnostics, _attributes.Protected, AttributeType.Protected);
-            CheckAttribute(diagnostics, _attributes.Public, AttributeType.Public);
-            CheckAttribute(diagnostics, _attributes.Recursive, AttributeType.Recursive);
-            CheckAttribute(diagnostics, _attributes.Ref, AttributeType.Ref);
-            CheckAttribute(diagnostics, _attributes.In, AttributeType.In);
-            CheckAttribute(diagnostics, _attributes.Static, AttributeType.Static);
-            CheckAttribute(diagnostics, _attributes.Virtual, AttributeType.Virtual);
+            if (attributes == null) return;
+
+            var getter = new AttributesGetter(applyAttributes);
+            getter.CheckAttribute(diagnostics, attributes.GlobalVar, AttributeType.GlobalVar);
+            getter.CheckAttribute(diagnostics, attributes.Override, AttributeType.Override);
+            getter.CheckAttribute(diagnostics, attributes.PlayerVar, AttributeType.PlayerVar);
+            getter.CheckAttribute(diagnostics, attributes.Private, AttributeType.Private);
+            getter.CheckAttribute(diagnostics, attributes.Protected, AttributeType.Protected);
+            getter.CheckAttribute(diagnostics, attributes.Public, AttributeType.Public);
+            getter.CheckAttribute(diagnostics, attributes.Recursive, AttributeType.Recursive);
+            getter.CheckAttribute(diagnostics, attributes.Ref, AttributeType.Ref);
+            getter.CheckAttribute(diagnostics, attributes.In, AttributeType.In);
+            getter.CheckAttribute(diagnostics, attributes.Static, AttributeType.Static);
+            getter.CheckAttribute(diagnostics, attributes.Virtual, AttributeType.Virtual);
         }
 
         void CheckAttribute(FileDiagnostics diagnostics, Token attribute, AttributeType type)

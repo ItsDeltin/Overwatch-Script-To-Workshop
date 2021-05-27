@@ -2,7 +2,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Parse.Functions.Builder
+namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
 {
     class MethodContentBuilder : AbstractVirtualContentBuilder<IVirtualMethodHandler>
     {

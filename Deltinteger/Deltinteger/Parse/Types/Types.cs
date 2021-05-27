@@ -98,11 +98,6 @@ namespace Deltin.Deltinteger.Parse
             throw new NotImplementedException();
         }
 
-        /// <summary>Sets up an object reference when a new object is created. Is also called when a new object of a class extending this type is created.</summary>
-        /// <param name="actionSet">The actionset to use.</param>
-        /// <param name="reference">The reference of the object.</param>
-        public virtual void BaseSetup(ActionSet actionSet, Element reference) => throw new NotImplementedException();
-
         public virtual void ResolveElements() {}
 
         /// <summary>Assigns workshop elements so the class can function. Implementers should check if `wasCalled` is true.</summary>

@@ -41,15 +41,18 @@ namespace Deltin.Deltinteger.Parse.Workshop
 
             // Add calls.
             foreach (var raw in collected)
-            if (raw.Key.GenericsCount != 0)
             {
                 var tracker = _trackers[raw.Key];
-                foreach (var call in raw.Value.Calls)
+                if (raw.Key.GenericsCount != 0)
                 {
-                    // Create the TypeArgCombo for this call.
-                    var combo = new TypeArgCombo(this, tracker, call.TypeArgs);
-                    combo.StartNext();
+                    foreach (var call in raw.Value.Calls)
+                    {
+                        // Create the TypeArgCombo for this call.
+                        var combo = new TypeArgCombo(this, tracker, call.TypeArgs);
+                        combo.StartNext();
+                    }
                 }
+                else tracker.AddCombo(new TypeArgCombo(this, tracker, new CodeType[0]));
             }
         }
 

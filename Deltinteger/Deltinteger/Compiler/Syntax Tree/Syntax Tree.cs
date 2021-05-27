@@ -258,10 +258,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Identifier { get; }
         public List<TypeArgContext> TypeArguments { get; }
         public List<VariableDeclaration> Parameters { get; }
+        
+        // Block
         public Block Block { get; }
         public Token GlobalVar { get; }
         public Token PlayerVar { get; }
         public Token Subroutine { get; }
+
+        // Macro
+        public IParseExpression MacroValue { get; }
 
         public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
         {
@@ -275,25 +280,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             PlayerVar = playervar;
             Subroutine = subroutine;
         }
-    }
 
-    public class MacroFunctionContext : Node, IDeclaration
-    {
-        public AttributeTokens Attributes { get; }
-        public IParseType Type { get; }
-        public Token Identifier { get; }
-        public List<TypeArgContext> TypeArguments { get; }
-        public List<VariableDeclaration> Parameters { get; }
-        public IParseExpression Expression { get; }
-
-        public MacroFunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, IParseExpression expression)
+        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, IParseExpression macroValue)
         {
             Attributes = attributes;
             Type = type;
             Identifier = identifier;
             TypeArguments = typeArgs;
             Parameters = parameters;
-            Expression = expression;
+            MacroValue = macroValue;
         }
     }
 

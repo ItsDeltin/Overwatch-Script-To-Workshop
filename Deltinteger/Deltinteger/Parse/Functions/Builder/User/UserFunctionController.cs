@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using Deltin.Deltinteger.Parse.Functions.Builder.Virtual;
 using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Elements;
 
