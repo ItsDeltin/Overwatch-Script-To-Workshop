@@ -121,8 +121,7 @@ namespace Deltin.Deltinteger.Parse
                 // If this is a struct array, the types are strict.
                 if (_isStructArray)
                     for (int i = 0; i < Values.Length; i++)
-                        if (!Values[i].Type().Implements(sourceType))
-                            parseInfo.Script.Diagnostics.Error($"Expected a value of type '" + sourceType.GetName() + "'", createArrayContext.Values[i].Range);
+                        SemanticsHelper.ExpectValueType(parseInfo, Values[i], sourceType, createArrayContext.Values[i].Range);
             }
         }
 

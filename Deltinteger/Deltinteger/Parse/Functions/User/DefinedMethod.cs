@@ -165,13 +165,13 @@ namespace Deltin.Deltinteger.Parse
             }
             else if (Context.MacroValue != null)
             {
-                MacroValue = _parseInfo
+                MacroValue = SingleReturnValue = _parseInfo
                     .SetReturnType(ReturnType)
                     .SetExpectType(ReturnType)
                     .SetThisType(ContainingType?.WorkingInstance)
                     .GetExpression(_methodScope, Context.MacroValue);
                 
-                SingleReturnValue = MacroValue;
+                SemanticsHelper.ExpectValueType(_parseInfo, MacroValue, ReturnType, Context.MacroValue.Range);
             }
             
             _wasApplied = true;

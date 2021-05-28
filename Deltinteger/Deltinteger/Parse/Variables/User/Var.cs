@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines when the initial value should be resolved.</summary>
         private readonly InitialValueResolve _initialValueResolve;
         /// <summary>Stores the context of the initial value.</summary>
-        private readonly IParseExpression _initalValueContext;
+        private readonly IParseExpression _initialValueContext;
 
         /// <summary>The resulting intial value. This will be null if there is no initial value.
         /// If _initialValueResolve is Instant, this will be set when the Var object is created.
@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
             _tokenModifiers = varInfo.TokenModifiers.ToArray();
             _handleRestrictedCalls = varInfo.HandleRestrictedCalls;
             _inferType = varInfo.InferType;
-            _initalValueContext = varInfo.InitialValueContext;
+            _initialValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.Scope;
 
@@ -96,7 +96,7 @@ namespace Deltin.Deltinteger.Parse
         private void GetInitialValue()
         {
             // Get the initial value.
-            if (_initalValueContext != null)
+            if (_initialValueContext != null)
             {
                 ParseInfo parseInfo = this._parseInfo;
 
@@ -109,7 +109,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Parse the initial value.
-                InitialValue = parseInfo.SetExpectType(CodeType).GetExpression(_operationalScope, _initalValueContext);
+                InitialValue = parseInfo.SetExpectType(CodeType).GetExpression(_operationalScope, _initialValueContext);
 
                 // Get the inferred type.
                 if (_inferType)
@@ -121,11 +121,10 @@ namespace Deltin.Deltinteger.Parse
 
                 // If the initial value's type is constant, make sure the constant type's implements the variable's type.
                 if (InitialValue?.Type() != null && InitialValue.Type().IsConstant() && !InitialValue.Type().Implements(CodeType))
-                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", _initalValueContext.Range);
+                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", _initialValueContext.Range);
 
                 // If the variable's type is constant, make sure the value's type matches.
-                else if (!InitialValue.Type().Implements(CodeType))
-                    parseInfo.Script.Diagnostics.Error($"Expected a value of type '" + CodeType.GetName() + "'", _initalValueContext.Range);
+                else SemanticsHelper.ExpectValueType(parseInfo, InitialValue, CodeType, _initialValueContext.Range);
 
                 // Check restricted calls.
                 if (_handleRestrictedCalls)

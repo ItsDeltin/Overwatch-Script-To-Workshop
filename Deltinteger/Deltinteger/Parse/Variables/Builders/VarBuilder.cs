@@ -89,14 +89,18 @@ namespace Deltin.Deltinteger.Parse
             }
             else
             {
-                if (_contextHandler.GetCodeType() == null) return;
+                CodeType type;
 
-                // Get the type.
-                CodeType type = TypeFromContext.GetCodeTypeFromContext(
-                    _parseInfo,
-                    _scope,
-                    _contextHandler.GetCodeType()
-                );
+                if (_contextHandler.GetCodeType() == null)
+                    type = _parseInfo.TranslateInfo.Types.Any();
+                else
+                    // Get the type.
+                    type = TypeFromContext.GetCodeTypeFromContext(
+                        _parseInfo,
+                        _scope,
+                        _contextHandler.GetCodeType()
+                    );
+                
                 ApplyCodeType(type);
             }
         }

@@ -38,11 +38,9 @@ namespace Deltin.Deltinteger.Parse
             if (WasSet)
                 parseInfo.Script.Diagnostics.Error("Hooks cannot be set twice.", expressionRange);
             // Check if the given value implements the expected value.
-            else if (!value.Type().Implements(type))
-                parseInfo.Script.Diagnostics.Error($"Expected a value of type {type.GetName()}.", expressionRange);
-            // Set the hook.
-            else
+            else if (SemanticsHelper.ExpectValueType(parseInfo, value, type, expressionRange))
             {
+                // Set the hook.
                 HookValue = value;
                 SetHook?.Invoke(value);
             }
