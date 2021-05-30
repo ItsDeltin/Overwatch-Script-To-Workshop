@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
         public void GetComponents(VariableComponentCollection componentCollection)
         {            
             // Add attribute components.
-            new AttributesGetter(_defineContext.Attributes, componentCollection).GetAttributes(ParseInfo.Script.Diagnostics);
+            AttributesGetter.GetAttributes(ParseInfo.Script.Diagnostics, _defineContext.Attributes, componentCollection);
 
             // Add workshop ID
             if (_defineContext.ID)
