@@ -259,9 +259,9 @@ namespace Deltin.Deltinteger.Parse
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
 
-        public override string GetName()
+        public override string GetName(bool makeAnonymousTypesUnknown = false)
         {
-            string result = ArrayOfType.GetNameOrAny();
+            string result = ArrayOfType.GetName(makeAnonymousTypesUnknown);
             if (ArrayOfType is PortableLambdaType) result = "(" + result + ")";
             return result + "[]";
         }

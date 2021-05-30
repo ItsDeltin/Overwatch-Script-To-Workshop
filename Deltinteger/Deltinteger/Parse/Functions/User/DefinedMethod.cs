@@ -128,8 +128,7 @@ namespace Deltin.Deltinteger.Parse
             if (attributes.IsOverride)
                 OverridingFunction = (DefinedMethodInstance)scopeProvider.GetOverridenFunction(parseInfo.TranslateInfo, new FunctionOverrideInfo(Name, ParameterTypes));
 
-            // TODO Add the hover info.
-            // parseInfo.Script.AddHover(nameRange, GetLabel(true));
+            parseInfo.Script.AddHover(nameRange, GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
 
             // if (Attributes.IsOverrideable)
             //     parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));

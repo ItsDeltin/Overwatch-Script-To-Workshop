@@ -26,7 +26,8 @@ namespace Deltin.Deltinteger.Parse
             Links = new Dictionary<AnonymousType, CodeType>(a.Links);
 
             foreach (var pair in b.Links)
-                Links.Add(pair.Key, pair.Value);
+                if (!Links.ContainsKey(pair.Key))
+                    Links.Add(pair.Key, pair.Value);
         }
     }
 }

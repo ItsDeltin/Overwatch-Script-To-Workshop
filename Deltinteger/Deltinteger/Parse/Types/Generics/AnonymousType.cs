@@ -44,6 +44,12 @@ namespace Deltin.Deltinteger.Parse
             return Object.ReferenceEquals(type, this);
         }
 
+        public override string GetName(bool makeAnonymousTypesUnknown = false)
+        {
+            if (makeAnonymousTypesUnknown) return "unknown";
+            return base.GetName();
+        }
+
         public static AnonymousType[] GetGenerics(List<TypeArgContext> typeArgs, ITypeArgTrackee context)
         {
             var generics = new AnonymousType[typeArgs.Count];

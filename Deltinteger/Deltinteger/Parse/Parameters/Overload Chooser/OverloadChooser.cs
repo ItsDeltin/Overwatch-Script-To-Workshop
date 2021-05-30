@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             PickyParameter lastPicky = null;
 
             // If the generics were provided ('_genericsProvided'), get the type linker from the option.
-            OverloadMatch match = new OverloadMatch(option, _genericsProvided ? option.GetTypeLinker(_generics) : null);
+            OverloadMatch match = new OverloadMatch(option, _genericsProvided ? option.GetTypeLinker(_generics) : null, _parseInfo.TranslateInfo, _targetRange);
             match.OrderedParameters = new PickyParameter[option.Parameters.Length];
 
             // Check type arg count.
@@ -183,11 +183,11 @@ namespace Deltin.Deltinteger.Parse.Overload
             }
 
             // Compare parameter types.
-            for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(_parseInfo.TranslateInfo, i);
+            match.UpdateAllParameters();
 
             // Make sure every type arg was accounted for.
             if (!_genericsProvided && option.TypeArgCount != match.TypeArgLinker.Links.Count)
-                match.CouldNotInferTypeArgs(_parseInfo.TranslateInfo, _targetRange);
+                match.InferSuccessful = false;
 
             // Get the missing parameters.
             match.GetMissingParameters(_errorMessages, context, _targetRange, CallRange);
@@ -195,8 +195,17 @@ namespace Deltin.Deltinteger.Parse.Overload
             return match;
         }
 
-        private void ExtractInferredGenerics(OverloadMatch match, CodeType parameterType, CodeType expressionType)
+        private bool ExtractInferredGenerics(OverloadMatch match, CodeType parameterType, CodeType expressionType)
         {
+            if (expressionType is UnknownLambdaType)
+            {
+                // A second pass will be required.
+                match.InferSuccessful = false;
+                return false;
+            }
+
+            bool result = true;
+
             // If the parameter type is an AnonymousType, add the link for the expression type if it doesn't already exist.
             if (parameterType is AnonymousType pat && pat.Context == match.Option.Trackee)
             {
@@ -212,27 +221,28 @@ namespace Deltin.Deltinteger.Parse.Overload
                 }
                 // Otherwise, the link exists. If the expression type is not equal to the link type, add an error.
                 else if (!expressionType.Is(typeLinker.Links[pat]))
-                    match.CouldNotInferTypeArgs(_parseInfo.TranslateInfo, _targetRange);
+                    match.InferSuccessful = result = false;
             }
             
             // Recursively match generics.
             for (int i = 0; i < parameterType.Generics.Length; i++)
                 // Make sure the expression's type's structure is usable.
                 if (i < expressionType.Generics.Length)
+                {
                     // Recursively check the generics.
-                    ExtractInferredGenerics(match, parameterType.Generics[i], expressionType.Generics[i]);
+                    if (!ExtractInferredGenerics(match, parameterType.Generics[i], expressionType.Generics[i]))
+                        result = false;
+                }
                 else
-                    match.CouldNotInferTypeArgs(_parseInfo.TranslateInfo, _targetRange);
+                    match.InferSuccessful = result = false;
+            
+            return result;
         }
 
         private OverloadMatch BestOption()
         {
             // If there are any methods with no errors, set that as the best option.
             OverloadMatch bestOption = _matches.FirstOrDefault(match => !match.HasError) ?? _matches.FirstOrDefault();
-
-            // Add the diagnostics of the best option.
-            bestOption.AddDiagnostics(_parseInfo.Script.Diagnostics);
-            CheckAccessLevel();
 
             // Apply the lambdas and method group parameters.
             // Iterate through each parameter.
@@ -245,6 +255,38 @@ namespace Deltin.Deltinteger.Parse.Overload
                 else
                     bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers();
             }
+
+            // Type-arg inference will need a second pass after we apply the lambdas,
+            // since lambda types are not known until we apply them.
+            if (!bestOption.InferSuccessful)
+            {
+                bool secondPass = true;
+
+                // Extract inferred generics (again)
+                for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
+                {
+                    var parameterValue = bestOption.OrderedParameters[i].Value;
+
+                    if (parameterValue != null)
+                        secondPass = secondPass && ExtractInferredGenerics(
+                            bestOption,
+                            bestOption.Option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo),
+                            parameterValue.Type());
+                }
+                
+                // Update the inference status. Will be true if ExtractInferredGenerics returned true with every iteration.
+                bestOption.InferSuccessful = secondPass;
+
+                bestOption.UpdateAllParameters();
+
+                // Clear the match's TypeArgLinker.
+                if (!secondPass)
+                    bestOption.TypeArgLinker = InstanceAnonymousTypeLinker.Empty;
+            }  
+
+            // Add the diagnostics of the best option.
+            bestOption.AddDiagnostics(_parseInfo.Script.Diagnostics);
+            CheckAccessLevel();
 
             return bestOption;
         }
@@ -361,17 +403,27 @@ namespace Deltin.Deltinteger.Parse.Overload
 
     public class OverloadMatch : IVariableResolveErrorHandler
     {
-        public IOverload Option { get; }
-        public PickyParameter[] OrderedParameters { get; set; }
-        public bool HasError => _errors.Count > 0;
+        public IOverload Option { get; } // The option this OverloadMatch represents.
+        public PickyParameter[] OrderedParameters { get; set; } // Parameter data.
         public int LastContextualParameterIndex { get; set; } = -1;
         public InstanceAnonymousTypeLinker TypeArgLinker { get; set; }
         public CodeType[] TypeArgs { get; }
-        readonly List<OverloadMatchError> _errors = new List<OverloadMatchError>();
+        public bool InferSuccessful { get; set; } = true;
+        readonly DeltinScript _deltinScript;
+        readonly DocRange _inferenceErrorRange;
+        readonly List<OverloadMatchError> _errors = new List<OverloadMatchError>(); // Errors provided by the chooser.
+        readonly OverloadMatchError[] _parameterErrors;
 
-        public OverloadMatch(IOverload option, InstanceAnonymousTypeLinker typeArgLinker)
+        public bool HasError => _errors.Count > 0 || HasParameterErrors; // Does the match have any errors?
+        public bool TypeArgLinkerCompleted => TypeArgLinker.Links.Count == Option.TypeArgCount; // Determines if the type-arg linker is completed.
+        public bool HasParameterErrors => _parameterErrors.Any(p => p != null); // Are there any parameter errors?
+
+        public OverloadMatch(IOverload option, InstanceAnonymousTypeLinker typeArgLinker, DeltinScript deltinScript, DocRange inferenceErrorRange)
         {
             Option = option;
+            _deltinScript = deltinScript;
+            _inferenceErrorRange = inferenceErrorRange;
+            _parameterErrors = new OverloadMatchError[option.Parameters.Length];
 
             if (typeArgLinker != null)
             {
@@ -388,11 +440,18 @@ namespace Deltin.Deltinteger.Parse.Overload
         public void Error(string message, DocRange range) => _errors.Add(new OverloadMatchError(message, range));
 
         /// <summary>Confirms that a parameter type matches.</summary>
-        public void CompareParameterTypes(DeltinScript deltinScript, int parameter)
+        public void UpdateParameter(int parameter)
         {
-            CodeType parameterType = Option.Parameters[parameter].GetCodeType(deltinScript).GetRealType(TypeArgLinker);
+            // Reset the parameter.
+            _parameterErrors[parameter] = null;
+
+            // Get the parameter type.
+            CodeType parameterType = Option.Parameters[parameter].GetCodeType(_deltinScript).GetRealType(TypeArgLinker);
+
+            // Get the value. Do nothing if there is no value.
             IExpression value = OrderedParameters[parameter]?.Value;
             if (value == null) return;
+
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
 
             // Lambda arg count mismatch.
@@ -400,18 +459,18 @@ namespace Deltin.Deltinteger.Parse.Overload
                 value.Type() is UnknownLambdaType unknownLambdaType && // Value type is a lambda.
                 unknownLambdaType.ArgumentCount != portableParameterType.Parameters.Length) // The value lambda's parameter length does not match.
                 // Add the error.
-                Error($"Lambda does not take {unknownLambdaType.ArgumentCount} arguments", errorRange);
+                _parameterErrors[parameter] = new($"Lambda does not take {unknownLambdaType.ArgumentCount} arguments", errorRange);
             
             // Do not add other errors if the value's type is an UnknownLambdaType.
             else if (value.Type() is UnknownLambdaType == false)
             {
                 // The parameter type does not match.
                 if (parameterType.CodeTypeParameterInvalid(value.Type()))
-                    Error(string.Format("Cannot convert type '{0}' to '{1}'", value.Type().GetName(), parameterType.GetName()), errorRange);
+                    _parameterErrors[parameter] = new(string.Format("Cannot convert type '{0}' to '{1}'", value.Type().GetName(), parameterType.GetName()), errorRange);
                 
                 // Constant used in bad place.
                 else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
-                    Error($"The type '{value.Type().Name}' cannot be used here", errorRange);
+                    _parameterErrors[parameter] = new($"The type '{value.Type().Name}' cannot be used here", errorRange);
                 
                 // Invalid ref
                 else if (Option.Parameters[parameter].Attributes.Ref)
@@ -427,6 +486,12 @@ namespace Deltin.Deltinteger.Parse.Overload
                     OrderedParameters[parameter].RefVariable = resolve;
                 }
             }
+        }
+
+        public void UpdateAllParameters()
+        {
+            for (int i = 0; i < OrderedParameters.Length; i++)
+                UpdateParameter(i);
         }
 
         /// <summary>Determines if there are any missing parameters.</summary>
@@ -461,6 +526,16 @@ namespace Deltin.Deltinteger.Parse.Overload
 
         public void AddDiagnostics(FileDiagnostics diagnostics)
         {
+            // Inference error
+            if (!InferSuccessful)
+                diagnostics.Error($"The type arguments for method '{Option.GetLabel(_deltinScript, LabelInfo.OverloadError)}' cannot be inferred from the usage. Try specifying the type arguments explicitly.", _inferenceErrorRange);
+
+            // Parameter errors
+            foreach (var parameterError in _parameterErrors)
+                if (parameterError != null)
+                    diagnostics.Error(parameterError.Message, parameterError.Range);
+
+            // Other errors
             foreach (OverloadMatchError error in _errors) diagnostics.Error(error.Message, error.Range);
         }
 
@@ -483,11 +558,8 @@ namespace Deltin.Deltinteger.Parse.Overload
     
         public void IncorrectTypeArgCount(DeltinScript deltinScript, DocRange range) =>
             Error("The function '" + Option.GetLabel(deltinScript, LabelInfo.OverloadError) + "' requires " + Option.TypeArgCount + " type arguments", range);
-        
-        public void CouldNotInferTypeArgs(DeltinScript deltinScript, DocRange range) =>
-            Error($"The type arguments for method '{Option.GetLabel(deltinScript, LabelInfo.OverloadError)}' cannot be inferred from the usage. Try specifying the type arguments explicitly.", range); 
-        
-        struct OverloadMatchError
+                
+        class OverloadMatchError
         {
             public string Message;
             public DocRange Range;

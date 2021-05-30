@@ -19,17 +19,17 @@ namespace Deltin.Deltinteger.Parse.Lambda
             Label = Name,
             Kind = CompletionItemKind.Constant
         };
-        public override string GetName()
+        public override string GetName(bool makeAnonymousTypesUnknown = false)
         {
             // No type args
             if (Parameters.Length == 0 && !ReturnsValue)
                 return Name;
             // Return type and parameters
             else if (ReturnsValue)
-                return Name + "<" + string.Join(", ", Parameters.Select(p => p.GetName()).Prepend(ReturnType.GetName())) + ">";
+                return Name + "<" + string.Join(", ", Parameters.Select(p => p.GetName(makeAnonymousTypesUnknown)).Prepend(ReturnType.GetName(makeAnonymousTypesUnknown))) + ">";
             // Parameters
             else
-                return Name + "<" + string.Join(", ", Parameters.Select(p => p.GetName())) + ">";
+                return Name + "<" + string.Join(", ", Parameters.Select(p => p.GetName(makeAnonymousTypesUnknown))) + ">";
         }
     }
 

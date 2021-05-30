@@ -479,7 +479,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 {
                     IParseExpression index = GetContainExpression();
                     // End the closing square bracket.
-                    var closing = ParseExpected(TokenType.SquareBracket_Close) ?? Current;
+                    var closing = ParseExpected(TokenType.SquareBracket_Close) ?? CurrentOrLast;
                     // Push operator
                     PushOperator(new ValueInArrayInfo(index, closing.Range.End));
                 }
@@ -489,7 +489,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Parse parameters.
                     var values = ParseParameterValues();
                     // End the parentheses.
-                    Token rightParentheses = ParseExpected(TokenType.Parentheses_Close) ?? Current;
+                    Token rightParentheses = ParseExpected(TokenType.Parentheses_Close) ?? CurrentOrLast;
                     // Update the expression.
                     PushOperator(new InvokeInfo(leftParentheses, rightParentheses, values));
                 }

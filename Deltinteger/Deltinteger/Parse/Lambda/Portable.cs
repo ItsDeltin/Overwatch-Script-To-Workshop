@@ -27,6 +27,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             // Add operations.
             Operations.AddAssignmentOperator();
 
+            Generics = parameters.Append(returnType).ToArray();
+
             AddInvokeFunction();
         }
 
@@ -86,19 +88,19 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return new PortableLambdaType(LambdaKind, Parameters.Select(p => p.GetRealType(instanceInfo)).ToArray(), ReturnsValue, ReturnType?.GetRealType(instanceInfo), true);
         }
 
-        public override string GetName()
+        public override string GetName(bool makeAnonymousTypesUnknown = false)
         {
             string result = string.Empty;
 
             // Single parameter
             if (Parameters.Length == 1)
-                result += Parameters[0]?.GetName() ?? "define";
+                result += Parameters[0].GetName(makeAnonymousTypesUnknown);
             else // Zero or more than one parameter.
             {
                 result += "(";
                 for (int i = 0; i < Parameters.Length; i++)
                 {
-                    result += Parameters[i]?.GetName() ?? "define";
+                    result += Parameters[i].GetName(makeAnonymousTypesUnknown);
                     if (i < Parameters.Length - 1) result += ", ";
                 }
                 result += ")";
@@ -108,7 +110,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // Void
             if (!ReturnsValue) result += "void";
-            else result += ReturnType?.GetName() ?? "define";
+            else result += ReturnType.GetName(makeAnonymousTypesUnknown);
 
             return result;
         }
