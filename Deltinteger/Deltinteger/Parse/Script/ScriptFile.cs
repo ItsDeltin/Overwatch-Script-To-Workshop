@@ -50,17 +50,17 @@ namespace Deltin.Deltinteger.Parse
         public OverloadChooser[] GetSignatures() => _overloads.ToArray();
 
         /// <summary>Adds a link that can be clicked on in the script.</summary>
-        public void AddDefinitionLink(DocRange callRange, Location definedAt)
+        public void AddDefinitionLink(DocRange source, Location target)
         {
-            if (callRange == null) throw new ArgumentNullException(nameof(callRange));
-            if (definedAt == null) throw new ArgumentNullException(nameof(definedAt));
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (target == null) throw new ArgumentNullException(nameof(target));
 
             _callLinks.Add(new LocationLink()
             {
-                OriginSelectionRange = callRange,
-                TargetUri = definedAt.uri.ToDefinition(),
-                TargetRange = definedAt.range,
-                TargetSelectionRange = definedAt.range
+                OriginSelectionRange = source,
+                TargetUri = target.uri.ToDefinition(),
+                TargetRange = target.range,
+                TargetSelectionRange = target.range
             });
         }
         public LocationLink[] GetDefinitionLinks() => _callLinks.ToArray();

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -111,6 +112,13 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return _definedInitializer.GetInstance(new GetInstanceInfo(newGenerics));
+        }
+
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            base.Call(parseInfo, callRange);
+            parseInfo.Script.Elements.AddDeclarationCall(_definedInitializer, new DeclarationCall(callRange, false));
+            parseInfo.Script.AddDefinitionLink(callRange, _definedInitializer.DefinedAt);
         }
     }
 }

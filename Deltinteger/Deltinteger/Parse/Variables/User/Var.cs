@@ -8,7 +8,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Var : IVariable, IApplyBlock, ISymbolLink, IElementProvider
+    public class Var : IVariable, IApplyBlock, IElementProvider, IDeclarationKey
     {
         private readonly ParseInfo _parseInfo;
 
@@ -91,6 +91,7 @@ namespace Deltin.Deltinteger.Parse
                 _parseInfo.TranslateInfo.ApplyBlock(this);
             
             _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, varInfo.CodeLensType, DefinedAt.range));
+            _parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(varInfo.DefinedAt.range, true));
         }
 
         private void GetInitialValue()
@@ -142,21 +143,8 @@ namespace Deltin.Deltinteger.Parse
             VariableType = _variableTypeHandler.GetVariableType();
             StoreType = _variableTypeHandler.GetStoreType();
 
-            if (DefinedAt.range != null)
-            {
-                _parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
-                _parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
-                _parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
-            }
-        }
-
-        // ICallable
-        public void Call(ParseInfo parseInfo, DocRange callRange)
-        {
-            parseInfo.Script.AddToken(callRange, _tokenType, _tokenModifiers);
-            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.Script.AddHover(callRange, GetLabel(true));
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+            _parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
+            _parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
         }
 
         public CompletionItem GetCompletion() => new CompletionItem()

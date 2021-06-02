@@ -1,8 +1,7 @@
 namespace Deltin.Deltinteger.Parse
 {
-    public interface IVariable : IElementProvider
+    public interface IVariable : IElementProvider, IDeclarationKey
     {
-        string Name { get; }
         bool RequiresCapture => false;
         VariableType VariableType { get; }
         IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker);

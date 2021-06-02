@@ -2,7 +2,7 @@ using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Constructor : IParameterCallable, ICallable, ISymbolLink
+    public class Constructor : IParameterCallable, ICallable
     {
         public string Name => Type.Name;
         public AccessLevel AccessLevel { get; }

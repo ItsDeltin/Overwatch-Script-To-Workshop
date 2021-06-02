@@ -7,7 +7,7 @@ using TypeArgContext = Deltin.Deltinteger.Compiler.SyntaxTree.TypeArgContext;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class AnonymousType : CodeType
+    public class AnonymousType : CodeType, IDeclarationKey
     {
         ITypeArgTrackee _context;
         public ITypeArgTrackee Context { get => _context; set {
@@ -50,13 +50,35 @@ namespace Deltin.Deltinteger.Parse
             return base.GetName();
         }
 
-        public static AnonymousType[] GetGenerics(List<TypeArgContext> typeArgs, ITypeArgTrackee context)
+        // Override calls to add a link to the declaration.
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            base.Call(parseInfo, callRange);
+            parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(callRange, false));
+        }
+
+        // Returns the name of the type as it was declared.
+        public string GetDeclarationName()
+        {
+            string result = Name;
+
+            if (AnonymousTypeAttributes.Single)
+                result = "single " + Name;
+            
+            return result;
+        }
+
+        public static AnonymousType[] GetGenerics(ParseInfo parseInfo, List<TypeArgContext> typeArgs, ITypeArgTrackee context)
         {
             var generics = new AnonymousType[typeArgs.Count];
             for (int i = 0; i < typeArgs.Count; i++)
             {
                 var anonymousType = new AnonymousType(typeArgs[i].Identifier.GetText(), new(single: typeArgs[i].Single));
                 anonymousType.Context = context;
+
+                // Add the declaration call.
+                parseInfo.Script.Elements.AddDeclarationCall(anonymousType, new DeclarationCall(typeArgs[i].Identifier.Range, true));
+
                 generics[i] = anonymousType;
             }
             return generics;

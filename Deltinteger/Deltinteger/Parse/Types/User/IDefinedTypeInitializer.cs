@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
@@ -18,6 +19,16 @@ namespace Deltin.Deltinteger.Parse
             else if (typeContext.DeclaringToken.TokenType == Deltin.Deltinteger.Compiler.TokenType.Struct)
                 return new DefinedStructInitializer(parseInfo, scope, typeContext);
             else throw new NotImplementedException();
+        }
+
+        static MarkupBuilder Hover(string tag, IDefinedTypeInitializer provider)
+        {
+            var builder = new MarkupBuilder().StartCodeLine().Add(tag + " " + provider.Name);
+
+            if (provider.GenericsCount != 0)
+                builder.Add("<" + string.Join(", ", provider.GenericTypes.Select(g => g.GetDeclarationName())) + ">");
+
+            return builder.EndCodeLine();
         }
 
         public IElementProvider ApplyDeclaration(IDeclaration declaration, ParseInfo parseInfo)

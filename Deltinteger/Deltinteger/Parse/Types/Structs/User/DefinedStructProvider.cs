@@ -6,7 +6,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedStructInitializer : StructInitializer, IDefinedTypeInitializer, IResolveElements
+    public class DefinedStructInitializer : StructInitializer, IDefinedTypeInitializer, IResolveElements, IDeclarationKey
     {
         public CodeType WorkingInstance => throw new NotImplementedException();
         public Location DefinedAt { get; }
@@ -27,7 +27,16 @@ namespace Deltin.Deltinteger.Parse
             OnReady = _onReady;
 
             // Get the type args.
-            GenericTypes = AnonymousType.GetGenerics(typeContext.Generics, this);
+            GenericTypes = AnonymousType.GetGenerics(parseInfo, typeContext.Generics, this);
+
+            // Add the declaration link.
+            if (typeContext.Identifier)
+            {
+                parseInfo.Script.AddHover(
+                    range: typeContext.Identifier.Range,
+                    content: IDefinedTypeInitializer.Hover("struct", this));
+                parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(typeContext.Identifier.Range, true));
+            }
         }
 
         public void ResolveElements()

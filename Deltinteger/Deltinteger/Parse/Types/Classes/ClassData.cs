@@ -9,8 +9,6 @@ namespace Deltin.Deltinteger.Parse
         public const string ObjectVariableTag = "_objectVariable_";
         public const string ClassIndexesTag = "_classIndexes";
         public IndexReference ClassIndexes { get; private set; }
-        private List<IndexReference> VariableStacks { get; } = new List<IndexReference>();
-        private int AssignClassID = 0;
 
         public void Init(DeltinScript deltinScript)
         {

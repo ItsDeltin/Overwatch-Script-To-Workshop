@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
 
     public interface IScopeHandler : IScopeProvider, IScopeAppender {}
 
-    public class DefinedMethodProvider : IElementProvider, IMethodProvider, ITypeArgTrackee, IApplyBlock
+    public class DefinedMethodProvider : IElementProvider, IMethodProvider, ITypeArgTrackee, IApplyBlock, IDeclarationKey
     {
         public string Name => Context.Identifier.GetText();
         public LanguageServer.Location DefinedAt => new LanguageServer.Location(_parseInfo.Script.Uri, Context.Identifier.GetRange(Context.Range));
@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
             _methodScope = _containingScope.Child();
             
             // Get the generics.
-            GenericTypes = AnonymousType.GetGenerics(context.TypeArguments, this);
+            GenericTypes = AnonymousType.GetGenerics(parseInfo, context.TypeArguments, this);
             foreach (var type in GenericTypes)
                 _methodScope.AddType(new GenericCodeTypeInitializer(type));
 
@@ -133,6 +133,7 @@ namespace Deltin.Deltinteger.Parse
             // if (Attributes.IsOverrideable)
             //     parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
+            parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(nameRange, true));
 
             parseInfo.TranslateInfo.ApplyBlock(this);
             parseInfo.Script.Elements.AddMethodDeclaration(this);
@@ -203,7 +204,7 @@ namespace Deltin.Deltinteger.Parse
         public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeProvider scopeHandler, FunctionContext context, IDefinedTypeInitializer containingType)
             => new DefinedMethodProvider(parseInfo, scopeHandler, context, containingType);
 
-        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeFunctionLabel(deltinScript, ReturnType, Name, ParameterProviders);
+        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeFunctionLabel(deltinScript, ReturnType, Name, ParameterProviders, GenericTypes);
     }
 
     public class DefinedMethodInstance : IMethod
@@ -253,7 +254,7 @@ namespace Deltin.Deltinteger.Parse
 
         public object Call(ParseInfo parseInfo, DocRange callRange)
         {
-            parseInfo.Script.Elements.AddDeclarationCall(Provider, new DeclarationCall(callRange));
+            parseInfo.Script.Elements.AddDeclarationCall(Provider, new DeclarationCall(callRange, false));
             return null;
         }
     }

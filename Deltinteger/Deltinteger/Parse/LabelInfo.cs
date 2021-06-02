@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace Deltin.Deltinteger.Parse
 {
     public class LabelInfo
@@ -46,14 +48,19 @@ namespace Deltin.Deltinteger.Parse
             return builder.Add(name).EndCodeLine();
         }
 
-        public MarkupBuilder MakeFunctionLabel(DeltinScript deltinScript, CodeType type, string name, IParameterLike[] parameters)
+        public MarkupBuilder MakeFunctionLabel(DeltinScript deltinScript, CodeType type, string name, IParameterLike[] parameters, AnonymousType[] typeArgs)
         {
             var builder = new MarkupBuilder().StartCodeLine();
 
             if (IncludeReturnType)
                 builder.Add(AnonymousLabelInfo.NameFromSolver(deltinScript, type) + " ");
             
-            builder.Add(name + "(");
+            builder.Add(name);
+
+            if (typeArgs.Length != 0)
+                builder.Add("<" + string.Join(", ", typeArgs.Select(typeArg => typeArg.GetDeclarationName())) + ">");
+            
+            builder.Add("(");
 
             for (int i = 0; i < parameters.Length; i++)
             {

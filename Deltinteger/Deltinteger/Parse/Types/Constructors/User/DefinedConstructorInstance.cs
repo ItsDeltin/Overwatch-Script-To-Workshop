@@ -44,10 +44,9 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.Script.Elements.AddDeclarationCall(Provider, new DeclarationCall(callRange));
+            parseInfo.Script.Elements.AddDeclarationCall(Provider, new DeclarationCall(callRange, false));
             // todo
             // parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
-            // Type.AddLink(parseInfo.GetLocation(callRange));
         }
 
         class UserConstructorController : IWorkshopFunctionController

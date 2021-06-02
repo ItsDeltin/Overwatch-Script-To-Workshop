@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse.Types.Constructors;
 using Deltin.Deltinteger.Compiler;
@@ -7,7 +8,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedClassInitializer : ClassInitializer, IResolveElements, IDefinedTypeInitializer
+    public class DefinedClassInitializer : ClassInitializer, IResolveElements, IDefinedTypeInitializer, IDeclarationKey
     {
         public Location DefinedAt { get; }
         public List<IElementProvider> DeclaredElements { get; } = new List<IElementProvider>();
@@ -31,7 +32,15 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.AddResolve(this);
 
             // Get the generics.
-            GenericTypes = AnonymousType.GetGenerics(_typeContext.Generics, this);
+            GenericTypes = AnonymousType.GetGenerics(parseInfo, _typeContext.Generics, this);
+
+            if (typeContext.Identifier)
+            {
+                parseInfo.Script.AddHover(
+                    range: typeContext.Identifier.Range,
+                    content: IDefinedTypeInitializer.Hover("class", this));
+                parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(typeContext.Identifier.Range, true));
+            }
         }
 
         public override bool BuiltInTypeMatches(Type type) => false;

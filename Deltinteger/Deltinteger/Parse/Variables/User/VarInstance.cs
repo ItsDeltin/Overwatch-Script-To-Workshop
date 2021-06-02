@@ -1,4 +1,4 @@
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -27,7 +27,12 @@ namespace Deltin.Deltinteger.Parse
             };
         }
 
-        public CompletionItem GetCompletion() => _var.GetCompletion();
+        public void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            IVariableInstance.Call(this, parseInfo, callRange);
+            parseInfo.Script.AddDefinitionLink(callRange, _var.DefinedAt);
+        }
+
         public IGettableAssigner GetAssigner(ActionSet actionSet) => CodeType.GetRealType(actionSet?.ThisTypeLinker).GetGettableAssigner(new AssigningAttributes() {
             Name = _var.Name,
             Extended = _var.InExtendedCollection,

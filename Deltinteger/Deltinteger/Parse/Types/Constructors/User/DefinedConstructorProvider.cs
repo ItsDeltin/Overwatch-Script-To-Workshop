@@ -4,7 +4,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse.Types.Constructors
 {
-    public class DefinedConstructorProvider : IConstructorProvider<DefinedConstructorInstance>, IApplyBlock, ISymbolLink
+    public class DefinedConstructorProvider : IConstructorProvider<DefinedConstructorInstance>, IApplyBlock, IDeclarationKey
     {
         public string Name => TypeProvider.Name;
         public string SubroutineName { get; }
@@ -36,13 +36,10 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             // Setup the parameters.
             ParameterProviders = ParameterProvider.GetParameterProviders(_parseInfo, _scope, _context.Parameters, SubroutineName != null);
             ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
-
-            // TODO: Type provider link!
-            // type.AddLink(DefinedAt);
             
             parseInfo.TranslateInfo.ApplyBlock(this);
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Constructor, DefinedAt.range));
+            parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(context.LocationToken.Range, true));
         }
 
         public void SetupBlock()

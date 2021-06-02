@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
@@ -9,7 +8,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedEnum : CodeType, ISymbolLink
+    public class DefinedEnum : CodeType, IDeclarationKey
     {
         public LanguageServer.Location DefinedAt { get; }
         private Scope Scope { get; }
@@ -31,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Set location and symbol link.
             DefinedAt = new Location(parseInfo.Script.Uri, enumContext.Identifier.Range);
-            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
+            parseInfo.Script.Elements.AddDeclarationCall(this, new(enumContext.Identifier.Range, true));
 
             // Get the enum members.
             for (int i = 0; i < enumContext.Values.Count; i++)
@@ -52,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
         {
             base.Call(parseInfo, callRange);
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new LanguageServer.Location(parseInfo.Script.Uri, callRange));
+            parseInfo.Script.Elements.AddDeclarationCall(this, new(callRange, false));
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem()
@@ -62,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
-    class DefinedEnumMember : IVariable, IVariableInstance, IExpression, ICallable, ISymbolLink
+    class DefinedEnumMember : IVariable, IVariableInstance, IExpression, ICallable, IDeclarationKey
     {
         public string Name { get; }
         public MarkupBuilder Documentation { get; }
@@ -88,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
             _deltinScript = parseInfo.TranslateInfo;
             ValueExpression = value;
 
-            _deltinScript.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
+            parseInfo.Script.Elements.AddDeclarationCall(this, new(definedAt.range, true));
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.EnumValue, DefinedAt.range));
         }
 
@@ -96,16 +95,10 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet) => ValueExpression.Parse(actionSet);
 
-        public CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = Name,
-            Kind = CompletionItemKind.EnumMember
-        };
-
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            _deltinScript.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+            parseInfo.Script.Elements.AddDeclarationCall(this, new(callRange, false));
         }
 
         public Scope ReturningScope() => null;

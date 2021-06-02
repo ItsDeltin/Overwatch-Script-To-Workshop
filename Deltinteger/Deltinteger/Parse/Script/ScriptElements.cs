@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -11,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
         readonly List<Lambda.LambdaAction> _lambdas = new List<Lambda.LambdaAction>();
         readonly List<CallMethodGroup> _methodGroupCalls = new List<CallMethodGroup>();
         readonly List<TypeArgCall> _typeArgCalls = new List<TypeArgCall>();
-        readonly Dictionary<object, List<DeclarationCall>> _declarationCalls = new Dictionary<object, List<DeclarationCall>>();
+        readonly Dictionary<IDeclarationKey, List<DeclarationCall>> _declarationCalls = new Dictionary<IDeclarationKey, List<DeclarationCall>>();
 
         // Public reading
         public IReadOnlyList<DefinedMethodProvider> DefinedMethods => _definedMethods;
@@ -20,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
         public IReadOnlyList<Lambda.LambdaAction> Lambdas => _lambdas;
         public IReadOnlyList<CallMethodGroup> MethodGroupCalls => _methodGroupCalls;
         public IReadOnlyList<TypeArgCall> TypeArgCalls => _typeArgCalls;
-        public IReadOnlyDictionary<object, List<DeclarationCall>> DeclarationCalls => _declarationCalls;
+        public IReadOnlyDictionary<IDeclarationKey, List<DeclarationCall>> DeclarationCalls => _declarationCalls;
 
         // Public adding
         public void AddMethodDeclaration(DefinedMethodProvider definedMethod) => _definedMethods.Add(definedMethod);
@@ -29,6 +30,16 @@ namespace Deltin.Deltinteger.Parse
         public void AddLambda(Lambda.LambdaAction lambdaAction) => _lambdas.Add(lambdaAction);
         public void AddMethodGroupCall(CallMethodGroup callMethodGroup) => _methodGroupCalls.Add(callMethodGroup);
         public void AddTypeArgCall(TypeArgCall typeArgCall) => _typeArgCalls.Add(typeArgCall);
-        public void AddDeclarationCall(object key, DeclarationCall declarationCall) => _declarationCalls.GetValueOrAddKey(key).Add(declarationCall);
+        public void AddDeclarationCall(IDeclarationKey key, DeclarationCall declarationCall) => _declarationCalls.GetValueOrAddKey(key).Add(declarationCall);
+
+        public (IDeclarationKey key, DocRange range) KeyFromPosition(DocPos position)
+        {
+            foreach (var callList in _declarationCalls)
+                foreach (var pair in callList.Value)
+                    if (pair.CallRange.IsInside(position))
+                        return new(callList.Key, pair.CallRange);
+
+            return new(null, null);
+        }
     }
 }

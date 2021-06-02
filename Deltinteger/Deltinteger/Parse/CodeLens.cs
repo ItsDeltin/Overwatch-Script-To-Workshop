@@ -52,19 +52,12 @@ namespace Deltin.Deltinteger.Parse
 
         public override Command GetCommand()
         {
-            var locations = new List<Location>();
-
-            // Loop through each script.
-            foreach (var script in _parseInfo.TranslateInfo.Importer.ScriptFiles)
-                // Check if said script calls the declaration key.
-                if (script.Elements.DeclarationCalls.TryGetValue(DeclarationKey, out var calls))
-                    // If it does, add the calls.
-                    locations.AddRange(calls.Select(c => script.GetLocation(c.CallRange)));
+            var locations = _parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().CallsFromDeclaration(DeclarationKey)
+                .Where(c => !c.IsDeclaration).Select(c => c.Location);
 
             return new Command {
                 Name = "ostw.showReferences",
-                Title = locations.Count.ToString() + " references",
-                // todo: add declaration
+                Title = locations.Count().ToString() + " references",
                 Arguments = new JArray {
                     // Uri
                     JToken.FromObject(_parseInfo.Script.Uri.ToString()),

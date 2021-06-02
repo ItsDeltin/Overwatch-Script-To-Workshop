@@ -209,6 +209,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var ruleContext in script.Context.Rules)
                     rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
+            
+            GetComponent<SymbolLinkComponent>().Collect();
         }
 
         public string WorkshopCode { get; private set; }
