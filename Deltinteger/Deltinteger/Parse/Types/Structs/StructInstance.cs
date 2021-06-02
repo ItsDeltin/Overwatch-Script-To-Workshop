@@ -10,15 +10,17 @@ namespace Deltin.Deltinteger.Parse
     public class StructInstance : CodeType, ITypeArrayHandler, IScopeAppender
     {
         public IVariableInstance[] Variables { get; private set; }
-        public IMethod[] Methods { get; private set; }
         protected Scope ObjectScope { get; }
         protected Scope StaticScope { get; }
         private bool _isReady;
+        readonly IStructProvider _provider;
 
         public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker genericsLinker) : base(provider.Name)
         {
             ObjectScope = new Scope("struct " + Name);
+            Generics = genericsLinker.SafeTypeArgsFromAnonymousTypes(provider.GenericTypes);
             Attributes = new TypeAttributes(true, Generics.Any(g => g.Attributes.ContainsGenerics));
+            _provider = provider;
 
             provider.OnReady.OnReady(() => {
                 // Variables
@@ -61,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
 
             foreach(var utype in type.UnionTypes())
             {
-                if (!(utype is StructInstance other && other.Variables.Length == Variables.Length && Generics.Length == other.Generics.Length))
+                if (!(utype is StructInstance other && other.Variables.Length == Variables.Length))
                     continue;
                 
                 bool structVariablesMatch = true;
@@ -88,6 +90,22 @@ namespace Deltin.Deltinteger.Parse
             return type is StructInstance structInstance
                 ? stackDelta == structInstance.GetGettableAssigner(AssigningAttributes.Empty).StackDelta()
                 : stackDelta == 1;
+        }
+
+        public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
+        {
+            // Similiar to DefinedClass.GetRealType
+            var newLinker = InstanceAnonymousTypeLinker.Empty;
+
+            for (int i = 0; i < Generics.Length; i++)
+            {
+                if (Generics[i] is AnonymousType at && instanceInfo.Links.ContainsKey(at))
+                    newLinker.Add(_provider.GenericTypes[i], instanceInfo.Links[at]);
+                else
+                    newLinker.Add(_provider.GenericTypes[i], Generics[i]);
+            }
+
+            return _provider.GetInstance(newLinker);
         }
 
         public override Scope GetObjectScope()

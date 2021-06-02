@@ -21,33 +21,35 @@ namespace Deltin.Deltinteger.Parse
             Generics = generics;
             var anonymousTypeLinker = new InstanceAnonymousTypeLinker(initializer.GenericTypes, generics);
 
-            Extends = initializer.Extends?.GetRealType(anonymousTypeLinker);
+            initializer.OnReady.OnReady(() => {
+                Extends = initializer.Extends?.GetRealType(anonymousTypeLinker);
 
-            OperationalScope = new Scope(); // todooo
-            ServeObjectScope = new Scope();
-            StaticScope = new Scope();
+                OperationalScope = new Scope(); // todooo
+                ServeObjectScope = new Scope();
+                StaticScope = new Scope();
 
-            // Add elements to scope.
-            var initializedVariables = new List<IVariableInstance>();
-            foreach (var element in initializer.DeclaredElements)
-            {
-                var instance = element.AddInstance(this, anonymousTypeLinker);
+                // Add elements to scope.
+                var initializedVariables = new List<IVariableInstance>();
+                foreach (var element in initializer.DeclaredElements)
+                {
+                    var instance = element.AddInstance(this, anonymousTypeLinker);
 
-                // Function
-                if (element is DefinedMethodProvider provider && provider.Virtual)
-                    Elements.AddVirtualFunction((IMethod)instance);
-                
-                // Variable
-                else if (instance is IVariableInstance variableInstance)
-                    initializedVariables.Add(variableInstance);
-            }
+                    // Function
+                    if (element is DefinedMethodProvider provider && provider.Virtual)
+                        Elements.AddVirtualFunction((IMethod)instance);
+                    
+                    // Variable
+                    else if (instance is IVariableInstance variableInstance)
+                        initializedVariables.Add(variableInstance);
+                }
 
-            Variables = initializedVariables.ToArray();
+                Variables = initializedVariables.ToArray();
 
-            // Add constructors.
-            Constructors = new Constructor[_definedInitializer.Constructors.Length];
-            for (int i = 0; i < _definedInitializer.Constructors.Length; i++)
-                Constructors[i] = _definedInitializer.Constructors[i].GetInstance(this, anonymousTypeLinker);
+                // Add constructors.
+                Constructors = new Constructor[_definedInitializer.Constructors.Length];
+                for (int i = 0; i < _definedInitializer.Constructors.Length; i++)
+                    Constructors[i] = _definedInitializer.Constructors[i].GetInstance(this, anonymousTypeLinker);
+            });
         }
 
         public override bool Is(CodeType other)

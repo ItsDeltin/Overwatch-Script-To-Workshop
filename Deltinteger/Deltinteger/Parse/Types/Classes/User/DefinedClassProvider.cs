@@ -13,6 +13,8 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public List<IElementProvider> DeclaredElements { get; } = new List<IElementProvider>();
         public IConstructorProvider<Constructor>[] Constructors { get; private set; }
+        public IValueSolve OnReady => _onReady;
+        readonly ValueSolveSource _onReady = new ValueSolveSource();
 
         readonly ParseInfo _parseInfo;
         readonly ClassContext _typeContext;
@@ -110,6 +112,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             WorkingInstance = GetInstance();
+            _onReady.Set();
 
             // TODO: update these
             // If the extend token exists, add completion that only contains all extendable classes.

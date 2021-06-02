@@ -17,15 +17,13 @@ namespace Deltin.Deltinteger.Parse
         // The variables of the struct declaration. 
         public IVariable[] Variables { get; private set; }
 
-        // The methods of the struct declaration. This is currently unused.
-        public IMethodProvider[] Methods { get; } = new IMethodProvider[0];
-
         // The struct type created from the declaration.
         public StructInstance Type { get; private set; }
 
-        // Used by StructInstance to determine when a provider is done collecting its values.
-        // We do not need to worry about this.
-        public IValueSolve OnReady { get; } = new ValueSolveSource(true);
+        // We do not need to worry about these values.
+        public IValueSolve OnReady { get; } = new ValueSolveSource(true); // Used by StructInstance to determine when a provider is done collecting its values.
+        public AnonymousType[] GenericTypes { get; } = new AnonymousType[0];
+        public IMethodProvider[] Methods { get; } = new IMethodProvider[0]; // The methods of the struct declaration. This is currently unused.
 
         private readonly ParseInfo _parseInfo;
         private readonly Scope _scope;
@@ -72,7 +70,6 @@ namespace Deltin.Deltinteger.Parse
             }
 
             Name += "}";
-            Type = new StructInstance(this, InstanceAnonymousTypeLinker.Empty);
 
             // Add completion.
             if (_parseInfo.ExpectingType is StructInstance expectingStruct)
@@ -92,12 +89,16 @@ namespace Deltin.Deltinteger.Parse
                     kind: CompletionRangeKind.ClearRest
                 ));
             }
+
+            Type = new StructInstance(this, InstanceAnonymousTypeLinker.Empty);
         }
 
         // Struct as workshop value. 
         public IWorkshopTree Parse(ActionSet actionSet) => new StructAssigner(Type, new StructAssigningAttributes(), false).GetValues(actionSet);
 
         CodeType IExpression.Type() => Type;
+
+        public StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new StructInstance(this, typeLinker);
 
         class StructValueContextHandler : IVarContextHandler
         {

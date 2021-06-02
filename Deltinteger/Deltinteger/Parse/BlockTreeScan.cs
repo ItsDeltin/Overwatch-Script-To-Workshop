@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Parse
                         break;
                     }
                 }
-            if (!blockReturns)
+            if (!blockReturns && path.ErrorRange != null)
                 _parseInfo.Script.Diagnostics.Error("Path does not return a value.", path.ErrorRange);
         }
 

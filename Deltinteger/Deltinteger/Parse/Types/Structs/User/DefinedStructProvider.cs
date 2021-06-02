@@ -69,8 +69,8 @@ namespace Deltin.Deltinteger.Parse
         public void AddMacro(MacroVarProvider macro) {}
         // public void AddMacro(MacroVarProvider macro) => ObjectScope.AddNativeVariable(macro.GetDefaultInstance());
 
-        public override CodeType GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
-        public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedStructInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));
+        public override StructInstance GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
+        public override StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new DefinedStructInstance(this, typeLinker);
         
         public override bool BuiltInTypeMatches(Type type) => false;
         public Scope GetObjectBasedScope() => ObjectScope;

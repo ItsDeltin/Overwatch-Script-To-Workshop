@@ -11,6 +11,8 @@ namespace Deltin.Deltinteger.Parse
         IVariable[] Variables { get; }
         IMethodProvider[] Methods { get; }
         IValueSolve OnReady { get; }
+        AnonymousType[] GenericTypes { get; }
+        StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker);
     }
 
     public abstract class StructInitializer : ICodeTypeInitializer, IStructProvider
@@ -33,7 +35,10 @@ namespace Deltin.Deltinteger.Parse
         public abstract bool BuiltInTypeMatches(Type type);
         public CompletionItem GetCompletion() => new CompletionItem() { Label = Name };
 
-        public abstract CodeType GetInstance();
-        public abstract CodeType GetInstance(GetInstanceInfo instanceInfo);
+        public abstract StructInstance GetInstance();
+        public abstract StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker);
+
+        CodeType ICodeTypeInitializer.GetInstance() => GetInstance();
+        CodeType ICodeTypeInitializer.GetInstance(GetInstanceInfo instanceInfo) => GetInstance(new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));
     }
 }
