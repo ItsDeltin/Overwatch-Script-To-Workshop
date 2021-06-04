@@ -5,23 +5,7 @@ using Deltin.Deltinteger.Parse.Variables.Build;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public interface IMacroInfo
-    {
-        string Name { get; }
-        Location DefinedAt { get; }
-        ParseInfo ParseInfo { get; }
-        CodeType Type { get; }
-        CodeType BelongsTo { get; }
-        bool WholeContext { get; }
-        InitialValueResolve InitialValueResolve { get; }
-        IParseExpression InitialValueContext { get; }
-        AccessLevel AccessLevel { get; }
-        Scope Scope { get; }
-        IVariableInstance Overriding { get; }
-        bool Static { get; }
-    }
-
-    public class VarInfo : IMacroInfo
+    public class VarInfo
     {
         public string Name { get; }
         public Location DefinedAt { get; }
@@ -29,7 +13,6 @@ namespace Deltin.Deltinteger.Parse
         public VariableTypeHandler VariableTypeHandler { get; }
 
         public CodeType Type { get; set; } = null;
-        public CodeType BelongsTo { get; set; } = null;
         public bool InferType { get; set; }
         public bool WholeContext { get; set; } = true;
         public bool Static { get; set; } = false;
@@ -47,6 +30,9 @@ namespace Deltin.Deltinteger.Parse
         public CodeLensSourceType CodeLensType { get; set; } = CodeLensSourceType.Variable;
         public Lambda.IBridgeInvocable BridgeInvocable { get; set; }
         public bool RequiresCapture { get; set; }
+        public bool IsMacro { get; set; }
+        public bool Virtual { get; set; }
+        public bool Override { get; set; }
         public IVariableInstance Overriding { get; set; }
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)

@@ -24,7 +24,6 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 ClassRelation = toWorkshop.ClassInitializer.RelationFromClassType((ClassType)method.DefinedInType);
 
                 // Extract the virtual functions.
-                // todo: In _allVirtualOptions, it may be a good idea to include classes that do not override so we don't need to check auto-implementations in the virtual builder.
                 Overriders = ClassRelation.ExtractOverridenElements<DefinedMethodInstance>(extender => DoesOverride(method, extender))
                     .ToArray();
             }

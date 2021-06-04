@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             Attributes = Attributes,
             Invoked = _invoked,
             RestrictedCalls = _restrictedCalls
-        }, Var.GetInstance(instanceInfo));
+        }, Var.GetInstance(null, instanceInfo));
 
         public void RestrictedCall(RestrictedCall restrictedCall)
         {

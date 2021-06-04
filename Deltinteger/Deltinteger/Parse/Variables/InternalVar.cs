@@ -44,8 +44,8 @@ namespace Deltin.Deltinteger.Parse
         //     parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         // }
 
-        public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
-        public IVariableInstance GetDefaultInstance() => this;
+        public IVariableInstance GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker) => this;
+        public IVariableInstance GetDefaultInstance(CodeType definedIn) => this;
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
             scopeHandler.Add(this, Static);

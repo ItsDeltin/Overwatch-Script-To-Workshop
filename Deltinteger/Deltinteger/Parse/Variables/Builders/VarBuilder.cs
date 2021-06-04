@@ -23,18 +23,13 @@ namespace Deltin.Deltinteger.Parse
         protected Scope _scope;
         protected bool _canInferType = false;
 
-        protected IVariableFactory _variableFactory = new VariableFactory();
-
         public VarBuilder(IScopeHandler scopeHandler, IVarContextHandler contextHandler)
         {
             _scopeHandler = scopeHandler;
             _contextHandler = contextHandler;
         }
         
-        public IVariable GetVar(Action<Var> var, Action<MacroVarProvider> macroVarProvider)
-            => GetVar(new SaveVariableResult(var, macroVarProvider));
-
-        public IVariable GetVar(ISaveVariableResult saveResult = null)
+        public Var GetVar()
         {
             _parseInfo = _contextHandler.ParseInfo;
             _diagnostics = _parseInfo.Script.Diagnostics;
@@ -72,10 +67,10 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.Recursive = IsRecursive();
 
             // Get the resulting variable.
-            var result = _variableFactory.GetVariable(saveResult, ComponentCollection, _varInfo);
+            var result = new Var(_varInfo);
 
             // Add the variable to the operational scope.
-            _scopeHandler.Add(result.GetDefaultInstance(), ComponentCollection.IsAttribute(AttributeType.Static));
+            _scopeHandler.Add(result.GetDefaultInstance(_scopeHandler.DefinedIn()), ComponentCollection.IsAttribute(AttributeType.Static));
 
             // Done
             return result;
@@ -157,26 +152,5 @@ namespace Deltin.Deltinteger.Parse
             if (!ComponentCollection.IsComponent<MacroComponent>())
                 RejectAttributes(new AttributeComponentIdentifier(AttributeType.Virtual, AttributeType.Override));
         }
-    }
-
-    public interface ISaveVariableResult
-    {
-        void Var(Var var);
-        void MacroVarProvider(MacroVarProvider macroVarProvider);
-    }
-
-    class SaveVariableResult : ISaveVariableResult
-    {
-        private readonly Action<Var> _var;
-        private readonly Action<MacroVarProvider> _macroVarProvider;
-
-        public SaveVariableResult(Action<Var> var, Action<MacroVarProvider> macroVarProvider)
-        {
-            _var = var;
-            _macroVarProvider = macroVarProvider;
-        }
-
-        public void Var(Var var) => _var(var);
-        public void MacroVarProvider(MacroVarProvider macroVarProvider) => _macroVarProvider(macroVarProvider);
     }
 }

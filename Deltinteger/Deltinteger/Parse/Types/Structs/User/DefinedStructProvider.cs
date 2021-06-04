@@ -60,14 +60,13 @@ namespace Deltin.Deltinteger.Parse
 
                 if (element is IMethodProvider method)
                     Methods.Add(method);
+                
+                else if (element is IVariable variable)
+                    Variables.Add(variable);
             }
             
             _onReady.Set();
         }
-
-        public void AddVariable(IVariable var) => base.Variables.Add(var);
-        public void AddMacro(MacroVarProvider macro) {}
-        // public void AddMacro(MacroVarProvider macro) => ObjectScope.AddNativeVariable(macro.GetDefaultInstance());
 
         public override StructInstance GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
         public override StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new DefinedStructInstance(this, typeLinker);

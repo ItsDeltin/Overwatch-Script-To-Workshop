@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -8,7 +7,6 @@ namespace Deltin.Deltinteger.Parse
     public interface IClassInitializer : ITypeArgTrackee
     {
         ClassType Extends { get; }
-        IReadOnlyList<IVariable> ObjectVariables { get; }
     }
 
     public abstract class ClassInitializer : ICodeTypeInitializer, IResolveElements, IClassInitializer
@@ -20,9 +18,6 @@ namespace Deltin.Deltinteger.Parse
 
         /// <summary>Determines if the class elements were resolved.</summary>
         protected bool _elementsResolved = false;
-
-        protected List<IVariable> _objectVariables = new List<IVariable>();
-        public IReadOnlyList<IVariable> ObjectVariables => _objectVariables;
 
         public ClassType Extends { get; protected set; }
 
@@ -47,7 +42,5 @@ namespace Deltin.Deltinteger.Parse
             Label = Name,
             Kind = CompletionItemKind.Class
         };
-
-        public void AddVariable(IVariable var) => _objectVariables.Add(var);
     }
 }

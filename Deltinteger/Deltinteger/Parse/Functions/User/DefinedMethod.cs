@@ -126,7 +126,11 @@ namespace Deltin.Deltinteger.Parse
 
             // Override
             if (attributes.IsOverride)
+            {
                 OverridingFunction = (DefinedMethodInstance)scopeProvider.GetOverridenFunction(parseInfo.TranslateInfo, new FunctionOverrideInfo(Name, ParameterTypes));
+                if (OverridingFunction == null)
+                    SemanticsHelper.CouldNotOverride(parseInfo, nameRange, "method");
+            }
 
             parseInfo.Script.AddHover(nameRange, GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
 

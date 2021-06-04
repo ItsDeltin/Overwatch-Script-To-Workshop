@@ -1,10 +1,7 @@
 using System;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Variables.Build;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -29,6 +26,9 @@ namespace Deltin.Deltinteger.Parse
         public bool Recursive { get; }
         public Lambda.IBridgeInvocable BridgeInvocable { get; }
         public bool RequiresCapture { get; }
+        public bool IsMacro { get; }
+        public bool Virtual { get; }
+        public bool Override { get; }
         private readonly SemanticTokenType _tokenType;
         private readonly TokenModifier[] _tokenModifiers;
         private readonly bool _handleRestrictedCalls;
@@ -64,6 +64,9 @@ namespace Deltin.Deltinteger.Parse
             Recursive = varInfo.Recursive;
             BridgeInvocable = varInfo.BridgeInvocable;
             RequiresCapture = varInfo.RequiresCapture;
+            IsMacro = varInfo.IsMacro;
+            Virtual = varInfo.Virtual;
+            Override = varInfo.Override;
             _tokenType = varInfo.TokenType;
             _tokenModifiers = varInfo.TokenModifiers.ToArray();
             _handleRestrictedCalls = varInfo.HandleRestrictedCalls;
@@ -147,13 +150,6 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
         }
 
-        public CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = Name,
-            Kind = CompletionItemKind.Variable,
-            Detail = CodeType.GetName() + " " + Name
-        };
-
         public string GetLabel(bool markdown)
         {
             string typeName = "define";
@@ -181,15 +177,15 @@ namespace Deltin.Deltinteger.Parse
             return name;
         }
 
-        public IVariableInstance GetDefaultInstance() => new VariableInstance(this, InstanceAnonymousTypeLinker.Empty);
+        public IVariableInstance GetDefaultInstance(CodeType definedIn) => new VariableInstance(this, InstanceAnonymousTypeLinker.Empty, definedIn);
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
-            var instance = new VariableInstance(this, genericsLinker);
+            var instance = new VariableInstance(this, genericsLinker, scopeHandler.DefinedIn());
             scopeHandler.Add(instance, Static);
             return instance;
         }
-        public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(), Static);
-        public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => new VariableInstance(this, genericsLinker);
+        public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(scopeHandler.DefinedIn()), Static);
+        public IVariableInstance GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker) => new VariableInstance(this, genericsLinker, definedIn);
 
         public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeVariableLabel(CodeType, Name);
     }

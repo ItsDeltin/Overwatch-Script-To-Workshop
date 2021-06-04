@@ -8,8 +8,8 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DefinedClass : ClassType
     {
-        private readonly ParseInfo _parseInfo;
-        private readonly DefinedClassInitializer _definedInitializer;
+        readonly ParseInfo _parseInfo;
+        readonly DefinedClassInitializer _definedInitializer;
 
         public DefinedClass(ParseInfo parseInfo, DefinedClassInitializer initializer, CodeType[] generics) : base(initializer.Name, initializer)
         {
@@ -34,12 +34,16 @@ namespace Deltin.Deltinteger.Parse
                 {
                     var instance = element.AddInstance(this, anonymousTypeLinker);
 
-                    // Function
+                    // Virtual function
                     if (element is DefinedMethodProvider provider && provider.Virtual)
                         Elements.AddVirtualFunction((IMethod)instance);
                     
-                    // Variable
-                    else if (instance is IVariableInstance variableInstance)
+                    // Virtual variable
+                    if (element is Var var && var.Virtual)
+                        Elements.AddVirtualVariable((IVariableInstance)instance);
+                    
+                    // Instance variable
+                    if (instance is IVariableInstance variableInstance && variableInstance.Provider.VariableType != VariableType.ElementReference)
                         initializedVariables.Add(variableInstance);
                 }
 

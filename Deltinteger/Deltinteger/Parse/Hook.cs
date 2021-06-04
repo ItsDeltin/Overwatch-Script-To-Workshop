@@ -80,9 +80,9 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Expected a hook variable.", context.Variable.Range);
         }
 
-        public IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker) => this;
+        public IVariableInstance GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker) => this;
         public IGettableAssigner GetAssigner(ActionSet actionSet) => throw new NotImplementedException();
-        public IVariableInstance GetDefaultInstance() => this;
+        public IVariableInstance GetDefaultInstance(CodeType definedIn) => this;
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
         public void AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
     }

@@ -180,6 +180,16 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                     varInfo.Static = true;
                     break;
                 
+                // Virtual
+                case AttributeType.Virtual:
+                    varInfo.Virtual = true;
+                    break;
+                
+                // Override
+                case AttributeType.Override:
+                    varInfo.Override = true;
+                    break;
+                
                 // Missing attribute function
                 default:
                     throw new NotImplementedException();
@@ -294,7 +304,11 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
             Range = symbolRange;
         }
 
-        public void Apply(VarInfo varInfo) => varInfo.VariableTypeHandler.SetWorkshopReference();
+        public void Apply(VarInfo varInfo)
+        {
+            varInfo.VariableTypeHandler.SetWorkshopReference();
+            varInfo.IsMacro = true;
+        }
         public string RejectMessage() => "Macros cannot be declared here.";
         public void Validate(VariableComponentCollection componentCollection) {}
         public bool CheckConflicts(VariableComponentCollection componentCollection) => true;

@@ -378,5 +378,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(((decimal)Value).ToString());
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
+
+        public override string ToString() => Value.ToString();
     }
 }

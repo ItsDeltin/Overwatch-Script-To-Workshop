@@ -82,6 +82,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Extends?.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
 
+            // Add instance variables to the assigner.
             var classInitializer = toWorkshop.ClassInitializer;
             var combo = classInitializer.ComboFromClassType(this);
             combo.AddVariableInstancesToAssigner(Variables, reference, assigner);
@@ -120,16 +121,18 @@ namespace Deltin.Deltinteger.Parse
         {
             readonly ClassType _classType;
             readonly List<IMethod> _virtualMethods = new List<IMethod>();
+            readonly List<IVariableInstance> _virtualVariables = new List<IVariableInstance>();
             readonly List<ClassElement> _scopeableElements = new List<ClassElement>();
             public IReadOnlyList<ClassElement> ScopeableElements => _scopeableElements.AsReadOnly();
 
-            public ClassElements(ClassType classType)
-            {
-                _classType = classType;
-            }
+            public ClassElements(ClassType classType) => _classType = classType;
 
+            // Adds a virtual function.
             public void AddVirtualFunction(IMethod method) => _virtualMethods.Add(method);
 
+            public void AddVirtualVariable(IVariableInstance variable) => _virtualVariables.Add(variable);
+
+            // Gets a virtual function. Returns null if none are found.
             public IMethod GetVirtualFunction(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
             {
                 // Loop through each virtual function.
@@ -155,8 +158,15 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
 
+            // Get the virtual variable that matches the name. Returns null if none are found.
+            public IVariableInstance GetVirtualVariable(string name) => _virtualVariables.FirstOrDefault(v => v.Name == name)
+                // If it is not found, try again with the extended type if it exists.
+                ?? (_classType.Extends as ClassType)?.Elements.GetVirtualVariable(name);
+
+            // Adds an element to the class.
             public void Add(IScopeable scopeable, bool instance) => _scopeableElements.Add(new ClassElement(scopeable, instance));
 
+            // Adds the elements in the class to a scope.
             public void AddToScope(Scope scope, bool instance)
             {
                 // Add elements from this class.

@@ -31,31 +31,13 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             {
                 Attributes.IsInstance = true;
 
+                var relations = new MethodClassRelations(toWorkshop, function);
+
                 // Get the class relation.
-                _classRelation = toWorkshop.ClassInitializer.RelationFromClassType((ClassType)function.DefinedInType);
+                _classRelation = relations.ClassRelation;
 
                 // Extract the virtual functions.
-                // todo: In _allVirtualOptions, it may be a good idea to include classes that do not override so we don't need to check auto-implementations in the virtual builder.
-                _allVirtualOptions.AddRange(_classRelation.ExtractOverridenElements<DefinedMethodInstance>(extender => DoesOverride(function, extender)));
-
-                // // Get the virtual functions.
-                // foreach (var extender in _classRelation.GetAllExtenders())
-                // {
-                //     // Extract the virtual function.
-                //     var methodInstance = extender.Instance.Elements.ScopeableElements.FirstOrDefault(element =>
-                //         // Make sure the scopeable is a defined method...
-                //         element.Scopeable is DefinedMethodInstance method &&
-                //         // ...that overrides the target method.
-                //         DoesOverride(function, method)
-                //     ).Scopeable as DefinedMethodInstance;
-
-                //     // Add the method instance if it exists.
-                //     // todo: In _allVirtualOptions, it may be a good idea to include classes that do not override so we don't need to check auto-implementations in the virtual builder.
-                //     if (methodInstance != null)
-                //     {
-                //         _allVirtualOptions.Add(methodInstance);
-                //     }
-                // }
+                _allVirtualOptions.AddRange(relations.Overriders);
             }
         }
 

@@ -4,7 +4,7 @@ namespace Deltin.Deltinteger.Parse
     {
         bool RequiresCapture => false;
         VariableType VariableType { get; }
-        IVariableInstance GetInstance(InstanceAnonymousTypeLinker genericsLinker);
-        IVariableInstance GetDefaultInstance();
+        IVariableInstance GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker);
+        IVariableInstance GetDefaultInstance(CodeType definedIn);
     }
 }

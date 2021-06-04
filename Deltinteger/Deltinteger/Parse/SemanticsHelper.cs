@@ -13,5 +13,8 @@ namespace Deltin.Deltinteger.Parse
             }
             return true;
         }
+
+        public static void CouldNotOverride(ParseInfo parseInfo, DocRange range, string elementTypeName) =>
+            parseInfo.Script.Diagnostics.Error("No overridable " + elementTypeName + " found in parent classes", range);
     }
 }

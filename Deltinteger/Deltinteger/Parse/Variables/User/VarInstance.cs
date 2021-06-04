@@ -1,4 +1,7 @@
+using System.Linq;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Parse.Functions.Builder.Virtual;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -14,16 +17,19 @@ namespace Deltin.Deltinteger.Parse
         ICodeTypeSolver IScopeable.CodeType => CodeType;
         public IVariableInstanceAttributes Attributes { get; }
 
-        private readonly Var _var;
+        readonly Var _var;
+        readonly CodeType _definedIn;
 
-        public VariableInstance(Var var, InstanceAnonymousTypeLinker instanceInfo)
+        public VariableInstance(Var var, InstanceAnonymousTypeLinker instanceInfo, CodeType definedIn)
         {
             _var = var;
             CodeType = var.CodeType.GetRealType(instanceInfo);
+            _definedIn = definedIn;
             Attributes = new VariableInstanceAttributes()
             {
                 CanBeSet = var.StoreType != StoreType.None,
-                StoreType = var.StoreType
+                StoreType = var.StoreType,
+                UseDefaultVariableAssigner = !var.IsMacro
             };
         }
 
@@ -42,5 +48,39 @@ namespace Deltin.Deltinteger.Parse
             VariableType = _var.VariableType,
             DefaultValue = _var.InitialValue
         });
+
+        public IWorkshopTree ToWorkshop(ActionSet actionSet)
+        {
+            if (!_var.IsMacro)
+                return actionSet.IndexAssigner.Get(_var).GetVariable();
+            else
+                return ToMacro(actionSet);
+        }
+
+        IWorkshopTree ToMacro(ActionSet actionSet)
+        {
+            var allMacros = new List<VariableInstanceOption>();
+            allMacros.Add(new VariableInstanceOption(this));
+
+            // Get the class relation.
+            if (_definedIn != null)
+            {
+                var relation = actionSet.ToWorkshop.ClassInitializer.RelationFromClassType((ClassType)_definedIn);
+
+                // Extract the virtual functions.
+                allMacros.AddRange(relation.ExtractOverridenElements<VariableInstance>(extender => extender.Name == Name)
+                    .Select(extender => new VariableInstanceOption(extender)));
+            }
+
+            return new MacroContentBuilder(actionSet, allMacros).Value;
+        }
+
+        class VariableInstanceOption : IMacroOption
+        {
+            readonly VariableInstance _variableInstance;
+            public VariableInstanceOption(VariableInstance variableInstance) => _variableInstance = variableInstance;
+            public ClassType ContainingType() => (ClassType)_variableInstance._definedIn;
+            public IWorkshopTree GetValue(ActionSet actionSet) => _variableInstance._var.InitialValue.Parse(actionSet);
+        }
     }
 }

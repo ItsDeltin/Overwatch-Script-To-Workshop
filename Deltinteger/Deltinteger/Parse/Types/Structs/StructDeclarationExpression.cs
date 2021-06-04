@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.Parse
                 Variables[i] = new StructValueVariable(_scope, new StructValueContextHandler(_parseInfo, _context.Values[i])).GetVar();
 
                 // Add the variable label.
-                Name += Variables[i].GetDefaultInstance().GetLabel(_parseInfo.TranslateInfo);
+                Name += Variables[i].GetDefaultInstance(null).GetLabel(_parseInfo.TranslateInfo);
             }
 
             Name += "}";

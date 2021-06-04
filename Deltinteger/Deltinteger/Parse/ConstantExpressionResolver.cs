@@ -24,10 +24,6 @@ namespace Deltin.Deltinteger.Parse
                     if (callMethod.CallingMethod is DefinedMethodInstance definedMethod && definedMethod.Provider.SingleReturnValue != null)
                         resolve = definedMethod.Provider.SingleReturnValue;
                 }
-
-                // If the expression is a macro variable, resolve the value.
-                else if (start is MacroVarInstance macroVar)
-                    resolve = macroVar.Provider.Value;
                 
                 // If the expression is an ExpressionTree, resolve the last value.
                 else if (start is ExpressionTree expressionTree)

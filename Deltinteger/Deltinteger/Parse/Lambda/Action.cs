@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
                 InvokedState[i] = new SubLambdaInvoke();
                 Parameters[i] = (Var)new LambdaVariable(i, expectingType, _lambdaScope, new LambdaContextHandler(_parseInfo, _context.Parameters[i]), InvokedState[i]).GetVar();
-                _argumentTypes[i] = Parameters[i].GetDefaultInstance().CodeType.GetCodeType(_parseInfo.TranslateInfo);
+                _argumentTypes[i] = Parameters[i].GetDefaultInstance(null).CodeType.GetCodeType(_parseInfo.TranslateInfo);
             }
 
             ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).AddVariableTracker(this).SetExpectingLambda(expectingType?.ReturnType);

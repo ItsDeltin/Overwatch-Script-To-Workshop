@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
                 Variables = new IVariableInstance[provider.Variables.Length];
                 for (int i = 0; i < Variables.Length; i++)
                 {
-                    Variables[i] = provider.Variables[i].GetInstance(genericsLinker);
+                    Variables[i] = provider.Variables[i].GetInstance(null, genericsLinker);
                     ObjectScope.AddNativeVariable(Variables[i]);
                 }
 
@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
         public override CompletionItem GetCompletion() => throw new System.NotImplementedException();
         void ThrowIfNotReady()
         {
-            if (!_isReady) throw new Exception("You are but a fool.");
+            if (!_isReady) throw new Exception("Struct is not ready.");
         }
 
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), false);

@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             IsGlobal = isGlobal;
         }
 
-        public GettableAssignerValueInfo(ActionSet actionSet, VarCollection varCollection, VarIndexAssigner assigner)
+        public GettableAssignerValueInfo(ActionSet actionSet, VarCollection varCollection)
         {
             ActionSet = actionSet;
             VarCollection = varCollection;

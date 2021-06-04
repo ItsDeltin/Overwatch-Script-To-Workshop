@@ -171,14 +171,15 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var declaration in script.Context.Declarations)
                     if (declaration is VariableDeclaration variable)
-                        new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable))
-                            .GetVar(var => {
-                                rulesetVariables.Add(var);
+                    {
+                        Var var = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable)).GetVar();
 
-                                // Add the variable to the player variables scope if it is a player variable.
-                                if (var.VariableType == VariableType.Player)
-                                    PlayerVariableScope.CopyVariable(var.GetDefaultInstance());
-                            }, macroVarProvider => {});
+                        rulesetVariables.Add(var);
+
+                        // Add the variable to the player variables scope if it is a player variable.
+                        if (var.VariableType == VariableType.Player)
+                            PlayerVariableScope.CopyVariable(var.GetDefaultInstance(null));
+                    }
             
             ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
             GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
@@ -238,7 +239,7 @@ namespace Deltin.Deltinteger.Parse
                 var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
 
                 // Assign the variable an index.
-                IGettable value = variable.GetDefaultInstance().GetAssigner(addToInitialRule.ActionSet).GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet, VarCollection, DefaultIndexAssigner));
+                IGettable value = variable.GetDefaultInstance(null).GetAssigner(addToInitialRule.ActionSet).GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet, VarCollection));
                 DefaultIndexAssigner.Add(variable, value);
                 
                 if (value is IndexReference indexReference)
