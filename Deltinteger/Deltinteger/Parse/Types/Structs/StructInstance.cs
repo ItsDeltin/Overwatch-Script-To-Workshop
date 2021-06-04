@@ -147,8 +147,8 @@ namespace Deltin.Deltinteger.Parse
         {
             // Since all variables in a struct array will be of the same length, we can use BridgeArbritrary instead.
             public override IWorkshopTree Length(IWorkshopTree reference) => str(reference).BridgeArbritrary(v => Element.CountOf(v)).GetWorkshopValue();
-            public override IWorkshopTree FirstOf(IWorkshopTree reference) => str(reference).Bridge(v => Element.FirstOf(v));
-            public override IWorkshopTree LastOf(IWorkshopTree reference) => str(reference).Bridge(v => Element.LastOf(v));
+            public override IWorkshopTree FirstOf(IWorkshopTree reference) => str(reference).Bridge(v => Element.FirstOf(v.Value));
+            public override IWorkshopTree LastOf(IWorkshopTree reference) => str(reference).Bridge(v => Element.LastOf(v.Value));
             public override IWorkshopTree Contains(IWorkshopTree reference, IWorkshopTree value)
             {
                 // Extract the values from the 'reference' struct array.

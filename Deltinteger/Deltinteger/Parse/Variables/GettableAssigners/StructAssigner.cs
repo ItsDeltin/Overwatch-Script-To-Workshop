@@ -166,8 +166,8 @@ namespace Deltin.Deltinteger.Parse
         IGettable GetGettable(string variableName);
         IWorkshopTree GetArbritraryValue();
         IWorkshopTree[] GetAllValues();
-        BridgeGetStructValue Bridge(Func<IWorkshopTree, IWorkshopTree> bridge) => new BridgeGetStructValue(this, bridge);
-        BridgeGetStructValue BridgeArbritrary(Func<IWorkshopTree, IWorkshopTree> bridge) => Bridge(bridge);
+        BridgeGetStructValue Bridge(Func<BridgeArgs, IWorkshopTree> bridge) => new BridgeGetStructValue(this, bridge);
+        BridgeGetStructValue BridgeArbritrary(Func<IWorkshopTree, IWorkshopTree> bridge) => Bridge(b => bridge(b.Value));
         bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new NotImplementedException();
         void IWorkshopTree.ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => throw new NotImplementedException();
 
@@ -193,6 +193,15 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return values.ToArray();
+        }
+
+        public static IWorkshopTree GetValueWithPath(IStructValue structValue, IEnumerable<string> path)
+        {
+            IWorkshopTree current = structValue;
+            foreach (var step in path)
+                current = ((IStructValue)current).GetValue(step);
+            
+            return current;
         }
     }
 
@@ -340,12 +349,14 @@ namespace Deltin.Deltinteger.Parse
     public class BridgeGetStructValue : IStructValue
     {
         private readonly IStructValue _structValue;
-        private readonly Func<IWorkshopTree, IWorkshopTree> _bridge;
+        private readonly Func<BridgeArgs, IWorkshopTree> _bridge;
+        readonly IEnumerable<string> _path;
 
-        public BridgeGetStructValue(IStructValue structValue, Func<IWorkshopTree, IWorkshopTree> bridge)
+        public BridgeGetStructValue(IStructValue structValue, Func<BridgeArgs, IWorkshopTree> bridge, IEnumerable<string> path = null)
         {
             _structValue = structValue;
             _bridge = bridge;
+            _path = path ?? Enumerable.Empty<string>();
         }
 
         public IWorkshopTree GetValue(string variableName)
@@ -353,11 +364,13 @@ namespace Deltin.Deltinteger.Parse
             // Get the struct value.
             var value = _structValue.GetValue(variableName);
 
+            var newPath = _path.Append(variableName);
+
             // Check if we need to do a subsection.
             if (value is IInlineStructDictionary subvalue)
-                return new BridgeGetStructValue(subvalue, _bridge);
+                return new BridgeGetStructValue(subvalue, _bridge, newPath);
 
-            return _bridge(value);
+            return _bridge(new BridgeArgs(value, newPath));
         }
 
         public IWorkshopTree GetWorkshopValue()
@@ -366,12 +379,30 @@ namespace Deltin.Deltinteger.Parse
             while (current is IStructValue structValue)
                 current = structValue.GetArbritraryValue();
 
-            return _bridge(current);
+            return _bridge(new BridgeArgs(current));
         }
 
         public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
         public IWorkshopTree GetArbritraryValue() => _structValue;
         public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues();
+    }
+
+    public struct BridgeArgs
+    {
+        public IWorkshopTree Value;
+        public IEnumerable<string> Path;
+
+        public BridgeArgs(IWorkshopTree value, IEnumerable<string> path)
+        {
+            Value = value;
+            Path = path;
+        }
+
+        public BridgeArgs(IWorkshopTree value)
+        {
+            Value = value;
+            Path = null;
+        }
     }
 
     /// <summary>Represents a struct array converted into a single array of indices with the same length of the struct array.</summary>
@@ -408,7 +439,7 @@ namespace Deltin.Deltinteger.Parse
             IndexedArray = append((new ValueInStructArray(StructArray, Element.ArrayElement()), IndexedArray));
 
         // Hook the bridge so that it is being used with the indexed array rather than the struct value 'v'.
-        public BridgeGetStructValue Bridge(Func<IWorkshopTree, IWorkshopTree> bridge) => new BridgeGetStructValue(this, v => Element.ValueInArray(v, bridge(IndexedArray)));
+        public BridgeGetStructValue Bridge(Func<BridgeArgs, IWorkshopTree> bridge) => new BridgeGetStructValue(this, v => Element.ValueInArray(v.Value, bridge(new BridgeArgs(IndexedArray))));
         public BridgeGetStructValue BridgeArbritrary(Func<IWorkshopTree, IWorkshopTree> bridge)
         {
             // In typical scenarios, this will equal true.
@@ -417,7 +448,7 @@ namespace Deltin.Deltinteger.Parse
 
             // It is completely useless for the user to do something like this, but if an arbritrary value is needed and
             // the length won't change, we can optimize and just use the original array.
-            return new BridgeGetStructValue(this, bridge);
+            return new BridgeGetStructValue(this, b => bridge(b.Value));
         }
     }
 }

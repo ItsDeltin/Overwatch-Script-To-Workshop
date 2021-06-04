@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
 
         bool _mappingArrayCanBeOptimizedOut = true;
 
+        bool _isStruct = false;
+
         public MacroContentBuilder(ActionSet actionSet, IEnumerable<IMacroOption> macros) : base(actionSet, macros)
         {
         }
@@ -34,6 +36,13 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
         protected override void InitiateNewOption(ActionSet optionSet, int classIdentifier)
         {
             _currentIndex = _virtualValues.Count; // Update _currentIndex
+
+            var currentValue = Current.GetValue(optionSet);
+
+            // If the macro value is a struct, we will need to bridge it.
+            if (_currentIndex == 0 && currentValue is IStructValue)
+                _isStruct = true;
+
             _virtualValues.Add(Current.GetValue(optionSet)); // Get the macro as a workshop value and add it to the list.
             LinkClassToValue(classIdentifier); // Map the classIdentifier.
         }
@@ -52,8 +61,32 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
 
         protected override void Completed()
         {
+            if (_isStruct)
+            {
+                // Use the first value as the template.
+                var template = (IStructValue)_virtualValues[0];
+
+                Value = template.Bridge(bridgeArgs => {
+                    // Get the workshop values.
+                    var steppedValues = _virtualValues
+                        // Do not need to calculate GetValueWithPath, already known via bridgeArgs.Value
+                        .Skip(1) 
+                        // Step into the overrider values with the path provided by bridgeArgs.
+                        .Select(value => IStructValue.GetValueWithPath((IStructValue)value, bridgeArgs.Path))
+                        // Prepend the template value.
+                        .Prepend(bridgeArgs.Value);
+                    
+                    return CreateVirtualMap(steppedValues);
+                });
+            }
+            else
+                Value = CreateVirtualMap(_virtualValues);
+        }
+
+        IWorkshopTree CreateVirtualMap(IEnumerable<IWorkshopTree> macroValues)
+        {
             // The array of macro values, collected from the potential virtual options.
-            var expArray = Element.CreateArray(_virtualValues.ToArray());
+            var expArray = Element.CreateArray(macroValues.ToArray());
 
             // The array of class identifiers.
             var identifierArray = Element.CreateArray(_valueMaps.Select(i => Element.Num(i.Identifier)).ToArray());
@@ -68,11 +101,11 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
                 // Maps class identifiers (identifierArray) to a macro value (expArray).
                 var mapArray = Element.CreateArray(_valueMaps.Select(i => Element.Num(i.ExpressionIndex)).ToArray());
 
-                Value = expArray[mapArray[Element.IndexOfArrayValue(identifierArray, classIdentifier)]];
+                return expArray[mapArray[Element.IndexOfArrayValue(identifierArray, classIdentifier)]];
             }
             else
                 // Mapping the class identifier is not required, use it directly.
-                Value = expArray[Element.IndexOfArrayValue(identifierArray, classIdentifier)];
+                return expArray[Element.IndexOfArrayValue(identifierArray, classIdentifier)];
         }
 
         // Links a class identifier to an expression in the virtual array.
