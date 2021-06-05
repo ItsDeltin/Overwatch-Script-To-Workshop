@@ -88,7 +88,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             // Get or create the subroutine.
             return _toWorkshop.SubroutineCatalog.GetSubroutine(identifier, () =>
                 // Create the subroutine.
-                new SubroutineBuilder(_toWorkshop.DeltinScript, new() {
+                new(new SubroutineBuilder(_toWorkshop.DeltinScript, new() {
                     Controller = this,
                     ElementName = _function.Name,
                     RuleName = _function.Provider.SubroutineName,
@@ -96,7 +96,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                     VariableGlobalDefault = _function.Provider.SubroutineDefaultGlobal,
                     ContainingType = _function.DefinedInType,
                     TypeLinker = _typeArgLinker
-                }).SetupSubroutine()
+                }))
             );
         }
 

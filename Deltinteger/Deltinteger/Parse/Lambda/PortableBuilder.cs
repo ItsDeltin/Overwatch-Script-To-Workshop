@@ -50,11 +50,11 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         ReturnHandler IWorkshopFunctionController.GetReturnHandler(ActionSet actionSet) => null;
         SubroutineCatalogItem IWorkshopFunctionController.GetSubroutine() => _deltinScript.WorkshopConverter.SubroutineCatalog.GetSubroutine(this, () =>
-            new SubroutineBuilder(_deltinScript, new SubroutineContext() {
+            new(new SubroutineBuilder(_deltinScript, new SubroutineContext() {
                 Controller = this,
                 ElementName = "func group", ObjectStackName = "func group", RuleName = "lambda",
                 VariableGlobalDefault = true
-            }).SetupSubroutine()
+            }))
         );
         object IWorkshopFunctionController.StackIdentifier() => this;
 

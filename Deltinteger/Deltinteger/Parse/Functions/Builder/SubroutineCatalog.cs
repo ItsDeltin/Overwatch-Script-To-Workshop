@@ -9,16 +9,30 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         readonly Dictionary<object, SubroutineCatalogItem> _subroutines = new Dictionary<object, SubroutineCatalogItem>();
         
         // Gets a subroutine for the specified key. If the key has no subroutine, it will be created.
-        public SubroutineCatalogItem GetSubroutine(object key, Func<SubroutineCatalogItem> create)
+        public SubroutineCatalogItem GetSubroutine(object key, Func<SetupSubroutine> create)
         {
             // Get the subroutine.
             if (!_subroutines.TryGetValue(key, out SubroutineCatalogItem info))
             {
                 // No subroutine found, create and add to dictionary.
-                info = create();
+                var setup = create();
+                info = setup.Item;
                 _subroutines.Add(key, info);
+                setup.CompleteSetup();
             }
             return info;
+        }
+    }
+
+    public struct SetupSubroutine
+    {
+        public SubroutineCatalogItem Item;
+        public Action CompleteSetup;
+
+        public SetupSubroutine(SubroutineBuilder builder)
+        {
+            Item = builder.Initiate();
+            CompleteSetup = builder.Complete;
         }
     }
 

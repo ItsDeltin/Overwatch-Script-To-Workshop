@@ -2,12 +2,17 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Functions.Builder
 {
-    class SubroutineBuilder
+    public class SubroutineBuilder
     {
         public SubroutineCatalogItem Result { get; private set; }
 
         readonly DeltinScript _deltinScript;
         readonly SubroutineContext _context;
+
+        TranslateRule _subroutineRule;
+        ActionSet _actionSet;
+        WorkshopFunctionBuilder _functionBuilder;
+        IndexReference _objectStore;
 
         public SubroutineBuilder(DeltinScript deltinScript, SubroutineContext context)
         {
@@ -15,76 +20,79 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             _context = context;
         }
 
-        public SubroutineCatalogItem SetupSubroutine()
+        public SubroutineCatalogItem Initiate()
         {
             // Setup the subroutine element.
             Subroutine subroutine = _deltinScript.SubroutineCollection.NewSubroutine(_context.ElementName);
 
             // Create the rule.
-            TranslateRule subroutineRule = new TranslateRule(_deltinScript, subroutine, _context.RuleName, _context.VariableGlobalDefault);
+            _subroutineRule = new TranslateRule(_deltinScript, subroutine, _context.RuleName, _context.VariableGlobalDefault);
 
             // Setup the return handler.
-            ActionSet actionSet = subroutineRule.ActionSet.New(subroutineRule.ActionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(_context.TypeLinker);
+            _actionSet = _subroutineRule.ActionSet.New(_subroutineRule.ActionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(_context.TypeLinker);
 
             // Create the function builder.
             var controller = _context.Controller;
 
             // Create the parameter handlers.
-            var parameterHandler = controller.CreateParameterHandler(actionSet, null);
+            var parameterHandler = controller.CreateParameterHandler(_actionSet, null);
             
             // If the subroutine is an object function inside a class, create a variable to store the class object.
-            IndexReference objectStore = null;
             if (controller.Attributes.IsInstance)
             {
-                objectStore = actionSet.VarCollection.Assign(_context.ObjectStackName, true, !controller.Attributes.IsRecursive);
+                _objectStore = _actionSet.VarCollection.Assign(_context.ObjectStackName, true, !controller.Attributes.IsRecursive);
 
                 // Set the objectStore as an empty array if the subroutine is recursive.
                 if (controller.Attributes.IsRecursive)
                 {
                     // Initialize as empty array.
-                    actionSet.InitialSet().AddAction(objectStore.SetVariable(Element.EmptyArray()));
+                    _actionSet.InitialSet().AddAction(_objectStore.SetVariable(Element.EmptyArray()));
 
                     // Add to assigner with the last of the objectStore stack being the object instance.
-                    _context.ContainingType?.AddObjectVariablesToAssigner(actionSet.ToWorkshop, Element.LastOf(objectStore.GetVariable()), actionSet.IndexAssigner);
+                    _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, Element.LastOf(_objectStore.GetVariable()), _actionSet.IndexAssigner);
 
                     // Set the actionSet.
-                    actionSet = actionSet.New(Element.LastOf(objectStore.Get())).PackThis().New(objectStore.CreateChild(Element.CountOf(objectStore.Get()) - 1));
+                    _actionSet = _actionSet.New(Element.LastOf(_objectStore.Get())).PackThis().New(_objectStore.CreateChild(Element.CountOf(_objectStore.Get()) - 1));
                 }
                 else
                 {
                     // Add to assigner with the objectStore being the object instance.
-                    _context.ContainingType?.AddObjectVariablesToAssigner(actionSet.ToWorkshop, objectStore.GetVariable(), actionSet.IndexAssigner);
+                    _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, _objectStore.GetVariable(), _actionSet.IndexAssigner);
 
                     // Set the actionSet.
-                    actionSet = actionSet.New(objectStore.Get()).PackThis().New(objectStore);
+                    _actionSet = _actionSet.New(_objectStore.Get()).PackThis().New(_objectStore);
                 }
             }
 
-            var functionBuilder = new WorkshopFunctionBuilder(actionSet, controller);
-            functionBuilder.ModifySet(a => a.PackThis()); // TODO: is this required?
-            functionBuilder.SetupReturnHandler();
-            parameterHandler.AddParametersToAssigner(actionSet.IndexAssigner);
-            functionBuilder.Controller.Build(functionBuilder.ActionSet); 
-            functionBuilder.ReturnHandler?.ApplyReturnSkips();
-
-            // Pop object array if recursive.
-            if (controller.Attributes.IsRecursive && controller.Attributes.IsInstance)
-                actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(objectStore.GetVariable()) - 1));
-
-            // Add the subroutine.
-            Rule translatedRule = subroutineRule.GetRule();
-            _deltinScript.WorkshopRules.Add(translatedRule);
+            _functionBuilder = new WorkshopFunctionBuilder(_actionSet, controller);
+            _functionBuilder.ModifySet(a => a.PackThis()); // TODO: is this required?
+            _functionBuilder.SetupReturnHandler();
+            parameterHandler.AddParametersToAssigner(_actionSet.IndexAssigner);
 
             // Done.
             return Result = new SubroutineCatalogItem(
                 subroutine: subroutine,
                 parameterHandler: parameterHandler,
-                objectStack: objectStore,
-                returnHandler: functionBuilder.ReturnHandler);
+                objectStack: _objectStore,
+                returnHandler: _functionBuilder.ReturnHandler);
+        }
+
+        public void Complete()
+        {
+            _functionBuilder.Controller.Build(_functionBuilder.ActionSet); 
+            _functionBuilder.ReturnHandler?.ApplyReturnSkips();
+
+            // Pop object array if recursive.
+            if (_context.Controller.Attributes.IsRecursive && _context.Controller.Attributes.IsInstance)
+                _actionSet.AddAction(_objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(_objectStore.GetVariable()) - 1));
+
+            // Add the subroutine.
+            Rule translatedRule = _subroutineRule.GetRule();
+            _deltinScript.WorkshopRules.Add(translatedRule);
         }
     }
 
-    struct SubroutineContext
+    public struct SubroutineContext
     {
         public string RuleName;
         public string ElementName;

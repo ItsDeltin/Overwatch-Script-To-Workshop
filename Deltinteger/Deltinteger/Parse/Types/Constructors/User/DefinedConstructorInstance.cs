@@ -98,14 +98,14 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
                 }
 
                 return _toWorkshop.SubroutineCatalog.GetSubroutine(key, () =>
-                    new SubroutineBuilder(_toWorkshop.DeltinScript, new() {
+                    new(new SubroutineBuilder(_toWorkshop.DeltinScript, new() {
                         ContainingType = _instance.Type,
                         Controller = this,
                         RuleName = _instance.Provider.SubroutineName,
                         ElementName = _instance.Type.GetName() + "_constructor",
                         VariableGlobalDefault = true,
                         TypeLinker = _instance._typeLinker
-                    }).SetupSubroutine());
+                    })));
             }
 
             // Unique stack identifier for recursive constructors.
