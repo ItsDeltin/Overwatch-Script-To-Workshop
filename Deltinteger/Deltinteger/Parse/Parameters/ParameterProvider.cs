@@ -40,7 +40,8 @@ namespace Deltin.Deltinteger.Parse
         public ParameterInstance GetInstance(InstanceAnonymousTypeLinker instanceInfo) => new ParameterInstance(new CodeParameter(Name, Type.GetRealType(instanceInfo), DefaultValue) {
             Attributes = Attributes,
             Invoked = _invoked,
-            RestrictedCalls = _restrictedCalls
+            RestrictedCalls = _restrictedCalls,
+            DefaultValue = DefaultValue
         }, Var.GetInstance(null, instanceInfo));
 
         public void RestrictedCall(RestrictedCall restrictedCall)

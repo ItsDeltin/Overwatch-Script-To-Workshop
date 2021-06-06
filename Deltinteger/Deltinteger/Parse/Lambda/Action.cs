@@ -222,8 +222,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             ReturnHandler returnHandler = new ReturnHandler(
                 actionSet,
-                ReturnType.GetGettableAssigner(new AssigningAttributes("lambda", actionSet.IsGlobal, false))
-                          .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false }),
+                ReturnType?.GetGettableAssigner(new AssigningAttributes("lambda", actionSet.IsGlobal, false))
+                           .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false }),
                 MultiplePaths);
             actionSet = AssignContainedParameters(lambdaAssigner, actionSet, parameterValues).New(returnHandler);
 

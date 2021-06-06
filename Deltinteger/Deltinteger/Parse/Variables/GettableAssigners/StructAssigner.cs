@@ -180,6 +180,7 @@ namespace Deltin.Deltinteger.Parse
             return current;
         }
 
+        /// <summary>Flattens structs within an array of workshop values.</summary>
         public static IWorkshopTree[] ExtractAllValues(IEnumerable<IWorkshopTree> children)
         {
             var values = new List<IWorkshopTree>();
@@ -195,6 +196,8 @@ namespace Deltin.Deltinteger.Parse
             return values.ToArray();
         }
 
+        /// <summary>Steps into a struct to get the specified value. For example, the struct <code>{x: 1, y: { z: 2 }}</code>
+        /// with the path <code>"y", "z"</code> will return 2.</summary>
         public static IWorkshopTree GetValueWithPath(IStructValue structValue, IEnumerable<string> path)
         {
             IWorkshopTree current = structValue;
@@ -387,9 +390,12 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues();
     }
 
+    /// <summary>Arguments from bridging struct values.</summary>
     public struct BridgeArgs
     {
+        /// <summary>The bridge's workshop value to be modified by the receiver.</summary>
         public IWorkshopTree Value;
+        /// <summary>The path used to obtain the value.</summary>
         public IEnumerable<string> Path;
 
         public BridgeArgs(IWorkshopTree value, IEnumerable<string> path)
