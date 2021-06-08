@@ -11,21 +11,12 @@ namespace Deltin.Deltinteger.Parse
         MarkupBuilder Documentation { get; }
         Constructor[] Constructors { get; }
         SelfContainedClassInstance Instance { get;}
-        void Setup(ISetupSelfContainedClass setup);
-        void WorkshopInit(DeltinScript deltinScript);
+        void Setup(SetupSelfContainedClass setup);
         void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner);
         void New(ActionSet actionSet, NewClassInfo newClassInfo);
     }
 
-    public interface ISetupSelfContainedClass
-    {
-        CodeType WorkingInstance { get; }
-        Scope ObjectScope { get; }
-        Scope StaticScope { get; }
-        void AddObjectVariable(IVariableInstance variableInstance);
-    }
-
-    class SetupSelfContainedClass : ISetupSelfContainedClass
+    public class SetupSelfContainedClass
     {
         public CodeType WorkingInstance { get; }
         public Scope ObjectScope { get; }
@@ -47,27 +38,19 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class SelfContainedClassInstance : ClassType
+    public class SelfContainedClassInstance : ClassType, IGetMeta
     {
-        private readonly ISelfContainedClass _classInfo;
-        private bool _didWorkshopInit;
+        readonly ISelfContainedClass _classInfo;
 
-        public SelfContainedClassInstance(ISelfContainedClass classInfo) : base(classInfo.Name)
+        public SelfContainedClassInstance(DeltinScript deltinScript, ISelfContainedClass classInfo) : base(classInfo.Name)
         {
             _classInfo = classInfo;
+            deltinScript.StagedInitiation.On(this);
         }
 
-        public override void WorkshopInit(DeltinScript deltinScript)
+        public void GetMeta()
         {
-            if (_didWorkshopInit) return;
-            _didWorkshopInit = true;
-            base.WorkshopInit(deltinScript);
-            _classInfo.WorkshopInit(deltinScript);
-        }
-
-        public override void ResolveElements()
-        {
-            var setup = new SetupSelfContainedClass(this, ServeObjectScope, StaticScope);
+            var setup = new SetupSelfContainedClass(this, ObjectScope, StaticScope);
             _classInfo.Setup(setup);
             Variables = setup.ObjectVariables.ToArray();
         }

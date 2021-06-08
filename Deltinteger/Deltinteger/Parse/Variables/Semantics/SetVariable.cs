@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
             _variableResolve = new VariableResolve(new VariableResolveOptions() { ShouldBeSettable = true }, variableExpression, assignmentContext.VariableExpression.Range, parseInfo.Script.Diagnostics);
 
             // Get the value.
-            _value = parseInfo.GetExpression(scope, assignmentContext.Value);
+            _value = parseInfo.SetExpectType(_variableResolve.SetVariable?.Type()).GetExpression(scope, assignmentContext.Value);
 
             // Get the operation.
             Token assignmentToken = assignmentContext.AssignmentToken;

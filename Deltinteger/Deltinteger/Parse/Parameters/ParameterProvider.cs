@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
             DefaultValue = DefaultValue
         }, Var.GetInstance(null, instanceInfo));
 
-        public void RestrictedCall(RestrictedCall restrictedCall)
+        public void AddRestrictedCall(RestrictedCall restrictedCall)
         {
             if (!_restrictedCalls.Contains(restrictedCall.CallType))
                 _restrictedCalls.Add(restrictedCall.CallType);

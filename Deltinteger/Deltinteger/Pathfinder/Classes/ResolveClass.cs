@@ -18,13 +18,13 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private readonly ITypeSupplier _supplier;
 
-        public PathResolveClass(ITypeSupplier supplier)
+        public PathResolveClass(DeltinScript deltinScript)
         {
-            _supplier = supplier;
-            Instance = new SelfContainedClassInstance(this);
+            _supplier = deltinScript.Types;
+            Instance = new SelfContainedClassInstance(deltinScript, this);
         }
 
-        public void Setup(ISetupSelfContainedClass setup)
+        public void Setup(SetupSelfContainedClass setup)
         {
             var parentArray = new InternalVar("ParentArray");
             var pathmap = new InternalVar("OriginMap");

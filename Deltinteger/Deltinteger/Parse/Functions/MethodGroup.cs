@@ -65,10 +65,10 @@ namespace Deltin.Deltinteger.Parse
         public CodeType[] TypeArgs { get; }
         private readonly ParseInfo _parseInfo;
         private readonly DocRange _range;
-        private PortableLambdaType _type = new PortableLambdaType(LambdaKind.Anonymous);
+        private PortableLambdaType _type = new PortableLambdaType(new(LambdaKind.Anonymous));
         public IMethod ChosenFunction { get; private set; }
         private IMethodGroupInvoker _functionInvoker;
-        public CallInfo CallInfo => (ChosenFunction as IApplyBlock)?.CallInfo;
+        public CallInfo CallInfo => ChosenFunction.Attributes.CallInfo;
         public IRecursiveCallHandler RecursiveCallHandler => CallInfo?.Function;
         public bool ResolvedSource => ChosenFunction != null;
         public IBridgeInvocable[] InvokedState { get; private set; } // todo

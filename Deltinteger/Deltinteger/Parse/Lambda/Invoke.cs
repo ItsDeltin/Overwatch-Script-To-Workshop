@@ -37,10 +37,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return actionSet.DeltinScript.GetComponent<LambdaGroup>().Call(actionSet, methodCall, LambdaType.ReturnType);
         }
 
-        public void Call(ParseInfo parseInfo, DocRange callRange)
+        public object Call(ParseInfo parseInfo, DocRange callRange)
         {
-            if (LambdaType.LambdaKind != LambdaKind.Anonymous && LambdaType.LambdaKind != LambdaKind.Portable && parseInfo.SourceExpression != null)
-                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr =>
+            parseInfo.SourceExpression?.OnResolve(expr => CheckRecursionAndRestricted(parseInfo, callRange, expr));
+            return null;
+        }
+        
+        public void CheckRecursionAndRestricted(ParseInfo parseInfo, DocRange callRange, IExpression lambdaSource)
+        {
+            if (LambdaType.LambdaKind != LambdaKind.Anonymous && LambdaType.LambdaKind != LambdaKind.Portable)
+                ConstantExpressionResolver.Resolve(lambdaSource, expr =>
                 {
                     // Get the lambda that is being invoked.
                     if (expr is ILambdaApplier source)
@@ -63,8 +69,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
                     // This will only run if a way to resolve lambdas was not accounted for.
                     // Unresolved lambdas will not throw any errors if a restricted value is inside and the lambda is invoked.
                     // Unresolved lambdas also cannot check for recursion.
-                    else parseInfo.Script.Diagnostics.Warning("Source lambda not found, contact zez- I mean, deltin.", callRange);
-                }));
+                    else parseInfo.Script.Diagnostics.Warning("Source lambda not found", callRange);
+                });
         }
 
         /// <summary>Gets the restricted calls and recursion from a lambda invocation.</summary>
@@ -76,7 +82,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // Add restricted calls.
             foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
-                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                parseInfo.RestrictedCallHandler.AddRestrictedCall(new RestrictedCall(
                     call.CallType,
                     parseInfo.GetLocation(callRange),
                     RestrictedCall.Message_LambdaInvoke(source.GetLabel(parseInfo.TranslateInfo, LabelInfo.RecursionError), call.CallType)

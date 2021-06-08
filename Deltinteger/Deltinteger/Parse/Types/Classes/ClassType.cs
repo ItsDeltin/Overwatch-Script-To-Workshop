@@ -11,15 +11,14 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Used in static methods and returned when ReturningScope() is called. Contains all static members in the inheritance tree.</summary>
         public Scope StaticScope { get; set; }
         /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
-        public Scope ServeObjectScope { get; set; }
-        /// <summary></summary>
-        public Scope OperationalScope { get; set; }
+        public Scope ObjectScope { get; set; }
 
         public IVariableInstance[] Variables { get; protected set; }
 
         // The provider that created this ClassType.
         public IClassInitializer Provider { get; }
 
+        // The elements of the class.
         public ClassElements Elements { get; }
 
         public ClassType(string name, IClassInitializer provider) : base(name)
@@ -88,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
             combo.AddVariableInstancesToAssigner(Variables, reference, assigner);
         }
 
-        public override Scope GetObjectScope() => ServeObjectScope;
+        public override Scope GetObjectScope() => ObjectScope;
         public override Scope ReturningScope() => StaticScope;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -96,22 +95,22 @@ namespace Deltin.Deltinteger.Parse
             Kind = CompletionItemKind.Class
         };
 
-        public virtual void AddObjectBasedScope(IMethod function)
+        public void AddObjectBasedScope(IMethod function)
         {
             Elements.Add(function, true);
-            ServeObjectScope.CopyMethod(function);
+            ObjectScope.CopyMethod(function);
         }
-        public virtual void AddStaticBasedScope(IMethod function)
+        public void AddStaticBasedScope(IMethod function)
         {
             Elements.Add(function, false);
             StaticScope.CopyMethod(function);
         }
-        public virtual void AddObjectBasedScope(IVariableInstance variable)
+        public void AddObjectBasedScope(IVariableInstance variable)
         {
             Elements.Add(variable, true);
-            ServeObjectScope.CopyVariable(variable);
+            ObjectScope.CopyVariable(variable);
         }
-        public virtual void AddStaticBasedScope(IVariableInstance variable)
+        public void AddStaticBasedScope(IVariableInstance variable)
         {
             Elements.Add(variable, false);
             StaticScope.CopyVariable(variable);

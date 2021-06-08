@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
 
     public interface IScopeHandler : IScopeProvider, IScopeAppender {}
 
-    public class DefinedMethodProvider : IElementProvider, IMethodProvider, ITypeArgTrackee, IApplyBlock, IDeclarationKey
+    public class DefinedMethodProvider : IElementProvider, IMethodProvider, ITypeArgTrackee, IApplyBlock, IDeclarationKey, IGetContent
     {
         public string Name => Context.Identifier.GetText();
         public LanguageServer.Location DefinedAt => new LanguageServer.Location(_parseInfo.Script.Uri, Context.Identifier.GetRange(Context.Range));
@@ -70,6 +70,7 @@ namespace Deltin.Deltinteger.Parse
         public bool MultiplePaths { get; private set; }
         public IExpression SingleReturnValue { get; private set; }
         public IExpression MacroValue { get; private set; }
+        public ValueSolveSource ContentReady { get; } = new ValueSolveSource();
 
         ITypeArgTrackee IMethodExtensions.Tracker => this;
         int ITypeArgTrackee.GenericsCount => GenericTypes.Length;
@@ -78,14 +79,14 @@ namespace Deltin.Deltinteger.Parse
         private readonly ParseInfo _parseInfo;
         private readonly Scope _containingScope;
         private readonly Scope _methodScope;
-        private readonly List<IOnBlockApplied> _listeners = new List<IOnBlockApplied>();
-        private bool _wasApplied;
 
         private DefinedMethodProvider(ParseInfo parseInfo, IScopeProvider scopeProvider, FunctionContext context, IDefinedTypeInitializer containingType)
         {
             _parseInfo = parseInfo;
             Context = context;
             ContainingType = containingType;
+            CallInfo = new CallInfo(new RecursiveCallHandler(this, context.Subroutine), parseInfo.Script, ContentReady);
+
             DocRange nameRange = context.Identifier.Range;
 
             // Get the attributes.
@@ -139,16 +140,23 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
             parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(nameRange, true));
 
-            parseInfo.TranslateInfo.ApplyBlock(this);
+            parseInfo.TranslateInfo.GetComponent<RecursionCheckComponent>().AddCheck(CallInfo);
+            parseInfo.TranslateInfo.StagedInitiation.On(this);
+
             parseInfo.Script.Elements.AddMethodDeclaration(this);
         }
 
-        public void SetupParameters() {}
-        public void SetupBlock()
+        public void GetContent()
         {
             if (Context.Block != null)
             {
-                Block = new BlockAction(_parseInfo.SetReturnType(ReturnType).SetThisType(ContainingType?.WorkingInstance), _methodScope, Context.Block);
+                Block = new BlockAction(
+                    _parseInfo
+                        .SetReturnType(ReturnType)
+                        .SetThisType(ContainingType?.WorkingInstance)
+                        .SetCallInfo(CallInfo),
+                    _methodScope,
+                    Context.Block);
 
                 // Validate returns.
                 BlockTreeScan validation = new BlockTreeScan(_parseInfo, this);
@@ -173,19 +181,13 @@ namespace Deltin.Deltinteger.Parse
                     .SetReturnType(ReturnType)
                     .SetExpectType(ReturnType)
                     .SetThisType(ContainingType?.WorkingInstance)
+                    .SetCallInfo(CallInfo)
                     .GetExpression(_methodScope, Context.MacroValue);
                 
                 SemanticsHelper.ExpectValueType(_parseInfo, MacroValue, ReturnType, Context.MacroValue.Range);
             }
             
-            _wasApplied = true;
-            foreach (var listener in _listeners) listener.Applied();
-        }
-
-        public void OnBlockApply(IOnBlockApplied onBlockApplied)
-        {
-            if (_wasApplied) onBlockApplied.Applied();
-            else _listeners.Add(onBlockApplied);
+            ContentReady.Set();
         }
     
         public IMethod GetDefaultInstance(CodeType definedIn) => new DefinedMethodInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes), definedIn);
@@ -242,6 +244,8 @@ namespace Deltin.Deltinteger.Parse
                 ParameterVars[i] = parameterInstance.Variable;
                 Parameters[i] = parameterInstance.Parameter;
             }
+
+            Attributes.CallInfo = Provider.CallInfo;
         }
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
@@ -258,7 +262,12 @@ namespace Deltin.Deltinteger.Parse
 
         public object Call(ParseInfo parseInfo, DocRange callRange)
         {
+            // LSP
             parseInfo.Script.Elements.AddDeclarationCall(Provider, new DeclarationCall(callRange, false));
+            parseInfo.Script.AddDefinitionLink(callRange, Provider.DefinedAt);
+
+            // Add method to call tracker.
+            parseInfo.CurrentCallInfo.Call(Provider.CallInfo.Function, callRange);
             return null;
         }
     }

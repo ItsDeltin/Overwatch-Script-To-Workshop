@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     /// <summary>The base class for lambda CodeTypes.</summary>
     public abstract class BaseLambda : PortableLambdaType
     {
-        protected BaseLambda(string name, LambdaKind lambdaKind, CodeType[] argumentTypes) : base(name, lambdaKind, argumentTypes)
+        protected BaseLambda(string name, LambdaKind lambdaKind, CodeType[] argumentTypes) : base(new PortableLambdaTypeBuilder(lambdaKind, name, argumentTypes))
         {
             CanBeDeleted = false;
             CanBeExtended = false;

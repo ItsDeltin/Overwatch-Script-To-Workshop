@@ -6,7 +6,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedStructInitializer : StructInitializer, IDefinedTypeInitializer, IResolveElements, IDeclarationKey
+    public class DefinedStructInitializer : StructInitializer, IDefinedTypeInitializer, IDeclarationKey, IGetMeta
     {
         public CodeType WorkingInstance => throw new NotImplementedException();
         public Location DefinedAt { get; }
@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
             _context = typeContext;
             _scope = scope;
             DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
-            parseInfo.TranslateInfo.AddResolve(this);
+            parseInfo.TranslateInfo.StagedInitiation.On(this);
             OnReady = _onReady;
 
             // Get the type args.
@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public void ResolveElements()
+        public void GetMeta()
         {
             StaticScope = _scope.Child();
             ObjectScope = StaticScope.Child();

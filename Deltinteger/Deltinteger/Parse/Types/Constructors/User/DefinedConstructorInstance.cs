@@ -31,6 +31,9 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
                 ParameterVars[i] = parameterInstance.Variable;
                 Parameters[i] = parameterInstance.Parameter;
             }
+
+            CallInfo = Provider.CallInfo;
+            RestrictedValuesAreFatal = Provider.SubroutineName == null;
         }
 
         public override void Parse(ActionSet actionSet, WorkshopParameter[] parameters)

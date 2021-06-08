@@ -37,6 +37,9 @@ namespace Deltin.Deltinteger.Parse
             CompletionItemKind = kind;
         }
 
+        public virtual IWorkshopTree ToWorkshop(ActionSet actionSet) => actionSet.IndexAssigner.Get(Provider).GetVariable();
+
+        // todo
         // public void Call(ParseInfo parseInfo, DocRange callRange)
         // {
         //     if (DefinedAt != null) parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
@@ -54,5 +57,15 @@ namespace Deltin.Deltinteger.Parse
         public void AddDefaultInstance(IScopeAppender scopeAppender) => scopeAppender.Add(this, Static);
         public IGettableAssigner GetAssigner(ActionSet actionSet) => Assigner;
         public bool CanBeAmbiguous() => Ambiguous;
+    }
+
+    class InternalVarValue : InternalVar
+    {
+        readonly IWorkshopTree _value;
+
+        public InternalVarValue(string name, CodeType type, IWorkshopTree value, CompletionItemKind kind) : base(name, type, kind) =>
+            _value = value;
+        
+        public override IWorkshopTree ToWorkshop(ActionSet actionSet) => _value;
     }
 }

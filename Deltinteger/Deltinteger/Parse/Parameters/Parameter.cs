@@ -72,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
         }
         public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => expression.Parse(actionSet);
 
-        public void RestrictedCall(RestrictedCall restrictedCall)
+        public void AddRestrictedCall(RestrictedCall restrictedCall)
         {
             if (!RestrictedCalls.Contains(restrictedCall.CallType))
                 RestrictedCalls.Add(restrictedCall.CallType);

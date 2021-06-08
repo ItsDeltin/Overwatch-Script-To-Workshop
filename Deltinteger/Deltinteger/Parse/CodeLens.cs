@@ -84,7 +84,8 @@ namespace Deltin.Deltinteger.Parse
         public override bool ShouldUse()
         {
             // Only show the codelens if the method is overriden.
-            return Method.Attributes.Overriders.Length > 0;
+            // return Method.Attributes.Overriders.Length > 0;
+            return false;
         }
 
         // TODO

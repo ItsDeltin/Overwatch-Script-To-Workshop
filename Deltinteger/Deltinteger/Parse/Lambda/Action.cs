@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
-    public class LambdaAction : IExpression, IWorkshopTree, IApplyBlock, IVariableTracker, ILambdaApplier
+    public class LambdaAction : IExpression, IWorkshopTree, IVariableTracker, ILambdaApplier
     {
         readonly LambdaExpression _context;
         readonly Scope _lambdaScope;
@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         CodeType[] _argumentTypes;
         bool _resolved;
 
-        /// <summary>The type of the lambda. This can either be BlockLambda, ValueBlockLambda, or MacroLambda.</summary>
+        /// <summary>The type of the lambda.</summary>
         public PortableLambdaType LambdaType { get; private set; }
 
         /// <summary>The parameters of the lambda.</summary>
@@ -140,10 +140,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 }
             }
 
-            LambdaType = new PortableLambdaType(expectingType?.LambdaKind ?? LambdaKind.Anonymous, _argumentTypes, returnsValue, ReturnType, _isExplicit);
+            LambdaType = new PortableLambdaType(new PortableLambdaTypeBuilder(
+                kind: expectingType?.LambdaKind ?? LambdaKind.Anonymous,
+                parameters: _argumentTypes,
+                returnType: ReturnType,
+                returnsValue: returnsValue,
+                parameterTypesKnown: _isExplicit,
+                callContainer: CallInfo));
 
             // Add so the lambda can be recursive-checked.
-            _parseInfo.TranslateInfo.RecursionCheck(CallInfo);
+            _parseInfo.TranslateInfo.GetComponent<RecursionCheckComponent>().AddCheck(CallInfo);
 
             if (!LambdaType.IsConstant())
                 _parseInfo.Script.Elements.AddLambda(this);
@@ -261,13 +267,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 builder.Add(")");
             }
             builder.Add(" => ");
+            builder.Add(ReturnType.GetNameOrVoid());
 
             return builder;
         }
-
-        public void SetupParameters() { }
-        public void SetupBlock() { }
-        public void OnBlockApply(IOnBlockApplied onBlockApplied) => onBlockApplied.Applied();
 
         public void LocalVariableAccessed(IVariable variable)
         {

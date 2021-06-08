@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Elements
         {
             if (_restricted != null)
                 // If there is a restricted call type, add it.
-                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                parseInfo.RestrictedCallHandler.AddRestrictedCall(new RestrictedCall(
                     (RestrictedCallType)_restricted,
                     parseInfo.GetLocation(callRange),
                     RestrictedCall.Message_Element((RestrictedCallType)_restricted)

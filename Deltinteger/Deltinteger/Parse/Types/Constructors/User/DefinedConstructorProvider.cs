@@ -4,7 +4,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse.Types.Constructors
 {
-    public class DefinedConstructorProvider : IConstructorProvider<DefinedConstructorInstance>, IApplyBlock, IDeclarationKey
+    public class DefinedConstructorProvider : IConstructorProvider<DefinedConstructorInstance>, IApplyBlock, IDeclarationKey, IGetContent
     {
         public string Name => TypeProvider.Name;
         public string SubroutineName { get; }
@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         public ParameterProvider[] ParameterProviders { get; private set; }
         public CodeType[] ParameterTypes { get; private set; }
         public BlockAction Block { get; private set; }
+        public ValueSolveSource ContentReady { get; } = new ValueSolveSource();
 
         private readonly ParseInfo _parseInfo;
         private readonly Scope _scope;
@@ -28,8 +29,8 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             _context = context;
             TypeProvider = provider;
 
-            _recursiveCallHandler = new RecursiveCallHandler(this, "constructor");
-            CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
+            _recursiveCallHandler = new RecursiveCallHandler(this, context.SubroutineName);
+            CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script, ContentReady);
             SubroutineName = context.SubroutineName?.Text.RemoveQuotes();
             DefinedAt = parseInfo.Script.GetLocation(context.LocationToken.Range);
 
@@ -37,18 +38,17 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             ParameterProviders = ParameterProvider.GetParameterProviders(_parseInfo, _scope, _context.Parameters, SubroutineName != null);
             ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
             
-            parseInfo.TranslateInfo.ApplyBlock(this);
+            parseInfo.TranslateInfo.StagedInitiation.On(this);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Constructor, DefinedAt.range));
             parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(context.LocationToken.Range, true));
         }
 
-        public void SetupBlock()
+        public void GetContent()
         {
             Block = new BlockAction(_parseInfo.SetCallInfo(CallInfo).SetThisType(TypeProvider.WorkingInstance), _scope, _context.Block);
             _applyBlock.Apply();
+            ContentReady.Set();
         }
-
-        public void OnBlockApply(IOnBlockApplied onBlockApplied) => _applyBlock.OnBlockApply(onBlockApplied);
     
         public DefinedConstructorInstance GetInstance(CodeType typeInstance, InstanceAnonymousTypeLinker genericsLinker)
             => new DefinedConstructorInstance(typeInstance, this, genericsLinker, DefinedAt);

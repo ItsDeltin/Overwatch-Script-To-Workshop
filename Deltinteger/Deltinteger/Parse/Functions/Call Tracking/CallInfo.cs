@@ -6,36 +6,46 @@ using RuleEvent = Deltin.Deltinteger.Elements.RuleEvent;
 
 namespace Deltin.Deltinteger.Parse
 {
+    // Tracks calls executed in a script.
     public class CallInfo : IRestrictedCallHandler
     {
         public IRecursiveCallHandler Function { get; }
-        private ScriptFile Script { get; }
-        private Dictionary<IRecursiveCallHandler, List<DocRange>> Calls { get; } = new Dictionary<IRecursiveCallHandler, List<DocRange>>();
         public List<RestrictedCall> RestrictedCalls { get; } = new List<RestrictedCall>();
+        public IValueSolve OnCompleted { get; }
 
-        public CallInfo(IRecursiveCallHandler function, ScriptFile script)
+        readonly ScriptFile _script;
+        readonly Dictionary<IRecursiveCallHandler, List<DocRange>> _calls = new Dictionary<IRecursiveCallHandler, List<DocRange>>();
+
+        public IEnumerable<IRecursiveCallHandler> Calls => _calls.Select(c => c.Key);
+
+        public CallInfo(IRecursiveCallHandler function, ScriptFile script, IValueSolve onCompleted = null)
         {
             Function = function;
-            Script = script;
+            _script = script;
+            OnCompleted = onCompleted ?? new ValueSolveSource(true);
         }
 
         public CallInfo(ScriptFile script)
         {
-            Script = script;
+            _script = script;
         }
 
         public void Call(IRecursiveCallHandler callBlock, DocRange range)
         {
-            if (!Calls.ContainsKey(callBlock)) Calls.Add(callBlock, new List<DocRange>());
-            Calls[callBlock].Add(range);
+            // Add the call to the dictionary if it does not exist.
+            if (!_calls.ContainsKey(callBlock))
+                _calls.Add(callBlock, new List<DocRange>());
+            
+            // Add the call range.
+            _calls[callBlock].Add(range);
         }
 
         public void CheckRecursion(DeltinScript deltinScript)
         {
-            foreach (var call in Calls)
+            foreach (var call in _calls)
                 if (DoesTreeCall(Function, call.Key))
                     foreach (DocRange range in call.Value)
-                        Script.Diagnostics.Error($"Recursion is not allowed here, the {call.Key.TypeName} '{call.Key.GetLabel(deltinScript)}' calls '{Function.GetLabel(deltinScript)}'.", range);
+                        _script.Diagnostics.Error($"Recursion is not allowed here, the {call.Key.TypeName} '{call.Key.GetLabel(deltinScript)}' calls '{Function.GetLabel(deltinScript)}'.", range);
         }
 
         private bool DoesTreeCall(IRecursiveCallHandler function, IRecursiveCallHandler currentCheck, List<IRecursiveCallHandler> check = null)
@@ -49,13 +59,13 @@ namespace Deltin.Deltinteger.Parse
             if (check.Contains(currentCheck)) return false;
             check.Add(currentCheck);
 
-            foreach (var call in currentCheck.CallInfo.Calls)
+            foreach (var call in currentCheck.CallInfo._calls)
                 if (DoesTreeCall(function, call.Key, check))
                     return true;
             return false;
         }
 
-        public void RestrictedCall(RestrictedCall restrictedCall) => RestrictedCalls.Add(restrictedCall);
+        public void AddRestrictedCall(RestrictedCall restrictedCall) => RestrictedCalls.Add(restrictedCall);
 
         public void CheckRestrictedCalls(RuleEvent eventType)
         {
@@ -64,7 +74,7 @@ namespace Deltin.Deltinteger.Parse
                 // If the restricted call type's list of supported event types does not contain eventType...
                 if (!Deltin.Deltinteger.RestrictedCall.SupportedGroups[call.CallType].Contains(eventType))
                     // ...then add the syntax error.
-                    call.AddDiagnostic(Script.Diagnostics);
+                    call.AddDiagnostic(_script.Diagnostics);
         }
 
         public RestrictedCallType[] GetRestrictedCallTypes() => GetRestrictedCallTypes(RestrictedCalls);
@@ -75,42 +85,5 @@ namespace Deltin.Deltinteger.Parse
             foreach (RestrictedCall call in restrictedCalls) if (!callTypes.Contains(call.CallType)) callTypes.Add(call.CallType);
             return callTypes.ToArray();
         }
-    }
-
-    public interface IRecursiveCallHandler
-    {
-        CallInfo CallInfo { get; }
-        string TypeName { get; }
-        bool DoesRecursivelyCall(IRecursiveCallHandler calling);
-        bool CanBeRecursivelyCalled();
-        string GetLabel(DeltinScript deltinScript);
-    }
-
-    public class RecursiveCallHandler : IRecursiveCallHandler
-    {
-        private readonly IApplyBlock _applyBlock;
-        private readonly string _typeName;
-
-        public RecursiveCallHandler(IApplyBlock applyBlock, string typeName = "function")
-        {
-            _applyBlock = applyBlock;
-            _typeName = typeName;
-        }
-
-        public CallInfo CallInfo => _applyBlock.CallInfo;
-        public string TypeName => _typeName;
-        public bool DoesRecursivelyCall(IRecursiveCallHandler calling) => this == calling;
-        public bool CanBeRecursivelyCalled() => _applyBlock is IMethod function && function.Attributes.Recursive;
-        public string GetLabel(DeltinScript deltinScript) => _applyBlock.GetLabel(deltinScript, LabelInfo.RecursionError).ToString(false);
-    }
-
-    public interface IRestrictedCallHandler
-    {
-        void RestrictedCall(RestrictedCall restrictedCall);
-    }
-
-    public class RestrictedCallList : List<RestrictedCall>, IRestrictedCallHandler
-    {
-        public void RestrictedCall(RestrictedCall restrictedCall) => Add(restrictedCall);
     }
 }

@@ -39,14 +39,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override bool IsConstant() => _constant;
-        public override void WorkshopInit(DeltinScript translateInfo)
-        {
-            foreach (EnumValuePair pair in _valuePairs)
-            {
-                if (_constant) translateInfo.DefaultIndexAssigner.Add(pair, pair.Member);
-                else translateInfo.DefaultIndexAssigner.Add(pair, pair.Member.ToElement());
-            }
-        }
 
         public override Scope GetObjectScope() => _objectScope;
         public override Scope ReturningScope() => _staticScope;
@@ -66,7 +58,6 @@ namespace Deltin.Deltinteger.Parse
 
             parseInfo.Script.AddHover(callRange, hoverContents.ToString());
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
-            parseInfo.TranslateInfo.AddWorkshopInit(this);
         }
 
         public static ValueGroupType[] GetEnumTypes(ITypeSupplier supplier)
@@ -137,8 +128,16 @@ namespace Deltin.Deltinteger.Parse
         {
             Member = member;
             CodeType = type;
+            Attributes = new VariableInstanceAttributes() {
+                CanBeSet = false,
+                UseDefaultVariableAssigner = false,
+                CanBeIndexed = false,
+                StoreType = StoreType.None
+            };
             // todo: token type
             // TokenType = Deltin.Deltinteger.Parse.SemanticTokenType.EnumMember;
         }
+
+        public override IWorkshopTree ToWorkshop(ActionSet actionSet) => Member;
     }
 }

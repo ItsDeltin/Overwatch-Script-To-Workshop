@@ -61,13 +61,6 @@ namespace Deltin.Deltinteger
         MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo);
     }
 
-    public interface IApplyBlock : IBlockListener, ILabeled
-    {
-        void SetupParameters() {}
-        void SetupBlock();        
-        CallInfo CallInfo { get; }
-    }
-
     public interface IBlockListener
     {
         void OnBlockApply(IOnBlockApplied onBlockApplied);
@@ -76,11 +69,6 @@ namespace Deltin.Deltinteger
     public interface IOnBlockApplied
     {
         void Applied();
-    }
-
-    public interface IResolveElements
-    {
-        void ResolveElements();
     }
 
     public interface IWorkshopInit

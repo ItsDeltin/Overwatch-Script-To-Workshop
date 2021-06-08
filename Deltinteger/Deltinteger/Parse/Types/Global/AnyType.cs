@@ -3,7 +3,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class AnyType : CodeType, IResolveElements
+    public class AnyType : CodeType
     {
         private readonly DeltinScript _deltinScript;
 
@@ -14,9 +14,11 @@ namespace Deltin.Deltinteger.Parse
             CanBeDeleted = true;
             CanBeExtended = false;
             _deltinScript = deltinScript;
+
+            deltinScript.StagedInitiation.On(InitiationStage.Meta, ResolveElements);
         }
 
-        public override void ResolveElements()
+        void ResolveElements()
         {
             Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(_deltinScript.Types, TypeOperator.Equal, this),

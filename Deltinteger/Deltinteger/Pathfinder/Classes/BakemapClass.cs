@@ -13,24 +13,24 @@ namespace Deltin.Deltinteger.Pathfinder
         public ObjectVariable Pathmap { get; private set; }
         private readonly ITypeSupplier _types;
 
-        public BakemapClass(ITypeSupplier types) : base()
+        public BakemapClass(DeltinScript deltinScript) : base()
         {
-            _types = types;
-            Instance = new SelfContainedClassInstance(this);
+            _types = deltinScript.Types;
+            Instance = new SelfContainedClassInstance(deltinScript, this);
         }
 
-        void ISelfContainedClass.Setup(ISetupSelfContainedClass setup)
+        void ISelfContainedClass.Setup(SetupSelfContainedClass setup)
         {
             var nodeBake = new InternalVar("NodeBake");
             var pathmap = new InternalVar("Pathmap");
 
             setup.AddObjectVariable(nodeBake);
             setup.AddObjectVariable(pathmap);
+            setup.ObjectScope.AddNativeMethod(Pathfind);
 
             NodeBake = new ObjectVariable(Instance, nodeBake);
             Pathmap = new ObjectVariable(Instance, pathmap);
         }
-        void ISelfContainedClass.WorkshopInit(DeltinScript deltinScript) {}
         void ISelfContainedClass.AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
         void ISelfContainedClass.New(ActionSet actionSet, NewClassInfo newClassInfo) {}
         MarkupBuilder ISelfContainedClass.Documentation => throw new System.NotImplementedException();

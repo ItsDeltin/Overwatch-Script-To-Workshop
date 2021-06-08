@@ -8,19 +8,20 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class StringType : CodeType, IResolveElements
+    public class StringType : CodeType, IGetMeta
     {
         private readonly ITypeSupplier _typeSupplier;
         private readonly Scope _scope = new Scope();
         private readonly InternalVar _length = new InternalVar("Length", CompletionItemKind.Property);
 
-        public StringType(ITypeSupplier typeSupplier) : base("String")
+        public StringType(DeltinScript deltinScript, ITypeSupplier typeSupplier) : base("String")
         {
             _typeSupplier = typeSupplier;
             CanBeExtended = false;
+            deltinScript.StagedInitiation.On(this);
         }
 
-        public override void ResolveElements()
+        public void GetMeta()
         {
             Operations.AddTypeOperation(new ITypeOperation[] {
                 new StringAddOperation(_typeSupplier)

@@ -7,22 +7,22 @@ namespace Deltin.Deltinteger.Parse
 {
     public class VariableInstance : IVariableInstance
     {
-        public string Name => _var.Name;
+        public string Name => Var.Name;
         public CodeType CodeType { get; }
-        public bool WholeContext => _var.WholeContext;
-        public LanguageServer.Location DefinedAt => _var.DefinedAt;
-        public AccessLevel AccessLevel => _var.AccessLevel;
-        IVariable IVariableInstance.Provider => _var;
+        public bool WholeContext => Var.WholeContext;
+        public LanguageServer.Location DefinedAt => Var.DefinedAt;
+        public AccessLevel AccessLevel => Var.AccessLevel;
+        IVariable IVariableInstance.Provider => Var;
         public MarkupBuilder Documentation { get; set; }
         ICodeTypeSolver IScopeable.CodeType => CodeType;
         public IVariableInstanceAttributes Attributes { get; }
 
-        readonly Var _var;
+        public Var Var { get; }
         readonly CodeType _definedIn;
 
         public VariableInstance(Var var, InstanceAnonymousTypeLinker instanceInfo, CodeType definedIn)
         {
-            _var = var;
+            Var = var;
             CodeType = var.CodeType.GetRealType(instanceInfo);
             _definedIn = definedIn;
             Attributes = new VariableInstanceAttributes()
@@ -36,23 +36,23 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             IVariableInstance.Call(this, parseInfo, callRange);
-            parseInfo.Script.AddDefinitionLink(callRange, _var.DefinedAt);
+            parseInfo.Script.AddDefinitionLink(callRange, Var.DefinedAt);
         }
 
         public IGettableAssigner GetAssigner(ActionSet actionSet) => CodeType.GetRealType(actionSet?.ThisTypeLinker).GetGettableAssigner(new AssigningAttributes() {
-            Name = _var.Name,
-            Extended = _var.InExtendedCollection,
-            ID = _var.ID,
+            Name = Var.Name,
+            Extended = Var.InExtendedCollection,
+            ID = Var.ID,
             IsGlobal = actionSet?.IsGlobal ?? true,
-            StoreType = _var.StoreType,
-            VariableType = _var.VariableType,
-            DefaultValue = _var.InitialValue
+            StoreType = Var.StoreType,
+            VariableType = Var.VariableType,
+            DefaultValue = Var.InitialValue
         });
 
         public IWorkshopTree ToWorkshop(ActionSet actionSet)
         {
-            if (!_var.IsMacro)
-                return actionSet.IndexAssigner.Get(_var).GetVariable();
+            if (!Var.IsMacro)
+                return actionSet.IndexAssigner.Get(Var).GetVariable();
             else
                 return ToMacro(actionSet);
         }
@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
             readonly VariableInstance _variableInstance;
             public VariableInstanceOption(VariableInstance variableInstance) => _variableInstance = variableInstance;
             public ClassType ContainingType() => (ClassType)_variableInstance._definedIn;
-            public IWorkshopTree GetValue(ActionSet actionSet) => _variableInstance._var.InitialValue.Parse(actionSet);
+            public IWorkshopTree GetValue(ActionSet actionSet) => _variableInstance.Var.InitialValue.Parse(actionSet);
         }
     }
 }

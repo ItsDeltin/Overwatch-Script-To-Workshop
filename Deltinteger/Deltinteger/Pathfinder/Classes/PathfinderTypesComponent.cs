@@ -11,8 +11,8 @@ namespace Deltin.Deltinteger.Pathfinder
         public void Init(DeltinScript deltinScript)
         {
             Pathmap = new PathmapClass(deltinScript);
-            PathResolve = new PathResolveClass(deltinScript.Types);
-            Bakemap = new BakemapClass(deltinScript.Types);
+            PathResolve = new PathResolveClass(deltinScript);
+            Bakemap = new BakemapClass(deltinScript);
 
             deltinScript.Types.AddType(Pathmap.Instance);
             deltinScript.Types.AddType(PathResolve.Instance);

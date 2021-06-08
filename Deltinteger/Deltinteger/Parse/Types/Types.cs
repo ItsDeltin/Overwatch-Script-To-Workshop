@@ -9,7 +9,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class CodeType : IExpression, ICallable, IWorkshopInit, ICodeTypeSolver
+    public abstract class CodeType : IExpression, ICallable, ICodeTypeSolver
     {
         public string Name { get; }
         public CodeType[] Generics { get; protected set; } = new CodeType[0];
@@ -98,11 +98,6 @@ namespace Deltin.Deltinteger.Parse
             throw new NotImplementedException();
         }
 
-        public virtual void ResolveElements() {}
-
-        /// <summary>Assigns workshop elements so the class can function. Implementers should check if `wasCalled` is true.</summary>
-        public virtual void WorkshopInit(DeltinScript translateInfo) { }
-
         /// <summary>Adds the class objects to the index assigner.</summary>
         /// <param name="source">The source of the type.</param>
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
@@ -120,7 +115,6 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            parseInfo.TranslateInfo.AddWorkshopInit(this);
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
             
             var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name);

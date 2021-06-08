@@ -305,7 +305,9 @@ namespace Deltin.Deltinteger.Parse
         public void Setup(TreeContextParseInfo tcParseInfo)
         {
             _methodCall = new CallMethodAction(tcParseInfo.ParseInfo, tcParseInfo.Scope, _methodContext, tcParseInfo.UsedAsExpression, tcParseInfo.Getter);
-            tcParseInfo.Parent?.RetrievedScopeable(_methodCall.CallingMethod);
+
+            if (_methodCall.Result != null)
+                tcParseInfo.Parent?.RetrievedScopeable(_methodCall.Result.TargetScopeable);
         }
 
         public Scope GetScope() => _methodCall.ReturningScope();

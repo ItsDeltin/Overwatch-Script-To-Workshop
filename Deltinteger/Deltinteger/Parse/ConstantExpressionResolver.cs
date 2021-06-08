@@ -13,8 +13,11 @@ namespace Deltin.Deltinteger.Parse
                 // If the expression is a CallvariableAction, resolve the initial value.
                 if (start is CallVariableAction callVariableAction)
                 {
-                    if (callVariableAction.Calling is Var var)
-                        resolve = var.InitialValue;
+                    if (callVariableAction.Calling is VariableInstance var)
+                    {
+                        var.Var.ValueReady.OnReady(() => Resolve(var.Var.InitialValue, callback));
+                        return;
+                    }
                 }
 
                 // If the expression is a function with only one return statement, resolve the value being returned.
@@ -33,6 +36,7 @@ namespace Deltin.Deltinteger.Parse
                 else Resolve(resolve, callback);
             };
 
+            // TODO: remove IBlockListener
             if (start is IBlockListener blockListener)
                 blockListener.OnBlockApply(new OnBlockApplied(resolver));
             else

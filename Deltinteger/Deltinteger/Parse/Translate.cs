@@ -26,6 +26,7 @@ namespace Deltin.Deltinteger.Parse
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
+        public StagedInitiation StagedInitiation { get; } = new StagedInitiation();
         private readonly OutputLanguage Language;
         public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>();
@@ -125,6 +126,8 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
+            AddComponent<RecursionCheckComponent>();
+
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var enumContext in script.Context.Enums)
@@ -196,10 +199,7 @@ namespace Deltin.Deltinteger.Parse
                     }
             }
 
-            foreach (var resolve in _resolveElements) resolve.ResolveElements();
-            foreach (var apply in _applyBlocks) apply.SetupParameters();
-            foreach (var apply in _applyBlocks) apply.SetupBlock();
-            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion(this);
+            StagedInitiation.Start();
 
             // Get hooks
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -318,27 +318,6 @@ namespace Deltin.Deltinteger.Parse
             return isGlobal ? InitialGlobal : InitialPlayer;
         }
 
-        // Applyable blocks
-        private readonly List<IApplyBlock> _applyBlocks = new List<IApplyBlock>();
-        private readonly List<CallInfo> _recursionCheck = new List<CallInfo>();
-        public void ApplyBlock(IApplyBlock apply)
-        {
-            _applyBlocks.Add(apply);
-            if (apply.CallInfo != null) _recursionCheck.Add(apply.CallInfo);
-        }
-        public void RecursionCheck(CallInfo callInfo)
-        {
-            _recursionCheck.Add(callInfo ?? throw new ArgumentNullException(nameof(callInfo)));
-        }
-
-        // Element resolve
-        private readonly List<IResolveElements> _resolveElements = new List<IResolveElements>();
-        public void AddResolve(IResolveElements resolveElement)
-        {
-            if (!_resolveElements.Contains(resolveElement))
-                _resolveElements.Add(resolveElement);
-        }
-
         // Workshop init
         private readonly List<IWorkshopInit> _workshopInit = new List<IWorkshopInit>();
         public void AddWorkshopInit(IWorkshopInit workshopInit)
@@ -373,10 +352,10 @@ namespace Deltin.Deltinteger.Parse
         public ScriptTypes(DeltinScript deltinScript)
         {
             _deltinScript = deltinScript;
-            _playerType = new PlayerType(this);
-            _vectorType = new VectorType(this);
-            _numberType = new NumberType(this);
-            _stringType = new StringType(this);
+            _playerType = new PlayerType(deltinScript, this);
+            _vectorType = new VectorType(deltinScript, this);
+            _numberType = new NumberType(deltinScript, this);
+            _stringType = new StringType(deltinScript, this);
             _booleanType = new BooleanType(this);
         }
 
@@ -398,12 +377,6 @@ namespace Deltin.Deltinteger.Parse
             // Enums
             foreach (var type in ValueGroupType.GetEnumTypes(this))
                 AddType(type);
-
-            foreach (var type in AllTypes)
-                if (type is IResolveElements resolveElements)
-                    resolveElements.ResolveElements();
-                else if (type.GetInstance() is IResolveElements resolveDefaultInstance)
-                    resolveDefaultInstance.ResolveElements();
 
             _deltinScript.PlayerVariableScope = _playerType.PlayerVariableScope;
         }

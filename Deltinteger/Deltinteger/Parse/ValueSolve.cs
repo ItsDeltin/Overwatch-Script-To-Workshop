@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (IsSet) throw new Exception("ValueSolveSource already set.");
             IsSet = true;
-            if (_onValueObtained != null) _onValueObtained();
+            _onValueObtained?.Invoke();
             _onValueObtained = null;
         }
 
@@ -48,12 +48,20 @@ namespace Deltin.Deltinteger.Parse
         public T Value { get; private set; }
         private Action<T> _onValueObtained;
 
+        public ValueSolveSource() {}
+
+        public ValueSolveSource(T value)
+        {
+            Value = value;
+            IsSet = true;
+        }
+
         public void Set(T value)
         {
             if (IsSet) throw new Exception("ValueSolveSource already set.");
             IsSet = true;
             Value = value;
-            _onValueObtained(value);
+            _onValueObtained?.Invoke(value);
             _onValueObtained = null;
         }
 

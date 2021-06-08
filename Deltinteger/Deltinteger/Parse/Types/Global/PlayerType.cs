@@ -5,7 +5,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class PlayerType : CodeType, ITypeArrayHandler, IResolveElements
+    public class PlayerType : CodeType, ITypeArrayHandler, IGetMeta
     {
         // These functions are shared with both Player and Player[] types.
         // * Teleport *
@@ -58,17 +58,19 @@ namespace Deltin.Deltinteger.Parse
         };
 
         public Scope PlayerVariableScope { get; } = new Scope("player variables") { TagPlayerVariables = true };
-        private Scope _objectScope;
-        private readonly ITypeSupplier _supplier;
+        readonly ITypeSupplier _supplier;
+        Scope _objectScope;
 
-        public PlayerType(ITypeSupplier typeSupplier) : base("Player")
+        public PlayerType(DeltinScript deltinScript, ITypeSupplier typeSupplier) : base("Player")
         {
             CanBeExtended = false;
             ArrayHandler = this;
             _supplier = typeSupplier;
+
+            deltinScript.StagedInitiation.On(this);
         }
 
-        public override void ResolveElements()
+        public void GetMeta()
         {
             _objectScope = PlayerVariableScope.Child();
             AddSharedFunctionsToScope(_objectScope);

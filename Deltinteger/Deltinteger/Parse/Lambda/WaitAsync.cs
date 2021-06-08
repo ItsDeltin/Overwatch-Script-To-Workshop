@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 .ToString(),
             Parameters = new[] {
                 new CodeParameter("duration", "The duration to wait in seconds before the action gets execute.", types.Number()),
-                new CodeParameter("action", "The action that is executed when the wait completes.", new PortableLambdaType(LambdaKind.Portable))
+                new CodeParameter("action", "The action that is executed when the wait completes.", new PortableLambdaType(new(LambdaKind.Portable)))
             },
             Action = (actionSet, methodCall) => {
                 actionSet.DeltinScript.GetComponent<WaitAsyncComponent>().AddToQueue(actionSet, methodCall.Get(0), methodCall.Get(1));

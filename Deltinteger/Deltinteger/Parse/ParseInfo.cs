@@ -279,9 +279,17 @@ namespace Deltin.Deltinteger.Parse
             // If the source expression is null, Event Player is used by default.
             // Otherwise, confirm that the source expression is returning the player variable scope.
             if (Variable.Provider.VariableType == VariableType.Player)
-                _parseInfo.RestrictedCallHandler.RestrictedCall(
-                    new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(CallRange), RestrictedCall.Message_EventPlayerDefault(_name))
-                );
+            {
+                // No source expression, Event Player is used by default.
+                if (_parseInfo.SourceExpression == null)
+                    DefaultEventPlayerRestrictedCall();
+                else // There is a source expression.
+                    _parseInfo.SourceExpression.OnResolve(expr => {
+                    // An expression that is not targettable.
+                    if (expr is RootAction)
+                        DefaultEventPlayerRestrictedCall();
+                });
+            }
                 
             // If there is a local variable tracker and the variable requires capture.
             if (Variable.Provider.RequiresCapture)
@@ -289,5 +297,9 @@ namespace Deltin.Deltinteger.Parse
             
             VariableCall.Accept();
         }
+
+        void DefaultEventPlayerRestrictedCall() => _parseInfo.RestrictedCallHandler.AddRestrictedCall(
+            new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(CallRange), RestrictedCall.Message_EventPlayerDefault(_name))
+        );
     }
 }

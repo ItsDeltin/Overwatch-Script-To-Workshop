@@ -46,11 +46,11 @@ namespace Deltin.Deltinteger.Pathfinder
         public PathmapClass(DeltinScript deltinScript)
         {
             DeltinScript = deltinScript;
-            Instance = new SelfContainedClassInstance(this);
+            Instance = new SelfContainedClassInstance(deltinScript, this);
             _pathfinderTypes = deltinScript.GetComponent<PathfinderTypesComponent>();
         }
 
-        public void Setup(ISetupSelfContainedClass setup)
+        public void Setup(SetupSelfContainedClass setup)
         {
             _pathmapClassConstructor = new PathmapClassConstructor(setup.WorkingInstance, _supplier);
             _emptyConstructor = new Constructor(setup.WorkingInstance, null, AccessLevel.Public) {

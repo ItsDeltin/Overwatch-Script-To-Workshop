@@ -5,7 +5,7 @@ using Deltin.Deltinteger.Parse.Variables.Build;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Var : IVariable, IApplyBlock, IElementProvider, IDeclarationKey
+    public class Var : IVariable, IElementProvider, IDeclarationKey
     {
         private readonly ParseInfo _parseInfo;
 
@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
         /// If it is ApplyBlock, this will be set when SetupBlock runs.</summary>
         public IExpression InitialValue { get; private set; }
 
-        public CallInfo CallInfo => null;
+        public ValueSolveSource ValueReady { get; } = new ValueSolveSource();
 
         public Var(VarInfo varInfo)
         {
@@ -91,7 +91,7 @@ namespace Deltin.Deltinteger.Parse
             if (_initialValueResolve == InitialValueResolve.Instant)
                 GetInitialValue();
             else
-                _parseInfo.TranslateInfo.ApplyBlock(this);
+                _parseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.Content, GetInitialValue);
             
             _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, varInfo.CodeLensType, DefinedAt.range));
             _parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(varInfo.DefinedAt.range, true));
@@ -112,8 +112,15 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo = parseInfo.SetRestrictedCallHandler(restrictedCalls);
                 }
 
+                ParseInfo initialValueParseInfo = parseInfo.SetExpectType(CodeType);
+                if (parseInfo.CurrentCallInfo == null)
+                {
+                    CallInfo callInfo = new CallInfo(parseInfo.Script);
+                    initialValueParseInfo = initialValueParseInfo.SetCallInfo(callInfo);
+                }
+
                 // Parse the initial value.
-                InitialValue = parseInfo.SetExpectType(CodeType).GetExpression(_operationalScope, _initialValueContext);
+                InitialValue = initialValueParseInfo.GetExpression(_operationalScope, _initialValueContext);
 
                 // Get the inferred type.
                 if (_inferType)
@@ -139,6 +146,8 @@ namespace Deltin.Deltinteger.Parse
                             // ... then add the error.
                             call.AddDiagnostic(parseInfo.Script.Diagnostics);
             }
+
+            ValueReady.Set();
         }
 
         private void AddScriptData()
@@ -156,15 +165,6 @@ namespace Deltin.Deltinteger.Parse
             if (CodeType != null) typeName = CodeType.GetName();
             return new MarkupBuilder().StartCodeLine().Add(typeName + " " + Name).EndCodeLine().ToString(markdown);
         }
-
-        public void SetupParameters() { }
-
-        public void SetupBlock()
-        {
-            GetInitialValue();
-        }
-
-        public void OnBlockApply(IOnBlockApplied onBlockApplied) => throw new NotImplementedException();
 
         public override string ToString()
         {

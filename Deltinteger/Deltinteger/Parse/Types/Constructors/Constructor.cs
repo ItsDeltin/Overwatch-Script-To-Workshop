@@ -10,6 +10,8 @@ namespace Deltin.Deltinteger.Parse
         public LanguageServer.Location DefinedAt { get; }
         public CodeType Type { get; }
         public MarkupBuilder Documentation { get; set; }
+        public CallInfo CallInfo { get; protected set; }
+        public bool RestrictedValuesAreFatal { get; protected set; } = true;
 
         public Constructor(CodeType type, LanguageServer.Location definedAt, AccessLevel accessLevel)
         {

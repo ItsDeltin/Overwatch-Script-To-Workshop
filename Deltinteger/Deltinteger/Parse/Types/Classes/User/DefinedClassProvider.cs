@@ -8,7 +8,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedClassInitializer : ClassInitializer, IResolveElements, IDefinedTypeInitializer, IDeclarationKey
+    public class DefinedClassInitializer : ClassInitializer, IDefinedTypeInitializer, IDeclarationKey, IGetMeta
     {
         public Location DefinedAt { get; }
         public List<IElementProvider> DeclaredElements { get; } = new List<IElementProvider>();
@@ -30,8 +30,9 @@ namespace Deltin.Deltinteger.Parse
             _typeContext = typeContext;
             DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
             _scope = scope;
+            MetaGetter = this;
 
-            parseInfo.TranslateInfo.AddResolve(this);
+            parseInfo.TranslateInfo.StagedInitiation.On(this);
 
             // Get the generics.
             GenericTypes = AnonymousType.GetGenerics(parseInfo, _typeContext.Generics, this);
@@ -47,10 +48,8 @@ namespace Deltin.Deltinteger.Parse
 
         public override bool BuiltInTypeMatches(Type type) => false;
 
-        public override void ResolveElements()
+        public void GetMeta()
         {
-            if (_elementsResolved) return;
-
             // Setup scopes.
             _operationalStaticScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
             _operationalObjectScope = _parseInfo.TranslateInfo.RulesetScope.Child(Name);
@@ -82,12 +81,12 @@ namespace Deltin.Deltinteger.Parse
                     // {
                         // CanExtend will return false if 'inheriting' is not a ClassType so we can safely cast here.
                         Extends = (ClassType)inheriting;
-                        Extends.ResolveElements();
+
+                        if (Extends.Provider.MetaGetter != null)
+                            _parseInfo.TranslateInfo.StagedInitiation.Meta.Depend(Extends.Provider.MetaGetter);
                     // }
                 }
             }
-
-            base.ResolveElements();
 
             (Extends as ClassType)?.Elements.AddToScope(_operationalStaticScope, false);
             (Extends as ClassType)?.Elements.AddToScope(_operationalObjectScope, true);

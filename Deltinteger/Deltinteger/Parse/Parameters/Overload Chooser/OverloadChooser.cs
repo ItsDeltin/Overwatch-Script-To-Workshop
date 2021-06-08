@@ -548,7 +548,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                 if (OrderedParameters[i].Prefilled)
                     // Add the restricted call.
                     foreach (RestrictedCallType callType in Option.Parameters[i].RestrictedCalls)
-                        parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                        parseInfo.RestrictedCallHandler.AddRestrictedCall(new RestrictedCall(
                             callType,
                             parseInfo.GetLocation(callRange),
                             RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.GetLabel(parseInfo.TranslateInfo, LabelInfo.OverloadError), callType),

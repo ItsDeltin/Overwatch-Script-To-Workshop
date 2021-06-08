@@ -56,13 +56,13 @@ namespace Deltin.Deltinteger.Parse
                     // Track the generics used in the function.
                     parseInfo.Script.Elements.AddTypeArgCall(new TypeArgCall(callingMethod.MethodInfo.Tracker, overloadChooser.Match.TypeArgs));
 
-                // If the function's block needs to be applied, check optional restricted calls when 'Applied()' runs.
-                if (callingMethod is IApplyBlock applyBlock)
-                    applyBlock.OnBlockApply(result);
-                else // Otherwise, the optional restricted calls can be resolved right away.
+                if (callingMethod.Attributes.CallInfo != null)
                 {
-                    // Get optional parameter's restricted calls.
-                    overloadChooser.Match?.CheckOptionalsRestrictedCalls(parseInfo, invokeInfo.TargetRange);
+                    // Restricted calls.
+                    RestrictedCall.BridgeMethodCall(parseInfo, callingMethod.Attributes.CallInfo, invokeInfo.TargetRange, callingMethod.Name, overloadChooser.Match.Option.RestrictedValuesAreFatal);
+                    
+                    // Apply
+                    callingMethod.Attributes.CallInfo.OnCompleted.OnReady(result.Apply);
                 }
 
                 // Check if the function can be called in parallel.
@@ -116,7 +116,7 @@ namespace Deltin.Deltinteger.Parse
             overloadChooser.Apply(invokeInfo.Context.Parameters, false, null);
 
             var invoke = (LambdaInvoke)overloadChooser.Overload;
-            invoke?.Call(parseInfo, invokeInfo.TargetRange);
+            invoke?.CheckRecursionAndRestricted(parseInfo, invokeInfo.TargetRange, invokeInfo.Target);
 
             return new LambdaInvokeResult(parseInfo.TranslateInfo, invoke, overloadChooser.ParameterResults, invokeInfo.Target);
         }
@@ -153,6 +153,7 @@ namespace Deltin.Deltinteger.Parse
         IMethod Function { get; }
         OverloadParameterResult[] Parameters { get; }
         CodeType ReturnType { get; }
+        IScopeable TargetScopeable { get; }
         IWorkshopTree Parse(ActionSet actionSet);
         void SetComment(string comment);
 
@@ -175,11 +176,12 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class FunctionInvokeResult : IInvokeResult, IBlockListener, IOnBlockApplied
+    class FunctionInvokeResult : IInvokeResult
     {
         public IMethod Function { get; }
         public CodeType ReturnType { get; set; }
         public OverloadParameterResult[] Parameters { get; }
+        public IScopeable TargetScopeable => Function;
         private readonly object _additionalData;
         private readonly OverloadMatch _match;
         private readonly ParseInfo _parseInfo;
@@ -213,32 +215,13 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        public void OnBlockApply(IOnBlockApplied onBlockApplied)
-        {
-            // If the function being called is an IApplyBlock, bridge onBlockApply to it.
-            if (Function is IApplyBlock applyBlock)
-                applyBlock.OnBlockApply(onBlockApplied);
-            // Otherwise, instantly apply.
-            else
-                onBlockApplied.Applied();
-        }
-
-        public void Applied()
+        public void Apply()
         {
             if (_usedAsExpression && !Function.DoesReturnValue)
                 _parseInfo.Script.Diagnostics.Error("The chosen overload for " + Function.Name + " does not return a value.", _targetRange);
 
             // Get optional parameter's restricted calls.
             _match?.CheckOptionalsRestrictedCalls(_parseInfo, _targetRange);
-
-            // Check callinfo :)
-            foreach (RestrictedCallType type in ((IApplyBlock)Function).CallInfo.GetRestrictedCallTypes())
-                _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
-                    type,
-                    _parseInfo.GetLocation(_targetRange),
-                    RestrictedCall.Message_FunctionCallsRestricted(Function.Name, type),
-                    _match.Option.RestrictedValuesAreFatal
-                ));
         }
 
         public void SetComment(string comment) => _comment = comment;
@@ -250,6 +233,7 @@ namespace Deltin.Deltinteger.Parse
         IMethod IInvokeResult.Function => this.Function;
         public CodeType ReturnType { get; }
         public OverloadParameterResult[] Parameters { get; }
+        public IScopeable TargetScopeable { get; }
         private readonly IExpression _target;
         private string _comment;
 
@@ -259,6 +243,9 @@ namespace Deltin.Deltinteger.Parse
             ReturnType = function.CodeType?.GetCodeType(deltinScript);
             Parameters = parameterValues;
             _target = target;
+
+            if (target is CallVariableAction callVariable)
+                TargetScopeable = callVariable.Calling;
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) =>

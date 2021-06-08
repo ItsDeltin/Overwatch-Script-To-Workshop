@@ -52,15 +52,8 @@ namespace Deltin.Deltinteger.Parse
                 OverloadChooser.Match.CheckOptionalsRestrictedCalls(parseInfo, nameRange);
 
                 // Bridge other restricted values.
-                if (Constructor is IApplyBlock applyBlock)
-                    foreach (RestrictedCallType type in applyBlock.CallInfo.GetRestrictedCallTypes())
-                        parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
-                            type,
-                            parseInfo.GetLocation(nameRange),
-                            RestrictedCall.Message_FunctionCallsRestricted(context.Type.GenericToken.Text, type),
-                            true
-                            // todo Constructor.RestrictedValuesAreFatal
-                        ));
+                if (Constructor.CallInfo != null)
+                    RestrictedCall.BridgeMethodCall(parseInfo, Constructor.CallInfo, nameRange, context.Type.GenericToken.Text, Constructor.RestrictedValuesAreFatal);
             }
         }
 

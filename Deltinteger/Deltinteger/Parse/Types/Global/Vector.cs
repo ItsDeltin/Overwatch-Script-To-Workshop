@@ -4,7 +4,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class VectorType : CodeType, IResolveElements
+    public class VectorType : CodeType, IGetMeta
     {
         private Scope objectScope = new Scope("Vector");
         private Scope staticScope = new Scope("Vector");
@@ -21,15 +21,17 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly ITypeSupplier _typeSupplier;
 
-        public VectorType(ITypeSupplier supplier) : base("Vector")
+        public VectorType(DeltinScript deltinScript, ITypeSupplier supplier) : base("Vector")
         {
             CanBeDeleted = false;
             CanBeExtended = false;
             TokenType = SemanticTokenType.Struct;
             _typeSupplier = supplier;
+
+            deltinScript.StagedInitiation.On(this);
         }
 
-        public override void ResolveElements()
+        public void GetMeta()
         {
             X = CreateInternalVar("X", "The X component of the vector.", _typeSupplier.Number());
             Y = CreateInternalVar("Y", "The Y component of the vector.", _typeSupplier.Number());
@@ -37,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
             HorizontalAngle = CreateInternalVar("HorizontalAngle", "The horizontal angle of the vector.", _typeSupplier.Number());
             VerticalAngle = CreateInternalVar("VerticalAngle", "The vertical angle of the vector.", _typeSupplier.Number());
             Magnitude = CreateInternalVar("Magnitude", "The magnitude of the vector.", _typeSupplier.Number());
-            Zero = CreateInternalVar("Zero", "Equal to `Vector(0, 0, 0)`.", _typeSupplier.Vector(), true);
+            Zero = CreateInternalVar("Zero", "Equal to `Vector(0, 0, 0)`.", _typeSupplier.Vector(), Element.Vector(0, 0, 0), true);
 
             objectScope.AddNativeMethod(DistanceTo);
             objectScope.AddNativeMethod(CrossProduct);
@@ -86,9 +88,20 @@ namespace Deltin.Deltinteger.Parse
             return newInternalVar;
         }
 
-        public override void WorkshopInit(DeltinScript translateInfo)
+        private InternalVarValue CreateInternalVar(string name, string documentation, CodeType type, IWorkshopTree value, bool isStatic = false)
         {
-            translateInfo.DefaultIndexAssigner.Add(Zero, Element.Vector(0, 0, 0));
+            // Create the variable.
+            InternalVarValue newInternalVar = new InternalVarValue(name, type, value, CompletionItemKind.Property) {
+                // IsSettable = false, // Make the variable unsettable.
+                Documentation = documentation // Set the documentation.
+            };
+
+            // Add the variable to the object scope.
+            if (!isStatic) objectScope.AddNativeVariable(newInternalVar);
+            // Add the variable to the static scope.
+            else staticScope.AddNativeVariable(newInternalVar);
+
+            return newInternalVar;
         }
 
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)

@@ -24,9 +24,16 @@ namespace Deltin.Deltinteger.Parse
             initializer.OnReady.OnReady(() => {
                 Extends = initializer.Extends?.GetRealType(anonymousTypeLinker);
 
-                OperationalScope = new Scope(); // todooo
-                ServeObjectScope = new Scope();
-                StaticScope = new Scope();
+                if (Extends == null) // Not extending anything, create scopes.
+                {
+                    ObjectScope = new Scope();
+                    StaticScope = new Scope();
+                }
+                else // Make scopes based off of child.
+                {
+                    ObjectScope = ((ClassType)Extends).ObjectScope.Child();
+                    StaticScope = ((ClassType)Extends).StaticScope.Child();
+                }
 
                 // Add elements to scope.
                 var initializedVariables = new List<IVariableInstance>();
@@ -75,34 +82,6 @@ namespace Deltin.Deltinteger.Parse
             // Run the constructor.
             AddObjectVariablesToAssigner(actionSet.ToWorkshop, (Element)newClassInfo.ObjectReference.GetVariable(), actionSet.IndexAssigner);
             newClassInfo.Constructor.Parse(actionSet.New((Element)newClassInfo.ObjectReference.GetVariable()), newClassInfo.Parameters);
-        }
-
-        public override void AddObjectBasedScope(IMethod function)
-        {
-            base.AddObjectBasedScope(function);
-            OperationalScope.CopyMethod(function);
-            ServeObjectScope.CopyMethod(function);
-        }
-
-        public override void AddStaticBasedScope(IMethod function)
-        {
-            base.AddStaticBasedScope(function);
-            OperationalScope.CopyMethod(function);
-            StaticScope.CopyMethod(function);
-        }
-
-        public override void AddObjectBasedScope(IVariableInstance variable)
-        {
-            base.AddObjectBasedScope(variable);
-            OperationalScope.CopyVariable(variable);
-            ServeObjectScope.CopyVariable(variable);
-        }
-
-        public override void AddStaticBasedScope(IVariableInstance variable)
-        {
-            base.AddStaticBasedScope(variable);
-            OperationalScope.CopyVariable(variable);
-            StaticScope.CopyVariable(variable);
         }
 
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
