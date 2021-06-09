@@ -9,42 +9,74 @@ namespace Deltin.Deltinteger.Parse
     {
         string Name { get; }
         MarkupBuilder Documentation { get; }
-        Constructor[] Constructors { get; }
         SelfContainedClassInstance Instance { get;}
         void Setup(SetupSelfContainedClass setup);
-        void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner);
         void New(ActionSet actionSet, NewClassInfo newClassInfo);
     }
 
     public class SetupSelfContainedClass
     {
-        public CodeType WorkingInstance { get; }
+        public SelfContainedClassInstance WorkingInstance { get; }
         public Scope ObjectScope { get; }
         public Scope StaticScope { get; }
-        public IReadOnlyList<IVariableInstance> ObjectVariables => _objectVariables;
-        private readonly List<IVariableInstance> _objectVariables = new List<IVariableInstance>();
+        public IEnumerable<ObjectVariable> ObjectVariables => _objectVariables;
+        public IEnumerable<Constructor> Constructors => _constructors;
 
-        public void AddObjectVariable(IVariableInstance variableInstance)
-        {
-            _objectVariables.Add(variableInstance);
-            ObjectScope.AddNativeVariable(variableInstance);
-        }
+        readonly List<ObjectVariable> _objectVariables = new List<ObjectVariable>();
+        readonly List<Constructor> _constructors = new List<Constructor>(); 
 
-        public SetupSelfContainedClass(CodeType workingInstance, Scope objectScope, Scope staticScope)
+        public SetupSelfContainedClass(SelfContainedClassInstance workingInstance, Scope objectScope, Scope staticScope)
         {
             WorkingInstance = workingInstance;
             ObjectScope = objectScope;
             StaticScope = staticScope;
         }
+
+        /// <summary>Creates an ObjectVariable and adds it to the object scope.</summary>
+        public ObjectVariable AddObjectVariable(IVariableInstance variableInstance)
+        {
+            // Add the variable to the object scope.
+            ObjectScope.AddNativeVariable(variableInstance);
+
+            // Create the ObjectVariable.
+            var result = new ObjectVariable(WorkingInstance, variableInstance);
+
+            // Add it to the list.
+            _objectVariables.Add(result);
+            return result;
+        }
+
+        public void AddConstructor(Constructor constructor) => _constructors.Add(constructor);
+    }
+
+    public class SelfContainedClassProvider : ClassInitializer
+    {
+        public SelfContainedClassInstance Instance { get; }
+        readonly ISelfContainedClass _selfContainedClass;
+        readonly DeltinScript _deltinScript;
+
+        public SelfContainedClassProvider(DeltinScript deltinScript, ISelfContainedClass selfContainedClass) : base(selfContainedClass.Name)
+        {
+            _selfContainedClass = selfContainedClass;
+            _deltinScript = deltinScript;
+            GenericTypes = new AnonymousType[0];
+
+            Instance = new SelfContainedClassInstance(deltinScript, selfContainedClass, this);
+        }
+
+        public override CodeType GetInstance() => Instance;
+        public override CodeType GetInstance(GetInstanceInfo instanceInfo) => Instance;
     }
 
     public class SelfContainedClassInstance : ClassType, IGetMeta
     {
         readonly ISelfContainedClass _classInfo;
 
-        public SelfContainedClassInstance(DeltinScript deltinScript, ISelfContainedClass classInfo) : base(classInfo.Name)
+        public SelfContainedClassInstance(DeltinScript deltinScript, ISelfContainedClass classInfo, SelfContainedClassProvider provider) : base(classInfo.Name, provider)
         {
             _classInfo = classInfo;
+            ObjectScope = new Scope();
+            StaticScope = new Scope();
             deltinScript.StagedInitiation.On(this);
         }
 
@@ -52,13 +84,9 @@ namespace Deltin.Deltinteger.Parse
         {
             var setup = new SetupSelfContainedClass(this, ObjectScope, StaticScope);
             _classInfo.Setup(setup);
-            Variables = setup.ObjectVariables.ToArray();
-        }
 
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
-        {
-            base.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
-            _classInfo.AddObjectVariablesToAssigner(reference, assigner);
+            Variables = setup.ObjectVariables.Select(ov => ov.Variable).ToArray();
+            Constructors = setup.Constructors.ToArray();
         }
 
         protected override void New(ActionSet actionSet, NewClassInfo classInfo)

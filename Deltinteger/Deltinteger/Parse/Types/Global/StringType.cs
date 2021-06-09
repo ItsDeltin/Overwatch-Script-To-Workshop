@@ -10,9 +10,9 @@ namespace Deltin.Deltinteger.Parse
 {
     public class StringType : CodeType, IGetMeta
     {
-        private readonly ITypeSupplier _typeSupplier;
-        private readonly Scope _scope = new Scope();
-        private readonly InternalVar _length = new InternalVar("Length", CompletionItemKind.Property);
+        readonly ITypeSupplier _typeSupplier;
+        readonly Scope _scope = new Scope();
+        InternalVar _length;
 
         public StringType(DeltinScript deltinScript, ITypeSupplier typeSupplier) : base("String")
         {
@@ -23,11 +23,11 @@ namespace Deltin.Deltinteger.Parse
 
         public void GetMeta()
         {
+            _length = new InternalVar("Length", _typeSupplier.Number(), CompletionItemKind.Property);
+
             Operations.AddTypeOperation(new ITypeOperation[] {
                 new StringAddOperation(_typeSupplier)
             });
-
-            _length.CodeType = _typeSupplier.Number();
 
             _scope.AddNativeMethod(FormatFunction(_typeSupplier));
             _scope.AddNativeMethod(ContainsFunction(_typeSupplier));

@@ -7,7 +7,8 @@ namespace Deltin.Deltinteger.Pathfinder
     public class PathResolveClass : ISelfContainedClass
     {
         public string Name => "PathResolve";
-        public SelfContainedClassInstance Instance { get; }
+        public SelfContainedClassProvider Provider { get; }
+        public SelfContainedClassInstance Instance => Provider.Instance;
 
         /// <summary>An array of numbers where each value is that index's parent index. Following the path will lead to the source. Subtract value by -1 since 0 is used for unset.</summary>
         public ObjectVariable ParentArray { get; private set; }
@@ -16,34 +17,27 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <summary>A vector determining the destination.</summary>
         public ObjectVariable Destination { get; private set; }
 
-        private readonly ITypeSupplier _supplier;
+        readonly ITypeSupplier _supplier;
+        readonly PathfinderTypesComponent _pathfinderTypes;
 
         public PathResolveClass(DeltinScript deltinScript)
         {
             _supplier = deltinScript.Types;
-            Instance = new SelfContainedClassInstance(deltinScript, this);
+            _pathfinderTypes = deltinScript.GetComponent<PathfinderTypesComponent>();
+            Provider = new SelfContainedClassProvider(deltinScript, this);
         }
 
         public void Setup(SetupSelfContainedClass setup)
         {
-            var parentArray = new InternalVar("ParentArray");
-            var pathmap = new InternalVar("OriginMap");
-            var destination = new InternalVar("Destination");
-
-            setup.AddObjectVariable(parentArray);
-            setup.AddObjectVariable(pathmap);
-            setup.AddObjectVariable(destination);
-
-            ParentArray = new ObjectVariable(Instance, parentArray);
-            Pathmap = new ObjectVariable(Instance, pathmap);
-            Destination = new ObjectVariable(Instance, destination);
+            ParentArray = setup.AddObjectVariable(new InternalVar("ParentArray", _supplier.Any()));
+            Pathmap = setup.AddObjectVariable(new InternalVar("OriginMap", _pathfinderTypes.Pathmap.Instance));
+            Destination = setup.AddObjectVariable(new InternalVar("Destination", _supplier.Vector()));
 
             setup.ObjectScope.AddNativeMethod(PathfindFunction);
             setup.ObjectScope.AddNativeMethod(Next);
         }
 
         public void WorkshopInit(DeltinScript translateInfo) => throw new NotImplementedException();
-        public void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) => throw new NotImplementedException();
         public void New(ActionSet actionSet, NewClassInfo newClassInfo) => throw new NotImplementedException();
 
         private FuncMethod PathfindFunction => new FuncMethodBuilder() {

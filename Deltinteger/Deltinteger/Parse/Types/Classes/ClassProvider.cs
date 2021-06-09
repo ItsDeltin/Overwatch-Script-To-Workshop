@@ -24,9 +24,9 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
         }
 
-        public abstract bool BuiltInTypeMatches(Type type);
-        public virtual CodeType GetInstance() => new ClassType(Name);
-        public virtual CodeType GetInstance(GetInstanceInfo instanceInfo) => new ClassType(Name);
+        public bool BuiltInTypeMatches(Type type) => false;
+        public abstract CodeType GetInstance();
+        public abstract CodeType GetInstance(GetInstanceInfo instanceInfo);
 
         public CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,

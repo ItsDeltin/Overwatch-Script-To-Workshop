@@ -10,24 +10,20 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext { get; set; } = true;
         public LanguageServer.Location DefinedAt { get; set; }
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
-        public ICodeTypeSolver CodeType { get; set; }
         public MarkupBuilder Documentation { get; set; }
-        public IGettableAssigner Assigner { get; set; }
         public bool Ambiguous { get; set; } = true;
         public bool RequiresCapture => false;
         public IVariable Provider => this;
         public CompletionItemKind CompletionItemKind { get; set; } = CompletionItemKind.Property;
         public IVariableInstanceAttributes Attributes { get; set; } = new VariableInstanceAttributes();
+        public CodeType CodeType { get; set; }
+        
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
 
-        public InternalVar(string name)
+        public InternalVar(string name, CodeType type)
         {
             Name = name;
-        }
-
-        public InternalVar(string name, CompletionItemKind kind)
-        {
-            Name = name;
-            CompletionItemKind = kind;
+            CodeType = type;
         }
 
         public InternalVar(string name, CodeType type, CompletionItemKind kind)
@@ -55,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             return this;
         }
         public void AddDefaultInstance(IScopeAppender scopeAppender) => scopeAppender.Add(this, Static);
-        public IGettableAssigner GetAssigner(ActionSet actionSet) => Assigner;
+        public IGettableAssigner GetAssigner(ActionSet actionSet) => CodeType.GetGettableAssigner(new AssigningAttributes());
         public bool CanBeAmbiguous() => Ambiguous;
     }
 

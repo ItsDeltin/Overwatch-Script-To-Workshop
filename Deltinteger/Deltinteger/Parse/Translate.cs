@@ -287,9 +287,6 @@ namespace Deltin.Deltinteger.Parse
             VarCollection.ToWorkshop(result);
             result.AppendLine();
 
-            // Print class identifiers.
-            // Types.PrintClassIdentifiers(result);
-
             // Get the subroutines.
             SubroutineCollection.ToWorkshop(result);
 
@@ -332,8 +329,8 @@ namespace Deltin.Deltinteger.Parse
         void IScopeAppender.AddStaticBasedScope(IMethod function) => RulesetScope.CopyMethod(function);
         void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => RulesetScope.CopyVariable(variable);
         void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => RulesetScope.CopyVariable(variable);
-        IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverloadInfo) => throw new NotImplementedException();
-        IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => throw new NotImplementedException();
+        IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverloadInfo) => null;
+        IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => null;
     }
 
     public class ScriptTypes : ITypeSupplier
@@ -369,7 +366,6 @@ namespace Deltin.Deltinteger.Parse
             AddType(_numberType);
             AddType(_stringType);
             AddType(_booleanType);
-            AddType(Pathfinder.SegmentsStruct.Instance);
             // Constant lambda types.
             AddType(new Lambda.BlockLambda());
             AddType(new Lambda.ValueBlockLambda(_anyType));
@@ -377,6 +373,8 @@ namespace Deltin.Deltinteger.Parse
             // Enums
             foreach (var type in ValueGroupType.GetEnumTypes(this))
                 AddType(type);
+            
+            _deltinScript.GetComponent<Pathfinder.PathfinderTypesComponent>();
 
             _deltinScript.PlayerVariableScope = _playerType.PlayerVariableScope;
         }

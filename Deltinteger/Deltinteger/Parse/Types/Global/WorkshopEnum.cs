@@ -123,11 +123,12 @@ namespace Deltin.Deltinteger.Parse
     class EnumValuePair : InternalVar
     {
         public ElementEnumMember Member { get; }
+        readonly ValueGroupType _type;
 
-        public EnumValuePair(ElementEnumMember member, bool constant, CodeType type) : base(member.CodeName(), type, constant ? CompletionItemKind.Constant : CompletionItemKind.EnumMember)
+        public EnumValuePair(ElementEnumMember member, bool constant, ValueGroupType type) : base(member.CodeName(), type, constant ? CompletionItemKind.Constant : CompletionItemKind.EnumMember)
         {
             Member = member;
-            CodeType = type;
+            _type = type;
             Attributes = new VariableInstanceAttributes() {
                 CanBeSet = false,
                 UseDefaultVariableAssigner = false,
@@ -138,6 +139,6 @@ namespace Deltin.Deltinteger.Parse
             // TokenType = Deltin.Deltinteger.Parse.SemanticTokenType.EnumMember;
         }
 
-        public override IWorkshopTree ToWorkshop(ActionSet actionSet) => Member;
+        public override IWorkshopTree ToWorkshop(ActionSet actionSet) =>_type.IsConstant() ? Member : Member.ToElement();
     }
 }

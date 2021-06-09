@@ -1,5 +1,6 @@
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.Lambda;
+using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Elements;
 using static Deltin.Deltinteger.Elements.Element;
 
@@ -37,9 +38,12 @@ namespace Deltin.Deltinteger.Pathfinder
         public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines whether or not the current node was reached.
         public LambdaAction ApplicableNodeDeterminer { get; set; } // The function used to get the closest node to the player.
 
+        ToWorkshop _toWorkshop;
+
         public void Init(DeltinScript deltinScript)
         {
             DeltinScript = deltinScript;
+            _toWorkshop = deltinScript.WorkshopConverter;
 
             bool assignExtended = false;
 
@@ -162,7 +166,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // If so, go to the destination.
             Destination.GetVariable(player),
             // Otherwise, go to the current node.
-            PathmapInstance.Nodes.Get()[PathmapReference.Get(player)][node]
+            PathmapInstance.Nodes.Get(_toWorkshop, PathmapReference.Get(player))[node]
         );
 
         /// <summary>The position of the current player: `Position Of(Event Player)`</summary>
@@ -252,7 +256,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         /// <summary>Gets the next pathfinding attribute.</summary>
         Element GetCurrentSegmentAttribute(Element player) => Element.Map(Element.Filter(
-            PathmapInstance.Attributes.Get()[PathmapReference.Get(player)],
+            PathmapInstance.Attributes.Get(_toWorkshop, PathmapReference.Get(player)),
             Element.And(
                 Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, Current.Get(player)),
                 Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1)
@@ -260,7 +264,7 @@ namespace Deltin.Deltinteger.Pathfinder
         ), Element.ZOf(Element.ArrayElement()));
 
         Element GetNextSegmentAttribute(Element player) => Element.Map(Element.Filter(
-            PathmapInstance.Attributes.Get()[PathmapReference.Get(player)],
+            PathmapInstance.Attributes.Get(_toWorkshop, PathmapReference.Get(player)),
             Element.And(
                 Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1),
                 Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[ParentArray.Get(player)[Current.Get(player)] - 1] - 1)

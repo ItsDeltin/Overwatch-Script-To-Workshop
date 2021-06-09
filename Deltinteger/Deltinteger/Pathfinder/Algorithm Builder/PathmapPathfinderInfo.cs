@@ -74,9 +74,9 @@ namespace Deltin.Deltinteger.Pathfinder
         public abstract void Finished();
 
         public abstract Element LoopCondition { get; }
-        public Element NodeArray => _pathmapClass.Nodes.Get()[PathmapObject];
-        public Element SegmentArray => _pathmapClass.Segments.Get()[PathmapObject];
-        public Element AttributeArray => _pathmapClass.Attributes.Get()[PathmapObject];
+        public Element NodeArray => _pathmapClass.Nodes.Get(ActionSet.ToWorkshop, PathmapObject);
+        public Element SegmentArray => _pathmapClass.Segments.Get(ActionSet.ToWorkshop, PathmapObject);
+        public Element AttributeArray => _pathmapClass.Attributes.Get(ActionSet.ToWorkshop, PathmapObject);
 
         protected Element NodeFromPosition(Element position) => _nodeFromPosition.NodeFromPosition(position);
     }
@@ -195,10 +195,10 @@ namespace Deltin.Deltinteger.Pathfinder
             _classReference = _pathResolveClass.Instance.Create(ActionSet, ActionSet.Translate.DeltinScript.GetComponent<ClassData>());
 
             // Save the pathmap.
-            _pathResolveClass.Pathmap.Set(ActionSet, _classReference.Get(), (Element)ActionSet.CurrentObject);
+            _pathResolveClass.Pathmap.SetWithReference(ActionSet, _classReference.Get(), (Element)ActionSet.CurrentObject);
 
             // Save the destination.
-            _pathResolveClass.Destination.Set(ActionSet, _classReference.Get(), OriginalPosition);
+            _pathResolveClass.Destination.SetWithReference(ActionSet, _classReference.Get(), OriginalPosition);
 
             // Assign FinalNode
             if (_destination != null)
@@ -218,7 +218,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public override void Finished()
         {
             // Save parent arrays.
-            _pathResolveClass.ParentArray.Set(ActionSet, _classReference.Get(), Builder.ParentArray.Get());
+            _pathResolveClass.ParentArray.SetWithReference(ActionSet, _classReference.Get(), Builder.ParentArray.Get());
         }
     }
 

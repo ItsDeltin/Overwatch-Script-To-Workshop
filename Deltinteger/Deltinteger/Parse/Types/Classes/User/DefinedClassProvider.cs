@@ -46,8 +46,6 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public override bool BuiltInTypeMatches(Type type) => false;
-
         public void GetMeta()
         {
             // Setup scopes.

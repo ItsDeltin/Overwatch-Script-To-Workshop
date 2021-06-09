@@ -28,8 +28,6 @@ namespace Deltin.Deltinteger.Parse
             Kind = TypeKind.Class;
         }
 
-        public ClassType(string name) : base(name) {}
-
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());

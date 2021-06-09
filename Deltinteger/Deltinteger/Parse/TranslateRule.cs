@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             GetConditions(ruleAction);
 
             RuleReturnHandler returnHandler = new RuleReturnHandler(ActionSet);
-            ruleAction.Block.Translate(ActionSet.New(returnHandler));
+            ruleAction.Block.Translate(ActionSet.New(returnHandler).New(ActionSet.IndexAssigner.CreateContained()));
         }
         public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType, Team team, PlayerSelector player, bool disabled = false)
         {

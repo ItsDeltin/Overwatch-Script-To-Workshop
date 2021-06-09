@@ -159,8 +159,7 @@ namespace Deltin.Deltinteger.Parse
                             file.Update();
 
                             JObject jsonData = JObject.Parse(file.Content);
-                            InternalVar jsonVar = new InternalVar(variableName);
-                            jsonVar.CodeType = new JsonType(jsonData);
+                            InternalVar jsonVar = new InternalVar(variableName, new JsonType(jsonData));
 
                             if (((JsonType)jsonVar.CodeType).ContainsDeepArrays())
                                 script.Diagnostics.Error("JSON Arrays cannot include objects or arrays.", stringRange);

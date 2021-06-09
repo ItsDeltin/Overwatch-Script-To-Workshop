@@ -78,11 +78,10 @@ namespace Deltin.Deltinteger.Json
         public JsonProperty(JProperty property)
         {
             Name = property.Name;
-            Var = new InternalVar(property.Name);
+            Var = new InternalVar(property.Name, Value.Type);
             // Var.IsSettable = false;
             Value = IJsonValue.GetValue(property.Value);
             Var.Documentation = Value.Documentation;
-            Var.CodeType = Value.Type;
         }
     }
 

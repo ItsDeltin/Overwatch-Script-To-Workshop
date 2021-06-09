@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
             if (resolvedVariable.SetVariable?.Calling is HookVar hookVar)
             {
                  // Get the hook value.
-                IExpression valueExpression = parseInfo.SetExpectingLambda(hookVar.CodeType.GetCodeType(parseInfo.TranslateInfo)).GetExpression(scope, context.Value);
+                IExpression valueExpression = parseInfo.SetExpectType(hookVar.CodeType.GetCodeType(parseInfo.TranslateInfo)).GetExpression(scope, context.Value);
 
                 if (valueExpression == null) return;
 

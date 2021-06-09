@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <summary>The next node.</summary>
         protected Element Next => ResolveInfo.ParentArray.Get(Target)[Look.Get()] - 1;
         /// <summary>The current segment resolved from the current node and the next node.</summary>
-        protected Element CurrentSegment => Element.FirstOf(PathmapInstance.SegmentsFromNodes(ResolveInfo.PathmapReference.Get(Target), Look.Get(), Next));
+        protected Element CurrentSegment => Element.FirstOf(PathmapInstance.SegmentsFromNodes(ActionSet.ToWorkshop, ResolveInfo.PathmapReference.Get(Target), Look.Get(), Next));
         /// <summary>Determines if the node after the current node is not the last one.</summary>
         protected Element NextIsNotEnd => Element.Compare(
             Next,
@@ -105,7 +105,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the attributes where the first node is the current and the second node is the next.
             Element.Filter(
                 // Get the attribute array.
-                PathmapInstance.Attributes.Get()[ResolveInfo.PathmapReference.Get(Target)],
+                PathmapInstance.Attributes.Get(ActionSet.ToWorkshop, ResolveInfo.PathmapReference.Get(Target)),
                 // Filter.
                 Element.And(
                     // Compare the first node to current.

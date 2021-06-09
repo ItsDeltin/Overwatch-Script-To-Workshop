@@ -52,8 +52,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Create a new Bakemap class instance.
             var newBakemap = _bakemapClass.Instance.Create(ActionSet, ActionSet.Translate.DeltinScript.GetComponent<ClassData>());
-            _bakemapClass.Pathmap.Set(ActionSet, newBakemap.Get(), _pathmapObject);
-            _bakemapClass.NodeBake.Set(ActionSet, newBakemap.Get(), _bakemap.Get());
+            _bakemapClass.Pathmap.SetWithReference(ActionSet, newBakemap.Get(), _pathmapObject);
+            _bakemapClass.NodeBake.SetWithReference(ActionSet, newBakemap.Get(), _bakemap.Get());
             return newBakemap.Get();
         }
 
@@ -81,10 +81,10 @@ namespace Deltin.Deltinteger.Pathfinder
         void IPathfinderInfo.OnLoopEnd() {}
 
         Element IPathfinderInfo.InitialNode => _nodeLoop.Value;
-        public Element NodeArray => _pathmapClass.Nodes.Get()[_pathmapObject];
+        public Element NodeArray => _pathmapClass.Nodes.Get(ActionSet.ToWorkshop, _pathmapObject);
         Element NodeArrayLength => Element.CountOf(NodeArray);
-        Element IPathfinderInfo.SegmentArray => _pathmapClass.Segments.Get()[_pathmapObject];
-        Element IPathfinderInfo.AttributeArray => _pathmapClass.Attributes.Get()[_pathmapObject];
+        Element IPathfinderInfo.SegmentArray => _pathmapClass.Segments.Get(ActionSet.ToWorkshop, _pathmapObject);
+        Element IPathfinderInfo.AttributeArray => _pathmapClass.Attributes.Get(ActionSet.ToWorkshop, _pathmapObject);
         Element IPathfinderInfo.LoopCondition => _builder.AnyAccessableUnvisited();
         public Element EnabledAttributes { get; }
     }

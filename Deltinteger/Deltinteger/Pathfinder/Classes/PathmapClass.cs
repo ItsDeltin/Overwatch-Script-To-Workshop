@@ -21,18 +21,15 @@ namespace Deltin.Deltinteger.Pathfinder
             .Add("Pathmaps are imported from ").Code(".pathmap").Add(" files. These files are generated from an ingame editor. Run the ").Code("Copy Pathmap Editor Code").Add(" command by opening the command palette with ").Code("ctrl+shift+p")
             .Add(". Paste the rules into Overwatch and select the map the pathmap will be created for.")
             .ToString();
-        public Constructor[] Constructors { get; private set; }
-        public SelfContainedClassInstance Instance { get; }
+        public SelfContainedClassProvider Provider { get; }
+        public SelfContainedClassInstance Instance => Provider.Instance;
 
         private readonly PathfinderTypesComponent _pathfinderTypes;
         private DeltinScript DeltinScript { get; }
-        public IndexReference Nodes { get; private set; }
-        public IndexReference Segments { get; private set; }
-        public IndexReference Attributes { get; private set; }
+        public ObjectVariable Nodes { get; private set; }
+        public ObjectVariable Segments { get; private set; }
+        public ObjectVariable Attributes { get; private set; }
 
-        private InternalVar NodesVar;
-        private InternalVar SegmentsVar;
-        private InternalVar AttributesVar;
         private HookVar OnPathStartHook;
         private HookVar OnNodeReachedHook;
         private HookVar OnPathCompleted;
@@ -46,7 +43,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public PathmapClass(DeltinScript deltinScript)
         {
             DeltinScript = deltinScript;
-            Instance = new SelfContainedClassInstance(deltinScript, this);
+            Provider = new SelfContainedClassProvider(deltinScript, this);
             _pathfinderTypes = deltinScript.GetComponent<PathfinderTypesComponent>();
         }
 
@@ -56,7 +53,9 @@ namespace Deltin.Deltinteger.Pathfinder
             _emptyConstructor = new Constructor(setup.WorkingInstance, null, AccessLevel.Public) {
                 Documentation = "Creates an empty pathmap."
             };
-            Constructors = new Constructor[] { _pathmapClassConstructor, _emptyConstructor };
+            
+            setup.AddConstructor(_pathmapClassConstructor);
+            setup.AddConstructor(_emptyConstructor);
 
             setup.ObjectScope.AddNativeMethod(Pathfind);
             setup.ObjectScope.AddNativeMethod(PathfindAll);
@@ -78,12 +77,16 @@ namespace Deltin.Deltinteger.Pathfinder
             setup.ObjectScope.AddNativeMethod(DecompressBakemapData);
 
             setup.StaticScope.AddNativeMethod(StopPathfind);
+            setup.StaticScope.AddNativeMethod(SkipNode);
             setup.StaticScope.AddNativeMethod(CurrentSegmentAttribute);
+            setup.StaticScope.AddNativeMethod(NextSegmentAttribute);
             setup.StaticScope.AddNativeMethod(IsPathfinding);
             setup.StaticScope.AddNativeMethod(IsPathfindStuck);
             setup.StaticScope.AddNativeMethod(FixPathfind);
+            setup.StaticScope.AddNativeMethod(CurrentPosition);
             setup.StaticScope.AddNativeMethod(NextPosition);
             setup.StaticScope.AddNativeMethod(CurrentNode);
+            setup.StaticScope.AddNativeMethod(NextNode);
             setup.StaticScope.AddNativeMethod(ThrottleToNextNode);
             setup.StaticScope.AddNativeMethod(Recalibrate);
             setup.StaticScope.AddNativeMethod(IsPathfindingToNode);
@@ -137,43 +140,20 @@ namespace Deltin.Deltinteger.Pathfinder
             setup.StaticScope.AddNativeVariable(IsNodeReachedDeterminer);
             setup.StaticScope.AddNativeVariable(ApplicableNodeDeterminer);
 
-            NodesVar = new InternalVar("Nodes")
-            {
-                Documentation = "The nodes of the pathmap.",
-                CodeType = new ArrayType(DeltinScript.Types, _supplier.Vector())
-            };
-            SegmentsVar = new InternalVar("Segments")
-            {
-                Documentation = "The segments of the pathmap. These segments connect the nodes together.",
-                CodeType = new ArrayType(DeltinScript.Types, SegmentsStruct.Instance)
-            };
-            AttributesVar = new InternalVar("Attributes")
-            {
-                Documentation = "The attributes of the pathmap. The X of a value in the array is the first node that the attribute is related to. The Y is the second node the attribute is related to. The Z is the attribute's actual value.",
-                CodeType = new ArrayType(DeltinScript.Types, _supplier.Vector())
-            };
-            setup.ObjectScope.AddNativeVariable(NodesVar);
-            setup.ObjectScope.AddNativeVariable(SegmentsVar);
-            setup.ObjectScope.AddNativeVariable(AttributesVar);
+            Nodes = setup.AddObjectVariable(new InternalVar("Nodes", _supplier.VectorArray()) {
+                Documentation = "The nodes of the pathmap."
+            });
+            Segments = setup.AddObjectVariable(new InternalVar("Segments", _supplier.VectorArray()) {
+                Documentation = "The segments of the pathmap. These segments connect the nodes together."
+            });
+            Attributes = setup.AddObjectVariable(new InternalVar("Attributes", _supplier.VectorArray()) {
+                Documentation = "The attributes of the pathmap. The X of a value in the array is the first node that the attribute is related to. The Y is the second node the attribute is related to. The Z is the attribute's actual value."
+            });
         }
 
         private static MarkupBuilder AddHookInfo(MarkupBuilder markupBuilder) => markupBuilder.NewLine().Add("This is a hook variable, meaning it can only be set at the rule-level.");
 
         private static ResolveInfoComponent Comp(ActionSet actionSet) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
-
-        public void WorkshopInit(DeltinScript translateInfo)
-        {
-            Nodes = translateInfo.VarCollection.Assign("Nodes", true, false);
-            Segments = translateInfo.VarCollection.Assign("Segments", true, false);
-            Attributes = translateInfo.VarCollection.Assign("Attributes", true, false);
-        }
-
-        public void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
-        {
-            assigner.Add(NodesVar, Nodes.CreateChild((Element)reference));
-            assigner.Add(SegmentsVar, Segments.CreateChild((Element)reference));
-            assigner.Add(AttributesVar, Attributes.CreateChild((Element)reference));
-        }
 
         public void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
@@ -181,8 +161,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
             if (newClassInfo.Constructor == _emptyConstructor)
             {
-                actionSet.AddAction(Nodes.SetVariable(Element.EmptyArray(), index: index));
-                actionSet.AddAction(Segments.SetVariable(Element.EmptyArray(), index: index));
+                Nodes.SetWithReference(actionSet, index, Element.EmptyArray());
+                Segments.SetWithReference(actionSet, index, Element.EmptyArray());
                 return;
             }
 
@@ -201,13 +181,13 @@ namespace Deltin.Deltinteger.Pathfinder
             foreach (var segment in pathMap.Segments) actionSet.AddAction(segments.ModifyVariable(operation: Operation.AppendToArray, value: segment.AsWorkshopData()));
             foreach (var attribute in pathMap.Attributes) actionSet.AddAction(attributes.ModifyVariable(operation: Operation.AppendToArray, value: attribute.AsWorkshopData()));
 
-            actionSet.AddAction(Nodes.SetVariable((Element)nodes.GetVariable(), index: index));
-            actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
-            actionSet.AddAction(Attributes.SetVariable((Element)attributes.GetVariable(), index: index));
+            Nodes.SetWithReference(actionSet, index, nodes.GetVariable());
+            Segments.SetWithReference(actionSet, index, segments.GetVariable());
+            Attributes.SetWithReference(actionSet, index, attributes.GetVariable());
         }
 
-        public Element SegmentsFromNodes(IWorkshopTree pathmapObject, Element node1, Element node2) => Element.Filter(
-            Segments.Get()[(Element)pathmapObject],
+        public Element SegmentsFromNodes(ToWorkshop toWorkshop, IWorkshopTree pathmapObject, Element node1, Element node2) => Element.Filter(
+            Segments.Get(toWorkshop, pathmapObject),
             And(
                 Contains(
                     PathfindAlgorithmBuilder.BothNodes(ArrayElement()),
@@ -417,10 +397,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 // Some nodes may be null
                 if (actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes)
                 {
-                    Element index = FirstNullOrLength(actionSet, Nodes.Get()[(Element)actionSet.CurrentObject], "Add Node: Index");
+                    Element index = FirstNullOrLength(actionSet, Nodes.Get(actionSet), "Add Node: Index");
 
                     // Set the position.
-                    actionSet.AddAction(Nodes.SetVariable((Element)methodCall.ParameterValues[0], null, (Element)actionSet.CurrentObject, index));
+                    Nodes.Set(actionSet, methodCall.Get(0), index);
 
                     // Return the index of the added node.
                     return index;
@@ -428,10 +408,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 else // No nodes will be null.
                 {
                     // Append the position.
-                    actionSet.AddAction(Nodes.ModifyVariable(operation: Operation.AppendToArray, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
+                    Nodes.Modify(actionSet, Operation.AppendToArray, methodCall.Get(0));
 
                     // Return the index of the added node.
-                    return Element.CountOf(Nodes.Get()[(Element)actionSet.CurrentObject]) - 1;
+                    return CountOf(Nodes.Get(actionSet)) - 1;
                 }
             }
         };
@@ -450,11 +430,11 @@ namespace Deltin.Deltinteger.Pathfinder
                 return null;
             },
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Nodes.SetVariable(value: Element.Null(), index: new Element[] { (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0] }));
+                Nodes.Set(actionSet, Null(), methodCall.Get(0));
 
                 // Delete segments.
-                Element connectedSegments = ContainParameter(actionSet, "Delete Node: Segments", Element.Filter(
-                    Segments.Get()[(Element)actionSet.CurrentObject],
+                Element connectedSegments = ContainParameter(actionSet, "Delete Node: Segments", Filter(
+                    Segments.Get(actionSet),
                     Contains(
                         PathfindAlgorithmBuilder.BothNodes(ArrayElement()),
                         methodCall.ParameterValues[0]
@@ -462,7 +442,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 ));
 
                 ForeachBuilder loop = new ForeachBuilder(actionSet, connectedSegments);
-                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, value: loop.IndexValue, index: (Element)actionSet.CurrentObject));
+                Segments.Modify(actionSet, Operation.RemoveFromArrayByValue, loop.IndexValue);
                 loop.Finish();
 
                 return null;
@@ -480,13 +460,13 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             ReturnType = _supplier.Number(),
             Action = (actionSet, methodCall) => {                
-                Element segmentData = Element.Vector((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1], Element.Num(0));
+                Element segmentData = Vector(methodCall.Get(0), methodCall.Get(1), Num(0));
                 
                 // Append the vector.
-                actionSet.AddAction(Segments.ModifyVariable(operation: Operation.AppendToArray, value: segmentData, index: (Element)actionSet.CurrentObject));
+                Segments.Modify(actionSet, Operation.AppendToArray, segmentData);
 
                 // Return the index of the last added node.
-                return Element.CountOf(Segments.GetVariable()) - 1;
+                return CountOf(Segments.Get(actionSet)) - 1;
             }
         };
 
@@ -498,11 +478,11 @@ namespace Deltin.Deltinteger.Pathfinder
                 .Add(" counterpart. This can be run while any of the pathfinder functions are running. The change will not reflect for players currently pathfinding.")
                 .ToString(),
             Parameters = new CodeParameter[] {
-                new CodeParameter("segment", "The segment that will be deleted.", SegmentsStruct.Instance)
+                new CodeParameter("segment", "The segment that will be deleted.", _supplier.Vector())
             },
             Action = (actionSet, methodCall) =>
             {
-                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
+                Segments.Modify(actionSet, Operation.RemoveFromArrayByValue, methodCall.Get(0));
                 return null;
             }
         };
@@ -519,11 +499,11 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             ReturnType = _supplier.Number(),
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Attributes.ModifyVariable(Operation.AppendToArray, Element.Vector(
+                Attributes.Modify(actionSet, Operation.AppendToArray, Element.Vector(
                     methodCall.ParameterValues[0],
                     methodCall.ParameterValues[1],
                     methodCall.ParameterValues[2]
-                ), null, (Element)actionSet.CurrentObject));
+                ));
                 return null;
             }
         };
@@ -539,11 +519,11 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("attribute", "The attribute value that will be removed. Should be any number.", _supplier.Number())
             },
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Attributes.ModifyVariable(Operation.RemoveFromArrayByValue, Element.Vector(
+                Attributes.Modify(actionSet, Operation.RemoveFromArrayByValue, Element.Vector(
                     methodCall.ParameterValues[0],
                     methodCall.ParameterValues[1],
                     methodCall.ParameterValues[2]
-                ), null, (Element)actionSet.CurrentObject));
+                ));
                 return null;
             }
         };
@@ -559,17 +539,16 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             Action = (actionSet, methodCall) =>
             {
-                actionSet.AddAction(Attributes.ModifyVariable(
+                Attributes.Modify(
+                    actionSet,
                     Operation.RemoveFromArrayByValue,
-                    Element.Filter(
-                        Attributes.Get()[(Element)actionSet.CurrentObject],
-                        Element.And(
-                            Element.Compare(methodCall.ParameterValues[0], Operator.Equal, Element.XOf(Element.ArrayElement())),
-                            Element.Compare(methodCall.ParameterValues[1], Operator.Equal, Element.YOf(Element.ArrayElement()))
+                    Filter(
+                        Attributes.Get(actionSet),
+                        And(
+                            Compare(methodCall.Get(0), Operator.Equal, XOf(ArrayElement())),
+                            Compare(methodCall.Get(1), Operator.Equal, YOf(ArrayElement()))
                         )
-                    ),
-                    index: (Element)actionSet.CurrentObject)
-                );
+                    ));
                 return null;
             }
         };
@@ -586,17 +565,16 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             Action = (actionSet, methodCall) =>
             {
-                actionSet.AddAction(Attributes.ModifyVariable(
+                Attributes.Modify(
+                    actionSet,
                     Operation.RemoveFromArrayByValue,
-                    Element.Filter(
-                        Attributes.Get()[(Element)actionSet.CurrentObject],
-                        Element.Or(
-                            Element.Compare(methodCall.ParameterValues[0], Operator.Equal, Element.XOf(Element.ArrayElement())),
-                            Element.Compare(methodCall.ParameterValues[0], Operator.Equal, Element.YOf(Element.ArrayElement()))
+                    Filter(
+                        Attributes.Get(actionSet),
+                        Or(
+                            Compare(methodCall.Get(0), Operator.Equal, XOf(ArrayElement())),
+                            Compare(methodCall.Get(0), Operator.Equal, YOf(ArrayElement()))
                         )
-                    ),
-                    index: (Element)actionSet.CurrentObject)
-                );
+                    ));
                 return null;
             }
         };
@@ -610,8 +588,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("node_a", "The first node index.", _supplier.Number()),
                 new CodeParameter("node_b", "The second node index.", _supplier.Number())
             },
-            ReturnType = SegmentsStruct.Instance,
-            Action = (actionSet, methodCall) => SegmentsFromNodes(actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
+            ReturnType = _supplier.Vector(),
+            Action = (actionSet, methodCall) => SegmentsFromNodes(actionSet.ToWorkshop, actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
         };
 
         // Bake()
@@ -711,8 +689,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Create a new Bakemap class instance.
             var newBakemap = bakemapClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
-            _pathfinderTypes.Bakemap.Pathmap.Set(actionSet, newBakemap.Get(), (Element)actionSet.CurrentObject);
-            _pathfinderTypes.Bakemap.NodeBake.Set(actionSet, newBakemap.Get(), component.Result);
+            _pathfinderTypes.Bakemap.Pathmap.SetWithReference(actionSet, newBakemap.Get(), (Element)actionSet.CurrentObject);
+            _pathfinderTypes.Bakemap.NodeBake.SetWithReference(actionSet, newBakemap.Get(), component.Result);
             
             return newBakemap.Get();
         }
@@ -988,35 +966,5 @@ namespace Deltin.Deltinteger.Pathfinder
 
             return map;
         }
-    }
-
-    class SegmentsStruct : CodeType
-    {
-        public static readonly SegmentsStruct Instance = new SegmentsStruct();
-        private readonly InternalVar Node_A;
-        private readonly InternalVar Node_B;
-        private readonly Scope _scope = new Scope();
-
-        private SegmentsStruct() : base("PathmapSegment")
-        {
-            Node_A = new InternalVar("Node_A", CompletionItemKind.Property) { Documentation = "The primary node of this segment. This returns a number which is the index of the node in the pathmap." };
-            Node_B = new InternalVar("Node_B", CompletionItemKind.Property) { Documentation = "The secondary node of this segment. This returns a number which is the index of the node in the pathmap." };
-            _scope.AddNativeVariable(Node_A);
-            _scope.AddNativeVariable(Node_B);
-        }
-
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
-        {
-            assigner.Add(Node_A, PathfindAlgorithmBuilder.Node1((Element)reference));
-            assigner.Add(Node_B, PathfindAlgorithmBuilder.Node2((Element)reference));
-        }
-
-        public override Scope GetObjectScope() => _scope;
-        public override Scope ReturningScope() => null;
-        public override CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = "Segments",
-            Kind = CompletionItemKind.Struct
-        };
     }
 }

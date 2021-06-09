@@ -14,9 +14,9 @@ namespace Deltin.Deltinteger.Pathfinder
             PathResolve = new PathResolveClass(deltinScript);
             Bakemap = new BakemapClass(deltinScript);
 
-            deltinScript.Types.AddType(Pathmap.Instance);
-            deltinScript.Types.AddType(PathResolve.Instance);
-            deltinScript.Types.AddType(Bakemap.Instance);
+            deltinScript.Types.AddType(Pathmap.Provider);
+            deltinScript.Types.AddType(PathResolve.Provider);
+            deltinScript.Types.AddType(Bakemap.Provider);
         }
     }
 }

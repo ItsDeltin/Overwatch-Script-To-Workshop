@@ -74,10 +74,9 @@ namespace Deltin.Deltinteger.Parse
         private InternalVar CreateInternalVar(string name, string documentation, CodeType type, bool isStatic = false)
         {
             // Create the variable.
-            InternalVar newInternalVar = new InternalVar(name, CompletionItemKind.Property) {
+            InternalVar newInternalVar = new InternalVar(name, type, CompletionItemKind.Property) {
                 // IsSettable = false, // Make the variable unsettable.
-                Documentation = documentation, // Set the documentation.
-                CodeType = type // Set the type.
+                Documentation = documentation // Set the documentation.
             };
 
             // Add the variable to the object scope.
