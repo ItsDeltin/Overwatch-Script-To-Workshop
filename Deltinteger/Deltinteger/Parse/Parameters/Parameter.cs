@@ -82,7 +82,12 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(DeltinScript deltinScript, AnonymousLabelInfo labelInfo)
         {
-            string result = labelInfo.NameFromSolver(deltinScript, _type) + " " + Name;
+            string result = string.Empty;
+
+            if (Attributes.Ref) result = "ref ";
+            else if (Attributes.In) result = "in ";
+            
+            result += labelInfo.NameFromSolver(deltinScript, _type) + " " + Name;
             if (DefaultValue != null) result = "[" + result + "]";
             return result;
         }
@@ -131,10 +136,12 @@ namespace Deltin.Deltinteger.Parse
     public struct ParameterAttributes
     {
         public bool Ref { get; }
+        public bool In { get; }
 
-        public ParameterAttributes(bool isRef)
+        public ParameterAttributes(bool isRef, bool in_)
         {
             Ref = isRef;
+            In = in_;
         }
     }
 

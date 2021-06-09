@@ -73,7 +73,7 @@ namespace Deltin.Deltinteger.Parse
 
                 parameter.Var = newVar;
                 parameter.Type = newVar.CodeType;
-                parameter.Attributes = new ParameterAttributes(newVar.Ref);
+                parameter.Attributes = new ParameterAttributes(newVar.Ref, newVar.VariableType == VariableType.ElementReference);
 
                 if (newVar.InitialValue != null) parameter.DefaultValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
 
@@ -85,7 +85,12 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(DeltinScript deltinScript, AnonymousLabelInfo labelInfo)
         {
-            string result = Type.GetName() + " " + Name;
+            string result = string.Empty;
+            
+            if (Attributes.Ref) result = "ref ";
+            else if (Attributes.In) result = "in ";
+
+            result += Type.GetName() + " " + Name;
             if (DefaultValue != null) result = "[" + result + "]";
             return result;
         }

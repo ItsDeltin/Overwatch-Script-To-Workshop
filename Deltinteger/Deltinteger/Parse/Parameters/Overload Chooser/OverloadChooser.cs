@@ -51,12 +51,12 @@ namespace Deltin.Deltinteger.Parse.Overload
             _generics = generics;
             PickyParameter[] inputParameters = ParametersFromContext(context);
 
+            // Do nothing else if the number of overloads is 0.
+            if (_overloads.Length == 0) return;
+
             // Match overloads.
             _matches = new OverloadMatch[_overloads.Length];
             for (int i = 0; i < _matches.Length; i++) _matches[i] = MatchOverload(_overloads[i], inputParameters, context);
-
-            // Do nothing else if the number of matches is 0.
-            if (_matches.Length == 0) return;
 
             // Choose the best option.
             Match = BestOption();
@@ -136,6 +136,8 @@ namespace Deltin.Deltinteger.Parse.Overload
                 // Out of range
                 if (i >= option.Parameters.Length)
                 {
+                    if (i == option.Parameters.Length)
+                        match.Error(string.Format(_errorMessages.BadParameterCount, inputParameters.Length), _targetRange);
                     continue;
                 }
                 // Non-picky
@@ -186,7 +188,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             match.UpdateAllParameters();
 
             // Make sure every type arg was accounted for.
-            if (!_genericsProvided && option.TypeArgCount != match.TypeArgLinker.Links.Count)
+            if (!_genericsProvided && !match.TypeArgLinkerCompleted)
                 match.InferSuccessful = false;
 
             // Get the missing parameters.
@@ -275,8 +277,9 @@ namespace Deltin.Deltinteger.Parse.Overload
                 }
                 
                 // Update the inference status. Will be true if ExtractInferredGenerics returned true with every iteration.
-                bestOption.InferSuccessful = secondPass;
+                secondPass = secondPass && bestOption.TypeArgLinkerCompleted;
 
+                bestOption.InferSuccessful = secondPass;
                 bestOption.UpdateAllParameters();
 
                 // Clear the match's TypeArgLinker.
@@ -452,27 +455,30 @@ namespace Deltin.Deltinteger.Parse.Overload
             IExpression value = OrderedParameters[parameter]?.Value;
             if (value == null) return;
 
+            CodeType valueType = value.Type();
+            if (valueType == null) return;
+
             DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
 
             // Lambda arg count mismatch.
             if (parameterType is PortableLambdaType portableParameterType && // Parameter type is a lambda.
-                value.Type() is UnknownLambdaType unknownLambdaType && // Value type is a lambda.
+                valueType is UnknownLambdaType unknownLambdaType && // Value type is a lambda.
                 unknownLambdaType.ArgumentCount != portableParameterType.Parameters.Length) // The value lambda's parameter length does not match.
                 // Add the error.
                 _parameterErrors[parameter] = new($"Lambda does not take {unknownLambdaType.ArgumentCount} arguments", errorRange);
             
             // Do not add other errors if the value's type is an UnknownLambdaType.
-            else if (value.Type() is UnknownLambdaType == false)
+            else if (valueType is UnknownLambdaType == false)
             {
                 // The parameter type does not match.
-                if (parameterType.CodeTypeParameterInvalid(value.Type()))
-                    _parameterErrors[parameter] = new(string.Format("Cannot convert type '{0}' to '{1}'", value.Type().GetName(), parameterType.GetName()), errorRange);
+                if (parameterType.CodeTypeParameterInvalid(valueType))
+                    _parameterErrors[parameter] = new(string.Format("Cannot convert type '{0}' to '{1}'", valueType.GetName(), parameterType.GetName()), errorRange);
                 
-                // Constant used in bad place.
-                else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
-                    _parameterErrors[parameter] = new($"The type '{value.Type().Name}' cannot be used here", errorRange);
+                // fixme Constant used in bad place.
+                else if (valueType != null && parameterType == null && valueType.IsConstant())
+                    _parameterErrors[parameter] = new($"The type '{valueType.Name}' cannot be used here", errorRange);
                 
-                // Invalid ref
+                // Ref parameter
                 else if (Option.Parameters[parameter].Attributes.Ref)
                 {
                     // Resolve the variable.
