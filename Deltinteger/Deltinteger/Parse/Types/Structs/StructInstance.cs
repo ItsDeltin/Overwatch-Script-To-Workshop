@@ -21,6 +21,7 @@ namespace Deltin.Deltinteger.Parse
             Generics = genericsLinker.SafeTypeArgsFromAnonymousTypes(provider.GenericTypes);
             Attributes = new TypeAttributes(true, Generics.Any(g => g.Attributes.ContainsGenerics));
             _provider = provider;
+            Operations.AddAssignmentOperator();
 
             provider.OnReady.OnReady(() => {
                 // Variables
