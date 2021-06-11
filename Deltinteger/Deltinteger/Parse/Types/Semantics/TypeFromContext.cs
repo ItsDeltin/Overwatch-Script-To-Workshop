@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
                 returnsValue = true;
             }
             
-            return new PortableLambdaType(new(LambdaKind.Portable, parameters: parameters, returnType: returnType, returnsValue: returnsValue ));
+            return new PortableLambdaType(new(LambdaKind.Portable, parameters: parameters, returnType: returnType, parameterTypesKnown: true, returnsValue: returnsValue ));
         }
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, GroupType type)
