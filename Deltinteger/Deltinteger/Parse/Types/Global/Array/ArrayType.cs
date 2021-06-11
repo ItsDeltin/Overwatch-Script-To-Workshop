@@ -268,10 +268,12 @@ namespace Deltin.Deltinteger.Parse
 
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
         {
-            if (ArrayOfType is AnonymousType anonymousType && instanceInfo.Links.ContainsKey(anonymousType))
-                return new ArrayType(_supplier, instanceInfo.Links[anonymousType]);
-            else
+            // Do nothing if the ArrayOfType does not contain generics.
+            if (!ArrayOfType.Attributes.ContainsGenerics)
                 return this;
+            
+            // Otherwise, create a new ArrayType with the array type converted.
+            return new ArrayType(_supplier, ArrayOfType.GetRealType(instanceInfo));
         }
     }
 
