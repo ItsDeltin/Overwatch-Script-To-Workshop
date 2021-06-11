@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ))));
 
             // Activate item lambda.
-            DeltinScript.GetComponent<LambdaGroup>().Call(rule.ActionSet.New(Element.LastOf(_waitAsyncQueue.Get()[item.Get()])), new Functions.Builder.CallInfo(), null);
+            DeltinScript.WorkshopConverter.LambdaBuilder.Call(rule.ActionSet.New(Element.LastOf(_waitAsyncQueue.Get()[item.Get()])), new Functions.Builder.CallInfo(), null);
 
             // Remove from queue.
             rule.ActionSet.AddAction(_waitAsyncQueue.ModifyVariable(Operation.RemoveFromArrayByIndex, item.Get()));

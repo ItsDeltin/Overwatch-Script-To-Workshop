@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 {
     public interface IVariableTracker
     {
-        void LocalVariableAccessed(IVariable variable);
+        void LocalVariableAccessed(IVariableInstance variable);
     }
 
     public interface ILambdaApplier : ILabeled

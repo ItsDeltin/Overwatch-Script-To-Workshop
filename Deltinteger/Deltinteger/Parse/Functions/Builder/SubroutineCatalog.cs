@@ -34,6 +34,12 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             Item = builder.Initiate();
             CompleteSetup = builder.Complete;
         }
+
+        public SetupSubroutine(SubroutineCatalogItem item, Action completeSetup)
+        {
+            Item = item;
+            CompleteSetup = completeSetup;
+        }
     }
 
     public class SubroutineCatalogItem

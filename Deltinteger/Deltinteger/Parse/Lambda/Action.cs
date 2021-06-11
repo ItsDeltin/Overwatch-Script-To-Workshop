@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public IExpression Expression { get; private set; }
 
         /// <summary>The captured local variables.</summary>
-        public List<IVariable> CapturedVariables { get; } = new List<IVariable>();
+        public List<IVariableInstance> CapturedVariables { get; } = new List<IVariableInstance>();
 
         ///<summary> The parent type that the lambda is defined in.</summary>
         public CodeType This { get; }
@@ -100,7 +100,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 _argumentTypes[i] = Parameters[i].GetDefaultInstance(null).CodeType.GetCodeType(_parseInfo.TranslateInfo);
             }
 
-            ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).AddVariableTracker(this).SetExpectingLambda(expectingType?.ReturnType);
+            ParseInfo parser = _parseInfo.SetCallInfo(CallInfo).AddVariableTracker(this).SetExpectType(expectingType?.ReturnType).SetReturnType(expectingType?.ReturnType);
 
             bool returnsValue = false;
 
@@ -136,7 +136,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 {
                     Expression = expr;
                     ReturnType = expr.Type();
-                    returnsValue = true;
+                    if (ReturnType != null) returnsValue = true;
                 }
             }
 
@@ -161,21 +161,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             if (LambdaType.IsConstant())
                 return new LambdaActionWorkshopInstance(actionSet, this);
 
-            // Otherwise, return an array containing data of the lambda.
-            var lambdaMeta = new List<IWorkshopTree>();
-
-            // The first element is the lambda's identifier.
-            lambdaMeta.Add(Element.Num(actionSet.ToWorkshop.PortableAssigner.FunctionFromKey(this).Identifier));
-
-            // The second element is the 'this' if applicable.
-            lambdaMeta.Add(actionSet.This ?? Element.Null());
-
-            // Every proceeding element is a captured local variable.
-            foreach (var capture in CapturedVariables)
-                lambdaMeta.Add(actionSet.IndexAssigner[capture].GetVariable());
-
-            // Return the array.
-            return Element.CreateArray(lambdaMeta.ToArray());
+            // Encode the lambda.
+            return Workshop.CaptureEncoder.Encode(actionSet, this);
         }
         public Scope ReturningScope() => LambdaType.GetObjectScope();
         public CodeType Type() => _resolved ? (CodeType)LambdaType : new UnknownLambdaType(_context.Parameters.Count);
@@ -246,7 +233,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         /// <summary>Outputs a portable lambda.</summary>
         private IWorkshopTree OutputPortable(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            var controller = actionSet.DeltinScript.GetComponent<LambdaGroup>();
+            var controller = actionSet.ToWorkshop.LambdaBuilder;
             return WorkshopFunctionBuilder.Call(actionSet, new Functions.Builder.CallInfo(parameterValues), controller);
         }
 
@@ -272,7 +259,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return builder;
         }
 
-        public void LocalVariableAccessed(IVariable variable)
+        public void LocalVariableAccessed(IVariableInstance variable)
         {
             if (!CapturedVariables.Contains(variable) && _lambdaScope.Parent.ScopeContains(variable))
                 CapturedVariables.Add(variable);

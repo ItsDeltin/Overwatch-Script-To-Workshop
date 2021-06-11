@@ -203,7 +203,7 @@ namespace Deltin.Deltinteger.Parse
             return apply.VariableCall;
         }
 
-        public void LocalVariableAccessed(IVariable variable)
+        public void LocalVariableAccessed(IVariableInstance variable)
         {
             if (LocalVariableTracker != null)
                 foreach (var tracker in LocalVariableTracker)
@@ -293,7 +293,7 @@ namespace Deltin.Deltinteger.Parse
                 
             // If there is a local variable tracker and the variable requires capture.
             if (Variable.Provider.RequiresCapture)
-                _parseInfo.LocalVariableAccessed(Variable.Provider);
+                _parseInfo.LocalVariableAccessed(Variable);
             
             VariableCall.Accept();
         }

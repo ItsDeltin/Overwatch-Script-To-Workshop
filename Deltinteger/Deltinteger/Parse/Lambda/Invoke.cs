@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 ILambdaInvocable lambda = (ILambdaInvocable)actionSet.CurrentObject;
                 return lambda.Invoke(actionSet, methodCall.ParameterValues);
             }
-            return actionSet.DeltinScript.GetComponent<LambdaGroup>().Call(actionSet, methodCall, LambdaType.ReturnType);
+            return actionSet.ToWorkshop.LambdaBuilder.Call(actionSet, methodCall, LambdaType.ReturnType);
         }
 
         public object Call(ParseInfo parseInfo, DocRange callRange)

@@ -155,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (_type.IsConstant())
                 return this;
-            return Element.CreateArray(Element.Num(actionSet.ToWorkshop.PortableAssigner.FunctionFromKey(this).Identifier), actionSet.This ?? Element.Null());
+            return Lambda.Workshop.CaptureEncoder.Encode(actionSet, this);
         }
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _functionInvoker.Invoke(actionSet, parameterValues);

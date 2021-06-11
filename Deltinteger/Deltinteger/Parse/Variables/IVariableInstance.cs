@@ -40,8 +40,8 @@ namespace Deltin.Deltinteger.Parse
 
         public GetVariablesAssigner(ActionSet actionSet)
         {
-            TypeLinker = actionSet.ThisTypeLinker;
-            IsGlobal = actionSet.IsGlobal;
+            TypeLinker = actionSet?.ThisTypeLinker;
+            IsGlobal = actionSet?.IsGlobal ?? true;
         }
 
         public GetVariablesAssigner(InstanceAnonymousTypeLinker typeLinker)

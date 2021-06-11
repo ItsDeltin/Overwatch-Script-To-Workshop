@@ -267,6 +267,9 @@ namespace Deltin.Deltinteger.Parse
             // Additional
             if (addRules != null)
                 WorkshopRules.AddRange(addRules.Invoke(VarCollection).Where(rule => rule != null));
+            
+            // Complete portable functions
+            WorkshopConverter.LambdaBuilder.Complete();
 
             // Order the workshop rules by priority.
             WorkshopRules = WorkshopRules.OrderBy(wr => wr.Priority).ToList();

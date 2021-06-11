@@ -52,6 +52,8 @@ namespace Deltin.Deltinteger.Parse
             info.ClassData.ObjectVariableFromIndex(info.StackOffset);
 
         public int StackDelta() => 1;
+
+        public IGettable Unfold(IUnfoldGettable unfolder) => new WorkshopElementReference(unfolder.NextValue());
     }
 
     public struct AssigningAttributes

@@ -52,6 +52,7 @@ namespace Deltin.Deltinteger.Parse
         GettableAssignerResult GetResult(GettableAssignerValueInfo info);
         IGettable GetValue(GettableAssignerValueInfo info) => GetResult(info).Gettable;
         IGettable AssignClassStacks(GetClassStacks info);
+        IGettable Unfold(IUnfoldGettable unfolder);
         int StackDelta();
     }
 
@@ -77,5 +78,10 @@ namespace Deltin.Deltinteger.Parse
             ClassData = classData;
             StackOffset = stackOffset;
         }
+    }
+
+    public interface IUnfoldGettable
+    {
+        IWorkshopTree NextValue();
     }
 }

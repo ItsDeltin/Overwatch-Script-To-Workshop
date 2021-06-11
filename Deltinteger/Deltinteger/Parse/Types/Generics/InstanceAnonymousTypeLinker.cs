@@ -25,14 +25,25 @@ namespace Deltin.Deltinteger.Parse
         // Extracts an array of type values from an array of type-args.
         // An exception will be thrown if a provided type-arg is not contained in the 'Links' dictionary.
         public CodeType[] TypeArgsFromAnonymousTypes(AnonymousType[] anonymousTypes) => (from a in anonymousTypes select Links[a]).ToArray();
+        // Extracts an array of type values from an array of type-args. No exception will be thrown.
         public CodeType[] SafeTypeArgsFromAnonymousTypes(AnonymousType[] anonymousTypes) => (from a in anonymousTypes select Links.TryGetValue(a, out var value) ? value : a).ToArray();
+
+        // Adds a link between a type-arg and a type-value.
+        public void Add(AnonymousType typeArg, CodeType typeValue) => Links.Add(typeArg, typeValue);
+
+        // Determines if the type linker is compatible with another.
+        public bool Compatible(InstanceAnonymousTypeLinker other)
+        {
+            foreach (var link in Links)
+                if (!(other.Links.TryGetValue(link.Key, out var otherPairedWith) && link.Value.CompatibleWith(otherPairedWith)))
+                    return false;
+            
+            return true;
+        }
 
         // Creates a new linker with the current linker merged with the provided linker.
         // If a duplicate key is found in the provided linker, this is prioritized.
         public InstanceAnonymousTypeLinker CloneMerge(InstanceAnonymousTypeLinker other) => new InstanceAnonymousTypeLinker(this, other);
-
-        // Adds a link between a type-arg and a type-value.
-        public void Add(AnonymousType typeArg, CodeType typeValue) => Links.Add(typeArg, typeValue);
 
         // Private constructor for CloneMerge.
         private InstanceAnonymousTypeLinker(InstanceAnonymousTypeLinker a, InstanceAnonymousTypeLinker b)

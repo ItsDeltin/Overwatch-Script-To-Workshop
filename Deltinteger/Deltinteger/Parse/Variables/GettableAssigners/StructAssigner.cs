@@ -83,6 +83,15 @@ namespace Deltin.Deltinteger.Parse
                 delta += _variables[i].GetAssigner().StackDelta();
             return delta;
         }
+
+        public IGettable Unfold(IUnfoldGettable unfolder)
+        {
+            var values = new Dictionary<string, IGettable>();
+            foreach (var var in _variables)
+                values.Add(var.Name, var.GetAssigner().Unfold(unfolder));
+            
+            return new StructAssignerValue(values);
+        }
     }
 
     public struct StructAssigningAttributes
