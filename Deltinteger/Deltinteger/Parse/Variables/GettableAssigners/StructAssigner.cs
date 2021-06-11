@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IGettable AssignClassStacks(GetClassStacks info)
         {
-            int offset = 0;
+            int offset = info.StackOffset;
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
             {
