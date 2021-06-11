@@ -235,7 +235,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                     if (!ExtractInferredGenerics(match, parameterType.Generics[i], expressionType.Generics[i]))
                         result = false;
                 }
-                else
+                else if (parameterType.Generics[i].Attributes.ContainsGenerics)
                     match.InferSuccessful = result = false;
             
             return result;
