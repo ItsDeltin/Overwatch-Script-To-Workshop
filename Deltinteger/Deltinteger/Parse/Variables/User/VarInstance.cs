@@ -39,11 +39,11 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddDefinitionLink(callRange, Var.DefinedAt);
         }
 
-        public IGettableAssigner GetAssigner(ActionSet actionSet) => CodeType.GetRealType(actionSet?.ThisTypeLinker).GetGettableAssigner(new AssigningAttributes() {
+        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetRealType(getAssigner.TypeLinker).GetGettableAssigner(new AssigningAttributes() {
             Name = Var.Name,
             Extended = Var.InExtendedCollection,
             ID = Var.ID,
-            IsGlobal = actionSet?.IsGlobal ?? true,
+            IsGlobal = getAssigner.IsGlobal,
             StoreType = Var.StoreType,
             VariableType = Var.VariableType,
             DefaultValue = Var.InitialValue

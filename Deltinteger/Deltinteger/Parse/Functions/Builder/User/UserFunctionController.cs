@@ -41,16 +41,6 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             }
         }
 
-        static bool DoesOverride(DefinedMethodInstance target, DefinedMethodInstance overrider)
-        {
-            while (overrider != null)
-            {
-                if (overrider.Provider == target.Provider) return true;
-                overrider = overrider.Provider.OverridingFunction;
-            }
-            return false;
-        }
-
         // Creates a return handler.
         public ReturnHandler GetReturnHandler(ActionSet actionSet) => new ReturnHandler(
             actionSet,
@@ -170,7 +160,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 if (gettable == null)
                     // Create a gettable for the parameter.
                     gettable = parameterVariables[i]
-                        .GetAssigner(actionSet)
+                        .GetAssigner(new(actionSet))
                         .GetValue(new GettableAssignerValueInfo(actionSet) {
                             SetInitialValue = false,
                             InitialValueOverride = providedParameters?[i].Value

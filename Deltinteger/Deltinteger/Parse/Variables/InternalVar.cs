@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             return this;
         }
         public void AddDefaultInstance(IScopeAppender scopeAppender) => scopeAppender.Add(this, Static);
-        public IGettableAssigner GetAssigner(ActionSet actionSet) => CodeType.GetGettableAssigner(new AssigningAttributes());
+        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetGettableAssigner(new AssigningAttributes());
         public bool CanBeAmbiguous() => Ambiguous;
     }
 

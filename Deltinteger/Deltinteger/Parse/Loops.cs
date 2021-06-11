@@ -279,7 +279,7 @@ namespace Deltin.Deltinteger.Parse
             if (DefinedVariable != null)
             {
                 // Add the defined variable to the index assigner.
-                DefinedVariable.GetInstance(null, actionSet.ThisTypeLinker).GetAssigner(actionSet).GetValue(actionSet);
+                DefinedVariable.GetInstance(null, actionSet.ThisTypeLinker).GetAssigner(new(actionSet)).GetValue(actionSet);
             }
             else if (Initializer != null)
                 Initializer.Translate(actionSet);
@@ -324,7 +324,7 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 // Get the gettable assigner for the for variable.
-                var assignerResult = DefinedVariable.GetDefaultInstance(null).GetAssigner(actionSet).GetResult(new GettableAssignerValueInfo(actionSet) {
+                var assignerResult = DefinedVariable.GetDefaultInstance(null).GetAssigner(new(actionSet)).GetResult(new GettableAssignerValueInfo(actionSet) {
                     SetInitialValue = false
                 });
 

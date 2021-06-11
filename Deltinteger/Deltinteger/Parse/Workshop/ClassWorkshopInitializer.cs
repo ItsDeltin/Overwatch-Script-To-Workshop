@@ -151,7 +151,7 @@ namespace Deltin.Deltinteger.Parse
             _instance = instance;
             // todo
             // StackLength = _instance.Attributes.StackLength;
-            StackLength = instance.Variables.Select(v => v.GetAssigner(null).StackDelta()).Sum();
+            StackLength = instance.Variables.Select(v => v.GetAssigner().StackDelta()).Sum();
         }
 
         public void Init()
@@ -180,7 +180,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < variables.Length; i++)
             {
                 // Get the gettable assigner.
-                var gettableAssigner = variables[i].GetAssigner(null);
+                var gettableAssigner = variables[i].GetAssigner();
 
                 // Create the gettable.
                 gettables[i] = gettableAssigner.AssignClassStacks(new GetClassStacks(_initializer, stack)).ChildFromClassReference(reference);

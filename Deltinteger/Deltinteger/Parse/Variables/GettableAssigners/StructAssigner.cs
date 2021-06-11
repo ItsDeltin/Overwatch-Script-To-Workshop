@@ -38,10 +38,9 @@ namespace Deltin.Deltinteger.Parse
                 // Get the child gettable.
                 values.Add(
                     var.Name,
-                    var.GetAssigner(info.ActionSet)
+                    var.GetAssigner(new(info.ActionSet))
                         .GetValue(new GettableAssignerValueInfo(
                             actionSet: info.ActionSet,
-                            varCollection: info.VarCollection,
                             setInitialValue: info.SetInitialValue,
                             initialValue: initialValue?.GetValue(var.Name),
                             inline: inline,
@@ -58,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Link the variable values to their names.
             foreach (var variable in _variables)
-                values.Add(variable.Name, variable.GetAssigner(actionSet).GetValue(new GettableAssignerValueInfo(actionSet) { Inline = true }).GetVariable());
+                values.Add(variable.Name, variable.GetAssigner(new(actionSet)).GetValue(new GettableAssignerValueInfo(actionSet) { Inline = true }).GetVariable());
             
             return new LinkedStructAssigner(values);
         }
@@ -69,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
             {
-                var assigner = var.GetAssigner(null);
+                var assigner = var.GetAssigner();
                 values.Add(var.Name, assigner.AssignClassStacks(new GetClassStacks(info.ClassData, offset)));
                 offset += assigner.StackDelta();
             }
@@ -81,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
         {
             int delta = 0;
             for (int i = 0; i < _variables.Length; i++)
-                delta += _variables[i].GetAssigner(null).StackDelta();
+                delta += _variables[i].GetAssigner().StackDelta();
             return delta;
         }
     }

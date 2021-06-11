@@ -3,7 +3,6 @@ namespace Deltin.Deltinteger.Parse
     public class GettableAssignerValueInfo
     {
         public ActionSet ActionSet { get; }
-        public VarCollection VarCollection { get; }
         public bool SetInitialValue { get; set; } = true;
         public IWorkshopTree InitialValueOverride { get; set; }
         public bool Inline { get; set; }
@@ -12,7 +11,6 @@ namespace Deltin.Deltinteger.Parse
 
         public GettableAssignerValueInfo(
             ActionSet actionSet,
-            VarCollection varCollection,
             bool setInitialValue,
             IWorkshopTree initialValue,
             bool inline,
@@ -20,7 +18,6 @@ namespace Deltin.Deltinteger.Parse
             bool isGlobal)
         {
             ActionSet = actionSet;
-            VarCollection = varCollection;
             SetInitialValue = setInitialValue;
             InitialValueOverride = initialValue;
             Inline = inline;
@@ -28,26 +25,22 @@ namespace Deltin.Deltinteger.Parse
             IsGlobal = isGlobal;
         }
 
-        public GettableAssignerValueInfo(ActionSet actionSet, VarCollection varCollection)
-        {
-            ActionSet = actionSet;
-            VarCollection = varCollection;
-            IndexReferenceCreator = new WorkshopVariableAssigner(varCollection);
-            IsGlobal = actionSet.IsGlobal;
-        }
-
         public GettableAssignerValueInfo(ActionSet actionSet)
         {
             ActionSet = actionSet;
-            VarCollection = actionSet.VarCollection;
             IndexReferenceCreator = new WorkshopVariableAssigner(actionSet.VarCollection);
             IsGlobal = actionSet.IsGlobal;
         }
 
         public GettableAssignerValueInfo(VarCollection varCollection)
         {
-            VarCollection = varCollection;
             IndexReferenceCreator = new WorkshopVariableAssigner(varCollection);
+            IsGlobal = true;
+        }
+
+        public GettableAssignerValueInfo(WorkshopVariableAssigner indexReferenceCreator)
+        {
+            IndexReferenceCreator = indexReferenceCreator;
             IsGlobal = true;
         }
 

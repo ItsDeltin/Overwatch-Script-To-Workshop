@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Parse
                     ObjectScope.AddNativeVariable(Variables[i]);
                 }
 
-                Attributes.StackLength = Variables.Select(v => v.GetAssigner(null).StackDelta()).Sum();
+                Attributes.StackLength = Variables.Select(v => v.GetAssigner(new GetVariablesAssigner(genericsLinker)).StackDelta()).Sum();
 
                 // Functions
                 foreach (var method in provider.Methods)

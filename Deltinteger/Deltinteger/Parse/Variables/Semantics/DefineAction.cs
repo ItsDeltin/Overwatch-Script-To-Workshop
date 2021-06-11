@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet)
         {
             var variableInstance = DefiningVariable.GetInstance(null, actionSet.ThisTypeLinker);
-            var value = variableInstance.GetAssigner(actionSet).GetValue(new GettableAssignerValueInfo(actionSet.SetNextComment(_comment)));
+            var value = variableInstance.GetAssigner(new(actionSet)).GetValue(new GettableAssignerValueInfo(actionSet.SetNextComment(_comment)));
             actionSet.IndexAssigner.Add(DefiningVariable, value);
         }
 

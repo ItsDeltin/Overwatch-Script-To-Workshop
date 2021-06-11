@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
 
         public IVariableInstance GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker) => this;
-        public IGettableAssigner GetAssigner(ActionSet actionSet) => throw new NotImplementedException();
+        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => throw new NotImplementedException();
         public IExpression GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => this;
         public IVariableInstance GetDefaultInstance(CodeType definedIn) => this;
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();

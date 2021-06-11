@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
         MarkupBuilder Documentation { get; }
         IVariableInstanceAttributes Attributes { get; }
 
-        IGettableAssigner GetAssigner(ActionSet actionSet);
+        IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner = default(GetVariablesAssigner));
         IWorkshopTree ToWorkshop(ActionSet actionSet) => actionSet.IndexAssigner.Get(Provider).GetVariable();
         ICallVariable GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(parseInfo, this, index);
         void Call(ParseInfo parseInfo, DocRange callRange) => Call(this, parseInfo, callRange);
@@ -30,6 +30,24 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.Script.Elements.AddDeclarationCall(variable.Provider, new DeclarationCall(callRange, false));
             parseInfo.Script.AddHover(callRange, variable.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
+        }
+    }
+
+    public struct GetVariablesAssigner
+    {
+        public readonly InstanceAnonymousTypeLinker TypeLinker;
+        public readonly bool IsGlobal;
+
+        public GetVariablesAssigner(ActionSet actionSet)
+        {
+            TypeLinker = actionSet.ThisTypeLinker;
+            IsGlobal = actionSet.IsGlobal;
+        }
+
+        public GetVariablesAssigner(InstanceAnonymousTypeLinker typeLinker)
+        {
+            TypeLinker = typeLinker;
+            IsGlobal = true;
         }
     }
 
