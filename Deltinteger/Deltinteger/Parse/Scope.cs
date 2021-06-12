@@ -166,44 +166,11 @@ namespace Deltin.Deltinteger.Parse
                 _variables.Add(variable);
         }
 
-        public bool IsVariable(string name) => GetVariable(name, false) != null;
-
-        public IVariableInstance GetVariable(string name, bool methodGroupsOnly)
-        {
-            IVariableInstance variable = null;
-            List<IMethod> functions = new List<IMethod>();
-
-            Scope current = this;
-            while (current != null)
-            {
-                // Add functions with the same name.
-                functions.AddRange(current._methods.Where(f => f.Name == name));
-
-                // Set the variable if it was not set yet.
-                if (variable == null)
-                    variable = current._variables.Where(
-                        v => !methodGroupsOnly ||
-                        v is MethodGroup ||
-                        v.CodeType is Lambda.PortableLambdaType
-                        ).FirstOrDefault(element => element.Name == name);
-
-                // Go to the parent scope.
-                current = current.Parent;
-            }
-
-            // Variables take priority over method groups.
-            if (variable != null) return variable;
-
-            // If there were any functions that share the variable name, return the method group.
-            if (functions.Count > 0) return new MethodGroup(name, functions.ToArray());
-
-            // Otherwise, return null.
-            return null;
-        }
+        public bool IsVariable(string name) => GetAllVariables(name, false).Count() != 0;
 
         public IVariableInstance GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range, bool methodGroupsOnly)
         {
-            IVariableInstance element = GetVariable(name, methodGroupsOnly);
+            IVariableInstance element = GetAllVariables(name, methodGroupsOnly).FirstOrDefault();
 
             if (range != null && element == null)
                 diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
@@ -217,14 +184,32 @@ namespace Deltin.Deltinteger.Parse
             return element;
         }
 
-        public IVariableInstance[] GetAllVariables(string name)
+        public IEnumerable<IVariableInstance> GetAllVariables(string name, bool methodGroupsOnly)
         {
-            List<IVariableInstance> variables = new List<IVariableInstance>();
-            IterateElements(true, false, it => {
-                if (it.Element.Name == name) variables.Add((IVariableInstance)it.Element);
-                return ScopeIterateAction.Continue;
-            });
-            return variables.ToArray();
+            var functions = new List<IMethod>();
+            var variables = new List<IVariableInstance>();
+
+            Scope current = this;
+            while (current != null)
+            {
+                // Add functions with the same name.
+                functions.AddRange(current._methods.Where(f => f.Name == name));
+
+                // Set the variable if it was not set yet.
+                variables.AddRange(current._variables.Where(
+                    v => v.Name == name && (!methodGroupsOnly ||
+                    v is MethodGroup ||
+                    v.CodeType is Lambda.PortableLambdaType)));
+
+                // Go to the parent scope.
+                current = current.Parent;
+            }
+
+            // Variables take priority over method groups.
+            if (variables.Count > 0 || functions.Count == 0) return variables;
+
+            // If there were any functions that share the variable name, return the method group.
+            return new[] { new MethodGroup(name, functions.ToArray()) };
         }
         
         public bool Conflicts(IScopeable scopeable, bool variables = true, bool functions = true)

@@ -318,7 +318,7 @@ namespace Deltin.Deltinteger.Parse
     /// <summary>Variables or types in the expression tree.</summary>
     class VariableOrTypePart : ITreeContextPart
     {
-        private readonly Identifier _variable;
+        private readonly Identifier _identifier;
         private readonly DocRange _range;
         private readonly string _name;
         private bool _canBeType;
@@ -328,14 +328,14 @@ namespace Deltin.Deltinteger.Parse
 
         public VariableOrTypePart(Identifier variable)
         {
-            _variable = variable;
-            _range = _variable.Token.Range;
+            _identifier = variable;
+            _range = _identifier.Token.Range;
             _name = variable.Token.Text;
         }
 
         public void Setup(TreeContextParseInfo tcParseInfo)
         {
-            _canBeType = (_variable.Index == null || _variable.Index.Count == 0) && tcParseInfo.Parent == null;
+            _canBeType = (_identifier.Index == null || _identifier.Index.Count == 0) && tcParseInfo.Parent == null;
             _tcParseInfo = tcParseInfo;
             _potentialPaths = GetPotentialPaths(tcParseInfo);
 
@@ -370,28 +370,24 @@ namespace Deltin.Deltinteger.Parse
             List<IPotentialPathOption> potentialPaths = new List<IPotentialPathOption>();
 
             // Get the potential variable.
-            if (tcParseInfo.Scope.IsVariable(_name))
+            foreach (var variable in tcParseInfo.Scope.GetAllVariables(_name, false))
             {
-                IVariableInstance[] variables = tcParseInfo.Scope.GetAllVariables(_name);
-                foreach (var variable in variables)
-                {
-                    // Variable handler.
-                    var apply = new VariableApply(tcParseInfo.ParseInfo, tcParseInfo.Getter, null, variable, _variable);
+                // Variable handler.
+                var apply = new VariableApply(tcParseInfo.ParseInfo, tcParseInfo.Getter, null, variable, _identifier);
 
-                    // Check accessor.
-                    bool accessorMatches = tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel);
+                // Check accessor.
+                bool accessorMatches = tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel);
 
-                    // Add the potential path.
-                    potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, tcParseInfo.ParseInfo, accessorMatches));
-                }
+                // Add the potential path.
+                potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, tcParseInfo.ParseInfo, accessorMatches));
             }
 
             // Get the potential type.
             // Currently, OSTW does not support nested types, so make sure there is no parent.
             if (_canBeType)
             {
-                var typeErrorHandler = new DefaultTypeContextError(tcParseInfo.ParseInfo, _variable, false);
-                var type = TypeFromContext.GetCodeTypeFromContext(typeErrorHandler, tcParseInfo.ParseInfo, tcParseInfo.Scope, _variable);
+                var typeErrorHandler = new DefaultTypeContextError(tcParseInfo.ParseInfo, _identifier, false);
+                var type = TypeFromContext.GetCodeTypeFromContext(typeErrorHandler, tcParseInfo.ParseInfo, tcParseInfo.Scope, _identifier);
                 // If the type exists, add it to potentialPaths.
                 if (typeErrorHandler.Exists)
                     potentialPaths.Add(new TypeOption(typeErrorHandler, type, tcParseInfo.ParseInfo, _range));
@@ -535,9 +531,12 @@ namespace Deltin.Deltinteger.Parse
                 // Check accessor.
                 if (!_accessorMatches)
                     _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", _variable.Name), _callRange);
-
-                // Notify parent about which element was retrived with it's scope.
-                _parent?.RetrievedScopeable(_variable);
+                
+                // Notify parent about which element was retrieved with it's scope.
+                if (_expression is CallMethodGroup callMethodGroup)
+                    _parent?.RetrievedScopeable(callMethodGroup.ChosenFunction);
+                else
+                    _parent?.RetrievedScopeable(_variable);
             }
 
             public bool IsAmbiguousTo(IPotentialPathOption other)

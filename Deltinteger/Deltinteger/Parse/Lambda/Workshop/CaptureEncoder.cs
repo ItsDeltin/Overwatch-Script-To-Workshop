@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
             // First element
             Num(actionSet.ToWorkshop.LambdaBuilder.GetIdentifier(actionSet, new MethodGroupWorkshopPortableFunction(actionSet.DeltinScript, methodGroup))),
             // Second element
-            actionSet.This ?? Null());
+            actionSet.CurrentObject ?? Null());
 
         public static void DecodeCaptured(ActionSet actionSet, IWorkshopTree source, LambdaAction lambdaAction)
         {
