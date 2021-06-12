@@ -100,7 +100,7 @@ namespace Deltin.Deltinteger.Parse
                 type = type.GetRealType(TypeLinker) ?? type;
 
             // Get the type name. If MakeAnonymousTypesUnkown and the type is an anonymous type, set the type name to 'unknown'.
-            return type.GetName(MakeAnonymousTypesUnkown);
+            return type.GetName(new(MakeAnonymousTypesUnkown, TypeLinker));
         }
     }
 }

@@ -148,12 +148,12 @@ namespace Deltin.Deltinteger.Parse
         };
 
         /// <summary>Gets the full name of the type.</summary>
-        public virtual string GetName(bool makeAnonymousTypesUnknown = false)
+        public virtual string GetName(GetTypeName settings = default(GetTypeName))
         {
             string result = Name;
 
             if (Generics.Length > 0)
-                result += "<" + string.Join(", ", Generics.Select(g => g.GetName(makeAnonymousTypesUnknown))) + ">";
+                result += "<" + string.Join(", ", Generics.Select(g => g.GetName(settings))) + ">";
 
             return result;
         }

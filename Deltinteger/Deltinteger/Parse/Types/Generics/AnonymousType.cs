@@ -44,9 +44,9 @@ namespace Deltin.Deltinteger.Parse
             return Object.ReferenceEquals(type, this);
         }
 
-        public override string GetName(bool makeAnonymousTypesUnknown = false)
+        public override string GetName(GetTypeName settings = default(GetTypeName))
         {
-            if (makeAnonymousTypesUnknown) return "unknown";
+            if (settings.MakeAnonymousTypesUnknown && !settings.TypeLinker.Links.ContainsKey(this)) return "unknown";
             return base.GetName();
         }
 

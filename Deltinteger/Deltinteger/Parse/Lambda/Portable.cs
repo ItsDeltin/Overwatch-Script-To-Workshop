@@ -89,19 +89,19 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 callContainer: CallContainer));
         }
 
-        public override string GetName(bool makeAnonymousTypesUnknown = false)
+        public override string GetName(GetTypeName settings = default(GetTypeName))
         {
             string result = string.Empty;
 
             // Single parameter
             if (Parameters.Length == 1)
-                result += Parameters[0].GetName(makeAnonymousTypesUnknown);
+                result += Parameters[0].GetName(settings);
             else // Zero or more than one parameter.
             {
                 result += "(";
                 for (int i = 0; i < Parameters.Length; i++)
                 {
-                    result += Parameters[i].GetName(makeAnonymousTypesUnknown);
+                    result += Parameters[i].GetName(settings);
                     if (i < Parameters.Length - 1) result += ", ";
                 }
                 result += ")";
@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // Void
             if (!ReturnsValue) result += "void";
-            else result += ReturnType.GetName(makeAnonymousTypesUnknown);
+            else result += ReturnType.GetName(settings);
 
             return result;
         }
