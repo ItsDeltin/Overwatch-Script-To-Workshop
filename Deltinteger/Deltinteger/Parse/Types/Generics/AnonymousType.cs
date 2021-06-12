@@ -41,7 +41,11 @@ namespace Deltin.Deltinteger.Parse
             if (AnonymousTypeAttributes.Single && type.Attributes.StackLength == 1)
                 return true;
 
-            return Object.ReferenceEquals(type, this);
+            foreach (var union in type.UnionTypes())
+                if (Object.ReferenceEquals(union, this))
+                    return true;
+            
+            return false;
         }
 
         public override string GetName(GetTypeName settings = default(GetTypeName))
