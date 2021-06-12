@@ -55,7 +55,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 ReturningValue = parseInfo.SetExpectType(parseInfo.ReturnType).GetExpression(scope, returnContext.Expression);
                 
-                SemanticsHelper.ExpectValueType(parseInfo, ReturningValue, parseInfo.ReturnType, returnContext.Expression.Range);
+                if (parseInfo.ReturnType != null)
+                    SemanticsHelper.ExpectValueType(parseInfo, ReturningValue, parseInfo.ReturnType, returnContext.Expression.Range);
             }
             // No return value provided, and one was expected.
             else if (parseInfo.ReturnType != null)
