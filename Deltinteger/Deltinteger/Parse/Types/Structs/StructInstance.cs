@@ -9,39 +9,53 @@ namespace Deltin.Deltinteger.Parse
 {
     public class StructInstance : CodeType, ITypeArrayHandler, IScopeAppender
     {
-        public IVariableInstance[] Variables { get; private set; }
+        public IVariableInstance[] Variables { get {
+            ThrowIfNotReady();
+            return _variables;   
+        }}
+        protected IVariableInstance[] _variables { get; private set; }
+
         protected Scope ObjectScope { get; }
         protected Scope StaticScope { get; }
-        private bool _isReady;
         readonly IStructProvider _provider;
+        readonly InstanceAnonymousTypeLinker _typeLinker;
 
-        public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker genericsLinker) : base(provider.Name)
+        bool _providerReady;
+        bool _instanceReady;
+
+        public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker typeLinker) : base(provider.Name)
         {
             ObjectScope = new Scope("struct " + Name);
-            Generics = genericsLinker.SafeTypeArgsFromAnonymousTypes(provider.GenericTypes);
-            Attributes = new TypeAttributes(true, Generics.Any(g => g.Attributes.ContainsGenerics));
+            StaticScope = new Scope("struct " + Name);
+
+            Generics = typeLinker.SafeTypeArgsFromAnonymousTypes(provider.GenericTypes);
+            Attributes = new StructAttributes(this);
             _provider = provider;
-            Operations.AddAssignmentOperator();
-
-            provider.OnReady.OnReady(() => {
-                // Variables
-                Variables = new IVariableInstance[provider.Variables.Length];
-                for (int i = 0; i < Variables.Length; i++)
-                {
-                    Variables[i] = provider.Variables[i].GetInstance(null, genericsLinker);
-                    ObjectScope.AddNativeVariable(Variables[i]);
-                }
-
-                Attributes.StackLength = Variables.Select(v => v.GetAssigner(new GetVariablesAssigner(genericsLinker)).StackDelta()).Sum();
-
-                // Functions
-                foreach (var method in provider.Methods)
-                    method.AddInstance(this, genericsLinker);
-
-                _isReady = true;
-            });
-
+            _typeLinker = typeLinker;
             ArrayHandler = this;
+
+            Operations.AddAssignmentOperator();
+            provider.OnReady.OnReady(() => _providerReady = true);
+        }
+
+        void Setup()
+        {
+            if (_instanceReady) return;
+            _instanceReady = true;
+
+            // Variables
+            _variables = new IVariableInstance[_provider.Variables.Length];
+            for (int i = 0; i < _variables.Length; i++)
+            {
+                _variables[i] = _provider.Variables[i].GetInstance(null, _typeLinker);
+                ObjectScope.AddNativeVariable(_variables[i]);
+            }
+
+            Attributes.StackLength = _variables.Select(v => v.GetAssigner(new GetVariablesAssigner(_typeLinker)).StackDelta()).Sum();
+
+            // Functions
+            foreach (var method in _provider.Methods)
+                method.AddInstance(this, _typeLinker);
         }
 
         public override bool Is(CodeType other)
@@ -115,6 +129,12 @@ namespace Deltin.Deltinteger.Parse
             return ObjectScope;
         }
 
+        public override Scope ReturningScope()
+        {
+            ThrowIfNotReady();
+            return StaticScope;
+        }
+
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             var structValue = (IStructValue)reference;
@@ -129,7 +149,8 @@ namespace Deltin.Deltinteger.Parse
         public override CompletionItem GetCompletion() => throw new System.NotImplementedException();
         void ThrowIfNotReady()
         {
-            if (!_isReady) throw new Exception("Struct is not ready.");
+            if (!_providerReady) throw new Exception("Struct provider is not ready.");
+            Setup();
         }
 
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), false);
@@ -295,6 +316,23 @@ namespace Deltin.Deltinteger.Parse
         
             // Simply casts an IWorkshopTree to an IStructValue.
             private static IStructValue str(IWorkshopTree reference) => (IStructValue)reference;
+        }
+    
+        class StructAttributes : TypeAttributes
+        {
+            readonly StructInstance _structInstance;
+            int _stackLength = -1;
+            
+            public StructAttributes(StructInstance structInstance) : base(true, structInstance.Generics.Any(g => g.Attributes.ContainsGenerics)) =>
+                _structInstance = structInstance;
+            
+            public override int StackLength {
+                get {
+                    _structInstance.ThrowIfNotReady();
+                    return _stackLength;
+                }
+                set => _stackLength = value;
+            }
         }
     }
 }

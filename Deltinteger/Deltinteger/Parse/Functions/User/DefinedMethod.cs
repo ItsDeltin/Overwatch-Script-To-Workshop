@@ -234,7 +234,7 @@ namespace Deltin.Deltinteger.Parse
             Provider = provider;
             CodeType = provider.ReturnType?.GetRealType(instanceInfo);
             InstanceInfo = instanceInfo;
-            DefinedInType = definedIn;
+            DefinedInType = Attributes.ContainingType = definedIn;
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             ParameterVars = new IVariableInstance[Parameters.Length];

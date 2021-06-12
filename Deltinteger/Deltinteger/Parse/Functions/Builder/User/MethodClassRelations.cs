@@ -18,15 +18,16 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         {
             Method = method;
             
-            if (method.DefinedInType != null)
+            if (method.DefinedInType is ClassType classType)
             {
                 // Get the class relation.
-                ClassRelation = toWorkshop.ClassInitializer.RelationFromClassType((ClassType)method.DefinedInType);
+                ClassRelation = toWorkshop.ClassInitializer.RelationFromClassType(classType);
 
                 // Extract the virtual functions.
                 Overriders = ClassRelation.ExtractOverridenElements<DefinedMethodInstance>(extender => DoesOverride(method, extender))
                     .ToArray();
             }
+            else Overriders = new DefinedMethodInstance[0];
         }
 
         static bool DoesOverride(DefinedMethodInstance target, DefinedMethodInstance overrider)

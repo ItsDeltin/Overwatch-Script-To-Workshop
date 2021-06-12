@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DefinedStructInitializer : StructInitializer, IDefinedTypeInitializer, IDeclarationKey, IGetMeta
     {
-        public CodeType WorkingInstance => throw new NotImplementedException();
+        public CodeType WorkingInstance { get; }
         public Location DefinedAt { get; }
         public Scope StaticScope { get; private set; }
         public Scope ObjectScope { get; private set; }
@@ -37,6 +37,8 @@ namespace Deltin.Deltinteger.Parse
                     content: IDefinedTypeInitializer.Hover("struct", this));
                 parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(typeContext.Identifier.Range, true));
             }
+
+            WorkingInstance = GetInstance();
         }
 
         public void GetMeta()
