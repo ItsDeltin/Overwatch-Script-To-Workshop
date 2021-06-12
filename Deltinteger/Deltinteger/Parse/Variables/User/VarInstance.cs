@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetRealType(getAssigner.TypeLinker).GetGettableAssigner(new AssigningAttributes() {
-            Name = Var.Name,
+            Name = (getAssigner.Tag ?? string.Empty) + Var.Name,
             Extended = Var.InExtendedCollection,
             ID = Var.ID,
             IsGlobal = getAssigner.IsGlobal,

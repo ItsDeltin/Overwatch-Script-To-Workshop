@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the child gettable.
                 values.Add(
                     var.Name,
-                    var.GetAssigner(new(info.ActionSet))
+                    var.GetAssigner(new(info.ActionSet, _attributes.Name + "_"))
                         .GetValue(new GettableAssignerValueInfo(
                             actionSet: info.ActionSet,
                             setInitialValue: info.SetInitialValue,
@@ -96,11 +96,13 @@ namespace Deltin.Deltinteger.Parse
 
     public struct StructAssigningAttributes
     {
+        public string Name;
         public StoreType StoreType;
         public IExpression DefaultValue;
 
         public StructAssigningAttributes(AssigningAttributes attributes)
         {
+            Name = attributes.Name;
             StoreType = attributes.StoreType;
             DefaultValue = attributes.DefaultValue;
         }

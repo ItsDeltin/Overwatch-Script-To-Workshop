@@ -37,17 +37,27 @@ namespace Deltin.Deltinteger.Parse
     {
         public readonly InstanceAnonymousTypeLinker TypeLinker;
         public readonly bool IsGlobal;
+        public readonly string Tag;
 
         public GetVariablesAssigner(ActionSet actionSet)
         {
             TypeLinker = actionSet?.ThisTypeLinker;
             IsGlobal = actionSet?.IsGlobal ?? true;
+            Tag = null;
+        }
+
+        public GetVariablesAssigner(ActionSet actionSet, string tag)
+        {
+            TypeLinker = actionSet?.ThisTypeLinker;
+            IsGlobal = actionSet?.IsGlobal ?? true;
+            Tag = tag;
         }
 
         public GetVariablesAssigner(InstanceAnonymousTypeLinker typeLinker)
         {
             TypeLinker = typeLinker;
             IsGlobal = true;
+            Tag = null;
         }
     }
 
