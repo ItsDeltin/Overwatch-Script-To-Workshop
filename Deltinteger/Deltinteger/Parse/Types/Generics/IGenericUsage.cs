@@ -27,11 +27,15 @@ namespace Deltin.Deltinteger.Parse
         public void UsedWithTypeArg(GlobTypeArgCollector collector, TypeArgCombo combo)
         {
             var thisSource = collector.GlobFromTypeArg(_source);
-            thisSource.OnTypeArg(type => {
-                var clone = combo.Clone();
-                clone.SetCurrent(type);
-                clone.StartNext();
-            });
+
+            // 'thisSource' will be null if the declaration the source type arg is defined in
+            // is never called. Nothing needs to be done in this case. 
+            if (thisSource != null)
+                thisSource.OnTypeArg(type => {
+                    var clone = combo.Clone();
+                    clone.SetCurrent(type);
+                    clone.StartNext();
+                });
         }
     }
 }

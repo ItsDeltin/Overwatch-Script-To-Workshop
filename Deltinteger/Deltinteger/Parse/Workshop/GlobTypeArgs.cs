@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
                     if (typeArg == arg.Source)
                         return arg;
             
-            throw new ArgumentException("The provided typeArg does not exist in the trackers.", nameof(typeArg));
+            return null;
         }
 
         private Dictionary<ITypeArgTrackee, TrackeeInfo> CollectTypeArgCalls(ScriptFile[] scripts)
