@@ -8,7 +8,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class CreateObjectAction : IExpression
+    public class CreateObjectAction : IExpression, IStatement
     {
         private CodeType CreatingObjectOf { get; }
         private OverloadChooser OverloadChooser { get; }
@@ -60,7 +60,9 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => CreatingObjectOf;
         public Scope ReturningScope() => CreatingObjectOf?.GetObjectScope();
 
-        public IWorkshopTree Parse(ActionSet actionSet)
-            => CreatingObjectOf.New(actionSet, Constructor, OverloadChooser.ParameterResults.Select(p => p.ToWorkshop(actionSet)).ToArray());
+        public IWorkshopTree Parse(ActionSet actionSet) =>
+            CreatingObjectOf.New(actionSet, Constructor, OverloadChooser.ParameterResults.Select(p => p.ToWorkshop(actionSet)).ToArray());
+        
+        public void Translate(ActionSet actionSet) => Parse(actionSet);
     }
 }
