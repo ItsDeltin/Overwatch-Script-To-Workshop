@@ -51,11 +51,11 @@ namespace Deltin.Deltinteger.Parse.Overload
             _generics = generics;
             PickyParameter[] inputParameters = ParametersFromContext(context);
 
-            // Do nothing else if the number of overloads is 0.
-            if (_overloads.Length == 0) return;
-
             // Match overloads.
             _matches = new OverloadMatch[_overloads.Length];
+
+            // Do nothing else if the number of overloads is 0.
+            if (_overloads.Length == 0) return;
             for (int i = 0; i < _matches.Length; i++) _matches[i] = MatchOverload(_overloads[i], inputParameters, context);
 
             // Choose the best option.
