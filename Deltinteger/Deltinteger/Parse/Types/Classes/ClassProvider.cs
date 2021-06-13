@@ -8,6 +8,7 @@ namespace Deltin.Deltinteger.Parse
     {
         ClassType Extends { get; }
         IGetMeta MetaGetter { get; }
+        IValueSolve OnReady { get; }
     }
 
     public abstract class ClassInitializer : ICodeTypeInitializer, IClassInitializer
@@ -18,6 +19,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType WorkingInstance { get; protected set; }
         public ClassType Extends { get; protected set; }
         public IGetMeta MetaGetter { get; protected set; }
+        public IValueSolve OnReady { get; protected set; } = new ValueSolveSource(true);
 
         public ClassInitializer(string name)
         {

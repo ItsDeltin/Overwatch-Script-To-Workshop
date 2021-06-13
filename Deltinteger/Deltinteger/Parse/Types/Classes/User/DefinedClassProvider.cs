@@ -13,7 +13,6 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public List<IElementProvider> DeclaredElements { get; } = new List<IElementProvider>();
         public IConstructorProvider<Constructor>[] Constructors { get; private set; }
-        public IValueSolve OnReady => _onReady;
         readonly ValueSolveSource _onReady = new ValueSolveSource();
 
         readonly ParseInfo _parseInfo;
@@ -28,9 +27,10 @@ namespace Deltin.Deltinteger.Parse
         {
             _parseInfo = parseInfo;
             _typeContext = typeContext;
-            DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
             _scope = scope;
             MetaGetter = this;
+            OnReady = _onReady;
+            DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
 
             parseInfo.TranslateInfo.StagedInitiation.On(this);
 

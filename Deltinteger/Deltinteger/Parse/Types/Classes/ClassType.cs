@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Workshop;
@@ -13,7 +14,14 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
         public Scope ObjectScope { get; set; }
 
-        public IVariableInstance[] Variables { get; protected set; }
+        public IVariableInstance[] Variables {
+            get {
+                ThrowIfNotReady();
+                return _variables;
+            }
+            protected set => _variables = value;
+        }
+        IVariableInstance[] _variables;
 
         // The provider that created this ClassType.
         public IClassInitializer Provider { get; }
@@ -21,11 +29,25 @@ namespace Deltin.Deltinteger.Parse
         // The elements of the class.
         public ClassElements Elements { get; }
 
+        public override Constructor[] Constructors
+        {
+            get {
+                ThrowIfNotReady();
+                return _constructors;
+            }
+            protected set => _constructors = value;
+        }
+        Constructor[] _constructors;
+
+        bool _providerReady;
+        bool _instanceReady;
+
         public ClassType(string name, IClassInitializer provider) : base(name)
         {
             Provider = provider;
             Elements = new ClassElements(this);
             Kind = TypeKind.Class;
+            provider.OnReady.OnReady(() => _providerReady = true);
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
@@ -85,8 +107,24 @@ namespace Deltin.Deltinteger.Parse
             combo.AddVariableInstancesToAssigner(Variables, reference, assigner);
         }
 
-        public override Scope GetObjectScope() => ObjectScope;
-        public override Scope ReturningScope() => StaticScope;
+        void ThrowIfNotReady()
+        {
+            if (!_providerReady) throw new Exception("Class provider is not ready.");
+            if (!_instanceReady) Setup();
+        }
+
+        protected virtual void Setup() => _instanceReady = true;
+
+        public override Scope GetObjectScope()
+        {
+            ThrowIfNotReady();
+            return ObjectScope;
+        }
+        public override Scope ReturningScope()
+        {
+            ThrowIfNotReady();
+            return StaticScope;
+        }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
@@ -132,6 +170,8 @@ namespace Deltin.Deltinteger.Parse
             // Gets a virtual function. Returns null if none are found.
             public IMethod GetVirtualFunction(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
             {
+                _classType.ThrowIfNotReady();
+
                 // Loop through each virtual function.
                 foreach (var virtualFunction in _virtualMethods)
                     // If the function's name matches and the parameter lengths are the same.
@@ -156,9 +196,14 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Get the virtual variable that matches the name. Returns null if none are found.
-            public IVariableInstance GetVirtualVariable(string name) => _virtualVariables.FirstOrDefault(v => v.Name == name)
-                // If it is not found, try again with the extended type if it exists.
-                ?? (_classType.Extends as ClassType)?.Elements.GetVirtualVariable(name);
+            public IVariableInstance GetVirtualVariable(string name)
+            {
+                _classType.ThrowIfNotReady();
+
+                return _virtualVariables.FirstOrDefault(v => v.Name == name)
+                    // If it is not found, try again with the extended type if it exists.
+                    ?? (_classType.Extends as ClassType)?.Elements.GetVirtualVariable(name);
+            }
 
             // Adds an element to the class.
             public void Add(IScopeable scopeable, bool instance) => _scopeableElements.Add(new ClassElement(scopeable, instance));

@@ -38,9 +38,8 @@ namespace Deltin.Deltinteger.Parse
             provider.OnReady.OnReady(() => _providerReady = true);
         }
 
-        void Setup()
+        protected virtual void Setup()
         {
-            if (_instanceReady) return;
             _instanceReady = true;
 
             // Variables
@@ -150,7 +149,7 @@ namespace Deltin.Deltinteger.Parse
         void ThrowIfNotReady()
         {
             if (!_providerReady) throw new Exception("Struct provider is not ready.");
-            Setup();
+            if (!_instanceReady) Setup();
         }
 
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), false);

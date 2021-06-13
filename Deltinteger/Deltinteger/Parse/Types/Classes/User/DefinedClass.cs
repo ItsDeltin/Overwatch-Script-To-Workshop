@@ -10,57 +10,61 @@ namespace Deltin.Deltinteger.Parse
     {
         readonly ParseInfo _parseInfo;
         readonly DefinedClassInitializer _definedInitializer;
+        readonly InstanceAnonymousTypeLinker _typeLinker;
 
         public DefinedClass(ParseInfo parseInfo, DefinedClassInitializer initializer, CodeType[] generics) : base(initializer.Name, initializer)
         {
             CanBeExtended = true;
             CanBeDeleted = true;
+            Generics = generics;
 
             _parseInfo = parseInfo;
             _definedInitializer = initializer;
-            Generics = generics;
-            var anonymousTypeLinker = new InstanceAnonymousTypeLinker(initializer.GenericTypes, generics);
+            _typeLinker = new InstanceAnonymousTypeLinker(initializer.GenericTypes, generics);
+        }
 
-            initializer.OnReady.OnReady(() => {
-                Extends = initializer.Extends?.GetRealType(anonymousTypeLinker);
+        protected override void Setup()
+        {
+            base.Setup();
 
-                if (Extends == null) // Not extending anything, create scopes.
-                {
-                    ObjectScope = new Scope();
-                    StaticScope = new Scope();
-                }
-                else // Make scopes based off of child.
-                {
-                    ObjectScope = ((ClassType)Extends).ObjectScope.Child();
-                    StaticScope = ((ClassType)Extends).StaticScope.Child();
-                }
+            Extends = _definedInitializer.Extends?.GetRealType(_typeLinker);
 
-                // Add elements to scope.
-                var initializedVariables = new List<IVariableInstance>();
-                foreach (var element in initializer.DeclaredElements)
-                {
-                    var instance = element.AddInstance(this, anonymousTypeLinker);
+            if (Extends == null) // Not extending anything, create scopes.
+            {
+                ObjectScope = new Scope();
+                StaticScope = new Scope();
+            }
+            else // Make scopes based off of child.
+            {
+                ObjectScope = ((ClassType)Extends).ObjectScope.Child();
+                StaticScope = ((ClassType)Extends).StaticScope.Child();
+            }
 
-                    // Virtual function
-                    if (element is DefinedMethodProvider provider && provider.Virtual)
-                        Elements.AddVirtualFunction((IMethod)instance);
-                    
-                    // Virtual variable
-                    if (element is Var var && var.Virtual)
-                        Elements.AddVirtualVariable((IVariableInstance)instance);
-                    
-                    // Instance variable
-                    if (instance is IVariableInstance variableInstance && variableInstance.Provider.VariableType != VariableType.ElementReference)
-                        initializedVariables.Add(variableInstance);
-                }
+            // Add elements to scope.
+            var initializedVariables = new List<IVariableInstance>();
+            foreach (var element in _definedInitializer.DeclaredElements)
+            {
+                var instance = element.AddInstance(this, _typeLinker);
 
-                Variables = initializedVariables.ToArray();
+                // Virtual function
+                if (element is DefinedMethodProvider provider && provider.Virtual)
+                    Elements.AddVirtualFunction((IMethod)instance);
+                
+                // Virtual variable
+                if (element is Var var && var.Virtual)
+                    Elements.AddVirtualVariable((IVariableInstance)instance);
+                
+                // Instance variable
+                if (instance is IVariableInstance variableInstance && variableInstance.Provider.VariableType != VariableType.ElementReference)
+                    initializedVariables.Add(variableInstance);
+            }
 
-                // Add constructors.
-                Constructors = new Constructor[_definedInitializer.Constructors.Length];
-                for (int i = 0; i < _definedInitializer.Constructors.Length; i++)
-                    Constructors[i] = _definedInitializer.Constructors[i].GetInstance(this, anonymousTypeLinker);
-            });
+            Variables = initializedVariables.ToArray();
+
+            // Add constructors.
+            Constructors = new Constructor[_definedInitializer.Constructors.Length];
+            for (int i = 0; i < _definedInitializer.Constructors.Length; i++)
+                Constructors[i] = _definedInitializer.Constructors[i].GetInstance(this, _typeLinker);
         }
 
         public override bool Is(CodeType other)

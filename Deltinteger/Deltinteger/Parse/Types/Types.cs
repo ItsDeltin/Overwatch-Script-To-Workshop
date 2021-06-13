@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public CodeType[] Generics { get; protected set; } = new CodeType[0];
-        public Constructor[] Constructors { get; protected set; } = new Constructor[0];
+        public virtual Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public virtual CodeType Extends { get; protected set; }
         public string Description { get; protected set; }
         public IInvokeInfo InvokeInfo { get; protected set; }
