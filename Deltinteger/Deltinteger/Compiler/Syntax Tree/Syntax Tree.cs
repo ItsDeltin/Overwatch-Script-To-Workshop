@@ -987,9 +987,14 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public string GetContents()
         {
             string result = string.Empty;
+            bool addNewline = false;
             foreach (var comment in Comments)
+            {
+                if (addNewline) result += '\n';
                 // Substring(1) skips the first #
                 result += comment.Text.Substring(1).Trim();
+                addNewline = true;
+            }
             return result;
         }
     }
