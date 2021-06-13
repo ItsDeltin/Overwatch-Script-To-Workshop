@@ -64,6 +64,7 @@ namespace Deltin.Deltinteger.Parse
                     // Apply
                     callingMethod.Attributes.CallInfo.OnCompleted.OnReady(result.Apply);
                 }
+                else result.Apply();
 
                 // Check if the function can be called in parallel.
                 if (parseInfo.AsyncInfo != null)

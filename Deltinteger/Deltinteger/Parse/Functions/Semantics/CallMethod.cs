@@ -11,11 +11,13 @@ namespace Deltin.Deltinteger.Parse
     {
         public IMethod CallingMethod => Result?.Function;
         public IInvokeResult Result { get; }
-        private readonly ParseInfo _parseInfo;
+        readonly ParseInfo _parseInfo;
+        readonly bool _usedAsExpression;
 
         public CallMethodAction(ParseInfo parseInfo, Scope scope, FunctionExpression methodContext, bool usedAsExpression, Scope getter)
         {
             _parseInfo = parseInfo;
+            _usedAsExpression = usedAsExpression;
 
             // Get the invoke target.
             var resolveInvoke = new ResolveInvokeInfo();
@@ -38,10 +40,9 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType Type()
         {
-            if (Result == null)
+            if (Result == null || (_usedAsExpression && Result.ReturnType == null))
                 return _parseInfo.TranslateInfo.Types.Unknown();
             
-            // todo: should this return _parseInfo.TranslateInfo.Types.Unknown if null?
             return Result.ReturnType;
         }
 
