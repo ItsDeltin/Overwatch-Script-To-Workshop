@@ -244,6 +244,23 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public bool IsStatement() => _trailingSeperator || (Result?.IsStatement() ?? true);
+
+        public bool TargetCanBeSet()
+        {
+
+            bool settable = true;
+
+            for (int i = 0; i < ExprContextTree.Length; i++)
+            {
+                if (!ExprContextTree[i].CanBeSetDirectly())
+                    settable = false;
+                
+                else if (!settable && ExprContextTree[i - 1].CanBeSetReference())
+                    settable = true;
+            }
+
+            return settable;
+        }
     }
 
     /// <summary>Data that gets sent to ITreeContextPart.</summary>
@@ -268,6 +285,8 @@ namespace Deltin.Deltinteger.Parse
         void RetrievedScopeable(IScopeable scopeable) { }
         IExpression GetExpression();
         DocRange GetRange();
+        bool CanBeSetDirectly();
+        bool CanBeSetReference();
     }
 
     /// <summary>Expressions in the tree.</summary>
@@ -289,6 +308,8 @@ namespace Deltin.Deltinteger.Parse
         public Scope GetScope() => _expression.ReturningScope();
         public IExpression GetExpression() => _expression;
         public DocRange GetRange() => _expressionContext.Range;
+        public bool CanBeSetDirectly() => false;
+        public bool CanBeSetReference() => _expression.Type() is ClassType;
     }
 
     /// <summary>Functions in the expression tree.</summary>
@@ -313,6 +334,8 @@ namespace Deltin.Deltinteger.Parse
         public Scope GetScope() => _methodCall.ReturningScope();
         public IExpression GetExpression() => _methodCall;
         public DocRange GetRange() => _methodContext.Target.Range;
+        public bool CanBeSetDirectly() => false;
+        public bool CanBeSetReference() => _methodCall.Type() is ClassType;
     }
 
     /// <summary>Variables or types in the expression tree.</summary>
@@ -472,12 +495,17 @@ namespace Deltin.Deltinteger.Parse
             foreach (var onResolve in _onResolve) onResolve.Invoke(result);
         }
 
+        public bool CanBeSetDirectly() => _chosenPath == null ? false : _chosenPath.CanBeSetDirectly();
+        public bool CanBeSetReference() => _chosenPath == null ? false : _chosenPath.CanBeSetReference();
+
         interface IPotentialPathOption
         {
             Scope GetScope();
             IExpression GetExpression();
             void Accept();
             bool IsAmbiguousTo(IPotentialPathOption other);
+            bool CanBeSetDirectly();
+            bool CanBeSetReference();
         }
         class TypeOption : IPotentialPathOption
         {
@@ -501,6 +529,8 @@ namespace Deltin.Deltinteger.Parse
                 _type.Call(_parseInfo, _callRange);
                 _errorHandler.ApplyErrors();
             }
+            public bool CanBeSetDirectly() => false;
+            public bool CanBeSetReference() => false;
         }
         class VariableOption : IPotentialPathOption
         {
@@ -550,6 +580,9 @@ namespace Deltin.Deltinteger.Parse
                 }
                 return false;
             }
+        
+            public bool CanBeSetDirectly() => _variable.Attributes.CanBeSet;
+            public bool CanBeSetReference() => _variable.CodeType.GetCodeType(_parseInfo.TranslateInfo) is ClassType;
         }
     }
 

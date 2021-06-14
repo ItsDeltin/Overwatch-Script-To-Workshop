@@ -37,6 +37,8 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Type operations for assignment, comparison, etc.</summary>
         public TypeOperatorInfo Operations { get; protected set; }
 
+        public TypeSemantics TypeSemantics { get; protected set; } = new TypeSemantics();
+
         public CodeType(string name)
         {
             Name = name;

@@ -15,12 +15,14 @@ namespace Deltin.Deltinteger.Parse
         public CallVariableAction SetVariable { get; }
         private ExpressionTree Tree { get; }
 
-        public VariableResolve(VariableResolveOptions options, IExpression expression, DocRange expressionRange, FileDiagnostics diagnostics)
-            : this(options, expression, expressionRange, new VariableResolveErrorHandler(diagnostics))
+        public VariableResolve(ParseInfo parseInfo, VariableResolveOptions options, IExpression expression, DocRange expressionRange)
+            : this(parseInfo, options, expression, expressionRange, new VariableResolveErrorHandler(parseInfo.Script.Diagnostics))
         {}
 
-        public VariableResolve(VariableResolveOptions options, IExpression expression, DocRange expressionRange, IVariableResolveErrorHandler errorHandler)
+        public VariableResolve(ParseInfo parseInfo, VariableResolveOptions options, IExpression expression, DocRange expressionRange, IVariableResolveErrorHandler errorHandler)
         {
+            bool treeSettable = true;
+
             // The expression is a variable.
             if (expression is CallVariableAction)
             {
@@ -42,6 +44,7 @@ namespace Deltin.Deltinteger.Parse
                         // Get the variable and the range.
                         SetVariable = (CallVariableAction)tree.Result;
                         VariableRange = tree.ExprContextTree.Last().GetRange();
+                        treeSettable = tree.TargetCanBeSet();
                     }
                 }
             }
@@ -57,16 +60,20 @@ namespace Deltin.Deltinteger.Parse
             if (SetVariable != null)
             {
                 // Check if the variable is settable.
-                // if (options.ShouldBeSettable && !SetVariable.Calling.Provider.Settable())
-                //     diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", VariableRange);
+                if (options.ShouldBeSettable)
+                {
+                    // The variable can never be set.
+                    if (!SetVariable.Calling.Attributes.CanBeSet)
+                        errorHandler.Error($"The variable '{SetVariable.Calling.Name}' cannot be set", VariableRange);
+
+                    // The variable is normally settable, but not in the current context.
+                    else if (!treeSettable || (parseInfo.ContextualVariableModifiers != null && !parseInfo.ContextualVariableModifiers.IsSettable(SetVariable.Calling)))
+                        errorHandler.Error($"The variable '{SetVariable.Calling.Name}' cannot be set in the current context", VariableRange);
+                }
                 
                 // Check if the variable is a whole workshop variable.
-                if (options.FullVariable && SetVariable.Calling.Attributes.StoreType != StoreType.FullVariable)
-                    errorHandler.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
-
-                // Check for indexers.
-                if (!options.CanBeIndexed && SetVariable.Index.Length != 0)
-                    errorHandler.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
+                else if ((options.FullVariable && SetVariable.Calling.Attributes.StoreType != StoreType.FullVariable) || (!options.CanBeIndexed && SetVariable.Index.Length != 0))
+                    errorHandler.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed", VariableRange);
             }
 
             DoesResolveToVariable = SetVariable != null;

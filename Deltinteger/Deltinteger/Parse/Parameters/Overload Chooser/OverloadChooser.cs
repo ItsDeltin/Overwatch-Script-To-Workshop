@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             PickyParameter lastPicky = null;
 
             // If the generics were provided ('_genericsProvided'), get the type linker from the option.
-            OverloadMatch match = new OverloadMatch(option, _genericsProvided ? option.GetTypeLinker(_generics) : null, _parseInfo.TranslateInfo, _targetRange);
+            OverloadMatch match = new OverloadMatch(option, _genericsProvided ? option.GetTypeLinker(_generics) : null, _parseInfo, _targetRange);
             match.OrderedParameters = new PickyParameter[option.Parameters.Length];
 
             // Check type arg count.
@@ -402,7 +402,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public InstanceAnonymousTypeLinker TypeArgLinker { get; set; }
         public CodeType[] TypeArgs { get; }
         public bool InferSuccessful { get; set; } = true;
-        readonly DeltinScript _deltinScript;
+        readonly ParseInfo _parseInfo;
         readonly DocRange _inferenceErrorRange;
         readonly List<OverloadMatchError> _errors = new List<OverloadMatchError>(); // Errors provided by the chooser.
         readonly OverloadMatchError[] _parameterErrors;
@@ -411,10 +411,10 @@ namespace Deltin.Deltinteger.Parse.Overload
         public bool TypeArgLinkerCompleted => TypeArgLinker.Links.Count == Option.TypeArgCount; // Determines if the type-arg linker is completed.
         public bool HasParameterErrors => _parameterErrors.Any(p => p != null); // Are there any parameter errors?
 
-        public OverloadMatch(IOverload option, InstanceAnonymousTypeLinker typeArgLinker, DeltinScript deltinScript, DocRange inferenceErrorRange)
+        public OverloadMatch(IOverload option, InstanceAnonymousTypeLinker typeArgLinker, ParseInfo parseInfo, DocRange inferenceErrorRange)
         {
             Option = option;
-            _deltinScript = deltinScript;
+            _parseInfo = parseInfo;
             _inferenceErrorRange = inferenceErrorRange;
             _parameterErrors = new OverloadMatchError[option.Parameters.Length];
 
@@ -439,7 +439,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             _parameterErrors[parameter] = null;
 
             // Get the parameter type.
-            CodeType parameterType = Option.Parameters[parameter].GetCodeType(_deltinScript).GetRealType(TypeArgLinker);
+            CodeType parameterType = Option.Parameters[parameter].GetCodeType(_parseInfo.TranslateInfo).GetRealType(TypeArgLinker);
 
             // Get the value. Do nothing if there is no value.
             IExpression value = OrderedParameters[parameter]?.Value;
@@ -473,6 +473,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                 {
                     // Resolve the variable.
                     VariableResolve resolve = new VariableResolve(
+                        _parseInfo,
                         // 'ref' variable settings.
                         options: new VariableResolveOptions() { CanBeIndexed = true, FullVariable = false, ShouldBeSettable = true },
                         expression: value,
@@ -524,7 +525,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         {
             // Inference error
             if (!InferSuccessful)
-                diagnostics.Error($"The type arguments for method '{Option.GetLabel(_deltinScript, LabelInfo.OverloadError)}' cannot be inferred from the usage. Try specifying the type arguments explicitly.", _inferenceErrorRange);
+                diagnostics.Error($"The type arguments for method '{Option.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)}' cannot be inferred from the usage. Try specifying the type arguments explicitly.", _inferenceErrorRange);
 
             // Parameter errors
             foreach (var parameterError in _parameterErrors)

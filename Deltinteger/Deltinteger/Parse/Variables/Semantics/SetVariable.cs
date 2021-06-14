@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
             IExpression variableExpression = parseInfo.GetExpression(scope, assignmentContext.VariableExpression);
 
             // Extract the variable data.
-            _variableResolve = new VariableResolve(new VariableResolveOptions() { ShouldBeSettable = true }, variableExpression, assignmentContext.VariableExpression.Range, parseInfo.Script.Diagnostics);
+            _variableResolve = new VariableResolve(parseInfo, new VariableResolveOptions() { ShouldBeSettable = true }, variableExpression, assignmentContext.VariableExpression.Range);
 
             // Get the value.
             _value = parseInfo.SetExpectType(_variableResolve.SetVariable?.Type()).GetExpression(scope, assignmentContext.Value);
@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the variable.
             IExpression variableExpr = parseInfo.GetExpression(scope, increment.VariableExpression);
-            _resolve = new VariableResolve(new VariableResolveOptions(), variableExpr, increment.VariableExpression.Range, parseInfo.Script.Diagnostics);
+            _resolve = new VariableResolve(parseInfo, new VariableResolveOptions(), variableExpr, increment.VariableExpression.Range);
         }
 
         public void Translate(ActionSet actionSet)

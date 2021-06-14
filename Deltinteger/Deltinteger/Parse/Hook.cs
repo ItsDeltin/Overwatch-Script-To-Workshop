@@ -56,13 +56,13 @@ namespace Deltin.Deltinteger.Parse
             IExpression variableExpression = parseInfo.GetExpression(scope, context.Variable);
 
             // Resolve the variable.
-            VariableResolve resolvedVariable = new VariableResolve(new VariableResolveOptions()
+            VariableResolve resolvedVariable = new VariableResolve(parseInfo, new VariableResolveOptions()
             {
                 // Not indexable
                 CanBeIndexed = false,
                 // Hook variables are not settable.
                 ShouldBeSettable = false
-            }, variableExpression, context.Variable.Range, parseInfo.Script.Diagnostics);
+            }, variableExpression, context.Variable.Range);
 
             // Check if the resolved variable is a HookVar.
             if (resolvedVariable.SetVariable?.Calling is HookVar hookVar)

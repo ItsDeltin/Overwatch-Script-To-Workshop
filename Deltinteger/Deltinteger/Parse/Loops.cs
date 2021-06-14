@@ -207,12 +207,12 @@ namespace Deltin.Deltinteger.Parse
                 else if (forContext.Initializer is Assignment assignment)
                 {
                     // Get the variable being set.
-                    VariableResolve = new VariableResolve(new VariableResolveOptions()
+                    VariableResolve = new VariableResolve(parseInfo, new VariableResolveOptions()
                     {
                         // The for cannot be indexed and should be on the rule-level.
                         CanBeIndexed = false,
                         FullVariable = true
-                    }, parseInfo.GetExpression(varScope, assignment.VariableExpression), assignment.VariableExpression.Range, parseInfo.Script.Diagnostics);
+                    }, parseInfo.GetExpression(varScope, assignment.VariableExpression), assignment.VariableExpression.Range);
 
                     InitialResolveValue = parseInfo.GetExpression(scope, assignment.Value);
                 }
@@ -221,12 +221,12 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // The variable is defined but no start value was given. In this case, just start at 0.
                     // Get the variable.
-                    VariableResolve = new VariableResolve(new VariableResolveOptions()
+                    VariableResolve = new VariableResolve(parseInfo, new VariableResolveOptions()
                     {
                         // The for cannot be indexed and should be on the rule-level.
                         CanBeIndexed = false,
                         FullVariable = true
-                    }, parseInfo.GetExpression(varScope, identifier), identifier.Range, parseInfo.Script.Diagnostics);
+                    }, parseInfo.GetExpression(varScope, identifier), identifier.Range);
                 }
                 // Incorrect initializer.
                 else

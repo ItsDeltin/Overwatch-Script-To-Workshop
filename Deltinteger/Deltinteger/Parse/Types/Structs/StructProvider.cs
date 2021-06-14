@@ -10,15 +10,14 @@ namespace Deltin.Deltinteger.Parse
         string Name { get; }
         IVariable[] Variables { get; }
         IMethodProvider[] Methods { get; }
-        IValueSolve OnReady { get; }
         AnonymousType[] GenericTypes { get; }
         StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker);
+        void Depend();
     }
 
     public abstract class StructInitializer : ICodeTypeInitializer, IStructProvider
     {
         public string Name { get; }
-        public IValueSolve OnReady { get; protected set; } = new ValueSolveSource(true);
         public int GenericsCount => GenericTypes.Length;
         public AnonymousType[] GenericTypes { get; protected set; }
         protected IList<IVariable> Variables { get; } = new List<IVariable>();
@@ -37,6 +36,7 @@ namespace Deltin.Deltinteger.Parse
 
         public abstract StructInstance GetInstance();
         public abstract StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker);
+        public abstract void Depend();
 
         CodeType ICodeTypeInitializer.GetInstance() => GetInstance();
         CodeType ICodeTypeInitializer.GetInstance(GetInstanceInfo instanceInfo) => GetInstance(new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));

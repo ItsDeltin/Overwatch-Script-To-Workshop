@@ -22,6 +22,7 @@ namespace Deltin.Deltinteger.Parse
             ArrayOfType = arrayOfType;
             ArrayHandler = arrayOfType.ArrayHandler;
             Attributes = arrayOfType.Attributes;
+            TypeSemantics = arrayOfType.TypeSemantics;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
 
             Generics = new[] { arrayOfType };
@@ -228,10 +229,7 @@ namespace Deltin.Deltinteger.Parse
             arrayOfType.ArrayHandler.OverrideArray(this);
         }
 
-        private void Func(FuncMethodBuilder builder)
-        {
-            Scope.AddNativeMethod(new FuncMethod(builder));
-        }
+        private void Func(FuncMethodBuilder builder) => Scope.AddNativeMethod(new FuncMethod(builder));
 
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
         {

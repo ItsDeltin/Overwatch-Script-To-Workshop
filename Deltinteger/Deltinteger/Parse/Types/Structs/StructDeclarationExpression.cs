@@ -21,7 +21,6 @@ namespace Deltin.Deltinteger.Parse
         public StructInstance Type { get; private set; }
 
         // We do not need to worry about these values.
-        public IValueSolve OnReady { get; } = new ValueSolveSource(true); // Used by StructInstance to determine when a provider is done collecting its values.
         public AnonymousType[] GenericTypes { get; } = new AnonymousType[0];
         public IMethodProvider[] Methods { get; } = new IMethodProvider[0]; // The methods of the struct declaration. This is currently unused.
 
@@ -99,6 +98,8 @@ namespace Deltin.Deltinteger.Parse
         CodeType IExpression.Type() => Type;
 
         public StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new StructInstance(this, typeLinker);
+
+        void IStructProvider.Depend() {}
 
         class StructValueContextHandler : IVarContextHandler
         {

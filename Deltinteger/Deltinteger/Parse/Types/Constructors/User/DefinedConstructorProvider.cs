@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
 
         public void GetContent()
         {
-            Block = new BlockAction(_parseInfo.SetCallInfo(CallInfo).SetThisType(TypeProvider.WorkingInstance), _scope, _context.Block);
+            Block = new BlockAction(_parseInfo.SetCallInfo(CallInfo).SetThisType(TypeProvider), _scope, _context.Block);
             _applyBlock.Apply();
             ContentReady.Set();
         }

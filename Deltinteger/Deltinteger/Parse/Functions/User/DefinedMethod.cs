@@ -148,18 +148,17 @@ namespace Deltin.Deltinteger.Parse
 
         public void GetContent()
         {
+            var parseInfo = _parseInfo
+                .SetReturnType(ReturnType)
+                .SetThisType(ContainingType)
+                .SetCallInfo(CallInfo);
+            
             if (Context.Block != null)
             {
-                Block = new BlockAction(
-                    _parseInfo
-                        .SetReturnType(ReturnType)
-                        .SetThisType(ContainingType?.WorkingInstance)
-                        .SetCallInfo(CallInfo),
-                    _methodScope,
-                    Context.Block);
+                Block = new BlockAction(parseInfo, _methodScope, Context.Block);
 
                 // Validate returns.
-                BlockTreeScan validation = new BlockTreeScan(_parseInfo, this);
+                BlockTreeScan validation = new BlockTreeScan(parseInfo, this);
                 validation.ValidateReturns();
                 MultiplePaths = validation.MultiplePaths;
 
@@ -173,18 +172,13 @@ namespace Deltin.Deltinteger.Parse
                         // ... If the current return statement returns a value and that value does not implement the return type ...
                         if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(ReturnType)))
                             // ... then add a syntax error.
-                            _parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
+                            parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
             }
             else if (Context.MacroValue != null)
             {
-                MacroValue = SingleReturnValue = _parseInfo
-                    .SetReturnType(ReturnType)
-                    .SetExpectType(ReturnType)
-                    .SetThisType(ContainingType?.WorkingInstance)
-                    .SetCallInfo(CallInfo)
-                    .GetExpression(_methodScope, Context.MacroValue);
+                MacroValue = SingleReturnValue = parseInfo.SetExpectType(ReturnType).GetExpression(_methodScope, Context.MacroValue);
                 
-                SemanticsHelper.ExpectValueType(_parseInfo, MacroValue, ReturnType, Context.MacroValue.Range);
+                SemanticsHelper.ExpectValueType(parseInfo, MacroValue, ReturnType, Context.MacroValue.Range);
             }
             
             ContentReady.Set();

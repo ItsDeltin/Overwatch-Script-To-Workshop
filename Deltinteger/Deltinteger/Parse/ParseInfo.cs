@@ -21,7 +21,9 @@ namespace Deltin.Deltinteger.Parse
         public UsageResolver CurrentUsageResolver { get; private set; }
         public UsageResolver SourceUsageResolver { get; private set; }
         public CodeType ReturnType { get; private set; }
-        public CodeType ThisType { get; private set; }
+        public CodeType ThisType => TypeInitializer?.WorkingInstance;
+        public IDefinedTypeInitializer TypeInitializer { get; private set; }
+        public VariableModifierGroup ContextualVariableModifiers { get; private set; }
 
         // Target
         public CodeType ExpectingType { get; private set; }
@@ -53,7 +55,8 @@ namespace Deltin.Deltinteger.Parse
             CurrentUsageResolver = other.CurrentUsageResolver;
             SourceUsageResolver = other.SourceUsageResolver;
             ReturnType = other.ReturnType;
-            ThisType = other.ThisType;
+            TypeInitializer = other.TypeInitializer;
+            ContextualVariableModifiers = other.ContextualVariableModifiers;
             ExpectingType = other.ExpectingType;
             LocalVariableTracker = other.LocalVariableTracker;
             ResolveInvokeInfo = other.ResolveInvokeInfo;
@@ -87,7 +90,8 @@ namespace Deltin.Deltinteger.Parse
         };
         public ParseInfo SetExpectType(CodeType type) => new ParseInfo(this) { ExpectingType = type }.SetExpectingLambda(type);
         public ParseInfo SetReturnType(CodeType type) => new ParseInfo(this) { ReturnType = type };
-        public ParseInfo SetThisType(CodeType type) => new ParseInfo(this) { ThisType = type };
+        public ParseInfo SetThisType(IDefinedTypeInitializer typeInitializer) => new ParseInfo(this) { TypeInitializer = typeInitializer };
+        public ParseInfo SetContextualModifierGroup(VariableModifierGroup modifierGroup) => new ParseInfo(this) { ContextualVariableModifiers = modifierGroup };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>

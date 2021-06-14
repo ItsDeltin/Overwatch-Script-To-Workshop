@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         readonly ParseInfo _parseInfo;
         readonly ClassContext _context;
         readonly Scope _scope;
-        readonly ValueSolveSource _onReady = new ValueSolveSource();
+        readonly VariableModifierGroup _contextualVariableModifiers = new VariableModifierGroup();
 
         public DefinedStructInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
@@ -24,7 +24,6 @@ namespace Deltin.Deltinteger.Parse
             _scope = scope;
             DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
             parseInfo.TranslateInfo.StagedInitiation.On(this);
-            OnReady = _onReady;
 
             // Get the type args.
             GenericTypes = AnonymousType.GetGenerics(parseInfo, typeContext.Generics, this);
@@ -53,21 +52,16 @@ namespace Deltin.Deltinteger.Parse
                 ObjectScope.AddType(new GenericCodeTypeInitializer(type));
             }
 
-            var methods = new List<IMethodProvider>();
+            var declarationParseInfo = _parseInfo.SetContextualModifierGroup(_contextualVariableModifiers); 
 
             // Get declarations.
             foreach (var declaration in _context.Declarations)
             {
-                var element = ((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo);
+                var element = ((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, declarationParseInfo);
 
                 if (element is IMethodProvider method)
                     Methods.Add(method);
-                
-                else if (element is IVariable variable)
-                    Variables.Add(variable);
             }
-            
-            _onReady.Set();
         }
 
         public override StructInstance GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
@@ -80,7 +74,14 @@ namespace Deltin.Deltinteger.Parse
         public IVariableInstance GetOverridenVariable(string variableName) => throw new NotImplementedException();
         public void AddObjectBasedScope(IMethod function) => ObjectScope.CopyMethod(function);
         public void AddStaticBasedScope(IMethod function) => StaticScope.CopyMethod(function);
-        public void AddObjectBasedScope(IVariableInstance variable) => ObjectScope.CopyVariable(variable);
+        public void AddObjectBasedScope(IVariableInstance variable)
+        {
+            Variables.Add(variable.Provider);
+            ObjectScope.CopyVariable(variable);
+            _contextualVariableModifiers.MakeUnsettable(variable);
+            variable.CodeType.GetCodeType(_parseInfo.TranslateInfo).TypeSemantics.MakeUnsettable(_parseInfo.TranslateInfo, _contextualVariableModifiers);
+        }
         public void AddStaticBasedScope(IVariableInstance variable) => StaticScope.CopyVariable(variable);
+        public override void Depend() => _parseInfo.TranslateInfo.StagedInitiation.Meta.Depend(this);
     }
 }

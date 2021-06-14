@@ -20,7 +20,6 @@ namespace Deltin.Deltinteger.Parse
         readonly IStructProvider _provider;
         readonly InstanceAnonymousTypeLinker _typeLinker;
 
-        bool _providerReady;
         bool _instanceReady;
 
         public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker typeLinker) : base(provider.Name)
@@ -30,12 +29,12 @@ namespace Deltin.Deltinteger.Parse
 
             Generics = typeLinker.SafeTypeArgsFromAnonymousTypes(provider.GenericTypes);
             Attributes = new StructAttributes(this);
+            TypeSemantics = new StructSemantics(this);
             _provider = provider;
             _typeLinker = typeLinker;
             ArrayHandler = this;
 
             Operations.AddAssignmentOperator();
-            provider.OnReady.OnReady(() => _providerReady = true);
         }
 
         protected virtual void Setup()
@@ -156,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
         public override CompletionItem GetCompletion() => throw new System.NotImplementedException();
         void ThrowIfNotReady()
         {
-            if (!_providerReady) throw new Exception("Struct provider is not ready.");
+            _provider.Depend();
             if (!_instanceReady) Setup();
         }
 
@@ -339,6 +338,22 @@ namespace Deltin.Deltinteger.Parse
                     return _stackLength;
                 }
                 set => _stackLength = value;
+            }
+        }
+    
+        class StructSemantics : TypeSemantics
+        {
+            readonly StructInstance _structInstance;
+
+            public StructSemantics(StructInstance structInstance) => _structInstance = structInstance;
+
+            public override void MakeUnsettable(DeltinScript deltinScript, VariableModifierGroup modifierGroup)
+            {
+                foreach (var variable in _structInstance.Variables)
+                {
+                    modifierGroup.MakeUnsettable(variable);
+                    variable.CodeType.GetCodeType(deltinScript).TypeSemantics.MakeUnsettable(deltinScript, modifierGroup);
+                }
             }
         }
     }
