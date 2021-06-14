@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
@@ -99,6 +99,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
+            ThrowIfNotReady();
             Extends?.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
 
             // Add instance variables to the assigner.
@@ -225,6 +226,8 @@ namespace Deltin.Deltinteger.Parse
             // Adds the elements in the class to a scope.
             public void AddToScope(Scope scope, bool instance)
             {
+                _classType.ThrowIfNotReady();
+
                 // Add elements from this class.
                 foreach (var scopeable in _scopeableElements)
                     if (ValidAccessLevel(scopeable.Scopeable.AccessLevel) && (!scopeable.IsInstance || instance))

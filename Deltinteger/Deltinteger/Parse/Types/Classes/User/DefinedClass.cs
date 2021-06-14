@@ -36,8 +36,8 @@ namespace Deltin.Deltinteger.Parse
             }
             else // Make scopes based off of child.
             {
-                ObjectScope = ((ClassType)Extends).ObjectScope.Child();
-                StaticScope = ((ClassType)Extends).StaticScope.Child();
+                ObjectScope = ((ClassType)Extends).GetObjectScope().Child();
+                StaticScope = ((ClassType)Extends).ReturningScope().Child();
             }
 
             // Add elements to scope.
