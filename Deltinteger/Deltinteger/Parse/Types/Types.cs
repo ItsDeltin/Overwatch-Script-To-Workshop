@@ -158,6 +158,8 @@ namespace Deltin.Deltinteger.Parse
             return result;
         }
 
+        public virtual AccessLevel LowestAccessLevel(CodeType other) => AccessLevel.Public;
+
         public virtual CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => this;
 
         public override string ToString() => GetName();

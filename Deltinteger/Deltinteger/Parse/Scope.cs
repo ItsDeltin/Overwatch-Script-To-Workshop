@@ -166,24 +166,6 @@ namespace Deltin.Deltinteger.Parse
                 _variables.Add(variable);
         }
 
-        public bool IsVariable(string name) => GetAllVariables(name, false).Count() != 0;
-
-        public IVariableInstance GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range, bool methodGroupsOnly)
-        {
-            IVariableInstance element = GetAllVariables(name, methodGroupsOnly).FirstOrDefault();
-
-            if (range != null && element == null)
-                diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
-
-            if (element != null && getter != null && !getter.AccessorMatches(element))
-            {
-                if (range == null) throw new Exception();
-                diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", name), range);
-            }
-
-            return element;
-        }
-
         public IEnumerable<IVariableInstance> GetAllVariables(string name, bool methodGroupsOnly)
         {
             var functions = new List<IMethod>();
@@ -320,55 +302,7 @@ namespace Deltin.Deltinteger.Parse
             if (scopeable is ICodeTypeInitializer type) AddType(type);
         }
 
-        public bool AccessorMatches(IScopeable element)
-        {
-            if (element.AccessLevel == AccessLevel.Public) return true;
-
-            bool matches = false;
-
-            IterateElements(true, true, itElement =>
-            {
-                if (element == itElement.Element)
-                {
-                    matches = true;
-                    return ScopeIterateAction.Stop;
-                }
-
-                if ((itElement.Container.PrivateCatch && element.AccessLevel == AccessLevel.Private) ||
-                    (itElement.Container.ProtectedCatch && element.AccessLevel == AccessLevel.Protected))
-                    return ScopeIterateAction.StopAfterScope;
-                return ScopeIterateAction.Continue;
-            });
-
-            return matches;
-        }
-
-        public bool AccessorMatches(Scope lookingForScope, AccessLevel accessLevel)
-        {
-            // Just return true if the access level is public.
-            if (accessLevel == AccessLevel.Public) return true;
-
-            Scope current = this;
-            while (current != null)
-            {
-                // If the current scope is the scope being looked for, return true.
-                if (current == lookingForScope)
-                    return true;
-
-                // If the current scope catches private elements and the target access level is private, return false.
-                if (current.PrivateCatch && accessLevel == AccessLevel.Private) return false;
-
-                // If the current scope catches protected elements and the target access level is protected, return false.
-                if (current.ProtectedCatch && accessLevel == AccessLevel.Protected) return false;
-
-                // Next current is parent.
-                current = current.Parent;
-            }
-
-            return false;
-        }
-
-        public CompletionItem[] GetCompletion(DeltinScript deltinScript, DocPos pos, bool immediate, Scope getter = null)
+        public CompletionItem[] GetCompletion(DeltinScript deltinScript, DocPos pos, bool immediate, CodeType getter = null)
         {
             var completions = new List<CompletionItem>(); // The list of completion items in this scope.
 
@@ -433,10 +367,10 @@ namespace Deltin.Deltinteger.Parse
             return completions.ToArray();
         }
 
-        private bool WasScopedAtPosition(IScopeable element, DocPos pos, Scope getter)
-        {
-            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.Start <= pos) && (getter == null || getter.AccessorMatches(element));
-        }
+        private bool WasScopedAtPosition(IVariableInstance variable, DocPos pos, CodeType getter) => WasScopedAtPosition(variable, pos, getter, variable.Attributes.ContainingType);
+        private bool WasScopedAtPosition(IMethod method, DocPos pos, CodeType getter) => WasScopedAtPosition(method, pos, getter, method.Attributes.ContainingType);
+        private bool WasScopedAtPosition(IScopeable element, DocPos pos, CodeType containingType, CodeType getter) =>
+            (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.Start <= pos) && (getter == null || SemanticsHelper.AccessLevelMatches(element.AccessLevel, containingType, getter));
 
         public bool ScopeContains(IScopeable element)
         {
@@ -445,20 +379,6 @@ namespace Deltin.Deltinteger.Parse
             // Function
             else if (element is IMethod function) return ScopeContains(function);
             else throw new NotImplementedException();
-        }
-
-        public bool ScopeContains(IVariable provider)
-        {
-            bool found = false;
-            IterateElements(true, true, iterate => {
-                if ((iterate.Element is IVariableInstance instance) && instance.Provider == provider)
-                {
-                    found = true;
-                    return ScopeIterateAction.Stop;
-                }
-                return ScopeIterateAction.Continue;
-            });
-            return found;
         }
 
         public bool ScopeContains(IVariableInstance variable)

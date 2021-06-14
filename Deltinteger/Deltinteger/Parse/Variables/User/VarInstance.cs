@@ -29,7 +29,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 CanBeSet = var.StoreType != StoreType.None,
                 StoreType = var.StoreType,
-                UseDefaultVariableAssigner = !var.IsMacro
+                UseDefaultVariableAssigner = !var.IsMacro,
+                ContainingType = definedIn
             };
         }
 

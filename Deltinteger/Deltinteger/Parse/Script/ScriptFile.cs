@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Parse
         public CompletionRangeKind Kind { get; }
         private readonly DeltinScript _deltinScript;
         private readonly Scope _scope;
-        private readonly Scope _getter;
+        private readonly CodeType _getter;
         private readonly CompletionItem[] _completionItems;
 
         public CompletionRange(DeltinScript deltinScript, Scope scope, DocRange range, CompletionRangeKind kind)
@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
             Range = range;
         }
 
-        public CompletionRange(DeltinScript deltinScript, Scope scope, Scope getter, DocRange range, CompletionRangeKind kind)
+        public CompletionRange(DeltinScript deltinScript, Scope scope, CodeType getter, DocRange range, CompletionRangeKind kind)
         {
             _deltinScript = deltinScript;
             _scope = scope ?? throw new ArgumentNullException(nameof(scope));

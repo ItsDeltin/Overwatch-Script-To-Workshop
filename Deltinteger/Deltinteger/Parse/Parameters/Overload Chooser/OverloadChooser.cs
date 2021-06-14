@@ -289,24 +289,14 @@ namespace Deltin.Deltinteger.Parse.Overload
 
             // Add the diagnostics of the best option.
             bestOption.AddDiagnostics(_parseInfo.Script.Diagnostics);
-            CheckAccessLevel();
+            CheckAccessLevel(bestOption);
 
             return bestOption;
         }
 
-        private void CheckAccessLevel()
+        private void CheckAccessLevel(OverloadMatch match)
         {
-            if (Overload == null) return;
-
-            bool accessable = true;
-
-            if (Overload is IMethod asMethod)
-            {
-                if (!_getter.AccessorMatches(asMethod)) accessable = false;
-            }
-            else if (!_getter.AccessorMatches(_scope, Overload.AccessLevel)) accessable = false;
-
-            if (!accessable)
+            if (!SemanticsHelper.AccessLevelMatches(match.Option.AccessLevel, match.Option.ContainingType, _parseInfo.ThisType))
                 _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)), _targetRange);
         }
 

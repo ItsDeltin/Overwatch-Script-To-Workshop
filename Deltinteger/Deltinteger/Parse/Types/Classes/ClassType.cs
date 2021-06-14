@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
@@ -152,6 +152,20 @@ namespace Deltin.Deltinteger.Parse
             StaticScope.CopyVariable(variable);
         }
     
+        public override AccessLevel LowestAccessLevel(CodeType other)
+        {
+            if (other == null) return AccessLevel.Public;
+
+            if (other is ClassType classType)
+            {
+                // Same class, private.
+                if (object.ReferenceEquals(Provider, classType.Provider)) return AccessLevel.Private;
+                // Extends, protected
+                if (classType.Provider.DoesExtend(Provider)) return AccessLevel.Protected;
+            }
+            return AccessLevel.Public;
+        }
+
         public class ClassElements
         {
             readonly ClassType _classType;

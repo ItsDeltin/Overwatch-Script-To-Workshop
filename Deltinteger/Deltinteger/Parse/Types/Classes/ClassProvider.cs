@@ -9,6 +9,7 @@ namespace Deltin.Deltinteger.Parse
         ClassType Extends { get; }
         IGetMeta MetaGetter { get; }
         IValueSolve OnReady { get; }
+        bool DoesExtend(IClassInitializer other);
     }
 
     public abstract class ClassInitializer : ICodeTypeInitializer, IClassInitializer
@@ -34,5 +35,16 @@ namespace Deltin.Deltinteger.Parse
             Label = Name,
             Kind = CompletionItemKind.Class
         };
+
+        public bool DoesExtend(IClassInitializer other)
+        {
+            IClassInitializer current = this;
+            while (current != null)
+            {
+                if (current == other) return true;
+                current = current.Extends?.Provider;
+            }
+            return false;
+        }
     }
 }

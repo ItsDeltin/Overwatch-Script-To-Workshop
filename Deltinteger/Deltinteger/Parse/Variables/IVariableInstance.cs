@@ -67,6 +67,7 @@ namespace Deltin.Deltinteger.Parse
         bool CanBeSet { get; }
         StoreType StoreType { get; }
         bool CanBeIndexed { get; }
+        CodeType ContainingType { get; }
     }
 
     class VariableInstanceAttributes : IVariableInstanceAttributes
@@ -75,5 +76,6 @@ namespace Deltin.Deltinteger.Parse
         public bool CanBeSet { get; set; } = true;
         public StoreType StoreType { get; set; } = StoreType.None;
         public bool CanBeIndexed { get; set; } = true;
+        public CodeType ContainingType { get; set; }
     }
 }

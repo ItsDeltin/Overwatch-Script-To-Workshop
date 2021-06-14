@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
@@ -195,10 +195,25 @@ namespace Deltin.Deltinteger.Parse
         public IExpression GetVariable(Scope scope, Scope getter, Identifier variableContext)
         {
             if (!variableContext.Token) return new MissingElementAction(TranslateInfo);
+
+            var name = variableContext.Token.Text;
+            var range = variableContext.Token.Range;
+
             // Get the variable.
-            var variable = scope.GetVariable(variableContext.Token.Text, getter, Script.Diagnostics, variableContext.Token.Range, ResolveInvokeInfo != null);
+            var variable = scope.GetAllVariables(name, ResolveInvokeInfo != null).FirstOrDefault();
+
+            // Variable does not exist.
             if (variable == null)
-                variable = new MissingVariable(TranslateInfo, variableContext.Token.Text);
+            {
+                Script.Diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, scope.ErrorName), range);
+                variable = new MissingVariable(TranslateInfo, name);
+            }
+            
+            // Check the access level.
+            if (!SemanticsHelper.AccessLevelMatches(variable.AccessLevel, variable.Attributes.ContainingType, ThisType))
+            {
+                Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", name), range);
+            }
 
             var apply = new VariableApply(this, scope, getter, variable, variableContext);
             apply.Accept();

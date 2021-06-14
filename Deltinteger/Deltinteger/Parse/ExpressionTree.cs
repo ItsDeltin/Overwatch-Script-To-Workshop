@@ -145,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
                         }
                         else continue;
 
-                        parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, treeScope, scope, range, CompletionRangeKind.ClearRest));
+                        parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, treeScope, parseInfo.ThisType, range, CompletionRangeKind.ClearRest));
                     }
                 }
         }
@@ -376,7 +376,7 @@ namespace Deltin.Deltinteger.Parse
                 var apply = new VariableApply(tcParseInfo.ParseInfo, tcParseInfo.Getter, null, variable, _identifier);
 
                 // Check accessor.
-                bool accessorMatches = tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel);
+                bool accessorMatches = SemanticsHelper.AccessLevelMatches(variable.AccessLevel, variable.Attributes.ContainingType, tcParseInfo.ParseInfo.ThisType);
 
                 // Add the potential path.
                 potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, tcParseInfo.ParseInfo, accessorMatches));

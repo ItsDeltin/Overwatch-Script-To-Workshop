@@ -134,6 +134,14 @@ namespace Deltin.Deltinteger.Parse
             return StaticScope;
         }
 
+        public override AccessLevel LowestAccessLevel(CodeType other)
+        {            
+            if (other != null && other is StructInstance structInstance && _provider == structInstance._provider)
+                return AccessLevel.Private;
+            else
+                return AccessLevel.Public;
+        }
+
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             var structValue = (IStructValue)reference;
