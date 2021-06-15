@@ -6,16 +6,20 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedStructInitializer : StructInitializer, IDefinedTypeInitializer, IDeclarationKey, IGetMeta
+    public class DefinedStructInitializer : StructInitializer, IDefinedTypeInitializer, IDeclarationKey, IGetMeta, IGetContent
     {
         public CodeType WorkingInstance { get; }
         public Location DefinedAt { get; }
         public Scope StaticScope { get; private set; }
         public Scope ObjectScope { get; private set; }
+        public bool[] GenericAssigns { get; }
         readonly ParseInfo _parseInfo;
         readonly ClassContext _context;
         readonly Scope _scope;
+        // Makes local struct variables unsettable in functions.
         readonly VariableModifierGroup _contextualVariableModifiers = new VariableModifierGroup();
+        // Tracks the assigning types that the struct variables use. 
+        readonly List<HashSet<DefinedStructInitializer>> _variablesCallTypeAssigners = new List<HashSet<DefinedStructInitializer>>();
 
         public DefinedStructInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
@@ -23,10 +27,12 @@ namespace Deltin.Deltinteger.Parse
             _context = typeContext;
             _scope = scope;
             DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
-            parseInfo.TranslateInfo.StagedInitiation.On(this);
+            parseInfo.TranslateInfo.StagedInitiation.Meta.Execute(this);
+            parseInfo.TranslateInfo.StagedInitiation.Content.Execute(this);
 
             // Get the type args.
             GenericTypes = AnonymousType.GetGenerics(parseInfo, typeContext.Generics, this);
+            GenericAssigns = new bool[GenericTypes.Length];
 
             // Add the declaration link.
             if (typeContext.Identifier)
@@ -64,6 +70,12 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        public void GetContent()
+        {
+            if (DoesRecursiveCall())
+                _parseInfo.Script.Diagnostics.Error("A variable defined in the struct recursively calls the struct", DefinedAt.range);
+        }
+
         public override StructInstance GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
         public override StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new DefinedStructInstance(this, typeLinker);
         
@@ -76,12 +88,66 @@ namespace Deltin.Deltinteger.Parse
         public void AddStaticBasedScope(IMethod function) => StaticScope.CopyMethod(function);
         public void AddObjectBasedScope(IVariableInstance variable)
         {
-            Variables.Add(variable.Provider);
+            // Add to scope.
             ObjectScope.CopyVariable(variable);
-            _contextualVariableModifiers.MakeUnsettable(variable);
-            variable.CodeType.GetCodeType(_parseInfo.TranslateInfo).TypeSemantics.MakeUnsettable(_parseInfo.TranslateInfo, _contextualVariableModifiers);
+
+            // Make sure the variable is not a macro.
+            if (variable.Attributes.StoreType != StoreType.None)
+            {
+                var variableType = variable.CodeType.GetCodeType(_parseInfo.TranslateInfo);
+
+                // Add to list of variables.
+                Variables.Add(variable.Provider);
+
+                // Make the variable unsettable when used locally.
+                _contextualVariableModifiers.MakeUnsettable(_parseInfo.TranslateInfo, variable);
+
+                var structCalls = new HashSet<DefinedStructInitializer>();
+
+                // Iterate through each assigning type in the variable's type.
+                // An 'assigning type' is a type within a type's tree that may potentially be used to assign a data-type.
+                // This is used to ensure that recursive structs do not exist.
+                foreach (var descendant in variableType.GetAssigningTypes())
+                    // If the variable type contains a struct, add it to the hashset of root variable types.
+                    if (descendant is DefinedStructInstance definedStructInstance)
+                        structCalls.Add(definedStructInstance.Provider);
+                    // If the variable type contains an anonymous type, mark that type-arg as an assigner.
+                    else if (descendant is AnonymousType anonymousType)
+                    {
+                        int index = Array.IndexOf(GenericTypes, anonymousType);
+                        if (index != -1)
+                            GenericAssigns[index] = true;
+                    }
+                
+                _variablesCallTypeAssigners.Add(structCalls);
+            }
         }
         public void AddStaticBasedScope(IVariableInstance variable) => StaticScope.CopyVariable(variable);
-        public override void Depend() => _parseInfo.TranslateInfo.StagedInitiation.Meta.Depend(this);
+        public override void DependMeta() => _parseInfo.TranslateInfo.StagedInitiation.Meta.Depend(this);
+        public override void DependContent() => _parseInfo.TranslateInfo.StagedInitiation.Content.Depend(this);
+
+        bool DoesRecursiveCall()
+        {
+            foreach (var variable in _variablesCallTypeAssigners)
+            foreach (var root in variable)
+            {
+                var watched = new HashSet<DefinedStructInitializer>();
+                foreach (var rootCall in EnumerateRootCallsRecursively(root))
+                {
+                    if (!watched.Add(rootCall)) return false;
+                    if (rootCall == this) return true;
+                }
+            }
+            return false;
+        }
+
+        static IEnumerable<DefinedStructInitializer> EnumerateRootCallsRecursively(DefinedStructInitializer target)
+        {
+            yield return target;
+            foreach (var variable in target._variablesCallTypeAssigners)
+            foreach (var root in variable)
+            foreach (var recursive in EnumerateRootCallsRecursively(root))
+                yield return recursive;
+        }
     }
 }

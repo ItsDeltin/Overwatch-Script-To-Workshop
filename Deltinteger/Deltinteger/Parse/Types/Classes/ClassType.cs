@@ -167,6 +167,8 @@ namespace Deltin.Deltinteger.Parse
             return AccessLevel.Public;
         }
 
+        public override IEnumerable<CodeType> GetAssigningTypes() => Enumerable.Empty<CodeType>();
+
         public class ClassElements
         {
             readonly ClassType _classType;

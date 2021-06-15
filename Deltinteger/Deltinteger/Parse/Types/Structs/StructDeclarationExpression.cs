@@ -99,7 +99,8 @@ namespace Deltin.Deltinteger.Parse
 
         public StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new StructInstance(this, typeLinker);
 
-        void IStructProvider.Depend() {}
+        void IStructProvider.DependMeta() {}
+        void IStructProvider.DependContent() {}
 
         class StructValueContextHandler : IVarContextHandler
         {

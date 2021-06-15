@@ -115,6 +115,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             return result;
         }
+    
+        public override IEnumerable<CodeType> GetAssigningTypes() => Enumerable.Empty<CodeType>();
     }
 
     public struct PortableLambdaTypeBuilder

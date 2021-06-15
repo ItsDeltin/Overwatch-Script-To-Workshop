@@ -166,6 +166,15 @@ namespace Deltin.Deltinteger.Parse
 
         public override string ToString() => GetName();
 
+        /// <summary>Gets the types that will be used to assign data values.</summary>
+        public virtual IEnumerable<CodeType> GetAssigningTypes()
+        {
+            yield return this;
+            foreach (var generic in Generics)
+                foreach (var recursive in generic.GetAssigningTypes())
+                    yield return recursive;
+        }
+
         CodeType ICodeTypeSolver.GetCodeType(DeltinScript deltinScript) => this;
     }
 }

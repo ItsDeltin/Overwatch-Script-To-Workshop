@@ -12,7 +12,8 @@ namespace Deltin.Deltinteger.Parse
         IMethodProvider[] Methods { get; }
         AnonymousType[] GenericTypes { get; }
         StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker);
-        void Depend();
+        void DependMeta();
+        void DependContent();
     }
 
     public abstract class StructInitializer : ICodeTypeInitializer, IStructProvider
@@ -36,7 +37,8 @@ namespace Deltin.Deltinteger.Parse
 
         public abstract StructInstance GetInstance();
         public abstract StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker);
-        public abstract void Depend();
+        public abstract void DependMeta();
+        public abstract void DependContent();
 
         CodeType ICodeTypeInitializer.GetInstance() => GetInstance();
         CodeType ICodeTypeInitializer.GetInstance(GetInstanceInfo instanceInfo) => GetInstance(new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));

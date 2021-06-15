@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
     public class StructInstance : CodeType, ITypeArrayHandler, IScopeAppender
     {
         public IVariableInstance[] Variables { get {
-            ThrowIfNotReady();
+            SetupMeta();
             return _variables;   
         }}
         protected IVariableInstance[] _variables { get; private set; }
@@ -21,6 +21,7 @@ namespace Deltin.Deltinteger.Parse
         readonly InstanceAnonymousTypeLinker _typeLinker;
 
         bool _instanceReady;
+        bool _contentReady;
 
         public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker typeLinker) : base(provider.Name)
         {
@@ -49,16 +50,20 @@ namespace Deltin.Deltinteger.Parse
                 ObjectScope.AddNativeVariable(_variables[i]);
             }
 
-            Attributes.StackLength = _variables.Select(v => v.GetAssigner(new GetVariablesAssigner(_typeLinker)).StackDelta()).Sum();
-
             // Functions
             foreach (var method in _provider.Methods)
                 method.AddInstance(this, _typeLinker);
         }
 
+        protected virtual void Content()
+        {
+            _contentReady = true;
+            Attributes.StackLength = _variables.Select(v => v.GetAssigner(new GetVariablesAssigner(_typeLinker)).StackDelta()).Sum();
+        }
+
         public override bool Is(CodeType other)
         {
-            ThrowIfNotReady();
+            SetupMeta();
 
             if (Name != other.Name || Generics.Length != other.Generics.Length)
                 return false;
@@ -72,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override bool Implements(CodeType type)
         {
-            ThrowIfNotReady();
+            SetupMeta();
 
             foreach(var utype in type.UnionTypes())
             {
@@ -123,13 +128,13 @@ namespace Deltin.Deltinteger.Parse
 
         public override Scope GetObjectScope()
         {
-            ThrowIfNotReady();
+            SetupMeta();
             return ObjectScope;
         }
 
         public override Scope ReturningScope()
         {
-            ThrowIfNotReady();
+            SetupMeta();
             return StaticScope;
         }
 
@@ -152,11 +157,17 @@ namespace Deltin.Deltinteger.Parse
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
             => GetGettableAssigner(new AssigningAttributes()).GetValue(new GettableAssignerValueInfo(actionSet)).GetVariable();
 
-        public override CompletionItem GetCompletion() => throw new System.NotImplementedException();
-        void ThrowIfNotReady()
+        void SetupMeta()
         {
-            _provider.Depend();
+            _provider.DependMeta();
             if (!_instanceReady) Setup();
+        }
+        
+        void SetupContent()
+        {
+            SetupMeta();
+            _provider.DependContent();
+            if (!_contentReady) Content();
         }
 
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), false);
@@ -334,7 +345,7 @@ namespace Deltin.Deltinteger.Parse
             
             public override int StackLength {
                 get {
-                    _structInstance.ThrowIfNotReady();
+                    _structInstance.SetupContent();
                     return _stackLength;
                 }
                 set => _stackLength = value;
@@ -350,10 +361,9 @@ namespace Deltin.Deltinteger.Parse
             public override void MakeUnsettable(DeltinScript deltinScript, VariableModifierGroup modifierGroup)
             {
                 foreach (var variable in _structInstance.Variables)
-                {
-                    modifierGroup.MakeUnsettable(variable);
-                    variable.CodeType.GetCodeType(deltinScript).TypeSemantics.MakeUnsettable(deltinScript, modifierGroup);
-                }
+                    // Ensures we do not stack overflow in case of recursive structs.
+                    if (!modifierGroup.ContainsProvider(variable.Provider))
+                        modifierGroup.MakeUnsettable(deltinScript, variable);
             }
         }
     }
