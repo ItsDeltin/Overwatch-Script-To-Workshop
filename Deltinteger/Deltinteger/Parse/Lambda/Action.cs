@@ -174,13 +174,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             switch (LambdaType.LambdaKind)
             {
                 // Constant macro
-                case LambdaKind.ConstantMacro:
-                    return OutputConstantMacro(lambaAssigner, actionSet, parameterValues);
-
-                // Constant block
-                case LambdaKind.ConstantBlock:
-                case LambdaKind.ConstantValue:
-                    return OutputContantBlock(lambaAssigner, actionSet, parameterValues);
+                case LambdaKind.Constant:
+                    return OutputContant(lambaAssigner, actionSet, parameterValues);
 
                 // Portable
                 case LambdaKind.Portable:
@@ -196,19 +191,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
         /// <summary>Assigns the parameter values to the action set for the constant lambdas.</summary>
         private ActionSet AssignContainedParameters(VarIndexAssigner lambaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            var newSet = actionSet.ContainVariableAssigner();
+            actionSet = actionSet.ContainVariableAssigner();
             actionSet.IndexAssigner.CopyAll(lambaAssigner);
 
             for (int i = 0; i < parameterValues.Length; i++)
-                newSet.IndexAssigner.Add(Parameters[i], parameterValues[i]);
+                actionSet.IndexAssigner.Add(Parameters[i], parameterValues[i]);
 
-            return newSet;
+            return actionSet;
         }
-        /// <summary>Outputs a constant macro lambda.</summary>
-        private IWorkshopTree OutputConstantMacro(VarIndexAssigner lambaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues) => Expression.Parse(AssignContainedParameters(lambaAssigner, actionSet, parameterValues));
-
-        /// <summary>Outputs a constant block.</summary>
-        private IWorkshopTree OutputContantBlock(VarIndexAssigner lambdaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
+        
+        private IWorkshopTree OutputContant(VarIndexAssigner lambdaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             ReturnHandler returnHandler = new ReturnHandler(
                 actionSet,
@@ -227,7 +219,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return returnHandler.GetReturnedValue();
         }
 
-        /// <summary>Outputs a portable lambda.</summary>
         private IWorkshopTree OutputPortable(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             var controller = actionSet.ToWorkshop.LambdaBuilder;
@@ -261,6 +252,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             if (!CapturedVariables.Contains(variable) && _lambdaScope.Parent.ScopeContains(variable))
                 CapturedVariables.Add(variable);
         }
+
+        public IEnumerable<RestrictedCallType> GetRestrictedCallTypes() => CallInfo.GetRestrictedCallTypes();
 
         public bool EmptyBlock => Statement == null || (Statement is BlockAction block && block.Statements.Length == 0);
 

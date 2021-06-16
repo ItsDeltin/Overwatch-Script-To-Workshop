@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Deltin.Deltinteger.Parse.Lambda;
 using Deltin.Deltinteger.Parse.Overload;
@@ -119,6 +120,9 @@ namespace Deltin.Deltinteger.Parse
             var invoke = (LambdaInvoke)overloadChooser.Overload;
             invoke?.CheckRecursionAndRestricted(parseInfo, invokeInfo.TargetRange, invokeInfo.Target);
 
+            if (invokeInfo.UsedAsExpression && !invoke.LambdaType.ReturnsValue)
+                parseInfo.Script.Diagnostics.Error("The lambda '" + invoke.LambdaType.GetName() + "' does not return a value", invokeInfo.TargetRange);
+
             return new LambdaInvokeResult(parseInfo.TranslateInfo, invoke, overloadChooser.ParameterResults, invokeInfo.Target);
         }
     }
@@ -157,6 +161,7 @@ namespace Deltin.Deltinteger.Parse
         IScopeable TargetScopeable { get; }
         IWorkshopTree Parse(ActionSet actionSet);
         void SetComment(string comment);
+        void GetConstantTarget(Action<IExpression> callback);
 
         public static WorkshopParameter[] GetParameterValuesAsWorkshop(ActionSet actionSet, IInvokeResult invokeResult)
         {
@@ -226,6 +231,14 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public void SetComment(string comment) => _comment = comment;
+
+        public void GetConstantTarget(Action<IExpression> callback)
+        {
+            if (Function is DefinedMethodInstance definedMethod)
+                definedMethod.Provider.ContentReady.OnReady(() => callback(definedMethod.Provider.SingleReturnValue));
+            else
+                callback(null);
+        }
     }
 
     class LambdaInvokeResult : IInvokeResult
@@ -256,6 +269,13 @@ namespace Deltin.Deltinteger.Parse
             );
 
         public void SetComment(string comment) => _comment = comment;
+
+        public void GetConstantTarget(Action<IExpression> callback) => ConstantExpressionResolver.Resolve(_target, target => {
+            if (target is LambdaAction lambdaAction)
+                callback(lambdaAction.Expression);
+            else
+                callback(null);
+        });
     }
 
     public class ResolveInvokeInfo

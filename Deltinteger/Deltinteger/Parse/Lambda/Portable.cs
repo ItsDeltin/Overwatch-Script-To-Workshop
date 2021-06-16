@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             InvokeInfo = new LambdaInvokeInfo(this);
         }
 
-        public override bool IsConstant() => LambdaKind == LambdaKind.ConstantBlock || LambdaKind == LambdaKind.ConstantMacro || LambdaKind == LambdaKind.ConstantValue;
+        public override bool IsConstant() => LambdaKind == LambdaKind.Constant;
         public override Scope GetObjectScope() => _scope;
 
         protected override bool DoesImplement(CodeType type)
@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 }
 
             // Make sure the return type matches.
-            return other.ReturnsValue == ReturnsValue && (((ReturnType == null) == (other.ReturnType == null)) || (ReturnType != null && ReturnType.Implements(other.ReturnType)));
+            return other.ReturnsValue == ReturnsValue && (!ReturnsValue || ReturnType.Implements(other.ReturnType));
         }
 
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
@@ -92,6 +92,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public override string GetName(GetTypeName settings = default(GetTypeName))
         {
             string result = string.Empty;
+
+            // Constant
+            if (LambdaKind == LambdaKind.Constant)
+                result += "const ";
 
             // Single parameter
             if (Parameters.Length == 1)
@@ -117,6 +121,15 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
     
         public override IEnumerable<CodeType> GetAssigningTypes() => Enumerable.Empty<CodeType>();
+    
+        public static PortableLambdaType CreateConstantType(CodeType returnType = null, params CodeType[] parameterTypes) =>
+            new PortableLambdaType(new(
+                kind: LambdaKind.Constant,
+                parameters: parameterTypes,
+                returnType: returnType,
+                parameterTypesKnown: true,
+                returnsValue: returnType != null
+            ));
     }
 
     public struct PortableLambdaTypeBuilder
@@ -178,8 +191,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
     {
         Anonymous,
         Portable,
-        ConstantBlock,
-        ConstantValue,
-        ConstantMacro
+        Constant
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger
@@ -20,5 +21,12 @@ namespace Deltin.Deltinteger
         public bool Recursive { get; set; }
 
         public CallInfo CallInfo { get; set; }
+
+        public IGetRestrictedCallTypes GetRestrictedCallTypes { get; set; }
+    }
+
+    public interface IGetRestrictedCallTypes
+    {
+        IEnumerable<RestrictedCallType> GetRestrictedCallTypes();
     }
 }

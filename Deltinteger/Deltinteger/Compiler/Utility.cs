@@ -334,6 +334,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Identifier:
                 case TokenType.Define:
                 case TokenType.Void:
+                case TokenType.Const:
                     return true;
 
                 default:
@@ -405,6 +406,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Ref:
                 case TokenType.Type:
                 case TokenType.Single:
+                case TokenType.Const:
                     return true;
 
                 default:
@@ -503,6 +505,7 @@ namespace Deltin.Deltinteger.Compiler
         // Keywords/identifiers
         Type,
         Single,
+        Const,
         // Attributes
         Public,
         Private,

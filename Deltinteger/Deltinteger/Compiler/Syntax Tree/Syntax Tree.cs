@@ -98,19 +98,22 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class LambdaType : Node, IParseType
     {
         public Token ArrowToken { get; }
+        public Token Const { get; }
         public List<IParseType> Parameters { get; }
         public IParseType ReturnType { get; }
 
-        public LambdaType(IParseType singleParameter, IParseType returnType, Token arrowToken)
+        public LambdaType(IParseType singleParameter, Token const_, IParseType returnType, Token arrowToken)
         {
             ArrowToken = arrowToken;
+            Const = const_;
             Parameters = new List<IParseType> { singleParameter };
             ReturnType = returnType;
         }
 
-        public LambdaType(List<IParseType> parameters, IParseType returnType, Token arrowToken)
+        public LambdaType(List<IParseType> parameters, Token const_, IParseType returnType, Token arrowToken)
         {
             ArrowToken = arrowToken;
+            Const = const_;
             Parameters = parameters;
             ReturnType = returnType;
         }

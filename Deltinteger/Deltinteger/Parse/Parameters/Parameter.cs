@@ -54,20 +54,21 @@ namespace Deltin.Deltinteger.Parse
         public virtual object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             // If the type of the parameter is a lambda, then resolve the expression.
-            if (_type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr =>
-            {
-                // If the expression is a lambda...
-                if (expr is Lambda.LambdaAction lambda)
-                    // ...then if this parameter is invoked, apply the restricted calls and recursion info.
-                    Invoked.OnInvoke(() =>
-                    {
-                        LambdaInvoke.LambdaInvokeApply(parseInfo, lambda, valueRange);
-                    });
-                // Otherwise, if the expression resolves to an IBridgeInvocable...
-                else if (LambdaInvoke.ParameterInvocableBridge(value, out IBridgeInvocable invocable))
-                    // ...then this lambda parameter is invoked, invoke the resolved invocable. 
-                    Invoked.OnInvoke(() => invocable.WasInvoked());
-            });
+            if (_type is PortableLambdaType lambdaType && lambdaType.LambdaKind == LambdaKind.Constant)
+                ConstantExpressionResolver.Resolve(value, expr =>
+                {
+                    // If the expression is a lambda...
+                    if (expr is Lambda.LambdaAction lambda)
+                        // ...then if this parameter is invoked, apply the restricted calls and recursion info.
+                        Invoked.OnInvoke(() =>
+                        {
+                            LambdaInvoke.LambdaInvokeApply(parseInfo, lambda, valueRange);
+                        });
+                    // Otherwise, if the expression resolves to an IBridgeInvocable...
+                    else if (LambdaInvoke.ParameterInvocableBridge(value, out IBridgeInvocable invocable))
+                        // ...then this lambda parameter is invoked, invoke the resolved invocable. 
+                        Invoked.OnInvoke(() => invocable.WasInvoked());
+                });
             return null;
         }
         public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => expression.Parse(actionSet);

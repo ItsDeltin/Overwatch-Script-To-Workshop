@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
             // value => ...
             var noIndex = GetFuncMethod();
             noIndex.Parameters = new CodeParameter[] {
-                new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(FuncType, ArrayOfType))
+                new CodeParameter("conditionLambda", ParameterDocumentation, PortableLambdaType.CreateConstantType(FuncType, ArrayOfType))
             };
             noIndex.Action = (actionSet, methodCall) =>
                 Executor.GetResult(Function, actionSet, inv => Lambda(methodCall).Invoke(actionSet, inv));
@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse
             // (value, index) => ...
             var withIndex = GetFuncMethod();
             withIndex.Parameters = new CodeParameter[] {
-                new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(FuncType, ArrayOfType, supplier.Number()))
+                new CodeParameter("conditionLambda", ParameterDocumentation, PortableLambdaType.CreateConstantType(FuncType, ArrayOfType, supplier.Number()))
             };
             withIndex.Action = (actionSet, methodCall) =>
                 Executor.GetResult(Function, actionSet, inv => Lambda(methodCall).Invoke(actionSet, inv, Element.ArrayIndex()));

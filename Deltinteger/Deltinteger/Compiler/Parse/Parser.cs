@@ -274,6 +274,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return false;
         }
 
+        bool Parse(TokenType type, bool isExpected, out Token result)
+        {
+            if (isExpected)
+                return result = ParseExpected(type);
+            else
+                return ParseOptional(type, out result);
+        }
+
         void Unexpected(bool root)
         {
             if ((root || Kind.IsSkippable()) && Kind != TokenType.EOF)
@@ -1092,6 +1100,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             if (ParseOptional(TokenType.Void, out var @void))
                 return EndNode(new ParseType(@void));
+            
+            var const_ = ParseOptional(TokenType.Const);
 
             // If we parse a parentheses, we can assume this is a lambda type.
             if (!ParseOptional(TokenType.Parentheses_Open))
@@ -1101,8 +1111,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
                 // Get the type name.
                 var identifier = ParseExpected(TokenType.Identifier, TokenType.Define);
-
-                // No arrow, parse the type normally.
                 var typeArgs = new List<IParseType>();
 
                 // Get the type arguments.
@@ -1127,7 +1135,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
 
                 // If we parse an arrow, this is a lambda type with a single parameter.
-                if (!ParseOptional(TokenType.Arrow, out Token arrow))
+                if (!Parse(TokenType.Arrow, const_, out Token arrow))
                 {
                     PopNodeStack();
                     return result;
@@ -1137,7 +1145,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 {
                     // Parse the lambda's return type.
                     var returnType = ParseType();
-                    return EndNode(new LambdaType(result, returnType, arrow));
+                    return EndNode(new LambdaType(result, const_, returnType, arrow));
                 }
             }
             else // This is a lambda with parenthesized parameters.
@@ -1152,7 +1160,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 bool isLambda;
 
                 // If an arrow is required, parse the expected arrow.
-                if (parameterTypes.Count != 1)
+                if (parameterTypes.Count != 1 || const_)
                 {
                     arrow = ParseExpected(TokenType.Arrow);
                     isLambda = true;
@@ -1167,7 +1175,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     var returnType = ParseType();
 
                     // Done.
-                    return EndNode(new LambdaType(parameterTypes, returnType, arrow));
+                    return EndNode(new LambdaType(parameterTypes, const_, returnType, arrow));
                 }
                 else
                 {

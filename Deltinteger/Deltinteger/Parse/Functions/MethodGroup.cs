@@ -66,11 +66,11 @@ namespace Deltin.Deltinteger.Parse
         private readonly DocRange _range;
         private PortableLambdaType _type = new PortableLambdaType(new(LambdaKind.Anonymous));
         public IMethod ChosenFunction { get; private set; }
-        private IMethodGroupInvoker _functionInvoker;
+        private IMethodGroupInvoker _constFunctionInvoker;
         public CallInfo CallInfo => ChosenFunction.Attributes.CallInfo;
         public IRecursiveCallHandler RecursiveCallHandler => CallInfo?.Function;
         public bool ResolvedSource => ChosenFunction != null;
-        public IBridgeInvocable[] InvokedState { get; private set; } // todo
+        public IBridgeInvocable[] InvokedState { get; private set; }
 
         public CallMethodGroup(ParseInfo parseInfo, DocRange range, MethodGroup group, CodeType[] typeArgs)
         {
@@ -122,17 +122,13 @@ namespace Deltin.Deltinteger.Parse
             // If a compatible function was found, get the handler.
             if (found)
             {
-                // todo
+                _constFunctionInvoker = GetLambdaHandler(ChosenFunction);
 
-                // _functionInvoker = GetLambdaHandler(ChosenFunction);
-                // if (!_type.IsConstant())
-                //     _identifier = _functionInvoker.GetIdentifier(_parseInfo);
-
-                // // Get the variable's invoke info from the parameters.
-                // InvokedState = new IBridgeInvocable[_functionInvoker.ParameterCount()];
-                // for (int i = 0; i < _functionInvoker.ParameterCount(); i++)
-                //     if (_functionInvoker.GetParameterVar(i) is Var var)
-                //         InvokedState[i] = var.BridgeInvocable;
+                // Get the variable's invoke info from the parameters.
+                InvokedState = new IBridgeInvocable[_constFunctionInvoker.ParameterCount()];
+                for (int i = 0; i < _constFunctionInvoker.ParameterCount(); i++)
+                    if (_constFunctionInvoker.GetParameterVar(i) is Var var)
+                        InvokedState[i] = var.BridgeInvocable;
             }
             else
                 _parseInfo.Script.Diagnostics.Error("No overload for '" + Group.Name + "' implements " + expecting.GetName(), _range);
@@ -157,11 +153,12 @@ namespace Deltin.Deltinteger.Parse
             return Lambda.Workshop.CaptureEncoder.Encode(actionSet, this);
         }
 
-        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _functionInvoker.Invoke(actionSet, parameterValues);
+        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) => _constFunctionInvoker.Invoke(actionSet, parameterValues);
 
         public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => ChosenFunction.GetLabel(deltinScript, labelInfo);
         public Scope ReturningScope() => null;
         public CodeType Type() => _type;
+        public IEnumerable<RestrictedCallType> GetRestrictedCallTypes() => ChosenFunction.Attributes.GetRestrictedCallTypes?.GetRestrictedCallTypes() ?? Enumerable.Empty<RestrictedCallType>();
         
         public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();

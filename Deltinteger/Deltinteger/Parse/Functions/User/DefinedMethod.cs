@@ -207,6 +207,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             Attributes.CallInfo = Provider.CallInfo;
+            Attributes.GetRestrictedCallTypes = Provider.CallInfo;
         }
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)

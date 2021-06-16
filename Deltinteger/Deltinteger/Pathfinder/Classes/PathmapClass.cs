@@ -99,20 +99,20 @@ namespace Deltin.Deltinteger.Pathfinder
             // All 'userLambda' variables below should be LambdaAction.
 
             // Code to run when pathfinding starts.
-            OnPathStartHook = new HookVar("OnPathStart", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathStart = (LambdaAction)userLambda));
+            OnPathStartHook = new HookVar("OnPathStart", PortableLambdaType.CreateConstantType(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathStart = (LambdaAction)userLambda));
             OnPathStartHook.Documentation = AddHookInfo(new MarkupBuilder()
                 .Add("The code that runs when a pathfind starts for a player. By default, it will start throttling to the player's current node. Hooking will override the thottle, so if you want to throttle you will need to call ").Code("Pathmap.ThrottleEventPlayerToNextNode").Add(".")
                 .NewLine().Add("Call ").Code("EventPlayer()").Add(" to get the player that is pathfinding."));
             // Code to run when node is reached.
-            OnNodeReachedHook = new HookVar("OnNodeReached", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnNodeReached = (LambdaAction)userLambda));
+            OnNodeReachedHook = new HookVar("OnNodeReached", PortableLambdaType.CreateConstantType(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnNodeReached = (LambdaAction)userLambda));
             OnNodeReachedHook.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player reaches a node. Does nothing by default.")
                 .NewLine().Add("Call ").Code("EventPlayer()").Add(" to get the player that reached the node."));
             // Code to run when pathfind completes.
-            OnPathCompleted = new HookVar("OnPathCompleted", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathCompleted = (LambdaAction)userLambda));
+            OnPathCompleted = new HookVar("OnPathCompleted", PortableLambdaType.CreateConstantType(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathCompleted = (LambdaAction)userLambda));
             OnPathCompleted.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player completes a pathfind. By default, it will stop throttling the player and call ").Code("StopPathfind(EventPlayer())").Add(", hooking will override this.")
                 .NewLine().Add("Call ").Code("EventPlayer()").Add(" to get the player that completed the path."));
             // The condition to use to determine if a node was reached.
-            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(DeltinScript.Types.Boolean(), new CodeType[] {_supplier.Vector()}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
+            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", PortableLambdaType.CreateConstantType(DeltinScript.Types.Boolean(), new CodeType[] {_supplier.Vector()}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
             IsNodeReachedDeterminer.Documentation = AddHookInfo(new MarkupBuilder()
                 .Add("The condition that is used to determine if a player reached the current node. The given value is the position of the next node. The returned value should be a boolean determining if the player reached the node they are walking towards.")
                 .NewLine()
@@ -120,7 +120,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 .NewSection()
                 .Add("By default, it will return true when the player is less than or equal to " + ResolveInfoComponent.DefaultMoveToNext + " meters away from the next node."));
             // The condition to use to determine the closest node to a player.
-            ApplicableNodeDeterminer = new HookVar("ApplicableNodeDeterminer", new ValueBlockLambda(DeltinScript.Types.Number(), new CodeType[] { new ArrayType(DeltinScript.Types, _supplier.Vector()), _supplier.Vector() }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.ApplicableNodeDeterminer = (LambdaAction)userLambda));
+            ApplicableNodeDeterminer = new HookVar("ApplicableNodeDeterminer", PortableLambdaType.CreateConstantType(DeltinScript.Types.Number(), new CodeType[] { new ArrayType(DeltinScript.Types, _supplier.Vector()), _supplier.Vector() }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.ApplicableNodeDeterminer = (LambdaAction)userLambda));
             ApplicableNodeDeterminer.Documentation = AddHookInfo(new MarkupBuilder()
                 .Add("Gets a node that is relevent to the specified position. Hooking this will change how OSTW generated rules will get the node. By default, it will return the node that is closest to the specified position.")
                 .NewLine()
@@ -207,8 +207,8 @@ namespace Deltin.Deltinteger.Pathfinder
             return (Element)containParameter.GetVariable();
         }
 
-        private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
-        private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
+        private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), new ExpressionOrWorkshopValue());
+        private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), new ExpressionOrWorkshopValue());
         private CodeParameter PrintProgress => new CodeParameter(
             "printProgress",
             new MarkupBuilder().Add("An action that is invoked with the progress of the bake. The value will be between 0 and 1, and will equal 1 when completed.")
@@ -218,7 +218,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 .Indent().Add("// Create a hud text of the baking process.").NewLine()
                 .Indent().Add("CreateHudText(AllPlayers(), Header: <\"Baking: <0>\"%, p * 100>, Location: Location.Top);").NewLine()
                 .Add("});").EndCodeLine().ToString(),
-            new BlockLambda(new CodeType[] { _supplier.Number() }), new ExpressionOrWorkshopValue(new EmptyLambda())
+            PortableLambdaType.CreateConstantType(null, _supplier.Number()), new ExpressionOrWorkshopValue(new EmptyLambda())
         );
 
         SharedPathfinderInfoValues CreatePathfinderInfo(ActionSet actionSet, Element attributes, IWorkshopTree onLoop, IWorkshopTree onConnectLoop) => new SharedPathfinderInfoValues() {

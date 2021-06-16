@@ -367,10 +367,6 @@ namespace Deltin.Deltinteger.Parse
             AddType(_numberType);
             AddType(_stringType);
             AddType(_booleanType);
-            // Constant lambda types.
-            AddType(new Lambda.BlockLambda());
-            AddType(new Lambda.ValueBlockLambda(_anyType));
-            AddType(new Lambda.MacroLambda(_anyType));
             // Enums
             foreach (var type in ValueGroupType.GetEnumTypes(this))
                 AddType(type);

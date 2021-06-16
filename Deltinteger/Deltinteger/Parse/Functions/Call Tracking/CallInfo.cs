@@ -7,7 +7,7 @@ using RuleEvent = Deltin.Deltinteger.Elements.RuleEvent;
 namespace Deltin.Deltinteger.Parse
 {
     // Tracks calls executed in a script.
-    public class CallInfo : IRestrictedCallHandler
+    public class CallInfo : IRestrictedCallHandler, IGetRestrictedCallTypes
     {
         public IRecursiveCallHandler Function { get; }
         public List<RestrictedCall> RestrictedCalls { get; } = new List<RestrictedCall>();
@@ -77,13 +77,14 @@ namespace Deltin.Deltinteger.Parse
                     call.AddDiagnostic(_script.Diagnostics);
         }
 
-        public RestrictedCallType[] GetRestrictedCallTypes() => GetRestrictedCallTypes(RestrictedCalls);
+        public IEnumerable<RestrictedCallType> GetRestrictedCallTypes() => GetRestrictedCallTypes(RestrictedCalls);
 
-        public static RestrictedCallType[] GetRestrictedCallTypes(List<RestrictedCall> restrictedCalls)
+        public static IEnumerable<RestrictedCallType> GetRestrictedCallTypes(List<RestrictedCall> restrictedCalls)
         {
-            List<RestrictedCallType> callTypes = new List<RestrictedCallType>();
-            foreach (RestrictedCall call in restrictedCalls) if (!callTypes.Contains(call.CallType)) callTypes.Add(call.CallType);
-            return callTypes.ToArray();
+            var callTypes = new HashSet<RestrictedCallType>();
+            foreach (RestrictedCall call in restrictedCalls)
+                if (callTypes.Add(call.CallType))
+                    yield return call.CallType;
         }
     }
 }

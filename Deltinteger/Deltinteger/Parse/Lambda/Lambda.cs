@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         bool ResolvedSource { get; }
         void GetLambdaStatement(PortableLambdaType expecting);
         void GetLambdaStatement();
+        IEnumerable<RestrictedCallType> GetRestrictedCallTypes();
     }
 
     public interface ILambdaInvocable
