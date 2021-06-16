@@ -224,8 +224,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         Token ParseExpected(params TokenType[] types)
         {
-            if (types.Contains(Kind))
-                return Consume();
+            foreach (var type in types)
+                if (Is(type))
+                    return Consume();
             AddError(ErrorExpected(types));
             return null;
         }
