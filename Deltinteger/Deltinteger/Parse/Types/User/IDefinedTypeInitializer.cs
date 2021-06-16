@@ -31,20 +31,15 @@ namespace Deltin.Deltinteger.Parse
 
         public IElementProvider ApplyDeclaration(IDeclaration declaration, ParseInfo parseInfo)
         {
-            IElementProvider result;
-
             // Function
             if (declaration is FunctionContext function)
-                result = DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, this);
+                return DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, this);
             
             // Variable
             else if (declaration is VariableDeclaration variable)
-                result = new ClassVariable(this, new DefineContextHandler(parseInfo, variable)).GetVar();
+                return new ClassVariable(this, new DefineContextHandler(parseInfo, variable)).GetVar();
 
-            else throw new NotImplementedException();
-
-            // result.AddDefaultInstance(this);
-            return result;
+            throw new NotImplementedException();
         }
     }
 }

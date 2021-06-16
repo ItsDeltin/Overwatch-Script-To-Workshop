@@ -150,9 +150,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // Add so the lambda can be recursive-checked.
             _parseInfo.TranslateInfo.GetComponent<RecursionCheckComponent>().AddCheck(CallInfo);
-
-            if (!LambdaType.IsConstant())
-                _parseInfo.Script.Elements.AddLambda(this);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet)

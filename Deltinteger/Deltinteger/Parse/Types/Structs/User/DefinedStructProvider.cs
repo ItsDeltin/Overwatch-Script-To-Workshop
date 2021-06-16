@@ -84,8 +84,8 @@ namespace Deltin.Deltinteger.Parse
         public Scope GetStaticBasedScope() => StaticScope;
         public IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverloadInfo) => throw new NotImplementedException();
         public IVariableInstance GetOverridenVariable(string variableName) => throw new NotImplementedException();
-        public void AddObjectBasedScope(IMethod function) => ObjectScope.CopyMethod(function);
-        public void AddStaticBasedScope(IMethod function) => StaticScope.CopyMethod(function);
+        public void AddObjectBasedScope(IMethod function) => ObjectScope.AddNativeMethod(function);
+        public void AddStaticBasedScope(IMethod function) => StaticScope.AddNativeMethod(function);
         public void AddObjectBasedScope(IVariableInstance variable)
         {
             // Add to scope.
@@ -123,6 +123,12 @@ namespace Deltin.Deltinteger.Parse
             }
         }
         public void AddStaticBasedScope(IVariableInstance variable) => StaticScope.CopyVariable(variable);
+        public void CheckConflict(string elementName, FileDiagnostics diagnostics, DocRange range) => SemanticsHelper.ErrorIfConflicts(
+            name: elementName,
+            errorMessage: "The type '" + Name + "' already contains a definition for '" + elementName + "'",
+            diagnostics: diagnostics,
+            range: range,
+            ObjectScope, StaticScope);
         public override void DependMeta() => _parseInfo.TranslateInfo.StagedInitiation.Meta.Depend(this);
         public override void DependContent() => _parseInfo.TranslateInfo.StagedInitiation.Content.Depend(this);
 

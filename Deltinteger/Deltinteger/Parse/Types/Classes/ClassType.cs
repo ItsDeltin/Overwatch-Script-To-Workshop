@@ -135,12 +135,12 @@ namespace Deltin.Deltinteger.Parse
         public void AddObjectBasedScope(IMethod function)
         {
             Elements.Add(function, true);
-            ObjectScope.CopyMethod(function);
+            ObjectScope.AddNativeMethod(function);
         }
         public void AddStaticBasedScope(IMethod function)
         {
             Elements.Add(function, false);
-            StaticScope.CopyMethod(function);
+            StaticScope.AddNativeMethod(function);
         }
         public void AddObjectBasedScope(IVariableInstance variable)
         {

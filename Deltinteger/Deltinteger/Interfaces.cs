@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger
     public interface IElementProvider
     {
         IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker);
-        void AddDefaultInstance(IScopeAppender scopeAppender);
     }
 
     public interface INamed

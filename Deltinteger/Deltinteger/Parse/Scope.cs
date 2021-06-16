@@ -215,83 +215,7 @@ namespace Deltin.Deltinteger.Parse
             return conflicts;
         }
 
-        /// <summary>
-        /// Adds a method to the current scope.
-        /// When handling methods added by the user, supply the diagnostics and range to show the syntax error at.
-        /// When handling methods added internally, have the diagnostics and range parameters be null. An exception will be thrown instead if there is a syntax error.
-        /// </summary>
-        /// <param name="method">The method that will be added to the current scope. If the object reference is already in the direct scope, an exception will be thrown.</param>
-        /// <param name="diagnostics">The file diagnostics to throw errors with. Should be null when adding methods internally.</param>
-        /// <param name="range">The document range to throw errors at. Should be null when adding methods internally.</param>
-        public void AddMethod(IMethod method, ParseInfo parseInfo, DocRange range, bool checkConflicts = true)
-        {
-            if (method == null) throw new ArgumentNullException(nameof(method));
-
-            if (checkConflicts && HasConflict(parseInfo.TranslateInfo, method))
-                parseInfo.Script.Diagnostics.Error("A method with the same name and parameter types was already defined in this scope.", range);
-
-            AddNativeMethod(method);
-        }
-
         public void AddNativeMethod(IMethod method) => _methods.Add(method);
-
-        /// <summary>
-        /// Blindly copies a method to the current scope without doing any syntax checking.
-        /// Use this to link to a method that already belongs to another scope. The other scope should have already handled the syntax checking.
-        /// </summary>
-        /// <param name="method">The method to copy.</param>
-        public void CopyMethod(IMethod method)
-        {
-            if (method == null) throw new ArgumentNullException(nameof(method));
-            AddNativeMethod(method);
-        }
-
-        /// <summary>Checks if a method conflicts with another method in the scope.</summary>
-        /// <param name="method">The method to check.</param>
-        /// <returns>Returns true if the current scope already has the same name and parameters as the input method.</returns>
-        public bool HasConflict(DeltinScript deltinScript, IMethod method) => Conflicts(method, functions: false) || GetMethodOverload(deltinScript, method) != null;
-
-        /// <summary>Gets a method in the scope that has the same name and parameter types. Can potentially resolve to itself if the method being tested is in the scope.</summary>
-        /// <param name="method">The method to get a matching overload.</param>
-        /// <returns>A method with the matching overload, or null if none is found.</returns>
-        public IMethod GetMethodOverload(DeltinScript deltinScript, IMethod method)
-        {
-            if (method == null) throw new ArgumentNullException(nameof(method));
-            return GetMethodOverload(deltinScript, method.Name, method.Parameters.Select(p => p.GetCodeType(deltinScript)).ToArray());
-        }
-
-        /// <summary>Gets a method overload in the scope that has the same name and parameter types.</summary>
-        /// <param name="name">The name of the method.</param>
-        /// <param name="parameterTypes">The types of the parameters.</param>
-        /// <returns>A method with the name and parameter types, or null if none is found.</returns>
-        public IMethod GetMethodOverload(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
-        {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (parameterTypes == null) throw new ArgumentNullException(nameof(parameterTypes));
-
-            IMethod method = null;
-
-            IterateElements(false, true, itElement =>
-            {
-                // Convert the current element to an IMethod for checking.
-                IMethod checking = (IMethod)itElement.Element;
-
-                // If the name does not match or the number of parameters are not equal, continue.
-                if (checking.Name != name || checking.Parameters.Length != parameterTypes.Length) return ScopeIterateAction.Continue;
-
-                // Loop through all parameters.
-                for (int p = 0; p < checking.Parameters.Length; p++)
-                    // If the parameter types do not match, continue.
-                    if (checking.Parameters[p].GetCodeType(deltinScript) != parameterTypes[p])
-                        return ScopeIterateAction.Continue;
-
-                // Parameter overload matches.
-                method = checking;
-                return ScopeIterateAction.Stop;
-            });
-
-            return method;
-        }
 
         public void AddType(ICodeTypeInitializer initializer) => _types.Add(initializer);
 
@@ -407,6 +331,29 @@ namespace Deltin.Deltinteger.Parse
             return found;
         }
 
+        public bool Conflicts(string name)
+        {
+            var current = this;
+            while (current != null)
+            {
+                foreach (var variable in _variables)
+                    if (variable.Name == name)
+                        return true;
+                
+                foreach (var method in _methods)
+                    if (method.Name == name)
+                        return true;
+                
+                foreach (var type in _types)
+                    if (type.Name == name)
+                        return true;
+
+                if (current.CatchConflict) return false;
+                current = current.Parent;
+            }
+            return false;
+        }
+
         public void EndScope(ActionSet actionSet, bool includeParents)
         {
             if (MethodContainer) return;
@@ -425,10 +372,17 @@ namespace Deltin.Deltinteger.Parse
         Scope IScopeProvider.GetStaticBasedScope() => this;
         IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverrideInfo) => throw new NotImplementedException();
         IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => throw new NotImplementedException();
-        void IScopeAppender.AddObjectBasedScope(IMethod function) => CopyMethod(function);
-        void IScopeAppender.AddStaticBasedScope(IMethod function) => CopyMethod(function);
-        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => CopyVariable(variable);
-        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => CopyVariable(variable);
+        void IScopeAppender.AddObjectBasedScope(IMethod function) => AddNativeMethod(function);
+        void IScopeAppender.AddStaticBasedScope(IMethod function) => AddNativeMethod(function);
+        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => AddNativeVariable(variable);
+        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => AddNativeVariable(variable);
+
+        public void CheckConflict(string elementName, FileDiagnostics diagnostics, DocRange range) => SemanticsHelper.ErrorIfConflicts(
+            name: elementName,
+            errorMessage: "The definition '" + elementName + "' already exists in the current scope",
+            diagnostics: diagnostics,
+            range: range,
+            this);
     }
 
     class ScopeIterate

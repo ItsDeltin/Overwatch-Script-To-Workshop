@@ -134,9 +134,16 @@ namespace Deltin.Deltinteger.Parse
         public IVariableInstance GetOverridenVariable(string variableName) => Extends.Elements.GetVirtualVariable(variableName);
         Scope IScopeProvider.GetObjectBasedScope() => _operationalObjectScope;
         Scope IScopeProvider.GetStaticBasedScope() => _operationalStaticScope;
-        void IScopeAppender.AddObjectBasedScope(IMethod function) => _operationalObjectScope.CopyMethod(function);
-        void IScopeAppender.AddStaticBasedScope(IMethod function) => _operationalStaticScope.CopyMethod(function);
-        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => _operationalObjectScope.CopyVariable(variable);
-        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => _operationalStaticScope.CopyVariable(variable);
+        void IScopeAppender.AddObjectBasedScope(IMethod function) => _operationalObjectScope.AddNativeMethod(function);
+        void IScopeAppender.AddStaticBasedScope(IMethod function) => _operationalStaticScope.AddNativeMethod(function);
+        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => _operationalObjectScope.AddNativeVariable(variable);
+        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => _operationalStaticScope.AddNativeVariable(variable);
+
+        public void CheckConflict(string elementName, FileDiagnostics diagnostics, DocRange range) => SemanticsHelper.ErrorIfConflicts(
+            name: elementName,
+            errorMessage: "The type '" + Name + "' already contains a definition for '" + elementName + "'",
+            diagnostics: diagnostics,
+            range: range,
+            _operationalObjectScope, _operationalStaticScope);
     }
 }

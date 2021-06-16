@@ -28,5 +28,21 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel.Private => lowest == AccessLevel.Private,
             _ => throw new NotImplementedException(target.ToString())
         };
+
+        public static void ErrorIfConflicts(string name, string errorMessage, FileDiagnostics diagnostics, DocRange range, params Scope[] scopes)
+        {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (errorMessage == null) throw new ArgumentNullException(nameof(errorMessage));
+            if (diagnostics == null) throw new ArgumentNullException(nameof(diagnostics));
+            if (range == null) throw new ArgumentNullException(nameof(range));
+            if (scopes == null) throw new ArgumentNullException(nameof(scopes));
+
+            foreach (var scope in scopes)
+                if (scope.Conflicts(name))
+                {
+                    diagnostics.Error(errorMessage, range);
+                    return;
+                }
+        }
     }
 }

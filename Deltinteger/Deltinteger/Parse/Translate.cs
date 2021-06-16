@@ -11,7 +11,7 @@ using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DeltinScript : IScopeProvider, IScopeAppender
+    public class DeltinScript : IScopeHandler
     {
         private FileGetter FileGetter { get; }
         public Importer Importer { get; }
@@ -193,10 +193,7 @@ namespace Deltin.Deltinteger.Parse
                 ParseInfo parseInfo = new ParseInfo(script, this);
                 foreach (var declaration in script.Context.Declarations)
                     if (declaration is FunctionContext function)
-                    {
-                        var p = DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, null);
-                        p.AddDefaultInstance(this);
-                    }
+                        DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, null);
             }
 
             StagedInitiation.Start();
@@ -328,12 +325,13 @@ namespace Deltin.Deltinteger.Parse
 
         Scope IScopeProvider.GetObjectBasedScope() => RulesetScope;
         Scope IScopeProvider.GetStaticBasedScope() => RulesetScope;
-        void IScopeAppender.AddObjectBasedScope(IMethod function) => RulesetScope.CopyMethod(function);
-        void IScopeAppender.AddStaticBasedScope(IMethod function) => RulesetScope.CopyMethod(function);
-        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => RulesetScope.CopyVariable(variable);
-        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => RulesetScope.CopyVariable(variable);
+        void IScopeAppender.AddObjectBasedScope(IMethod function) => RulesetScope.AddNativeMethod(function);
+        void IScopeAppender.AddStaticBasedScope(IMethod function) => RulesetScope.AddNativeMethod(function);
+        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => RulesetScope.AddNativeVariable(variable);
+        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => RulesetScope.AddNativeVariable(variable);
         IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverloadInfo) => null;
         IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => null;
+        public void CheckConflict(string elementName, FileDiagnostics diagnostics, DocRange range) => RulesetScope.CheckConflict(elementName, diagnostics, range);
     }
 
     public class ScriptTypes : ITypeSupplier

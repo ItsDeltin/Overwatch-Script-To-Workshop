@@ -14,23 +14,22 @@ namespace Deltin.Deltinteger.Parse
         private Scope Scope { get; }
         private DeltinScript _translateInfo { get; }
 
-        public DefinedEnum(ParseInfo parseInfo, EnumContext enumContext) : base(enumContext.Identifier.Text)
+        public DefinedEnum(ParseInfo parseInfo, EnumContext enumContext) : base(enumContext.Identifier.GetText())
         {
             CanBeExtended = false;
             CanBeDeleted = false;
             Kind = TypeKind.Enum;
-
-            // Check if a type with the same name already exists.
-            // todo
-            // if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
-            //     parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", enumContext.Identifier.Range);
             
             _translateInfo = parseInfo.TranslateInfo;
             Scope = new Scope("enum " + Name);
 
-            // Set location and symbol link.
-            DefinedAt = new Location(parseInfo.Script.Uri, enumContext.Identifier.Range);
-            parseInfo.Script.Elements.AddDeclarationCall(this, new(enumContext.Identifier.Range, true));
+            if (enumContext.Identifier)
+            {
+                parseInfo.TranslateInfo.CheckConflict(Name, parseInfo.Script.Diagnostics, enumContext.Identifier.Range);
+                // Set location and symbol link.
+                DefinedAt = new Location(parseInfo.Script.Uri, enumContext.Identifier.Range);
+                parseInfo.Script.Elements.AddDeclarationCall(this, new(enumContext.Identifier.Range, true));
+            }
 
             // Get the enum members.
             for (int i = 0; i < enumContext.Values.Count; i++)

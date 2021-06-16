@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Parse
             // If a compatible function was found, get the handler.
             if (found)
             {
-                _parseInfo.Script.Elements.AddMethodGroupCall(this);
+                // todo
 
                 // _functionInvoker = GetLambdaHandler(ChosenFunction);
                 // if (!_type.IsConstant())

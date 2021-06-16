@@ -9,38 +9,6 @@ using Deltin.Deltinteger.Parse.Functions.Builder.User;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public interface IScopeProvider
-    {
-        Scope GetObjectBasedScope();
-        Scope GetStaticBasedScope();
-        IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo provider);
-        IVariableInstance GetOverridenVariable(string variableName);
-        Scope GetScope(bool isStatic) => isStatic ? GetStaticBasedScope() : GetObjectBasedScope();
-    }
-
-    public interface IScopeAppender
-    {
-        void AddObjectBasedScope(IMethod function);
-        void AddStaticBasedScope(IMethod function);
-        void AddObjectBasedScope(IVariableInstance variable);
-        void AddStaticBasedScope(IVariableInstance variable);
-
-        void Add(IMethod function, bool isStatic)
-        {
-            if (isStatic) AddStaticBasedScope(function);
-            else AddObjectBasedScope(function);
-        }
-        void Add(IVariableInstance variable, bool isStatic)
-        {
-            if (isStatic) AddStaticBasedScope(variable);
-            else AddObjectBasedScope(variable);
-        }
-
-        CodeType DefinedIn() => this as CodeType;
-    }
-
-    public interface IScopeHandler : IScopeProvider, IScopeAppender {}
-
     public class DefinedMethodProvider : IElementProvider, IMethodProvider, ITypeArgTrackee, IApplyBlock, IDeclarationKey, IGetContent
     {
         public string Name => Context.Identifier.GetText();
@@ -80,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly Scope _containingScope;
         private readonly Scope _methodScope;
 
-        private DefinedMethodProvider(ParseInfo parseInfo, IScopeProvider scopeProvider, FunctionContext context, IDefinedTypeInitializer containingType)
+        private DefinedMethodProvider(ParseInfo parseInfo, IScopeHandler scopeProvider, FunctionContext context, IDefinedTypeInitializer containingType)
         {
             _parseInfo = parseInfo;
             Context = context;
@@ -133,17 +101,26 @@ namespace Deltin.Deltinteger.Parse
                     SemanticsHelper.CouldNotOverride(parseInfo, nameRange, "method");
             }
 
-            parseInfo.Script.AddHover(nameRange, GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
+            // Check conflicts and add to scope.
+            scopeProvider.CheckConflict(Name, parseInfo.Script.Diagnostics, nameRange);
+            scopeProvider.Add(GetDefaultInstance(scopeProvider.DefinedIn()), Static);
 
+            // Add LSP elements
+            // Hover
+            parseInfo.Script.AddHover(nameRange, GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
+            // 'references' code lens
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
+            // Rename & go-to-definition
+            parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(nameRange, true));
+            // todo: 'override' code lens
             // if (Attributes.IsOverrideable)
             //     parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
-            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
-            parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(nameRange, true));
 
+            // Add the CallInfo to the recursion check.
             parseInfo.TranslateInfo.GetComponent<RecursionCheckComponent>().AddCheck(CallInfo);
-            parseInfo.TranslateInfo.StagedInitiation.On(this);
 
-            parseInfo.Script.Elements.AddMethodDeclaration(this);
+            // Queue content for staged initiation.
+            parseInfo.TranslateInfo.StagedInitiation.On(this);
         }
 
         public void GetContent()
@@ -185,23 +162,15 @@ namespace Deltin.Deltinteger.Parse
         }
     
         public IMethod GetDefaultInstance(CodeType definedIn) => new DefinedMethodInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes), definedIn);
-        public DefinedMethodInstance CreateInstance(InstanceAnonymousTypeLinker genericsLinker, CodeType definedIn) => new DefinedMethodInstance(this, genericsLinker, definedIn);
-        public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(scopeHandler.DefinedIn()), Static);
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
             // Get the instance.
             IMethod instance = new DefinedMethodInstance(this, genericsLinker, scopeHandler.DefinedIn());
-            
-            // Add the function to the scope.
-            if (Static)
-                scopeHandler.AddStaticBasedScope(instance);
-            else
-                scopeHandler.AddObjectBasedScope(instance);
-            
+            scopeHandler.Add(instance, Static);
             return instance;
         }
 
-        public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeProvider scopeHandler, FunctionContext context, IDefinedTypeInitializer containingType)
+        public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeHandler scopeHandler, FunctionContext context, IDefinedTypeInitializer containingType)
             => new DefinedMethodProvider(parseInfo, scopeHandler, context, containingType);
 
         public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeFunctionLabel(deltinScript, ReturnType, Name, ParameterProviders, GenericTypes);
