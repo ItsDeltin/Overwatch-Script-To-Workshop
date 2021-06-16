@@ -42,10 +42,8 @@ namespace Deltin.Deltinteger.Parse
 
         ITypeArgTrackee IMethodExtensions.Tracker => this;
         int ITypeArgTrackee.GenericsCount => GenericTypes.Length;
-        IMethod IMethodProvider.Overriding => OverridingFunction;
 
         private readonly ParseInfo _parseInfo;
-        private readonly Scope _containingScope;
         private readonly Scope _methodScope;
 
         private DefinedMethodProvider(ParseInfo parseInfo, IScopeHandler scopeProvider, FunctionContext context, IDefinedTypeInitializer containingType)
@@ -76,9 +74,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Setup the scope.
-            _containingScope = Static ? scopeProvider.GetStaticBasedScope() : scopeProvider.GetObjectBasedScope();
-            _containingScope.MethodContainer = true;
-            _methodScope = _containingScope.Child();
+            var containingScope = scopeProvider.GetScope(Static);
+            containingScope.MethodContainer = true;
+            _methodScope = containingScope.Child(true);
             
             // Get the generics.
             GenericTypes = AnonymousType.GetGenerics(parseInfo, context.TypeArguments, this);
@@ -213,7 +211,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained())
+            actionSet = actionSet
                 .SetThisTypeLinker(methodCall.TypeArgs)
                 .MergeTypeLinker(InstanceInfo);
             

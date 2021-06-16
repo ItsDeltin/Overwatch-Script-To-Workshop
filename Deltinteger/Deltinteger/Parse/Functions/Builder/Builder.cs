@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                 ActionSet.Translate.MethodStack.Add(stack);
             }
 
-            ModifySet(a => a.PackThis());
+            ModifySet(a => a.PackThis().ContainVariableAssigner());
 
             // Setup the return handler.
             if (call.ProvidedReturnHandler != null)

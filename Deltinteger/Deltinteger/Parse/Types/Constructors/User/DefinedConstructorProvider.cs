@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         public DefinedConstructorProvider(IDefinedTypeInitializer provider, ParseInfo parseInfo, Scope scope, ConstructorContext context)
         {
             _parseInfo = parseInfo;
-            _scope = scope.Child();
+            _scope = scope.Child(true);
             _context = context;
             TypeProvider = provider;
 

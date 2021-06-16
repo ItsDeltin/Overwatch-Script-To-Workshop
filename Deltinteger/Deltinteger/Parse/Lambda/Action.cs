@@ -196,7 +196,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         /// <summary>Assigns the parameter values to the action set for the constant lambdas.</summary>
         private ActionSet AssignContainedParameters(VarIndexAssigner lambaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            var newSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            var newSet = actionSet.ContainVariableAssigner();
             actionSet.IndexAssigner.CopyAll(lambaAssigner);
 
             for (int i = 0; i < parameterValues.Length; i++)

@@ -54,7 +54,6 @@ namespace Deltin.Deltinteger.Parse
         IVariableInstance IVariable.GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker) => this;
         IVariableInstance IVariable.GetDefaultInstance(CodeType definedIn) => this;
         IScopeable IElementProvider.AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
-        void IElementProvider.AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
 
         void IVariableInstance.Call(ParseInfo parseInfo, DocRange callRange) {}
     }

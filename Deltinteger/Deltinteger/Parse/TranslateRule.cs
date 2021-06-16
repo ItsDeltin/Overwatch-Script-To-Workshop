@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             GetConditions(ruleAction);
 
             RuleReturnHandler returnHandler = new RuleReturnHandler(ActionSet);
-            ruleAction.Block.Translate(ActionSet.New(returnHandler).New(ActionSet.IndexAssigner.CreateContained()));
+            ruleAction.Block.Translate(ActionSet.New(returnHandler).ContainVariableAssigner());
         }
         public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType, Team team, PlayerSelector player, bool disabled = false)
         {
@@ -190,6 +190,7 @@ namespace Deltin.Deltinteger.Parse
         public ActionSet New(IWorkshopTree currentObject) => new ActionSet(this) { CurrentObject = currentObject };
         public ActionSet New(IGettable relatedIndex, Element target = null) => new ActionSet(this) { CurrentObjectRelatedIndex = new SourceIndexReference(relatedIndex, target) };
         public ActionSet New(bool isRecursive) => new ActionSet(this) { IsRecursive = isRecursive };
+        public ActionSet ContainVariableAssigner() => new ActionSet(this) { IndexAssigner = IndexAssigner.CreateContained() };
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
         public ActionSet SetNextComment(string comment) => new ActionSet(this) { CommentNext = new ActionComment(comment) };

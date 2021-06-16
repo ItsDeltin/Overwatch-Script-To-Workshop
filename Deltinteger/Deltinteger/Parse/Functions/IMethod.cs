@@ -53,7 +53,6 @@ namespace Deltin.Deltinteger.Parse
     public interface IMethodProvider : IMethodExtensions, IElementProvider
     {
         string Name { get; }
-        IMethod Overriding { get; }
     }
 
     class MethodInfo : IMethodExtensions

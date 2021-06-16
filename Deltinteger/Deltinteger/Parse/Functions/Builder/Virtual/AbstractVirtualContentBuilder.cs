@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
             foreach (T option in Functions)
             {
                 // The action set for the overload.
-                var optionSet = ActionSet.New(ActionSet.IndexAssigner.CreateContained());
+                var optionSet = ActionSet.ContainVariableAssigner();
                 var containingType = option.ContainingType();
 
                 // Add the object variables of the selected method.

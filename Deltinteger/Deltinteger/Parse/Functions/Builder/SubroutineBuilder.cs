@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             _subroutineRule = new TranslateRule(_deltinScript, subroutine, _context.RuleName, _context.VariableGlobalDefault);
 
             // Setup the return handler.
-            _actionSet = _subroutineRule.ActionSet.New(_subroutineRule.ActionSet.IndexAssigner.CreateContained()).SetThisTypeLinker(_context.TypeLinker);
+            _actionSet = _subroutineRule.ActionSet.ContainVariableAssigner().SetThisTypeLinker(_context.TypeLinker);
 
             // Create the function builder.
             var controller = _context.Controller;

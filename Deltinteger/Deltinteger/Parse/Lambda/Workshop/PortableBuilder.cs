@@ -127,7 +127,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                 returnHandlers.Add(returnHandler);
 
                 // The action set for the overload.
-                ActionSet optionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).New(returnHandler).SetThisTypeLinker(compatibleLambda.TypeLinker);
+                ActionSet optionSet = actionSet.ContainVariableAssigner().New(returnHandler).SetThisTypeLinker(compatibleLambda.TypeLinker);
 
                 // Go to next case
                 lambdaSwitch.NextCase(Element.Num(compatibleLambda.Identifier));

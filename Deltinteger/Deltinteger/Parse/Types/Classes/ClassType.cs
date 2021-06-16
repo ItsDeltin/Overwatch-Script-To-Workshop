@@ -52,7 +52,8 @@ namespace Deltin.Deltinteger.Parse
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
         {
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            // todo: is this required?
+            actionSet = actionSet.ContainVariableAssigner();
 
             ClassData classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
 

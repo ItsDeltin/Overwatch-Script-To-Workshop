@@ -37,21 +37,10 @@ namespace Deltin.Deltinteger.Parse
         {
             ErrorName = name;
         }
-        private Scope(Scope parent, string name)
-        {
-            Parent = parent;
-            ErrorName = name;
-        }
 
-        public Scope Child()
-        {
-            return new Scope(this);
-        }
-
-        public Scope Child(string name)
-        {
-            return new Scope(this, name);
-        }
+        public Scope Child() => new Scope(this);
+        public Scope Child(string name) => new Scope(this) { ErrorName = name };
+        public Scope Child(bool containConflicts) => new Scope(this) { CatchConflict = true };
 
         private void IterateElements(bool iterateVariables, bool iterateMethods, Func<ScopeIterate, ScopeIterateAction> element, Func<Scope, ScopeIterateAction> onEmpty = null)
         {
@@ -336,15 +325,15 @@ namespace Deltin.Deltinteger.Parse
             var current = this;
             while (current != null)
             {
-                foreach (var variable in _variables)
+                foreach (var variable in current._variables)
                     if (variable.Name == name)
                         return true;
                 
-                foreach (var method in _methods)
+                foreach (var method in current._methods)
                     if (method.Name == name)
                         return true;
                 
-                foreach (var type in _types)
+                foreach (var type in current._types)
                     if (type.Name == name)
                         return true;
 
