@@ -29,20 +29,85 @@ namespace Deltin.Deltinteger.Parse
             _ => throw new NotImplementedException(target.ToString())
         };
 
-        public static void ErrorIfConflicts(string name, string errorMessage, FileDiagnostics diagnostics, DocRange range, params Scope[] scopes)
+        public static void ErrorIfConflicts(
+            ParseInfo parseInfo,
+            CheckConflict identifier,
+            string nameConflictMessage,
+            string overloadConflictMessage,
+            DocRange range,
+            params Scope[] scopes)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (errorMessage == null) throw new ArgumentNullException(nameof(errorMessage));
-            if (diagnostics == null) throw new ArgumentNullException(nameof(diagnostics));
+            if (parseInfo == null) throw new ArgumentNullException(nameof(parseInfo));
+            if (identifier.Name == null) throw new ArgumentNullException(nameof(identifier) + "." + nameof(identifier.Name));
+            if (nameConflictMessage == null) throw new ArgumentNullException(nameof(nameConflictMessage));
+            if (overloadConflictMessage == null) throw new ArgumentNullException(nameof(overloadConflictMessage));
             if (range == null) throw new ArgumentNullException(nameof(range));
             if (scopes == null) throw new ArgumentNullException(nameof(scopes));
 
             foreach (var scope in scopes)
-                if (scope.Conflicts(name))
+                switch (Conflicts(scope, identifier, parseInfo.TranslateInfo))
                 {
-                    diagnostics.Error(errorMessage, range);
-                    return;
+                    // Name conflict
+                    case ScopeConflict.NameConflict:
+                        parseInfo.Script.Diagnostics.Error(nameConflictMessage, range);
+                        return;
+                    
+                    // Overload conflict
+                    case ScopeConflict.OverloadConflict:
+                        parseInfo.Script.Diagnostics.Error(overloadConflictMessage, range);
+                        return;
                 }
+        }
+
+        static ScopeConflict Conflicts(Scope scope, CheckConflict identifier, DeltinScript deltinScript)
+        {
+            while (scope != null)
+            {
+                // Variables
+                foreach (var variable in scope.Variables)
+                    if (variable.Name == identifier.Name)
+                        return ScopeConflict.NameConflict;
+                // Types
+                foreach (var type in scope.Types)
+                    if (type.Name == identifier.Name)
+                        return ScopeConflict.NameConflict;
+                // Methods
+                foreach (var method in scope.Methods)
+                    if (method.Name == identifier.Name)
+                    {
+                        // Not a method identifier.
+                        if (identifier.ParameterTypes == null)
+                            return ScopeConflict.NameConflict;
+                        
+                        // Make sure parameter lengths match.
+                        if (identifier.ParameterTypes.Length == method.Parameters.Length)
+                        {
+                            bool conflicts = true;
+
+                            for (int i = 0; i < identifier.ParameterTypes.Length; i++)
+                                // If the parameter types do not match, there is no conflict.
+                                if (!identifier.ParameterTypes[i].Is(method.Parameters[i].GetCodeType(deltinScript)))
+                                {
+                                    conflicts = false;
+                                    break;
+                                }
+                            
+                            if (conflicts)
+                                return ScopeConflict.OverloadConflict;
+                        }
+                    }
+
+                if (scope.CatchConflict) return ScopeConflict.NoConflict;
+                scope = scope.Parent;
+            }
+            return ScopeConflict.NoConflict;
+        }
+
+        enum ScopeConflict
+        {
+            NoConflict,
+            NameConflict,
+            OverloadConflict,
         }
     }
 }

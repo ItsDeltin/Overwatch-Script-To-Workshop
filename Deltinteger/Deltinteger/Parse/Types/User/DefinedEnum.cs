@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (enumContext.Identifier)
             {
-                parseInfo.TranslateInfo.CheckConflict(Name, parseInfo.Script.Diagnostics, enumContext.Identifier.Range);
+                parseInfo.TranslateInfo.CheckConflict(parseInfo, new(Name), enumContext.Identifier.Range);
                 // Set location and symbol link.
                 DefinedAt = new Location(parseInfo.Script.Uri, enumContext.Identifier.Range);
                 parseInfo.Script.Elements.AddDeclarationCall(this, new(enumContext.Identifier.Range, true));

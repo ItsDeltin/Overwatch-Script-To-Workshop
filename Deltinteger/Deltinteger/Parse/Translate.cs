@@ -331,7 +331,7 @@ namespace Deltin.Deltinteger.Parse
         void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => RulesetScope.AddNativeVariable(variable);
         IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverloadInfo) => null;
         IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => null;
-        public void CheckConflict(string elementName, FileDiagnostics diagnostics, DocRange range) => RulesetScope.CheckConflict(elementName, diagnostics, range);
+        public void CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range) => RulesetScope.CheckConflict(parseInfo, identifier, range);
     }
 
     public class ScriptTypes : ITypeSupplier

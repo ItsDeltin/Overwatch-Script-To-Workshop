@@ -34,7 +34,30 @@ namespace Deltin.Deltinteger.Parse
 
     public interface IConflictChecker
     {
-        void CheckConflict(string elementName, FileDiagnostics diagnostics, DocRange range);
+        void CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range);
+    }
+
+    public struct CheckConflict
+    {
+        public readonly string Name;
+        public readonly CodeType[] ParameterTypes;
+
+        public CheckConflict(string name)
+        {
+            Name = name;
+            ParameterTypes = null;
+        }
+
+        public CheckConflict(string name, CodeType[] parameterTypes)
+        {
+            Name = name;
+            ParameterTypes = parameterTypes;
+        }
+
+        public static string CreateNameConflictMessage(string typeName, string identifier) =>
+            "The type '" + typeName + "' already contains a definition for '" + identifier + "'";
+        public static string CreateOverloadConflictMessage(string typeName, string identifier) =>
+            "The type '" + typeName + "' already contains a definition '" + identifier + "' with the same name and parameter types";
     }
 
     public interface IScopeHandler : IScopeProvider, IScopeAppender, IConflictChecker {}

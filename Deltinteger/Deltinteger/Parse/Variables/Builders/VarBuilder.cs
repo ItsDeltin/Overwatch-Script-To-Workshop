@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
             var result = new Var(_varInfo);
 
             // Add the variable to the operational scope.
-            _scopeHandler.CheckConflict(_name, _parseInfo.Script.Diagnostics, _nameRange);
+            _scopeHandler.CheckConflict(_parseInfo, new(_name), _nameRange);
             _scopeHandler.Add(result.GetDefaultInstance(_scopeHandler.DefinedIn()), ComponentCollection.IsAttribute(AttributeType.Static));
 
             // Done

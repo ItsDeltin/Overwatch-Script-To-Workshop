@@ -123,10 +123,11 @@ namespace Deltin.Deltinteger.Parse
             }
         }
         public void AddStaticBasedScope(IVariableInstance variable) => StaticScope.CopyVariable(variable);
-        public void CheckConflict(string elementName, FileDiagnostics diagnostics, DocRange range) => SemanticsHelper.ErrorIfConflicts(
-            name: elementName,
-            errorMessage: "The type '" + Name + "' already contains a definition for '" + elementName + "'",
-            diagnostics: diagnostics,
+        public void CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range) => SemanticsHelper.ErrorIfConflicts(
+            parseInfo: parseInfo,
+            identifier: identifier,
+            nameConflictMessage: Parse.CheckConflict.CreateNameConflictMessage(Name, identifier.Name),
+            overloadConflictMessage: Parse.CheckConflict.CreateOverloadConflictMessage(Name, identifier.Name),
             range: range,
             ObjectScope, StaticScope);
         public override void DependMeta() => _parseInfo.TranslateInfo.StagedInitiation.Meta.Depend(this);

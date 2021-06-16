@@ -320,29 +320,6 @@ namespace Deltin.Deltinteger.Parse
             return found;
         }
 
-        public bool Conflicts(string name)
-        {
-            var current = this;
-            while (current != null)
-            {
-                foreach (var variable in current._variables)
-                    if (variable.Name == name)
-                        return true;
-                
-                foreach (var method in current._methods)
-                    if (method.Name == name)
-                        return true;
-                
-                foreach (var type in current._types)
-                    if (type.Name == name)
-                        return true;
-
-                if (current.CatchConflict) return false;
-                current = current.Parent;
-            }
-            return false;
-        }
-
         public void EndScope(ActionSet actionSet, bool includeParents)
         {
             if (MethodContainer) return;
@@ -366,10 +343,11 @@ namespace Deltin.Deltinteger.Parse
         void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => AddNativeVariable(variable);
         void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => AddNativeVariable(variable);
 
-        public void CheckConflict(string elementName, FileDiagnostics diagnostics, DocRange range) => SemanticsHelper.ErrorIfConflicts(
-            name: elementName,
-            errorMessage: "The definition '" + elementName + "' already exists in the current scope",
-            diagnostics: diagnostics,
+        public void CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range) => SemanticsHelper.ErrorIfConflicts(
+            parseInfo: parseInfo,
+            identifier: identifier,
+            nameConflictMessage: "The definition '" + identifier.Name + "' already exists in the current scope",
+            overloadConflictMessage: "The current scope already contains a definition '" + identifier.Name + "' with the same name and parameter types",
             range: range,
             this);
     }

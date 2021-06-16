@@ -100,7 +100,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Check conflicts and add to scope.
-            scopeProvider.CheckConflict(Name, parseInfo.Script.Diagnostics, nameRange);
+            scopeProvider.CheckConflict(parseInfo, new(Name, ParameterTypes), nameRange);
             scopeProvider.Add(GetDefaultInstance(scopeProvider.DefinedIn()), Static);
 
             // Add LSP elements
