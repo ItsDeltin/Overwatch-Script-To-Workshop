@@ -211,29 +211,33 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
             }
         }
 
-        public bool CheckConflicts(VariableComponentCollection componentCollection)
+        public bool CheckConflicts(VariableComponentCollection collection)
         {
             switch (Attribute)
             {
                 // globalvar conflicting with playervar
                 case AttributeType.GlobalVar:
-                    if (componentCollection.IsAttribute(AttributeType.PlayerVar))
-                    {
-                        componentCollection.Diagnostics.Error("The 'globalvar' attribute cannot be used alongside the 'playervar' attribute.", Range);
-                        WasRejected = true;
-                        return false;
-                    }
-                    break;
-                
+                    return Conflict(collection, AttributeType.PlayerVar, "The 'globalvar' attribute cannot be used alongside the 'playervar' attribute");                
                 // playervar conflicting with globalvar
                 case AttributeType.PlayerVar:
-                    if (componentCollection.IsAttribute(AttributeType.GlobalVar))
-                    {
-                        componentCollection.Diagnostics.Error("The 'playervar' attribute cannot be used alongside the 'globalvar' attribute.", Range);
-                        WasRejected = true;
-                        return false;
-                    }
-                    break;
+                    return Conflict(collection, AttributeType.GlobalVar, "The 'playervar' attribute cannot be used alongside the 'globalvar' attribute");   
+                // in conflicting with ref
+                case AttributeType.In:
+                    return Conflict(collection, AttributeType.Ref, "The 'in' attribute cannot be used alongside the 'ref' attribute");
+                // ref conflicting with in
+                case AttributeType.Ref:
+                    return Conflict(collection, AttributeType.In, "The 'ref' attribute cannot be used alongside the 'in' attribute");
+            }
+            return true;
+        }
+
+        bool Conflict(VariableComponentCollection collection, AttributeType attributeType, string message)
+        {
+            if (collection.IsAttribute(attributeType))
+            {
+                collection.Diagnostics.Error(message, Range);
+                WasRejected = true;
+                return false;
             }
             return true;
         }
