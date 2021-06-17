@@ -122,7 +122,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool IsVoid => false;
         public bool DefinitelyType => true;
         public bool Valid => ArrowToken;
-        Token IParseType.GenericToken => throw new NotImplementedException();
+        Token IParseType.GenericToken => null;
     }
 
     public class GroupType : Node, IParseType

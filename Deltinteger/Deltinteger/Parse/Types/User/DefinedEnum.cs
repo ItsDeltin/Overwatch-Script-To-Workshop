@@ -16,7 +16,6 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedEnum(ParseInfo parseInfo, EnumContext enumContext) : base(enumContext.Identifier.GetText())
         {
-            CanBeExtended = false;
             Kind = TypeKind.Enum;
             
             _translateInfo = parseInfo.TranslateInfo;

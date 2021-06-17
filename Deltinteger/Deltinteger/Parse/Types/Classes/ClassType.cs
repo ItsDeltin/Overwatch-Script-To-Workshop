@@ -87,8 +87,8 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Delete(ActionSet actionSet, Element reference)
         {
-            var combo = actionSet.ToWorkshop.ClassInitializer.ComboFromClassType(this);
-            int count = combo.StackLength + combo.StackOffset;
+            var relation = actionSet.ToWorkshop.ClassInitializer.RelationFromClassType(this);
+            int count = relation.GetTotalStackLength();
 
             for (int i = 0; i < count; i++)
                 actionSet.ToWorkshop.ClassInitializer.ObjectVariableFromIndex(i).Set(actionSet, value: 0, index: reference);

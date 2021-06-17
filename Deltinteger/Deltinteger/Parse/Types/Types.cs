@@ -25,9 +25,6 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
         public bool CanBeDeleted { get; protected set; } = false;
 
-        /// <summary>Determines if other classes can inherit this class.</summary>
-        public bool CanBeExtended { get; protected set; } = false;
-
         /// <summary>The attributes of the type. Determines if the type is a struct or struct array and more.</summary>
         public TypeAttributes Attributes { get; protected set; } = new TypeAttributes();
 

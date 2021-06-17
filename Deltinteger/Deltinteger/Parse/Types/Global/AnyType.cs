@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Parse
         public AnyType(string name, DeltinScript deltinScript) : base(name)
         {
             CanBeDeleted = true;
-            CanBeExtended = false;
             _deltinScript = deltinScript;
 
             deltinScript.StagedInitiation.On(InitiationStage.Meta, ResolveElements);

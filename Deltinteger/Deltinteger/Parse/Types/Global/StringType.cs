@@ -17,7 +17,6 @@ namespace Deltin.Deltinteger.Parse
         public StringType(DeltinScript deltinScript, ITypeSupplier typeSupplier) : base("String")
         {
             _typeSupplier = typeSupplier;
-            CanBeExtended = false;
             deltinScript.StagedInitiation.On(this);
         }
 

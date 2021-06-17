@@ -11,7 +11,6 @@ namespace Deltin.Deltinteger.Parse
 
         public NumberType(DeltinScript deltinScript, ITypeSupplier supplier) : base("Number")
         {
-            CanBeExtended = false;
             _supplier = supplier;
 
             deltinScript.StagedInitiation.On(this);

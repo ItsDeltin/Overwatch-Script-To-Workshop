@@ -63,7 +63,6 @@ namespace Deltin.Deltinteger.Parse
 
         public PlayerType(DeltinScript deltinScript, ITypeSupplier typeSupplier) : base("Player")
         {
-            CanBeExtended = false;
             ArrayHandler = this;
             _supplier = typeSupplier;
 

@@ -199,6 +199,7 @@ namespace Deltin.Deltinteger.Parse
         public ClassType Instance { get; }
         public ClassWorkshopRelation Extending { get; private set; }
         readonly List<ClassWorkshopRelation> _extendedBy = new List<ClassWorkshopRelation>();
+        int _totalStackLength = -1;
 
         public ClassWorkshopRelation(WorkshopInitializedCombo combo, ClassType instance)
         {
@@ -235,6 +236,18 @@ namespace Deltin.Deltinteger.Parse
                 if (value != null)
                     yield return value;
             }
+        }
+
+        /// <summary>The number of object variables required to store this class and any extender.</summary> 
+        public int GetTotalStackLength()
+        {
+            if (_totalStackLength == -1)
+            {
+                _totalStackLength = Combo.StackOffset + Combo.StackLength;
+                if (_extendedBy.Count != 0)
+                    _totalStackLength = Math.Max(_totalStackLength, _extendedBy.Max(extended => extended.GetTotalStackLength()));
+            }
+            return _totalStackLength;
         }
     }
 }

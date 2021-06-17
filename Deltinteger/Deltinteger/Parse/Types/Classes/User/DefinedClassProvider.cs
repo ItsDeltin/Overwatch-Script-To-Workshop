@@ -72,17 +72,7 @@ namespace Deltin.Deltinteger.Parse
                 if (inheriting != null)
                 {
                     inheriting.Call(_parseInfo, inheritContext.Range);
-
-                    // Make sure the type being extended can actually be extended.
-                    // TODO: update CanExtend!
-                    // if (CodeTypeHelpers.CanExtend(WorkingInstance, inheriting, _parseInfo.Script.Diagnostics, inheritContext.Range))
-                    // {
-                        // CanExtend will return false if 'inheriting' is not a ClassType so we can safely cast here.
-                        Extends = (ClassType)inheriting;
-
-                        if (Extends.Provider.MetaGetter != null)
-                            _parseInfo.TranslateInfo.StagedInitiation.Meta.Depend(Extends.Provider.MetaGetter);
-                    // }
+                    TryToExtend(inheriting, inheritContext.GenericToken.GetRange(inheritContext.Range));
                 }
             }
 
@@ -128,6 +118,41 @@ namespace Deltin.Deltinteger.Parse
             // _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, CodeLensSourceType.Type, _definedAt.range));
         }
         
+        void TryToExtend(CodeType type, DocRange range)
+        {
+            // Make sure the type is a class.
+            if (type is not ClassType classType)
+            {
+                _parseInfo.Script.Diagnostics.Error("'" + type.Name + "' is not a class", range);
+                return;
+            }
+            
+            // Do not extend self.
+            if (classType.Provider == this)
+            {
+                _parseInfo.Script.Diagnostics.Error("Cannot extend self", range);
+                return;
+            }
+
+            // Check for circular hierarchy.
+            var current = classType.Provider.Extends?.Provider;
+            while (current != null)
+            {
+                if (current == this)
+                {
+                    _parseInfo.Script.Diagnostics.Error("Circular hierarchies are not allowed", range);
+                    return;
+                }
+                current = (current.Extends as ClassType)?.Provider;
+            }
+
+            Extends = classType;
+
+            // Ok
+            if (classType.Provider.MetaGetter != null)
+                _parseInfo.TranslateInfo.StagedInitiation.Meta.Depend(classType.Provider.MetaGetter);
+        }
+
         public override CodeType GetInstance() => new DefinedClass(_parseInfo, this, GenericTypes);
         public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedClass(_parseInfo, this, instanceInfo.Generics);
         public IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo overrideInfo) => Extends.Elements.GetVirtualFunction(deltinScript, overrideInfo.Name, overrideInfo.ParameterTypes);

@@ -10,7 +10,6 @@ namespace Deltin.Deltinteger.Parse
 
         public BooleanType(ITypeSupplier supplier) : base("Boolean")
         {
-            CanBeExtended = false;
             _supplier = supplier;
 
             Operations.AddTypeOperation(new TypeOperation[] {
