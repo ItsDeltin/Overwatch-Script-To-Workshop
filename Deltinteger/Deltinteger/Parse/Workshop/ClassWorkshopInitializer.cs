@@ -12,11 +12,11 @@ namespace Deltin.Deltinteger.Parse
         readonly ToWorkshop _toWorkshop;
         GlobTypeArgCollector _typeTracker => _toWorkshop.TypeArgGlob;
         int _stackCount; // The number of object variables that need to be assigned.
-        IndexReference[] _stacks; // The object variables.
         int _newClassID; // Counts up from 0 assigning classes identifiers.
         readonly HashSet<WorkshopInitializedCombo> _initializedCombos = new HashSet<WorkshopInitializedCombo>();
         readonly List<ClassProviderComboCollection> _providerComboCollections = new List<ClassProviderComboCollection>();
         readonly List<ClassWorkshopRelation> _relations = new List<ClassWorkshopRelation>();
+        public IndexReference[] Stacks { get; private set; } // The object variables.
 
         public ClassWorkshopInitializerComponent(ToWorkshop toWorkshop)
         {
@@ -79,13 +79,13 @@ namespace Deltin.Deltinteger.Parse
         // Assigns ObjectVariable stacks.
         void AssignStacks()
         {
-            _stacks = new IndexReference[_stackCount];
+            Stacks = new IndexReference[_stackCount];
 
-            for (int i = 0; i < _stacks.Length; i++)
-                _stacks[i] = _toWorkshop.DeltinScript.VarCollection.Assign(ObjectVariableTag + i, true, false);
+            for (int i = 0; i < Stacks.Length; i++)
+                Stacks[i] = _toWorkshop.DeltinScript.VarCollection.Assign(ObjectVariableTag + i, true, false);
         }
 
-        public IndexReference ObjectVariableFromIndex(int i) => _stacks[i];
+        public IndexReference ObjectVariableFromIndex(int i) => Stacks[i];
     }
 
     public class ClassProviderComboCollection

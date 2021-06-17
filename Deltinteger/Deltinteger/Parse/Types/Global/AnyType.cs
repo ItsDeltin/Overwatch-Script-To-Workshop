@@ -40,6 +40,13 @@ namespace Deltin.Deltinteger.Parse
             Operations.AddTypeOperation(AssignmentOperation.GetNumericOperations(this));
         }
 
+        public override void Delete(ActionSet actionSet, Element reference)
+        {
+            var stacks = actionSet.ToWorkshop.ClassInitializer.Stacks;
+            for (int i = 0; i < stacks.Length; i++)
+                stacks[i].Set(actionSet, value: 0, index: reference);
+        }
+
         public override bool Implements(CodeType type) => !type.IsConstant() && type is StructInstance == false;
         public override bool Is(CodeType type) => !type.IsConstant();
         public override CompletionItem GetCompletion() => GetTypeCompletion(this);

@@ -23,7 +23,6 @@ namespace Deltin.Deltinteger.Parse
 
         public VectorType(DeltinScript deltinScript, ITypeSupplier supplier) : base("Vector")
         {
-            CanBeDeleted = false;
             CanBeExtended = false;
             TokenType = SemanticTokenType.Struct;
             _typeSupplier = supplier;

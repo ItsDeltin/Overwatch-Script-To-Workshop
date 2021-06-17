@@ -73,35 +73,34 @@ namespace Deltin.Deltinteger.Parse
 
     public class DeleteAction : IStatement
     {
-        private IExpression DeleteValue { get; }
+        readonly IExpression _deleteValue;
+        string _comment;
 
         public DeleteAction(ParseInfo parseInfo, Scope scope, Delete deleteContext)
         {
-            DeleteValue = parseInfo.GetExpression(scope, deleteContext.Deleting);
+            _deleteValue = parseInfo.GetExpression(scope, deleteContext.Deleting);
 
-            if (DeleteValue.Type() == null)
-                parseInfo.Script.Diagnostics.Error("Expression has no type.", deleteContext.Deleting.Range);
-
-            else if (!DeleteValue.Type().CanBeDeleted)
-                parseInfo.Script.Diagnostics.Error($"Type '{DeleteValue.Type().Name}' cannot be deleted.", deleteContext.Deleting.Range);
+            if (!_deleteValue.Type().CanBeDeleted)
+                parseInfo.Script.Diagnostics.Error($"Type '{_deleteValue.Type().Name}' cannot be deleted", deleteContext.Deleting.Range);
         }
 
         public void Translate(ActionSet actionSet)
         {
+            actionSet = actionSet.SetNextComment(_comment);
+
             // Object reference to delete.
-            Element delete = (Element)DeleteValue.Parse(actionSet);
+            Element delete = (Element)_deleteValue.Parse(actionSet);
 
             // Class data.
             var classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // Remove the variable from the list of classes.
-            actionSet.AddAction(classData.ClassIndexes.SetVariable(
-                value: 0,
-                index: delete
-            ));
+            classData.ClassIndexes.Set(actionSet, value: 0, index: delete);
 
             // Delete the object.
-            DeleteValue.Type().Delete(actionSet, delete);
+            _deleteValue.Type().Delete(actionSet, delete);
         }
+
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => _comment = comment;
     }
 }

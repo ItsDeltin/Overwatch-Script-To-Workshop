@@ -87,15 +87,11 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Delete(ActionSet actionSet, Element reference)
         {
-            if (Extends != null && Extends.CanBeDeleted)
-                Extends.Delete(actionSet, reference);
+            var combo = actionSet.ToWorkshop.ClassInitializer.ComboFromClassType(this);
+            int count = combo.StackLength + combo.StackOffset;
 
-            // TODO: delete
-            // foreach (ObjectVariable objectVariable in ObjectVariables)
-            //     actionSet.AddAction(objectVariable.ArrayStore.SetVariable(
-            //         value: 0,
-            //         index: reference
-            //     ));
+            for (int i = 0; i < count; i++)
+                actionSet.ToWorkshop.ClassInitializer.ObjectVariableFromIndex(i).Set(actionSet, value: 0, index: reference);
         }
 
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
