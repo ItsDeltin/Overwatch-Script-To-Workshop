@@ -38,7 +38,7 @@
                             "indent": {
                                 "description": "The indentation of the action. Is neutral by default.",
                                 "type": "string",
-                                "enum": ["indent", "outdent", "neutral"],
+                                "enum": ["indent", "outdent", "neutral", "drop"],
                                 "default": "indent"
                             }
                         }

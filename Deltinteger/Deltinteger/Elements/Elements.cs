@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Elements
         public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
             var action = Function as ElementJsonAction;
-            if (action != null && action.Indentation == "outdent") b.Outdent();
+            if (action != null && action.Indentation == "outdent" || action.Indentation == "drop") b.Outdent();
 
             // Add a comment and newline
             if (Comment != null) b.AppendLine($"\"{Comment}\"");
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Elements
             if (action != null)
             {
                 b.AppendLine(";");
-                if (action.Indentation == "indent") b.Indent();
+                if (action.Indentation == "indent" || action.Indentation == "drop") b.Indent();
             }
         }
 

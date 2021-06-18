@@ -4000,7 +4000,8 @@
     },
     {
       "name": "Else",
-      "hidden": true
+      "hidden": true,
+      "indent": "drop"
     },
     {
       "name": "Kill",
