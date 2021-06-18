@@ -1,12 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse.Variables.Build;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -47,6 +45,8 @@ namespace Deltin.Deltinteger.Parse
             // Empty struct error.
             if (_context.Values.Count == 0)
                 _parseInfo.Script.Diagnostics.Error("Empty structs are not allowed", _context.Range);
+            
+            var scopeHandler = new StructValueScopeHandler(_scope);
 
             // Create the struct type from the values.
             Variables = new IVariable[_context.Values.Count];
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
                     _parseInfo.Script.Diagnostics.Error("Inconsistent struct value usage; value types must be all explicit or all implicit", _context.Values[i].Identifier.Range);
                 
                 // Create the struct variable.
-                Variables[i] = new StructValueVariable(_scope, new StructValueContextHandler(_parseInfo, _context.Values[i])).GetVar();
+                Variables[i] = new StructValueVariable(scopeHandler, new StructValueContextHandler(_parseInfo, _context.Values[i])).GetVar();
 
                 // Add the variable label.
                 Name += Variables[i].GetDefaultInstance(null).GetLabel(_parseInfo.TranslateInfo);
@@ -102,6 +102,7 @@ namespace Deltin.Deltinteger.Parse
         void IStructProvider.DependMeta() {}
         void IStructProvider.DependContent() {}
 
+        // Handles the syntax tree context for struct variables.
         class StructValueContextHandler : IVarContextHandler
         {
             public ParseInfo ParseInfo { get; }
@@ -122,6 +123,28 @@ namespace Deltin.Deltinteger.Parse
             public string GetName() => _context.Identifier.GetText();
             public DocRange GetNameRange() => _context.Identifier.GetRange(_context.Range);
             public DocRange GetTypeRange() => _context.Type?.Range;
+        }
+
+        // Handles the struct expression's scope and checks for duplicates.
+        class StructValueScopeHandler : IScopeHandler
+        {
+            readonly Scope _scope;
+            readonly List<string> _variableNames = new List<string>();
+
+            public StructValueScopeHandler(Scope scope) => _scope = scope;
+            Scope IScopeProvider.GetObjectBasedScope() => _scope;
+            Scope IScopeProvider.GetStaticBasedScope() => _scope;
+            IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo provider) => null;
+            IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => null;
+            void IScopeAppender.AddObjectBasedScope(IMethod function) {}
+            void IScopeAppender.AddStaticBasedScope(IMethod function) {}
+            void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => _variableNames.Add(variable.Name);
+            void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => _variableNames.Add(variable.Name);
+            void IConflictChecker.CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range)
+            {
+                if (_variableNames.Contains(identifier.Name))
+                    parseInfo.Script.Diagnostics.Error("Struct cannot have multiple properties with the same name", range);
+            }
         }
     }
 }
