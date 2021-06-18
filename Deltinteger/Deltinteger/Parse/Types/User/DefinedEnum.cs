@@ -58,13 +58,18 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
-    class DefinedEnumMember : IVariable, IVariableInstance, IExpression, ICallable, IDeclarationKey
+    class DefinedEnumMember : IVariable, IVariableInstance, IDeclarationKey
     {
         public string Name { get; }
         public MarkupBuilder Documentation { get; }
         public LanguageServer.Location DefinedAt { get; }
         public DefinedEnum Enum { get; }
-        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes() { CanBeSet = false, StoreType = StoreType.None, CanBeIndexed = false };
+        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes() {
+            CanBeSet = false,
+            StoreType = StoreType.None,
+            CanBeIndexed = false,
+            UseDefaultVariableAssigner = false
+        };
 
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool WholeContext => true;
@@ -88,9 +93,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.EnumValue, DefinedAt.range));
         }
 
-        public CodeType Type() => Enum;
-
-        public IWorkshopTree Parse(ActionSet actionSet) => ValueExpression.Parse(actionSet);
+        public IWorkshopTree ToWorkshop(ActionSet actionSet) => ValueExpression.Parse(actionSet);
 
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
@@ -98,13 +101,9 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.Elements.AddDeclarationCall(this, new(callRange, false));
         }
 
-        public Scope ReturningScope() => null;
-
         public IVariableInstance GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker) => this;
         public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => throw new NotImplementedException();
-        public IExpression GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => this;
         public IVariableInstance GetDefaultInstance(CodeType definedIn) => this;
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
-        public void AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
     }
 }

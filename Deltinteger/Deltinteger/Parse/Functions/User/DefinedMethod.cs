@@ -196,6 +196,7 @@ namespace Deltin.Deltinteger.Parse
             CodeType = provider.ReturnType?.GetRealType(instanceInfo);
             InstanceInfo = instanceInfo;
             DefinedInType = Attributes.ContainingType = definedIn;
+            Attributes.Parallelable = provider.IsSubroutine;
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             ParameterVars = new IVariableInstance[Parameters.Length];

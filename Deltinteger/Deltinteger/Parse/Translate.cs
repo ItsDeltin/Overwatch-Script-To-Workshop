@@ -177,11 +177,14 @@ namespace Deltin.Deltinteger.Parse
                     {
                         Var var = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable)).GetVar();
 
-                        rulesetVariables.Add(var);
+                        if (var.StoreType != StoreType.None)
+                        {
+                            rulesetVariables.Add(var);
 
-                        // Add the variable to the player variables scope if it is a player variable.
-                        if (var.VariableType == VariableType.Player)
-                            PlayerVariableScope.CopyVariable(var.GetDefaultInstance(null));
+                            // Add the variable to the player variables scope if it is a player variable.
+                            if (var.VariableType == VariableType.Player)
+                                PlayerVariableScope.CopyVariable(var.GetDefaultInstance(null));
+                        }
                     }
             
             ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.

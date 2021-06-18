@@ -279,7 +279,8 @@ namespace Deltin.Deltinteger.Parse
             if (DefinedVariable != null)
             {
                 // Add the defined variable to the index assigner.
-                DefinedVariable.GetInstance(null, actionSet.ThisTypeLinker).GetAssigner(new(actionSet)).GetValue(actionSet);
+                var gettable = DefinedVariable.GetInstance(null, actionSet.ThisTypeLinker).GetAssigner(new(actionSet)).GetValue(actionSet);
+                actionSet.IndexAssigner.Add(DefinedVariable, gettable);
             }
             else if (Initializer != null)
                 Initializer.Translate(actionSet);
