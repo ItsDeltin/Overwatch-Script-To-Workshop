@@ -11,6 +11,9 @@
       "include": "#new"
     },
     {
+      "include": "#import"
+    },
+    {
       "include": "#class-struct-declaration"
     },
     {
@@ -28,6 +31,25 @@
   ],
   "firstLineMatch": "\\brule\\b",
   "repository": {
+    "import": {
+      "begin": "\\bimport\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.other"
+        }
+      },
+      "end": ";",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#string-literal"
+        }
+      ]
+    },
     "comment": {
       "patterns": [
         {
@@ -898,6 +920,27 @@
         }
       ]
     },
+    "constructor-declaration": {
+      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar)\\b\\s*)*)(constructor)\\s*(?=\\()",
+      "beginCaptures": {
+        "3": {
+          "name": "storage.modifier"
+        },
+        "4": {
+          "name": "storage.type"
+        }
+      },
+      "end": "(?<=\\})",
+      "endCaptures": {},
+      "patterns": [
+        {
+          "include": "#parameter_list"
+        },
+        {
+          "include": "#block"
+        }
+      ]
+    },
     "class-struct-declaration": {
       "begin": "(class)\\s*([a-zA-Z0-9_]+\\b)|(struct)\\s*([a-zA-Z0-9_]+\\b)",
       "beginCaptures": {
@@ -955,6 +998,9 @@
           "patterns": [
             {
               "include": "#comment"
+            },
+            {
+              "include": "#constructor-declaration"
             },
             {
               "include": "#function-declaration"

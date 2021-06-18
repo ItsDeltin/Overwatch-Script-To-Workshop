@@ -128,6 +128,21 @@ const variableDeclaration: Pattern = {
     patterns: [{ include: Repository.expression }],
 };
 
+// Constructors
+const constructorDeclaration: Pattern = {
+    begin: [
+        matchAttributes,
+        pair('constructor', 'storage.type'),
+        w,
+        tm.PositiveLookahead('('),
+    ],
+    end: tm.PositiveLookbehind('}'),
+    patterns: [
+        { include: Repository.parameter_list },
+        { include: Repository.block },
+    ],
+};
+
 // Functions
 const functionDeclaration: Pattern = {
     begin: [
@@ -228,6 +243,7 @@ const classOrStructDeclaration: Pattern = {
             end: common_nodes.bracket_close,
             patterns: [
                 includeComment,
+                { include: Repository.constructor_declaration },
                 { include: Repository.function_declaration },
                 { include: Repository.variable_declaration },
             ],
@@ -433,7 +449,7 @@ const statementEnd: Pattern = {
     zeroCapture: { name: Names.terminator },
 };
 
-export const ifStatement: Pattern = {
+const ifStatement: Pattern = {
     begin: [
         b,
         tm.Maybe([pair('else', Names.else_), w]),
@@ -490,7 +506,7 @@ const assignment: Pattern = {
     zeroCapture: { name: Names.assignment_compound },
 };
 
-export const expressionPattern: Pattern = {
+const expressionPattern: Pattern = {
     patterns: [
         // number
         { include: Repository.number },
@@ -718,6 +734,7 @@ export function getRepository() {
         result[name.replace('#', '')] = pattern;
     }
 
+    add(Repository.import_, import_);
     add(Repository.comment, comment);
     add(Repository.expression, expressionPattern);
     add(Repository.string_literal, stringLiteral);
@@ -736,6 +753,7 @@ export function getRepository() {
     add(Repository.code_type_matcher, codeTypeMatcher);
     add(Repository.variable_declaration, variableDeclaration);
     add(Repository.function_declaration, functionDeclaration);
+    add(Repository.constructor_declaration, constructorDeclaration);
     add(Repository.class_struct_declaration, classOrStructDeclaration);
     add(Repository.enum_declaration, enumDeclaration);
     add(Repository.type_args, typeArgs);

@@ -1221,7 +1221,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool IsConstructor() => Lookahead(() =>
         {
             ParseAttributes();
-            return Is(TokenType.Identifier) && Is(TokenType.Parentheses_Open, 1);
+            return Is(TokenType.Constructor);
         });
 
         /// <summary>Determines if the current context is a type cast.</summary>
@@ -1482,7 +1482,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         ConstructorContext ParseConstructor()
         {
             var attributes = ParseAttributes();
-            var identifier = ParseExpected(TokenType.Identifier);
+            var constructor = ParseExpected(TokenType.Constructor);
             ParseExpected(TokenType.Parentheses_Open);
 
             // Get the parameters.
@@ -1496,7 +1496,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Get the constructor's block.
             Block block = ParseBlock();
 
-            return new ConstructorContext(attributes, identifier, parameters, subroutineName, block);
+            return new ConstructorContext(attributes, constructor, parameters, subroutineName, block);
         }
 
         NewExpression ParseNew()

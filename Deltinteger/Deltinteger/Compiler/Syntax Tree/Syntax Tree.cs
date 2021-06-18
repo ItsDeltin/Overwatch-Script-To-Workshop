@@ -298,15 +298,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class ConstructorContext
     {
         public AttributeTokens Attributes { get; }
-        public Token LocationToken { get; }
+        public Token ConstructorToken { get; }
         public List<VariableDeclaration> Parameters { get; }
         public Token SubroutineName { get; }
         public Block Block { get; }
 
-        public ConstructorContext(AttributeTokens attributes, Token locationToken, List<VariableDeclaration> parameters, Token subroutineName, Block block)
+        public ConstructorContext(AttributeTokens attributes, Token constructorToken, List<VariableDeclaration> parameters, Token subroutineName, Block block)
         {
             Attributes = attributes;
-            LocationToken = locationToken;
+            ConstructorToken = constructorToken;
             Parameters = parameters;
             SubroutineName = subroutineName;
             Block = block;

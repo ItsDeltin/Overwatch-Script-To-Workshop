@@ -502,6 +502,7 @@ namespace Deltin.Deltinteger.Compiler
         Root,
         As,
         Async,
+        Constructor,
         // Keywords/identifiers
         Type,
         Single,

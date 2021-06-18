@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             _recursiveCallHandler = new RecursiveCallHandler(this, context.SubroutineName);
             CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script, ContentReady);
             SubroutineName = context.SubroutineName?.Text.RemoveQuotes();
-            DefinedAt = parseInfo.Script.GetLocation(context.LocationToken.Range);
+            DefinedAt = parseInfo.Script.GetLocation(context.ConstructorToken.Range);
 
             // Setup the parameters.
             ParameterProviders = ParameterProvider.GetParameterProviders(_parseInfo, _scope, _context.Parameters, SubroutineName != null);
@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             
             parseInfo.TranslateInfo.StagedInitiation.On(this);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Constructor, DefinedAt.range));
-            parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(context.LocationToken.Range, true));
+            parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(context.ConstructorToken.Range, true));
         }
 
         public void GetContent()

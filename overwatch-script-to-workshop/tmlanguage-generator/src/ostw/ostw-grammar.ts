@@ -12,6 +12,7 @@ let grammar = tm.createTextmateGrammar({
     repository: getRepository(),
     patterns: [
         { include: Repository.new_ },
+        { include: Repository.import_ },
         { include: Repository.class_struct_declaration },
         { include: Repository.enum_declaration },
         { include: Repository.rule },
