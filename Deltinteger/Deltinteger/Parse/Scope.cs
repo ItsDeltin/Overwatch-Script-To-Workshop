@@ -22,7 +22,6 @@ namespace Deltin.Deltinteger.Parse
         public Scope Parent { get; }
         public string ErrorName { get; set; } = "current scope";
         public bool PrivateCatch { get; set; }
-        public bool ProtectedCatch { get; set; }
         public bool CompletionCatch { get; set; }
         public bool MethodContainer { get; set; }
         public bool CatchConflict { get; set; }
@@ -80,7 +79,6 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 if (current.PrivateCatch) getPrivate = false;
-                if (current.ProtectedCatch) getProtected = false;
                 if (stopAfterScope) return;
 
                 current = current.Parent;

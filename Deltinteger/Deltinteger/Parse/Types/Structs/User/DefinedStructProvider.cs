@@ -48,8 +48,8 @@ namespace Deltin.Deltinteger.Parse
 
         public void GetMeta()
         {
-            StaticScope = _scope.Child();
-            ObjectScope = StaticScope.Child();
+            StaticScope = _scope.Child(true);
+            ObjectScope = StaticScope.Child(true);
 
             // Add type args to scopes.
             foreach (var type in GenericTypes)

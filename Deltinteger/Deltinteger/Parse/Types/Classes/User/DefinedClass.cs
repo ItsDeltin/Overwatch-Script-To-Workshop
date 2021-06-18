@@ -28,16 +28,8 @@ namespace Deltin.Deltinteger.Parse
 
             Extends = _definedInitializer.Extends?.GetRealType(_typeLinker);
 
-            if (Extends == null) // Not extending anything, create scopes.
-            {
-                ObjectScope = new Scope();
-                StaticScope = new Scope();
-            }
-            else // Make scopes based off of child.
-            {
-                ObjectScope = ((ClassType)Extends).GetObjectScope().Child();
-                StaticScope = ((ClassType)Extends).ReturningScope().Child();
-            }
+            ObjectScope = new Scope();
+            StaticScope = new Scope();
 
             // Add elements to scope.
             var initializedVariables = new List<IVariableInstance>();
@@ -56,6 +48,12 @@ namespace Deltin.Deltinteger.Parse
                 // Instance variable
                 if (instance is IVariableInstance variableInstance && variableInstance.Provider.VariableType != VariableType.ElementReference)
                     initializedVariables.Add(variableInstance);
+            }
+
+            if (Extends is ClassType classType)
+            {
+                classType.Elements.AddToScope(_parseInfo.TranslateInfo, ObjectScope, true);
+                classType.Elements.AddToScope(_parseInfo.TranslateInfo, StaticScope, false);
             }
 
             Variables = initializedVariables.ToArray();

@@ -22,12 +22,14 @@ namespace Deltin.Deltinteger.Parse
 
         Scope _operationalObjectScope;
         Scope _operationalStaticScope;
+        Scope _conflictScope;
 
         public DefinedClassInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
             _parseInfo = parseInfo;
             _typeContext = typeContext;
             _scope = scope;
+            _conflictScope = new Scope(Name);
             MetaGetter = this;
             OnReady = _onReady;
             DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
@@ -76,9 +78,6 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            (Extends as ClassType)?.Elements.AddToScope(_operationalStaticScope, false);
-            (Extends as ClassType)?.Elements.AddToScope(_operationalObjectScope, true);
-
             // Get declarations.
             foreach (var declaration in _typeContext.Declarations)
                 DeclaredElements.Add(((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo));
@@ -97,6 +96,9 @@ namespace Deltin.Deltinteger.Parse
                     new EmptyConstructorProvider(DefinedAt)
                 };
             }
+
+            (Extends as ClassType)?.Elements.AddToScope(_parseInfo.TranslateInfo, _operationalStaticScope, false);
+            (Extends as ClassType)?.Elements.AddToScope(_parseInfo.TranslateInfo, _operationalObjectScope, true);
 
             WorkingInstance = GetInstance();
             _onReady.Set();
@@ -159,10 +161,26 @@ namespace Deltin.Deltinteger.Parse
         public IVariableInstance GetOverridenVariable(string variableName) => Extends.Elements.GetVirtualVariable(variableName);
         Scope IScopeProvider.GetObjectBasedScope() => _operationalObjectScope;
         Scope IScopeProvider.GetStaticBasedScope() => _operationalStaticScope;
-        void IScopeAppender.AddObjectBasedScope(IMethod function) => _operationalObjectScope.AddNativeMethod(function);
-        void IScopeAppender.AddStaticBasedScope(IMethod function) => _operationalStaticScope.AddNativeMethod(function);
-        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => _operationalObjectScope.AddNativeVariable(variable);
-        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => _operationalStaticScope.AddNativeVariable(variable);
+        void IScopeAppender.AddObjectBasedScope(IMethod function)
+        {
+            _operationalObjectScope.AddNativeMethod(function);
+            _conflictScope.AddNative(function);
+        }
+        void IScopeAppender.AddStaticBasedScope(IMethod function)
+        {
+            _operationalStaticScope.AddNativeMethod(function);
+            _conflictScope.AddNative(function);
+        }
+        void IScopeAppender.AddObjectBasedScope(IVariableInstance variable)
+        {
+            _operationalObjectScope.AddNativeVariable(variable);
+            _conflictScope.AddNative(variable);
+        }
+        void IScopeAppender.AddStaticBasedScope(IVariableInstance variable)
+        {
+            _operationalStaticScope.AddNativeVariable(variable);
+            _conflictScope.AddNative(variable);
+        }
 
         public void CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range) => SemanticsHelper.ErrorIfConflicts(
             parseInfo: parseInfo,
@@ -170,6 +188,6 @@ namespace Deltin.Deltinteger.Parse
             nameConflictMessage: Parse.CheckConflict.CreateNameConflictMessage(Name, identifier.Name),
             overloadConflictMessage: Parse.CheckConflict.CreateOverloadConflictMessage(Name, identifier.Name),
             range: range,
-            _operationalObjectScope, _operationalStaticScope);
+            _conflictScope);
     }
 }

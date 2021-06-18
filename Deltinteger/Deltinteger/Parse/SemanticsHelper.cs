@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
                 }
         }
 
-        static ScopeConflict Conflicts(Scope scope, CheckConflict identifier, DeltinScript deltinScript)
+        public static ScopeConflict Conflicts(Scope scope, CheckConflict identifier, DeltinScript deltinScript)
         {
             while (scope != null)
             {
@@ -102,12 +102,12 @@ namespace Deltin.Deltinteger.Parse
             }
             return ScopeConflict.NoConflict;
         }
+    }
 
-        enum ScopeConflict
-        {
-            NoConflict,
-            NameConflict,
-            OverloadConflict,
-        }
+    public enum ScopeConflict
+    {
+        NoConflict,
+        NameConflict,
+        OverloadConflict,
     }
 }

@@ -10,9 +10,9 @@ namespace Deltin.Deltinteger.Parse
     public class ClassType : CodeType, IScopeAppender
     {
         /// <summary>Used in static methods and returned when ReturningScope() is called. Contains all static members in the inheritance tree.</summary>
-        public Scope StaticScope { get; set; }
+        protected Scope StaticScope { get; set; }
         /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
-        public Scope ObjectScope { get; set; }
+        protected Scope ObjectScope { get; set; }
 
         public IVariableInstance[] Variables {
             get {
@@ -224,17 +224,30 @@ namespace Deltin.Deltinteger.Parse
             public void Add(IScopeable scopeable, bool instance) => _scopeableElements.Add(new ClassElement(scopeable, instance));
 
             // Adds the elements in the class to a scope.
-            public void AddToScope(Scope scope, bool instance)
+            public void AddToScope(DeltinScript deltinScript, Scope scope, bool instance)
             {
                 _classType.ThrowIfNotReady();
 
                 // Add elements from this class.
                 foreach (var scopeable in _scopeableElements)
-                    if (ValidAccessLevel(scopeable.Scopeable.AccessLevel) && (!scopeable.IsInstance || instance))
+                    if (ValidAccessLevel(scopeable.Scopeable.AccessLevel) &&
+                        (!scopeable.IsInstance || instance) &&
+                        // Make sure the element being added doesn't conflict with existing items.
+                        // todo: this is ugly and I hate it.
+                        SemanticsHelper.Conflicts(
+                            scope,
+                            new CheckConflict(
+                                scopeable.Scopeable.Name,
+                                scopeable.Scopeable is not IMethod method ?
+                                    null :
+                                    method.Parameters.Select(p => p.GetCodeType(deltinScript)).ToArray()),
+                            deltinScript) == ScopeConflict.NoConflict)
+                    {
                         scope.AddNative(scopeable.Scopeable);
+                    }
                 
                 // Add parent elements.
-                (_classType.Extends as ClassType)?.Elements.AddToScope(scope, instance);
+                (_classType.Extends as ClassType)?.Elements.AddToScope(deltinScript, scope, instance);
             }
 
             static bool ValidAccessLevel(AccessLevel accessLevel) => accessLevel == AccessLevel.Public || accessLevel == AccessLevel.Protected;
