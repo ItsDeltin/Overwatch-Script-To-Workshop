@@ -47,6 +47,7 @@ namespace Deltin.Deltinteger.Parse
             Provider = provider;
             Elements = new ClassElements(this);
             Kind = TypeKind.Class;
+            AsReferenceResetSettability = true;
             provider.OnReady.OnReady(() => _providerReady = true);
         }
 

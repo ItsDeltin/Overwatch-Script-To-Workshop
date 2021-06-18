@@ -247,7 +247,6 @@ namespace Deltin.Deltinteger.Parse
 
         public bool TargetCanBeSet()
         {
-
             bool settable = true;
 
             for (int i = 0; i < ExprContextTree.Length; i++)
@@ -309,7 +308,7 @@ namespace Deltin.Deltinteger.Parse
         public IExpression GetExpression() => _expression;
         public DocRange GetRange() => _expressionContext.Range;
         public bool CanBeSetDirectly() => false;
-        public bool CanBeSetReference() => _expression.Type() is ClassType;
+        public bool CanBeSetReference() => _expression.Type()?.AsReferenceResetSettability ?? true;
     }
 
     /// <summary>Functions in the expression tree.</summary>
@@ -335,7 +334,7 @@ namespace Deltin.Deltinteger.Parse
         public IExpression GetExpression() => _methodCall;
         public DocRange GetRange() => _methodContext.Target.Range;
         public bool CanBeSetDirectly() => false;
-        public bool CanBeSetReference() => _methodCall.Type() is ClassType;
+        public bool CanBeSetReference() => _methodCall.Type().AsReferenceResetSettability;
     }
 
     /// <summary>Variables or types in the expression tree.</summary>
@@ -582,7 +581,7 @@ namespace Deltin.Deltinteger.Parse
             }
         
             public bool CanBeSetDirectly() => _variable.Attributes.CanBeSet;
-            public bool CanBeSetReference() => _variable.CodeType.GetCodeType(_parseInfo.TranslateInfo) is ClassType;
+            public bool CanBeSetReference() => _variable.CodeType.GetCodeType(_parseInfo.TranslateInfo).AsReferenceResetSettability;
         }
     }
 

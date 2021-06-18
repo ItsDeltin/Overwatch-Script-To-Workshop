@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger.Parse
             ArrayHandler = arrayOfType.ArrayHandler;
             Attributes = arrayOfType.Attributes;
             TypeSemantics = arrayOfType.TypeSemantics;
+            AsReferenceResetSettability = arrayOfType.AsReferenceResetSettability;
             DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName(), ArrayOfType is ClassType);
 
             Generics = new[] { arrayOfType };
