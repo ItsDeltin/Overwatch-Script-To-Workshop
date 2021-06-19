@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Variable
             else if (declaration is VariableDeclaration variable)
-                return new ClassVariable(this, new DefineContextHandler(parseInfo, variable)).GetVar();
+                return new ClassVariable(this, new DefineContextHandler(parseInfo.SetThisType(this), variable)).GetVar();
 
             throw new NotImplementedException();
         }
