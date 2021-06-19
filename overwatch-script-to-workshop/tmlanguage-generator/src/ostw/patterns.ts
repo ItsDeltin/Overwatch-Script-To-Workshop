@@ -358,6 +358,14 @@ const statement: Pattern = {
             zeroEndCapture: { name: Names.terminator },
             patterns: [{ include: Repository.expression }],
         },
+        // delete
+        {
+            begin: [b, 'delete', b],
+            zeroBeginCapture: { name: 'keyword.operator.expression.delete' },
+            end: ';',
+            zeroEndCapture: { name: Names.terminator },
+            patterns: [{ include: Repository.expression }],
+        },
         // for
         {
             begin: [

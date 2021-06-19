@@ -496,6 +496,25 @@
           ]
         },
         {
+          "begin": "\\bdelete\\b",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.operator.expression.delete"
+            }
+          },
+          "end": ";",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.terminator.statement.ostw"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
           "begin": "(for)\\s*(\\()",
           "beginCaptures": {
             "1": {
