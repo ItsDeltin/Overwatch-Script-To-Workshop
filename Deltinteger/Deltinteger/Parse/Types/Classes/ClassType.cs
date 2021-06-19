@@ -17,11 +17,10 @@ namespace Deltin.Deltinteger.Parse
         public IVariableInstance[] Variables {
             get {
                 ThrowIfNotReady();
-                return _variables;
+                return _variables.ToArray();
             }
-            protected set => _variables = value;
         }
-        IVariableInstance[] _variables;
+        protected List<IVariableInstance> _variables = new List<IVariableInstance>();
 
         // The provider that created this ClassType.
         public IClassInitializer Provider { get; }
@@ -144,6 +143,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Elements.Add(variable, true);
             ObjectScope.CopyVariable(variable);
+            _variables.Add(variable);
         }
         public void AddStaticBasedScope(IVariableInstance variable)
         {

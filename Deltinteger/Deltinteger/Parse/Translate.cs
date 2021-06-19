@@ -230,6 +230,8 @@ namespace Deltin.Deltinteger.Parse
             InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
             WorkshopRules = new List<Rule>();
 
+            WorkshopConverter.InitStatic();
+
             // Init called types.
             foreach (var workshopInit in _workshopInit) workshopInit.WorkshopInit(this);
 

@@ -46,9 +46,13 @@ namespace Deltin.Deltinteger.Parse
             _variables = new IVariableInstance[_provider.Variables.Length];
             for (int i = 0; i < _variables.Length; i++)
             {
-                _variables[i] = _provider.Variables[i].GetInstance(null, _typeLinker);
+                _variables[i] = _provider.Variables[i].GetInstance(this, _typeLinker);
                 ObjectScope.AddNativeVariable(_variables[i]);
             }
+
+            // Static variables
+            foreach (var variable in _provider.StaticVariables)
+                variable.AddInstance(this, _typeLinker);
 
             // Functions
             foreach (var method in _provider.Methods)

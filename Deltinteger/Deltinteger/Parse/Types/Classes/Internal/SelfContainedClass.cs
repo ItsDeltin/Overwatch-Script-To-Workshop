@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
             var setup = new SetupSelfContainedClass(this, ObjectScope, StaticScope);
             _classInfo.Setup(setup);
 
-            Variables = setup.ObjectVariables.Select(ov => ov.Variable).ToArray();
+            _variables = setup.ObjectVariables.Select(ov => ov.Variable).ToList();
             Constructors = setup.Constructors.ToArray();
         }
 

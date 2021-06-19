@@ -528,8 +528,8 @@ namespace Deltin.Deltinteger.Parse
                 _type.Call(_parseInfo, _callRange);
                 _errorHandler.ApplyErrors();
             }
-            public bool CanBeSetDirectly() => false;
-            public bool CanBeSetReference() => false;
+            public bool CanBeSetDirectly() => false; // Can't set types
+            public bool CanBeSetReference() => true; // Static variables
         }
         class VariableOption : IPotentialPathOption
         {

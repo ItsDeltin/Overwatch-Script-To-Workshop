@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using SubroutineCatalog = Deltin.Deltinteger.Parse.Functions.Builder.SubroutineCatalog;
 using LambdaBuilder = Deltin.Deltinteger.Parse.Lambda.Workshop.LambdaBuilder;
 
@@ -21,5 +23,24 @@ namespace Deltin.Deltinteger.Parse.Workshop
         }
 
         public T GetComponent<T>() where T: IComponent, new() => DeltinScript.GetComponent<T>();
+
+        public void InitStatic()
+        {
+            foreach (var staticVariable in CollectScriptElements(elements => elements.StaticVariables))
+                DeltinScript.DefaultIndexAssigner.Add(
+                    staticVariable,
+                    staticVariable
+                        .GetDefaultInstance(null)
+                        .GetAssigner(new GetVariablesAssigner(DeltinScript.InitialGlobal.ActionSet))
+                        .GetValue(new GettableAssignerValueInfo(DeltinScript.InitialGlobal.ActionSet))
+                );
+        }
+
+        IEnumerable<T> CollectScriptElements<T>(Func<ScriptElements, IEnumerable<T>> selector)
+        {
+            foreach (var script in DeltinScript.Importer.ScriptFiles)
+                foreach (var item in selector(script.Elements))
+                    yield return item;
+        }
     }
 }

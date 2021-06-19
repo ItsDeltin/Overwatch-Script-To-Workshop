@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
@@ -101,6 +102,14 @@ namespace Deltin.Deltinteger.Parse
                 scope = scope.Parent;
             }
             return ScopeConflict.NoConflict;
+        }
+    
+        public static IEnumerable<CodeType> RecursivelyGetGenerics(CodeType type)
+        {
+            yield return type;
+            foreach (var generic in type.Generics)
+                foreach (var recursive in RecursivelyGetGenerics(generic))
+                    yield return recursive;
         }
     }
 

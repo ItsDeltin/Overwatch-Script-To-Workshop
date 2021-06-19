@@ -114,7 +114,10 @@ namespace Deltin.Deltinteger.Parse
         {
             // If the type of the variable is a constant workshop value and there is no initial value, throw a syntax error.
             if (_varInfo.Type != null && _varInfo.Type.IsConstant() && _varInfo.InitialValueContext == null)
-                _diagnostics.Error("Variables with constant workshop types must have an initial value.", _nameRange);
+                _diagnostics.Error("Variables with constant workshop types must have an initial value", _nameRange);
+            
+            if (ComponentCollection.IsAttribute(AttributeType.Static) && SemanticsHelper.RecursivelyGetGenerics(_varInfo.Type).Any(type => type is AnonymousType))
+                _diagnostics.Error("Static variables cannot use anonymous types", _nameRange);
         }
 
         private void GetOverridenVariable()

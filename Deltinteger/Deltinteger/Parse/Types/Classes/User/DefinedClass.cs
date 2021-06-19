@@ -32,7 +32,6 @@ namespace Deltin.Deltinteger.Parse
             StaticScope = new Scope();
 
             // Add elements to scope.
-            var initializedVariables = new List<IVariableInstance>();
             foreach (var element in _definedInitializer.DeclaredElements)
             {
                 var instance = element.AddInstance(this, _typeLinker);
@@ -44,10 +43,6 @@ namespace Deltin.Deltinteger.Parse
                 // Virtual variable
                 if (element is Var var && var.Virtual)
                     Elements.AddVirtualVariable((IVariableInstance)instance);
-                
-                // Instance variable
-                if (instance is IVariableInstance variableInstance && variableInstance.Provider.VariableType != VariableType.ElementReference)
-                    initializedVariables.Add(variableInstance);
             }
 
             if (Extends is ClassType classType)
@@ -55,8 +50,6 @@ namespace Deltin.Deltinteger.Parse
                 classType.Elements.AddToScope(_parseInfo.TranslateInfo, ObjectScope, true);
                 classType.Elements.AddToScope(_parseInfo.TranslateInfo, StaticScope, false);
             }
-
-            Variables = initializedVariables.ToArray();
 
             // Add constructors.
             Constructors = new Constructor[_definedInitializer.Constructors.Length];

@@ -78,6 +78,8 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
+            WorkingInstance = GetInstance();
+
             // Get declarations.
             foreach (var declaration in _typeContext.Declarations)
                 DeclaredElements.Add(((IDefinedTypeInitializer)this).ApplyDeclaration(declaration, _parseInfo));
@@ -100,7 +102,6 @@ namespace Deltin.Deltinteger.Parse
             (Extends as ClassType)?.Elements.AddToScope(_parseInfo.TranslateInfo, _operationalStaticScope, false);
             (Extends as ClassType)?.Elements.AddToScope(_parseInfo.TranslateInfo, _operationalObjectScope, true);
 
-            WorkingInstance = GetInstance();
             _onReady.Set();
 
             // TODO: update these
@@ -179,8 +180,11 @@ namespace Deltin.Deltinteger.Parse
         void IScopeAppender.AddStaticBasedScope(IVariableInstance variable)
         {
             _operationalStaticScope.AddNativeVariable(variable);
+            _operationalObjectScope.AddNativeVariable(variable);
             _conflictScope.AddNative(variable);
+            _parseInfo.Script.Elements.AddStaticVariable(variable.Provider);
         }
+        CodeType IScopeAppender.DefinedIn() => WorkingInstance;
 
         public void CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range) => SemanticsHelper.ErrorIfConflicts(
             parseInfo: parseInfo,

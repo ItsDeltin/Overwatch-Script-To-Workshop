@@ -278,10 +278,10 @@ namespace Deltin.Deltinteger.Parse
             return completions.ToArray();
         }
 
-        private bool WasScopedAtPosition(IVariableInstance variable, DocPos pos, CodeType getter) => WasScopedAtPosition(variable, pos, getter, variable.Attributes.ContainingType);
-        private bool WasScopedAtPosition(IMethod method, DocPos pos, CodeType getter) => WasScopedAtPosition(method, pos, getter, method.Attributes.ContainingType);
+        private bool WasScopedAtPosition(IVariableInstance variable, DocPos pos, CodeType getter) => WasScopedAtPosition(variable, pos, variable.Attributes.ContainingType, getter);
+        private bool WasScopedAtPosition(IMethod method, DocPos pos, CodeType getter) => WasScopedAtPosition(method, pos, method.Attributes.ContainingType, getter);
         private bool WasScopedAtPosition(IScopeable element, DocPos pos, CodeType containingType, CodeType getter) =>
-            (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.Start <= pos) && (getter == null || SemanticsHelper.AccessLevelMatches(element.AccessLevel, containingType, getter));
+            (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.Start <= pos) && SemanticsHelper.AccessLevelMatches(element.AccessLevel, containingType, getter);
 
         public bool ScopeContains(IScopeable element)
         {

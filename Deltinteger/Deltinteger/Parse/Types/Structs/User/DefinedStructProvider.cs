@@ -10,8 +10,6 @@ namespace Deltin.Deltinteger.Parse
     {
         public CodeType WorkingInstance { get; }
         public Location DefinedAt { get; }
-        public Scope StaticScope { get; private set; }
-        public Scope ObjectScope { get; private set; }
         public bool[] GenericAssigns { get; }
         readonly ParseInfo _parseInfo;
         readonly ClassContext _context;
@@ -20,6 +18,9 @@ namespace Deltin.Deltinteger.Parse
         readonly VariableModifierGroup _contextualVariableModifiers = new VariableModifierGroup();
         // Tracks the assigning types that the struct variables use. 
         readonly List<HashSet<DefinedStructInitializer>> _variablesCallTypeAssigners = new List<HashSet<DefinedStructInitializer>>();
+
+        private Scope _staticScope;
+        private Scope _objectScope;
 
         public DefinedStructInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
         {
@@ -48,14 +49,14 @@ namespace Deltin.Deltinteger.Parse
 
         public void GetMeta()
         {
-            StaticScope = _scope.Child(true);
-            ObjectScope = StaticScope.Child(true);
+            _staticScope = _scope.Child(true);
+            _objectScope = _staticScope.Child(true);
 
             // Add type args to scopes.
             foreach (var type in GenericTypes)
             {
-                StaticScope.AddType(new GenericCodeTypeInitializer(type));
-                ObjectScope.AddType(new GenericCodeTypeInitializer(type));
+                _staticScope.AddType(new GenericCodeTypeInitializer(type));
+                _objectScope.AddType(new GenericCodeTypeInitializer(type));
             }
 
             var declarationParseInfo = _parseInfo.SetContextualModifierGroup(_contextualVariableModifiers); 
@@ -80,16 +81,16 @@ namespace Deltin.Deltinteger.Parse
         public override StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new DefinedStructInstance(this, typeLinker);
         
         public override bool BuiltInTypeMatches(Type type) => false;
-        public Scope GetObjectBasedScope() => ObjectScope;
-        public Scope GetStaticBasedScope() => StaticScope;
+        public Scope GetObjectBasedScope() => _objectScope;
+        public Scope GetStaticBasedScope() => _staticScope;
         public IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverloadInfo) => throw new NotImplementedException();
         public IVariableInstance GetOverridenVariable(string variableName) => throw new NotImplementedException();
-        public void AddObjectBasedScope(IMethod function) => ObjectScope.AddNativeMethod(function);
-        public void AddStaticBasedScope(IMethod function) => StaticScope.AddNativeMethod(function);
+        public void AddObjectBasedScope(IMethod function) => _objectScope.AddNativeMethod(function);
+        public void AddStaticBasedScope(IMethod function) => _staticScope.AddNativeMethod(function);
         public void AddObjectBasedScope(IVariableInstance variable)
         {
             // Add to scope.
-            ObjectScope.CopyVariable(variable);
+            _objectScope.CopyVariable(variable);
 
             // Make sure the variable is not a macro.
             if (variable.Attributes.StoreType != StoreType.None)
@@ -122,14 +123,20 @@ namespace Deltin.Deltinteger.Parse
                 _variablesCallTypeAssigners.Add(structCalls);
             }
         }
-        public void AddStaticBasedScope(IVariableInstance variable) => StaticScope.CopyVariable(variable);
+        public void AddStaticBasedScope(IVariableInstance variable)
+        {
+            _staticScope.CopyVariable(variable);
+            _objectScope.CopyVariable(variable);
+            StaticVariables.Add(variable.Provider);
+            _parseInfo.Script.Elements.AddStaticVariable(variable.Provider);
+        }
         public void CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range) => SemanticsHelper.ErrorIfConflicts(
             parseInfo: parseInfo,
             identifier: identifier,
             nameConflictMessage: Parse.CheckConflict.CreateNameConflictMessage(Name, identifier.Name),
             overloadConflictMessage: Parse.CheckConflict.CreateOverloadConflictMessage(Name, identifier.Name),
             range: range,
-            ObjectScope, StaticScope);
+            _objectScope, _staticScope);
         public override void DependMeta() => _parseInfo.TranslateInfo.StagedInitiation.Meta.Depend(this);
         public override void DependContent() => _parseInfo.TranslateInfo.StagedInitiation.Content.Depend(this);
 
