@@ -26,11 +26,10 @@ namespace Deltin.Deltinteger.Parse.Workshop
 
         public void InitStatic()
         {
-            foreach (var staticVariable in CollectScriptElements(elements => elements.StaticVariables))
+            foreach (var staticVariable in DeltinScript.GetComponent<StaticVariableCollection>().StaticVariables)
                 DeltinScript.DefaultIndexAssigner.Add(
-                    staticVariable,
+                    staticVariable.Provider,
                     staticVariable
-                        .GetDefaultInstance(null)
                         .GetAssigner(new GetVariablesAssigner(DeltinScript.InitialGlobal.ActionSet))
                         .GetValue(new GettableAssignerValueInfo(DeltinScript.InitialGlobal.ActionSet))
                 );

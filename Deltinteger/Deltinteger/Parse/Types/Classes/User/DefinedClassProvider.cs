@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse
             _operationalStaticScope.AddNativeVariable(variable);
             _operationalObjectScope.AddNativeVariable(variable);
             _conflictScope.AddNative(variable);
-            _parseInfo.Script.Elements.AddStaticVariable(variable.Provider);
+            _parseInfo.TranslateInfo.GetComponent<StaticVariableCollection>().AddVariable(variable);
         }
         CodeType IScopeAppender.DefinedIn() => WorkingInstance;
 

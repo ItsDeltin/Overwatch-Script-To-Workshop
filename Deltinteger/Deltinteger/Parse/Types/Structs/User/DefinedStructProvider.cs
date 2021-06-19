@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
             _staticScope.CopyVariable(variable);
             _objectScope.CopyVariable(variable);
             StaticVariables.Add(variable.Provider);
-            _parseInfo.Script.Elements.AddStaticVariable(variable.Provider);
+            _parseInfo.TranslateInfo.GetComponent<StaticVariableCollection>().AddVariable(variable);
         }
         public void CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range) => SemanticsHelper.ErrorIfConflicts(
             parseInfo: parseInfo,

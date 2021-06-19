@@ -19,11 +19,13 @@ namespace Deltin.Deltinteger.Parse
 
         private InternalVar Zero;
 
-        private readonly ITypeSupplier _typeSupplier;
+        readonly DeltinScript _deltinScript;
+        readonly ITypeSupplier _typeSupplier;
 
         public VectorType(DeltinScript deltinScript, ITypeSupplier supplier) : base("Vector")
         {
             TokenType = SemanticTokenType.Struct;
+            _deltinScript = deltinScript;
             _typeSupplier = supplier;
 
             deltinScript.StagedInitiation.On(this);
@@ -38,6 +40,8 @@ namespace Deltin.Deltinteger.Parse
             VerticalAngle = CreateInternalVar("VerticalAngle", "The vertical angle of the vector.", _typeSupplier.Number());
             Magnitude = CreateInternalVar("Magnitude", "The magnitude of the vector.", _typeSupplier.Number());
             Zero = CreateInternalVar("Zero", "Equal to `Vector(0, 0, 0)`.", _typeSupplier.Vector(), Element.Vector(0, 0, 0), true);
+
+            _deltinScript.GetComponent<StaticVariableCollection>().AddVariable(Zero.GetDefaultInstance(this));
 
             objectScope.AddNativeMethod(DistanceTo);
             objectScope.AddNativeMethod(CrossProduct);
