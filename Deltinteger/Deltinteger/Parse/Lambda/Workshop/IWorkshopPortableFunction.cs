@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                     // Create the gettable.
                     parameter.CodeType
                         .GetGettableAssigner(new AssigningAttributes(parameter.Name, true, false))
-                        .GetValue(new GettableAssignerValueInfo(parameterAssigner) { SetInitialValue = false }))).ToArray();
+                        .GetValue(new GettableAssignerValueInfo(parameterAssigner) { SetInitialValue = SetInitialValue.DoNotSet }))).ToArray();
             }
 
             public void AddToAssigner(VarIndexAssigner assigner)
@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                         .GetGettableAssigner(new AssigningAttributes(parameter.Name, true, false))
                         .GetValue(new GettableAssignerValueInfo(parameterAssigner.VarCollection) {
                             IndexReferenceCreator = parameterAssigner,
-                            SetInitialValue = false
+                            SetInitialValue = SetInitialValue.DoNotSet
                         })).ToArray();
             }
 

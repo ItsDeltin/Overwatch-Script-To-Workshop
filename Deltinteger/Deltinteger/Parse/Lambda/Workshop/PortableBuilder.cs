@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
             return expectedType.GetRealType(actionSet.ThisTypeLinker).GetGettableAssigner(new AssigningAttributes("todo:name", true, false))
                 .GetValue(new GettableAssignerValueInfo(actionSet) {
                     IndexReferenceCreator = _returnRecycler,
-                    SetInitialValue = false
+                    SetInitialValue = SetInitialValue.DoNotSet
                 })
                 .GetVariable();
         }
@@ -120,7 +120,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                     compatibleLambda.Runner.ReturnType?.GetGettableAssigner(new AssigningAttributes("lambdaReturnValue", true, false))
                         // Get the IGettable
                         .GetValue(new GettableAssignerValueInfo(actionSet) {
-                            SetInitialValue = false,
+                            SetInitialValue = SetInitialValue.DoNotSet,
                             IndexReferenceCreator = _returnRecycler
                         }),
                     compatibleLambda.Runner.ReturnType != null);

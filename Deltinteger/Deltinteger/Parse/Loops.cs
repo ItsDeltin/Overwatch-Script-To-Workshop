@@ -326,7 +326,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Get the gettable assigner for the for variable.
                 var assignerResult = DefinedVariable.GetDefaultInstance(null).GetAssigner(new(actionSet)).GetResult(new GettableAssignerValueInfo(actionSet) {
-                    SetInitialValue = false
+                    SetInitialValue = SetInitialValue.DoNotSet
                 });
 
                 // Link the value to the variable.

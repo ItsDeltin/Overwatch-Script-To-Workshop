@@ -47,7 +47,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             _function.CodeType?.GetCodeType(actionSet.DeltinScript)
                                .GetRealType(_typeArgLinker)
                                .GetGettableAssigner(new AssigningAttributes("returnValue_" + _function.Name, actionSet.IsGlobal, false))
-                               .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = false }),
+                               .GetValue(new GettableAssignerValueInfo(actionSet) {
+                                    SetInitialValue = SetInitialValue.DoNotSet,
+                                    Inline = !IsMultiplePaths()
+                                }),
             IsMultiplePaths());
 
         bool IsMultiplePaths() => _function.Provider.ReturnType != null && (_function.Provider.MultiplePaths || _function.Attributes.Recursive || _function.Provider.SubroutineName != null);
@@ -162,7 +165,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                     gettable = parameterVariables[i]
                         .GetAssigner(new(actionSet))
                         .GetValue(new GettableAssignerValueInfo(actionSet) {
-                            SetInitialValue = false,
+                            SetInitialValue = SetInitialValue.DoNotSet,
                             InitialValueOverride = providedParameters?[i].Value
                         });
 

@@ -3,7 +3,7 @@ namespace Deltin.Deltinteger.Parse
     public class GettableAssignerValueInfo
     {
         public ActionSet ActionSet { get; }
-        public bool SetInitialValue { get; set; } = true;
+        public SetInitialValue SetInitialValue { get; set; } = SetInitialValue.SetAndFallbackTo0;
         public IWorkshopTree InitialValueOverride { get; set; }
         public bool Inline { get; set; }
         public WorkshopVariableAssigner IndexReferenceCreator { get; set; }
@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Parse
 
         public GettableAssignerValueInfo(
             ActionSet actionSet,
-            bool setInitialValue,
+            SetInitialValue setInitialValue,
             IWorkshopTree initialValue,
             bool inline,
             WorkshopVariableAssigner indexReferenceCreator,
@@ -45,6 +45,13 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public static implicit operator GettableAssignerValueInfo(ActionSet actionSet) => new GettableAssignerValueInfo(actionSet);
+    }
+
+    public enum SetInitialValue
+    {
+        DoNotSet,
+        SetIfExists,
+        SetAndFallbackTo0
     }
     
     public interface IGettableAssigner

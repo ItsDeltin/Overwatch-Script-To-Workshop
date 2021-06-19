@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the initial value.
             IWorkshopTree initialValue = Element.Num(0);
+            bool hasDefaultValue = true;
 
             // Set the initial value to the override if it exists.
             if (info.InitialValueOverride != null)
@@ -26,7 +27,10 @@ namespace Deltin.Deltinteger.Parse
             // Otherwise, use the var's initial value.
             else if (_attributes.DefaultValue != null)
                 initialValue = _attributes.DefaultValue.Parse(info.ActionSet);
-
+            
+            // No default value
+            else hasDefaultValue = false;
+            
             // Inline
             if (inline) return new GettableAssignerResult(new WorkshopElementReference(initialValue), initialValue);
             
@@ -34,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             var value = info.IndexReferenceCreator.Create(_attributes);
 
             // Set the initial value.
-            if (info.SetInitialValue)
+            if (info.SetInitialValue == SetInitialValue.SetAndFallbackTo0 || (info.SetInitialValue == SetInitialValue.SetIfExists && hasDefaultValue))
             {
                 if (value is RecursiveIndexReference recursive)
                 {

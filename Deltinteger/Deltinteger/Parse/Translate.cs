@@ -241,7 +241,12 @@ namespace Deltin.Deltinteger.Parse
                 var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
 
                 // Assign the variable an index.
-                IGettable value = variable.GetDefaultInstance(null).GetAssigner(new(addToInitialRule.ActionSet)).GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet));
+                IGettable value = variable
+                    .GetDefaultInstance(null)
+                    .GetAssigner(new(addToInitialRule.ActionSet))
+                    .GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet) {
+                        SetInitialValue = SetInitialValue.SetIfExists
+                    });
                 DefaultIndexAssigner.Add(variable, value);
                 
                 if (value is IndexReference indexReference)
