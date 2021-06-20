@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
-using Deltin.Deltinteger.Parse.Lambda;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Parse.Variables.Build;
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
     public interface IVariableTracker
     {
-        void LocalVariableAccessed(IIndexReferencer variable);
+        void LocalVariableAccessed(IVariableInstance variable);
     }
 
     public interface ILambdaApplier : ILabeled
@@ -21,6 +20,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         bool ResolvedSource { get; }
         void GetLambdaStatement(PortableLambdaType expecting);
         void GetLambdaStatement();
+        IEnumerable<RestrictedCallType> GetRestrictedCallTypes();
     }
 
     public interface ILambdaInvocable
@@ -55,13 +55,12 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _parameter = parameter;
         }
 
-        public VarBuilderAttribute[] GetAttributes() => new VarBuilderAttribute[0];
+        public void GetComponents(VariableComponentCollection componentCollection) {}
         public IParseType GetCodeType() => _parameter.Type;
         public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
         public string GetName() => _parameter.Identifier.GetText();
         public DocRange GetNameRange() => _parameter.Identifier.GetRange(_parameter.Range);
         public DocRange GetTypeRange() => _parameter.Type?.Range;
-        public bool CheckName() => _parameter.Identifier;
     }
 
     public class ExpectingLambdaInfo

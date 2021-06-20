@@ -1,5 +1,6 @@
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.Lambda;
+using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Elements;
 using static Deltin.Deltinteger.Elements.Element;
 
@@ -9,13 +10,12 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public const double DefaultMoveToNext = 0.4;
 
-        public DeltinScript DeltinScript { get; set; }
+        public DeltinScript DeltinScript { get; private set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
         public bool PotentiallyNullNodes { get; set; } // Determines if nodes can potentially be null.
         public bool TrackNextAttribute { get; set; } // Determines if nodes can potentially be null.
 
         // Class Instances
-        private PathResolveClass PathResolveInstance;
         private PathmapClass PathmapInstance;
 
         // Workshop Variables
@@ -35,11 +35,16 @@ namespace Deltin.Deltinteger.Pathfinder
         public LambdaAction OnPathStart { get; set; } // The code to run when a path starts.
         public LambdaAction OnNodeReached { get; set; } // The code to run when a node is reached.
         public LambdaAction OnPathCompleted { get; set; } // The code to run when a path is completed.
-        public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines wether or not the current node was reached.
+        public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines whether or not the current node was reached.
         public LambdaAction ApplicableNodeDeterminer { get; set; } // The function used to get the closest node to the player.
 
-        public void Init()
+        ToWorkshop _toWorkshop;
+
+        public void Init(DeltinScript deltinScript)
         {
+            DeltinScript = deltinScript;
+            _toWorkshop = deltinScript.WorkshopConverter;
+
             bool assignExtended = false;
 
             // Assign workshop variables.
@@ -56,12 +61,12 @@ namespace Deltin.Deltinteger.Pathfinder
                 TimeSinceLastNode = DeltinScript.VarCollection.Assign("timeSinceLastNode", false, assignExtended);
             }
 
+            var pathfinderTypes = DeltinScript.GetComponent<PathfinderTypesComponent>();
             if (TrackNextAttribute)
                 NextAttribute = DeltinScript.VarCollection.Assign("nextAttribute", false, assignExtended);
 
             // Get the PathResolve instance and the Pathmap instance.
-            PathResolveInstance = DeltinScript.Types.GetInstance<PathResolveClass>();
-            PathmapInstance = DeltinScript.Types.GetInstance<PathmapClass>();
+            PathmapInstance = pathfinderTypes.Pathmap;
 
             // Get the resolve subroutine.
             GetResolveCurrentRule();
@@ -161,7 +166,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // If so, go to the destination.
             Destination.GetVariable(player),
             // Otherwise, go to the current node.
-            PathmapInstance.Nodes.Get()[PathmapReference.Get(player)][node]
+            PathmapInstance.Nodes.Get(_toWorkshop, PathmapReference.Get(player))[node]
         );
 
         /// <summary>The position of the current player: `Position Of(Event Player)`</summary>
@@ -251,7 +256,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         /// <summary>Gets the next pathfinding attribute.</summary>
         Element GetCurrentSegmentAttribute(Element player) => Element.Map(Element.Filter(
-            PathmapInstance.Attributes.Get()[PathmapReference.Get(player)],
+            PathmapInstance.Attributes.Get(_toWorkshop, PathmapReference.Get(player)),
             Element.And(
                 Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, Current.Get(player)),
                 Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1)
@@ -259,7 +264,7 @@ namespace Deltin.Deltinteger.Pathfinder
         ), Element.ZOf(Element.ArrayElement()));
 
         Element GetNextSegmentAttribute(Element player) => Element.Map(Element.Filter(
-            PathmapInstance.Attributes.Get()[PathmapReference.Get(player)],
+            PathmapInstance.Attributes.Get(_toWorkshop, PathmapReference.Get(player)),
             Element.And(
                 Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1),
                 Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[ParentArray.Get(player)[Current.Get(player)] - 1] - 1)

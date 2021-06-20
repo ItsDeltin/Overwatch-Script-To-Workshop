@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
+using Deltin.Deltinteger.Parse.Functions.Builder;
+using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -40,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             GetConditions(ruleAction);
 
             RuleReturnHandler returnHandler = new RuleReturnHandler(ActionSet);
-            ruleAction.Block.Translate(ActionSet.New(returnHandler));
+            ruleAction.Block.Translate(ActionSet.New(returnHandler).ContainVariableAssigner());
         }
         public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType, Team team, PlayerSelector player, bool disabled = false)
         {
@@ -143,18 +144,15 @@ namespace Deltin.Deltinteger.Parse
         public SourceIndexReference CurrentObjectRelatedIndex { get; private set; }
         public IWorkshopTree This { get; private set; }
         public bool IsRecursive { get; private set; }
+        public ActionComment CommentNext { get; private set; }
+        public InstanceAnonymousTypeLinker ThisTypeLinker { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
+        public ToWorkshop ToWorkshop { get => Translate.DeltinScript.WorkshopConverter; }
 
         public int ActionCount => ActionList.Count;
 
-        public ActionSet(bool isGlobal, VarCollection varCollection)
-        {
-            IsGlobal = isGlobal;
-            VarCollection = varCollection;
-            ActionList = new List<IActionList>();
-        }
         public ActionSet(TranslateRule translate, DocRange genericErrorRange, List<IActionList> actions)
         {
             Translate = translate;
@@ -177,10 +175,8 @@ namespace Deltin.Deltinteger.Parse
             CurrentObjectRelatedIndex = other.CurrentObjectRelatedIndex;
             This = other.This;
             IsRecursive = other.IsRecursive;
-        }
-        private ActionSet Clone()
-        {
-            return new ActionSet(this);
+            CommentNext = other.CommentNext;
+            ThisTypeLinker = other.ThisTypeLinker;
         }
 
         public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this)
@@ -192,11 +188,29 @@ namespace Deltin.Deltinteger.Parse
             ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler))
         };
         public ActionSet New(IWorkshopTree currentObject) => new ActionSet(this) { CurrentObject = currentObject };
-        public ActionSet New(IndexReference relatedIndex, Element target = null) => new ActionSet(this) { CurrentObjectRelatedIndex = new SourceIndexReference(relatedIndex, target) };
+        public ActionSet New(IGettable relatedIndex, Element target = null) => new ActionSet(this) { CurrentObjectRelatedIndex = new SourceIndexReference(relatedIndex, target) };
         public ActionSet New(bool isRecursive) => new ActionSet(this) { IsRecursive = isRecursive };
+        public ActionSet ContainVariableAssigner() => new ActionSet(this) { IndexAssigner = IndexAssigner.CreateContained() };
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
+        public ActionSet SetNextComment(string comment) => new ActionSet(this) { CommentNext = new ActionComment(comment) };
+        public ActionSet SetThisTypeLinker(InstanceAnonymousTypeLinker thisTypeLinker) => new ActionSet(this) { ThisTypeLinker = thisTypeLinker };
+        public ActionSet MergeTypeLinker(InstanceAnonymousTypeLinker thisTypeLinker)
+        {
+            // Do nothing if the type linker is null.
+            if (thisTypeLinker == null) return this;
 
+            // Clone the ActionSet.
+            var clone = new ActionSet(this);
+            
+            // If there was no type linker to begin with, set the type linker to the one provided.
+            if (clone.ThisTypeLinker == null)
+                clone.ThisTypeLinker = thisTypeLinker;
+            else // Otherwise, merge the existing type linker and the provided type linker.
+                clone.ThisTypeLinker = clone.ThisTypeLinker.CloneMerge(thisTypeLinker);
+
+            return clone;
+        }
 
         public void AddAction(string comment, params IWorkshopTree[] actions)
         {
@@ -207,11 +221,19 @@ namespace Deltin.Deltinteger.Parse
                     element.Comment = comment;
                     comment = null;
                 }
-                ActionList.Add(new ALAction(action));
+                AddAction(new ALAction(action));
             }
         }
         public void AddAction(params IWorkshopTree[] actions) => AddAction(null, actions);
-        public void AddAction(params IActionList[] actions) => ActionList.AddRange(actions);
+        public void AddAction(params IActionList[] actions)
+        {
+            ActionList.AddRange(actions);
+            if (CommentNext != null && !CommentNext.Used && actions[0] is ALAction alaction && alaction.Calling is Element element)
+            {
+                element.Comment = CommentNext.GetValue();
+                CommentNext = null;
+            }
+        }
 
         public ActionSet InitialSet()
         {
@@ -347,13 +369,25 @@ namespace Deltin.Deltinteger.Parse
 
     public struct SourceIndexReference
     {
-        public IndexReference Reference { get; }
+        public IGettable Reference { get; }
         public Element Target { get; }
 
-        public SourceIndexReference(IndexReference reference, Element target)
+        public SourceIndexReference(IGettable reference, Element target)
         {
             Reference = reference;
             Target = target;
+        }
+    }
+
+    public class ActionComment
+    {
+        private readonly string _value;
+        public bool Used { get; private set; }
+        public ActionComment(string value) => _value = value;
+        public string GetValue()
+        {
+            Used = true;
+            return _value;
         }
     }
 }

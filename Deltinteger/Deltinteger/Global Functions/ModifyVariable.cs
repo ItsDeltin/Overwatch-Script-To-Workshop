@@ -16,13 +16,11 @@ namespace Deltin.Deltinteger.GlobalFunctions
             Action = (actionSet, methodCall) => {
                 VariableResolve variableResolve = (VariableResolve)methodCall.AdditionalParameterData[0];
                 Operation operation = ((ElementEnumMember)methodCall.ParameterValues[1]).GetOperation();
-                Element value = (Element)methodCall.ParameterValues[2];
+                IWorkshopTree value = methodCall.ParameterValues[2];
 
                 VariableElements variableElements = variableResolve.ParseElements(actionSet);
 
-                actionSet.AddAction(variableElements.IndexReference.ModifyVariable(
-                    operation, value, variableElements.Target, variableElements.Index
-                ));
+                variableElements.IndexReference.Modify(actionSet, operation, value, variableElements.Target, variableElements.Index);
                 return null;
             }
         };

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Parse.Overload;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using ISignatureHelpHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.ISignatureHelpHandler;
 using SignatureHelpCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.SignatureHelpCapability;

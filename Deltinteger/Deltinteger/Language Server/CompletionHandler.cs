@@ -35,14 +35,7 @@ namespace Deltin.Deltinteger.LanguageServer
             // Add snippets.
             Snippet.AddSnippets(items);
 
-            // Add types.
-            foreach (var type in _languageServer.LastParse.Types.AllTypes)
-            {
-                var completion = type.GetCompletion();
-                if (completion != null) items.Add(completion);
-            }
-
-            // Get the script from the uri. If it isn't parsed, return the default completion. 
+            // Get the script from the uri. If it isn't parsed, return the default completion.
             var script = _languageServer.LastParse.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
             if (script == null) return items;
 

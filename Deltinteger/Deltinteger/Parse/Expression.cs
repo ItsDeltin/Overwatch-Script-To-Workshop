@@ -93,14 +93,36 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression[] Values { get; }
         private readonly CodeType _type;
+        private readonly bool _isStructArray; // Determines if this is definitely a struct array. Will be false for empty struct arrays.
 
         public CreateArrayAction(ParseInfo parseInfo, Scope scope, CreateArray createArrayContext)
         {
             Values = new IExpression[createArrayContext.Values.Count];
             for (int i = 0; i < Values.Length; i++)
-                Values[i] = parseInfo.GetExpression(scope, createArrayContext.Values[i]);
+            {
+                var expectingType = parseInfo.ExpectingType;
+                if (expectingType is ArrayType expectingArray)
+                    expectingType = expectingArray.ArrayOfType;
+
+                Values[i] = parseInfo.SetExpectType(expectingType).GetExpression(scope, createArrayContext.Values[i]);
+            }
             
-            _type = new ArrayType(parseInfo.TranslateInfo.Types, Values.Length == 0 ? parseInfo.TranslateInfo.Types.Any() : Values[0].Type());
+            if (Values.Length == 0)
+                _type = new ArrayType(parseInfo.TranslateInfo.Types, parseInfo.TranslateInfo.Types.Any());
+            else
+            {
+                // The type of the array is the type of the first value.
+                var sourceType = Values[0].Type();
+                _type = new ArrayType(parseInfo.TranslateInfo.Types, sourceType);
+
+                // Struct array
+                _isStructArray = sourceType.Attributes.IsStruct;
+
+                // If this is a struct array, the types are strict.
+                if (_isStructArray)
+                    for (int i = 0; i < Values.Length; i++)
+                        SemanticsHelper.ExpectValueType(parseInfo, Values[i], sourceType, createArrayContext.Values[i].Range);
+            }
         }
 
         public CodeType Type() => _type;
@@ -110,7 +132,12 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree[] asWorkshop = new IWorkshopTree[Values.Length];
             for (int i = 0; i < asWorkshop.Length; i++)
                 asWorkshop[i] = Values[i].Parse(actionSet);
+            
+            // Struct array
+            if (_isStructArray)
+                return new StructArray(Array.ConvertAll(asWorkshop, item => (IStructValue)item));
 
+            // Normal array
             return Element.CreateArray(asWorkshop);
         }
     }
@@ -126,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
             Expression = parseInfo.GetExpression(scope, typeConvert.Expression);
 
             // Get the type. Syntax error if there is none.
-            ConvertingTo = CodeType.GetCodeTypeFromContext(parseInfo, typeConvert.Type);
+            ConvertingTo = TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, typeConvert.Type);
         }
 
         public Scope ReturningScope() => ConvertingTo?.GetObjectScope();
@@ -213,18 +240,18 @@ namespace Deltin.Deltinteger.Parse
 
     public class ThisAction : IExpression
     {
-        private CodeType ThisType { get; }
+        readonly IDefinedTypeInitializer _typeInitializer;
 
         public ThisAction(ParseInfo parseInfo, Scope scope, ThisExpression context)
         {
-            ThisType = scope.GetThis();
-            if (ThisType == null)
+            _typeInitializer = parseInfo.TypeInitializer;
+            if (_typeInitializer == null)
                 parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", context.Range);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => actionSet.This;
-        public CodeType Type() => ThisType;
-        public Scope ReturningScope() => ThisType?.GetObjectScope();
+        public CodeType Type() => _typeInitializer.WorkingInstance;
+        public Scope ReturningScope() => _typeInitializer.GetObjectBasedScope();
     }
 
     /*

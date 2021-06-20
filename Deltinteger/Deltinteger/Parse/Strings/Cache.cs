@@ -5,10 +5,9 @@ namespace Deltin.Deltinteger.Parse.Strings
 {
     class StringSaverComponent : IComponent, IDisposable
     {
-        public DeltinScript DeltinScript { get; set; }
         public List<IStringParse> Strings { get; } = new List<IStringParse>();
         
-        public void Init() {}
+        public void Init(DeltinScript deltinScript) {}
 
         public void Dispose() => RemoveUnused(Strings);
 

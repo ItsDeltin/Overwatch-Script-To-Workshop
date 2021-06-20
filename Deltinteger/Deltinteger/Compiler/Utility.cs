@@ -284,6 +284,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.String:
                 case TokenType.Parentheses_Open:
                 case TokenType.SquareBracket_Open:
+                case TokenType.CurlyBracket_Open:
                 case TokenType.Async:
                 // Unary
                 case TokenType.Subtract:
@@ -333,8 +334,29 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Identifier:
                 case TokenType.Define:
                 case TokenType.Void:
+                case TokenType.Const:
                     return true;
 
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsPartOfTypeArgs(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Parentheses_Open:
+                case TokenType.Parentheses_Close:
+                case TokenType.SquareBracket_Open:
+                case TokenType.SquareBracket_Close:
+                case TokenType.GreaterThan:
+                case TokenType.LessThan:
+                case TokenType.Define:
+                case TokenType.Identifier:
+                case TokenType.Comma:
+                    return true;
+                
                 default:
                     return false;
             }
@@ -383,6 +405,8 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.PlayerVar:
                 case TokenType.Ref:
                 case TokenType.Type:
+                case TokenType.Single:
+                case TokenType.Const:
                     return true;
 
                 default:
@@ -458,7 +482,6 @@ namespace Deltin.Deltinteger.Compiler
         Continue,
         Return,
         Rule,
-		Type,
         Disabled,
         For,
         While,
@@ -470,6 +493,7 @@ namespace Deltin.Deltinteger.Compiler
         Case,
         Default,
         Class,
+        Struct,
         Enum,
         Void,
         New,
@@ -478,6 +502,11 @@ namespace Deltin.Deltinteger.Compiler
         Root,
         As,
         Async,
+        Constructor,
+        // Keywords/identifiers
+        Type,
+        Single,
+        Const,
         // Attributes
         Public,
         Private,

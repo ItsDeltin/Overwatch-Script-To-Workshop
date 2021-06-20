@@ -2,21 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
-using Deltin.Deltinteger.Parse.Lambda;
+using Deltin.Deltinteger.Parse.Workshop;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Parse
 {
     public abstract class CodeType : IExpression, ICallable, ICodeTypeSolver
     {
         public string Name { get; }
-        public Constructor[] Constructors { get; protected set; } = new Constructor[0];
-        public CodeType Extends { get; private set; }
+        public CodeType[] Generics { get; protected set; } = new CodeType[0];
+        public virtual Constructor[] Constructors { get; protected set; } = new Constructor[0];
+        public virtual CodeType Extends { get; protected set; }
         public string Description { get; protected set; }
         public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
@@ -27,43 +25,24 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
         public bool CanBeDeleted { get; protected set; } = false;
 
-        /// <summary>Determines if other classes can inherit this class.</summary>
-        public bool CanBeExtended { get; protected set; } = false;
+        /// <summary>Determines if contextual variable settability resets when this type is used as a type.</summary>
+        public bool AsReferenceResetSettability { get; protected set; } = false;
 
+        /// <summary>The attributes of the type. Determines if the type is a struct or struct array and more.</summary>
+        public TypeAttributes Attributes { get; protected set; } = new TypeAttributes();
+
+        /// <summary>Overrides execution of array functions when this type is used in an array.</summary>
+        public virtual ITypeArrayHandler ArrayHandler { get; protected set; } = new DefaultArrayHandler();
+
+        /// <summary>Type operations for assignment, comparison, etc.</summary>
         public TypeOperatorInfo Operations { get; protected set; }
+
+        public TypeSemantics TypeSemantics { get; protected set; } = new TypeSemantics();
 
         public CodeType(string name)
         {
             Name = name;
             Operations = new TypeOperatorInfo(this);
-        }
-
-        protected void Inherit(CodeType extend, FileDiagnostics diagnostics, DocRange range)
-        {
-            if (extend == null) throw new ArgumentNullException(nameof(extend));
-
-            string errorMessage = null;
-
-            if (!extend.CanBeExtended)
-                errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
-
-            else if (extend == this)
-                errorMessage = "Cannot extend self.";
-
-            else if (extend.Implements(this))
-                errorMessage = $"The class {extend.Name} extends this class.";
-
-            if (errorMessage != null)
-            {
-                if (diagnostics == null || range == null) throw new Exception(errorMessage);
-                else
-                {
-                    diagnostics.Error(errorMessage, range);
-                    return;
-                }
-            }
-
-            Extends = extend;
         }
 
         public virtual bool Implements(CodeType type)
@@ -88,10 +67,19 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
+        public virtual CodeType[] UnionTypes() => new[] {this};
+
         public virtual bool Is(CodeType type) => this == type;
 
+        public virtual bool CompatibleWith(CodeType type)
+        {
+            if (IsConstant() != type.IsConstant()) return false;
+            if (IsConstant() && type.IsConstant()) return true;
+            return type.Attributes.StackLength == 1;
+        }
+
         // Static
-        public abstract Scope ReturningScope();
+        public virtual Scope ReturningScope() => null;
         // Object
         public virtual Scope GetObjectScope() => null;
 
@@ -106,65 +94,55 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="constructor">The constuctor that was called.</param>
         /// <param name="constructorValues">The parameter values of the constructor.</param>
         /// <param name="additionalParameterData">Additional parameter data.</param>
-        public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
         {
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();
         }
 
-        /// <summary>Sets up an object reference when a new object is created. Is also called when a new object of a class extending this type is created.</summary>
-        /// <param name="actionSet">The actionset to use.</param>
-        /// <param name="reference">The reference of the object.</param>
-        public virtual void BaseSetup(ActionSet actionSet, Element reference) => throw new NotImplementedException();
-
-        /// <summary>Assigns workshop elements so the class can function. Implementers should check if `wasCalled` is true.</summary>
-        public virtual void WorkshopInit(DeltinScript translateInfo) { }
-
         /// <summary>Adds the class objects to the index assigner.</summary>
         /// <param name="source">The source of the type.</param>
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
-        public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) { }
+        public virtual void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner) { }
 
         /// <summary>Deletes a variable from memory.</summary>
         /// <param name="actionSet">The action set to add the actions to.</param>
         /// <param name="reference">The object reference.</param>
         public virtual void Delete(ActionSet actionSet, Element reference) {}
 
-        /// <summary>
-        /// Gets an operation.
-        /// </summary>
-        /// <param name="op">The operation's operator type.</param>
-        /// <param name="right">The right object's type.</param>
-        /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>
-        public virtual TypeOperation GetOperation(TypeOperator op, CodeType right)
-        {
-            CodeType current = this;
-            while (current != null)
-            {
-                    ITypeOperation operation = current.Operations.GetOperation(op, right);
-                    if (operation.Operator == op && right != null && right.Implements(operation.Right))
-                        return (TypeOperation)operation;
-                
-                current = current.Extends;
-            }
-            return null;
-        }
+        public virtual IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new DataTypeAssigner(attributes);
 
         /// <summary>Calls a type from the specified document range.</summary>
         /// <param name="parseInfo">The script that the type was called from.</param>
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name).EndCodeLine();
-            if (Description != null) hover.NewSection().Add(Description);
-
-            parseInfo.TranslateInfo.Types.CallType(this);
-            parseInfo.Script.AddHover(callRange, hover);
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
+            
+            var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name);
+            if (Generics.Length != 0)
+                hover.Add("<" + string.Join(", ", Generics.Select(g => g.GetName())) + ">");
+            hover.EndCodeLine();
+
+            if (Description != null) hover.NewSection().Add(Description);
+            parseInfo.Script.AddHover(callRange, hover);
         }
 
+        public virtual AnonymousType[] ExtractAnonymousTypes()
+        {
+            var types = new HashSet<AnonymousType>();
+
+            foreach (var typeArg in Generics)
+                foreach (var typeArgExtracted in typeArg.ExtractAnonymousTypes())
+                    types.Add(typeArgExtracted);
+
+            return types.ToArray();
+        }
+
+        public virtual IGenericUsage GetGenericUsage() => new AddToGenericsUsage(this);
+
         /// <summary>Gets the completion that will show up for the language server.</summary>
-        public abstract CompletionItem GetCompletion();
+        public virtual CompletionItem GetCompletion() => throw new NotImplementedException();
 
         public static CompletionItem GetTypeCompletion(CodeType type) => new CompletionItem() {
             Label = type.GetName(),
@@ -172,105 +150,31 @@ namespace Deltin.Deltinteger.Parse
         };
 
         /// <summary>Gets the full name of the type.</summary>
-        public virtual string GetName() => Name;
-
-        public CodeType GetCodeType(DeltinScript deltinScript) => this;
-
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, IParseType typeContext) => GetCodeTypeFromContext(parseInfo, (dynamic)typeContext);
-
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, ParseType typeContext)
+        public virtual string GetName(GetTypeName settings = default(GetTypeName))
         {
-            if (typeContext == null) return parseInfo.TranslateInfo.Types.Unknown();
+            string result = Name;
 
-            CodeType type;
-            bool doCall = true;
+            if (Generics.Length > 0)
+                result += "<" + string.Join(", ", Generics.Select(g => g.GetName(settings))) + ">";
 
-            if (typeContext.IsDefault)
-            {
-                if (typeContext.Infer)
-                    parseInfo.Script.Diagnostics.Hint("Unable to infer type", typeContext.Identifier.Range);
-
-                type = parseInfo.TranslateInfo.Types.Any();
-                doCall = false;
-            }
-            else
-            {
-                type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
-                if (type == null) return parseInfo.TranslateInfo.Types.Unknown();
-            }
-
-            // Get generics
-            if (typeContext.HasTypeArgs)
-            {
-                // Create a list to store the generics.
-                List<CodeType> generics = new List<CodeType>();
-
-                // Get the generics.
-                foreach (var genericContext in typeContext.TypeArgs)
-                    generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
-
-                if (type is Lambda.ValueBlockLambda)
-                    type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
-                else if (type is Lambda.BlockLambda)
-                    type = new Lambda.BlockLambda(generics.ToArray());
-                else if (type is Lambda.MacroLambda)
-                    type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
-            }
-
-            if (doCall)
-                type.Call(parseInfo, typeContext.Identifier.Range);
-
-            for (int i = 0; i < typeContext.ArrayCount; i++)
-                type = new ArrayType(parseInfo.TranslateInfo.Types, type);
-            
-            return type;
-        }
-
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, LambdaType type)
-        {
-            // Get the lambda type's parameters.
-            var parameters = new CodeType[type.Parameters.Count];
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                parameters[i] = GetCodeTypeFromContext(parseInfo, type.Parameters[i]);
-
-                // Constant types are not allowed.
-                if (parameters[i] != null && parameters[i].IsConstant())
-                    parseInfo.Script.Diagnostics.Error("The constant type '" + parameters[i].GetName() + "' cannot be used in method types", type.Parameters[i].Range);
-            }
-
-            // Get the return type.
-            CodeType returnType = null;
-            bool returnsValue = false;
-
-            if (!type.ReturnType.IsVoid)
-            {
-                returnType = GetCodeTypeFromContext(parseInfo, type.ReturnType);
-                returnsValue = true;
-            }
-
-            return new PortableLambdaType(LambdaKind.Portable, parameters, returnsValue, returnType, true);
-        }
-
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, GroupType type)
-        {
-            // Get the contained type.
-            var result = GetCodeTypeFromContext(parseInfo, type.Type);
-            // Get the array type.
-            for (int i = 0; i < type.ArrayCount; i++) result = new ArrayType(parseInfo.TranslateInfo.Types, result);
-            // Done.
             return result;
         }
 
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, PipeTypeContext type)
+        public virtual AccessLevel LowestAccessLevel(CodeType other) => AccessLevel.Public;
+
+        public virtual CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => this;
+
+        public override string ToString() => GetName();
+
+        /// <summary>Gets the types that will be used to assign data values.</summary>
+        public virtual IEnumerable<CodeType> GetAssigningTypes()
         {
-            var left = GetCodeTypeFromContext(parseInfo, type.Left);
-            var right = GetCodeTypeFromContext(parseInfo, type.Right);
-
-            if (left.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Left.Range);
-            if (right.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Right.Range);
-
-            return new PipeType(left, right);
+            yield return this;
+            foreach (var generic in Generics)
+                foreach (var recursive in generic.GetAssigningTypes())
+                    yield return recursive;
         }
+
+        CodeType ICodeTypeSolver.GetCodeType(DeltinScript deltinScript) => this;
     }
 }

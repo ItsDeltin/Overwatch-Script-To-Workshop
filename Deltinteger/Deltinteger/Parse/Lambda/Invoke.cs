@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public CodeParameter[] Parameters { get; }
 
         public MethodAttributes Attributes => new MethodAttributes();
-        public bool Static => false;
         public bool WholeContext => true;
         public MarkupBuilder Documentation => "Invokes the lambda expression.";
         public Location DefinedAt => null;
@@ -20,6 +19,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public bool DoesReturnValue => LambdaType.ReturnsValue;
 
         public PortableLambdaType LambdaType { get; }
+        IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
 
         public LambdaInvoke(PortableLambdaType lambdaType)
         {
@@ -34,13 +34,19 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 ILambdaInvocable lambda = (ILambdaInvocable)actionSet.CurrentObject;
                 return lambda.Invoke(actionSet, methodCall.ParameterValues);
             }
-            return actionSet.DeltinScript.GetComponent<LambdaGroup>().Call(actionSet, methodCall);
+            return actionSet.ToWorkshop.LambdaBuilder.Call(actionSet, methodCall, LambdaType.ReturnType);
         }
 
-        public void Call(ParseInfo parseInfo, DocRange callRange)
+        public object Call(ParseInfo parseInfo, DocRange callRange)
         {
-            if (LambdaType.LambdaKind != LambdaKind.Anonymous && LambdaType.LambdaKind != LambdaKind.Portable && parseInfo.SourceExpression != null)
-                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr =>
+            parseInfo.SourceExpression?.OnResolve(expr => CheckRecursionAndRestricted(parseInfo, callRange, expr));
+            return null;
+        }
+        
+        public void CheckRecursionAndRestricted(ParseInfo parseInfo, DocRange callRange, IExpression lambdaSource)
+        {
+            if (LambdaType.LambdaKind != LambdaKind.Anonymous && LambdaType.LambdaKind != LambdaKind.Portable)
+                new ParameterExpressionResolver(expr =>
                 {
                     // Get the lambda that is being invoked.
                     if (expr is ILambdaApplier source)
@@ -63,8 +69,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
                     // This will only run if a way to resolve lambdas was not accounted for.
                     // Unresolved lambdas will not throw any errors if a restricted value is inside and the lambda is invoked.
                     // Unresolved lambdas also cannot check for recursion.
-                    else parseInfo.Script.Diagnostics.Warning("Source lambda not found, contact zez- I mean, deltin.", callRange);
-                }));
+                    else parseInfo.Script.Diagnostics.Warning("Source lambda not found", callRange);
+                }).On(lambdaSource);
         }
 
         /// <summary>Gets the restricted calls and recursion from a lambda invocation.</summary>
@@ -72,14 +78,15 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             if (!source.ResolvedSource) return;
 
-            parseInfo.CurrentCallInfo?.Call(source.RecursiveCallHandler, callRange);
-
+            if (source.RecursiveCallHandler != null)
+                parseInfo.CurrentCallInfo.Call(source.RecursiveCallHandler, callRange);
+            
             // Add restricted calls.
-            foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
-                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
-                    call.CallType,
+            foreach (var callType in source.GetRestrictedCallTypes())
+                parseInfo.RestrictedCallHandler.AddRestrictedCall(new RestrictedCall(
+                    callType,
                     parseInfo.GetLocation(callRange),
-                    RestrictedCall.Message_LambdaInvoke(source.GetLabel(parseInfo.TranslateInfo, LabelInfo.RecursionError), call.CallType)
+                    RestrictedCall.Message_LambdaInvoke(source.GetLabel(parseInfo.TranslateInfo, LabelInfo.RecursionError), callType)
                 ));
         }
 
@@ -89,9 +96,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
         /// <returns>True if the invocable is found, false otherwise.</returns>
         public static bool ParameterInvocableBridge(IExpression expression, out IBridgeInvocable invocable)
         {
-            if (expression is CallVariableAction callVariable && callVariable.Calling is Var var && var.BridgeInvocable != null)
+            if (expression is CallVariableAction callVariable && callVariable.Calling is VariableInstance varInstance && varInstance.Var.BridgeInvocable != null)
             {
-                invocable = var.BridgeInvocable;
+                invocable = varInstance.Var.BridgeInvocable;
                 return true;
             }
             invocable = null;

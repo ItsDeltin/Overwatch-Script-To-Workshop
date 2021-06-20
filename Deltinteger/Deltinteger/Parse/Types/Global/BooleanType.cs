@@ -4,18 +4,14 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class BooleanType : CodeType, IResolveElements
+    public class BooleanType : CodeType
     {
         private readonly ITypeSupplier _supplier;
 
         public BooleanType(ITypeSupplier supplier) : base("Boolean")
         {
-            CanBeExtended = false;
             _supplier = supplier;
-        }
 
-        public void ResolveElements()
-        {
             Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(TypeOperator.And, this, this),
                 new TypeOperation(TypeOperator.Or, this, this),

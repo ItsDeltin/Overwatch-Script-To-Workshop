@@ -109,6 +109,16 @@ namespace Deltin.Deltinteger
         }
 
         public static string RemoveStructuralChars(this string str) => str.Replace(",", "").Replace("(", "").Replace(")", "");
+
+        public static V GetValueOrAddKey<T, V>(this Dictionary<T, V> dictionary, T key) where V: class, new()
+        {
+            if (!dictionary.TryGetValue(key, out V value))
+            {
+                value = new V();
+                dictionary.Add(key, value);
+            }
+            return value;
+        }
     }
 
     class ArrayBuilder<T>
@@ -208,7 +218,7 @@ namespace Deltin.Deltinteger
         }
         public MarkupBuilder Indent() => Add("    ");
 
-        public override string ToString() => result.ToString();
+        public override string ToString() => noMarkup.ToString();
         public string ToString(bool markup) => markup ? result.ToString() : noMarkup.ToString();
         public MarkupContent ToMarkup() => new MarkupContent()
         {

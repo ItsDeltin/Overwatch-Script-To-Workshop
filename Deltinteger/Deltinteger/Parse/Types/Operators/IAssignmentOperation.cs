@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly VariableElements _elements;
         private readonly string _comment;
 
-        public IndexReference Variable => _elements.IndexReference;
+        public IGettable Variable => _elements.IndexReference;
         public Element[] Index => _elements.Index;
         public Element Target => _elements.Target;
 
@@ -92,7 +92,7 @@ namespace Deltin.Deltinteger.Parse
             _elements = variableInfo;
         }
 
-        public void Set() => ActionSet.AddAction(_comment, Variable.SetVariable((Element)Value, Target, Index));
-        public void Modify(Operation operation) => ActionSet.AddAction(_comment, Variable.ModifyVariable(operation, (Element)Value, Target, Index));
+        public void Set() => Variable.Set(ActionSet.SetNextComment(_comment), Value, Target, Index);
+        public void Modify(Operation operation) => Variable.Modify(ActionSet.SetNextComment(_comment), operation, Value, Target, Index);
     }
 }

@@ -23,15 +23,16 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet) => throw new NotImplementedException();
     }
 
-    public class MissingVariable : IVariable, IExpression
+    public class MissingVariable : IVariable, IVariableInstance, IExpression
     {
         public string Name { get; }
         public MarkupBuilder Documentation => null;
-        public bool Static => true;
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         public CodeType CodeType { get; }
+        public VariableType VariableType => VariableType.Dynamic;
+        public IVariable Provider => this;
         ICodeTypeSolver IScopeable.CodeType => CodeType;
 
         public MissingVariable(DeltinScript deltinScript, string name)
@@ -43,7 +44,12 @@ namespace Deltin.Deltinteger.Parse
         public bool IsStatement() => true;
         public Scope ReturningScope() => null;
         public CodeType Type() => CodeType;
-        public CompletionItem GetCompletion() => throw new NotImplementedException();
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
+        public IVariableInstance GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker) => this;
+        public IVariableInstance GetDefaultInstance(CodeType definedIn) => this;
+        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => throw new NotImplementedException();
+        public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
+        public void AddDefaultInstance(IScopeAppender scopeAppender) => throw new NotImplementedException();
+        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes();
     }
 }

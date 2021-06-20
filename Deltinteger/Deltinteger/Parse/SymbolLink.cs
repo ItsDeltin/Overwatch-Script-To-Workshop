@@ -7,49 +7,34 @@ namespace Deltin.Deltinteger.Parse
 {
     public class SymbolLinkComponent : IComponent
     {
-        public DeltinScript DeltinScript { get; set; }
+        readonly Dictionary<object, List<SymbolLink>> _calls = new Dictionary<object, List<SymbolLink>>();
+        DeltinScript _deltinScript;
 
-        private Dictionary<ICallable, SymbolLinkCollection> callRanges { get; } = new Dictionary<ICallable, SymbolLinkCollection>();
-
-        public void Init() { }
-
-        public void AddSymbolLink(ICallable callable, Location calledFrom, bool isDeclarer = false)
+        void IComponent.Init(DeltinScript deltinScript)
         {
-            if (callable == null) throw new ArgumentNullException(nameof(callable));
-            if (calledFrom == null) throw new ArgumentNullException(nameof(calledFrom));
-
-            if (!callRanges.ContainsKey(callable)) callRanges.Add(callable, new SymbolLinkCollection());
-            callRanges[callable].Add(new SymbolLink(calledFrom, isDeclarer));
+            _deltinScript = deltinScript;
         }
 
-        public Dictionary<ICallable, SymbolLinkCollection> GetSymbolLinks() => callRanges;
-
-        public SymbolLinkCollection GetSymbolLinks(ICallable callable) => callRanges[callable];
-    }
-
-    public class SymbolLinkCollection : List<SymbolLink>
-    {
-        public SymbolLink[] GetSymbolLinks(bool includeDeclarer)
+        public void Collect()
         {
-            if (includeDeclarer)
-                return ToArray();
-            else
-            {
-                SymbolLink[] links = this.Where(sl => !sl.Declarer).ToArray();
-                return links;
-            }
+            // Merge declaration calls.
+            foreach (var script in _deltinScript.Importer.ScriptFiles)
+                foreach (var call in script.Elements.DeclarationCalls)
+                    _calls.GetValueOrAddKey(call.Key).AddRange(call.Value.Select(call => new SymbolLink(script.GetLocation(call.CallRange), call.IsDeclaration)));
         }
+
+        public IReadOnlyList<SymbolLink> CallsFromDeclaration(object key) => _calls[key].AsReadOnly();
     }
 
     public class SymbolLink
     {
         public Location Location { get; }
-        public bool Declarer { get; }
+        public bool IsDeclaration { get; }
 
         public SymbolLink(Location location, bool declarer)
         {
             Location = location;
-            Declarer = declarer;
+            IsDeclaration = declarer;
         }
     }
 }

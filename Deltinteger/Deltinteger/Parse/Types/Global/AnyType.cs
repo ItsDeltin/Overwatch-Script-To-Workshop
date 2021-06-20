@@ -3,7 +3,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class AnyType : CodeType, IResolveElements
+    public class AnyType : CodeType
     {
         private readonly DeltinScript _deltinScript;
 
@@ -12,11 +12,12 @@ namespace Deltin.Deltinteger.Parse
         public AnyType(string name, DeltinScript deltinScript) : base(name)
         {
             CanBeDeleted = true;
-            CanBeExtended = false;
             _deltinScript = deltinScript;
+
+            deltinScript.StagedInitiation.On(InitiationStage.Meta, ResolveElements);
         }
 
-        public void ResolveElements()
+        void ResolveElements()
         {
             Operations.AddTypeOperation(new TypeOperation[] {
                 new TypeOperation(_deltinScript.Types, TypeOperator.Equal, this),
@@ -38,7 +39,14 @@ namespace Deltin.Deltinteger.Parse
             Operations.AddTypeOperation(AssignmentOperation.GetNumericOperations(this));
         }
 
-        public override bool Implements(CodeType type) => !type.IsConstant();
+        public override void Delete(ActionSet actionSet, Element reference)
+        {
+            var stacks = actionSet.ToWorkshop.ClassInitializer.Stacks;
+            for (int i = 0; i < stacks.Length; i++)
+                stacks[i].Set(actionSet, value: 0, index: reference);
+        }
+
+        public override bool Implements(CodeType type) => !type.IsConstant() && type is StructInstance == false;
         public override bool Is(CodeType type) => !type.IsConstant();
         public override CompletionItem GetCompletion() => GetTypeCompletion(this);
         public override Scope GetObjectScope() => _deltinScript.PlayerVariableScope;

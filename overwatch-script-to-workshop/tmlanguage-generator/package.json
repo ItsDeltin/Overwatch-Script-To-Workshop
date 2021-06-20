@@ -1,0 +1,17 @@
+{
+  "devDependencies": {
+    "nodemon": "^2.0.7",
+    "prettier": "2.2.1",
+    "typescript": "^4.2.4"
+  },
+  "scripts": {
+    "compile": "tsc -b && node dist/ostw/ostw-grammar.js",
+    "watch": "tsc -w",
+    "dev": "nodemon dist/index.js",
+    "watchdev": "concurrently \"npm:watch\" \"npm:dev\""
+  },
+  "dependencies": {
+    "@types/node": "^15.6.0",
+    "concurrently": "^6.0.2"
+  }
+}

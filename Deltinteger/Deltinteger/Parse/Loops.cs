@@ -4,6 +4,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Variables.Build;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -154,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
         readonly bool IsAutoFor;
         readonly IStatement Block;
         readonly IExpression Condition;
-        readonly Var DefinedVariable;
+        readonly IVariable DefinedVariable;
 
         // For
         readonly SetVariableAction Initializer;
@@ -179,7 +180,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Declaration for initializer.
                     if (forContext.Initializer is VariableDeclaration declaration)
-                        DefinedVariable = new ScopedVariable(varScope, new DefineContextHandler(parseInfo, declaration));
+                        DefinedVariable = new ScopedVariable(false, varScope, new DefineContextHandler(parseInfo, declaration)).GetVar();
                     // Variable assignment for initializer
                     else if (forContext.Initializer is Assignment assignment)
                         Initializer = new SetVariableAction(parseInfo, varScope, assignment);
@@ -200,18 +201,18 @@ namespace Deltin.Deltinteger.Parse
                 // Declaration
                 else if (forContext.Initializer is VariableDeclaration declaration)
                 {
-                    DefinedVariable = new ScopedVariable(varScope, new DefineContextHandler(parseInfo, declaration));
+                    DefinedVariable = new ScopedVariable(false, varScope, new DefineContextHandler(parseInfo, declaration)).GetVar();
                 }
                 // Assignment
                 else if (forContext.Initializer is Assignment assignment)
                 {
                     // Get the variable being set.
-                    VariableResolve = new VariableResolve(new VariableResolveOptions()
+                    VariableResolve = new VariableResolve(parseInfo, new VariableResolveOptions()
                     {
                         // The for cannot be indexed and should be on the rule-level.
                         CanBeIndexed = false,
                         FullVariable = true
-                    }, parseInfo.GetExpression(varScope, assignment.VariableExpression), assignment.VariableExpression.Range, parseInfo.Script.Diagnostics);
+                    }, parseInfo.GetExpression(varScope, assignment.VariableExpression), assignment.VariableExpression.Range);
 
                     InitialResolveValue = parseInfo.GetExpression(scope, assignment.Value);
                 }
@@ -220,12 +221,12 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // The variable is defined but no start value was given. In this case, just start at 0.
                     // Get the variable.
-                    VariableResolve = new VariableResolve(new VariableResolveOptions()
+                    VariableResolve = new VariableResolve(parseInfo, new VariableResolveOptions()
                     {
                         // The for cannot be indexed and should be on the rule-level.
                         CanBeIndexed = false,
                         FullVariable = true
-                    }, parseInfo.GetExpression(varScope, identifier), identifier.Range, parseInfo.Script.Diagnostics);
+                    }, parseInfo.GetExpression(varScope, identifier), identifier.Range);
                 }
                 // Incorrect initializer.
                 else
@@ -278,13 +279,8 @@ namespace Deltin.Deltinteger.Parse
             if (DefinedVariable != null)
             {
                 // Add the defined variable to the index assigner.
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, DefinedVariable, actionSet.IsGlobal, null);
-
-                // Set the initial variable.
-                if (actionSet.IndexAssigner[DefinedVariable] is IndexReference && DefinedVariable.InitialValue != null)
-                    actionSet.AddAction(((IndexReference)actionSet.IndexAssigner[DefinedVariable]).SetVariable(
-                        (Element)DefinedVariable.InitialValue.Parse(actionSet)
-                    ));
+                var gettable = DefinedVariable.GetInstance(null, actionSet.ThisTypeLinker).GetAssigner(new(actionSet)).GetValue(actionSet);
+                actionSet.IndexAssigner.Add(DefinedVariable, gettable);
             }
             else if (Initializer != null)
                 Initializer.Translate(actionSet);
@@ -319,17 +315,27 @@ namespace Deltin.Deltinteger.Parse
             if (VariableResolve != null)
             {
                 VariableElements elements = VariableResolve.ParseElements(actionSet);
-                variable = elements.IndexReference.WorkshopVariable;
+                var indexReference = (IndexReference)elements.IndexReference;
+
+                variable = indexReference.WorkshopVariable;
                 target = elements.Target;
                 start = (Element)InitialResolveValue?.Parse(actionSet) ?? Element.Num(0);
             }
             // New variable being use in for.
             else
             {
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, DefinedVariable, actionSet.IsGlobal, null);
-                variable = ((IndexReference)actionSet.IndexAssigner[DefinedVariable]).WorkshopVariable;
-                target = Element.EventPlayer();
-                start = (Element)DefinedVariable.InitialValue?.Parse(actionSet) ?? Element.Num(0);
+                // Get the gettable assigner for the for variable.
+                var assignerResult = DefinedVariable.GetDefaultInstance(null).GetAssigner(new(actionSet)).GetResult(new GettableAssignerValueInfo(actionSet) {
+                    SetInitialValue = SetInitialValue.DoNotSet
+                });
+
+                // Link the value to the variable.
+                actionSet.IndexAssigner.Add(DefinedVariable, assignerResult.Gettable);
+
+                // Set variable, target, and stop.
+                variable = ((IndexReference)actionSet.IndexAssigner[DefinedVariable]).WorkshopVariable; // Extract the workshop variable.
+                target = Element.EventPlayer(); // Set target to Event Player since declaring variables has no target.
+                start = (Element)assignerResult.InitialValue ?? Element.Num(0); // Set start to InitialValue or 0 if null.
             }
 
             Element stop = (Element)Condition.Parse(actionSet);
@@ -365,7 +371,7 @@ namespace Deltin.Deltinteger.Parse
 
     class ForeachAction : LoopAction
     {
-        private Var ForeachVar { get; }
+        private IVariable ForeachVar { get; }
         private IExpression Array { get; }
         private IStatement Block { get; }
 
@@ -375,7 +381,7 @@ namespace Deltin.Deltinteger.Parse
 
             Scope varScope = scope.Child();
 
-            ForeachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext));
+            ForeachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext)).GetVar();
 
             // Get the array that will be iterated on.
             Array = parseInfo.GetExpression(scope, foreachContext.Expression);
@@ -417,14 +423,13 @@ namespace Deltin.Deltinteger.Parse
                 _foreachContext = foreachContext;
             }
 
-            public VarBuilderAttribute[] GetAttributes() => new VarBuilderAttribute[0];
+            public void GetComponents(VariableComponentCollection componentCollection) {}
             public IParseType GetCodeType() => _foreachContext.Type;
             public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
             public string GetName() => _foreachContext.Identifier.Text;
 
             public DocRange GetNameRange() => _foreachContext.Identifier.Range;
             public DocRange GetTypeRange() => _foreachContext.Type.Range;
-            public bool CheckName() => _foreachContext.Identifier;
         }
     }
 }

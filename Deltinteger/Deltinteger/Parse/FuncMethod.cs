@@ -11,27 +11,14 @@ namespace Deltin.Deltinteger.Parse
         public CodeParameter[] Parameters { get; set; }
         public ICodeTypeSolver CodeType { get; set; }
         public MethodAttributes Attributes { get; set; } = new MethodAttributes();
-        public bool Static { get; set; }
         public bool WholeContext { get; set; } = true;
         public MarkupBuilder Documentation { get; set; }
+        public IMethodExtensions MethodInfo { get; }
         public LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
 
         private readonly Func<ActionSet, MethodCall, IWorkshopTree> _action;
         private readonly Func<ParseInfo, DocRange, object> _onCall;
-
-        public FuncMethod(string name, Func<ActionSet, MethodCall, IWorkshopTree> action)
-        {
-            Name = name;
-            _action = action;
-        }
-
-        public FuncMethod(string name, CodeParameter[] parameters, Func<ActionSet, MethodCall, IWorkshopTree> action)
-        {
-            Name = name;
-            Parameters = parameters;
-            _action = action;
-        }
 
         public FuncMethod(FuncMethodBuilder builder)
         {
@@ -39,6 +26,7 @@ namespace Deltin.Deltinteger.Parse
             Parameters = builder.Parameters ?? new CodeParameter[0];
             CodeType = builder.ReturnType;
             Documentation = builder.Documentation ?? throw new ArgumentNullException(nameof(Documentation));
+            MethodInfo = builder?.MethodInfo ?? new MethodInfo();
             _action = builder.Action ?? throw new ArgumentNullException(nameof(_action));
             _onCall = builder.OnCall;
         }
@@ -57,9 +45,11 @@ namespace Deltin.Deltinteger.Parse
         public CodeType ReturnType;
         /// <summary>Required: the documentation of the function.</summary>
         public string Documentation;
-        /// <summary>Required: The action of the function.</summary>
+        /// <summary>Not required: the additional method options.</summary>
+        public IMethodExtensions MethodInfo;
+        /// <summary>Required: the action of the function.</summary>
         public Func<ActionSet, MethodCall, IWorkshopTree> Action;
-        /// <summary>Not required: The code to run when the function is called.</summary>
+        /// <summary>Not required: the code to run when the function is called.</summary>
         public Func<ParseInfo, DocRange, object> OnCall;
 
         public static implicit operator FuncMethod(FuncMethodBuilder builder) => new FuncMethod(builder);

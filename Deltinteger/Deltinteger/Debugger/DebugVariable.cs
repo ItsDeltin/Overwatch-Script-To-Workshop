@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.Debugger.Protocol;
 using Deltin.Deltinteger.Csv;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Debugger
 {
@@ -31,12 +32,13 @@ namespace Deltin.Deltinteger.Debugger
         public int[] Index { get; }
         public CsvPart Value { get; private set; }
 
-        public LinkableDebugVariable(DebugVariableLinkCollection collection, IIndexReferencer referencer, WorkshopVariable variable, int[] index)
+        public LinkableDebugVariable(DebugVariableLinkCollection collection, IVariable scriptVariable, WorkshopVariable workshopVariable, int[] index)
         {
-            Resolver = referencer.Type()?.DebugVariableResolver ?? new DefaultResolver();
-            Name = referencer.Name;
-            Type = referencer.Type()?.GetName() ?? "define";
-            Variable = variable;
+            // todo
+            // Resolver = scriptVariable.CodeType.DebugVariableResolver ?? new DefaultResolver();
+            Name = scriptVariable.Name;
+            // Type = scriptVariable.CodeType.GetName();
+            Variable = workshopVariable;
             Index = index;
         }
 

@@ -25,9 +25,9 @@ namespace Deltin.Deltinteger.Parse
             Returns = GetReturns();
             ReturnsValue = Returns.Any(r => r.ReturningValue != null);
         }
-        public BlockTreeScan(bool doesReturnValue, ParseInfo parseInfo, DefinedMethod method) : this(parseInfo, method.Block, method.Name, method.Context.Identifier.Range)
+        public BlockTreeScan(ParseInfo parseInfo, DefinedMethodProvider method) : this(parseInfo, method.Block, method.Name, method.Context.Identifier.Range)
         {
-            ReturnsValue = doesReturnValue;
+            ReturnsValue = method.ReturnType != null;
         }
 
         // Makes sure each return statement returns a value if the method returns a value and that each path returns a value.
@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Parse
                         break;
                     }
                 }
-            if (!blockReturns)
+            if (!blockReturns && path.ErrorRange != null)
                 _parseInfo.Script.Diagnostics.Error("Path does not return a value.", path.ErrorRange);
         }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Parse.Workshop;
 using Newtonsoft.Json.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -35,7 +36,7 @@ namespace Deltin.Deltinteger.Json
             return false;
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             foreach (var p in Properties)
             {
@@ -77,11 +78,10 @@ namespace Deltin.Deltinteger.Json
         public JsonProperty(JProperty property)
         {
             Name = property.Name;
-            Var = new InternalVar(property.Name, CompletionItemKind.Property);
-            Var.IsSettable = false;
+            Var = new InternalVar(property.Name, Value.Type);
+            // Var.IsSettable = false;
             Value = IJsonValue.GetValue(property.Value);
             Var.Documentation = Value.Documentation;
-            Var.CodeType = Value.Type;
         }
     }
 
@@ -208,6 +208,7 @@ namespace Deltin.Deltinteger.Json
         public Deltin.Deltinteger.LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
         private JsonType ContainingType { get; }
+        IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
 
         public GetJsonPropertyFunction(JsonType containingType)
         {
@@ -249,7 +250,7 @@ namespace Deltin.Deltinteger.Json
                     {
                         Label = prop.Name,
                         Detail = prop.Name,
-                        Documentation = Extras.GetMarkupContent(prop.Var.Documentation),
+                        Documentation = prop.Var.Documentation.ToMarkup(),
                         Kind = CompletionItemKind.Property
                     });
                 parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));

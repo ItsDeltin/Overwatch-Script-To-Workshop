@@ -5,7 +5,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class PlayerType : CodeType, IAdditionalArray, IResolveElements
+    public class PlayerType : CodeType, ITypeArrayHandler, IGetMeta
     {
         // These functions are shared with both Player and Player[] types.
         // * Teleport *
@@ -58,16 +58,19 @@ namespace Deltin.Deltinteger.Parse
         };
 
         public Scope PlayerVariableScope { get; } = new Scope("player variables") { TagPlayerVariables = true };
-        private Scope _objectScope;
-        private readonly ITypeSupplier _supplier;
+        readonly ITypeSupplier _supplier;
+        Scope _objectScope;
 
-        public PlayerType(ITypeSupplier typeSupplier) : base("Player")
+        public PlayerType(DeltinScript deltinScript, ITypeSupplier typeSupplier) : base("Player")
         {
-            CanBeExtended = false;
+            AsReferenceResetSettability = true;
+            ArrayHandler = this;
             _supplier = typeSupplier;
+
+            deltinScript.StagedInitiation.On(this);
         }
 
-        public void ResolveElements()
+        public void GetMeta()
         {
             _objectScope = PlayerVariableScope.Child();
             AddSharedFunctionsToScope(_objectScope);
@@ -170,5 +173,8 @@ namespace Deltin.Deltinteger.Parse
             Parameters = new[] { new CodeParameter("enabled", $"Specifies whether the player or players are able to use their {abilityName.ToLower()}.", _supplier.Boolean()) },
             Action = (actionSet, methodCall) => Element.Part("Set " + abilityName + " Enabled", actionSet.CurrentObject, methodCall.Get(0))
         };
+
+        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes) => null;
+        public ArrayFunctionHandler GetFunctionHandler() => new ArrayFunctionHandler();
     }
 }

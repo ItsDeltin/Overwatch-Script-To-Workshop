@@ -2,30 +2,31 @@ using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Parse.Workshop;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class StringType : CodeType, IResolveElements
+    public class StringType : CodeType, IGetMeta
     {
-        private readonly ITypeSupplier _typeSupplier;
-        private readonly Scope _scope = new Scope();
-        private readonly InternalVar _length = new InternalVar("Length", CompletionItemKind.Property) { IsSettable = false };
+        readonly ITypeSupplier _typeSupplier;
+        readonly Scope _scope = new Scope();
+        InternalVar _length;
 
-        public StringType(ITypeSupplier typeSupplier) : base("String")
+        public StringType(DeltinScript deltinScript, ITypeSupplier typeSupplier) : base("String")
         {
             _typeSupplier = typeSupplier;
-            CanBeExtended = false;
+            deltinScript.StagedInitiation.On(this);
         }
 
-        public void ResolveElements()
+        public void GetMeta()
         {
+            _length = new InternalVar("Length", _typeSupplier.Number(), CompletionItemKind.Property);
+
             Operations.AddTypeOperation(new ITypeOperation[] {
                 new StringAddOperation(_typeSupplier)
             });
-
-            _length.CodeType = _typeSupplier.Number();
 
             _scope.AddNativeMethod(FormatFunction(_typeSupplier));
             _scope.AddNativeMethod(ContainsFunction(_typeSupplier));
@@ -37,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             _scope.AddNativeVariable(_length);
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             assigner.Add(_length, Element.Part("String Length", reference));
         }

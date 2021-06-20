@@ -4,18 +4,19 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class NumberType : CodeType, IResolveElements
+    public class NumberType : CodeType, IGetMeta
     {
-        private readonly ITypeSupplier _supplier;
-        private readonly Scope _scope = new Scope();
+        readonly ITypeSupplier _supplier;
+        readonly Scope _scope = new Scope();
 
-        public NumberType(ITypeSupplier supplier) : base("Number")
+        public NumberType(DeltinScript deltinScript, ITypeSupplier supplier) : base("Number")
         {
-            CanBeExtended = false;
             _supplier = supplier;
+
+            deltinScript.StagedInitiation.On(this);
         }
 
-        public void ResolveElements()
+        public void GetMeta()
         {
             // Floor
             _scope.AddNativeMethod(new FuncMethodBuilder() {
@@ -53,7 +54,7 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.Divide, this, this), // Number / number
                 new TypeOperation(TypeOperator.Modulo, this, this), // Number % number
 				new TypeOperation(TypeOperator.Pow, this, this),
-                new TypeOperation(TypeOperator.Multiply, _supplier.Vector(), _supplier.Vector()), // Vector * number
+                new TypeOperation(TypeOperator.Multiply, _supplier.Vector(), _supplier.Vector()), // Number * vector
 				new TypeOperation(TypeOperator.LessThan, this, _supplier.Boolean()), // Number < number
                 new TypeOperation(TypeOperator.LessThanOrEqual, this, _supplier.Boolean()), // Number <= number
                 new TypeOperation(TypeOperator.GreaterThanOrEqual, this, _supplier.Boolean()), // Number >= number

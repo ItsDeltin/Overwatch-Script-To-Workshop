@@ -31,6 +31,8 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
+            actionSet = actionSet.ContainVariableAssigner();
+
             foreach (var statement in Statements)
                 statement.Translate(actionSet);
 

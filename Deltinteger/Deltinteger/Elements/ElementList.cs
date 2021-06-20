@@ -8,13 +8,14 @@ using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.Compl
 
 namespace Deltin.Deltinteger.Elements
 {
-    public class ElementList : IMethod
+    public class ElementList : IMethod, IGetRestrictedCallTypes
     {
         public string Name { get; }
         public CodeParameter[] Parameters { get; private set; }
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public MarkupBuilder Documentation { get; }
         public ICodeTypeSolver CodeType { get; private set; }
+        IMethodExtensions IMethod.MethodInfo { get; } = new MethodInfo();
         private readonly RestrictedCallType? _restricted;
         private readonly ElementBaseJson _function;
         private readonly Element _actionReturnValue;
@@ -32,6 +33,8 @@ namespace Deltin.Deltinteger.Elements
 
             Name = function.CodeName();
             Documentation = function.Documentation;
+
+            Attributes.GetRestrictedCallTypes = this;
 
             if (function.Restricted != null)
                 _restricted = GetRestrictedCallTypeFromString(function.Restricted);
@@ -131,7 +134,7 @@ namespace Deltin.Deltinteger.Elements
         {
             if (_restricted != null)
                 // If there is a restricted call type, add it.
-                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                parseInfo.RestrictedCallHandler.AddRestrictedCall(new RestrictedCall(
                     (RestrictedCallType)_restricted,
                     parseInfo.GetLocation(callRange),
                     RestrictedCall.Message_Element((RestrictedCallType)_restricted)
@@ -139,6 +142,11 @@ namespace Deltin.Deltinteger.Elements
             
             return null;
         }
+
+        public IEnumerable<RestrictedCallType> GetRestrictedCallTypes() =>
+            _restricted == null ?
+            Enumerable.Empty<RestrictedCallType>() :
+            new RestrictedCallType[] { (RestrictedCallType)_restricted };
 
         private static IMethod[] WorkshopFunctions { get; } = GetWorkshopFunctions();
         private static IMethod[] GetWorkshopFunctions()

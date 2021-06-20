@@ -1,10 +1,15 @@
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
+using System;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class PathResolveClass : ClassType
+    public class PathResolveClass : ISelfContainedClass
     {
+        public string Name => "PathResolve";
+        public SelfContainedClassProvider Provider { get; }
+        public SelfContainedClassInstance Instance => Provider.Instance;
+
         /// <summary>An array of numbers where each value is that index's parent index. Following the path will lead to the source. Subtract value by -1 since 0 is used for unset.</summary>
         public ObjectVariable ParentArray { get; private set; }
         /// <summary>A reference to the source pathmap.</summary>
@@ -12,33 +17,30 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <summary>A vector determining the destination.</summary>
         public ObjectVariable Destination { get; private set; }
 
-        private readonly ITypeSupplier _supplier;
+        readonly ITypeSupplier _supplier;
+        readonly PathfinderTypesComponent _pathfinderTypes;
 
-        public PathResolveClass(ITypeSupplier supplier) : base("PathResolve")
+        public PathResolveClass(DeltinScript deltinScript)
         {
-            _supplier = supplier;
+            _supplier = deltinScript.Types;
+            _pathfinderTypes = deltinScript.GetComponent<PathfinderTypesComponent>();
+            Provider = new SelfContainedClassProvider(deltinScript, this);
         }
 
-        public override void ResolveElements()
+        public void Setup(SetupSelfContainedClass setup)
         {
-            if (elementsResolved) return;
-            base.ResolveElements();
+            ParentArray = setup.AddObjectVariable(new InternalVar("ParentArray", _supplier.Any()));
+            Pathmap = setup.AddObjectVariable(new InternalVar("OriginMap", _pathfinderTypes.Pathmap.Instance));
+            Destination = setup.AddObjectVariable(new InternalVar("Destination", _supplier.Vector()));
 
-            // Set ParentArray
-            ParentArray = AddObjectVariable(new InternalVar("ParentArray"));
-
-            // Set Pathmap
-            Pathmap = AddObjectVariable(new InternalVar("OriginMap"));
-
-            // Set Destination
-            Destination = AddObjectVariable(new InternalVar("Destination"));
-
-            serveObjectScope.AddNativeMethod(PathfindFunction);
-            serveObjectScope.AddNativeMethod(Next);
+            setup.ObjectScope.AddNativeMethod(PathfindFunction);
+            setup.ObjectScope.AddNativeMethod(Next);
         }
 
-        private FuncMethod PathfindFunction => new FuncMethodBuilder()
-        {
+        public void WorkshopInit(DeltinScript translateInfo) => throw new NotImplementedException();
+        public void New(ActionSet actionSet, NewClassInfo newClassInfo) => throw new NotImplementedException();
+
+        private FuncMethod PathfindFunction => new FuncMethodBuilder() {
             Name = "Pathfind",
             Documentation = "Pathfinds the specified players to the destination.",
             Parameters = new CodeParameter[] {
@@ -50,7 +52,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 ResolveInfoComponent resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
 
                 // For each of the players, get the current.
-                resolveInfo.Pathfind(actionSet, (Element)call.ParameterValues[0], Pathmap.Get(actionSet), ParentArray.Get(actionSet), Destination.Get(actionSet));
+                resolveInfo.Pathfind(actionSet, (Element)call.ParameterValues[0], (Element)Pathmap.Get(actionSet), (Element)ParentArray.Get(actionSet), (Element)Destination.Get(actionSet));
 
                 return null;
             }
@@ -65,7 +67,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("node", new MarkupBuilder().Add("The index of the node from the ").Code("PathResolve.OriginMap.Nodes").Add(" array."), _supplier.Number())
             },
             ReturnType = _supplier.Number(),
-            Action = (actionSet, methodCall) => ParentArray.Get(actionSet)[(Element)methodCall.ParameterValues[0]] - 1
+            Action = (actionSet, methodCall) => Element.ValueInArray(ParentArray.Get(actionSet), (Element)methodCall.ParameterValues[0]) - 1
         };
+
+        public MarkupBuilder Documentation => new MarkupBuilder(null);
+        public Constructor[] Constructors => new Constructor[0];
     }
 }

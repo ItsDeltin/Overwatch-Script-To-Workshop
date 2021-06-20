@@ -28,10 +28,10 @@ namespace Deltin.Deltinteger.Elements
         public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
             var action = Function as ElementJsonAction;
-            if (action != null && action.Indentation == "outdent") b.Outdent();
+            if (action != null && (action.Indentation == "outdent" || action.Indentation == "drop")) b.Outdent();
 
             // Add a comment and newline
-            if (Comment != null) b.Append($"\"{Comment}\"");
+            if (Comment != null) b.AppendLine($"\"{Comment}\"");
 
             // Add the disabled tag if the element is disabled.
             if (Function is ElementJsonAction && Disabled) b.AppendKeyword("disabled").Append(" ");
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Elements
             if (action != null)
             {
                 b.AppendLine(";");
-                if (action.Indentation == "indent") b.Indent();
+                if (action.Indentation == "indent" || action.Indentation == "drop") b.Indent();
             }
         }
 
@@ -378,5 +378,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(((decimal)Value).ToString());
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
+
+        public override string ToString() => Value.ToString();
     }
 }
