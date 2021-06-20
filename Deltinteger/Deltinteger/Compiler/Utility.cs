@@ -22,37 +22,7 @@ namespace Deltin.Deltinteger.Compiler
             Character = character;
         }
 
-        public int PosIndex(string text)
-        {
-            if (Line == 0 && Character == 0) return 0;
-
-            int line = 0;
-            int character = 0;
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] == '\n')
-                {
-                    line++;
-                    character = 0;
-                }
-                else
-                {
-                    character++;
-                }
-
-                if (Line == line && Character == character)
-                    return i + 1;
-
-                if (line > Line)
-                    throw new Exception("Scanned line surpassed expected line.");
-            }
-            throw new Exception("End reached without encountering position.");
-        }
-
-        public override string ToString()
-        {
-            return Line + ", " + Character;
-        }
+        public override string ToString() => Line + ", " + Character;
 
         public int CompareTo(DocPos other)
         {
@@ -181,6 +151,7 @@ namespace Deltin.Deltinteger.Compiler
         public string Text { get; }
         public DocRange Range { get; set; }
         public TokenType TokenType { get; }
+        public TokenFlags Flags { get; set; }
 
         public Token(string text, DocRange range, TokenType tokenType)
         {
@@ -195,6 +166,14 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator false(Token x) => x == null;
         public static bool operator !(Token x) => x == null;
         public static implicit operator bool(Token x) => x != null;
+        public static implicit operator DocRange(Token x) => x.Range;
+    }
+
+    [Flags]
+    public enum TokenFlags
+    {
+        None = 0,
+        StringSingleQuotes = 1
     }
 
     public static class TokenExtensions
@@ -282,6 +261,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.CurlyBracket_Close:
                 case TokenType.CurlyBracket_Open:
                 case TokenType.EOF:
+				case TokenType.Type:
                     return false;
 
                 default:
@@ -313,7 +293,7 @@ namespace Deltin.Deltinteger.Compiler
                     return true;
 
                 default:
-                    return tokenType.IsStartOfType(); // Lambdas
+                    return tokenType.IsStartOfType() || tokenType.IsIdentifier(); // Lambdas
             }
         }
 
@@ -379,10 +359,34 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Semicolon:
                 case TokenType.Switch:
                 case TokenType.While:
+                case TokenType.ActionComment:
                     return true;
 
                 default:
                     return tokenType.IsStartOfType() || tokenType.IsStartOfExpression();
+            }
+        }
+
+        public static bool IsIdentifier(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Identifier:
+                case TokenType.As:
+                case TokenType.Async:
+                case TokenType.Case:
+                case TokenType.Default:
+                case TokenType.Disabled:
+                case TokenType.GlobalVar:
+                case TokenType.Import:
+                case TokenType.In:
+                case TokenType.PlayerVar:
+                case TokenType.Ref:
+                case TokenType.Type:
+                    return true;
+
+                default:
+                    return false;
             }
         }
 
@@ -436,12 +440,17 @@ namespace Deltin.Deltinteger.Compiler
         // Boolean
         And,
         Or,
+        Pipe,
         // Generic expressions
-        String,
         Number,
         True,
         False,
         Null,
+        // Strings
+        String,
+        InterpolatedStringTail,
+        InterpolatedStringMiddle,
+        InterpolatedStringHead,
         // Keywords
         Import,
         Define,
@@ -449,6 +458,7 @@ namespace Deltin.Deltinteger.Compiler
         Continue,
         Return,
         Rule,
+		Type,
         Disabled,
         For,
         While,
@@ -490,7 +500,7 @@ namespace Deltin.Deltinteger.Compiler
         QuestionMark,
         // Other
         ActionComment,
-        EOF
+        EOF,
     }
 
     public class UpdateRange

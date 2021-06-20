@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the constructor to use.
                 OverloadChooser = new OverloadChooser(
-                    CreatingObjectOf.Constructors, parseInfo, CreatingObjectOf.ReturningScope(), scope, nameRange, context.Range, new OverloadError("type " + CreatingObjectOf.Name)
+                    CreatingObjectOf.Constructors, parseInfo, CreatingObjectOf.ReturningScope(), scope, nameRange, context.Range, context.Range, new OverloadError("type " + CreatingObjectOf.Name)
                 );
                 OverloadChooser.Apply(context.Parameters);
 
@@ -37,9 +37,22 @@ namespace Deltin.Deltinteger.Parse
 
                 if (Constructor != null)
                 {
+                    // Default restricted parameter values.
+                    OverloadChooser.Match.CheckOptionalsRestrictedCalls(parseInfo, nameRange);
+
+                    // Bridge other restricted values.
+                    if (Constructor is IApplyBlock applyBlock)
+                        foreach (RestrictedCallType type in applyBlock.CallInfo.GetRestrictedCallTypes())
+                            parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                                type,
+                                parseInfo.GetLocation(nameRange),
+                                RestrictedCall.Message_FunctionCallsRestricted(context.ClassIdentifier.Text, type),
+                                Constructor.RestrictedValuesAreFatal
+                            ));
+
                     parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(Constructor, new Location(parseInfo.Script.Uri, nameRange));
                     Constructor.Call(parseInfo, nameRange);
-                    parseInfo.Script.AddHover(context.Range, Constructor.GetLabel(true));
+                    parseInfo.Script.AddHover(context.Range, Constructor.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
                 }
             }
         }

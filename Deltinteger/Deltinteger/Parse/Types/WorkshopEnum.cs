@@ -10,42 +10,46 @@ namespace Deltin.Deltinteger.Parse
 {
     class ValueGroupType : CodeType
     {
-        public EnumData EnumData { get; }
-        private Scope Scope { get; }
-        private List<EnumValuePair> ValuePairs { get; } = new List<EnumValuePair>();
-        private bool Constant { get; }
+        public ElementEnum EnumData { get; }
+        private readonly Scope _staticScope; 
+        protected readonly Scope _objectScope;
+        private List<EnumValuePair> _valuePairs = new List<EnumValuePair>();
+        private bool _constant;
 
-        public ValueGroupType(EnumData enumData, bool constant) : base(enumData.CodeName)
+        public ValueGroupType(ElementEnum enumData, ITypeSupplier types, bool constant) : base(enumData.Name)
         {
-            Scope = new Scope("enum " + Name);
-            Constant = constant;
+            _staticScope = new Scope("enum " + Name);
+            _objectScope = new Scope("enum " + Name);
+            _constant = constant;
             EnumData = enumData;
-            TokenType = TokenType.Enum;
+            TokenType = SemanticTokenType.Enum;
 
             if (constant)
                 TokenModifiers.Add(TokenModifier.Readonly);
 
-            foreach (EnumMember member in enumData.Members)
+            foreach (ElementEnumMember member in enumData.Members)
             {
                 EnumValuePair newPair = new EnumValuePair(member, constant, this);
-                ValuePairs.Add(newPair);
-                Scope.AddNativeVariable(newPair);
+                _valuePairs.Add(newPair);
+                _staticScope.AddNativeVariable(newPair);
             }
+
+            Operations.DefaultAssignment = !constant;
         }
 
-        public override bool IsConstant() => Constant;
+        public override bool IsConstant() => _constant;
         public override void WorkshopInit(DeltinScript translateInfo)
         {
-            foreach (EnumValuePair pair in ValuePairs)
+            foreach (EnumValuePair pair in _valuePairs)
             {
-                if (Constant) translateInfo.DefaultIndexAssigner.Add(pair, pair.Member);
-                else translateInfo.DefaultIndexAssigner.Add(pair, EnumData.ToElement(pair.Member));
+                if (_constant) translateInfo.DefaultIndexAssigner.Add(pair, pair.Member);
+                else translateInfo.DefaultIndexAssigner.Add(pair, pair.Member.ToElement());
             }
         }
 
-        public override Scope ReturningScope() => Scope;
-        public override CompletionItem GetCompletion() => new CompletionItem()
-        {
+        public override Scope GetObjectScope() => _objectScope;
+        public override Scope ReturningScope() => _staticScope;
+        public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.Enum
         };
@@ -53,10 +57,10 @@ namespace Deltin.Deltinteger.Parse
         {
             MarkupBuilder hoverContents = new MarkupBuilder()
                 .StartCodeLine()
-                .Add((Constant ? "constant " : "enum ") + Name)
+                .Add((_constant ? "constant " : "enum ") + Name)
                 .EndCodeLine();
-
-            if (Constant)
+            
+            if (_constant)
                 hoverContents.NewSection().Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
 
             parseInfo.Script.AddHover(callRange, hoverContents.ToString());
@@ -64,28 +68,78 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.Types.CallType(this);
         }
 
-        public static readonly ValueGroupType[] EnumTypes = GetEnumTypes();
-        private static ValueGroupType[] GetEnumTypes()
+        public static ValueGroupType[] GetEnumTypes(ITypeSupplier supplier)
         {
-            var enums = EnumData.GetEnumData();
-            ValueGroupType[] types = new ValueGroupType[enums.Length];
-            for (int i = 0; i < types.Length; i++) types[i] = new ValueGroupType(enums[i], !enums[i].ConvertableToElement());
-            return types;
+            var enums = ElementRoot.Instance.Enumerators;
+            var types = new List<ValueGroupType>();
+
+            foreach (var enumerator in enums)
+                if (!enumerator.Hidden)
+                {
+                    if (enumerator.Name == "Team")
+                        types.Add(new TeamGroupType(supplier, enumerator));
+                    else
+                        types.Add(new ValueGroupType(enumerator, supplier, !enumerator.ConvertableToElement()));
+                }
+
+            return types.ToArray();
+        }
+    }
+
+    class TeamGroupType : ValueGroupType
+    {
+        private readonly InternalVar Opposite;
+        private readonly InternalVar Score;
+        private readonly InternalVar OnDefense;
+        private readonly InternalVar OnOffense;
+
+        public TeamGroupType(ITypeSupplier typeSupplier, ElementEnum enumData) : base(enumData, typeSupplier, false)
+        {
+            Opposite = new InternalVar("Opposite", this, CompletionItemKind.Property) {
+                Documentation = new MarkupBuilder()
+                    .Add("The opposite team of the value. If the team value is ").Code("Team 1").Add(", Opposite will be ").Code("Team 2").Add(" and vice versa. If the value is ")
+                    .Code("All").Add(", Opposite will still be ").Code("All").Add(".")
+                    .ToString()
+            };
+            Score = new InternalVar("Score", typeSupplier.Number(), CompletionItemKind.Property) {
+                Documentation = new MarkupBuilder()
+                    .Add("The current score for the team. Results in 0 in free-for-all modes.")
+                    .ToString()
+            };
+            OnDefense = new InternalVar("OnDefense", typeSupplier.Boolean(), CompletionItemKind.Property) {
+                Documentation = new MarkupBuilder()
+                    .Add("Whether the specified team is currently on defense. Results in False if the game mode is not Assault, Escort, or Assault/Escort.")
+                    .ToString()
+            };
+            OnOffense = new InternalVar("OnOffense", typeSupplier.Boolean(), CompletionItemKind.Property) {
+                Documentation = new MarkupBuilder()
+                    .Add("Whether the specified team is currently on offense. Results in False if the game mode is not Assault, Escort, or Assault/Escort.")
+                    .ToString()
+            };
+
+            _objectScope.AddNativeVariable(Opposite);
+            _objectScope.AddNativeVariable(Score);
+            _objectScope.AddNativeVariable(OnDefense);
+            _objectScope.AddNativeVariable(OnOffense);
         }
 
-        public static ValueGroupType GetEnumType(EnumData enumData) => EnumTypes.First(t => t.EnumData == enumData);
-        public static ValueGroupType GetEnumType<T>() => GetEnumType(EnumData.GetEnum<T>());
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        {
+            assigner.Add(Opposite, Element.Part("Opposite Team Of", reference));
+            assigner.Add(Score, Element.Part("Team Score", reference));
+            assigner.Add(OnDefense, Element.Part("Is Team On Defense", reference));
+            assigner.Add(OnOffense, Element.Part("Is Team On Offense", reference));
+        }
     }
 
     class EnumValuePair : InternalVar
     {
-        public EnumMember Member { get; }
+        public ElementEnumMember Member { get; }
 
-        public EnumValuePair(EnumMember member, bool constant, CodeType type) : base(member.CodeName, constant ? CompletionItemKind.Constant : CompletionItemKind.EnumMember)
+        public EnumValuePair(ElementEnumMember member, bool constant, CodeType type) : base(member.CodeName(), type, constant ? CompletionItemKind.Constant : CompletionItemKind.EnumMember)
         {
             Member = member;
-            CodeType = type;
-            TokenType = Deltin.Deltinteger.Parse.TokenType.EnumMember;
+            TokenType = Deltin.Deltinteger.Parse.SemanticTokenType.EnumMember;
         }
     }
 }

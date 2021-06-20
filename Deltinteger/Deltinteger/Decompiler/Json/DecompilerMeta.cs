@@ -46,8 +46,8 @@ namespace Deltin.Deltinteger.Decompiler.Json
             for (int i = 0; i < split.Count; i++)
             {
                 Element element;
-                if (i < split.Count - 1) element = new A_Continue();
-                else element = new A_End();
+                if (i < split.Count - 1) element = Element.Part("Continue");
+                else element = Element.Part("End");
 
                 element.Disabled = true; // Disable the action.
                 element.Comment = split[i] // Set the comment.

@@ -68,20 +68,13 @@ namespace Deltin.Deltinteger
 
             return options.ToArray();
         }
-
-        public static CompletionItem GetFunctionCompletion(IMethod function) => new CompletionItem()
-        {
-            Label = function.Name,
-            Kind = CompletionItemKind.Method,
-            Detail = (!function.DoesReturnValue ? "void" : (function.CodeType == null ? "define" : function.CodeType.GetName())) + " " + function.GetLabel(false),
-            Documentation = Extras.GetMarkupContent(function.Documentation)
-        };
     }
 
     public class MethodCall : Deltin.Deltinteger.Parse.FunctionBuilder.ICallHandler
     {
         public IWorkshopTree[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
+        public object AdditionalData { get; set; }
         public CallParallel ParallelMode { get; set; } = CallParallel.NoParallel;
         public string ActionComment { get; set; }
 
@@ -164,12 +157,22 @@ namespace Deltin.Deltinteger
         public RestrictedCallType CallType { get; }
         public Location CallRange { get; }
         public string Message { get; }
+        public bool Fatal { get; }
 
-        public RestrictedCall(RestrictedCallType callType, Location callRange, string message)
+        public RestrictedCall(RestrictedCallType callType, Location callRange, string message, bool fatal = true)
         {
             CallType = callType;
             CallRange = callRange;
             Message = message;
+            Fatal = fatal;
+        }
+
+        public void AddDiagnostic(FileDiagnostics diagnostics)
+        {
+            if (Fatal)
+                diagnostics.Error(Message, CallRange.range);
+            else
+                diagnostics.Warning(Message, CallRange.range);
         }
 
         public static string StringFromCallType(RestrictedCallType type)
@@ -182,7 +185,7 @@ namespace Deltin.Deltinteger
         }
 
         public static bool EventPlayerDefaultCall(IIndexReferencer referencer, IExpression parent, ParseInfo parseInfo)
-            => referencer.VariableType == VariableType.Player && (parent == null && (parent.ReturningScope() != null && parent.ReturningScope() != parseInfo.TranslateInfo.PlayerVariableScope));
+            => referencer.VariableType == VariableType.Player && (parent == null || parent is RootAction);
     }
 
     public enum RestrictedCallType

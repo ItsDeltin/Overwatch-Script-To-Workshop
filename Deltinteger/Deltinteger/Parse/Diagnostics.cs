@@ -67,12 +67,22 @@ namespace Deltin.Deltinteger.Parse
             return SeverityColors[errorLevel - 1];
         }
 
-        public PublishDiagnosticsParams[] GetDiagnostics()
+        public PublishDiagnosticsParams[] GetPublishDiagnostics()
         {
             var publishDiagnostics = new PublishDiagnosticsParams[diagnosticFiles.Count];
             for (int i = 0; i < publishDiagnostics.Length; i++)
                 publishDiagnostics[i] = diagnosticFiles[i].GetDiagnostics();
             return publishDiagnostics;
+        }
+
+        public Diagnostic[] GetDiagnostics()
+        {
+            var diagnostics = new List<Diagnostic>();
+            
+            foreach (var file in diagnosticFiles)
+                diagnostics.AddRange(file.Diagnostics);
+            
+            return diagnostics.ToArray();
         }
 
         public string OutputDiagnostics()
@@ -152,7 +162,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void OutputDiagnostics(StringBuilder builder)
         {
-            var sorted = Diagnostics.OrderBy(d => d.severity);
+            var sorted = Diagnostics.Where(d => d.severity != Diagnostic.Hint).OrderBy(d => d.severity);
             foreach (var diagnostic in sorted)
                 builder.AppendLine(diagnostic.Info(Uri.AbsolutePath));
         }

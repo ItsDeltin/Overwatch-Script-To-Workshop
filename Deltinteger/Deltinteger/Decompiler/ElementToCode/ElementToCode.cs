@@ -157,13 +157,18 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             NewLine();
             Advance();
         }
-        public void AddComment(ITTEAction action)
+        public void AddComment(ITTEAction action) => AddComment(action.Comment, action.Disabled);
+        public void AddComment(string comment, bool disabled)
         {
-            if (action.Comment == null) return;
-            if (action.Disabled) Append("// ");
-            else Append("# ");
-            Append(action.Comment);
-            NewLine();
+            if (comment == null) return;
+
+            var lines = comment.Split(new[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.None);
+            foreach (var line in lines)
+            {
+                if (disabled) Append("// " + line);
+                else Append("# " + line);
+                NewLine();
+            }
         }
     }
 
@@ -187,18 +192,18 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 if (Rule.EventInfo.Event != RuleEvent.OngoingGlobal)
                 {
                     Decompiler.NewLine();
-                    Decompiler.Append("Event." + EnumData.GetEnumValue(Rule.EventInfo.Event).CodeName);
+                    Decompiler.Append("Event." + ElementEnumMember.Event(Rule.EventInfo.Event).CodeName());
                     // Write the event.
                     if (Rule.EventInfo.Team != Team.All)
                     {
                         Decompiler.NewLine();
-                        Decompiler.Append("Team." + EnumData.GetEnumValue(Rule.EventInfo.Team).CodeName);
+                        Decompiler.Append("Team." + ElementEnumMember.Team(Rule.EventInfo.Team).CodeName());
                     }
                     // Write the player.
                     if (Rule.EventInfo.Player != PlayerSelector.All)
                     {
                         Decompiler.NewLine();
-                        Decompiler.Append("Player." + EnumData.GetEnumValue(Rule.EventInfo.Player).CodeName);
+                        Decompiler.Append("Player." + ElementEnumMember.Player(Rule.EventInfo.Player).CodeName());
                     }
                 }
 

@@ -10,28 +10,33 @@ namespace Deltin.Deltinteger.Parse
 {
     public class Var : IIndexReferencer, IApplyBlock
     {
-        private ParseInfo parseInfo { get; }
+        private readonly ParseInfo _parseInfo;
 
         // IScopeable
         public string Name { get; }
+        public MarkupBuilder Documentation { get; }
+        public MarkupBuilder MarkupBuilder { get; }
         public AccessLevel AccessLevel { get; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; }
 
 
         // Attributes
-        public CodeType CodeType { get; }
-        public VariableType VariableType { get; }
-        public StoreType StoreType { get; }
+        public CodeType CodeType { get; private set; }
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
+        public VariableType VariableType { get; private set; }
+        public StoreType StoreType { get; private set; }
         public bool InExtendedCollection { get; }
         public int ID { get; }
         public bool Static { get; }
         public bool Recursive { get; }
         public Lambda.IBridgeInvocable BridgeInvocable { get; }
         public bool RequiresCapture { get; }
-        private readonly TokenType _tokenType;
+        private readonly SemanticTokenType _tokenType;
         private readonly TokenModifier[] _tokenModifiers;
         private readonly bool _handleRestrictedCalls;
+        private readonly bool _inferType;
+        private readonly VariableTypeHandler _variableTypeHandler;
 
         public bool WasCalled { get; private set; }
 
@@ -53,12 +58,10 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = varInfo.Name;
             DefinedAt = varInfo.DefinedAt;
-            parseInfo = varInfo.ParseInfo;
+            _parseInfo = varInfo.ParseInfo;
             AccessLevel = varInfo.AccessLevel;
             WholeContext = varInfo.WholeContext;
             CodeType = varInfo.Type;
-            VariableType = varInfo.VariableType;
-            StoreType = varInfo.StoreType;
             InExtendedCollection = varInfo.InExtendedCollection;
             ID = varInfo.ID;
             Static = varInfo.Static;
@@ -68,31 +71,29 @@ namespace Deltin.Deltinteger.Parse
             _tokenType = varInfo.TokenType;
             _tokenModifiers = varInfo.TokenModifiers.ToArray();
             _handleRestrictedCalls = varInfo.HandleRestrictedCalls;
+            _inferType = varInfo.InferType;
             _initalValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.OperationalScope;
 
+            _variableTypeHandler = varInfo.VariableTypeHandler;
+            if (!_inferType)
+                AddScriptData();
+
             if (ID != -1)
             {
                 if (VariableType == VariableType.Global)
-                    parseInfo.TranslateInfo.VarCollection.Reserve(ID, true, parseInfo.Script.Diagnostics, DefinedAt.range);
+                    _parseInfo.TranslateInfo.VarCollection.Reserve(ID, true, _parseInfo.Script.Diagnostics, DefinedAt.range);
                 else if (VariableType == VariableType.Player)
-                    parseInfo.TranslateInfo.VarCollection.Reserve(ID, false, parseInfo.Script.Diagnostics, DefinedAt.range);
-            }
-
-            if (DefinedAt.range != null)
-            {
-                parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
-                parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
-                parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
+                    _parseInfo.TranslateInfo.VarCollection.Reserve(ID, false, _parseInfo.Script.Diagnostics, DefinedAt.range);
             }
 
             if (_initialValueResolve == InitialValueResolve.Instant)
                 GetInitialValue();
             else
-                parseInfo.TranslateInfo.ApplyBlock(this);
-
-            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, varInfo.CodeLensType, DefinedAt.range));
+                _parseInfo.TranslateInfo.ApplyBlock(this);
+            
+            _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, varInfo.CodeLensType, DefinedAt.range));
         }
 
         private void GetInitialValue()
@@ -100,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the initial value.
             if (_initalValueContext != null)
             {
-                ParseInfo parseInfo = this.parseInfo;
+                ParseInfo parseInfo = this._parseInfo;
 
                 // Store the initial value's restricted calls.
                 RestrictedCallList restrictedCalls = null;
@@ -112,6 +113,14 @@ namespace Deltin.Deltinteger.Parse
 
                 // Parse the initial value.
                 InitialValue = parseInfo.SetExpectingLambda(CodeType).GetExpression(_operationalScope, _initalValueContext);
+
+                // Get the inferred type.
+                if (_inferType)
+                {
+                    CodeType = InitialValue.Type();
+                    _variableTypeHandler.SetType(CodeType);
+                    AddScriptData();
+                }
 
                 // If the initial value's type is constant, make sure the constant type's implements the variable's type.
                 if (InitialValue?.Type() != null && InitialValue.Type().IsConstant() && !InitialValue.Type().Implements(CodeType))
@@ -128,7 +137,20 @@ namespace Deltin.Deltinteger.Parse
                         if (VariableType == VariableType.Global ||
                             (VariableType == VariableType.Player && call.CallType != RestrictedCallType.EventPlayer))
                             // ... then add the error.
-                            parseInfo.Script.Diagnostics.Error(call.Message, call.CallRange.range);
+                            call.AddDiagnostic(parseInfo.Script.Diagnostics);
+            }
+        }
+
+        private void AddScriptData()
+        {
+            VariableType = _variableTypeHandler.GetVariableType();
+            StoreType = _variableTypeHandler.GetStoreType();
+
+            if (DefinedAt.range != null)
+            {
+                _parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
+                _parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
+                _parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             }
         }
 
@@ -140,7 +162,7 @@ namespace Deltin.Deltinteger.Parse
         // IExpression
         public Scope ReturningScope()
         {
-            if (CodeType == null) return parseInfo.TranslateInfo.PlayerVariableScope;
+            if (CodeType == null) return _parseInfo.TranslateInfo.PlayerVariableScope;
             else return CodeType.GetObjectScope();
         }
         public CodeType Type() => CodeType;
@@ -155,17 +177,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            return actionSet.IndexAssigner[this].GetVariable();
-        }
-
-        public CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = Name,
-            Kind = CompletionItemKind.Variable,
-            Detail = (CodeType?.Name ?? "define") + " " + Name
-        };
+        public IWorkshopTree Parse(ActionSet actionSet) => actionSet.IndexAssigner[this].GetVariable();
 
         public string GetLabel(bool markdown)
         {
@@ -200,21 +212,20 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public Location DefinedAt { get; }
         public ParseInfo ParseInfo { get; }
+        public VariableTypeHandler VariableTypeHandler { get; }
 
         public CodeType Type = null;
+        public bool InferType;
         public bool WholeContext = true;
         public bool Static = false;
         public bool InExtendedCollection = false;
         public int ID = -1;
         public IParseExpression InitialValueContext = null;
         public AccessLevel AccessLevel = AccessLevel.Private;
-        public bool IsWorkshopReference = false;
-        public VariableType VariableType = VariableType.Dynamic;
-        public StoreType StoreType;
         public InitialValueResolve InitialValueResolve = InitialValueResolve.Instant;
         public Scope OperationalScope;
         public bool Recursive;
-        public TokenType TokenType = TokenType.Variable;
+        public SemanticTokenType TokenType = SemanticTokenType.Variable;
         public List<TokenModifier> TokenModifiers = new List<TokenModifier>();
         public bool HandleRestrictedCalls;
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
@@ -226,6 +237,7 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
             DefinedAt = definedAt;
             ParseInfo = parseInfo;
+            VariableTypeHandler = new VariableTypeHandler(this);
         }
     }
 

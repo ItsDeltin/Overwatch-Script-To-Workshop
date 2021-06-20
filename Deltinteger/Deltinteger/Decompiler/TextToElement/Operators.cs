@@ -8,24 +8,24 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         // Compare
         public static TTEOperator Ternary { get; } = new TTEOperator(1, "?", OperatorType.Ternary);
         public static TTEOperator RhsTernary { get; } = new TTEOperator(2, ":", OperatorType.Ternary);
+        public static TTEOperator Or { get; } = new TTEOperator(3, "||");
+        public static TTEOperator And { get; } = new TTEOperator(4, "&&");
         public static TTEOperator Equal { get; } = new TTEOperator(5, "==");
-        public static TTEOperator NotEqual { get; } = new TTEOperator(6, "!=");
-        public static TTEOperator GreaterThan { get; } = new TTEOperator(7, ">");
-        public static TTEOperator LessThan { get; } = new TTEOperator(8, "<");
-        public static TTEOperator GreaterThanOrEqual { get; } = new TTEOperator(9, ">=");
-        public static TTEOperator LessThanOrEqual { get; } = new TTEOperator(10, "<=");
+        public static TTEOperator NotEqual { get; } = new TTEOperator(5, "!=");
+        public static TTEOperator GreaterThan { get; } = new TTEOperator(6, ">");
+        public static TTEOperator LessThan { get; } = new TTEOperator(6, "<");
+        public static TTEOperator GreaterThanOrEqual { get; } = new TTEOperator(6, ">=");
+        public static TTEOperator LessThanOrEqual { get; } = new TTEOperator(6, "<=");
         // Boolean
-        public static TTEOperator And { get; } = new TTEOperator(3, "&&");
-        public static TTEOperator Or { get; } = new TTEOperator(4, "||");
         // Math
-        public static TTEOperator Subtract { get; } = new TTEOperator(11, "-", ContainGroup.Right);
-        public static TTEOperator Add { get; } = new TTEOperator(12, "+");
-        public static TTEOperator Modulo { get; } = new TTEOperator(13, "%", ContainGroup.Right);
-        public static TTEOperator Divide { get; } = new TTEOperator(14, "/", ContainGroup.Right);
-        public static TTEOperator Multiply { get; } = new TTEOperator(15, "*");
-        public static TTEOperator Power { get; } = new TTEOperator(16, "^", ContainGroup.Left);
+        public static TTEOperator Subtract { get; } = new TTEOperator(7, "-", ContainGroup.Right);
+        public static TTEOperator Add { get; } = new TTEOperator(7, "+");
+        public static TTEOperator Modulo { get; } = new TTEOperator(8, "%", ContainGroup.Right);
+        public static TTEOperator Divide { get; } = new TTEOperator(8, "/", ContainGroup.Right);
+        public static TTEOperator Multiply { get; } = new TTEOperator(8, "*");
+        public static TTEOperator Power { get; } = new TTEOperator(9, "^", ContainGroup.Left);
         // Unary
-        public static TTEOperator Not { get; } = new TTEOperator(17, "!", OperatorType.Unary);
+        public static TTEOperator Not { get; } = new TTEOperator(10, "!", OperatorType.Unary);
 
         public int Precedence { get; }
         public string Operator { get; }
@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return op1 == RhsTernary && op2 == RhsTernary;
 
             if (op1 == Sentinel || op2 == Sentinel) return false;
-            return op1.Precedence > op2.Precedence;
+            return op1.Precedence >= op2.Precedence;
         }
     }
 

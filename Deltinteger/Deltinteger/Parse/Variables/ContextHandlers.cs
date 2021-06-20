@@ -51,6 +51,9 @@ namespace Deltin.Deltinteger.Parse
             // Get the ref attribute.
             if (_attributes.Ref) attributes.Add(new VarBuilderAttribute(AttributeType.Ref, _attributes.Ref.Range));
 
+            // Get the in attribute.
+            if (_attributes.In) attributes.Add(new VarBuilderAttribute(AttributeType.In, _attributes.In.Range));
+
             // Get Accessors.
             // Private
             if (_attributes.Private) attributes.Add(new VarBuilderAttribute(AttributeType.Private, _attributes.Private.Range));

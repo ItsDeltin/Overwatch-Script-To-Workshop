@@ -12,6 +12,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<ClassContext> Classes { get; } = new List<ClassContext>();
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
+
+		    public List<TypeAliasContext> TypeAliases {get; } = new List<TypeAliasContext>();
+
+        public List<Token> PlayervarReservations {get; } = new List<Token>();
+        public List<Token> GlobalvarReservations {get; } = new List<Token>();
+
         public List<Hook> Hooks { get; } = new List<Hook>();
         public List<TokenCapture> NodeCaptures { get; set; }
     }
@@ -27,10 +33,9 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         DocRange Range { get; set; }
     }
     public interface IParseExpression : INodeRange { }
-    public interface IParseStatement : INodeRange { }
-    public interface ICommentableStatement
+    public interface IParseStatement : INodeRange
     {
-        Token ActionComment { get; }
+        MetaComment Comment { get; set; }
     }
     public interface IDeclaration
     {
@@ -48,6 +53,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         bool LookaheadValid { get; }
         bool IsVoid { get; }
         bool DefinitelyType { get; }
+        bool Infer => false;
     }
 
     public class ParseType : Node, IParseType
@@ -72,9 +78,9 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
 
         public bool HasTypeArgs => TypeArgs != null && TypeArgs.Count > 0;
-        public bool IsArray => ArrayCount > 0;
         public bool LookaheadValid => Identifier != null;
         public bool IsDefault => !Identifier || Identifier.TokenType == TokenType.Define;
+        public bool Infer => Identifier && Identifier.TokenType == TokenType.Define;
         public bool DefinitelyType => IsVoid || Identifier.TokenType == TokenType.Define || TypeArgs.Count > 0;
         Token IParseType.GenericToken => Identifier;
     }
@@ -120,6 +126,23 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool IsVoid => Type.IsVoid;
         public bool DefinitelyType => Type.DefinitelyType;
         Token IParseType.GenericToken => Type.GenericToken;
+    }
+
+    public class PipeTypeContext : Node, IParseType
+    {
+        public IParseType Left { get; }
+        public IParseType Right { get; }
+
+        public PipeTypeContext(IParseType left, IParseType right)
+        {
+            Left = left;
+            Right = right;
+        }
+
+        public Token GenericToken => throw new NotImplementedException();
+        public bool LookaheadValid => true;
+        public bool IsVoid => false;
+        public bool DefinitelyType => true;
     }
 
     public class RuleContext : Node
@@ -271,6 +294,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token GlobalVar { get; set; }
         public Token PlayerVar { get; set; }
         public Token Ref { get; set; }
+        public Token In { get; set; }
         public List<Token> AllAttributes { get; } = new List<Token>();
         public AccessLevel GetAccessLevel() => Public != null ? AccessLevel.Public : Protected != null ? AccessLevel.Protected : AccessLevel.Private;
     }
@@ -281,9 +305,21 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token LeftParen;
         public IParseExpression Expression;
         public Token RightParen;
+        public MetaComment Comment;
 
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }
+	
+	public class TypeAliasContext : Node
+	{
+		public Token NewTypeName;
+		public IParseType OtherType;
+
+		public TypeAliasContext(Token newTypeName, IParseType otherType) {
+			NewTypeName = newTypeName;
+			OtherType = otherType;
+		}
+	}
 
     public class Import
     {
@@ -315,12 +351,18 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class FunctionExpression : Node, IParseExpression, IParseStatement
     {
         public IParseExpression Target { get; }
+        public Token LeftParentheses { get; }
+        public Token RightParentheses { get; }
         public List<ParameterValue> Parameters { get; }
+        public MetaComment Comment { get; set; }
 
-        public FunctionExpression(IParseExpression target, List<ParameterValue> parameters)
+        public FunctionExpression(IParseExpression target, Token leftParentheses, Token rightParentheses, List<ParameterValue> parameters)
         {
             Target = target;
+            LeftParentheses = leftParentheses;
+            RightParentheses = rightParentheses;
             Parameters = parameters;
+            Range = target.Range.Start + rightParentheses.Range.End;
         }
 
         public override string ToString() => Target.ToString() + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
@@ -345,6 +387,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public Token ClassIdentifier { get; }
         public List<ParameterValue> Parameters { get; }
+        public MetaComment Comment { get; set; }
 
         public NewExpression(Token classIdentifier, List<ParameterValue> parameters)
         {
@@ -389,6 +432,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Token { get; }
         public string Value { get; }
         public List<IParseExpression> Formats { get; }
+        public bool ClassicFormatSyntax { get; }
 
         public StringExpression(Token localized, Token token)
         {
@@ -400,9 +444,34 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public StringExpression(Token localized, Token token, List<IParseExpression> formats) : this(localized, token)
         {
             Formats = formats;
+            ClassicFormatSyntax = true;
         }
 
         public override string ToString() => '"' + Value + '"';
+    }
+
+    public class InterpolatedStringExpression : Node, IParseExpression
+    {
+        public Token Tail { get; }
+        public List<InterpolatedStringPart> Parts { get; }
+
+        public InterpolatedStringExpression(Token tail, List<InterpolatedStringPart> parts)
+        {
+            Tail = tail;
+            Parts = parts;
+        }
+    }
+
+    public class InterpolatedStringPart
+    {
+        public IParseExpression Expression { get; } 
+        public Token Right { get; }
+
+        public InterpolatedStringPart(IParseExpression expression, Token right)
+        {
+            Expression = expression;
+            Right = right;
+        }
     }
 
     public class Identifier : Node, IParseExpression
@@ -440,11 +509,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseExpression Array { get; }
         public IParseExpression Index { get; }
 
-        public ValueInArray(IParseExpression array, IParseExpression index, Token closingToken)
+        public ValueInArray(IParseExpression array, IParseExpression index, DocPos endPosition)
         {
             Array = array;
             Index = index;
-            Range = new DocRange(Array.Range.Start, closingToken.Range.End);
+            Range = new DocRange(Array.Range.Start, endPosition);
         }
 
         public override string ToString() => Array.ToString() + "[" + Index.ToString() + "]";
@@ -581,6 +650,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression Expression { get; }
         public Token ActionComment { get; }
+        public MetaComment Comment { get; set; }
 
         public ExpressionStatement(IParseExpression expression, Token actionComment)
         {
@@ -595,21 +665,25 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class Block : Node, IParseStatement
     {
         public List<IParseStatement> Statements { get; }
+        public MetaComment Comment { get; set; }
+        public MetaComment EndComment { get; set; }
 
-        public Block(List<IParseStatement> statements)
+        public Block(List<IParseStatement> statements, MetaComment endComment)
         {
+            EndComment = endComment;
             Statements = statements;
         }
 
         public override string ToString() => "block [" + Statements.Count + " statements]";
     }
 
-    public class Assignment : Node, IParseStatement, ICommentableStatement
+    public class Assignment : Node, IParseStatement
     {
         public IParseExpression VariableExpression { get; }
         public Token AssignmentToken { get; }
         public IParseExpression Value { get; }
         public Token ActionComment { get; }
+        public MetaComment Comment { get; set; }
 
         public Assignment(IParseExpression variableExpression, Token assignmentToken, IParseExpression value, Token actionComment)
         {
@@ -626,6 +700,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public Token Token { get; }
         public IParseExpression Expression { get; }
+        public MetaComment Comment { get; set; }
 
         public Return(Token token, IParseExpression expression)
         {
@@ -638,11 +713,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class Continue : Node, IParseStatement
     {
+        public MetaComment Comment { get; set; }
         public override string ToString() => "continue";
     }
 
     public class Break : Node, IParseStatement
     {
+        public MetaComment Comment { get; set; }
         public override string ToString() => "break";
     }
 
@@ -652,6 +729,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseStatement Statement { get; }
         public List<ElseIf> ElseIfs { get; }
         public Else Else { get; }
+        public MetaComment Comment { get; set; }
 
         public If(IParseExpression expression, IParseStatement statement, List<ElseIf> elseIfs, Else els)
         {
@@ -667,6 +745,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression Expression { get; }
         public IParseStatement Statement { get; }
+        public MetaComment Comment { get; set; }
 
         public ElseIf(IParseExpression expression, IParseStatement statement)
         {
@@ -679,6 +758,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class Else : Node, IParseStatement
     {
         public IParseStatement Statement { get; }
+        public MetaComment Comment { get; set; }
 
         public Else(IParseStatement statement)
         {
@@ -690,6 +770,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression Expression { get; }
         public List<IParseStatement> Statements { get; }
+        public MetaComment Comment { get; set; }
 
         public Switch(IParseExpression expression, List<IParseStatement> statements)
         {
@@ -703,6 +784,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Token { get; }
         public IParseExpression Value { get; }
         public bool IsDefault { get; }
+        public MetaComment Comment { get; set; }
 
         public SwitchCase(Token caseToken, IParseExpression value)
         {
@@ -725,6 +807,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseStatement Iterator { get; }
         public IParseStatement Block { get; }
         public Token InitializerSemicolon { get; }
+        public MetaComment Comment { get; set; }
 
         public For(IParseStatement initializer, IParseExpression condition, IParseStatement iterator, IParseStatement block, Token initializerSemicolon)
         {
@@ -740,6 +823,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression Condition { get; }
         public IParseStatement Statement { get; }
+        public MetaComment Comment { get; set; }
 
         public While(IParseExpression condition, IParseStatement statement)
         {
@@ -754,6 +838,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Identifier { get; }
         public IParseExpression Expression { get; }
         public IParseStatement Statement { get; }
+        public MetaComment Comment { get; set; }
 
         public Foreach(IParseType type, Token identifier, IParseExpression expression, IParseStatement statement)
         {
@@ -772,6 +857,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseExpression InitialValue { get; }
         public Token Extended { get; }
         public Token ID { get; }
+        public MetaComment Comment { get; set; }
 
         public VariableDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id)
         {
@@ -804,6 +890,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public IParseExpression VariableExpression { get; }
         public bool Decrement { get; }
+        public MetaComment Comment { get; set; }
 
         public Increment(IParseExpression variableExpression, bool decrement)
         {
@@ -817,6 +904,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class Delete : Node, IParseStatement
     {
         public IParseExpression Deleting { get; }
+        public MetaComment Comment { get; set; }
 
         public Delete(IParseExpression deleting)
         {
@@ -824,9 +912,30 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
+    public class MetaComment : Node
+    {
+        public List<Token> Comments { get; }
+
+        public MetaComment(List<Token> comments)
+        {
+            Comments = comments;
+        }
+
+        public string GetContents()
+        {
+            string result = string.Empty;
+            foreach (var comment in Comments)
+                // Substring(1) skips the first #
+                result += comment.Text.Substring(1).Trim();
+            return result;
+        }
+    }
+
     // Errors
     public class MissingElement : Node, IParseExpression, IParseStatement
     {
+        public MetaComment Comment { get; set; }
+
         public MissingElement(DocRange range)
         {
             Range = range;

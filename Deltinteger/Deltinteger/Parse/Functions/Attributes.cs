@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.Parse
             CheckAttribute(diagnostics, context.Public, MethodAttributeType.Public);
             CheckAttribute(diagnostics, context.Recursive, MethodAttributeType.Recursive);
             CheckAttribute(diagnostics, context.Ref, MethodAttributeType.Ref);
+            CheckAttribute(diagnostics, context.In, MethodAttributeType.In);
             CheckAttribute(diagnostics, context.Static, MethodAttributeType.Static);
             CheckAttribute(diagnostics, context.Virtual, MethodAttributeType.Virtual);
         }
@@ -145,7 +146,8 @@ namespace Deltin.Deltinteger.Parse
         Static,
         Override,
         Virtual,
-        Recursive
+        Recursive,
+        In
     }
 
     // Result Appenders
@@ -198,7 +200,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected override AttributeTokens GetAttributeContext() => Context.Attributes;
         protected override string GetSubroutineName() => Context.Subroutine?.Text.RemoveQuotes();
-        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref };
+        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref, MethodAttributeType.In };
     }
 
     // Attribute handler for defined macros
@@ -213,6 +215,6 @@ namespace Deltin.Deltinteger.Parse
 
         protected override AttributeTokens GetAttributeContext() => Declaration.Attributes;
         protected override string GetSubroutineName() => null;
-        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.Recursive, MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref };
+        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.Recursive, MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref, MethodAttributeType.In };
     }
 }

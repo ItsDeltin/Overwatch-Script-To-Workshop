@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     public interface ITTEExpression
     {
         void Decompile(DecompileRule decompiler);
-        bool IsEventPlayer() => this is FunctionExpression func && func.Function.WorkshopName == "Event Player";
+        bool IsEventPlayer() => this is FunctionExpression func && func.Function.Name == "Event Player";
         bool RequiresContainment() => this is UnaryOperatorExpression || this is BinaryOperatorExpression || this is TernaryExpression;
         void WritePlayerSeperator(DecompileRule decompiler)
         {
@@ -63,11 +63,12 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                      .Replace("{1}", "<1>")
                      .Replace("{2}", "<2>");
 
-            if (Formats == null || Formats.Length == 0)
+            if (Formats == null || Formats.Length == 0 || count == 0)
                 decompiler.Append(str);
             else
             {
                 decompiler.Append("<" + str + ", ");
+                count = System.Math.Min(count, Formats.Length);
                 for (int i = 0; i < count; i++)
                 {
                     Formats[i].Decompile(decompiler);
@@ -106,18 +107,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
     public class ConstantEnumeratorExpression : ITTEExpression
     {
-        public EnumMember Member { get; }
+        public ElementEnumMember Member { get; }
 
-        public ConstantEnumeratorExpression(EnumMember member)
+        public ConstantEnumeratorExpression(ElementEnumMember member)
         {
             Member = member;
         }
 
-        public override string ToString() => Member.WorkshopName;
+        public override string ToString() => Member.Name;
 
         public void Decompile(DecompileRule decompiler)
         {
-            decompiler.Append(Member.Enum.CodeName + "." + Member.CodeName);
+            decompiler.Append(Member.Enum.Name + "." + Member.CodeName());
         }
     }
 }

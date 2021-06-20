@@ -95,18 +95,16 @@ namespace Deltin.Deltinteger.Parse
 
     public class ElementCountCodeLens : CodeLensRange
     {
-        private readonly bool optimized;
         private int elementCount = -1;
         private int actionCount = -1;
 
-        public ElementCountCodeLens(DocRange range, bool optimized) : base(CodeLensSourceType.None, range, null)
+        public ElementCountCodeLens(DocRange range) : base(CodeLensSourceType.None, range, null)
         {
-            this.optimized = optimized;
         }
 
         public void RuleParsed(Rule rule)
         {
-            elementCount = rule.ElementCount(optimized);
+            elementCount = rule.ElementCount();
             actionCount = rule.Actions.Length;
         }
 

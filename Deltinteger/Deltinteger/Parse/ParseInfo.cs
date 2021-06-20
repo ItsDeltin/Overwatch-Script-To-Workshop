@@ -18,8 +18,9 @@ namespace Deltin.Deltinteger.Parse
         public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
         public ExpectingLambdaInfo ExpectingLambda { get; private set; }
 
-        // Do not persist.
         public ITreeContextPart SourceExpression { get; private set; }
+        public UsageResolver CurrentUsageResolver { get; private set; }
+        public UsageResolver SourceUsageResolver { get; private set; }
 
         // Tail
         public IVariableTracker[] LocalVariableTracker { get; private set; }
@@ -27,6 +28,8 @@ namespace Deltin.Deltinteger.Parse
         // Head
         public ResolveInvokeInfo ResolveInvokeInfo { get; private set; }
         public AsyncInfo AsyncInfo { get; private set; }
+
+        public Elements.ITypeSupplier Types => TranslateInfo.Types;
 
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
@@ -42,6 +45,9 @@ namespace Deltin.Deltinteger.Parse
             ContinueHandler = other.ContinueHandler;
             RestrictedCallHandler = other.RestrictedCallHandler;
             ExpectingLambda = other.ExpectingLambda;
+            SourceExpression = other.SourceExpression;
+            CurrentUsageResolver = other.CurrentUsageResolver;
+            SourceUsageResolver = other.SourceUsageResolver;
             LocalVariableTracker = other.LocalVariableTracker;
             ResolveInvokeInfo = other.ResolveInvokeInfo;
             AsyncInfo = other.AsyncInfo;
@@ -68,6 +74,10 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetLambdaInfo(ExpectingLambdaInfo lambdaInfo) => new ParseInfo(this) { ExpectingLambda = lambdaInfo };
         public ParseInfo SetInvokeInfo(ResolveInvokeInfo invokeInfo) => new ParseInfo(this) { ResolveInvokeInfo = invokeInfo };
         public ParseInfo SetAsyncInfo(AsyncInfo asyncInfo) => new ParseInfo(this) { AsyncInfo = asyncInfo };
+        public ParseInfo SetUsageResolver(UsageResolver currentUsageResolver, UsageResolver sourceUsageResolver) => new ParseInfo(this) {
+            CurrentUsageResolver = currentUsageResolver,
+            SourceUsageResolver = sourceUsageResolver
+        };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
@@ -77,12 +87,8 @@ namespace Deltin.Deltinteger.Parse
             IStatement statement = StatementFromContext(scope, statementContext);
 
             // Apply related output comment.
-            if (statementContext is ICommentableStatement comment && comment.ActionComment != null)
-            {
-                string text = comment.ActionComment.Text.Substring(1).Trim();
-                DocRange range = comment.ActionComment.Range;
-                statement.OutputComment(Script.Diagnostics, range, text);
-            }
+            if (statementContext.Comment != null)
+                statement.OutputComment(Script.Diagnostics, statementContext.Comment.Range, statementContext.Comment.GetContents());
 
             return statement;
         }
@@ -118,12 +124,12 @@ namespace Deltin.Deltinteger.Parse
                     if (!expr.IsStatement())
                     {
                         Script.Diagnostics.Error("Expressions can't be used as statements.", statementContext.Range);
-                        return MissingElementAction.MissingElement;
+                        return new MissingElementAction(TranslateInfo);
                     }
-                    if (expr is IStatement == false) return MissingElementAction.MissingElement;
+                    if (expr is IStatement == false) return new MissingElementAction(TranslateInfo);
                     return (IStatement)expr;
 
-                default: return MissingElementAction.MissingElement;
+                default: return new MissingElementAction(TranslateInfo);
             }
         }
 
@@ -140,10 +146,11 @@ namespace Deltin.Deltinteger.Parse
 
             switch (exprContext)
             {
-                case NumberExpression number: return new NumberAction(Script, number);
-                case BooleanExpression boolean: return new BoolAction(Script, boolean.Value);
-                case NullExpression @null: return new NullAction();
+                case NumberExpression number: return new NumberAction(this, number);
+                case BooleanExpression boolean: return new BoolAction(this, boolean.Value);
+                case NullExpression @null: return new NullAction(this);
                 case StringExpression @string: return new StringAction(this, scope, @string);
+                case InterpolatedStringExpression interpolatedString: return new Strings.InterpolatedStringAction(interpolatedString, this, scope);
                 case Identifier identifier: return GetVariable(scope, getter, identifier, selfContained);
                 case FunctionExpression method: return new CallMethodAction(this, scope, method, usedAsValue, getter);
                 case NewExpression newObject: return new CreateObjectAction(this, scope, newObject);
@@ -163,7 +170,7 @@ namespace Deltin.Deltinteger.Parse
                 case LambdaExpression lambda: return new Lambda.LambdaAction(this, scope, lambda);
                 case AsyncContext asyncContext: return AsyncInfo.ParseAsync(this, scope, asyncContext, usedAsValue);
                 // Missing
-                case MissingElement missing: return MissingElementAction.MissingElement;
+                case MissingElement missing: return new MissingElementAction(TranslateInfo);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }
@@ -176,14 +183,16 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>An IExpression created from the context.</returns>
         public IExpression GetVariable(Scope scope, Scope getter, Identifier variableContext, bool selfContained)
         {
+            if (!variableContext.Token) return new MissingElementAction(TranslateInfo);
+
             // Get the variable name and range.
             string variableName = variableContext.Token.Text;
             DocRange variableRange = variableContext.Token.Range;
 
             // Get the variable.
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange, ResolveInvokeInfo != null);
-            if (element == null) return new MissingVariable(variableName);
-
+            if (element == null) return new MissingVariable(TranslateInfo, variableName);
+            
             // Additional syntax checking.
             var expression = new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);
 
@@ -200,14 +209,12 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>An IExpression[] of each indexer in the chain. Will return null if arrayContext is null.</returns>
         public IExpression[] ExpressionIndexArray(Scope scope, List<ArrayIndex> arrayContext)
         {
-            if (arrayContext == null) return null;
-
             IExpression[] index = null;
             if (arrayContext != null)
             {
                 index = new IExpression[arrayContext.Count];
                 for (int i = 0; i < index.Length; i++)
-                    index[i] = GetExpression(scope, arrayContext[i].Expression);
+                    index[i] = ClearContextual().GetExpression(scope, arrayContext[i].Expression);
             }
             return index;
         }
@@ -257,6 +264,10 @@ namespace Deltin.Deltinteger.Parse
             AsyncInfo = null
         };
 
+        public ParseInfo ClearContextual() => new ParseInfo(this) {
+            SourceExpression = null
+        }.ClearTail().ClearHead();
+
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
     }
 
@@ -287,7 +298,7 @@ namespace Deltin.Deltinteger.Parse
                 if (referencer.RequiresCapture)
                     _parseInfo.LocalVariableAccessed(referencer);
 
-                return new CallVariableAction(referencer, index);
+                return new CallVariableAction(_parseInfo.TranslateInfo.Types, referencer, index);
             }
 
             // Check value in array.

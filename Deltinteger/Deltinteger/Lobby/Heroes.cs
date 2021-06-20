@@ -10,29 +10,29 @@ namespace Deltin.Deltinteger.Lobby
         // ***********
         private static readonly LobbySetting QuickMelee = new SwitchValue("Quick Melee", true);
         private static readonly LobbySetting SpawnWithUlt = new SwitchValue("Spawn With Ultimate Ready", false);
-        private static readonly LobbySetting DamageDealt = new RangeValue("Damage Dealt", 10, 500);
-        private static readonly LobbySetting DamageReceived = new RangeValue("Damage Received", 10, 500);
-        private static readonly LobbySetting HealingDealt = new RangeValue("Healing Dealt", 10, 500);
-        private static readonly LobbySetting HealingReceived = new RangeValue("Healing Received", 10, 500);
-        private static readonly LobbySetting JumpVerticalSpeed = new RangeValue("Jump Vertical Speed", 25, 800);
-        private static readonly LobbySetting MovementGravity = new RangeValue("Movement Gravity", 25, 400);
-        private static readonly LobbySetting MovementSpeed = new RangeValue("Movement Speed", 50, 300);
+        private static readonly LobbySetting DamageDealt = RangeValue.NewPercentage("Damage Dealt", 10, 500);
+        private static readonly LobbySetting DamageReceived = RangeValue.NewPercentage("Damage Received", 10, 500);
+        private static readonly LobbySetting HealingDealt = RangeValue.NewPercentage("Healing Dealt", 10, 500);
+        private static readonly LobbySetting HealingReceived = RangeValue.NewPercentage("Healing Received", 10, 500);
+        private static readonly LobbySetting JumpVerticalSpeed = RangeValue.NewPercentage("Jump Vertical Speed", 25, 800);
+        private static readonly LobbySetting MovementGravity = RangeValue.NewPercentage("Movement Gravity", 25, 400);
+        private static readonly LobbySetting MovementSpeed = RangeValue.NewPercentage("Movement Speed", 50, 300);
         private static readonly LobbySetting ReceiveHeadshotsOnly = new SwitchValue("Receive Headshots Only", false);
         private static readonly LobbySetting PrimaryFire = new SwitchValue("Primary Fire", true);
         // * Generic Ammunition Info (Add to global) *
-        private static readonly LobbySetting AmmunitionClipSizeScalar = new RangeValue("Ammunition Clip Size Scalar", 25, 500);
+        private static readonly LobbySetting AmmunitionClipSizeScalar = RangeValue.NewPercentage("Ammunition Clip Size Scalar", 25, 500);
         private static readonly LobbySetting NoAmmunitionRequirement = new SwitchValue("No Ammunition Requirement", false);
 
 
         // * Healers *
-        private static readonly LobbySetting Health = new RangeValue("Health", 10, 500);
+        private static readonly LobbySetting Health = RangeValue.NewPercentage("Health", 10, 500);
 
         // * Projectiles *
-        private static readonly LobbySetting ProjectileSpeed = new RangeValue("Projectile Speed", 0, 300);
-        private static readonly LobbySetting ProjectileGravity = new RangeValue("Projectile Gravity", 0, 500);
+        private static readonly LobbySetting ProjectileSpeed = RangeValue.NewPercentage("Projectile Speed", 0, 500);
+        private static readonly LobbySetting ProjectileGravity = RangeValue.NewPercentage("Projectile Gravity", 0, 500);
 
         // * Ult Duration *
-        private static readonly LobbySetting UltimateDuration = new RangeValue("Ultimate Duration", 25, 500);
+        private static readonly LobbySetting UltimateDuration = RangeValue.NewPercentage("Ultimate Duration", 25, 500);
         private static readonly LobbySetting InfiniteDuration = new SwitchValue("Infinite Ultimate Duration", false);
 
         // * Scope *
@@ -114,9 +114,9 @@ namespace Deltin.Deltinteger.Lobby
 
             // Add the settings.
             Add(new SwitchValue(isEnabled, true) { TitleResolver = enabledResolver });
-            Add(new RangeValue(generation, 10, 500) { TitleResolver = generationResolver });
-            Add(new RangeValue(passive, 0, 500) { TitleResolver = passiveGenerationResolver });
-            Add(new RangeValue(combat, 0, 500) { TitleResolver = combatGenerationResolver });
+            Add(RangeValue.NewPercentage(generation, generationResolver, min:10, max:500));
+            Add(RangeValue.NewPercentage(passive, passiveGenerationResolver, min:0, max:500));
+            Add(RangeValue.NewPercentage(combat, combatGenerationResolver, min:0, max:500));
 
             if (hasDuration)
             {
@@ -125,7 +125,7 @@ namespace Deltin.Deltinteger.Lobby
                 Add(InfiniteDuration);
             }
 
-            if (hasKnockback) Add(new RangeValue(knockback, 0, 500));
+            if (hasKnockback) Add(RangeValue.NewPercentage(knockback, min:0, max:500));
 
             return this;
         }
@@ -138,21 +138,18 @@ namespace Deltin.Deltinteger.Lobby
             if (hasCooldown)
             {
                 string cooldownTimeTitle = name + " Cooldown Time";
-                Add(new RangeValue(cooldownTimeTitle, 0, 500)
-                {
-                    TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name)
-                });
+                Add(RangeValue.NewPercentage(cooldownTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name), min:0, max:500));
             }
 
             // If the ability has a knockback scalar, add the knockback option.
             if (hasKnockback)
             {
                 if (!selfKnockback)
-                    Add(new RangeValue(name + " Knockback Scalar", 0, 500));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar", min:0, max:500));
                 else
                 {
-                    Add(new RangeValue(name + " Knockback Scalar (Enemy)", 0, 300));
-                    Add(new RangeValue(name + " Knockback Scalar (Self)", 0, 300));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Enemy)", min:0, max:300));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Self)", min:0, max:300));
                 }
             }
 
@@ -160,18 +157,12 @@ namespace Deltin.Deltinteger.Lobby
             if (rechargeable)
             {
                 string rechargeRateTitle = name + " Recharge Rate";
-                Add(new RangeValue(rechargeRateTitle, 0, 500)
-                {
-                    TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name)
-                });
+                Add(RangeValue.NewPercentage(rechargeRateTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name), min:0, max:500));
 
                 if (!noMaximumTime)
                 {
                     string maximumTimeTitle = name + " Maximum Time";
-                    Add(new RangeValue(maximumTimeTitle, 20, 500)
-                    {
-                        TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name)
-                    });
+                    Add(RangeValue.NewPercentage(maximumTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name), min:20, max:500));
                 }
             }
             return this;
@@ -200,12 +191,12 @@ namespace Deltin.Deltinteger.Lobby
         public static void Init()
         {
             AllHeroSettings = new HeroSettingCollection[] {
-                new HeroSettingCollection("General").AddUlt(null, true).AddProjectile(true).AddHealer(),
+                new HeroSettingCollection("General").AddUlt(null, true).AddProjectile(true).AddHealer().AddRange("Ability Cooldown Time"),
                 new HeroSettingCollection("Ana").AddUlt("Nano Boost").AddProjectile(false).AddHealer().AddScope().AddAbility("Biotic Grenade").AddAbility("Sleep Dart"),
                 new HeroSettingCollection("Ashe").AddUlt("B.O.B.", true).AddProjectile(true).AddScope().AddAbility("Coach Gun", hasKnockback: true, selfKnockback: true).AddAbility("Dynamite").AddRange("Dynamite Fuse Time Scalar", 1),
                 new HeroSettingCollection("Baptiste").AddUlt("Amplification Matrix", true).AddProjectile(false).AddHealer().AddAbility("Immortality Field").AddAbility("Regenerative Burst").AddSecondaryFire(),
                 new HeroSettingCollection("Bastion").AddUlt("Configuration: Tank", true).AddProjectile(false).AddHealer().AddAbility("Reconfigure", hasCooldown: false).AddAbility("Self-Repair", hasCooldown: false, rechargeable: true),
-                new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
+                new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Barrier Shield", rechargeable: true).AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
                 new HeroSettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", hasCooldown: false, rechargeable: true).AddRange("Call Mech Knockback Scalar", 0, 400).AddSwitch("Spawn Without Mech", false).RemoveAmmunition(),
                 new HeroSettingCollection("Doomfist").AddUlt("Meteor Strike", hasKnockback: true, hasDuration: true).AddProjectile(false).AddAbility("Rising Uppercut", hasKnockback: true).AddAbility("Rocket Punch", hasKnockback: true).AddAbility("Seismic Slam").AddRange("Ammunition Regeneration Time Scalar", 33, 500),
                 new HeroSettingCollection("Echo").AddUlt("Duplicate").AddProjectile(false).AddAbility("Flight").AddAbility("Focusing Beam").AddAbility("Glide", hasCooldown: false).AddAbility("Sticky Bombs"),

@@ -18,7 +18,7 @@ rule: "Commands" -1
     CreateHudText(AllPlayers(), Text: "OSTW pathmap editor", Location:Location.Left, SortOrder: 0);
     CreateHudText(AllPlayers(), Text: "Remember to periodically compile your pathmap so you don't lose progress.", TextColor: Color.Orange, Location:Location.Left, SortOrder: 1);
     CreateHudText(AllPlayers(), Text: "――――――――――", Location: Location.Left, SortOrder: 2);
-    CreateHudText(AllPlayers(), Text: <"Mode - Press <0> to change", InputBindingString(ButtonValue(Button.Interact))>, Location: Location.Left, SortOrder: 3);
+    CreateHudText(AllPlayers(), Text: <"Mode - Press <0> to change", InputBindingString(Button.Interact)>, Location: Location.Left, SortOrder: 3);
     CreateHudText(
         AllPlayers(),
         Text: <"<0>Free Walk\n<1>Place Nodes+Segments\n<2>Add Attributes",
@@ -30,7 +30,7 @@ rule: "Commands" -1
         SortOrder: 4
     );
     CreateHudText(AllPlayers(), Text: "――――――――――", Location: Location.Left, SortOrder: 5);
-    CreateHudText(AllPlayers(), Text: <"Change Mode → <0>", InputBindingString(ButtonValue(Button.Interact))>, Location: Location.Left, SortOrder: 6);
+    CreateHudText(AllPlayers(), Text: <"Change Mode → <0>", InputBindingString(Button.Interact)>, Location: Location.Left, SortOrder: 6);
     CreateHudText(CurrentMode == Mode.Place ? AllPlayers() : null, Text: <"Create Node → <0>\nDelete Node → <1>+<0>", inpStr(Button.PrimaryFire), inpStr(Button.Crouch)>, TextColor: Color.SkyBlue, Location: Location.Left, SortOrder: 7);
     CreateHudText(CurrentMode == Mode.Attribute ? AllPlayers() : null, Text: <"Toggle Current Attribute → <0>", inpStr(Button.PrimaryFire)>, TextColor: Color.SkyBlue, Location: Location.Left, SortOrder: 7);
     CreateHudText(ArrayContains([Mode.Place, Mode.Attribute], CurrentMode) ? AllPlayers() : null, Text: <"Select node → <0>\nDeselect All Nodes → <1>+<0>", inpStr(Button.SecondaryFire), inpStr(Button.Crouch)>, TextColor: Color.LimeGreen, Location: Location.Left, SortOrder: 8);
@@ -64,7 +64,7 @@ rule: "Commands" -1
     );
 }
 
-define inpStr(Button button): InputBindingString(ButtonValue(button));
+define inpStr(Button button): InputBindingString(button);
 
 define menuArrow(define value, define expecting): value == expecting ? "▶" : "▷";
 
@@ -106,6 +106,7 @@ globalvar Vector attributesOut 2; // The attributes for the CSV output.
 globalvar Vector preloadNodes 3; // Preloading nodes.
 globalvar Vector preloadSegments 4; // Preloading segments.
 globalvar Vector preloadAttributes 5; // Preloading segments.
+globalvar define fileName = null; // The name of the pathmap file.
 
 globalvar define PlaceMode = 0;
 globalvar define FirstAttribute = 0; // The selected attribute.
@@ -157,7 +158,7 @@ if (IsButtonHeld(HostPlayer(), Button.Interact))
     if (CurrentMode > 2) CurrentMode = 0;
 }
 
-Node GetClosestNode(): Nodes.SortedArray(Node node => EyePosition().DistanceTo(node.ShownLocation))[0];
+Node GetClosestNode(): Nodes.SortedArray((Node node) => EyePosition().DistanceTo(node.ShownLocation))[0];
 define IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventPlayer())) < 5;
 
 rule: "Create node"
@@ -244,7 +245,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     foreach (Node selected in Selected)
         selected.Deselect();
-    Selected = EmptyArray();
+    Selected = [];
 }
 
 class Node
@@ -326,10 +327,10 @@ class Node
     {
         DestroyAttributes();
 
-        LinkedAttribute[] show = root.Attributes.FilteredArray(LinkedAttribute attribute => attribute.Node1 == this);
+        LinkedAttribute[] show = root.Attributes.FilteredArray((LinkedAttribute attribute) => attribute.Node1 == this);
         foreach (LinkedAttribute attribute in show)
         {
-            define index = VisibleAttribute.IndexOf(VisibleAttribute.FilteredArray(VisibleAttributeInfo info => info.Link == attribute.Node2)[0]);
+            define index = VisibleAttribute.IndexOf((VisibleAttribute.FilteredArray((VisibleAttributeInfo info) => info.Link == attribute.Node2))[0]);
             if (index == -1)
             {
                 index = VisibleAttribute.Length;
@@ -421,7 +422,7 @@ if (PlaceMode == 1)
     for (define i = 1; i < Selected.Length; i++)
         if (!SegmentExists(Selected[i - 1], Selected[i]))
         {
-            ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[i - 1], Selected[i]))
+            ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[i - 1], Selected[i]));
             Segments.Last.Show();
         }
 }
@@ -436,12 +437,12 @@ if (PlaceMode == 2)
     for (define i = 1; i < Selected.Length; i++)
         if (!SegmentExists(Selected[0], Selected[i]))
         {
-            ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[0], Selected[i]))
+            ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[0], Selected[i]));
             Segments.Last.Show();
         }
 }
 
-define SegmentExists(define node1, define node2): Segments.IsTrueForAny(Segment segment => segment.Nodes.Contains(node1) && segment.Nodes.Contains(node2));
+define SegmentExists(define node1, define node2): Segments.IsTrueForAny((Segment segment) => segment.Nodes.Contains(node1) && segment.Nodes.Contains(node2));
 
 rule: "Delete Segments"
 Event.OngoingPlayer
@@ -450,7 +451,7 @@ if (IsButtonHeld(EventPlayer(), b_connectNodes))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define i = Segments.Length - 1; i >= 0; i--)
-        if (Segments[i].Nodes.IsTrueForAll(Node node => Selected.Contains(node)))
+        if (Segments[i].Nodes.IsTrueForAll((Node node) => Selected.Contains(node)))
         {
             Segments[i].Hide();
             delete(Segments[i]);
@@ -515,7 +516,7 @@ if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlay
     LoopIfConditionIsTrue();
 }
 
-rule: "CSV out"
+rule: "Compile"
 Event.OngoingPlayer
 if (IsCommunicating(EventPlayer(), b_compile))
 {
@@ -548,7 +549,7 @@ if (IsCommunicating(EventPlayer(), b_compile))
 
     SmallMessage(AllPlayers(), "Compile Finished!");
     EnableInspectorRecording();
-    # Pathmap is compiled. Copy the current global variable set to the clipboard. In vscode, press ctrl+shift+p to open the command pallete, then run the 'Create pathmap from CSV clipboard' command.
+    # Pathmap is compiled. Copy the current global action set to the clipboard. In vscode, press ctrl+shift+p to open the command pallete, then run the 'Create pathmap from action-set clipboard' command.
     DisableInspectorRecording();
     compiling = false;
 }
@@ -574,6 +575,9 @@ if (CountOf(preloadNodes) != 0)
             Nodes[preload.Y],
             preload.Z
         ));
+    
+    if (fileName != null)
+        CreateHudText(AllPlayers(), Text: fileName, SortOrder: 1, TextColor: Color.Orange, Location: Location.Right);
 }
 
 rule: "Increment Place Mode"
@@ -679,7 +683,7 @@ if (Selected.Length >= 2)
     Node node1 = Selected[Selected.Length - 2];
     Node node2 = Selected.Last;
 
-    LinkedAttribute matching = Attributes.FilteredArray(LinkedAttribute attribute => attribute.Node1 == node1 && attribute.Node2 == node2 && attribute.ID == FirstAttribute)[0];
+    LinkedAttribute matching = (Attributes.FilteredArray((LinkedAttribute attribute) => attribute.Node1 == node1 && attribute.Node2 == node2 && attribute.ID == FirstAttribute))[0];
     if (matching != null)
     {
         ModifyVariable(Attributes, Operation.RemoveFromArrayByValue, matching);

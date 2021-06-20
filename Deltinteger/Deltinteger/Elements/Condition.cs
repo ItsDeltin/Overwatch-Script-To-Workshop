@@ -1,56 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Deltin.Deltinteger;
-
-namespace Deltin.Deltinteger.Elements
+﻿namespace Deltin.Deltinteger.Elements
 {
     public class Condition
     {
         public Element Value1 { get; private set; }
-        public EnumMember CompareOperator { get; private set; }
+        public OperatorElement CompareOperator { get; private set; }
         public Element Value2 { get; private set; }
+        public string Comment { get; set; }
 
-        public Condition(Element value1, EnumMember compareOperator, Element value2)
+        public Condition(Element value1, OperatorElement op, Element value2)
         {
-            if (!value1.ElementData.IsValue)
-                throw new ArgumentException("Method in condition must be a value method.", nameof(value1));
-
-            if (!value2.ElementData.IsValue)
-                throw new ArgumentException("Method in condition must be a value method.", nameof(value2));
-
             Value1 = value1;
-            CompareOperator = compareOperator;
+            CompareOperator = op;
             Value2 = value2;
         }
+        public Condition(Element value1, Operator op, Element value2) : this(value1, new OperatorElement(op), value2) {}
+        public Condition(Element condition) : this(condition, Operator.Equal, Element.True()) {}
 
-        public Condition(Element value1, Elements.Operators compareOperator, Element value2) : this(value1, EnumData.GetEnumValue(compareOperator), value2) { }
-        public Condition(V_Compare condition) : this((Element)condition.ParameterValues[0], (EnumMember)condition.ParameterValues[1], (Element)condition.ParameterValues[2]) { }
-        public Condition(Element condition) : this(condition, Operators.Equal, new V_True()) { }
-
-        public string ToWorkshop(OutputLanguage language, bool optimize)
+        public void ToWorkshop(WorkshopBuilder builder)
         {
-            Element a = Value1;
-            Element b = Value2;
-            if (optimize)
-            {
-                a = a.Optimize();
-                b = b.Optimize();
-            }
+            string result = string.Empty;
 
-            return a.ToWorkshop(language, ToWorkshopContext.ConditionValue) + " " + CompareOperator.ToWorkshop(language, ToWorkshopContext.Other) + " " + b.ToWorkshop(language, ToWorkshopContext.ConditionValue);
+            // Add a comment and newline
+            if (Comment != null) builder.AppendLine($"\"{Comment}\"\n");
+            
+            Value1.ToWorkshop(builder, ToWorkshopContext.ConditionValue);
+            builder.Append(" ");
+            CompareOperator.ToWorkshop(builder, ToWorkshopContext.Other);
+            builder.Append(" ");
+            Value2.ToWorkshop(builder, ToWorkshopContext.ConditionValue);
+            builder.Append(";");
+            builder.AppendLine();
         }
 
-        public int ElementCount(bool optimized)
-        {
-            if (optimized)
-                return 1 + Value1.Optimize().ElementCount() + Value2.Optimize().ElementCount();
-            else
-                return 1 + Value1.ElementCount() + Value2.ElementCount();
-        }
+        public int ElementCount() => (Value1.ElementCount() + Value2.ElementCount()) - 1;
+
+        public Condition Optimized() => new Condition(Value1.Optimized(), CompareOperator, Value2.Optimized());
 
         public static implicit operator Condition(Element element) => new Condition(element);
     }

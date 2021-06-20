@@ -16,7 +16,9 @@ namespace Deltin.Deltinteger.Parse
         public CodeParameter[] Parameters { get; protected set; }
         public LanguageServer.Location DefinedAt { get; }
         public CodeType Type { get; }
-        public string Documentation { get; set; }
+        public MarkupBuilder Documentation { get; set; }
+        public virtual bool RestrictedValuesAreFatal => true;
+        bool IParameterCallable.RestrictedValuesAreFatal => RestrictedValuesAreFatal;
 
         public Constructor(CodeType type, LanguageServer.Location definedAt, AccessLevel accessLevel)
         {
@@ -30,7 +32,16 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual void Call(ParseInfo parseInfo, DocRange callRange) { }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel("new " + Type.Name, Parameters, markdown, Documentation);
+        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo)
+        {
+            var builder = new MarkupBuilder().StartCodeLine().Add("new " + Type.GetName());
+            builder.Add(CodeParameter.GetLabels(deltinScript, Parameters)).EndCodeLine();
+
+            if (labelInfo.IncludeDocumentation)
+                builder.NewSection().Add(Documentation);
+
+            return builder.EndCodeLine();
+        }
     }
 
     public class DefinedConstructor : Constructor, IApplyBlock
@@ -47,6 +58,7 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly RecursiveCallHandler _recursiveCallHandler;
         public SubroutineInfo SubroutineInfo { get; set; }
+        public override bool RestrictedValuesAreFatal => SubroutineName == null;
 
         public DefinedConstructor(ParseInfo parseInfo, Scope scope, CodeType type, ConstructorContext context) : base(
             type,
@@ -75,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
 
-            parseInfo.Script.AddHover(context.LocationToken.Range, GetLabel(true));
+            parseInfo.Script.AddHover(context.LocationToken.Range, GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
         }
 
         public void SetupBlock()

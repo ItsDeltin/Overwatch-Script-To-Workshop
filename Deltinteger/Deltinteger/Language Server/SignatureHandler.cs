@@ -44,20 +44,13 @@ namespace Deltin.Deltinteger.LanguageServer
             });
         }
 
-        public SignatureHelpRegistrationOptions GetRegistrationOptions()
+        public SignatureHelpRegistrationOptions GetRegistrationOptions(SignatureHelpCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
             return new SignatureHelpRegistrationOptions()
             {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
                 TriggerCharacters = new Container<string>("(", ",")
             };
-        }
-
-        // Client capability
-        private SignatureHelpCapability _capability;
-        public void SetCapability(SignatureHelpCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

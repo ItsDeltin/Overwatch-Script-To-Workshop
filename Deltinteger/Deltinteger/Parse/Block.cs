@@ -1,5 +1,5 @@
-using System;
 using System.Linq;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
@@ -8,6 +8,8 @@ namespace Deltin.Deltinteger.Parse
     {
         public IStatement[] Statements { get; }
         public Scope BlockScope { get; }
+        public string EndComment {get; private set;}
+
 
         public BlockAction(ParseInfo parseInfo, Scope scope, Block blockContext)
         {
@@ -17,13 +19,15 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < Statements.Length; i++)
                 Statements[i] = parseInfo.GetStatement(BlockScope, blockContext.Statements[i]);
 
-            parseInfo.Script.AddCompletionRange(new CompletionRange(BlockScope, blockContext.Range, CompletionRangeKind.Catch));
+            parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, BlockScope, blockContext.Range, CompletionRangeKind.Catch));
+            EndComment = blockContext.EndComment?.GetContents();
         }
 
         public BlockAction(IStatement[] statements)
         {
             Statements = statements;
         }
+
 
         public void Translate(ActionSet actionSet)
         {

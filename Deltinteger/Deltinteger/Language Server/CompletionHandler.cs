@@ -18,12 +18,10 @@ namespace Deltin.Deltinteger.LanguageServer
     class CompletionHandler : ICompletionHandler
     {
         private DeltintegerLanguageServer _languageServer { get; }
-        private Scope _globalScope { get; }
 
         public CompletionHandler(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
-            _globalScope = Scope.GetGlobalScope();
         }
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
@@ -39,7 +37,10 @@ namespace Deltin.Deltinteger.LanguageServer
 
             // Add types.
             foreach (var type in _languageServer.LastParse.Types.AllTypes)
-                items.Add(type.GetCompletion());
+            {
+                var completion = type.GetCompletion();
+                if (completion != null) items.Add(completion);
+            }
 
             // Get the script from the uri. If it isn't parsed, return the default completion. 
             var script = _languageServer.LastParse.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
@@ -79,11 +80,10 @@ namespace Deltin.Deltinteger.LanguageServer
                     }
                 }
             }
-            else items.AddRange(_globalScope.GetCompletion(null, false));
             return items;
         }
 
-        public CompletionRegistrationOptions GetRegistrationOptions()
+        public CompletionRegistrationOptions GetRegistrationOptions(CompletionCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
             return new CompletionRegistrationOptions()
             {
@@ -101,13 +101,6 @@ namespace Deltin.Deltinteger.LanguageServer
                 // information for a completion item.
                 ResolveProvider = false
             };
-        }
-
-        // Client compatibility
-        private CompletionCapability _capability;
-        public void SetCapability(CompletionCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

@@ -34,6 +34,9 @@ namespace Deltin.Deltinteger.Parse
             return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
         }
 
+        public void Set(ActionSet actionSet, Element value, Element target = null, params Element[] index) => Set(actionSet, null, value, target, index);
+        public void Set(ActionSet actionSet, string comment, Element value, Element target = null, params Element[] index) => actionSet.AddAction(comment, SetVariable(value, target, index));
+
         public IndexReference CreateChild(params Element[] index)
         {
             // Note: `ArrayBuilder` and `ArrayBuilder<Element>` are 2 very different things.
@@ -55,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override IWorkshopTree GetVariable(Element targetPlayer = null)
         {
-            return Element.Part<V_LastOf>(base.GetVariable(targetPlayer));
+            return Element.LastOf(base.GetVariable(targetPlayer));
         }
 
         public override Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
@@ -70,7 +73,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Element[] Reset()
         {
-            return base.SetVariable(new V_EmptyArray());
+            return base.SetVariable(Element.EmptyArray());
         }
 
         public Element[] Push(Element value)
@@ -93,7 +96,7 @@ namespace Deltin.Deltinteger.Parse
 
         private Element StackLength()
         {
-            return Element.Part<V_CountOf>(base.GetVariable());
+            return Element.CountOf(base.GetVariable());
         }
     }
 

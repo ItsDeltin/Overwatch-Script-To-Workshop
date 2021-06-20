@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Elements
             Name = name;
         }
 
-        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => Name;
+        public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(Name);
         public virtual bool EqualTo(IWorkshopTree other)
         {
             if (this.GetType() != other.GetType()) return false;

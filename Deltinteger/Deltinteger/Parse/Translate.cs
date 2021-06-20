@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public ScriptTypes Types { get; } = new ScriptTypes();
-        public Scope PlayerVariableScope { get; private set; } = new Scope("player variables");
+        public Scope PlayerVariableScope { get; set; }
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
@@ -39,14 +39,14 @@ namespace Deltin.Deltinteger.Parse
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
-            GlobalScope = Scope.GetGlobalScope();
-            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope);
+            Types.GetDefaults(this);
+
+            GlobalScope = new Scope("global scope");
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
 
-            Types.GetDefaults(this);
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(translateSettings.Root);
+            Importer.CollectScriptFiles(this, translateSettings.Root);
 
             Translate();
             if (!Diagnostics.ContainsErrors())
@@ -111,42 +111,84 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
-            // Get the reserved variables and IDs
-            // foreach (ScriptFile script in Importer.ScriptFiles)
-            // {
-            //     if (script.Context.reserved_global()?.reserved_list() != null)
-            //     {
-            //         foreach (var name in script.Context.reserved_global().reserved_list().PART()) VarCollection.Reserve(name.GetText(), true);
-            //         foreach (var id in script.Context.reserved_global().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), true, null, null);
-            //     }
-            //     if (script.Context.reserved_player()?.reserved_list() != null)
-            //     {
-            //         foreach (var name in script.Context.reserved_player().reserved_list().PART()) VarCollection.Reserve(name.GetText(), false);
-            //         foreach (var id in script.Context.reserved_player().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), false, null, null);
-            //     }
-            // }
+            // Get the variable reservations
+            foreach (ScriptFile script in Importer.ScriptFiles)
+                foreach (Token reservation in script.Context.GlobalvarReservations)
+                {
+                    string text = reservation.GetText().RemoveQuotes();
+                    if(Int32.TryParse(text, out int id)){
+                        VarCollection.Reserve(id, true, script.Diagnostics, reservation.Range);
+                    } else {
+                        VarCollection.Reserve(text, true);
+                    }
+                }
+            foreach (ScriptFile script in Importer.ScriptFiles)
+                foreach (Token reservation in script.Context.PlayervarReservations)
+                {
+                    string text = reservation.GetText().RemoveQuotes();
+                    if(Int32.TryParse(text, out int id)){
+                        VarCollection.Reserve(id, false, script.Diagnostics, reservation.Range);
+                    } else {
+                        VarCollection.Reserve(text, false);
+                    }
+                }
 
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var enumContext in script.Context.Enums)
-                {
-                    var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
-                    Types.AllTypes.Add(newEnum);
-                    Types.DefinedTypes.Add(newEnum);
-                    Types.CalledTypes.Add(newEnum);
-                }
+                    if (enumContext.Identifier)
+                    {
+                        var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
+                        Types.AllTypes.Add(newEnum);
+                        Types.DefinedTypes.Add(newEnum);
+                        Types.CalledTypes.Add(newEnum);
+                    }
 
             // Get the types
             foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var typeContext in script.Context.Classes)
-                {
-                    var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
-                    Types.AllTypes.Add(newType);
-                    Types.DefinedTypes.Add(newType);
-                    Types.CalledTypes.Add(newType);
-                }
+            foreach (var typeContext in script.Context.Classes)
+            {
+                var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
+                Types.AllTypes.Add(newType);
+                Types.DefinedTypes.Add(newType);
+                Types.CalledTypes.Add(newType);
+            }
+	
+			//Get the type aliases
+            foreach (ScriptFile script in Importer.ScriptFiles)
+			{    
+				ParseInfo parseInfo = new ParseInfo(script, this);
+            	foreach (var typeContext in script.Context.TypeAliases)
+                    if (typeContext.NewTypeName)
+                    {
+                        var aliasType = Types.GetCodeType(typeContext.NewTypeName?.Text);
+                        var type = PipeType.GetCodeTypeFromContext(parseInfo, typeContext.OtherType);
+                        if(aliasType != null)
+                            parseInfo.Script.Diagnostics.Error("type name already in use.", typeContext.Range);
+                        else if(type != null)
+                            Types.TypeAliases.Add(typeContext.NewTypeName.GetText(), type);
+                    }
+			}
+            
+            // Get variable declarations
+            foreach (ScriptFile script in Importer.ScriptFiles)
+                foreach (var declaration in script.Context.Declarations)
+                    if (declaration is VariableDeclaration variable)
+                    {
+                        ParseInfo parseInfo = new ParseInfo(script, this);
+                        
+                        Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable));
+                        rulesetVariables.Add(newVar);
 
-            // Get the declarations
+                        // Add the variable to the player variables scope if it is a player variable.
+                        if (newVar.VariableType == VariableType.Player)
+                            PlayerVariableScope.CopyVariable(newVar);
+                    }
+            
+            ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
+            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
+
+            // Get the function declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 ParseInfo parseInfo = new ParseInfo(script, this);
@@ -163,23 +205,13 @@ namespace Deltin.Deltinteger.Parse
                     // Macro var
                     else if (declaration is MacroVarDeclaration macroVar)
                         parseInfo.GetMacro(RulesetScope, RulesetScope, macroVar);
-                    // Variables
-                    else if (declaration is VariableDeclaration variable)
-                    {
-                        Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable));
-                        rulesetVariables.Add(newVar);
-
-                        // Add the variable to the player variables scope if it is a player variable.
-                        if (newVar.VariableType == VariableType.Player)
-                            PlayerVariableScope.CopyVariable(newVar);
-                    }
                 }
             }
 
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
             foreach (var apply in _applyBlocks) apply.SetupParameters();
             foreach (var apply in _applyBlocks) apply.SetupBlock();
-            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion();
+            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion(this);
 
             // Get hooks
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -207,7 +239,9 @@ namespace Deltin.Deltinteger.Parse
             WorkshopRules = new List<Rule>();
 
             // Init called types.
-            foreach (var type in Types.CalledTypes.Distinct()) type.WorkshopInit(this);
+            foreach (var type in Types.AllTypes)
+                if (Types.CalledTypes.Contains(type))
+                    type.WorkshopInit(this);
 
             // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
@@ -235,7 +269,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(this, rule);
-                Rule newRule = translate.GetRule();
+                Rule newRule = GetRule(translate.GetRule());
                 WorkshopRules.Add(newRule);
                 rule.ElementCountLens.RuleParsed(newRule);
             }
@@ -243,11 +277,11 @@ namespace Deltin.Deltinteger.Parse
             // Add built-in rules.
             // Initial player
             if (InitialPlayer.Actions.Count > 0)
-                WorkshopRules.Insert(0, InitialPlayer.GetRule());
+                WorkshopRules.Insert(0, GetRule(InitialPlayer.GetRule()));
 
             // Initial global
             if (InitialGlobal.Actions.Count > 0)
-                WorkshopRules.Insert(0, InitialGlobal.GetRule());
+                WorkshopRules.Insert(0, GetRule(InitialGlobal.GetRule()));
 
             // Additional
             if (addRules != null)
@@ -281,12 +315,19 @@ namespace Deltin.Deltinteger.Parse
             // Get the rules.
             for (int i = 0; i < WorkshopRules.Count; i++)
             {
-                WorkshopRules[i].ToWorkshop(result, OptimizeOutput);
-                ElementCount += WorkshopRules[i].ElementCount(OptimizeOutput);
+                WorkshopRules[i].ToWorkshop(result);
+                ElementCount += WorkshopRules[i].ElementCount();
                 if (i != WorkshopRules.Count - 1) result.AppendLine();
             }
+            
+            WorkshopCode = result.GetResult();
+        }
 
-            WorkshopCode = result.ToString();
+        Rule GetRule(Rule rule)
+        {
+            if (OptimizeOutput)
+                rule = rule.Optimized();
+            return rule;
         }
 
         public ScriptFile ScriptFromUri(Uri uri) => Importer.ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
@@ -310,34 +351,80 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ScriptTypes
+    public class ScriptTypes : ITypeSupplier
     {
         public List<CodeType> AllTypes { get; } = new List<CodeType>();
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
         public List<CodeType> CalledTypes { get; } = new List<CodeType>();
+		public Dictionary<String, CodeType> TypeAliases {get; } =  new Dictionary<String, CodeType>();
+        private readonly PlayerType _playerType;
+        private readonly VectorType _vectorType;
+        private readonly NumberType _numberType;
+        private readonly StringType _stringType;
+        private readonly BooleanType _booleanType;
+        private AnyType _anyType;
+        private AnyType _unknownType;
+
+        public ScriptTypes()
+        {
+            _playerType = new PlayerType(this);
+            _vectorType = new VectorType(this);
+            _numberType = new NumberType(this);
+            _stringType = new StringType(this);
+            _booleanType = new BooleanType(this);
+        }
 
         public void GetDefaults(DeltinScript deltinScript)
         {
-            AllTypes.AddRange(CodeType.DefaultTypes);
-            AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
-            AllTypes.Add(new Pathfinder.PathResolveClass());
+            _anyType = new AnyType(deltinScript);
+            _unknownType = new AnyType("?", deltinScript);
+            AddType(_anyType);
+            AddType(_playerType);
+            AddType(_vectorType);
+            AddType(_numberType);
+            AddType(_stringType);
+            AddType(_booleanType);
+            AddType(Pathfinder.SegmentsStruct.Instance);
+            // Pathfinder classes
+            AddType(new Pathfinder.PathmapClass(deltinScript));
+            AddType(new Pathfinder.PathResolveClass(this));
+            AddType(new Pathfinder.BakemapClass(this));
+            // Constant lambda types.
+            AddType(new Lambda.BlockLambda());
+            AddType(new Lambda.ValueBlockLambda(_anyType));
+            AddType(new Lambda.MacroLambda(_anyType));
+            // Model static class.
+            // AddType(new Models.AssetClass());
+            // Enums
+            foreach (var type in ValueGroupType.GetEnumTypes(this))
+                AddType(type);
+
+            foreach (var type in AllTypes)
+                if (type is IResolveElements resolveElements)
+                    resolveElements.ResolveElements();
+
+            deltinScript.PlayerVariableScope = _playerType.PlayerVariableScope;
         }
+
+        private void AddType(CodeType type) => AllTypes.Add(type);
 
         public CodeType GetCodeType(string name) => AllTypes.FirstOrDefault(type => type.Name == name);
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
             var type = AllTypes.FirstOrDefault(type => type.Name == name);
+			if(type == null) {
+				CodeType typeAlias;
+				if(TypeAliases.TryGetValue(name, out typeAlias))
+					type = typeAlias;
+			}
 
             if (range != null && type == null)
                 diagnostics.Error(string.Format("The type {0} does not exist.", name), range);
 
             return type;
         }
-        public bool IsCodeType(string name)
-        {
-            return GetCodeType(name, null, null) != null;
-        }
-        public T GetCodeType<T>() where T : CodeType => (T)AllTypes.FirstOrDefault(type => type.GetType() == typeof(T));
+        public bool IsCodeType(string name) => GetCodeType(name, null, null) != null;
+        public T GetCodeType<T>() where T: CodeType => (T)AllTypes.FirstOrDefault(type => type.GetType() == typeof(T));
 
         public void CallType(CodeType type)
         {
@@ -356,7 +443,25 @@ namespace Deltin.Deltinteger.Parse
             builder.AppendLine();
         }
 
-        public T GetInstance<T>() where T : CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
+        public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
+
+        public CodeType Default() => Any();
+        public CodeType Any() => _anyType;
+        public CodeType AnyArray() => new ArrayType(this, Any());
+        public CodeType Boolean() => _booleanType;
+        public CodeType Number() => _numberType;
+        public CodeType String() => _stringType;
+        public CodeType Player() => _playerType;
+        public CodeType Vector() => _vectorType;
+        public CodeType Unknown() => _unknownType;
+
+        public CodeType EnumType(string typeName)
+        {
+            foreach (var type in AllTypes)
+                if (type is ValueGroupType valueGroupType && type.Name == typeName)
+                    return type;
+            throw new Exception("No enum type by the name of '" + typeName + "' exists.");
+        }
     }
 
     public interface IComponent

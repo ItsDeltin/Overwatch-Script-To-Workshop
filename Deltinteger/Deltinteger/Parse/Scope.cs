@@ -13,7 +13,6 @@ namespace Deltin.Deltinteger.Parse
     {
         private readonly List<IVariable> _variables = new List<IVariable>();
         private readonly List<IMethod> _functions = new List<IMethod>();
-        private readonly List<MethodGroup> _methodGroups = new List<MethodGroup>();
         public Scope Parent { get; }
         public string ErrorName { get; set; } = "current scope";
         public CodeType This { get; set; }
@@ -22,6 +21,7 @@ namespace Deltin.Deltinteger.Parse
         public bool CompletionCatch { get; set; }
         public bool MethodContainer { get; set; }
         public bool CatchConflict { get; set; }
+        public bool TagPlayerVariables { get; set; }
 
         public Scope() { }
         private Scope(Scope parent)
@@ -63,9 +63,7 @@ namespace Deltin.Deltinteger.Parse
                 if (iterateVariables) checkScopeables.AddRange(current._variables);
 
                 // If functions are being iterated, add them to the list.
-                if (iterateMethods)
-                    foreach (var group in current._methodGroups)
-                        checkScopeables.AddRange(group.Functions);
+                if (iterateMethods) checkScopeables.AddRange(current._functions);
 
                 bool stopAfterScope = false;
 
@@ -105,18 +103,19 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public void CopyAll(Scope other, Scope getter)
+        public void CopyAll(Scope other)
         {
             other.IterateParents(scope =>
             {
-                _methodGroups.AddRange(scope._methodGroups);
+                _functions.AddRange(scope._functions);
                 return true;
             });
 
             other.IterateElements(true, true, iterate =>
             {
                 // Add the element.
-                if (iterate.Element is IVariable variable) _variables.Add(variable);
+                if (iterate.Element is IVariable variable && !_variables.Contains(variable))
+                    _variables.Add(variable);
 
                 if (iterate.Container.PrivateCatch || iterate.Container.CompletionCatch) return ScopeIterateAction.StopAfterScope;
                 return ScopeIterateAction.Continue;
@@ -166,16 +165,31 @@ namespace Deltin.Deltinteger.Parse
 
         public IVariable GetVariable(string name, bool methodGroupsOnly)
         {
-            IVariable element = null;
-            Scope current = this;
+            IVariable variable = null;
+            List<IMethod> functions = new List<IMethod>();
 
-            while (current != null && element == null)
+            Scope current = this;
+            while (current != null)
             {
-                element = current._variables.Where(v => !methodGroupsOnly || v is MethodGroup || v.CodeType is Lambda.PortableLambdaType).FirstOrDefault(element => element.Name == name);
+                // Add functions with the same name.
+                functions.AddRange(current._functions.Where(f => f.Name == name));
+
+                // Set the variable if it was not set yet.
+                if (variable == null)
+                    variable = current._variables.Where(v => !methodGroupsOnly || v is MethodGroup || v.CodeType is Lambda.PortableLambdaType).FirstOrDefault(element => element.Name == name);
+
+                // Go to the parent scope.
                 current = current.Parent;
             }
 
-            return element;
+            // Variables take priority over method groups.
+            if (variable != null) return variable;
+
+            // If there were any functions that share the variable name, return the method group.
+            if (functions.Count > 0) return new MethodGroup(name, functions.ToArray());
+
+            // Otherwise, return null.
+            return null;
         }
 
         public IVariable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range, bool methodGroupsOnly)
@@ -194,6 +208,16 @@ namespace Deltin.Deltinteger.Parse
             return element;
         }
 
+        public IVariable[] GetAllVariables(string name)
+        {
+            List<IVariable> variables = new List<IVariable>();
+            IterateElements(true, false, it => {
+                if (it.Element.Name == name) variables.Add((IVariable)it.Element);
+                return ScopeIterateAction.Continue;
+            });
+            return variables.ToArray();
+        }
+        
         public bool Conflicts(IScopeable scopeable, bool variables = true, bool functions = true)
         {
             bool conflicts = false;
@@ -223,22 +247,12 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="method">The method that will be added to the current scope. If the object reference is already in the direct scope, an exception will be thrown.</param>
         /// <param name="diagnostics">The file diagnostics to throw errors with. Should be null when adding methods internally.</param>
         /// <param name="range">The document range to throw errors at. Should be null when adding methods internally.</param>
-        public void AddMethod(IMethod method, FileDiagnostics diagnostics, DocRange range, bool checkConflicts = true)
+        public void AddMethod(IMethod method, ParseInfo parseInfo, DocRange range, bool checkConflicts = true)
         {
             if (method == null) throw new ArgumentNullException(nameof(method));
 
-            if (checkConflicts && HasConflict(method))
-            {
-                string message = "A method with the same name and parameter types was already defined in this scope.";
-
-                if (diagnostics != null && range != null)
-                {
-                    diagnostics.Error(message, range);
-                    return;
-                }
-                else
-                    throw new Exception(message);
-            }
+            if (checkConflicts && HasConflict(parseInfo.TranslateInfo, method))
+                parseInfo.Script.Diagnostics.Error("A method with the same name and parameter types was already defined in this scope.", range);
 
             AddNativeMethod(method);
         }
@@ -264,20 +278,7 @@ namespace Deltin.Deltinteger.Parse
             _variables.Add(macro);
         }
 
-        public void AddNativeMethod(IMethod method)
-        {
-            foreach (var group in _methodGroups)
-                if (group.MethodIsValid(method))
-                {
-                    group.AddMethod(method);
-                    return;
-                }
-
-            var newGroup = new MethodGroup(method.Name);
-            newGroup.AddMethod(method);
-            _variables.Add(newGroup);
-            _methodGroups.Add(newGroup);
-        }
+        public void AddNativeMethod(IMethod method) => _functions.Add(method);
 
         /// <summary>
         /// Blindly copies a method to the current scope without doing any syntax checking.
@@ -293,24 +294,24 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Checks if a method conflicts with another method in the scope.</summary>
         /// <param name="method">The method to check.</param>
         /// <returns>Returns true if the current scope already has the same name and parameters as the input method.</returns>
-        public bool HasConflict(IMethod method) => Conflicts(method, functions: false) || GetMethodOverload(method) != null;
+        public bool HasConflict(DeltinScript deltinScript, IMethod method) => Conflicts(method, functions: false) || GetMethodOverload(deltinScript, method) != null;
 
         public bool HasConflict(MacroVar macro) => GetMacroOverload(macro.Name, macro.DefinedAt) != null;
 
         /// <summary>Gets a method in the scope that has the same name and parameter types. Can potentially resolve to itself if the method being tested is in the scope.</summary>
         /// <param name="method">The method to get a matching overload.</param>
         /// <returns>A method with the matching overload, or null if none is found.</returns>
-        public IMethod GetMethodOverload(IMethod method)
+        public IMethod GetMethodOverload(DeltinScript deltinScript, IMethod method)
         {
             if (method == null) throw new ArgumentNullException(nameof(method));
-            return GetMethodOverload(method.Name, method.Parameters.Select(p => p.Type).ToArray());
+            return GetMethodOverload(deltinScript, method.Name, method.Parameters.Select(p => p.GetCodeType(deltinScript)).ToArray());
         }
 
         /// <summary>Gets a method overload in the scope that has the same name and parameter types.</summary>
         /// <param name="name">The name of the method.</param>
         /// <param name="parameterTypes">The types of the parameters.</param>
         /// <returns>A method with the name and parameter types, or null if none is found.</returns>
-        public IMethod GetMethodOverload(string name, CodeType[] parameterTypes)
+        public IMethod GetMethodOverload(DeltinScript deltinScript, string name, CodeType[] parameterTypes)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (parameterTypes == null) throw new ArgumentNullException(nameof(parameterTypes));
@@ -328,7 +329,7 @@ namespace Deltin.Deltinteger.Parse
                 // Loop through all parameters.
                 for (int p = 0; p < checking.Parameters.Length; p++)
                     // If the parameter types do not match, continue.
-                    if (checking.Parameters[p].Type != parameterTypes[p])
+                    if (checking.Parameters[p].GetCodeType(deltinScript) != parameterTypes[p])
                         return ScopeIterateAction.Continue;
 
                 // Parameter overload matches.
@@ -361,23 +362,6 @@ namespace Deltin.Deltinteger.Parse
 
             return variable;
 
-        }
-
-        /// <summary>Gets all methods in the scope with the provided name.</summary>
-        /// <param name="name">The name of the methods.</param>
-        /// <returns>An array of methods with the matching name.</returns>
-        public IMethod[] GetMethodsByName(string name)
-        {
-            List<IMethod> methods = new List<IMethod>();
-
-            IterateParents(scope =>
-            {
-                if (scope.TryGetGroupByName(name, out var group))
-                    methods.AddRange(group.Functions);
-                return false;
-            });
-
-            return methods.ToArray();
         }
 
         public CodeType GetThis()
@@ -442,7 +426,7 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public CompletionItem[] GetCompletion(DocPos pos, bool immediate, Scope getter = null)
+        public CompletionItem[] GetCompletion(DeltinScript deltinScript, DocPos pos, bool immediate, Scope getter = null)
         {
             var completions = new List<CompletionItem>(); // The list of completion items in this scope.
 
@@ -450,42 +434,49 @@ namespace Deltin.Deltinteger.Parse
             var batches = new List<FunctionBatch>();
             IterateParents(scope =>
             {
-                // Iterate through each group.
-                foreach (var group in scope._methodGroups)
-                    // Iterate through each function in the group.
-                    foreach (var func in group.Functions)
-                        // If the function is scoped at pos,
-                        // add it to a batch.
-                        if (scope.WasScopedAtPosition(func, pos, getter))
-                        {
-                            bool batchFound = false; // Determines if a batch was found for the function.
+                // Iterate through each function.
+                foreach (var func in scope._functions)
+                    // If the function is scoped at pos,
+                    // add it to a batch.
+                    if (scope.WasScopedAtPosition(func, pos, getter))
+                    {
+                        bool batchFound = false; // Determines if a batch was found for the function.
 
-                            // Iterate through each existing batch.
-                            foreach (var batch in batches)
-                                // If the current batch's name is equal to the function's name, add it to the batch.
-                                if (batch.Name == func.Name)
-                                {
-                                    batch.Add();
-                                    batchFound = true;
-                                    break;
-                                }
+                        // Iterate through each existing batch.
+                        foreach (var batch in batches)
+                            // If the current batch's name is equal to the function's name, add it to the batch.
+                            if (batch.Name == func.Name)
+                            {
+                                batch.Add();
+                                batchFound = true;
+                                break;
+                            }
 
-                            // If no batch was found for the function name, create a new batch.
-                            if (!batchFound)
-                                batches.Add(new FunctionBatch(func.Name, func));
-                        }
+                        // If no batch was found for the function name, create a new batch.
+                        if (!batchFound)
+                            batches.Add(new FunctionBatch(func.Name, func));
+                    }
 
                 // Add the variables.
                 foreach (var variable in scope._variables)
                     if (variable is MethodGroup == false && scope.WasScopedAtPosition(variable, pos, getter))
-                        completions.Add(variable.GetCompletion());
+                        if (TagPlayerVariables && variable is IIndexReferencer referencer && referencer.VariableType == VariableType.Player)
+                            completions.Add(new CompletionItem() {
+                                Label = "★ " + variable.Name,
+                                SortText = "!" + variable.Name,
+                                InsertText = variable.Name,
+                                Kind = CompletionItemKind.Variable,
+                                Detail = variable.CodeType.GetCodeType(deltinScript).GetName() + " " + variable.Name
+                            });
+                        else
+                            completions.Add(variable.GetCompletion(deltinScript));
 
                 return scope.CompletionCatch;
             });
 
             // Get the batch completion.
             foreach (var batch in batches)
-                completions.Add(batch.GetCompletion());
+                completions.Add(batch.GetCompletion(deltinScript));
 
             return completions.ToArray();
         }
@@ -493,36 +484,6 @@ namespace Deltin.Deltinteger.Parse
         private bool WasScopedAtPosition(IScopeable element, DocPos pos, Scope getter)
         {
             return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.Start <= pos) && (getter == null || getter.AccessorMatches(element));
-        }
-
-        private bool TryGetGroupByName(string name, out MethodGroup group)
-        {
-            foreach (var g in _methodGroups)
-                if (g.Name == name)
-                {
-                    group = g;
-                    return true;
-                }
-            group = null;
-            return false;
-        }
-
-        public static Scope GetGlobalScope()
-        {
-            Scope globalScope = new Scope();
-
-            // Add workshop methods
-            foreach (var workshopMethod in ElementList.Elements)
-                if (!workshopMethod.Hidden)
-                    globalScope.AddNativeMethod(workshopMethod);
-
-            // Add custom methods
-            foreach (var builtInMethod in CustomMethods.CustomMethodData.GetCustomMethods())
-                if (builtInMethod.Global)
-                    globalScope.AddNativeMethod(builtInMethod);
-
-            globalScope.AddNativeMethod(new Lambda.WaitAsyncFunction());
-            return globalScope;
         }
 
         public bool ScopeContains(IScopeable element)
@@ -554,7 +515,7 @@ namespace Deltin.Deltinteger.Parse
             bool found = false;
             IterateParents(scope =>
             {
-                found = scope.TryGetGroupByName(function.Name, out var group) && group.Functions.Contains(function);
+                found = scope._functions.Contains(function);
                 return found;
             });
             return found;
@@ -611,12 +572,12 @@ namespace Deltin.Deltinteger.Parse
 
         public void Add() => Overloads++;
 
-        public CompletionItem GetCompletion() => new CompletionItem()
+        public CompletionItem GetCompletion(DeltinScript deltinScript) => new CompletionItem()
         {
             Label = Name,
             Kind = CompletionItemKind.Function,
             Documentation = Primary.Documentation,
-            Detail = IMethod.GetLabel(Primary, true)
+            Detail = IMethod.DefaultLabel(deltinScript, LabelInfo.SignatureOverload, Primary).ToString(false)
             // Fancy label (similiar to what c# does)
             // Documentation = new MarkupBuilder()
             //     .StartCodeLine()

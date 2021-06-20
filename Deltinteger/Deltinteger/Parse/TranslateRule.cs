@@ -68,26 +68,26 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (var condition in ruleAction.Conditions)
             {
-                var conditionParse = condition.Parse(ActionSet);
+                var conditionParse = condition.Expression.Parse(ActionSet);
 
                 Element value1;
-                EnumMember compareOperator;
+                Operator compareOperator;
                 Element value2;
 
-                if (conditionParse is V_Compare)
+                if (conditionParse is Element asElement && asElement.Function.Name == "Compare")
                 {
-                    value1 = (Element)((Element)conditionParse).ParameterValues[0];
-                    compareOperator = (EnumMember)((Element)conditionParse).ParameterValues[1];
-                    value2 = (Element)((Element)conditionParse).ParameterValues[2];
+                    value1 = (Element)asElement.ParameterValues[0];
+                    compareOperator = ((OperatorElement)asElement.ParameterValues[1]).Operator;
+                    value2 = (Element)asElement.ParameterValues[2];
                 }
                 else
                 {
                     value1 = (Element)conditionParse;
-                    compareOperator = EnumData.GetEnumValue(Operators.Equal);
-                    value2 = new V_True();
+                    compareOperator = Operator.Equal;
+                    value2 = Element.True();
                 }
 
-                Conditions.Add(new Condition(value1, compareOperator, value2));
+                Conditions.Add(new Condition(value1, compareOperator, value2) { Comment = condition.Comment?.GetContents() });
             }
         }
 
@@ -140,9 +140,8 @@ namespace Deltin.Deltinteger.Parse
         public VarIndexAssigner IndexAssigner { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
         public IWorkshopTree CurrentObject { get; private set; }
-        public IndexReference CurrentObjectRelatedIndex { get; private set; }
+        public SourceIndexReference CurrentObjectRelatedIndex { get; private set; }
         public IWorkshopTree This { get; private set; }
-        public int IndentCount { get; private set; }
         public bool IsRecursive { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
@@ -177,7 +176,6 @@ namespace Deltin.Deltinteger.Parse
             CurrentObject = other.CurrentObject;
             CurrentObjectRelatedIndex = other.CurrentObjectRelatedIndex;
             This = other.This;
-            IndentCount = other.IndentCount;
             IsRecursive = other.IsRecursive;
         }
         private ActionSet Clone()
@@ -194,38 +192,26 @@ namespace Deltin.Deltinteger.Parse
             ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler))
         };
         public ActionSet New(IWorkshopTree currentObject) => new ActionSet(this) { CurrentObject = currentObject };
-        public ActionSet New(IndexReference relatedIndex) => new ActionSet(this) { CurrentObjectRelatedIndex = relatedIndex };
+        public ActionSet New(IndexReference relatedIndex, Element target = null) => new ActionSet(this) { CurrentObjectRelatedIndex = new SourceIndexReference(relatedIndex, target) };
         public ActionSet New(bool isRecursive) => new ActionSet(this) { IsRecursive = isRecursive };
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
-        public ActionSet Indent()
-        {
-            var newActionSet = Clone();
-            newActionSet.IndentCount++;
-            return newActionSet;
-        }
 
-        public void AddAction(IWorkshopTree action)
-        {
-            if (action is Element element) element.Indent = IndentCount;
-            ActionList.Add(new ALAction(action));
-        }
-        public void AddAction(IWorkshopTree[] actions)
+
+        public void AddAction(string comment, params IWorkshopTree[] actions)
         {
             foreach (var action in actions)
             {
-                if (action is Element element) element.Indent = IndentCount;
+                if (action is Element element && comment != null)
+                {
+                    element.Comment = comment;
+                    comment = null;
+                }
                 ActionList.Add(new ALAction(action));
             }
         }
-        public void AddAction(IActionList action)
-        {
-            ActionList.Add(action);
-        }
-        public void AddAction(IActionList[] actions)
-        {
-            ActionList.AddRange(actions);
-        }
+        public void AddAction(params IWorkshopTree[] actions) => AddAction(null, actions);
+        public void AddAction(params IActionList[] actions) => ActionList.AddRange(actions);
 
         public ActionSet InitialSet()
         {
@@ -326,11 +312,10 @@ namespace Deltin.Deltinteger.Parse
             else skipCount = GetSkipCount(EndMarker);
 
             Element newAction;
-            if (Condition == null) newAction = Element.Part<A_Skip>(skipCount);
-            else newAction = Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), skipCount);
+            if (Condition == null) newAction = Element.Part("Skip", skipCount);
+            else newAction = Element.Part("Skip If", Element.Not(Condition), skipCount);
 
             newAction.Comment = Comment;
-
             return newAction;
         }
 
@@ -348,7 +333,7 @@ namespace Deltin.Deltinteger.Parse
             EndMarker = endMarker;
         }
 
-        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => StartMarker.NumberOfActionsToMarker(EndMarker).ToString();
+        public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(StartMarker.NumberOfActionsToMarker(EndMarker).ToString());
 
         public bool EqualTo(IWorkshopTree other) => false;
     }
@@ -358,5 +343,17 @@ namespace Deltin.Deltinteger.Parse
         public bool IsAction { get; } = false;
         public Element GetAction() => throw new NotImplementedException();
         public bool ShouldRemove() => false;
+    }
+
+    public struct SourceIndexReference
+    {
+        public IndexReference Reference { get; }
+        public Element Target { get; }
+
+        public SourceIndexReference(IndexReference reference, Element target)
+        {
+            Reference = reference;
+            Target = target;
+        }
     }
 }

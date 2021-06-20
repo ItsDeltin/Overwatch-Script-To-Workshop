@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Parse
     public class MacroVar : IVariable, IExpression, ICallable, IApplyBlock
     {
         public string Name { get; }
+        public MarkupBuilder Documentation { get; }
         public AccessLevel AccessLevel { get; set; }
 
         public bool Virtual { get; set; }
@@ -26,6 +27,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IExpression Expression { get; private set; }
         public CodeType CodeType { get; private set; }
+        ICodeTypeSolver IScopeable.CodeType => CodeType;
 
         private readonly IParseExpression _expressionToParse;
         private readonly Scope _scope;
@@ -34,6 +36,7 @@ namespace Deltin.Deltinteger.Parse
         private bool _wasApplied = false;
 
         public CallInfo CallInfo { get; }
+
         private readonly RecursiveCallHandler _recursiveCallHandler;
 
         public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext, CodeType returnType)
@@ -59,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
 
             _scope.AddMacro(this, parseInfo.Script.Diagnostics, nameRange, !Override);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
-            parseInfo.Script.AddHover(nameRange, GetLabel(true));
+            parseInfo.Script.AddHover(nameRange, ((IVariable)this).GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Variable, DefinedAt.range));
 
             if (Override)
@@ -110,23 +113,10 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.Script.AddHover(callRange, GetLabel(true));
+            parseInfo.Script.AddHover(callRange, ((IVariable)this).GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
             parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
             OnBlockApply(new MacroVarRestrictedCallHandler(this, parseInfo.RestrictedCallHandler, parseInfo.GetLocation(callRange)));
-        }
-
-        public CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = Name,
-            Kind = CompletionItemKind.Property
-        };
-
-        public string GetLabel(bool markdown)
-        {
-            string name = (CodeType?.GetName() ?? "define") + " " + Name;
-            if (markdown) return HoverHandler.Sectioned(name, null);
-            else return name;
         }
 
         public MacroVar[] AllMacroOverrideOptions()

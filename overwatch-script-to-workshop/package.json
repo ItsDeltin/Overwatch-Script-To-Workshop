@@ -2,7 +2,7 @@
     "name": "overwatch-script-to-workshop",
     "displayName": "Overwatch Script To Workshop",
     "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-    "version": "3.0.1",
+    "version": "3.1.4",
     "publisher": "Deltin",
     "engines": {
         "vscode": "^1.47.0"
@@ -201,7 +201,7 @@
             },
             {
                 "command": "ostw.createPathmap",
-                "title": "Create pathmap from CSV clipboard",
+                "title": "Create pathmap from action-set clipboard",
                 "category": "Overwatch Script To Workshop"
             },
             {
@@ -242,11 +242,29 @@
                     "*.lobby.json",
                     "*.lobby"
                 ],
-                "url": "./LobbySettingValidation.json"
+                "url": "./json-schemas/LobbySettingValidation.json"
+            },
+            {
+                "fileMatch": "Elements.json",
+                "url": "./json-schemas/ElementValidation.json"
             }
         ],
-        "debuggers": [
-            {
+        "debuggers": [{
+            "type": "ostw",
+            "label": "Overwatch Script To Workshop",
+            "languages": [
+                "ostw"
+            ],
+            "configurationSnippets": [{
+                "label": "Overwatch Script To Workshop: Debug Current File",
+                "name": "Overwatch Script To Workshop Configuration",
+                "description": "A new configuration for debugging an OSTW script.",
+                "body": {
+                    "type": "ostw",
+                    "program": "${workspaceFolder}/${file}"
+                }
+            }],
+            "initialConfigurations": [{
                 "type": "ostw",
                 "label": "Overwatch Script To Workshop",
                 "languages": [
@@ -285,8 +303,8 @@
                         }
                     }
                 }
-            }
-        ]
+            }]
+        }]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && webpack --mode production",

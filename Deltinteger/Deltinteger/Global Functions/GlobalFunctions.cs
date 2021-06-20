@@ -9,11 +9,34 @@ namespace Deltin.Deltinteger.GlobalFunctions
             var functions = GetFunctions(deltinScript);
             foreach (var function in functions)
                 scope.AddNativeMethod(function);
+            scope.AddNativeMethod(new Parse.Lambda.WaitAsyncFunction(deltinScript.Types));
         }
 
         public static IMethod[] GetFunctions(DeltinScript deltinScript) => new IMethod[] {
-            WorkshopSettingHero(deltinScript),
-            WorkshopSettingCombo(deltinScript)
+            AngleFromVectors(deltinScript),
+            ChaseVariableAtRate(deltinScript),
+            ChaseVariableOverTime(deltinScript),
+            ClassMemory(deltinScript),
+            ClassMemoryRemaining(deltinScript),
+            ClassMemoryUsed(deltinScript),
+            CompareMap(deltinScript),
+            CustomColor(deltinScript),
+            Destination(deltinScript),
+            DestroyDummyBot(deltinScript),
+            DoesLineIntersectSphere(deltinScript),
+            InsertValueInArray(deltinScript),
+            LinearInterpolate(deltinScript),
+            LinearInterpolateDistance(deltinScript),
+            LinePlaneIntersection(deltinScript),
+            Midpoint(deltinScript),
+            MinWait(),
+            ModifyVariable(deltinScript),
+            Pi(deltinScript),
+            RemoveFromArrayAtIndex(deltinScript),
+            SphereHitboxRaycast(deltinScript),
+            StopChasingVariable(deltinScript),
+            WorkshopSettingCombo(deltinScript),
+            WorkshopSettingHero(deltinScript)
         };
     }
 }

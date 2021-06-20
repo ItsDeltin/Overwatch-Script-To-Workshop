@@ -28,15 +28,9 @@ namespace Deltin.Deltinteger.Models
         public Vertex(double x, double y) : this(x, y, 0, 0) { }
         public Vertex() : this(0, 0, 0, 0) { }
 
-        public static Vertex operator +(Vertex left, Vertex right) => new Vertex(left.X + right.X, left.Y + right.Y, left.Z + right.Z);
-        public static Vertex operator -(Vertex left, Vertex right) => new Vertex(left.X - right.X, left.Y - right.Y, left.Z - right.Z);
-        public static Vertex operator *(Vertex left, Vertex right) => new Vertex(left.X * right.X, left.Y * right.Y, left.Z * right.Z);
-        public static Vertex operator /(Vertex left, Vertex right) => new Vertex(left.X / right.X, left.Y / right.Y, left.Z / right.Z);
-        public static Vertex operator /(Vertex left, double right) => new Vertex(left.X / right, left.Y / right, left.Z / right);
-
-        public V_Vector ToVector()
+        public Element ToVector()
         {
-            return Element.Part<V_Vector>(new V_Number(X), new V_Number(Y), new V_Number(Z));
+            return Element.Vector(X, Y, Z);
         }
 
         public Vertex Rotate(double pitch, double roll, double yaw)

@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.Lobby
         public HeroesRoot Heroes { get; set; }
         public string Description { get; set; }
         public WorkshopValuePair Workshop { get; set; }
+        public WorkshopValuePair Extensions { get; set; }
 
         public void ToWorkshop(WorkshopBuilder builder)
         {
@@ -50,7 +51,7 @@ namespace Deltin.Deltinteger.Lobby
                     .AppendLine("{")
                     .Indent()
                     .AppendKeyword("Description").Append(": \"" + Description + "\"").AppendLine()
-                    .Unindent()
+                    .Outdent()
                     .AppendLine("}");
             }
 
@@ -61,7 +62,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Lobby.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
 
@@ -78,11 +79,26 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Workshop.ToWorkshopCustom(builder);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
 
-            builder.Unindent();
+            // Get extensions.
+            if (Extensions != null)
+            {
+                builder.AppendKeywordLine("extensions");
+                builder.AppendLine("{");
+                builder.Indent();
+
+                foreach (var ext in Extensions)
+                    if ((bool)ext.Value)
+                        builder.AppendKeywordLine(ext.Key);
+
+                builder.Outdent();
+                builder.AppendLine("}");
+            }
+
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -137,6 +153,9 @@ namespace Deltin.Deltinteger.Lobby
 
             // Add 'Workshop' property.
             root.Properties.Add("Workshop", GetCustomSettingsSchema(generate));
+
+            // Add 'Extensions' property.
+            root.Properties.Add("Extensions", ExtensionInfo.GetSchema());
 
             // Get the result.
             string result = JsonConvert.SerializeObject(root, new JsonSerializerSettings()
@@ -267,7 +286,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (string map in maps)
                 builder.AppendLine(builder.Translate(map).RemoveStructuralChars());
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -277,7 +296,7 @@ namespace Deltin.Deltinteger.Lobby
 
             // Check for invalid properties.
             foreach (JProperty setting in jobject.Properties())
-                if (!new string[] { "Lobby", "Modes", "Heroes", "Description", "Workshop" }.Contains(setting.Name))
+                if (!new string[] { "Lobby", "Modes", "Heroes", "Description", "Workshop", "Extensions" }.Contains(setting.Name))
                     validation.InvalidSetting(setting.Name);
 
             // Check lobby settings.
@@ -295,6 +314,19 @@ namespace Deltin.Deltinteger.Lobby
             // Check description.
             if (jobject.TryGetValue("Description", out JToken description) && description.Type != JTokenType.String)
                 validation.IncorrectType("Description", "string");
+            
+            // Check extensions.
+            if (jobject.TryGetValue("Extensions", out JToken extensionsToken)
+                // Make sure the extension group's value is an object.
+                && validation.TryGetObject("Extensions", extensionsToken, out var extensions))
+                // Check each extension.
+                foreach (var prop in extensions)
+                    // The extension name does not exist.
+                    if (!ExtensionInfo.Extensions.Any(e => e.Name == prop.Key))
+                        validation.Error($"The extension '{prop.Key}' does not exist.");
+                    // The extension value is not a boolean.
+                    else if (prop.Value.Type != JTokenType.Boolean)
+                        validation.Error($"The value of the extension '{prop.Key}' must be a boolean.");
 
             validation.Dump(diagnostics, range);
             return !validation.HasErrors();
@@ -351,7 +383,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 General.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
             if (Team1 != null)
@@ -360,7 +392,7 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Team1.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
             if (Team2 != null)
@@ -369,11 +401,11 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendLine("{");
                 builder.Indent();
                 Team2.ToWorkshop(builder, allSettings);
-                builder.Unindent();
+                builder.Outdent();
                 builder.AppendLine("}");
             }
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
         }
 
@@ -440,7 +472,7 @@ namespace Deltin.Deltinteger.Lobby
                         builder.AppendLine("{");
                         builder.Indent();
                         WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
-                        builder.Unindent();
+                        builder.Outdent();
                         builder.AppendLine("}");
                     }
                     else WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
@@ -528,19 +560,20 @@ namespace Deltin.Deltinteger.Lobby
 
         public SettingValidation() { }
 
-        public void Error(string error)
+        public void Error(string error) => _errors.Add(error);
+        public void InvalidSetting(string propertyName) => _errors.Add($"The setting '{propertyName}' is not valid.");
+        public void IncorrectType(string propertyName, string expectedType) => _errors.Add($"The setting '{propertyName}' requires a value of type " + expectedType + ".");
+        public bool TryGetObject(string propertyName, JToken token, out JObject obj)
         {
-            _errors.Add(error);
-        }
+            if (token is JObject tokenAsObject)
+            {
+                obj = tokenAsObject;
+                return true;
+            }
 
-        public void InvalidSetting(string propertyName)
-        {
-            _errors.Add($"The setting '{propertyName}' is not valid.");
-        }
-
-        public void IncorrectType(string propertyName, string expectedType)
-        {
-            _errors.Add($"The setting '{propertyName}' requires a value of type " + expectedType + ".");
+            Error($"The setting '{propertyName}' must be an object.");
+            obj = null;
+            return false;
         }
 
         public bool HasErrors() => _errors.Count > 0;

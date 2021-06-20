@@ -67,4 +67,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public string Message() => "No " + (_left ? "left" : "right") + "-hand ternary operator";
     }
+
+    class InterpolationMissingTerminator : IParserError
+    {
+        public DocRange Range { get; }
+
+        public InterpolationMissingTerminator(DocRange range)
+        {
+            Range = range;
+        }
+
+        public string Message() => "Missing close delimiter '}' for interpolated expression started with '{'.";
+    }
 }

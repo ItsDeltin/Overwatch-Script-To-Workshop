@@ -9,54 +9,43 @@ namespace Deltin.Deltinteger.Parse
 {
     public class SetVariableAction : IStatement
     {
-        private VariableResolve VariableResolve { get; }
-        private Token Operation { get; }
-        private IExpression Value { get; }
-        private string Comment;
+        private readonly VariableResolve _variableResolve;
+        private readonly IExpression _value;
+        private readonly IAssignmentOperation _operation;
+        private string _comment;
 
         public SetVariableAction(ParseInfo parseInfo, Scope scope, Assignment assignmentContext)
         {
+            // Get the variable expression.
             IExpression variableExpression = parseInfo.GetExpression(scope, assignmentContext.VariableExpression);
 
-            // Get the variable being set.
-            VariableResolve = new VariableResolve(new VariableResolveOptions(), variableExpression, assignmentContext.VariableExpression.Range, parseInfo.Script.Diagnostics);
+            // Extract the variable data.
+            _variableResolve = new VariableResolve(new VariableResolveOptions() { ShouldBeSettable = true }, variableExpression, assignmentContext.VariableExpression.Range, parseInfo.Script.Diagnostics);
+
+            // Get the value.
+            _value = parseInfo.GetExpression(scope, assignmentContext.Value);
 
             // Get the operation.
-            Operation = assignmentContext.AssignmentToken;
+            Token assignmentToken = assignmentContext.AssignmentToken;
+            CodeType variableType = variableExpression.Type(), valueType = _value.Type();
+            AssignmentOperator op = AssignmentOperation.OperatorFromTokenType(assignmentToken.TokenType);
+            _operation = variableType.Operations.GetOperation(op, valueType);
 
-            Value = parseInfo.GetExpression(scope, assignmentContext.Value);
-        }
-
-        public void Translate(ActionSet actionSet)
-        {
-            VariableElements elements = VariableResolve.ParseElements(actionSet);
-            Element value = (Element)Value.Parse(actionSet);
-
-            Elements.Operation? modifyOperation = null;
-            switch (Operation.Text)
+            // No operators exist for the variable and value pair.
+            if (_operation == null)
             {
-                case "=": break;
-                case "^=": modifyOperation = Elements.Operation.RaiseToPower; break;
-                case "*=": modifyOperation = Elements.Operation.Multiply; break;
-                case "/=": modifyOperation = Elements.Operation.Divide; break;
-                case "%=": modifyOperation = Elements.Operation.Modulo; break;
-                case "+=": modifyOperation = Elements.Operation.Add; break;
-                case "-=": modifyOperation = Elements.Operation.Subtract; break;
-                default: throw new Exception($"Unknown operation {Operation}.");
+                // If the variable type is any, use default operation.
+                if (assignmentToken.TokenType == TokenType.Equal && variableType.Operations.DefaultAssignment && TypeComparison.IsAny(parseInfo.Types, variableType))
+                    _operation = new AssignmentOperation(op, parseInfo.Types.Any());
+                // Otherwise, add an error.
+                else
+                    parseInfo.Script.Diagnostics.Error("Operator '" + assignmentToken.Text + "' cannot be applied to the types '" + variableType.GetNameOrAny() + "' and '" + valueType.GetNameOrAny() + "'.", assignmentToken.Range);
             }
-
-            // Set Variable actions
-            if (modifyOperation == null)
-                actionSet.AddAction(CommentAll(Comment, elements.IndexReference.SetVariable(value, elements.Target, elements.Index)));
-            // Modify Variable actions
-            else
-                actionSet.AddAction(CommentAll(Comment, elements.IndexReference.ModifyVariable((Elements.Operation)modifyOperation, value, elements.Target, elements.Index)));
         }
 
-        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
-        {
-            Comment = comment;
-        }
+        public void Translate(ActionSet actionSet) => _operation.Resolve(new AssignmentOperationInfo(_comment, actionSet, _variableResolve.ParseElements(actionSet), _value.Parse(actionSet)));
+
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => _comment = comment;
 
         public static Element[] CommentAll(string comment, Element[] actions)
         {

@@ -16,19 +16,19 @@ namespace Deltin.Deltinteger.Parse
         private VariableType VariableType { get; }
         private VariableResolveOptions Options { get; }
 
-        public VariableParameter(string name, string documentation, VariableResolveOptions options = null) : base(name, documentation)
+        public VariableParameter(string name, string documentation, ICodeTypeSolver typeSolver, VariableResolveOptions options = null) : base(name, documentation, typeSolver)
         {
             VariableType = VariableType.Dynamic;
             Options = options ?? new VariableResolveOptions();
         }
-        public VariableParameter(string name, string documentation, VariableType variableType, VariableResolveOptions options = null) : base(name, documentation)
+        public VariableParameter(string name, string documentation, VariableType variableType, ICodeTypeSolver typeSolver, VariableResolveOptions options = null) : base(name, documentation, typeSolver)
         {
             if (variableType == VariableType.ElementReference) throw new Exception("Only the variable types Dynamic, Global, and Player is valid.");
             VariableType = variableType;
             Options = options ?? new VariableResolveOptions();
         }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             VariableResolve resolvedVariable = new VariableResolve(Options, value, valueRange, parseInfo.Script.Diagnostics);
 
@@ -53,19 +53,17 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstBoolParameter : CodeParameter
     {
-        private bool DefaultConstValue { get; }
 
-        public ConstBoolParameter(string name, string documentation) : base(name, documentation) { }
-        public ConstBoolParameter(string name, string documentation, bool defaultValue)
-            : base(name, documentation, new ExpressionOrWorkshopValue(defaultValue ? (Element)new V_True() : new V_False()))
+        public ConstBoolParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Boolean()) { }
+        public ConstBoolParameter(string name, string documentation, ITypeSupplier typeSupplier, bool defaultValue)
+            : base(name, documentation, typeSupplier.Boolean(), new ExpressionOrWorkshopValue(defaultValue ? Element.True() : Element.False()))
         {
-            DefaultConstValue = defaultValue;
         }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
-            if (value is ExpressionOrWorkshopValue)
-                return ((ExpressionOrWorkshopValue)value).WorkshopValue is V_True;
+            if (value is ExpressionOrWorkshopValue expressionOrWorkshop && expressionOrWorkshop.WorkshopValue is Element asElement)
+                return asElement.Function.Name == "True";
 
             if (value is BoolAction == false)
             {
@@ -81,13 +79,13 @@ namespace Deltin.Deltinteger.Parse
     {
         private double DefaultConstValue { get; }
 
-        public ConstNumberParameter(string name, string documentation) : base(name, documentation) { }
-        public ConstNumberParameter(string name, string documentation, double defaultValue) : base(name, documentation, new ExpressionOrWorkshopValue(new V_Number(defaultValue)))
+        public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Number()) {}
+        public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier, double defaultValue) : base(name, documentation, typeSupplier.Number(), new ExpressionOrWorkshopValue(Element.Num(defaultValue)))
         {
             DefaultConstValue = defaultValue;
         }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             if (value == null) return DefaultConstValue;
 
@@ -103,9 +101,9 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstStringParameter : CodeParameter
     {
-        public ConstStringParameter(string name, string documentation) : base(name, documentation) { }
+        public ConstStringParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.String()) { }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             StringAction str = value as StringAction;
             if (str == null && valueRange != null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
@@ -117,9 +115,9 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstHeroParameter : CodeParameter
     {
-        public ConstHeroParameter(string name, string documentation) : base(name, documentation) { }
+        public ConstHeroParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Hero()) { }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             // ConstantExpressionResolver.Resolve's callback will be called after this function runs,
             // so we store the value in an object reference whose value will be set later.
@@ -129,9 +127,9 @@ namespace Deltin.Deltinteger.Parse
             ConstantExpressionResolver.Resolve(value, expr =>
             {
                 // If the resulting expression is an EnumValuePair and the EnumValuePair's enum is Hero,
-                if (expr is CallVariableAction call && call.Calling is EnumValuePair pair && pair.Member.Enum.Type == typeof(Hero))
+                if (expr is CallVariableAction call && call.Calling is EnumValuePair pair && pair.Member.Enum.Name == "Hero")
                     // Resolve the value.
-                    promise.Resolve((Hero)pair.Member.Value);
+                    promise.Resolve(pair.Member.Name);
                 // Otherwise, add an error.
                 else if (valueRange != null)
                     parseInfo.Script.Diagnostics.Error("Expected hero constant", valueRange);
@@ -145,8 +143,104 @@ namespace Deltin.Deltinteger.Parse
 
     class ConstHeroValueResolver
     {
-        public Hero Hero { get; private set; }
-        public void Resolve(Hero hero) => Hero = hero;
+        public string Hero { get; private set; }
+        public void Resolve(string hero) => Hero = hero;
+    }
+
+    abstract class ConstArrayParameter<T> : CodeParameter
+    {
+        private readonly string _elementKindName;
+
+        protected ConstArrayParameter(ICodeTypeSolver type, string elementKindName, string name, MarkupBuilder documentation, bool optional = false)
+            : base(name, documentation, type, optional ? new ExpressionOrWorkshopValue() : null)
+        {
+            _elementKindName = elementKindName;
+        }
+
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
+        {
+            var values = new List<T>();
+            ConstantExpressionResolver.Resolve(value, expr =>
+            {
+                // If the resulting expression is a CreateArray,
+                if (expr is CreateArrayAction array)
+                {
+                    var error = new ConstElementErrorHandler(parseInfo.Script.Diagnostics, valueRange, _elementKindName);
+
+                    // Iterate through each element in the array and get the value.
+                    foreach (var value in array.Values)
+                        ConstantExpressionResolver.Resolve(value, expr =>
+                        {
+                            // Make sure the value is a string.
+                            if (TryGetValue(expr, out T value))
+                                values.Add(value);
+                            // Otherwise, add an error.
+                            else
+                                error.AddError();
+                        });
+                }
+                // Otherwise, add an error.
+                else if (valueRange != null)
+                    parseInfo.Script.Diagnostics.Error($"Expected a {_elementKindName} array", valueRange);
+            });
+            return values;
+        }
+
+        protected abstract bool TryGetValue(IExpression expression, out T value);
+
+        class ConstElementErrorHandler
+        {
+            private readonly FileDiagnostics _diagnostics;
+            private readonly DocRange _errorRange;
+            private readonly string _kindName;
+            private bool _addedError;
+
+            public ConstElementErrorHandler(FileDiagnostics diagnostics, DocRange errorRange, string kindName)
+            {
+                _diagnostics = diagnostics;
+                _errorRange = errorRange;
+                _kindName = kindName;
+            }
+
+            public void AddError()
+            {
+                if (_addedError) return;
+                _addedError = true;
+                _diagnostics.Error($"One or more values in the {_kindName} array is not a constant {_kindName} expression", _errorRange);
+            }
+        }
+    }
+
+    class ConstStringArrayParameter : ConstArrayParameter<string>
+    {
+        public ConstStringArrayParameter(string name, string documentation, ITypeSupplier types) : base(types.Array(types.String()), "string", name, documentation) { }
+
+        protected override bool TryGetValue(IExpression expression, out string value)
+        {
+            if (expression is StringAction stringAction)
+            {
+                value = stringAction.Value;
+                return true;
+            }
+            value = null;
+            return false;
+        }
+    }
+
+    class ConstIntegerArrayParameter : ConstArrayParameter<int>
+    {
+        public ConstIntegerArrayParameter(string name, MarkupBuilder documentation, ITypeSupplier types, bool optional = false) : base(types.NumberArray(), "integer", name, documentation, optional) { }
+
+        protected override bool TryGetValue(IExpression expression, out int value)
+        {
+            if (expression is NumberAction numberAction)
+            {
+                value = (int)numberAction.Value;
+                return true;
+            }
+            value = 0;
+            return false;
+        }
     }
 
     class FileParameter : CodeParameter
@@ -159,7 +253,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="parameterName">The name of the parameter.</param>
         /// <param name="description">The parameter's description. Can be null.</param>
         /// <param name="fileTypes">The expected file types. Can be null.</param>
-        public FileParameter(string parameterName, string description, params string[] fileTypes) : base(parameterName, description)
+        public FileParameter(string parameterName, string description, ITypeSupplier typeSupplier, params string[] fileTypes) : base(parameterName, description, typeSupplier.String())
         {
             if (fileTypes != null)
             {
@@ -170,7 +264,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             StringAction str = value as StringAction;
             if (str == null)
@@ -189,7 +283,7 @@ namespace Deltin.Deltinteger.Parse
 
             string dir = Path.GetDirectoryName(resultingPath);
             if (Directory.Exists(dir))
-                Importer.AddImportCompletion(parseInfo.Script, dir, valueRange);
+                Importer.AddImportCompletion(parseInfo.TranslateInfo, parseInfo.Script, dir, valueRange);
 
             if (!File.Exists(resultingPath))
             {

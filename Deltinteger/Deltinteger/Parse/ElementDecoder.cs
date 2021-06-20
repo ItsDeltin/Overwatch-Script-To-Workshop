@@ -22,28 +22,28 @@ namespace Deltin.Deltinteger.Parse
         void Decode(Element element)
         {
             // Global variable
-            if (element is V_GlobalVariable)
+            if (element.Function.Name == "Global Variable")
             {
                 WorkshopVariable = (WorkshopVariable)element.ParameterValues[0];
                 RetrievedVariable = true;
                 IsGlobal = true;
             }
             // Player variable
-            else if (element is V_PlayerVariable)
+            else if (element.Function.Name == "Player Variable")
             {
                 Player = (Element)element.ParameterValues[0];
-                IsEventPlayer = Player is V_EventPlayer;
+                IsEventPlayer = Player.Function.Name == "Event Player";
                 WorkshopVariable = (WorkshopVariable)element.ParameterValues[1];
                 RetrievedVariable = true;
                 IsGlobal = false;
             }
             // Value in array
-            else if (element is V_ValueInArray)
+            else if (element.Function.Name == "Value In Array")
             {
                 Decode((Element)element.ParameterValues[0]);
 
                 // Add to the constant index list.
-                if (element.ParameterValues[1] is V_Number num)
+                if (element.ParameterValues[1] is NumberElement num)
                     ConstantIndex?.Add((int)num.Value);
                 else // Remove constant index list.
                     ConstantIndex = null;

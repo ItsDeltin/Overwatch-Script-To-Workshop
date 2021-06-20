@@ -44,9 +44,6 @@ namespace Deltin.Deltinteger.Parse
             // Get the hook variable's expression.
             IExpression variableExpression = parseInfo.GetExpression(scope, context.Variable);
 
-            // Get the hook value.
-            IExpression valueExpression = parseInfo.GetExpression(scope, context.Value);
-
             // Resolve the variable.
             VariableResolve resolvedVariable = new VariableResolve(new VariableResolveOptions()
             {
@@ -56,12 +53,17 @@ namespace Deltin.Deltinteger.Parse
                 ShouldBeSettable = false
             }, variableExpression, context.Variable.Range, parseInfo.Script.Diagnostics);
 
-            if (valueExpression == null) return;
-
             // Check if the resolved variable is a HookVar.
             if (resolvedVariable.SetVariable?.Calling is HookVar hookVar)
+            {
+                 // Get the hook value.
+                IExpression valueExpression = parseInfo.SetExpectingLambda(hookVar.CodeType).GetExpression(scope, context.Value);
+
+                if (valueExpression == null) return;
+
                 // If it is, set the hook.
                 hookVar.TrySet(parseInfo, valueExpression, context.Value.Range);
+            }
             else
                 // Not a hook variable.
                 parseInfo.Script.Diagnostics.Error("Expected a hook variable.", context.Variable.Range);

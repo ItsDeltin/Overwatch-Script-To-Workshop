@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse.Lambda
@@ -27,6 +28,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         protected PortableLambdaType(string name, LambdaKind lambdaKind, CodeType[] parameters) : base(name)
         {
+            if (parameters.Any(p => p == null))
+                throw new Exception("Element in " + nameof(parameters) + " is null.");
+
             LambdaKind = lambdaKind;
             ParameterTypesKnown = true;
             Parameters = parameters;
@@ -43,7 +47,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public override bool IsConstant() => LambdaKind == LambdaKind.ConstantBlock || LambdaKind == LambdaKind.ConstantMacro || LambdaKind == LambdaKind.ConstantValue;
         public override Scope GetObjectScope() => _scope;
 
-        public override bool Implements(CodeType type)
+        protected override bool DoesImplement(CodeType type)
         {
             var other = type as PortableLambdaType;
             if (other == null || Parameters.Length != other.Parameters.Length) return false;
@@ -94,6 +98,19 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             return result;
         }
+    }
+
+    class UnknownLambdaType : CodeType
+    {
+        public int ArgumentCount { get; }
+
+        public UnknownLambdaType(int argumentCount) : base(null)
+        {
+            ArgumentCount = argumentCount;
+        }
+
+        public override CompletionItem GetCompletion() => throw new NotImplementedException();
+        public override Scope ReturningScope() => throw new NotImplementedException();
     }
 
     public enum LambdaKind
