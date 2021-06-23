@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the type arguments.
                 var typeArgs = GetAndValidateTypeArgs(parseInfo, scope, provider.GenericTypes, typeContext.TypeArgs);
-                var instanceInfo = new GetInstanceInfo(typeArgs);
+                var instanceInfo = new GetInstanceInfo(typeContext.UnparalleledStructMarker ? ParallelStatus.Unparalleled : ParallelStatus.Parallel, typeArgs);
 
                 // Track the type args being used.
                 parseInfo.Script.Elements.AddTypeArgCall(new TypeArgCall(provider, typeArgs));

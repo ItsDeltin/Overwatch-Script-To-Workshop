@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
                 stacks[i].Set(actionSet, value: 0, index: reference);
         }
 
-        public override bool Implements(CodeType type) => !type.IsConstant() && type is StructInstance == false;
+        public override bool Implements(CodeType type) => !type.IsConstant() && type.Attributes.StackLength == 1;
         public override bool Is(CodeType type) => !type.IsConstant();
         public override CompletionItem GetCompletion() => GetTypeCompletion(this);
         public override Scope GetObjectScope() => _deltinScript.PlayerVariableScope;

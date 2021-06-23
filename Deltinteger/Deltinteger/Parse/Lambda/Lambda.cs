@@ -63,45 +63,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public DocRange GetTypeRange() => _parameter.Type?.Range;
     }
 
-    public class ExpectingLambdaInfo
-    {
-        public PortableLambdaType Type { get; }
-        public bool RegisterOccursLater { get; }
-        private readonly List<ILambdaApplier> _apply = new List<ILambdaApplier>();
-
-        public ExpectingLambdaInfo()
-        {
-            RegisterOccursLater = true;
-        }
-
-        public ExpectingLambdaInfo(PortableLambdaType type)
-        {
-            RegisterOccursLater = false;
-            Type = type;
-        }
-
-        public void Apply(ILambdaApplier applier)
-        {
-            if (!RegisterOccursLater)
-                // The arrow registration occurs now, parse the statement.
-                applier.GetLambdaStatement(Type);
-            else
-                // Otherwise, add it to the _apply list so we can apply it later.
-                _apply.Add(applier);
-        }
-
-        public void FinishAppliers(PortableLambdaType type)
-        {
-            foreach (var apply in _apply) apply.GetLambdaStatement(type);
-        }
-
-        public void FinishAppliers()
-        {
-            foreach (var apply in _apply) apply.GetLambdaStatement();
-        }
-    }
-
-    public class CheckLambdaContext
+    public class CheckLambdaContext : IExpectingTypeReady
     {
         public ParseInfo ParseInfo;
         public ILambdaApplier Applier;
@@ -121,7 +83,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public void Check()
         {
             // If no lambda was expected, throw an error since the parameter types can not be determined.
-            if (ParseInfo.ExpectingLambda == null)
+            if (ParseInfo.ExpectingTypeRegistry == null)
             {
                 // Parameter data is known.
                 if (ParameterState == ParameterState.CountAndTypesKnown)
@@ -130,7 +92,16 @@ namespace Deltin.Deltinteger.Parse.Lambda
                     ParseInfo.Script.Diagnostics.Error(ErrorMessage, Range);
             }
             else
-                ParseInfo.ExpectingLambda.Apply(Applier);
+                ParseInfo.ExpectingTypeRegistry.Apply(this);
+        }
+
+        public void NoTypeReady() => Applier.GetLambdaStatement();
+        public void TypeReady(CodeType type)
+        {
+            if (type is PortableLambdaType portableLambdaType)
+                Applier.GetLambdaStatement(portableLambdaType);
+            else
+                NoTypeReady();
         }
     }
 

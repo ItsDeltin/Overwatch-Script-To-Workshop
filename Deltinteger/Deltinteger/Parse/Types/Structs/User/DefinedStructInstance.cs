@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public DefinedStructInitializer Provider { get; }
 
-        public DefinedStructInstance(DefinedStructInitializer provider, InstanceAnonymousTypeLinker genericsLinker) : base(provider, genericsLinker)
+        public DefinedStructInstance(DefinedStructInitializer provider, InstanceAnonymousTypeLinker genericsLinker, ParallelStatus parallelStatus) : base(provider, genericsLinker, parallelStatus)
         {
             Provider = provider;
 

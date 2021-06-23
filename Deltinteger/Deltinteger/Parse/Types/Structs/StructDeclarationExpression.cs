@@ -15,18 +15,19 @@ namespace Deltin.Deltinteger.Parse
         // The variables of the struct declaration. 
         public IVariable[] Variables { get; private set; }
 
-        // The struct type created from the declaration.
-        public StructInstance Type { get; private set; }
-
         // We do not need to worry about these values.
         public AnonymousType[] GenericTypes { get; } = new AnonymousType[0];
         public IMethodProvider[] Methods { get; } = new IMethodProvider[0]; // The methods of the struct declaration. This is currently unused.
         public IVariable[] StaticVariables { get; } = new IVariable[0];
 
+        // The struct type created from the declaration.
+        Lazy<StructInstance> _type;
+
         private readonly ParseInfo _parseInfo;
         private readonly Scope _scope;
         private readonly StructDeclarationContext _context;
         private readonly bool _isExplicit;
+        bool _isParallel = false;
 
         public StructDeclarationExpression(ParseInfo parseInfo, Scope scope, StructDeclarationContext context)
         {
@@ -34,6 +35,7 @@ namespace Deltin.Deltinteger.Parse
             _scope = scope;
             _context = context;
             _isExplicit = context.Values.Any(v => v.Type != null);
+            parseInfo.ExpectingTypeRegistry?.Apply(new ContextWatcher(this));
             GetValue();
         }
 
@@ -90,15 +92,19 @@ namespace Deltin.Deltinteger.Parse
                 ));
             }
 
-            Type = new StructInstance(this, InstanceAnonymousTypeLinker.Empty);
+            _type = new Lazy<StructInstance>(() => new StructInstance(this, InstanceAnonymousTypeLinker.Empty, _isParallel ? ParallelStatus.Parallel : ParallelStatus.Unparalleled));
         }
 
         // Struct as workshop value. 
-        public IWorkshopTree Parse(ActionSet actionSet) => new StructAssigner(Type, new StructAssigningAttributes(), false).GetValues(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            var structValue = new StructAssigner(_type.Value, new StructAssigningAttributes()).GetValues(actionSet);
+            return _isParallel ? structValue : Elements.Element.CreateArray(structValue.GetAllValues());
+        }
 
-        CodeType IExpression.Type() => Type;
+        CodeType IExpression.Type() => _type.Value;
 
-        public StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new StructInstance(this, typeLinker);
+        public StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker, ParallelStatus parallelStatus) => new StructInstance(this, typeLinker, parallelStatus);
 
         void IStructProvider.DependMeta() {}
         void IStructProvider.DependContent() {}
@@ -146,6 +152,15 @@ namespace Deltin.Deltinteger.Parse
                 if (_variableNames.Contains(identifier.Name))
                     parseInfo.Script.Diagnostics.Error("Struct cannot have multiple properties with the same name", range);
             }
+        }
+
+        class ContextWatcher : IExpectingTypeReady
+        {
+            readonly StructDeclarationExpression _expression;
+            public ContextWatcher(StructDeclarationExpression expression) => _expression = expression;
+            public void NoTypeReady() => _expression._isParallel = true;
+            public void TypeReady(CodeType type) =>
+                _expression._isParallel = (type is StructInstance structInstance && structInstance.ParallelStatus == ParallelStatus.Parallel);
         }
     }
 }

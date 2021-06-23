@@ -218,7 +218,18 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type()
         {
-            if (Consequent.Type() == Alternative.Type()) return Consequent.Type();
+            var consequentType = Consequent.Type();
+            var alternativeType = Alternative.Type();
+
+            // If the types are the same, the ternary type is that type.
+            if (consequentType.Is(alternativeType))
+                return consequentType;
+            
+            // Otherwise, if the types are compatible, create a union with those types.
+            if (consequentType.CompatibleWith(alternativeType))
+                return new PipeType(consequentType, alternativeType);
+
+            // Otherwise, the type is Any.
             return parseInfo.Types.Any();
         }
         public IWorkshopTree Parse(ActionSet actionSet) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));

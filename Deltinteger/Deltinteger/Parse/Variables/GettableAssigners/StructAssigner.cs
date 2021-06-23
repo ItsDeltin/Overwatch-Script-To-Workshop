@@ -9,13 +9,11 @@ namespace Deltin.Deltinteger.Parse
     {
         readonly IVariableInstance[] _variables;
         readonly StructAssigningAttributes _attributes;
-        readonly bool _isArray;
 
-        public StructAssigner(StructInstance structInstance, StructAssigningAttributes attributes, bool isArray)
+        public StructAssigner(StructInstance structInstance, StructAssigningAttributes attributes)
         {
             _variables = structInstance.Variables;
             _attributes = attributes;
-            _isArray = isArray;
         }
 
         public GettableAssignerResult GetResult(GettableAssignerValueInfo info)
@@ -108,12 +106,9 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class StructAssignerValue : IGettable, IAssignedStructDictionary
+    class StructAssignerValue : IGettable, IStructValue
     {
         private readonly Dictionary<string, IGettable> _children;
-        IGettable[] IAssignedStructDictionary.ChildGettables => _children.Select(c => c.Value).ToArray();
-        IWorkshopTree IInlineStructDictionary.this[string variableName] => _children[variableName].GetVariable();
-        IGettable IAssignedStructDictionary.this[string variableName] => _children[variableName];
         IWorkshopTree IStructValue.GetValue(string variableName) => _children[variableName].GetVariable();
         IGettable IStructValue.GetGettable(string variableName) => _children[variableName];
 
@@ -218,24 +213,10 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    /// <summary>The interface for variable-linked struct values. 'this[variableName]' will get the struct variable's value.</summary>
-    public interface IInlineStructDictionary : IStructValue
-    {
-        IWorkshopTree this[string variableName] { get; }
-    }
-
-    /// <summary>A struct value that has assigned indices.</summary>
-    public interface IAssignedStructDictionary : IInlineStructDictionary
-    {
-        IGettable[] ChildGettables { get; }
-        new IGettable this[string variableName] { get; }
-    }
-
     /// <summary>Struct variables linked to workshop values.</summary>
-    public class LinkedStructAssigner : IInlineStructDictionary
+    public class LinkedStructAssigner : IStructValue
     {
         public Dictionary<string, IWorkshopTree> Values { get; }
-        public IWorkshopTree this[string variableName] => Values[variableName];
         public IWorkshopTree GetValue(string variableName) => Values[variableName];
         public IWorkshopTree GetArbritraryValue() => Values.First().Value;
         public IWorkshopTree[] GetAllValues() => IStructValue.ExtractAllValues(Values.Select(v => v.Value));
@@ -346,7 +327,7 @@ namespace Deltin.Deltinteger.Parse
             var value = _structValue.GetValue(variableName);
 
             // Check if we need to do a value-in-array subsection.
-            if (value is IInlineStructDictionary subvalue)
+            if (value is IStructValue subvalue)
                 return new ValueInStructArray(subvalue, _index);
 
             // Otherwise, get the value in the array normally.
@@ -380,7 +361,7 @@ namespace Deltin.Deltinteger.Parse
             var newPath = _path.Append(variableName);
 
             // Check if we need to do a subsection.
-            if (value is IInlineStructDictionary subvalue)
+            if (value is IStructValue subvalue)
                 return new BridgeGetStructValue(subvalue, _bridge, newPath);
 
             return _bridge(new BridgeArgs(value, newPath));
@@ -445,7 +426,7 @@ namespace Deltin.Deltinteger.Parse
             var value = StructArray.GetValue(variableName);
 
             // Check if we need to do a subsection.
-            if (value is IInlineStructDictionary subvalue)
+            if (value is IStructValue subvalue)
                 return new IndexedStructArray(subvalue, IndexedArray, _operationModifiesLength);
             
             return value;

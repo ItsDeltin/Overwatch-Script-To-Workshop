@@ -9,6 +9,8 @@ namespace Deltin.Deltinteger.Parse
 {
     public class StructInstance : CodeType, ITypeArrayHandler, IScopeAppender
     {
+        public ParallelStatus ParallelStatus { get;  }
+
         public IVariableInstance[] Variables { get {
             SetupMeta();
             return _variables;   
@@ -23,8 +25,9 @@ namespace Deltin.Deltinteger.Parse
         bool _instanceReady;
         bool _contentReady;
 
-        public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker typeLinker) : base(provider.Name)
+        public StructInstance(IStructProvider provider, InstanceAnonymousTypeLinker typeLinker, ParallelStatus parallelStatus) : base(provider.Name)
         {
+            ParallelStatus = parallelStatus;
             ObjectScope = new Scope("struct " + Name);
             StaticScope = new Scope("struct " + Name);
 
@@ -62,7 +65,11 @@ namespace Deltin.Deltinteger.Parse
         protected virtual void Content()
         {
             _contentReady = true;
-            Attributes.StackLength = _variables.Select(v => v.GetAssigner(new GetVariablesAssigner(_typeLinker)).StackDelta()).Sum();
+            
+            if (ParallelStatus == ParallelStatus.Unparalleled)
+                Attributes.StackLength = 1;
+            else
+                Attributes.StackLength = _variables.Select(v => v.GetAssigner(new GetVariablesAssigner(_typeLinker)).StackDelta()).Sum();
         }
 
         public override bool Is(CodeType other)
@@ -85,7 +92,7 @@ namespace Deltin.Deltinteger.Parse
 
             foreach(var utype in type.UnionTypes())
             {
-                if (!(utype is StructInstance other && other.Variables.Length == Variables.Length))
+                if (!(utype is StructInstance other && other.Variables.Length == Variables.Length && other.ParallelStatus == ParallelStatus))
                     continue;
                 
                 bool structVariablesMatch = true;
@@ -127,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
                     newLinker.Add(_provider.GenericTypes[i], Generics[i]);
             }
 
-            return _provider.GetInstance(newLinker);
+            return _provider.GetInstance(newLinker, ParallelStatus);
         }
 
         public override Scope GetObjectScope()
@@ -174,16 +181,28 @@ namespace Deltin.Deltinteger.Parse
             if (!_contentReady) Content();
         }
 
-        public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), false);
+        public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
+        {
+            if (ParallelStatus == ParallelStatus.Unparalleled)
+                return base.GetGettableAssigner(attributes);
+            return new StructAssigner(this, new StructAssigningAttributes(attributes));
+        }
 
-        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), true);
+        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes) => GetGettableAssigner(attributes);
         void ITypeArrayHandler.OverrideArray(ArrayType array) {}
-        ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler() => new StructArrayFunctionHandler();
+        ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler()
+        {
+            if (ParallelStatus == ParallelStatus.Unparalleled)
+                return new ArrayFunctionHandler();
+            return new StructArrayFunctionHandler();
+        }
 
         void IScopeAppender.AddObjectBasedScope(IMethod function) => ObjectScope.AddNativeMethod(function);
         void IScopeAppender.AddStaticBasedScope(IMethod function) => StaticScope.AddNativeMethod(function);
         void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => ObjectScope.AddNativeVariable(variable);
         void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => StaticScope.AddNativeVariable(variable);
+
+        public override string GetName(GetTypeName settings) => (ParallelStatus == ParallelStatus.Parallel ? String.Empty : "*") + base.GetName(settings);
 
         // Overrides default array function implementation to support structs, since the default won't work with parallel variables.
         class StructArrayFunctionHandler : ArrayFunctionHandler
@@ -344,7 +363,9 @@ namespace Deltin.Deltinteger.Parse
             readonly StructInstance _structInstance;
             int _stackLength = -1;
             
-            public StructAttributes(StructInstance structInstance) : base(true, structInstance.Generics.Any(g => g.Attributes.ContainsGenerics)) =>
+            public StructAttributes(StructInstance structInstance) : base(
+                isStruct: structInstance.ParallelStatus == ParallelStatus.Parallel,
+                containsGenerics: structInstance.Generics.Any(g => g.Attributes.ContainsGenerics)) =>
                 _structInstance = structInstance;
             
             public override int StackLength {

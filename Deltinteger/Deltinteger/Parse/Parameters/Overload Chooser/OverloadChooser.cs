@@ -110,8 +110,8 @@ namespace Deltin.Deltinteger.Parse.Overload
                 }
 
                 // Set expression and expressionRange.
-                parameter.LambdaInfo = new ExpectingLambdaInfo();
-                parameter.Value = _parseInfo.SetLambdaInfo(parameter.LambdaInfo).GetExpression(_getter, context[i].Expression);
+                parameter.LambdaInfo = new ExpectTypeInfo();
+                parameter.Value = _parseInfo.SetExpectTypeRegistry(parameter.LambdaInfo).GetExpression(_getter, context[i].Expression);
                 parameter.ExpressionRange = context[i].Expression.Range;
             }
 
@@ -249,14 +249,9 @@ namespace Deltin.Deltinteger.Parse.Overload
             // Apply the lambdas and method group parameters.
             // Iterate through each parameter.
             for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
-            {
-                // If the CodeParameter type is a lambda type, get the lambda statement with it.
-                if (bestOption.Option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo) is PortableLambdaType portableLambda)
-                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers((PortableLambdaType)portableLambda.GetRealType(bestOption.TypeArgLinker));
-                // Otherwise, get the lambda statement with the default.
-                else
-                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers();
-            }
+                bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers(
+                    bestOption.Option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo).GetRealType(bestOption.TypeArgLinker)
+                );
 
             // Type-arg inference will need a second pass after we apply the lambdas,
             // since lambda types are not known until we apply them.
@@ -382,7 +377,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         /// <summary>When the parameter expressions are parsed, the parameter types are unknown. Lambda and method groups will behave
         /// differently depending on the parameter type, so some components will not be parsed until the parameter type is known.
         /// Use this to apply the lambda/method group data when the overload is chosen.</summary>
-        public ExpectingLambdaInfo LambdaInfo { get; set; }
+        public ExpectTypeInfo LambdaInfo { get; set; }
         /// <summary>The resolved variable for 'ref' parameters.</summary>
         public VariableResolve RefVariable { get; set; }
 

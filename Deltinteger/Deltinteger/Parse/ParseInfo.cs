@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         public IBreakContainer BreakHandler { get; private set; }
         public IContinueContainer ContinueHandler { get; private set; }
         public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
-        public ExpectingLambdaInfo ExpectingLambda { get; private set; }
+        public ExpectTypeInfo ExpectingTypeRegistry { get; private set; }
         public ITreeContextPart SourceExpression { get; private set; }
         public UsageResolver CurrentUsageResolver { get; private set; }
         public UsageResolver SourceUsageResolver { get; private set; }
@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
             BreakHandler = other.BreakHandler;
             ContinueHandler = other.ContinueHandler;
             RestrictedCallHandler = other.RestrictedCallHandler;
-            ExpectingLambda = other.ExpectingLambda;
+            ExpectingTypeRegistry = other.ExpectingTypeRegistry;
             SourceExpression = other.SourceExpression;
             CurrentUsageResolver = other.CurrentUsageResolver;
             SourceUsageResolver = other.SourceUsageResolver;
@@ -80,15 +80,14 @@ namespace Deltin.Deltinteger.Parse
 
             return new ParseInfo(this) { LocalVariableTracker = variableTrackerArray };
         }
-        public ParseInfo SetExpectingLambda(CodeType sourceType) => new ParseInfo(this) { ExpectingLambda = sourceType is PortableLambdaType portable ? new ExpectingLambdaInfo(portable) : null };
-        public ParseInfo SetLambdaInfo(ExpectingLambdaInfo lambdaInfo) => new ParseInfo(this) { ExpectingLambda = lambdaInfo };
         public ParseInfo SetInvokeInfo(ResolveInvokeInfo invokeInfo) => new ParseInfo(this) { ResolveInvokeInfo = invokeInfo };
         public ParseInfo SetAsyncInfo(AsyncInfo asyncInfo) => new ParseInfo(this) { AsyncInfo = asyncInfo };
         public ParseInfo SetUsageResolver(UsageResolver currentUsageResolver, UsageResolver sourceUsageResolver) => new ParseInfo(this) {
             CurrentUsageResolver = currentUsageResolver,
             SourceUsageResolver = sourceUsageResolver
         };
-        public ParseInfo SetExpectType(CodeType type) => new ParseInfo(this) { ExpectingType = type }.SetExpectingLambda(type);
+        public ParseInfo SetExpectType(CodeType type) => new ParseInfo(this) { ExpectingType = type, ExpectingTypeRegistry = new ExpectTypeInfo(type) };
+        public ParseInfo SetExpectTypeRegistry(ExpectTypeInfo expectTypeInfo) => new ParseInfo(this) { ExpectingTypeRegistry = expectTypeInfo };
         public ParseInfo SetReturnType(CodeType type) => new ParseInfo(this) { ReturnType = type };
         public ParseInfo SetThisType(IDefinedTypeInitializer typeInitializer) => new ParseInfo(this) { TypeInitializer = typeInitializer };
         public ParseInfo SetContextualModifierGroup(VariableModifierGroup modifierGroup) => new ParseInfo(this) { ContextualVariableModifiers = modifierGroup };

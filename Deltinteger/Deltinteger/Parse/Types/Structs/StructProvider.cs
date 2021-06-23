@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
         IVariable[] StaticVariables { get; }
         IMethodProvider[] Methods { get; }
         AnonymousType[] GenericTypes { get; }
-        StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker);
+        StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker, ParallelStatus parallelStatus);
         void DependMeta();
         void DependContent();
     }
@@ -39,11 +39,11 @@ namespace Deltin.Deltinteger.Parse
         public CompletionItem GetCompletion() => new CompletionItem() { Label = Name };
 
         public abstract StructInstance GetInstance();
-        public abstract StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker);
+        public abstract StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker, ParallelStatus parallelStatus);
         public abstract void DependMeta();
         public abstract void DependContent();
 
         CodeType ICodeTypeInitializer.GetInstance() => GetInstance();
-        CodeType ICodeTypeInitializer.GetInstance(GetInstanceInfo instanceInfo) => GetInstance(new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));
+        CodeType ICodeTypeInitializer.GetInstance(GetInstanceInfo instanceInfo) => GetInstance(new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics), instanceInfo.ParallelStatus);
     }
 }

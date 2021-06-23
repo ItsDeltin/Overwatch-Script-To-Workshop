@@ -34,10 +34,17 @@ namespace Deltin.Deltinteger.Parse
     public class GetInstanceInfo
     {
         public CodeType[] Generics { get; }
+        public ParallelStatus ParallelStatus { get; }
 
         public GetInstanceInfo(params CodeType[] generics)
         {
             Generics = generics;
+        }
+
+        public GetInstanceInfo(ParallelStatus parallelStatus, params CodeType[] generics)
+        {
+            Generics = generics;
+            ParallelStatus = parallelStatus;
         }
 
         public static implicit operator GetInstanceInfo(InstanceAnonymousTypeLinker linker) => new GetInstanceInfo(linker.Links.Keys.ToArray());
