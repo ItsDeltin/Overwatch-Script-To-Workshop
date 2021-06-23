@@ -218,10 +218,63 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type()
         {
-            if (Consequent.Type() == Alternative.Type()) return Consequent.Type();
+            var consequentType = Consequent.Type();
+            var alternativeType = Alternative.Type();
+
+            // If the types are the same, the ternary type is that type.
+            if (consequentType.Is(alternativeType))
+                return consequentType;
+            
+            // Otherwise, if the types are compatible, create a union with those types.
+            if (consequentType.CompatibleWith(alternativeType))
+                return new PipeType(consequentType, alternativeType);
+
+            // Otherwise, the type is Any.
             return parseInfo.Types.Any();
         }
-        public IWorkshopTree Parse(ActionSet actionSet) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            var condition = Condition.Parse(actionSet);
+            var consequent = Consequent.Parse(actionSet);
+            var alternative = Alternative.Parse(actionSet);
+
+            if (consequent is IStructValue consequentStruct)
+                return new TernaryConditionalStruct(condition, consequentStruct, (IStructValue)alternative);
+
+            return Element.TernaryConditional(condition, consequent, alternative);
+        }
+
+        class TernaryConditionalStruct : IStructValue
+        {
+            readonly IWorkshopTree _condition;
+            readonly IStructValue _consequent;
+            readonly IStructValue _alternative;
+
+            public TernaryConditionalStruct(IWorkshopTree condition, IStructValue consequent, IStructValue alternative)
+            {
+                _condition = condition;
+                _consequent = consequent;
+                _alternative = alternative;
+            }
+
+            public IWorkshopTree GetValue(string variableName)
+            {
+                // Get the consequent and alternative.
+                var consequent = _consequent.GetValue(variableName);
+                var alternative = _alternative.GetValue(variableName);
+
+                // Check if we need to do a ternary subsection.
+                if (consequent is IInlineStructDictionary consequentStruct)
+                    return new TernaryConditionalStruct(_condition, consequentStruct, (IStructValue)alternative);
+
+                // Otherwise, create the ternary normally.
+                return Element.TernaryConditional(_condition, consequent, alternative);
+            }
+
+            public IWorkshopTree[] GetAllValues() => _consequent.GetAllValues();
+            public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
+            public IWorkshopTree GetArbritraryValue() => _consequent;
+        }
     }
 
     public class RootAction : IExpression
