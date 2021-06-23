@@ -157,12 +157,20 @@ namespace Deltin.Deltinteger.Parse
                 return AccessLevel.Public;
         }
 
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference reference, VarIndexAssigner assigner)
         {
-            var structValue = (IStructValue)reference;
+            if (ParallelStatus == ParallelStatus.Parallel)
+            {
+                var structValue = (IStructValue)reference.Value;
 
-            foreach (var variable in Variables)
-                assigner.Add(variable.Provider, structValue.GetGettable(variable.Name));
+                foreach (var variable in Variables)
+                    assigner.Add(variable.Provider, structValue.GetGettable(variable.Name));
+            }
+            else
+            {
+                for (int i = 0; i < Variables.Length; i++)
+                    assigner.Add(Variables[i].Provider, reference.Reference.ChildFromClassReference(Element.Num(i)));
+            }
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)

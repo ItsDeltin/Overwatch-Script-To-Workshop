@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
         public override CodeType[] UnionTypes() => IncludedTypes;
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference reference, VarIndexAssigner assigner)
         {
             foreach (CodeType included in IncludedTypes)
                 included.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);

@@ -94,7 +94,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.ToWorkshop.ClassInitializer.ObjectVariableFromIndex(i).Set(actionSet, value: 0, index: reference);
         }
 
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference reference, VarIndexAssigner assigner)
         {
             ThrowIfNotReady();
             Extends?.AddObjectVariablesToAssigner(toWorkshop, reference, assigner);
@@ -102,7 +102,7 @@ namespace Deltin.Deltinteger.Parse
             // Add instance variables to the assigner.
             var classInitializer = toWorkshop.ClassInitializer;
             var combo = classInitializer.ComboFromClassType(this);
-            combo.AddVariableInstancesToAssigner(Variables, reference, assigner);
+            combo.AddVariableInstancesToAssigner(Variables, reference.Value, assigner);
         }
 
         void ThrowIfNotReady()

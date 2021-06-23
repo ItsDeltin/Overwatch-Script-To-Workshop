@@ -188,7 +188,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler))
         };
         public ActionSet New(IWorkshopTree currentObject) => new ActionSet(this) { CurrentObject = currentObject };
-        public ActionSet New(IGettable relatedIndex, Element target = null) => new ActionSet(this) { CurrentObjectRelatedIndex = new SourceIndexReference(relatedIndex, target) };
+        public ActionSet New(SourceIndexReference source) => new ActionSet(this) { CurrentObjectRelatedIndex = source };
         public ActionSet New(bool isRecursive) => new ActionSet(this) { IsRecursive = isRecursive };
         public ActionSet ContainVariableAssigner() => new ActionSet(this) { IndexAssigner = IndexAssigner.CreateContained() };
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
@@ -371,11 +371,34 @@ namespace Deltin.Deltinteger.Parse
     {
         public IGettable Reference { get; }
         public Element Target { get; }
+        public IWorkshopTree Value { get; }
 
-        public SourceIndexReference(IGettable reference, Element target)
+        public SourceIndexReference(IGettable reference, Element target, IWorkshopTree value)
         {
-            Reference = reference;
+            Reference = reference ?? throw new ArgumentNullException(nameof(reference));
             Target = target;
+            Value = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
+        public SourceIndexReference(IWorkshopTree value)
+        {
+            Reference = new WorkshopElementReference(value);
+            Target = null;
+            Value = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
+        public SourceIndexReference(IGettable reference)
+        {
+            Reference = reference ?? throw new ArgumentNullException(nameof(reference));
+            Target = null;
+            Value = reference.GetVariable();
+        }
+
+        public SourceIndexReference(IGettable reference, IWorkshopTree value)
+        {
+            Reference = reference ?? throw new ArgumentNullException(nameof(reference));
+            Target = null;
+            Value = value ?? throw new ArgumentNullException(nameof(reference));
         }
     }
 

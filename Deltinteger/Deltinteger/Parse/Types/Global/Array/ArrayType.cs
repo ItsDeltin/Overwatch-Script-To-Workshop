@@ -241,12 +241,12 @@ namespace Deltin.Deltinteger.Parse
             return new DataTypeAssigner(attributes);
         }
 
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference reference, VarIndexAssigner assigner)
         {
             var functionHandler = ArrayOfType.ArrayHandler.GetFunctionHandler();
-            assigner.Add(_length, functionHandler.Length(reference));
-            assigner.Add(_first, functionHandler.FirstOf(reference));
-            assigner.Add(_last, functionHandler.LastOf(reference));
+            assigner.Add(_length, functionHandler.Length(reference.Value));
+            assigner.Add(_first, functionHandler.FirstOf(reference.Value));
+            assigner.Add(_last, functionHandler.LastOf(reference.Value));
         }
 
         public override AnonymousType[] ExtractAnonymousTypes() => ArrayOfType.ExtractAnonymousTypes();
