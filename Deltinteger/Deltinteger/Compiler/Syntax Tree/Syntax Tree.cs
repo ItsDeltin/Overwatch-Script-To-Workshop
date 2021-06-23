@@ -63,6 +63,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         int ArrayCount { get; }
         bool IsDefault { get; }
         bool Infer { get; }
+        Token UnparalleledStructMarker { get; }
     }
 
     public class ParseType : Node, IParseType, ITypeContextHandler
@@ -70,13 +71,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Identifier { get; }
         public List<IParseType> TypeArgs { get; }
         public int ArrayCount { get; }
+        public Token UnparalleledStructMarker { get; }
         public bool IsVoid { get; }
 
-        public ParseType(Token identifier, List<IParseType> typeArgs, int arrayCount)
+        public ParseType(Token unparalleledStructMarker, Token identifier, List<IParseType> typeArgs, int arrayCount)
         {
             Identifier = identifier;
             TypeArgs = typeArgs;
             ArrayCount = arrayCount;
+            UnparalleledStructMarker = unparalleledStructMarker;
             IsVoid = false;
         }
 
@@ -517,6 +520,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         int ITypeContextHandler.ArrayCount => 0;
         bool ITypeContextHandler.IsDefault => false;
         bool ITypeContextHandler.Infer => false;
+        Token ITypeContextHandler.UnparalleledStructMarker => null;
 
         public Identifier(Token token, List<ArrayIndex> index, List<IParseType> generics)
         {

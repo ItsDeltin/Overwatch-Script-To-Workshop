@@ -1109,6 +1109,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // No parentheses found.
                 // This is either a normal type or a lambda with a single parameter.
 
+                // Unparalleled struct marker. (*)
+                var unparalleledStructMarker = ParseOptional(TokenType.Multiply);
+
                 // Get the type name.
                 var identifier = ParseExpected(TokenType.Identifier, TokenType.Define);
                 var typeArgs = new List<IParseType>();
@@ -1125,7 +1128,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Get the array indices
                 int arrayCount = ParseTypeArray();
                 
-                IParseType result = EndNodeWithoutPopping(new ParseType(identifier, typeArgs, arrayCount));
+                IParseType result = EndNodeWithoutPopping(new ParseType(unparalleledStructMarker, identifier, typeArgs, arrayCount));
 
                 // Get pipe
                 while (ParseOptional(TokenType.Pipe))
@@ -1148,7 +1151,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     return EndNode(new LambdaType(result, const_, returnType, arrow));
                 }
             }
-            else // This is a lambda with parenthesized parameters.
+            else // This is a lambda with parenthesized parameters or a grouped type.
             {
                 // Get the parameter types.
                 var parameterTypes = ParseDelimitedList(TokenType.Parentheses_Close, () => Kind.IsStartOfType(), () => ParseType());

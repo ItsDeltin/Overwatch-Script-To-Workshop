@@ -335,6 +335,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Define:
                 case TokenType.Void:
                 case TokenType.Const:
+                case TokenType.Multiply:
                     return true;
 
                 default:
