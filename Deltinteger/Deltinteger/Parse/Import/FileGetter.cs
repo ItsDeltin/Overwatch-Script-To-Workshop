@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.LanguageServer.Settings;
 using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse

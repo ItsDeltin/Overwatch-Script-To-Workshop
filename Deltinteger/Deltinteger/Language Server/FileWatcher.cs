@@ -8,6 +8,7 @@ using IDidChangeWatchedFilesHandler = OmniSharp.Extensions.LanguageServer.Protoc
 using DidChangeWatchedFilesParams = OmniSharp.Extensions.LanguageServer.Protocol.Models.DidChangeWatchedFilesParams;
 using DidChangeWatchedFilesCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.DidChangeWatchedFilesCapability;
 using DidChangeWatchedFilesRegistrationOptions = OmniSharp.Extensions.LanguageServer.Protocol.Models.DidChangeWatchedFilesRegistrationOptions;
+using ClientCapabilities = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities;
 using FileSystemWatcherContainer = OmniSharp.Extensions.LanguageServer.Protocol.Models.Container<OmniSharp.Extensions.LanguageServer.Protocol.Models.FileSystemWatcher>;
 using WatchKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.WatchKind;
 using FileChangeType = OmniSharp.Extensions.LanguageServer.Protocol.Models.FileChangeType;
@@ -73,7 +74,9 @@ namespace Deltin.Deltinteger.LanguageServer
             _patternHandlers = patternHandlers;
         }
 
-        public DidChangeWatchedFilesRegistrationOptions GetRegistrationOptions() => new DidChangeWatchedFilesRegistrationOptions() {
+        public DidChangeWatchedFilesRegistrationOptions GetRegistrationOptions(
+            DidChangeWatchedFilesCapability watchedFilesChangedCopability, ClientCapabilities clientCapability
+        ) => new DidChangeWatchedFilesRegistrationOptions() {
             Watchers = new FileSystemWatcherContainer(_systemWatchers)
         };
 

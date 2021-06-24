@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Compiler
 
         public void UpdateIfChanged(string newContent, ParserSettings parserSettings)
         {
-            if (newContent == Content && parserSettings.Equals(ParserSettings)) return;
+            if (newContent == null || (newContent == Content && parserSettings.Equals(ParserSettings))) return;
             Update(newContent, parserSettings);
         }
 

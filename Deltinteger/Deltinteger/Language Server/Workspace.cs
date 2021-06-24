@@ -8,13 +8,14 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class ServerWorkspace
     {
-        public List<WorkspaceFolder> WorkspaceFolders { get; } = new List<WorkspaceFolder>();
+        public IEnumerable<WorkspaceFolder> WorkspaceFolders => _workspaceFolders;
+        public List<WorkspaceFolder> _workspaceFolders { get; } = new List<WorkspaceFolder>();
 
         public void SetWorkspaceFolders(WorkspaceFolderContainer container)
         {
             if (container != null)
                 foreach (var folder in container)
-                    WorkspaceFolders.Add(folder);
+                    _workspaceFolders.Add(folder);
         }
 
         public WorkspaceFolder GetFileWorkspaceFolder(Uri uri)

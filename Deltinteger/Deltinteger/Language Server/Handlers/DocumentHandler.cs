@@ -1,17 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Compiler.Parse;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.LanguageServer.Settings;
 using OmniSharp.Extensions.LanguageServer.Protocol;
-using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
@@ -30,6 +25,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public List<Document> Documents { get; } = new List<Document>();
         private readonly DeltintegerLanguageServer _languageServer;
         private readonly ParserSettingsResolver _parserSettingsResolver;
+        private readonly ProjectSettingsWatcher _projectSettings;
         private SynchronizationCapability _compatibility;
         private TaskCompletionSource<Unit> _scriptReady = new TaskCompletionSource<Unit>();
 
@@ -37,6 +33,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             _languageServer = builder.Server;
             _parserSettingsResolver = builder.ParserSettingsResolver;
+            _projectSettings = builder.ProjectSettings;
             SetupUpdateListener();
         }
 
@@ -191,7 +188,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter)
                 {
                     OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
-                    OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput
+                    OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput,
+                    Settings = _projectSettings.GetProjectSettings(item.Uri)
                 });
                 _languageServer.LastParse = deltinScript;
 

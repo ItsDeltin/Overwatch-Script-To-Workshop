@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Deltin.Deltinteger.Compiler;
-using IParserSettingsResolver = Deltin.Deltinteger.LanguageServer.IParserSettingsResolver;
+using IParserSettingsResolver = Deltin.Deltinteger.LanguageServer.Settings.IParserSettingsResolver;
 
 namespace Deltin.Deltinteger.Parse
 {

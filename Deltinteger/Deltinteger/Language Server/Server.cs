@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
-using System.Text;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Pathfinder;
 using Deltin.Deltinteger.Debugger;
@@ -14,10 +11,8 @@ using Serilog;
 using TextCopy;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Server;
-using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -106,7 +101,8 @@ namespace Deltin.Deltinteger.LanguageServer
             ));
 
             Workspace.SetWorkspaceFolders(Server.ClientSettings.WorkspaceFolders);
-            builder.ParserSettingsResolver.GetModuleFiles();
+            builder.ProjectSettings.GetInitialFiles();
+            builder.ParserSettingsResolver.GetInitialFiles();
             
             Server.SendNotification(Version, Program.VERSION);            
             await Server.WaitForExit;
