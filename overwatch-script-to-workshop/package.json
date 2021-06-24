@@ -1,325 +1,348 @@
 {
-    "name": "overwatch-script-to-workshop",
-    "displayName": "Overwatch Script To Workshop",
-    "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-    "version": "3.0.2",
-    "publisher": "Deltin",
-    "engines": {
-        "vscode": "^1.47.0"
-    },
-    "categories": [
-        "Programming Languages",
-        "Debuggers"
-    ],
-    "activationEvents": [
-        "onLanguage:ostw",
-        "onLanguage:ow_ostw",
-        "workspaceContains:**/customGameSettings.json",
-        "workspaceContains:**/*.pathmap",
-        "onCommand:ostw.downloadLatestRelease",
-        "onCommand:ostw.locateServerInstallation",
-        "onCommand:ostw.decompile.clipboard"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/ItsDeltin/Overwatch-Script-To-Workshop.git"
-    },
-    "bugs": {
-        "email": "grittydeltin@gmail.com",
-        "url": "https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/issues"
-    },
-    "main": "./dist/extensions.js",
-    "icon": "icon.png",
-    "contributes": {
-        "languages": [
-            {
-                "id": "ostw",
-                "aliases": [
-                    "Overwatch Script To Workshop",
-                    "ostw"
-                ],
-                "extensions": [
-                    ".del",
-                    ".ostw",
-                    ".workshop"
-                ],
-                "configuration": "./language-configuration.json"
-            },
-            {
-                "id": "ow_ostw",
-                "aliases": [
-                    "Overwatch Output",
-                    "ow"
-                ],
-                "extensions": [
-                    ".ow",
-                    ".overwatch"
-                ],
-                "configuration": "./language-configuration.json"
-            },
-            {
-                "id": "json",
-                "extensions": [
-                    ".lobby"
-                ]
-            }
+  "name": "overwatch-script-to-workshop",
+  "displayName": "Overwatch Script To Workshop",
+  "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
+  "version": "3.1.4",
+  "publisher": "Deltin",
+  "engines": {
+    "vscode": "^1.47.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers"
+  ],
+  "activationEvents": [
+    "onLanguage:ostw",
+    "onLanguage:ow_ostw",
+    "workspaceContains:**/customGameSettings.json",
+    "workspaceContains:**/*.pathmap",
+    "onCommand:ostw.downloadLatestRelease",
+    "onCommand:ostw.locateServerInstallation",
+    "onCommand:ostw.decompile.clipboard"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ItsDeltin/Overwatch-Script-To-Workshop.git"
+  },
+  "bugs": {
+    "email": "grittydeltin@gmail.com",
+    "url": "https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/issues"
+  },
+  "main": "./dist/extensions.js",
+  "icon": "icon.png",
+  "contributes": {
+    "languages": [
+      {
+        "id": "ostw",
+        "aliases": [
+          "Overwatch Script To Workshop",
+          "ostw"
         ],
-        "grammars": [
-            {
-                "language": "ostw",
-                "scopeName": "source.del",
-                "path": "./syntaxes/ostw.tmLanguage.json"
-            },
-            {
-                "language": "ow_ostw",
-                "scopeName": "ow_source.del",
-                "path": "./syntaxes/ow.tmLanguage.json"
-            }
+        "extensions": [
+          ".del",
+          ".ostw",
+          ".workshop"
         ],
-        "configuration": {
-            "type": "object",
-            "title": "ostw",
-            "properties": {
-                "ostw.outputLanguage": {
-                    "scope": "window",
-                    "type": "string",
-                    "enum": [
-                        "English",
-                        "German",
-                        "Spanish (Castilian)",
-                        "Spanish (Mexico)",
-                        "French",
-                        "Italian",
-                        "Japanese",
-                        "Korean",
-                        "Polish",
-                        "Portuguese",
-                        "Russian",
-                        "Chinese (S)",
-                        "Chinese (T)"
-                    ],
-                    "default": "English",
-                    "description": "The output language of the OSTW output."
-                },
-                "ostw.optimizeOutput": {
-                    "scope": "window",
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Determines if the workshop output will be optimized."
-                },
-                "ostw.deltintegerPath": {
-                    "scope": "machine",
-                    "type": "string",
-                    "description": "The command to run to start the OSTW server."
-                },
-                "ostw.deltintegerShell": {
-                    "scope": "machine",
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Whether to use the operating system shell to start the deltinteger process."
-                },
-                "ostw.newRelease": {
-                    "scope": "machine",
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Determines if the new release notification is shown."
-                },
-                "ostw.ignoreRelease": {
-                    "scope": "machine",
-                    "type": "string",
-                    "description": "Ignores a release tag."
-                },
-                "ostw.semanticHighlighting": {
-                    "scope": "resource",
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Determines if OSTW will use semantic highlighting."
-                },
-                "ostw.codelens.references": {
-                    "scope": "window",
-                    "type": "boolean",
-                    "description": "Determines if the references code lens is shown.",
-                    "default": true
-                },
-                "ostw.codelens.implements": {
-                    "scope": "window",
-                    "type": "boolean",
-                    "description": "Determines if the implements code lens is shown.",
-                    "default": true
-                },
-                "ostw.codelens.elementCount": {
-                    "scope": "window",
-                    "type": "boolean",
-                    "description": "Determines if the element count code lens is shown.",
-                    "default": true
-                },
-                "ostw.trace.server": {
-                    "scope": "window",
-                    "type": "string",
-                    "enum": [
-                        "off",
-                        "messages",
-                        "verbose"
-                    ],
-                    "default": "off",
-                    "description": "Traces the communication between VS Code and the language server."
-                },
-                "ostw.dev.deltintegerWatchBuild": {
-                    "scope": "machine",
-                    "type": "string",
-                    "description": "Restarts the language server when the provided file changes.",
-                    "default": null
-                },
-                "ostw.dev.waitForDebugger": {
-                    "scope": "machine",
-                    "type": "boolean",
-                    "description": "Will not start the language server until a debugger is attached.",
-                    "default": false
-                }
-            }
-        },
-        "commands": [
-            {
-                "command": "ostw.downloadLatestRelease",
-                "title": "Download the latest OSTW release",
-                "category": "Overwatch Script To Workshop"
-            },
-            {
-                "command": "ostw.locateServerInstallation",
-                "title": "Locate the server installation",
-                "category": "Overwatch Script To Workshop"
-            },
-            {
-                "command": "ostw.virtualDocumentOutput",
-                "title": "Create a panel for workshop code output",
-                "category": "Overwatch Script To Workshop"
-            },
-            {
-                "command": "ostw.showReferences",
-                "title": "Show References",
-                "category": "Overwatch Script To Workshop"
-            },
-            {
-                "command": "ostw.createPathmap",
-                "title": "Create pathmap from CSV clipboard",
-                "category": "Overwatch Script To Workshop"
-            },
-            {
-                "command": "ostw.pathmapEditorCode",
-                "title": "Copy pathmap editor code",
-                "category": "Overwatch Script To Workshop"
-            },
-            {
-                "command": "ostw.copyWorkshopCode",
-                "title": "Copy the workshop output to the clipboard",
-                "category": "Overwatch Script To Workshop"
-            },
-            {
-                "command": "ostw.decompile.clipboard",
-                "title": "Decompile from clipboard to file",
-                "category": "Overwatch Script To Workshop"
-            },
-            {
-                "command": "ostw.restartLanguageServer",
-                "title": "Restart OSTW Language Server",
-                "category": "Overwatch Script To Workshop"
-            }
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "ow_ostw",
+        "aliases": [
+          "Overwatch Output",
+          "ow"
         ],
-        "keybindings": [
-            {
-                "command": "ostw.copyWorkshopCode",
-                "key": "Ctrl+Alt+C"
-            },
-            {
-                "command": "ostw.decompile.insert",
-                "key": "Ctrl+K Ctrl+V"
-            }
+        "extensions": [
+          ".ow",
+          ".overwatch"
         ],
-        "jsonValidation": [
-            {
-                "fileMatch": [
-                    "customGameSettings.json",
-                    "*.lobby.json",
-                    "*.lobby"
-                ],
-                "url": "./json-schemas/LobbySettingValidation.json"
-            },
-            {
-                "fileMatch": "module.json",
-                "url": "./json-schemas/ConfigValidation.json"
-            }
-        ],
-        "debuggers": [
-            {
-                "type": "ostw",
-                "label": "Overwatch Script To Workshop",
-                "languages": [
-                    "ostw"
-                ],
-                "configurationSnippets": [
-                    {
-                        "label": "Overwatch Script To Workshop: Debug Current File",
-                        "name": "Overwatch Script To Workshop Configuration",
-                        "description": "A new configuration for debugging an OSTW script.",
-                        "body": {
-                            "type": "ostw",
-                            "program": "${workspaceFolder}/${file}"
-                        }
-                    }
-                ],
-                "initialConfigurations": [
-                    {
-                        "type": "ostw",
-                        "name": "OSTW",
-                        "program": "${workspaceFolder}/${file}",
-                        "request": "launch"
-                    }
-                ],
-                "configurationAttributes": {
-                    "launch": {
-                        "required": [
-                            "program"
-                        ],
-                        "properties": {
-                            "program": {
-                                "type": "string",
-                                "description": "The script to debug.",
-                                "default": "${workspaceFolder}/${file}"
-                            }
-                        }
-                    }
-                }
-            }
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "json",
+        "extensions": [
+          ".lobby"
         ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ostw",
+        "scopeName": "source.del",
+        "path": "./syntaxes/ostw.tmLanguage.json"
+      },
+      {
+        "language": "ow_ostw",
+        "scopeName": "ow_source.del",
+        "path": "./syntaxes/ow.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "ostw",
+      "properties": {
+        "ostw.outputLanguage": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "English",
+            "German",
+            "Spanish (Castilian)",
+            "Spanish (Mexico)",
+            "French",
+            "Italian",
+            "Japanese",
+            "Korean",
+            "Polish",
+            "Portuguese",
+            "Russian",
+            "Chinese (S)",
+            "Chinese (T)"
+          ],
+          "default": "English",
+          "description": "The output language of the OSTW output."
+        },
+        "ostw.optimizeOutput": {
+          "scope": "window",
+          "type": "boolean",
+          "default": true,
+          "description": "Determines if the workshop output will be optimized."
+        },
+        "ostw.deltintegerPath": {
+          "scope": "machine",
+          "type": "string",
+          "description": "The command to run to start the OSTW server."
+        },
+        "ostw.deltintegerShell": {
+          "scope": "machine",
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to use the operating system shell to start the deltinteger process."
+        },
+        "ostw.newRelease": {
+          "scope": "machine",
+          "type": "boolean",
+          "default": true,
+          "description": "Determines if the new release notification is shown."
+        },
+        "ostw.ignoreRelease": {
+          "scope": "machine",
+          "type": "string",
+          "description": "Ignores a release tag."
+        },
+        "ostw.semanticHighlighting": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Determines if OSTW will use semantic highlighting."
+        },
+        "ostw.codelens.references": {
+          "scope": "window",
+          "type": "boolean",
+          "description": "Determines if the references code lens is shown.",
+          "default": true
+        },
+        "ostw.codelens.implements": {
+          "scope": "window",
+          "type": "boolean",
+          "description": "Determines if the implements code lens is shown.",
+          "default": true
+        },
+        "ostw.codelens.elementCount": {
+          "scope": "window",
+          "type": "boolean",
+          "description": "Determines if the element count code lens is shown.",
+          "default": true
+        },
+        "ostw.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        },
+        "ostw.dev.deltintegerWatchBuild": {
+          "scope": "machine",
+          "type": "string",
+          "description": "Restarts the language server when the provided file changes.",
+          "default": null
+        },
+        "ostw.dev.waitForDebugger": {
+          "scope": "machine",
+          "type": "boolean",
+          "description": "Will not start the language server until a debugger is attached.",
+          "default": false
+        }
+      }
     },
-    "scripts": {
-        "vscode:prepublish": "npm run compile && webpack --mode production",
-        "compile": "node ./build-grammar/out/build-grammar.js && tsc -b && webpack --mode development",
-        "watch": "tsc -b -w",
-        "test": "sh ./scripts/e2e.sh",
-        "webpack": "webpack --mode development",
-        "webpack-dev": "webpack --mode development --watch",
-        "compile-grammar-builder": "tsc -b ./build-grammar"
-    },
-    "devDependencies": {
-        "@types/mocha": "^5.2.0",
-        "@types/node": "^8.10.61",
-        "@types/vscode": "^1.47.0",
-        "js-yaml": "^3.14.0",
-        "ts-loader": "^6.2.2",
-        "tslint": "^5.20.1",
-        "typescript": "^3.9.6",
-        "webpack": "^4.43.0",
-        "webpack-cli": "^3.3.12"
-    },
-    "dependencies": {
-        "async": "^3.2.0",
-        "axios": "^0.19.2",
-        "chokidar": "^3.4.3",
-        "glob": "^7.1.6",
-        "vscode-debugadapter": "^1.41.1",
-        "vscode-debugprotocol": "^1.41.0",
-        "vscode-languageclient": "^6.1.3",
-        "yauzl": "^2.10.0"
-    }
+    "commands": [
+      {
+        "command": "ostw.downloadLatestRelease",
+        "title": "Download the latest OSTW release",
+        "category": "Overwatch Script To Workshop"
+      },
+      {
+        "command": "ostw.locateServerInstallation",
+        "title": "Locate the server installation",
+        "category": "Overwatch Script To Workshop"
+      },
+      {
+        "command": "ostw.virtualDocumentOutput",
+        "title": "Create a panel for workshop code output",
+        "category": "Overwatch Script To Workshop"
+      },
+      {
+        "command": "ostw.showReferences",
+        "title": "Show References",
+        "category": "Overwatch Script To Workshop"
+      },
+      {
+        "command": "ostw.createPathmap",
+        "title": "Create pathmap from action-set clipboard",
+        "category": "Overwatch Script To Workshop"
+      },
+      {
+        "command": "ostw.pathmapEditorCode",
+        "title": "Copy pathmap editor code",
+        "category": "Overwatch Script To Workshop"
+      },
+      {
+        "command": "ostw.copyWorkshopCode",
+        "title": "Copy the workshop output to the clipboard",
+        "category": "Overwatch Script To Workshop"
+      },
+      {
+        "command": "ostw.decompile.clipboard",
+        "title": "Decompile from clipboard to file",
+        "category": "Overwatch Script To Workshop"
+      },
+      {
+        "command": "ostw.restartLanguageServer",
+        "title": "Restart OSTW Language Server",
+        "category": "Overwatch Script To Workshop"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "ostw.copyWorkshopCode",
+        "key": "Ctrl+Alt+C"
+      },
+      {
+        "command": "ostw.decompile.insert",
+        "key": "Ctrl+K Ctrl+V"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": [
+          "customGameSettings.json",
+          "*.lobby.json",
+          "*.lobby"
+        ],
+        "url": "./json-schemas/LobbySettingValidation.json"
+      },
+      {
+        "fileMatch": "Elements.json",
+        "url": "./json-schemas/ElementValidation.json"
+      },
+      {
+          "fileMatch": "module.json",
+          "url": "./json-schemas/ConfigValidation.json"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "ostw",
+        "label": "Overwatch Script To Workshop",
+        "languages": [
+          "ostw"
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Overwatch Script To Workshop: Debug Current File",
+            "name": "Overwatch Script To Workshop Configuration",
+            "description": "A new configuration for debugging an OSTW script.",
+            "body": {
+              "type": "ostw",
+              "program": "${workspaceFolder}/${file}"
+            }
+          }
+        ],
+        "initialConfigurations": [
+          {
+            "type": "ostw",
+            "label": "Overwatch Script To Workshop",
+            "languages": [
+              "ostw"
+            ],
+            "configurationSnippets": [
+              {
+                "label": "Overwatch Script To Workshop: Debug Current File",
+                "name": "Overwatch Script To Workshop Configuration",
+                "description": "A new configuration for debugging an OSTW script.",
+                "body": {
+                  "type": "ostw",
+                  "program": "${workspaceFolder}/${file}"
+                }
+              }
+            ],
+            "initialConfigurations": [
+              {
+                "type": "ostw",
+                "name": "OSTW",
+                "program": "${workspaceFolder}/${file}",
+                "request": "launch"
+              }
+            ],
+            "configurationAttributes": {
+              "launch": {
+                "required": [
+                  "program"
+                ],
+                "properties": {
+                  "program": {
+                    "type": "string",
+                    "description": "The script to debug.",
+                    "default": "${workspaceFolder}/${file}"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile && webpack --mode production",
+    "compile": "npm run compile-grammar-builder && tsc -b && webpack --mode development",
+    "watch": "tsc -b -w",
+    "webpack": "webpack --mode development",
+    "webpack-dev": "webpack --mode development --watch",
+    "compile-grammar-builder": "tsc -b ./tmlanguage-generator && node ./tmlanguage-generator/dist/ostw/ostw-grammar.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^5.2.0",
+    "@types/node": "^8.10.66",
+    "@types/vscode": "^1.47.0",
+    "js-yaml": "^3.14.0",
+    "ts-loader": "^6.2.2",
+    "tslint": "^5.20.1",
+    "typescript": "^3.9.6",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
+  },
+  "dependencies": {
+    "async": "^3.2.0",
+    "axios": "^0.19.2",
+    "chokidar": "^3.4.3",
+    "glob": "^7.1.6",
+    "vscode-debugadapter": "^1.41.1",
+    "vscode-debugprotocol": "^1.41.0",
+    "vscode-languageclient": "^6.1.3",
+    "yauzl": "^2.10.0"
+  }
 }

@@ -13,13 +13,6 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class Pathmap
     {
-        // nodesOut and segmentsOut must equal the ID override in Modules/PathfindEditor.del:
-        // line 312: define globalvar nodesOut    [3];
-        // line 313: define globalvar segmentsOut [4];
-        private const int nodesOut = 0;
-        private const int segmentsOut = 1;
-        private const int attributesOut = 2;
-
         public static Pathmap ImportFromActionSetFile(string file, IPathmapErrorHandler errorHandler) => ImportFromActionSet(File.ReadAllText(file).Trim(), errorHandler);
         public static Pathmap ImportFromActionSet(string text, IPathmapErrorHandler errorHandler)
         {
@@ -87,12 +80,12 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private static Vertex[] ExtractVertexArray(string variableName, IPathmapErrorHandler errorHandler, ITTEExpression expression)
         {
-            if (expression is FunctionExpression arrayFunction && arrayFunction.Function.WorkshopName == "Array")
+            if (expression is FunctionExpression arrayFunction && arrayFunction.Function.Name == "Array")
             {
                 Vertex[] vertices = new Vertex[arrayFunction.Values.Length];
                 // Loop through each value.
                 for (int i = 0; i < arrayFunction.Values.Length; i++)
-                    if (arrayFunction.Values[i] is FunctionExpression vectorFunction && vectorFunction.Function.WorkshopName == "Vector")
+                    if (arrayFunction.Values[i] is FunctionExpression vectorFunction && vectorFunction.Function.Name == "Vector")
                     {
                         double x = ExtractVertexComponent(errorHandler, 0, vectorFunction),
                             y = ExtractVertexComponent(errorHandler, 1, vectorFunction),
@@ -189,7 +182,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private Segment() { }
 
-        public V_Vector AsWorkshopData() => new V_Vector((double)Node1, (double)Node2, 0);
+        public Element AsWorkshopData() => Element.Vector((double)Node1, (double)Node2, 0);
     }
 
     public class MapAttribute
@@ -209,7 +202,7 @@ namespace Deltin.Deltinteger.Pathfinder
         }
         public MapAttribute() { }
 
-        public Element AsWorkshopData() => new V_Vector(Node1, Node2, Attribute);
+        public Element AsWorkshopData() => Element.Vector(Node1, Node2, Attribute);
     }
 
     public interface IPathmapErrorHandler

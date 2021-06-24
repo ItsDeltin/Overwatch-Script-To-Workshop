@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler.Parse;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
@@ -77,7 +78,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             if (op1 == Sentinel || op2 == Sentinel) return false;
 
-            return op1.Precedence >= op2.Precedence;
+            return op1.Precedence >= op2.Precedence && !(op1 is CompilerOperator op1co && op1co.Type == OperatorType.Unary && op2 is CompilerOperator op2co && op2co.Type == OperatorType.Unary);
         }
     }
 
@@ -91,23 +92,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
     public interface IOperatorRhsHandler
     {
-        void Get(Parser parser);
+        void Get(OperatorInfo op, Parser parser);
     }
 
     public class DefaultRhsHandler : IOperatorRhsHandler
     {
-        public void Get(Parser parser)
-        {
-            parser.GetExpressionWithArray();
-        }
+        public void Get(OperatorInfo op, Parser parser) => parser.GetExpressionWithArray();
     }
 
     public class DotRhsHandler : IOperatorRhsHandler
     {
-        public void Get(Parser parser)
+        public void Get(OperatorInfo op, Parser parser)
         {
             parser.Operands.Push(parser.Identifier());
             parser.GetArrayAndInvokes();
+
+            if (op.Operator == CompilerOperator.Squiggle)
+                parser.PopAllOperators();
         }
     }
 

@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.LanguageServer
             ReferenceHandler referenceHandler = new ReferenceHandler(this);
             CodeLensHandler codeLensHandler = new CodeLensHandler(this);
             DoRenameHandler renameHandler = new DoRenameHandler(this);
-            PrepareRenameHandler prepareRenameHandler = new PrepareRenameHandler(this);
+            ColorHandler colorHandler = new ColorHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => AddRequests(options
                 .WithInput(Console.OpenStandardInput())
@@ -91,18 +91,18 @@ namespace Deltin.Deltinteger.LanguageServer
                 .ConfigureLogging(x => x
                     .AddSerilog()
                     .AddLanguageProtocolLogging()
-                    .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Critical))
-                .WithHandler<DocumentHandler>(DocumentHandler)
-                .WithHandler<CompletionHandler>(completionHandler)
-                .WithHandler<SignatureHandler>(signatureHandler)
-                .WithHandler<ConfigurationHandler>(ConfigurationHandler)
-                .WithHandler<DefinitionHandler>(definitionHandler)
-                .WithHandler<HoverHandler>(hoverHandler)
-                .WithHandler<ReferenceHandler>(referenceHandler)
-                .WithHandler<CodeLensHandler>(codeLensHandler)
-                .WithHandler<DoRenameHandler>(renameHandler)
-                .WithHandler<DidChangeWatchedFilesHandler>(builder.FileHandlerBuilder.GetHandler())
-                .WithHandler<PrepareRenameHandler>(prepareRenameHandler)
+                    .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
+                .AddHandler(DocumentHandler)
+                .AddHandler(completionHandler)
+                .AddHandler(signatureHandler)
+                .AddHandler(ConfigurationHandler)
+                .AddHandler(definitionHandler)
+                .AddHandler(hoverHandler)
+                .AddHandler(referenceHandler)
+                .AddHandler(codeLensHandler)
+                .AddHandler(renameHandler)
+                .AddHandler(colorHandler)
+                .AddHandler(builder.FileHandlerBuilder.GetHandler())
             ));
 
             Workspace.SetWorkspaceFolders(Server.ClientSettings.WorkspaceFolders);
@@ -150,26 +150,34 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // Pathmap editor request.
-            options.OnRequest<PathmapDocument, bool>("pathmapEditor", (editFileToken) => Task<bool>.Run(() =>
+            options.OnRequest<PathmapDocument, PathmapEditorResult>("pathmapEditor", (editFileToken) => Task<PathmapEditorResult>.Run(() =>
             {
-
-                DeltinScript compile;
-                if (editFileToken.Text == null)
+                try
                 {
-                    string editor = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
-                    compile = new DeltinScript(new TranslateSettings(editor)
+                    DeltinScript compile;
+                    if (editFileToken.Text == null)
                     {
-                        OutputLanguage = ConfigurationHandler.OutputLanguage
-                    });
+                        string editor = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+                        compile = new DeltinScript(new TranslateSettings(editor)
+                        {
+                            OutputLanguage = ConfigurationHandler.OutputLanguage
+                        });
+                    }
+                    else
+                    {
+                        compile = Editor.Generate(editFileToken.File, Pathmap.ImportFromText(editFileToken.Text), ConfigurationHandler.OutputLanguage);
+                    }
+
+                    if (compile.Diagnostics.ContainsErrors())
+                        return new PathmapEditorResult("An error was found in the pathmap script: " + compile.Diagnostics.GetDiagnostics()[0].ToString()); // error
+
+                    Clipboard.SetText(compile.WorkshopCode);
+                    return new PathmapEditorResult(); // success
                 }
-                else
+                catch (Exception ex)
                 {
-                    compile = Editor.Generate(editFileToken.File, Pathmap.ImportFromText(editFileToken.Text), ConfigurationHandler.OutputLanguage);
+                    return new PathmapEditorResult(ex.Message);
                 }
-
-                Clipboard.SetText(compile.WorkshopCode);
-
-                return true;
             }));
 
             // semantic tokens

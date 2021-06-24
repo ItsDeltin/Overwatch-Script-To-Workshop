@@ -40,29 +40,27 @@ namespace Deltin.Deltinteger.LanguageServer
             SetupUpdateListener();
         }
 
-        public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
-        {
-            return new TextDocumentAttributes(uri, "ostw");
-        }
+        public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) => new TextDocumentAttributes(uri, "ostw");
 
-        // Text document registeration options.
-        TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() => new TextDocumentRegistrationOptions()
-        {
+        // Document change
+        public TextDocumentChangeRegistrationOptions GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentChangeRegistrationOptions() {
+            DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
+            SyncKind = _syncKind
+        };
+
+        // Open
+        TextDocumentOpenRegistrationOptions IRegistration<TextDocumentOpenRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentOpenRegistrationOptions() {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
-        // Save options.
-        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions>.GetRegistrationOptions() => new TextDocumentSaveRegistrationOptions()
-        {
-            DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
-            IncludeText = _sendTextOnSave
+        // Close
+        TextDocumentCloseRegistrationOptions IRegistration<TextDocumentCloseRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentCloseRegistrationOptions() {
+            DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
-        // Document change options.
-        TextDocumentChangeRegistrationOptions IRegistration<TextDocumentChangeRegistrationOptions>.GetRegistrationOptions() => new TextDocumentChangeRegistrationOptions()
-        {
-            DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
-            SyncKind = _syncKind
+        // Save
+        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentSaveRegistrationOptions() {
+            DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
         // Handle save.
@@ -80,7 +78,9 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle close.
         public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
         {
-            Documents.Remove(TextDocumentFromUri(closeParams.TextDocument.Uri.ToUri()));
+            var removing = TextDocumentFromUri(closeParams.TextDocument.Uri.ToUri());
+            removing.Remove();
+            Documents.Remove(removing);
             return Unit.Task;
         }
 
@@ -107,13 +107,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 document.Update(rep.ToString(), change, changeParams.TextDocument.Version, _parserSettingsResolver.GetParserSettings(document.Uri));
             }
             return Parse(document.Uri);
-        }
-
-        // Get client compatibility
-        void ICapability<SynchronizationCapability>.SetCapability(SynchronizationCapability compatibility)
-        {
-            _compatibility = compatibility;
-        }
+        }        
 
         public Document TextDocumentFromUri(Uri uri)
         {
@@ -156,7 +150,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             _currentDocument = document;
             _wait.Set();
-            return null;
+            return Task.FromResult(Unit.Value);
         }
 
         private Document _currentDocument;
@@ -205,7 +199,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     _scriptReady.SetResult(Unit.Value);
 
                 // Publish the diagnostics.
-                var publishDiagnostics = diagnostics.GetDiagnostics();
+                var publishDiagnostics = diagnostics.GetPublishDiagnostics();
                 foreach (var publish in publishDiagnostics)
                     _languageServer.Server.TextDocument.PublishDiagnostics(publish);
 

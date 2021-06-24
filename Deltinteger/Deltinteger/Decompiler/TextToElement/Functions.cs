@@ -6,12 +6,12 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 {
     public class FunctionExpression : ITTEExpression, ITTEAction
     {
-        public ElementList Function { get; }
+        public ElementBaseJson Function { get; }
         public ITTEExpression[] Values { get; }
         public string Comment { get; set; }
         public bool Disabled { get; set; }
 
-        public FunctionExpression(ElementList function, ITTEExpression[] values)
+        public FunctionExpression(ElementBaseJson function, ITTEExpression[] values)
         {
             Function = function;
             Values = values;
@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             if (Disabled)
                 decompiler.Append("// ");
 
-            if (WorkshopFunctionDecompileHook.Convert.TryGetValue(Function.WorkshopName, out var action))
+            if (WorkshopFunctionDecompileHook.Convert.TryGetValue(Function.Name, out var action))
                 action.Invoke(decompiler, this);
             else
                 Default(decompiler, end);
@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public void Default(DecompileRule decompiler, bool end)
         {
-            decompiler.Append(Function.Name + "(");
+            decompiler.Append(Function.CodeName() + "(");
 
             for (int i = 0; i < Values.Length; i++)
             {

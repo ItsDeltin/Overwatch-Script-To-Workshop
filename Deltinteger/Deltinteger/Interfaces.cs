@@ -1,47 +1,17 @@
-using System.Text;
+using System;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger
 {
-    public interface IMethod : IScopeable, IParameterCallable
+    public interface IElementProvider
     {
-        MethodAttributes Attributes { get; }
-        bool DoesReturnValue { get; }
-        IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
-        void Call(ParseInfo parseInfo, DocRange callRange) { }
-
-        public static string GetLabel(IMethod function, bool includeReturnType)
-        {
-            // Get the return type.
-            string result = "";
-            if (includeReturnType)
-                result += (function.DoesReturnValue ? function.CodeType?.GetName() ?? "define" : "void") + " ";
-
-            result += function.Name + "(";
-
-            // Get the parameters.
-            for (int i = 0; i < function.Parameters.Length; i++)
-            {
-                result += function.Parameters[i].GetLabel(false);
-                if (i < function.Parameters.Length - 1) result += ", ";
-            }
-
-            result += ")";
-            return result;
-        }
-    }
-
-    public interface ISkip
-    {
-        int SkipParameterIndex();
+        IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker);
     }
 
     public interface INamed
@@ -51,15 +21,9 @@ namespace Deltin.Deltinteger
 
     public interface IScopeable : INamed, IAccessable
     {
-        CodeType CodeType { get; }
-        bool Static { get; }
+        ICodeTypeSolver CodeType { get; }
         bool WholeContext { get; }
-        CompletionItem GetCompletion();
-    }
-
-    public interface IVariable : IScopeable
-    {
-        bool CanBeIndexed => true;
+        CompletionItem GetCompletion(DeltinScript deltinScript);
     }
 
     public interface ICallable : INamed
@@ -71,6 +35,7 @@ namespace Deltin.Deltinteger
     {
         CodeParameter[] Parameters { get; }
         MarkupBuilder Documentation { get; }
+        object Call(ParseInfo parseInfo, DocRange callRange) => null;
         bool RestrictedValuesAreFatal => true;
     }
 
@@ -82,19 +47,17 @@ namespace Deltin.Deltinteger
 
     public interface IGettable
     {
+        bool CanBeSet();
         IWorkshopTree GetVariable(Element eventPlayer = null);
+        void Set(ActionSet actionSet, IWorkshopTree value) => Set(actionSet, value, null, null);
+        void Set(ActionSet actionSet, IWorkshopTree value, Element target, params Element[] index);
+        void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, params Element[] index);
+        IGettable ChildFromClassReference(IWorkshopTree reference);
     }
 
     public interface ILabeled
     {
-        string GetLabel(bool markdown);
-    }
-
-    public interface IApplyBlock : IBlockListener, ILabeled
-    {
-        void SetupParameters();
-        void SetupBlock();
-        CallInfo CallInfo { get; }
+        MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo);
     }
 
     public interface IBlockListener
@@ -105,5 +68,10 @@ namespace Deltin.Deltinteger
     public interface IOnBlockApplied
     {
         void Applied();
+    }
+
+    public interface IWorkshopInit
+    {
+        void WorkshopInit(DeltinScript deltinScript);
     }
 }

@@ -35,11 +35,11 @@ namespace Deltin.Deltinteger.Debugger
             Scopes.Add(_rawScope);
         }
 
-        public void Add(IIndexReferencer referencer, IndexReference value)
+        public void Add(IVariable referencer, IndexReference value)
         {
             int[] index = new int[value.Index.Length];
             for (int i = 0; i < index.Length; i++)
-                if (value.Index[i] is V_Number number)
+                if (value.Index[i] is NumberElement number)
                     index[i] = (int)number.Value;
                 else
                     return;

@@ -1,6 +1,8 @@
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.Lambda;
+using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Elements;
+using static Deltin.Deltinteger.Elements.Element;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
@@ -8,12 +10,12 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public const double DefaultMoveToNext = 0.4;
 
-        public DeltinScript DeltinScript { get; set; }
+        public DeltinScript DeltinScript { get; private set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
         public bool PotentiallyNullNodes { get; set; } // Determines if nodes can potentially be null.
+        public bool TrackNextAttribute { get; set; } // Determines if nodes can potentially be null.
 
         // Class Instances
-        private PathResolveClass PathResolveInstance;
         private PathmapClass PathmapInstance;
 
         // Workshop Variables
@@ -23,6 +25,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public IndexReference ParentArray { get; set; } // Stores the parent path array.
         private IndexReference Destination { get; set; } // The destination to walk to after all nodes have been transversed.
         public IndexReference CurrentAttribute { get; set; } // The current pathfinding attribute.
+        public IndexReference NextAttribute { get; set; } // The current pathfinding attribute.
 
         // Stuck dection workshop variables. These are only assigned if 'TrackTimeSinceLastNode' is true.
         private IndexReference DistanceToNextNode { get; set; } // The distance from the player to the next node.
@@ -32,11 +35,16 @@ namespace Deltin.Deltinteger.Pathfinder
         public LambdaAction OnPathStart { get; set; } // The code to run when a path starts.
         public LambdaAction OnNodeReached { get; set; } // The code to run when a node is reached.
         public LambdaAction OnPathCompleted { get; set; } // The code to run when a path is completed.
-        public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines wether or not the current node was reached.
+        public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines whether or not the current node was reached.
         public LambdaAction ApplicableNodeDeterminer { get; set; } // The function used to get the closest node to the player.
 
-        public void Init()
+        ToWorkshop _toWorkshop;
+
+        public void Init(DeltinScript deltinScript)
         {
+            DeltinScript = deltinScript;
+            _toWorkshop = deltinScript.WorkshopConverter;
+
             bool assignExtended = false;
 
             // Assign workshop variables.
@@ -53,20 +61,24 @@ namespace Deltin.Deltinteger.Pathfinder
                 TimeSinceLastNode = DeltinScript.VarCollection.Assign("timeSinceLastNode", false, assignExtended);
             }
 
+            var pathfinderTypes = DeltinScript.GetComponent<PathfinderTypesComponent>();
+            if (TrackNextAttribute)
+                NextAttribute = DeltinScript.VarCollection.Assign("nextAttribute", false, assignExtended);
+
             // Get the PathResolve instance and the Pathmap instance.
-            PathResolveInstance = DeltinScript.Types.GetInstance<PathResolveClass>();
-            PathmapInstance = DeltinScript.Types.GetInstance<PathmapClass>();
+            PathmapInstance = pathfinderTypes.Pathmap;
 
             // Get the resolve subroutine.
-            GetResolveRoutine();
+            GetResolveCurrentRule();
+            GetNextNodeRule();
         }
 
-        private void GetResolveRoutine()
+        void GetResolveCurrentRule()
         {
             // Create the rule that will get the closest node.
             TranslateRule getResolveRule = new TranslateRule(DeltinScript, "Pathfinder: Resolve Current", RuleEvent.OngoingPlayer);
             // The rule will activate when DoGetCurrent is set to true.
-            getResolveRule.Conditions.Add(new Condition((Element)DoGetCurrent.GetVariable(), Operators.Equal, new V_True()));
+            getResolveRule.Conditions.Add(new Condition((Element)DoGetCurrent.GetVariable(), Operator.Equal, Element.True()));
             // Set the Current variable to the closest node.
             getResolveRule.ActionSet.AddAction(Current.SetVariable(ClosestNode(getResolveRule.ActionSet, PlayerPosition())));
 
@@ -79,74 +91,86 @@ namespace Deltin.Deltinteger.Pathfinder
                 OnPathStart.Invoke(getResolveRule.ActionSet);
 
             // Update IsPathfindStuck data.
-            UpdateStuckDetector(getResolveRule.ActionSet);
+            UpdateStuckDetector(getResolveRule.ActionSet, EventPlayer());
 
             // Reset DoGetCurrent to false.
-            getResolveRule.ActionSet.AddAction(DoGetCurrent.SetVariable(new V_False()));
+            getResolveRule.ActionSet.AddAction(DoGetCurrent.SetVariable(Element.False()));
 
             // Add the rule.
             DeltinScript.WorkshopRules.Add(getResolveRule.GetRule());
+        }
 
-            // Resolve the rule that increments the current node.
-
+        void GetNextNodeRule()
+        {
             // The 'next' rule will set current to the next node index when the current node is reached. 
             TranslateRule next = new TranslateRule(DeltinScript, "Pathfinder: Resolve Next", RuleEvent.OngoingPlayer);
             next.Conditions.Add(NodeReachedCondition(next.ActionSet));
-            next.Conditions.Add(new Condition(ParentArray.Get(), Operators.NotEqual, new V_Null()));
+            next.Conditions.Add(new Condition(ParentArray.Get(), Operator.NotEqual, Element.Null()));
 
-            if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock)
-                next.ActionSet.AddAction(Element.Part<A_If>(new V_Compare(Current.Get(), Operators.NotEqual, new V_Number(-1))));
+            GetNextNode(next.ActionSet, EventPlayer());
 
-            // Get last attribute.
-            next.ActionSet.AddAction(CurrentAttribute.SetVariable(NextSegmentAttribute(new V_EventPlayer())));
-
-            // Set current as the current's parent.
-            next.ActionSet.AddAction(Current.SetVariable(ParentArray.Get()[Current.Get()] - 1));
-
-            // Update stuck
-            UpdateStuckDetector(next.ActionSet);
-
-            // Invoke OnNodeReached
-            OnNodeReached?.Invoke(next.ActionSet);
-
-            if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock) next.ActionSet.AddAction(Element.Part<A_Else>());
-
-            if (OnPathCompleted == null)
-            {
-                next.ActionSet.AddAction(Element.Part<A_StopThrottleInDirection>(new V_EventPlayer()));
-                StopPathfinding(next.ActionSet, new V_EventPlayer());
-            }
-            else if (!OnPathCompleted.EmptyBlock) OnPathCompleted.Invoke(next.ActionSet);
-
-            if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock) next.ActionSet.AddAction(Element.Part<A_End>());
+            // Loop the next rule if the condition is true.
+            next.ActionSet.AddAction(LoopIfConditionIsTrue());
 
             // Add rule
             DeltinScript.WorkshopRules.Add(next.GetRule());
         }
 
+        public void GetNextNode(ActionSet actionSet, Element player)
+        {
+            if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock)
+                actionSet.AddAction(If(Compare(Current.Get(player), Operator.NotEqual, Num(-1))));
+
+            // Get last attribute.
+            actionSet.AddAction(CurrentAttribute.SetVariable(GetCurrentSegmentAttribute(player), targetPlayer: player));
+
+            if (TrackNextAttribute)
+                actionSet.AddAction(NextAttribute.SetVariable(GetNextSegmentAttribute(player), targetPlayer: player));
+
+            // Set current as the current's parent.
+            actionSet.AddAction(Current.SetVariable(ParentArray.Get(player)[Current.Get(player)] - 1, targetPlayer: player));
+
+            // Update stuck
+            UpdateStuckDetector(actionSet, player);
+
+            // Invoke OnNodeReached
+            OnNodeReached?.Invoke(actionSet);
+
+            if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock) actionSet.AddAction(Else());
+
+            if (OnPathCompleted == null)
+            {
+                actionSet.AddAction(Part("Stop Throttle In Direction", player));
+                StopPathfinding(actionSet, player);
+            }
+            else if (!OnPathCompleted.EmptyBlock) OnPathCompleted.Invoke(actionSet);
+
+            if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock) actionSet.AddAction(End());
+        }
+
         /// <summary>Gets the closest node the player is pathfinding with.</summary>
         public void SetCurrent(ActionSet actionSet, Element players)
         {
-            actionSet.AddAction(DoGetCurrent.SetVariable(value: new V_True(), targetPlayer: players));
+            actionSet.AddAction(DoGetCurrent.SetVariable(value: Element.True(), targetPlayer: players));
         }
 
         /// <summary>Gets the closest node from a position.</summary>
         public Element ClosestNode(ActionSet actionSet, Element position) => PathmapInstance.GetNodeFromPositionHandler(actionSet, PathmapReference.Get()).NodeFromPosition(position);
 
-        /// <summary>The position of the current node the player is walking towards.</summary>
-        public Element CurrentPosition(Element player = null) => PathmapInstance.Nodes.Get()[PathmapReference.Get()][Current.Get(player)];
+        public Element CurrentPositionWithDestination(Element player = null) => PositionAtOrDestination(Current.Get(player), player);
+        public Element NextPositionWithDestination(Element player = null) => PositionAtOrDestination(ParentArray.Get(player)[Current.GetVariable(player)] - 1, player);
 
-        public Element CurrentPositionWithDestination(Element player = null) => Element.TernaryConditional(
+        Element PositionAtOrDestination(Element node, Element player = null) => Element.TernaryConditional(
             // Current will be -1 if the player reached the last node.
-            new V_Compare(Current.GetVariable(player), Operators.Equal, new V_Number(-1)),
+            Element.Compare(node, Operator.Equal, Element.Num(-1)),
             // If so, go to the destination.
             Destination.GetVariable(player),
             // Otherwise, go to the current node.
-            CurrentPosition(player)
+            PathmapInstance.Nodes.Get(_toWorkshop, PathmapReference.Get(player))[node]
         );
 
         /// <summary>The position of the current player: `Position Of(Event Player)`</summary>
-        private Element PlayerPosition() => Element.Part<V_PositionOf>(Element.Part<V_EventPlayer>());
+        private Element PlayerPosition() => Element.PositionOf(Element.EventPlayer());
 
         /// <summary>Starts pathfinding for the specified players.</summary>
         /// <param name="actionSet">The actionset of the current rule.</param>
@@ -182,7 +206,7 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <summary>Stops pathfinding for the specified players.</summary>
         /// <param name="actionSet">The actionset of the current rule.</param>
         /// <param name="players">The players to stop pathfinding for.</param>
-        public void StopPathfinding(ActionSet actionSet, Element players) => actionSet.AddAction(ParentArray.SetVariable(value: new V_Null(), targetPlayer: players));
+        public void StopPathfinding(ActionSet actionSet, Element players) => actionSet.AddAction(ParentArray.SetVariable(value: Element.Null(), targetPlayer: players));
 
         /// <summary>Stops pathfinding for the players that are pathfinding using the specified pathmap reference.</summary>
         /// <param name="actionSet">The actionset of the current rule.</param>
@@ -192,18 +216,18 @@ namespace Deltin.Deltinteger.Pathfinder
             StopPathfinding(
                 actionSet,
                 // Filter players by whos pathfinding reference is equal to pathmapReference.
-                Element.Part<V_FilteredArray>(
+                Element.Filter(
                     players,
-                    new V_Compare(
-                        PathmapReference.GetVariable(new V_ArrayElement()),
-                        Operators.Equal,
+                    Element.Compare(
+                        PathmapReference.GetVariable(Element.ArrayElement()),
+                        Operator.Equal,
                         pathmapReference
                     )
                 )
             );
 
         /// <summary>Determines if the target player is pathfinding.</summary>
-        public Element IsPathfinding(Element player) => new V_Compare(ParentArray.GetVariable(player), Operators.NotEqual, new V_Null());
+        public Element IsPathfinding(Element player) => Element.Compare(ParentArray.GetVariable(player), Operator.NotEqual, Element.Null());
 
         /// <summary>Returns true if the player takes longer than expected to reach the next node.</summary>
         public Element IsPathfindingStuck(Element player, Element scalar)
@@ -212,53 +236,56 @@ namespace Deltin.Deltinteger.Pathfinder
 
             Element defaultSpeed = 5.5;
             Element nodeDistance = DistanceToNextNode.Get(player);
-            Element timeSinceLastNode = new V_TotalTimeElapsed() - TimeSinceLastNode.Get(player);
-
-            Element isStuck = new V_Compare(
+            Element timeSinceLastNode = Element.Part("Total Time Elapsed") - TimeSinceLastNode.Get(player);
+            
+            Element isStuck = Element.Compare(
                 nodeDistance - ((defaultSpeed * scalar * timeSinceLastNode) / leniency),
-                Operators.LessThanOrEqual,
-                new V_Number(0)
+                Operator.LessThanOrEqual,
+                Element.Num(0)
             );
-            return Element.Part<V_And>(IsPathfinding(player), isStuck);
+            return Element.And(IsPathfinding(player), isStuck);
         }
 
         /// <summary>Updates stuck detector.</summary>
-        private void UpdateStuckDetector(ActionSet actionSet)
+        private void UpdateStuckDetector(ActionSet actionSet, Element player)
         {
             if (!TrackTimeSinceLastNode) return; // Do nothing if TrackTimeSinceLastNode is set to false.
-            actionSet.AddAction(TimeSinceLastNode.SetVariable(new V_TotalTimeElapsed()));
-            actionSet.AddAction(DistanceToNextNode.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), CurrentPositionWithDestination())));
+            actionSet.AddAction(TimeSinceLastNode.SetVariable(Part("Total Time Elapsed"), targetPlayer: player));
+            actionSet.AddAction(DistanceToNextNode.SetVariable(DistanceBetween(PositionOf(player), CurrentPositionWithDestination(player)), targetPlayer: player));
         }
 
         /// <summary>Gets the next pathfinding attribute.</summary>
-        // public Element NextSegmentAttribute(Element player) => Element.TernaryConditional(
-        //     Element.Part<V_And>(IsPathfinding(player), new V_Compare(Current.GetVariable(player), Operators.NotEqual, new V_Number(-1))),
-        //     AttributeArray.Get(player)[Current.Get(player)],
-        //     new V_Number(-1)
-        // );
-        public Element NextSegmentAttribute(Element player) => Element.Part<V_MappedArray>(Element.Part<V_FilteredArray>(
-            PathmapInstance.Attributes.Get()[PathmapReference.Get(player)],
-            Element.Part<V_And>(
-                new V_Compare(Element.Part<V_XOf>(Element.Part<V_ArrayElement>()), Operators.Equal, Current.Get(player)),
-                new V_Compare(Element.Part<V_YOf>(Element.Part<V_ArrayElement>()), Operators.Equal, ParentArray.Get()[Current.Get()] - 1)
+        Element GetCurrentSegmentAttribute(Element player) => Element.Map(Element.Filter(
+            PathmapInstance.Attributes.Get(_toWorkshop, PathmapReference.Get(player)),
+            Element.And(
+                Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, Current.Get(player)),
+                Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1)
             )
-        ), Element.Part<V_ZOf>(Element.Part<V_ArrayElement>()));
+        ), Element.ZOf(Element.ArrayElement()));
 
+        Element GetNextSegmentAttribute(Element player) => Element.Map(Element.Filter(
+            PathmapInstance.Attributes.Get(_toWorkshop, PathmapReference.Get(player)),
+            Element.And(
+                Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1),
+                Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[ParentArray.Get(player)[Current.Get(player)] - 1] - 1)
+            )
+        ), Element.ZOf(Element.ArrayElement()));
+    
         /// <summary>Throttles the event player to the next node.</summary>
         public void ThrottleEventPlayerToNextNode(ActionSet actionSet)
         {
             // Start throttle to the current node.
-            actionSet.AddAction(Element.Part<A_StartThrottleInDirection>(
-                Element.Part<V_EventPlayer>(),
-                Element.Part<V_DirectionTowards>(
-                    Element.Part<V_PositionOf>(Element.Part<V_EventPlayer>()),
+            actionSet.AddAction(Element.Part("Start Throttle In Direction",
+                Element.EventPlayer(),
+                Element.DirectionTowards(
+                    Element.PositionOf(Element.EventPlayer()),
                     // Go to the destination once the final node is reached.
                     CurrentPositionWithDestination()
                 ),
-                new V_Number(1), // Magnitude
-                EnumData.GetEnumValue(Relative.ToWorld), // Relative
-                EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle), // Throttle Behavior
-                EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude) // Throttle Reevaluation
+                Element.Num(1), // Magnitude
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Relative", "To World"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("ThrottleBehavior", "Replace Existing Throttle"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("ThrottleRev", "Direction And Magnitude")
             ));
         }
 
@@ -268,19 +295,19 @@ namespace Deltin.Deltinteger.Pathfinder
             // No node reached hook, use default.
             if (IsNodeReachedDeterminer == null)
                 return new Condition(
-                    Element.Part<V_DistanceBetween>(
+                    Element.DistanceBetween(
                         PlayerPosition(),
                         CurrentPositionWithDestination()
                     ),
-                    Operators.LessThanOrEqual,
-                    new V_Number(DefaultMoveToNext)
+                    Operator.LessThanOrEqual,
+                    Element.Num(DefaultMoveToNext)
                 );
             // Otherwise, use hook.
             else
                 return new Condition(
                     (Element)IsNodeReachedDeterminer.Invoke(actionSet, CurrentPositionWithDestination()),
-                    Operators.Equal,
-                    new V_True()
+                    Operator.Equal,
+                    Element.True()
                 );
         }
     }

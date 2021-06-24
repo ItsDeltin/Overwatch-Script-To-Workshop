@@ -2,49 +2,80 @@ using System;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class ConstantExpressionResolver
+    abstract class ConstantExpressionResolver
     {
-        public static void Resolve(IExpression start, Action<IExpression> callback)
+        public virtual void On(IExpression expression)
         {
-            Action resolver = () =>
+            // todo: do something if the expression has a GetMeta or GetContent.
+            switch (expression)
             {
-                IExpression resolve = null;
+                // Expression is a CallVariableAction, get the initial value.
+                case CallVariableAction callVariableAction:
+                    OnVariable(callVariableAction);
+                    break;
+                
+                // Expression is a CallMethodAction, get the method's single return value.
+                case CallMethodAction callMethodAction:
+                    OnMethod(callMethodAction);
+                    break;
+                
+                // If the expression is an ExpressionTree, get the last value.
+                case ExpressionTree expressionTree:
+                    ContinueIfExists(expressionTree, expressionTree.Result);
+                    break;
+                
+                // Nothing compatible found, finish.
+                default:
+                    Complete(expression);
+                    break;
+            }
+        }
 
-                // If the expression is a CallvariableAction, resolve the initial value.
-                if (start is CallVariableAction callVariableAction)
-                {
-                    if (callVariableAction.Calling is Var var)
-                        resolve = var.InitialValue;
-                }
-
-                // If the expression is a function with only one return statement, resolve the value being returned.
-                else if (start is CallMethodAction callMethod)
-                {
-                    // If the function is calling a DefinedMethod, resolve the value.
-                    if (callMethod.CallingMethod is DefinedMethod definedMethod && definedMethod.SingleReturnValue != null)
-                        resolve = definedMethod.SingleReturnValue;
-
-                    // If the expression is a parametered macro, resolve the value.
-                    else if (callMethod.CallingMethod is DefinedMacro definedMacro)
-                        resolve = definedMacro.Expression;
-                }
-
-                // If the expression is a macro variable, resolve the value.
-                else if (start is MacroVar macroVar)
-                    resolve = macroVar.Expression;
-
-                // If the expression is an ExpressionTree, resolve the last value.
-                else if (start is ExpressionTree expressionTree)
-                    resolve = expressionTree.Result;
-
-                if (resolve == null) callback.Invoke(start);
-                else Resolve(resolve, callback);
-            };
-
-            if (start is IBlockListener blockListener)
-                blockListener.OnBlockApply(new OnBlockApplied(() => resolver.Invoke()));
+        protected virtual void OnVariable(CallVariableAction variableCall)
+        {
+            if (variableCall.Calling is VariableInstance var)
+                var.Var.ValueReady.OnReady(() => ContinueIfExists(variableCall, var.Var.InitialValue));
             else
-                resolver.Invoke();
+                Complete(variableCall);
+        }
+
+        protected virtual void OnMethod(CallMethodAction methodCall)
+        {
+            if (methodCall.Result == null)
+                Complete(methodCall);
+            else
+                methodCall.Result.GetConstantTarget(result => ContinueIfExists(methodCall, result));
+        }
+
+        void ContinueIfExists(IExpression source, IExpression target)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (target == null) Complete(source);
+            On(target);
+        }
+
+        protected abstract void Complete(IExpression expression);
+
+        public static void Resolve(IExpression expression, Action<IExpression> callback) => new GenericConstantExpressionResolver(callback).On(expression);
+    }
+
+    class GenericConstantExpressionResolver : ConstantExpressionResolver
+    {
+        readonly Action<IExpression> _action;
+        public GenericConstantExpressionResolver(Action<IExpression> action) => _action = action;
+        protected override void Complete(IExpression expression) => _action(expression);
+    }
+
+    class ParameterExpressionResolver : GenericConstantExpressionResolver
+    {
+        public ParameterExpressionResolver(Action<IExpression> action) : base(action) {}
+
+        protected override void OnVariable(CallVariableAction callVariableAction)
+        {
+            if (callVariableAction.Calling is VariableInstance variableInstance && variableInstance.Var.BridgeInvocable != null)
+                Complete(callVariableAction);
+            else
+                base.OnVariable(callVariableAction);
         }
     }
 

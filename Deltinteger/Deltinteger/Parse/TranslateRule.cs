@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Parse.FunctionBuilder;
+using Deltin.Deltinteger.Parse.Functions.Builder;
+using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -40,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             GetConditions(ruleAction);
 
             RuleReturnHandler returnHandler = new RuleReturnHandler(ActionSet);
-            ruleAction.Block.Translate(ActionSet.New(returnHandler));
+            ruleAction.Block.Translate(ActionSet.New(returnHandler).ContainVariableAssigner());
         }
         public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType, Team team, PlayerSelector player, bool disabled = false)
         {
@@ -71,20 +72,20 @@ namespace Deltin.Deltinteger.Parse
                 var conditionParse = condition.Expression.Parse(ActionSet);
 
                 Element value1;
-                EnumMember compareOperator;
+                Operator compareOperator;
                 Element value2;
 
-                if (conditionParse is V_Compare)
+                if (conditionParse is Element asElement && asElement.Function.Name == "Compare")
                 {
-                    value1 = (Element)((Element)conditionParse).ParameterValues[0];
-                    compareOperator = (EnumMember)((Element)conditionParse).ParameterValues[1];
-                    value2 = (Element)((Element)conditionParse).ParameterValues[2];
+                    value1 = (Element)asElement.ParameterValues[0];
+                    compareOperator = ((OperatorElement)asElement.ParameterValues[1]).Operator;
+                    value2 = (Element)asElement.ParameterValues[2];
                 }
                 else
                 {
                     value1 = (Element)conditionParse;
-                    compareOperator = EnumData.GetEnumValue(Operators.Equal);
-                    value2 = new V_True();
+                    compareOperator = Operator.Equal;
+                    value2 = Element.True();
                 }
 
                 Conditions.Add(new Condition(value1, compareOperator, value2) { Comment = condition.Comment?.GetContents() });
@@ -140,22 +141,18 @@ namespace Deltin.Deltinteger.Parse
         public VarIndexAssigner IndexAssigner { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
         public IWorkshopTree CurrentObject { get; private set; }
-        public IndexReference CurrentObjectRelatedIndex { get; private set; }
+        public SourceIndexReference CurrentObjectRelatedIndex { get; private set; }
         public IWorkshopTree This { get; private set; }
-        public int IndentCount { get; private set; }
         public bool IsRecursive { get; private set; }
+        public ActionComment CommentNext { get; private set; }
+        public InstanceAnonymousTypeLinker ThisTypeLinker { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
+        public ToWorkshop ToWorkshop { get => Translate.DeltinScript.WorkshopConverter; }
 
         public int ActionCount => ActionList.Count;
 
-        public ActionSet(bool isGlobal, VarCollection varCollection)
-        {
-            IsGlobal = isGlobal;
-            VarCollection = varCollection;
-            ActionList = new List<IActionList>();
-        }
         public ActionSet(TranslateRule translate, DocRange genericErrorRange, List<IActionList> actions)
         {
             Translate = translate;
@@ -177,12 +174,9 @@ namespace Deltin.Deltinteger.Parse
             CurrentObject = other.CurrentObject;
             CurrentObjectRelatedIndex = other.CurrentObjectRelatedIndex;
             This = other.This;
-            IndentCount = other.IndentCount;
             IsRecursive = other.IsRecursive;
-        }
-        private ActionSet Clone()
-        {
-            return new ActionSet(this);
+            CommentNext = other.CommentNext;
+            ThisTypeLinker = other.ThisTypeLinker;
         }
 
         public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this)
@@ -194,39 +188,51 @@ namespace Deltin.Deltinteger.Parse
             ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler))
         };
         public ActionSet New(IWorkshopTree currentObject) => new ActionSet(this) { CurrentObject = currentObject };
-        public ActionSet New(IndexReference relatedIndex) => new ActionSet(this) { CurrentObjectRelatedIndex = relatedIndex };
+        public ActionSet New(IGettable relatedIndex, Element target = null) => new ActionSet(this) { CurrentObjectRelatedIndex = new SourceIndexReference(relatedIndex, target) };
         public ActionSet New(bool isRecursive) => new ActionSet(this) { IsRecursive = isRecursive };
+        public ActionSet ContainVariableAssigner() => new ActionSet(this) { IndexAssigner = IndexAssigner.CreateContained() };
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
-        public ActionSet Indent()
+        public ActionSet SetNextComment(string comment) => new ActionSet(this) { CommentNext = new ActionComment(comment) };
+        public ActionSet SetThisTypeLinker(InstanceAnonymousTypeLinker thisTypeLinker) => new ActionSet(this) { ThisTypeLinker = thisTypeLinker };
+        public ActionSet MergeTypeLinker(InstanceAnonymousTypeLinker thisTypeLinker)
         {
-            var newActionSet = Clone();
-            newActionSet.IndentCount++;
-            return newActionSet;
+            // Do nothing if the type linker is null.
+            if (thisTypeLinker == null) return this;
+
+            // Clone the ActionSet.
+            var clone = new ActionSet(this);
+            
+            // If there was no type linker to begin with, set the type linker to the one provided.
+            if (clone.ThisTypeLinker == null)
+                clone.ThisTypeLinker = thisTypeLinker;
+            else // Otherwise, merge the existing type linker and the provided type linker.
+                clone.ThisTypeLinker = clone.ThisTypeLinker.CloneMerge(thisTypeLinker);
+
+            return clone;
         }
 
         public void AddAction(string comment, params IWorkshopTree[] actions)
         {
             foreach (var action in actions)
             {
-                if (action is Element element)
+                if (action is Element element && comment != null)
                 {
-                    element.Indent = IndentCount;
-                    if (comment != null)
-                    {
-                        element.Comment = comment;
-                        comment = null;
-                    }
+                    element.Comment = comment;
+                    comment = null;
                 }
-                ActionList.Add(new ALAction(action));
+                AddAction(new ALAction(action));
             }
         }
-
         public void AddAction(params IWorkshopTree[] actions) => AddAction(null, actions);
-
         public void AddAction(params IActionList[] actions)
         {
             ActionList.AddRange(actions);
+            if (CommentNext != null && !CommentNext.Used && actions[0] is ALAction alaction && alaction.Calling is Element element)
+            {
+                element.Comment = CommentNext.GetValue();
+                CommentNext = null;
+            }
         }
 
         public ActionSet InitialSet()
@@ -328,11 +334,10 @@ namespace Deltin.Deltinteger.Parse
             else skipCount = GetSkipCount(EndMarker);
 
             Element newAction;
-            if (Condition == null) newAction = Element.Part<A_Skip>(skipCount);
-            else newAction = Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), skipCount);
+            if (Condition == null) newAction = Element.Part("Skip", skipCount);
+            else newAction = Element.Part("Skip If", Element.Not(Condition), skipCount);
 
             newAction.Comment = Comment;
-
             return newAction;
         }
 
@@ -350,7 +355,7 @@ namespace Deltin.Deltinteger.Parse
             EndMarker = endMarker;
         }
 
-        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => StartMarker.NumberOfActionsToMarker(EndMarker).ToString();
+        public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(StartMarker.NumberOfActionsToMarker(EndMarker).ToString());
 
         public bool EqualTo(IWorkshopTree other) => false;
     }
@@ -360,5 +365,29 @@ namespace Deltin.Deltinteger.Parse
         public bool IsAction { get; } = false;
         public Element GetAction() => throw new NotImplementedException();
         public bool ShouldRemove() => false;
+    }
+
+    public struct SourceIndexReference
+    {
+        public IGettable Reference { get; }
+        public Element Target { get; }
+
+        public SourceIndexReference(IGettable reference, Element target)
+        {
+            Reference = reference;
+            Target = target;
+        }
+    }
+
+    public class ActionComment
+    {
+        private readonly string _value;
+        public bool Used { get; private set; }
+        public ActionComment(string value) => _value = value;
+        public string GetValue()
+        {
+            Used = true;
+            return _value;
+        }
     }
 }

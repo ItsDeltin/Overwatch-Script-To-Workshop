@@ -1,12 +1,13 @@
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using static Deltin.Deltinteger.Elements.Element;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
     class PathfindAlgorithmBuilder
     {
         public const bool AssignExtended = false;
-        static readonly V_Number _leastNot0 = new V_Number(0.0001);
+        static readonly Element _leastNot0 = Num(0.0001);
 
         public IPathfinderInfo Info { get; }
         readonly ResolveInfoComponent resolveInfo;
@@ -44,7 +45,7 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexReference neighborSegmentAttributes = actionSet.VarCollection.Assign("Dijkstra: Neighbor Attributes", actionSet.IsGlobal, AssignExtended);
             InitializeVariables();
 
-            actionSet.AddAction(Element.Part<A_While>(Info.LoopCondition));
+            actionSet.AddAction(While(Info.LoopCondition));
 
             // Invoke LoopStart
             Info.OnLoop();
@@ -62,19 +63,15 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(ArrayBuilder<Element>.Build(
                 // Get the index from the segment data
                 neighborIndex.SetVariable(
-                    Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
+                    FirstOf(Filter(
                         BothNodes(forBuilder.IndexValue),
-                        new V_Compare(
-                            new V_ArrayElement(),
-                            Operators.NotEqual,
-                            Current.GetVariable()
-                        )
+                        Compare(ArrayElement(), Operator.NotEqual, Current.GetVariable())
                     ))
                 ),
 
                 // Get the distance between the current and the neighbor index.
                 neighborDistance.SetVariable(
-                    Element.Part<V_DistanceBetween>(
+                    DistanceBetween(
                         nodes[neighborIndex.Get()],
                         nodes[Current.Get()]
                     ) + Distances.Get()[Current.Get()]
@@ -82,18 +79,10 @@ namespace Deltin.Deltinteger.Pathfinder
             ));
 
             // Get the attributes from the current node to the neighbor node.
-            actionSet.AddAction(neighborSegmentAttributes.SetVariable(Element.Part<V_FilteredArray>(attributes,
-                Element.Part<V_And>(
-                    new V_Compare(
-                        Element.Part<V_YOf>(new V_ArrayElement()),
-                        Operators.Equal,
-                        Current.Get()
-                    ),
-                    new V_Compare(
-                        Element.Part<V_XOf>(new V_ArrayElement()),
-                        Operators.Equal,
-                        neighborIndex.Get()
-                    )
+            actionSet.AddAction(neighborSegmentAttributes.SetVariable(Filter(attributes,
+                And(
+                    Compare(YOf(ArrayElement()), Operator.Equal, Current.Get()),
+                    Compare(XOf(ArrayElement()), Operator.Equal, neighborIndex.Get())
                 )
             )));
 
@@ -106,18 +95,18 @@ be set as the parent regardless.
 Additionally, make sure that any of the neighbor's attributes is in the attribute array.";
 
             // Set the current neighbor's distance if the new distance is less than what it is now.
-            actionSet.AddAction(ifComment, Element.Part<A_If>(Element.Part<V_And>(
-                Element.Part<V_Or>(
-                    Element.Part<V_Not>(Distances.Get()[neighborIndex.Get()]),
+            actionSet.AddAction(ifComment, If(And(
+                Or(
+                    Not(Distances.Get()[neighborIndex.Get()]),
                     neighborDistance.Get() < Distances.Get()[neighborIndex.Get()]
                 ),
-                Element.Part<V_Or>(
+                Or(
                     // There are no attributes.
-                    Element.Part<V_Not>(Element.Part<V_CountOf>(neighborSegmentAttributes.Get())),
+                    Not(CountOf(neighborSegmentAttributes.Get())),
                     // There are attributes and the attribute array contains one of the attributes.
-                    Element.Part<V_IsTrueForAny>(
+                    Any(
                         neighborSegmentAttributes.Get(),
-                        Element.Part<V_ArrayContains>(Info.EnabledAttributes, Element.Part<V_ZOf>(new V_ArrayElement()))
+                        Contains(Info.EnabledAttributes, ZOf(ArrayElement()))
                     )
                 )
             )));
@@ -133,12 +122,12 @@ back by 1 when used.",
                 ParentArray.SetVariable(Current.Get() + 1, index: neighborIndex.Get())
             );
 
-            actionSet.AddAction(new A_End()); // End the if.
+            actionSet.AddAction(End()); // End the if.
             forBuilder.Finish(); // End the for.
             actionSet.AddAction(Unvisited.ModifyVariable(Operation.RemoveFromArrayByValue, Current.Get())); // Remove the current node from the unvisited array.
             Info.OnLoopEnd(); // External end loop logic.
             Current.Set(actionSet, LowestUnvisited()); // Set current to the unvisited node with the lowest distance.
-            actionSet.AddAction(new A_End()); // End the while loop.
+            actionSet.AddAction(End()); // End the while loop.
             Info.Finished(); // Done.
 
             // Reset variables.
@@ -169,36 +158,33 @@ back by 1 when used.",
             // Set the unvisited array.
             // Create an array counting up to the number of values in the nodeArray array.
             // For example, if nodeArray has 6 variables unvisitedVar will be set to [0, 1, 2, 3, 4, 5].
-            Element array = Element.Part<V_MappedArray>(nodes, new V_CurrentArrayIndex());
+            Element array = Map(nodes, ArrayIndex());
 
             // If any of the nodes are null, destroy them.
             if (resolveInfo.PotentiallyNullNodes)
-                array = Element.Part<V_FilteredArray>(array, new V_Compare(nodes[new V_ArrayElement()], Operators.NotEqual, new V_Null()));
+                array = Filter(array, Compare(nodes[ArrayElement()], Operator.NotEqual, Null()));
 
             Unvisited.Set(actionSet, array);
         }
 
         /// <summary>Gets the segments connected to the current node.</summary>
-        Element GetConnectedSegments() => Element.Part<V_FilteredArray>(
+        Element GetConnectedSegments() => Filter(
             segments,
             // Make sure one of the segments nodes is the current node.
-            Element.Part<V_ArrayContains>(
-                BothNodes(new V_ArrayElement()),
-                Current.Get()
-            )
+            Contains(BothNodes(Element.ArrayElement()), Current.Get())
         );
 
         /// <summary>Gets the unvisited node with the lowest distance.</summary>
-        Element LowestUnvisited() => Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(
-            Element.Part<V_FilteredArray>(Unvisited.Get(), new V_Compare(Distances.Get()[new V_ArrayElement()], Operators.NotEqual, new V_Number(0))),
-            Distances.Get()[new V_ArrayElement()]
+        Element LowestUnvisited() => FirstOf(Sort(
+            Filter(Unvisited.Get(), Compare(Distances.Get()[ArrayElement()], Operator.NotEqual, Num(0))),
+            Distances.Get()[ArrayElement()]
         ));
 
         public static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
-        public static Element Node1(Element segment) => Element.Part<V_XOf>(segment);
-        public static Element Node2(Element segment) => Element.Part<V_YOf>(segment);
+        public static Element Node1(Element segment) => XOf(segment);
+        public static Element Node2(Element segment) => YOf(segment);
 
-        public Element NoAccessableUnvisited() => Element.Part<V_IsTrueForAll>(Unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(Distances.GetVariable(), new V_ArrayElement()), Operators.Equal, new V_Number(0)));
-        public Element AnyAccessableUnvisited() => Element.Part<V_IsTrueForAny>(Unvisited.Get(), Distances.Get()[new V_ArrayElement()]);
+        public Element NoAccessableUnvisited() => All(Unvisited.GetVariable(), Compare(Distances.Get()[ArrayElement()], Operator.Equal, Num(0)));
+        public Element AnyAccessableUnvisited() => Any(Unvisited.Get(), Distances.Get()[ArrayElement()]);
     }
 }

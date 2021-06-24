@@ -7,50 +7,46 @@ using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Compiler;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
-using BaseRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.RenameHandler;
+using IRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.IRenameHandler;
 using RenameCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.RenameCapability;
-
 using IPrepareRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.IPrepareRenameHandler;
-using PrepareRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.PrepareRenameHandler;
-using OmniSharp.Extensions.LanguageServer.Protocol;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    static class RenameInfo
+    class DoRenameHandler : IRenameHandler, IPrepareRenameHandler
     {
         public static RenameLink GetLink(DeltintegerLanguageServer languageServer, Uri uri, Position position)
         {
-            var links = languageServer.LastParse?.GetComponent<SymbolLinkComponent>().GetSymbolLinks();
-            if (links == null) return null;
+            // Get the script from the uri, and get the 
+            var keyRange = languageServer.LastParse?.ScriptFromUri(uri)?.Elements.KeyFromPosition(position);
 
-            foreach (var linkPair in links)
-                foreach (var link in linkPair.Value)
-                    // TODO-URI: Should use Uri.Compare?
-                    if (link.Location.uri == uri && link.Location.range.IsInside(position))
-                        return new RenameLink(linkPair, link.Location.range);
+            // Script was not found, script not yet read, or no key was found.
+            if (keyRange?.key == null) return null;
 
-            return null;
+            var locations = languageServer.LastParse.GetComponent<SymbolLinkComponent>().CallsFromDeclaration(keyRange.Value.key).Select(link => link.Location);
+            return new RenameLink(keyRange?.key.Name, keyRange?.range, locations);
         }
-    }
 
-    class DoRenameHandler : BaseRenameHandler
-    {
         private DeltintegerLanguageServer _languageServer;
 
-        public DoRenameHandler(DeltintegerLanguageServer languageServer) : base(new RenameRegistrationOptions()
-        {
-            DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
-            PrepareProvider = true
-        })
+        public DoRenameHandler(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
         }
 
-        public override async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
+        public RenameRegistrationOptions GetRegistrationOptions(RenameCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
-            return await Task.Run(() =>
+            return new RenameRegistrationOptions() {
+                DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
+                PrepareProvider = true
+            };
+        }
+
+        public Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
+        {
+            return Task.Run(() =>
             {
-                var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
+                var link = GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
                 if (link == null) return new WorkspaceEdit();
 
                 var grouped = link.Group();
@@ -85,8 +81,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     WorkspaceEditDocumentChange edit = new WorkspaceEditDocumentChange(new TextDocumentEdit()
                     {
                         Edits = edits.ToArray(),
-                        TextDocument = new VersionedTextDocumentIdentifier()
-                        {
+                        TextDocument = new OptionalVersionedTextDocumentIdentifier() {
                             Version = document.Version,
                             Uri = document.Uri
                         }
@@ -101,62 +96,29 @@ namespace Deltin.Deltinteger.LanguageServer
             });
         }
 
-        public override void SetCapability(RenameCapability capability)
-        {
-            base.SetCapability(capability);
-        }
+        public Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken) => Task.Run(() => {
+            var link = GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
+            if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
 
-        public override string ToString()
-        {
-            return base.ToString();
-        }
-    }
-
-    class PrepareRenameHandler : IPrepareRenameHandler
-    {
-        private DeltintegerLanguageServer _languageServer;
-        private RenameCapability _capability;
-
-        public PrepareRenameHandler(DeltintegerLanguageServer languageServer)
-        {
-            _languageServer = languageServer;
-        }
-
-        // IPrepareRename
-        public async Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken)
-        {
-            return await Task.Run(() =>
+            return new RangeOrPlaceholderRange(new PlaceholderRange()
             {
-                var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
-                if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
-
-                return new RangeOrPlaceholderRange(new PlaceholderRange()
-                {
-                    Range = link.Range,
-                    Placeholder = link.Name
-                });
+                Range = link.SourceRange,
+                Placeholder = link.Name
             });
-        }
-
-        public object GetRegistrationOptions() => null;
-
-        public void SetCapability(RenameCapability capability)
-        {
-            _capability = capability;
-        }
+        });
     }
 
     class RenameLink
     {
         public string Name { get; }
-        public Location[] Links { get; }
-        public DocRange Range { get; }
+        public DocRange SourceRange { get; }
+        public IEnumerable<Location> Links { get; }
 
-        public RenameLink(KeyValuePair<ICallable, SymbolLinkCollection> link, DocRange range)
+        public RenameLink(string placeholderName, DocRange sourceRange, IEnumerable<Location> links)
         {
-            Name = link.Key.Name;
-            Links = link.Value.Select(sl => sl.Location).ToArray();
-            Range = range;
+            Name = placeholderName;
+            SourceRange = sourceRange;
+            Links = links;
         }
 
         public SymbolLinkUriGroup[] Group()

@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Elements
         public RuleEvent RuleEvent { get; }
         public Team Team { get; }
         public PlayerSelector Player { get; }
-        public Subroutine Subroutine { get; }
+        public Subroutine Subroutine { get; set; }
         public RuleType RuleType { get; }
 
         public Condition[] Conditions { get; set; }
@@ -41,12 +41,9 @@ namespace Deltin.Deltinteger.Elements
             Subroutine = subroutine;
         }
 
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => Name;
 
-        public void ToWorkshop(WorkshopBuilder builder, bool optimize)
+        public void ToWorkshop(WorkshopBuilder builder)
         {
             if (Disabled)
             {
@@ -60,23 +57,28 @@ namespace Deltin.Deltinteger.Elements
                 .Indent()
                 .AppendKeywordLine("event")
                 .AppendLine("{")
-                .Indent()
-                .AppendLine(EnumData.GetEnumValue(RuleEvent).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";");
-
+                .Indent();
+            
+            ElementRoot.Instance.GetEnumValue("Event", RuleEvent.ToString()).ToWorkshop(builder, ToWorkshopContext.Other);
+            builder.Append(";").AppendLine();
+            
             // Add attributes.
             switch (RuleType)
             {
                 case RuleType.PlayerBased:
                     // Player based attributes
-                    builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Team attribute
-                    builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Player attribute
+                    ElementEnumMember.Team(Team).ToWorkshop(builder, ToWorkshopContext.Other); // Team attribute
+                    builder.Append(";").AppendLine();
+                    ElementRoot.Instance.GetEnumValue("Player", Player.ToString()).ToWorkshop(builder, ToWorkshopContext.Other); // Player attribute
+                    builder.Append(";").AppendLine();
                     break;
 
                 case RuleType.Subroutine:
-                    builder.AppendLine(Subroutine.ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Attribute name
+                    Subroutine.ToWorkshop(builder, ToWorkshopContext.Other); // Attribute name
+                    builder.Append(";").AppendLine();
                     break;
             }
-            builder.Unindent()
+            builder.Outdent()
                 .AppendLine("}");
 
             if (Conditions?.Length > 0)
@@ -87,10 +89,9 @@ namespace Deltin.Deltinteger.Elements
                     .Indent();
 
                 foreach (var condition in Conditions)
-                    builder.AppendLine(condition.ToWorkshop(builder.OutputLanguage, optimize) + ";");
-
-                builder.Unindent()
-                    .AppendLine("}");
+                    condition.ToWorkshop(builder);
+                
+                builder.Outdent().AppendLine("}");
             }
 
             // Add actions.
@@ -103,36 +104,54 @@ namespace Deltin.Deltinteger.Elements
                     .Indent();
 
                 foreach (var action in Actions)
-                    if (optimize)
-                        builder.AppendLine(action.Optimize().ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Action));
-                    else
-                        builder.AppendLine(action.ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Action));
-
-                builder.Unindent()
-                    .AppendLine("}");
+                    action.ToWorkshop(builder, ToWorkshopContext.Action);
+                
+                builder.Outdent().AppendLine("}");
             }
-            builder.Unindent()
-                .AppendLine("}");
+            builder.Outdent().AppendLine("}");
         }
 
-        public int ElementCount(bool optimized)
+        public int ElementCount()
         {
             int count = 1;
 
             if (Conditions != null)
                 foreach (Condition condition in Conditions)
-                    count += condition.ElementCount(optimized);
+                    count += condition.ElementCount();
 
             if (Actions != null)
                 foreach (Element action in Actions)
-                {
-                    if (optimized)
-                        count += action.Optimize().ElementCount();
-                    else
-                        count += action.ElementCount();
-                }
+                    count += action.ElementCount();
 
             return count;
+        }
+
+        public Rule Optimized()
+        {
+            // Get new rule.
+            Rule optimized = RuleType == RuleType.Subroutine ? new Rule(Name, Subroutine) : new Rule(Name, RuleEvent, Team, Player);
+
+            // Copy other settings.
+            optimized.Disabled = Disabled;
+            optimized.Priority = Priority;
+
+            // Optimize conditions.
+            if (Conditions != null)
+            {
+                optimized.Conditions = new Condition[Conditions.Length];
+                for (int i = 0; i < optimized.Conditions.Length; i++)
+                    optimized.Conditions[i] = Conditions[i].Optimized();
+            }
+
+            // Optimize actions.
+            if (Actions != null)
+            {
+                optimized.Actions = new Element[Actions.Length];
+                for (int i = 0; i < optimized.Actions.Length; i++)
+                    optimized.Actions[i] = Actions[i].Optimized();
+            }
+
+            return optimized;
         }
     }
 

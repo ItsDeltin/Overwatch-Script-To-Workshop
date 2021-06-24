@@ -1,0 +1,113 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Debugger;
+using Deltin.Deltinteger.I18n;
+
+namespace Deltin.Deltinteger.Parse
+{
+    public class ToWorkshop
+    {
+        public DeltinScript DeltinScript { get; }
+        public VarCollection VarCollection { get; } = new VarCollection();
+        public SubroutineCollection SubroutineCollection { get; } = new SubroutineCollection();
+        public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
+        public TranslateRule InitialGlobal { get; private set; }
+        public TranslateRule InitialPlayer { get; private set; }
+        public DebugVariableLinkCollection DebugVariables { get; } = new DebugVariableLinkCollection();
+        public string WorkshopCode { get; private set; }
+        public int ElementCount { get; private set; }
+
+        List<Rule> _workshopRules;
+
+        public ToWorkshop(DeltinScript deltinScript)
+        {
+            DeltinScript = deltinScript;
+        }
+
+        public void Convert()
+        {
+            // Set up the variable collection.
+            VarCollection.Setup();
+
+            // Set up initial global and player rules.
+            InitialGlobal = new TranslateRule(this, "Initial Global", RuleEvent.OngoingGlobal);
+            InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
+            _workshopRules = new List<Rule>();
+
+            // Init called types.
+            foreach (var workshopInit in _workshopInit) workshopInit.WorkshopInit(this);
+
+            // Assign variables at the rule-set level.
+            foreach (var variable in rulesetVariables)
+            {
+                var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
+
+                // Assign the variable an index.
+                IGettable value = variable.GetDefaultInstance().GetAssigner(null).GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet, VarCollection, DefaultIndexAssigner));
+                DefaultIndexAssigner.Add(variable, value);
+                
+                // TODO: Don't cast to IndexReference
+                DebugVariables.Add(variable, (IndexReference)value);
+            }
+
+            // Parse the rules.
+            foreach (var rule in rules)
+            {
+                var translate = new TranslateRule(this, rule);
+                Rule newRule = translate.GetRule();
+                _workshopRules.Add(newRule);
+                rule.ElementCountLens.RuleParsed(newRule);
+            }
+
+            // Add built-in rules.
+            // Initial player
+            if (InitialPlayer.Actions.Count > 0)
+                _workshopRules.Insert(0, InitialPlayer.GetRule());
+
+            // Initial global
+            if (InitialGlobal.Actions.Count > 0)
+                _workshopRules.Insert(0, InitialGlobal.GetRule());
+
+            // Additional
+            // if (addRules != null)
+                // _workshopRules.AddRange(addRules.Invoke(VarCollection).Where(rule => rule != null));
+
+            // Order the workshop rules by priority.
+            _workshopRules = _workshopRules.OrderBy(wr => wr.Priority).ToList();
+
+            // Get the final workshop string.
+            WorkshopBuilder result = new WorkshopBuilder(Language);
+            LanguageInfo.I18nWarningMessage(result, Language);
+
+            // Get the custom game settings.
+            if (Importer.MergedLobbySettings != null)
+            {
+                Ruleset settings = Ruleset.Parse(Importer.MergedLobbySettings);
+                settings.ToWorkshop(result);
+                result.AppendLine();
+            }
+
+            // Get the variables.
+            VarCollection.ToWorkshop(result);
+            result.AppendLine();
+
+            // Print class identifiers.
+            // Types.PrintClassIdentifiers(result);
+
+            // Get the subroutines.
+            SubroutineCollection.ToWorkshop(result);
+
+            // Get the rules.
+            for (int i = 0; i < _workshopRules.Count; i++)
+            {
+                _workshopRules[i].ToWorkshop(result, OptimizeOutput);
+                ElementCount += _workshopRules[i].ElementCount(OptimizeOutput);
+                if (i != _workshopRules.Count - 1) result.AppendLine();
+            }
+            
+            WorkshopCode = result.GetResult();
+        }
+    }
+}

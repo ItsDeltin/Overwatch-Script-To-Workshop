@@ -9,70 +9,59 @@ namespace Deltin.Deltinteger
     {
         public bool Tab { get; set; } = false;
         public OutputLanguage OutputLanguage { get; }
-        private readonly StringBuilder Builder;
-        private int IndentCount;
-        private bool InLine = false;
+        private readonly StringBuilder _builder;
+        private int _indentCount;
+        private bool _space = false;
 
         public WorkshopBuilder(OutputLanguage outputLanguage)
         {
             OutputLanguage = outputLanguage;
-            Builder = new StringBuilder();
+            _builder = new StringBuilder();
         }
 
         public WorkshopBuilder(OutputLanguage outputLanguage, StringBuilder builder)
         {
             OutputLanguage = outputLanguage;
-            Builder = builder;
+            _builder = builder;
         }
 
         public WorkshopBuilder Append(string text)
         {
-            if (!InLine) Builder.Append(Spacer());
-            Builder.Append(text);
-            InLine = true;
+            if (_space)
+            {
+                if (_indentCount != 0)
+                    _builder.Append(new string(Tab ? '\t' : ' ', _indentCount * (Tab ? 1 : 4)));
+                _space = false;
+            }
+            _builder.Append(text);
             return this;
         }
-
         public WorkshopBuilder AppendLine()
         {
-            Builder.AppendLine();
-            InLine = false;
+            _builder.AppendLine();
+            _space = true;
             return this;
         }
+        public WorkshopBuilder AppendLine(string text) => Append(text).AppendLine();
+        public WorkshopBuilder AppendKeyword(string keyword) => Append(Kw(keyword));
+        public WorkshopBuilder AppendKeywordLine(string keyword) => AppendLine(Kw(keyword));
 
-        public WorkshopBuilder AppendLine(string text)
-        {
-            Builder.AppendLine(Spacer() + text);
-            InLine = false;
-            return this;
-        }
-
-        public WorkshopBuilder AppendKeywordLine(string keyword)
-        {
-            AppendLine(LanguageInfo.Translate(OutputLanguage, keyword));
-            return this;
-        }
-
-        public WorkshopBuilder AppendKeyword(string keyword)
-        {
-            Append(LanguageInfo.Translate(OutputLanguage, keyword));
-            return this;
-        }
+        public string Kw(string keyword) => LanguageInfo.Translate(OutputLanguage, keyword);
 
         public WorkshopBuilder Indent()
         {
-            IndentCount++;
+            _indentCount++;
             return this;
         }
 
-        public WorkshopBuilder Unindent()
+        public WorkshopBuilder Outdent()
         {
-            IndentCount--;
+            _indentCount--;
             return this;
         }
 
         public string Translate(string keyword) => LanguageInfo.Translate(OutputLanguage, keyword);
-        private string Spacer() => Extras.Indent(IndentCount, Tab);
-        public override string ToString() => Builder.ToString();
+
+        public string GetResult() => _builder.ToString();
     }
 }

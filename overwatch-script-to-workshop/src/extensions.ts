@@ -116,10 +116,10 @@ function subscribe(context: ExtensionContext)
 		}
 
 		// Send the 'pathmapEditor' request with the 'editPathmap' contents for the parameter to the language server.
-		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap, File: editPathmapFile}).then((result: boolean) => {
+		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap, File: editPathmapFile}).then((result: any) => {
 			// The request will return true if successful.
 			// It can return false if PathfindEditor.del was tinkered with by the user (or there is a bug).
-			if (result)
+			if (result.success)
 			{
 				// Send a success message depending on if the editor is the default editor or the editor is editing a .pathmap file.
 				if (editPathmapFile == null)
@@ -128,7 +128,7 @@ function subscribe(context: ExtensionContext)
 					vscode.window.showInformationMessage("Pathmap editor for '" + editPathmapFile + "' copied to clipboard. Paste the rules in Overwatch to edit.");
 			}
 			else
-				vscode.window.showInformationMessage('Failed to generate pathmap editor code.');
+				vscode.window.showErrorMessage(result.reason);
 		}, (reason: any) => {
 			vscode.window.showErrorMessage(reason);
 		});

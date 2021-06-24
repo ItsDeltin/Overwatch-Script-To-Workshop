@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < Statements.Length; i++)
                 Statements[i] = parseInfo.GetStatement(BlockScope, blockContext.Statements[i]);
 
-            parseInfo.Script.AddCompletionRange(new CompletionRange(BlockScope, blockContext.Range, CompletionRangeKind.Catch));
+            parseInfo.Script.AddCompletionRange(new CompletionRange(parseInfo.TranslateInfo, BlockScope, blockContext.Range, CompletionRangeKind.Catch));
             EndComment = blockContext.EndComment?.GetContents();
         }
 
@@ -31,6 +31,8 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
+            actionSet = actionSet.ContainVariableAssigner();
+
             foreach (var statement in Statements)
                 statement.Translate(actionSet);
 

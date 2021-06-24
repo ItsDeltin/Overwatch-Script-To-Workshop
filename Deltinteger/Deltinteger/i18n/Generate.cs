@@ -35,14 +35,19 @@ namespace Deltin.Deltinteger.I18n
                 "subroutines"
             });
 
-            // Add methods
-            keywords.AddRange(ElementList.Elements.Select(e => e.WorkshopName));
+            // Add actions
+            keywords.AddRange(ElementRoot.Instance.Actions.Select(e => e.Name));
+
+            // Add values
+            keywords.AddRange(ElementRoot.Instance.Values.Select(e => e.Name));
 
             // Add enums
-            foreach (var enumData in EnumData.GetEnumData())
-                foreach (var member in enumData.Members)
-                    keywords.Add(member.GetI18nKeyword());
-
+            // TODO: Update
+            throw new NotImplementedException();
+            // foreach(var enumData in ElementRoot.Instance.Enumerators)
+            //     foreach (var member in enumData.Members)
+            //         keywords.Add(member.GetI18nKeyword());
+            
             // Add settings
             keywords.AddRange(Lobby.Ruleset.Keywords());
 

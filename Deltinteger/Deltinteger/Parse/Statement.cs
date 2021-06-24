@@ -48,8 +48,19 @@ namespace Deltin.Deltinteger.Parse
         public ReturnAction(ParseInfo parseInfo, Scope scope, Return returnContext)
         {
             ErrorRange = returnContext.Range;
-            if (returnContext.Expression != null) ReturningValue = parseInfo.GetExpression(scope, returnContext.Expression);
             ReturningFromScope = scope;
+
+            // Get the expression being returned.
+            if (returnContext.Expression != null)
+            {
+                ReturningValue = parseInfo.SetExpectType(parseInfo.ReturnType).GetExpression(scope, returnContext.Expression);
+                
+                if (parseInfo.ReturnType != null)
+                    SemanticsHelper.ExpectValueType(parseInfo, ReturningValue, parseInfo.ReturnType, returnContext.Expression.Range);
+            }
+            // No return value provided, and one was expected.
+            else if (parseInfo.ReturnType != null)
+                parseInfo.Script.Diagnostics.Error("Must return a value of type '" + parseInfo.ReturnType.GetName() + "'", returnContext.Token.Range);
         }
 
         public void Translate(ActionSet actionSet)
@@ -62,35 +73,34 @@ namespace Deltin.Deltinteger.Parse
 
     public class DeleteAction : IStatement
     {
-        private IExpression DeleteValue { get; }
+        readonly IExpression _deleteValue;
+        string _comment;
 
         public DeleteAction(ParseInfo parseInfo, Scope scope, Delete deleteContext)
         {
-            DeleteValue = parseInfo.GetExpression(scope, deleteContext.Deleting);
+            _deleteValue = parseInfo.GetExpression(scope, deleteContext.Deleting);
 
-            if (DeleteValue.Type() == null)
-                parseInfo.Script.Diagnostics.Error("Expression has no type.", deleteContext.Deleting.Range);
-
-            else if (!DeleteValue.Type().CanBeDeleted)
-                parseInfo.Script.Diagnostics.Error($"Type '{DeleteValue.Type().Name}' cannot be deleted.", deleteContext.Deleting.Range);
+            if (!_deleteValue.Type().CanBeDeleted)
+                parseInfo.Script.Diagnostics.Error($"Type '{_deleteValue.Type().Name}' cannot be deleted", deleteContext.Deleting.Range);
         }
 
         public void Translate(ActionSet actionSet)
         {
+            actionSet = actionSet.SetNextComment(_comment);
+
             // Object reference to delete.
-            Element delete = (Element)DeleteValue.Parse(actionSet);
+            Element delete = (Element)_deleteValue.Parse(actionSet);
 
             // Class data.
             var classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // Remove the variable from the list of classes.
-            actionSet.AddAction(classData.ClassIndexes.SetVariable(
-                value: new V_Number(0),
-                index: delete
-            ));
+            classData.ClassIndexes.Set(actionSet, value: 0, index: delete);
 
             // Delete the object.
-            DeleteValue.Type().Delete(actionSet, delete);
+            _deleteValue.Type().Delete(actionSet, delete);
         }
+
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => _comment = comment;
     }
 }

@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     Rule initialNodes = new Rule("Initial Nodes");
                     initialNodes.Actions = ArrayBuilder<Element>.Build(
                         // Set nodes, segments, and attributes.
-                        WorkshopArrayBuilder.SetVariable(null, new V_CustomString(fileName), null, FileName, false),
+                        WorkshopArrayBuilder.SetVariable(null, Element.CustomString(fileName), null, FileName, false),
                         WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), null, LoadNodes, false),
                         WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), null, LoadSegments, false),
                         WorkshopArrayBuilder.SetVariable(null, map.AttributesAsWorkshopData(), null, LoadAttributes, false)

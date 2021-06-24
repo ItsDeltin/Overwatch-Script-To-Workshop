@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
@@ -17,50 +16,44 @@ namespace Deltin.Deltinteger.Parse
     public class NumberAction : IExpression
     {
         public double Value { get; }
+        private readonly CodeType _type;
 
-        public NumberAction(ScriptFile script, NumberExpression numberContext)
+        public NumberAction(ParseInfo parseInfo, NumberExpression numberContext)
         {
             Value = numberContext.Value;
+            _type = parseInfo.TranslateInfo.Types.Number();
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            return new V_Number(Value);
-        }
+        public CodeType Type() => _type;
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.Num(Value);
     }
 
     public class BoolAction : IExpression
     {
         public bool Value { get; }
+        private readonly CodeType _type;
 
-        public BoolAction(ScriptFile script, bool value)
+        public BoolAction(ParseInfo parseInfo, bool value)
         {
             Value = value;
+            _type = parseInfo.TranslateInfo.Types.Boolean();
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => _type;
 
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            if (Value) return new V_True();
-            else return new V_False();
-        }
+        public IWorkshopTree Parse(ActionSet actionSet) => Value ? Element.True() : Element.False();
     }
 
     public class NullAction : IExpression
     {
-        public NullAction() { }
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        private readonly CodeType _type;
 
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            return new V_Null();
-        }
+        public NullAction(ParseInfo parseInfo) => _type = parseInfo.TranslateInfo.Types.Any();
+        public Scope ReturningScope() => null;
+        public CodeType Type() => _type;
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.Null();
     }
 
     public class ValueInArrayAction : IExpression
@@ -85,13 +78,12 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType;
-
         public IWorkshopTree Parse(ActionSet actionSet)
         {
             IWorkshopTree result = Expression.Parse(actionSet);
 
-            foreach (var index in Index)
-                result = Element.Part<V_ValueInArray>(result, index.Parse(actionSet));
+            foreach(var index in Index)
+                result = Element.ValueInArray(result, index.Parse(actionSet));
 
             return result;
         }
@@ -101,15 +93,36 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression[] Values { get; }
         private readonly CodeType _type;
+        private readonly bool _isStructArray; // Determines if this is definitely a struct array. Will be false for empty struct arrays.
 
         public CreateArrayAction(ParseInfo parseInfo, Scope scope, CreateArray createArrayContext)
         {
             Values = new IExpression[createArrayContext.Values.Count];
             for (int i = 0; i < Values.Length; i++)
-                Values[i] = parseInfo.GetExpression(scope, createArrayContext.Values[i]);
+            {
+                var expectingType = parseInfo.ExpectingType;
+                if (expectingType is ArrayType expectingArray)
+                    expectingType = expectingArray.ArrayOfType;
+
+                Values[i] = parseInfo.SetExpectType(expectingType).GetExpression(scope, createArrayContext.Values[i]);
+            }
             
-            // Todo: replace null with default type (when merged with the explicit branch)
-            _type = new ArrayType(Values.Length == 0 ? null : Values[0].Type());
+            if (Values.Length == 0)
+                _type = new ArrayType(parseInfo.TranslateInfo.Types, parseInfo.TranslateInfo.Types.Any());
+            else
+            {
+                // The type of the array is the type of the first value.
+                var sourceType = Values[0].Type();
+                _type = new ArrayType(parseInfo.TranslateInfo.Types, sourceType);
+
+                // Struct array
+                _isStructArray = sourceType.Attributes.IsStruct;
+
+                // If this is a struct array, the types are strict.
+                if (_isStructArray)
+                    for (int i = 0; i < Values.Length; i++)
+                        SemanticsHelper.ExpectValueType(parseInfo, Values[i], sourceType, createArrayContext.Values[i].Range);
+            }
         }
 
         public CodeType Type() => _type;
@@ -119,7 +132,12 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree[] asWorkshop = new IWorkshopTree[Values.Length];
             for (int i = 0; i < asWorkshop.Length; i++)
                 asWorkshop[i] = Values[i].Parse(actionSet);
+            
+            // Struct array
+            if (_isStructArray)
+                return new StructArray(Array.ConvertAll(asWorkshop, item => (IStructValue)item));
 
+            // Normal array
             return Element.CreateArray(asWorkshop);
         }
     }
@@ -135,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
             Expression = parseInfo.GetExpression(scope, typeConvert.Expression);
 
             // Get the type. Syntax error if there is none.
-            ConvertingTo = CodeType.GetCodeTypeFromContext(parseInfo, typeConvert.Type);
+            ConvertingTo = TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, typeConvert.Type);
         }
 
         public Scope ReturningScope() => ConvertingTo?.GetObjectScope();
@@ -143,80 +161,37 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet) => Expression.Parse(actionSet);
     }
 
-    public class OperatorAction : IExpression
-    {
-        public IExpression Left { get; }
-        public IExpression Right { get; }
-        public OperatorInfo Operator { get; }
-
-        public OperatorAction(ParseInfo parseInfo, Scope scope, BinaryOperatorExpression op)
-        {
-            Operator = op.Operator;
-            // Left operator.
-            Left = parseInfo.GetExpression(scope, op.Left);
-            // Right operator.
-            Right = parseInfo.GetExpression(scope, op.Right);
-        }
-
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            var left = Left.Parse(actionSet);
-            var right = Right.Parse(actionSet);
-            switch (Operator.Operator.Operator)
-            {
-                case "^": return Element.Part<V_RaiseToPower>(left, right);
-                case "*": return Element.Part<V_Multiply>(left, right);
-                case "/": return Element.Part<V_Divide>(left, right);
-                case "%": return Element.Part<V_Modulo>(left, right);
-                case "+": return Element.Part<V_Add>(left, right);
-                case "-": return Element.Part<V_Subtract>(left, right);
-                case "<": return new V_Compare(left, Operators.LessThan, right);
-                case "<=": return new V_Compare(left, Operators.LessThanOrEqual, right);
-                case "==": return new V_Compare(left, Operators.Equal, right);
-                case ">=": return new V_Compare(left, Operators.GreaterThanOrEqual, right);
-                case ">": return new V_Compare(left, Operators.GreaterThan, right);
-                case "!=": return new V_Compare(left, Operators.NotEqual, right);
-                case "&&": return Element.Part<V_And>(left, right);
-                case "||": return Element.Part<V_Or>(left, right);
-                default: throw new Exception($"Unrecognized operator {Operator}.");
-            }
-        }
-    }
-
     public class UnaryOperatorAction : IExpression
     {
         public IExpression Value { get; }
-        public OperatorInfo Operator { get; }
+        private readonly IUnaryTypeOperation _operation;
+        private readonly CodeType _type;
 
         public UnaryOperatorAction(ParseInfo parseInfo, Scope scope, UnaryOperatorExpression expression)
         {
             Value = parseInfo.GetExpression(scope, expression.Value);
-            Operator = expression.Operator;
+
+            string op = expression.Operator.Operator.Operator;
+            _operation = Value?.Type()?.Operations.GetOperation(UnaryTypeOperation.OperatorFromString(op)) ?? GetDefaultOperation(op, parseInfo.TranslateInfo.Types);
+            _type = _operation.ReturnType ?? parseInfo.TranslateInfo.Types.Unknown();
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet) => _operation.Resolve(actionSet, Value);
+
+        private UnaryTypeOperation GetDefaultOperation(string op, ITypeSupplier supplier)
         {
-            // OperatorInfo (an operator instance) ->
-            // CompilerOperator (the actual operator data) ->
-            // Operator's actual string identifier
-            switch (Operator.Operator.Operator)
+            if (Value.Type().IsConstant())
+                return null;
+            
+            switch (op)
             {
-                // Not
-                case "!":
-                    return Element.Part<V_Not>(Value.Parse(actionSet));
-                // Inverse
-                case "-":
-                    return Element.Part<V_Multiply>(Value.Parse(actionSet), new V_Number(-1));
-                // Unimplemented unary operator.
-                default:
-                    throw new NotImplementedException(Operator.Operator.Operator);
+                case "!": return new UnaryTypeOperation(UnaryTypeOperation.OperatorFromString(op), supplier.Boolean(), v => !(Element)v);
+                case "-": return new UnaryTypeOperation(UnaryTypeOperation.OperatorFromString(op), supplier.Number(), v => (Element)v * -1);
+                default: throw new NotImplementedException();
             }
         }
 
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => _type;
     }
 
     public class TernaryConditionalAction : IExpression
@@ -243,10 +218,63 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type()
         {
-            if (Consequent.Type() == Alternative.Type()) return Consequent.Type();
-            return null;
+            var consequentType = Consequent.Type();
+            var alternativeType = Alternative.Type();
+
+            // If the types are the same, the ternary type is that type.
+            if (consequentType.Is(alternativeType))
+                return consequentType;
+            
+            // Otherwise, if the types are compatible, create a union with those types.
+            if (consequentType.CompatibleWith(alternativeType))
+                return new PipeType(consequentType, alternativeType);
+
+            // Otherwise, the type is Any.
+            return parseInfo.Types.Any();
         }
-        public IWorkshopTree Parse(ActionSet actionSet) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            var condition = Condition.Parse(actionSet);
+            var consequent = Consequent.Parse(actionSet);
+            var alternative = Alternative.Parse(actionSet);
+
+            if (consequent is IStructValue consequentStruct)
+                return new TernaryConditionalStruct(condition, consequentStruct, (IStructValue)alternative);
+
+            return Element.TernaryConditional(condition, consequent, alternative);
+        }
+
+        class TernaryConditionalStruct : IStructValue
+        {
+            readonly IWorkshopTree _condition;
+            readonly IStructValue _consequent;
+            readonly IStructValue _alternative;
+
+            public TernaryConditionalStruct(IWorkshopTree condition, IStructValue consequent, IStructValue alternative)
+            {
+                _condition = condition;
+                _consequent = consequent;
+                _alternative = alternative;
+            }
+
+            public IWorkshopTree GetValue(string variableName)
+            {
+                // Get the consequent and alternative.
+                var consequent = _consequent.GetValue(variableName);
+                var alternative = _alternative.GetValue(variableName);
+
+                // Check if we need to do a ternary subsection.
+                if (consequent is IInlineStructDictionary consequentStruct)
+                    return new TernaryConditionalStruct(_condition, consequentStruct, (IStructValue)alternative);
+
+                // Otherwise, create the ternary normally.
+                return Element.TernaryConditional(_condition, consequent, alternative);
+            }
+
+            public IWorkshopTree[] GetAllValues() => _consequent.GetAllValues();
+            public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
+            public IWorkshopTree GetArbritraryValue() => _consequent;
+        }
     }
 
     public class RootAction : IExpression
@@ -265,18 +293,18 @@ namespace Deltin.Deltinteger.Parse
 
     public class ThisAction : IExpression
     {
-        private CodeType ThisType { get; }
+        readonly IDefinedTypeInitializer _typeInitializer;
 
         public ThisAction(ParseInfo parseInfo, Scope scope, ThisExpression context)
         {
-            ThisType = scope.GetThis();
-            if (ThisType == null)
+            _typeInitializer = parseInfo.TypeInitializer;
+            if (_typeInitializer == null)
                 parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", context.Range);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => actionSet.This;
-        public CodeType Type() => ThisType;
-        public Scope ReturningScope() => ThisType?.GetObjectScope();
+        public CodeType Type() => _typeInitializer.WorkingInstance;
+        public Scope ReturningScope() => _typeInitializer.GetObjectBasedScope();
     }
 
     /*
@@ -337,10 +365,10 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree expressionResult = expression.Parse(actionSet);
 
             // Get the class identifier of the input expression.
-            IWorkshopTree classIdentifier = Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), expressionResult);
+            IWorkshopTree classIdentifier = classData.ClassIndexes.Get()[expressionResult];
 
             // Check if the expression's class identifier and the type are equal.
-            return new V_Compare(classIdentifier, Operators.Equal, new V_Number(checkingIfType.Identifier));
+            return Element.Compare(classIdentifier, Operator.Equal, new NumberElement(checkingIfType.Identifier));
         }
 
         public Scope ReturningScope() => null;

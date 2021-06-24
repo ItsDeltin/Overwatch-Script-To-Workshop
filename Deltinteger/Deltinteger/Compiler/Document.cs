@@ -4,6 +4,7 @@ using System.Linq;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Compiler.Parse;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Cache;
 using TextDocumentItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.TextDocumentItem;
 
 namespace Deltin.Deltinteger.Compiler
@@ -14,9 +15,10 @@ namespace Deltin.Deltinteger.Compiler
         public Lexer Lexer { get; }
         public string Content { get; private set; }
         public RootContext Syntax { get; private set; }
-        public long Version { get; private set; }
+        public int? Version { get; private set; }
         public List<IParserError> Errors { get; private set; }
         public ParserSettings ParserSettings { get; private set; }
+        public CacheWatcher Cache { get; } = new CacheWatcher();
 
         public Document(Uri uri, string initialContent)
         {
@@ -32,14 +34,14 @@ namespace Deltin.Deltinteger.Compiler
             Version = document.Version;
         }
 
-        private void Parse(IncrementInfo incrementInfo = null)
+        private void Parse()
         {
-            Parser parser = new Parser(Lexer, ParserSettings, Syntax, incrementInfo);
+            Parser parser = new Parser(Lexer, ParserSettings, Syntax);
             Syntax = parser.Parse();
             Errors = parser.Errors;
         }
 
-        public void Update(string newContent, UpdateRange updateRange, long version, ParserSettings parserSettings)
+        public void Update(string newContent, UpdateRange updateRange, int? version, ParserSettings parserSettings)
         {
             Version = version;
             Content = newContent;
@@ -51,8 +53,8 @@ namespace Deltin.Deltinteger.Compiler
             }
             else
             {
-                var increment = Lexer.Update(new VersionInstance(newContent), updateRange);
-                Parse(increment);
+                Lexer.Update(new VersionInstance(newContent), updateRange);
+                Parse();
             }
         }
 
@@ -85,5 +87,10 @@ namespace Deltin.Deltinteger.Compiler
             Text = Content,
             LanguageId = "ostw"
         };
+    
+        public void Remove()
+        {
+            Cache.Unregister();
+        }
     }
 }

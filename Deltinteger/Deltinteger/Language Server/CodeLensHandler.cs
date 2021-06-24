@@ -35,12 +35,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     // Create the CodeLens.
                     finalLenses.Add(new CodeLens()
                     {
-                        Command = new Command()
-                        {
-                            Title = lens.GetTitle(),
-                            Name = lens.Command,
-                            Arguments = lens.GetArguments()
-                        },
+                        Command = lens.GetCommand(),
                         Range = lens.Range
                     });
 
@@ -55,7 +50,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 (_languageServer.ConfigurationHandler.ElementCountCodeLens && lens is ElementCountCodeLens);
         }
 
-        public CodeLensRegistrationOptions GetRegistrationOptions()
+        public CodeLensRegistrationOptions GetRegistrationOptions(CodeLensCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
             return new CodeLensRegistrationOptions()
             {
