@@ -48,8 +48,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.Script.Elements.AddDeclarationCall(Provider, new DeclarationCall(callRange, false));
-            // todo
-            // parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
+            parseInfo.CurrentCallInfo.Call(Provider.CallInfo.Function, callRange);
         }
 
         class UserConstructorController : IWorkshopFunctionController

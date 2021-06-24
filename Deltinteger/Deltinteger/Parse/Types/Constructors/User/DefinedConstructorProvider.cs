@@ -41,6 +41,9 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             parseInfo.TranslateInfo.StagedInitiation.On(this);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Constructor, DefinedAt.range));
             parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(context.ConstructorToken.Range, true));
+
+            // Add the CallInfo to the recursion check.
+            parseInfo.TranslateInfo.GetComponent<RecursionCheckComponent>().AddCheck(CallInfo);
         }
 
         public void GetContent()
