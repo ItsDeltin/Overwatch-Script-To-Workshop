@@ -6114,7 +6114,7 @@
           "defaultValue": "Color"
         },
         "Reevaluation": {
-          "type": "ProgressBarEvaluation",
+          "type": "ProgressBarHudEvaluation",
           "defaultValue": "Visible To Values And Color"
         },
         "Nonteam Spectators": {
@@ -6170,7 +6170,7 @@
           "defaultValue": "Color"
         },
         "Reevaluation": {
-          "type": "ProgressBarEvaluation",
+          "type": "ProgressBarWorldEvaluation",
           "defaultValue": "Visible To Values And Color"
         },
         "Nonteam Spectators": {
@@ -7270,11 +7270,29 @@
     "HealthType": ["Health", "Armor", "Shields"],
     "OutlineType": ["Default", "Occluded", "Always"],
     "Assist": ["Assisters And Targets", "None"],
-    "ProgressBarEvaluation": [
+    "ProgressBarHudEvaluation": [
       "Visible To Values And Color",
       "Visible To And Values",
       "Visible To And Color",
       "Visible To",
+      "Values And Color",
+      "Values",
+      "Color",
+      "None"
+    ],
+    "ProgressBarWorldEvaluation": [
+      "Visible To Position Values And Color",
+      "Visible To Position And Values",
+      "Visible To Position And Colors",
+      "Visible To Values And Color",
+      "Visible To And Position",
+      "Visible To And Values",
+      "Visible To And Color",
+      "Visible To",
+      "Position Values And Color",
+      "Position And Color",
+      "Position And Values",
+      "Position",
       "Values And Color",
       "Values",
       "Color",

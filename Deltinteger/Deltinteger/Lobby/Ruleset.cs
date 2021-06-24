@@ -576,7 +576,7 @@ namespace Deltin.Deltinteger.Lobby
             return false;
         }
 
-        public bool HasErrors() => _errors.Count > 0;
+        public bool HasErrors() => _errors.Any(error => error.IsFatal);
 
         public void Dump(FileDiagnostics diagnostics, DocRange range)
         {
