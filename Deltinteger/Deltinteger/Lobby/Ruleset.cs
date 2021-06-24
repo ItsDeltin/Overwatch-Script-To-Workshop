@@ -556,13 +556,13 @@ namespace Deltin.Deltinteger.Lobby
 
     public class SettingValidation
     {
-        private readonly List<string> _errors = new List<string>();
+        private readonly List<ValidationError> _errors = new List<ValidationError>();
 
         public SettingValidation() { }
 
-        public void Error(string error) => _errors.Add(error);
-        public void InvalidSetting(string propertyName) => _errors.Add($"The setting '{propertyName}' is not valid.");
-        public void IncorrectType(string propertyName, string expectedType) => _errors.Add($"The setting '{propertyName}' requires a value of type " + expectedType + ".");
+        public void Error(string error, bool isFatal = true) => _errors.Add(new ValidationError(error, isFatal));
+        public void InvalidSetting(string propertyName) => Error($"The setting '{propertyName}' is not valid.");
+        public void IncorrectType(string propertyName, string expectedType) => Error($"The setting '{propertyName}' requires a value of type " + expectedType + ".");
         public bool TryGetObject(string propertyName, JToken token, out JObject obj)
         {
             if (token is JObject tokenAsObject)
@@ -580,7 +580,23 @@ namespace Deltin.Deltinteger.Lobby
 
         public void Dump(FileDiagnostics diagnostics, DocRange range)
         {
-            foreach (string error in _errors) diagnostics.Error(error, range);
+            foreach (var error in _errors)
+                if (error.IsFatal)
+                    diagnostics.Error(error.Message, range);
+                else
+                    diagnostics.Warning(error.Message, range);
+        }
+
+        struct ValidationError
+        {
+            public string Message;
+            public bool IsFatal;
+
+            public ValidationError(string message, bool isFatal = true)
+            {
+                Message = message;
+                IsFatal = isFatal;
+            }
         }
     }
 }

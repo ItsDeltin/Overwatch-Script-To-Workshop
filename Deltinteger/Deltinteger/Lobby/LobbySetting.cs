@@ -86,7 +86,7 @@ namespace Deltin.Deltinteger.Lobby
             {
                 string str = value.ToObject<string>();
                 if (!Values.Contains(str))
-                    validation.Error($"Expected one of the following values for property '{Name}': {string.Join(", ", Values.Select(v => "'" + v + "'"))}");
+                    validation.Error($"Expected one of the following values for property '{Name}': {string.Join(", ", Values.Select(v => "'" + v + "'"))}", false);
             }
             catch
             {
@@ -218,8 +218,8 @@ namespace Deltin.Deltinteger.Lobby
             try
             {
                 double number = value.ToObject<double>();
-                if (number < Min) validation.Error($"The property '{Name}' requires a number above {Min}, got {number}.");
-                if (number > Max) validation.Error($"The property '{Name}' requires a number below {Max}, got {number}.");
+                if (number < Min) validation.Error($"The property '{Name}' requires a number above {Min}, got {number}.", false);
+                if (number > Max) validation.Error($"The property '{Name}' requires a number below {Max}, got {number}.", false);
             }
             catch
             {
