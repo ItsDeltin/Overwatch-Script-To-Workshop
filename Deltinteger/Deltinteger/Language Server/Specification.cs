@@ -70,8 +70,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public Location(Uri uri, DocRange range)
         {
-            this.uri = uri;
-            this.range = range;
+            this.uri = uri ?? throw new ArgumentNullException(nameof(uri));
+            this.range = range ?? throw new ArgumentNullException(nameof(range));
         }
 
         public LSLocation ToLsLocation()

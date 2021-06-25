@@ -191,8 +191,8 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                     break;
                 
                 // Missing attribute function
-                default:
-                    throw new NotImplementedException();
+                // default:
+                //     throw new NotImplementedException();
             }
         }
 

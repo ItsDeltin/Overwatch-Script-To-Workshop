@@ -193,7 +193,7 @@ namespace Deltin.Deltinteger.Parse
         public ActionSet ContainVariableAssigner() => new ActionSet(this) { IndexAssigner = IndexAssigner.CreateContained() };
         public ActionSet PackThis() => new ActionSet(this) { This = CurrentObject };
         public ActionSet SetThis(IWorkshopTree value) => new ActionSet(this) { This = value };
-        public ActionSet SetNextComment(string comment) => new ActionSet(this) { CommentNext = new ActionComment(comment) };
+        public ActionSet SetNextComment(string comment) => comment == null ? this : new ActionSet(this) { CommentNext = new ActionComment(comment) };
         public ActionSet SetThisTypeLinker(InstanceAnonymousTypeLinker thisTypeLinker) => new ActionSet(this) { ThisTypeLinker = thisTypeLinker };
         public ActionSet MergeTypeLinker(InstanceAnonymousTypeLinker thisTypeLinker)
         {
@@ -216,10 +216,18 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (var action in actions)
             {
-                if (action is Element element && comment != null)
+                if (action is Element element)
                 {
-                    element.Comment = comment;
-                    comment = null;
+                    if (comment != null)
+                    {
+                        element.Comment = comment;
+                        comment = null;
+                    }
+                    else if (CommentNext != null && !CommentNext.Used)
+                    {
+                        element.Comment = CommentNext.GetValue();
+                        CommentNext = null;
+                    }
                 }
                 AddAction(new ALAction(action));
             }

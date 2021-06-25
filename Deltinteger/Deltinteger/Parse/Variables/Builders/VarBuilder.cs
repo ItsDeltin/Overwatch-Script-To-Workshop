@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = _contextHandler.ParseInfo;
             _diagnostics = _parseInfo.Script.Diagnostics;
             _nameRange = _contextHandler.GetNameRange();
-            _name = _contextHandler.GetName();
+            _name = _contextHandler.GetName() ?? "?";
 
             // Get then check components.
             ComponentCollection = new VariableComponentCollection(_diagnostics);
@@ -70,7 +70,8 @@ namespace Deltin.Deltinteger.Parse
             var result = new Var(_varInfo);
 
             // Add the variable to the operational scope.
-            _scopeHandler.CheckConflict(_parseInfo, new(_name), _nameRange);
+            if (_nameRange != null)
+                _scopeHandler.CheckConflict(_parseInfo, new(_name), _nameRange);
             _scopeHandler.Add(result.GetDefaultInstance(_scopeHandler.DefinedIn()), ComponentCollection.IsAttribute(AttributeType.Static));
 
             // Done
@@ -112,6 +113,8 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual void TypeCheck()
         {
+            if (_nameRange == null) return;
+            
             // If the type of the variable is a constant workshop value and there is no initial value, throw a syntax error.
             if (_varInfo.Type != null && _varInfo.Type.IsConstant() && _varInfo.InitialValueContext == null)
                 _diagnostics.Error("Variables with constant workshop types must have an initial value", _nameRange);
@@ -125,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
             // No attribute is being overriden.
             if (!ComponentCollection.IsAttribute(AttributeType.Override)) return;
 
-            var overriding = _scopeHandler.GetOverridenVariable(_contextHandler.GetName());
+            var overriding = _scopeHandler.GetOverridenVariable(_name);
             var overridingType = overriding.CodeType.GetCodeType(_parseInfo.TranslateInfo);
 
             // Make sure the overriden variable's type matches.

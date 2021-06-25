@@ -1,11 +1,5 @@
 namespace Deltin.Deltinteger.Parse.Functions.Builder
 {
-    /// <summary>Creates an IWorkshopFunctionController.</summary>
-    public interface IWorkshopFunctionControllerProvider
-    {
-        IWorkshopFunctionController Get(DeltinScript deltinScript);
-    }
-
     /// <summary> The root interface representing function and function-like patterns being compiled to the workshop.
     /// This is used by the WorkshopFunctionBuilder to create inline functions and subroutines.</summary>
     public interface IWorkshopFunctionController

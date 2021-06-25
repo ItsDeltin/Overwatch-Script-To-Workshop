@@ -93,8 +93,11 @@ namespace Deltin.Deltinteger.Parse
             else
                 _parseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.Content, GetInitialValue);
             
-            _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, varInfo.CodeLensType, DefinedAt.range));
-            _parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(varInfo.DefinedAt.range, true));
+            if (DefinedAt != null)
+            {
+                _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, varInfo.CodeLensType, DefinedAt.range));
+                _parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(DefinedAt.range, true));
+            }
         }
 
         private void GetInitialValue()
@@ -155,8 +158,11 @@ namespace Deltin.Deltinteger.Parse
             VariableType = _variableTypeHandler.GetVariableType();
             StoreType = _variableTypeHandler.GetStoreType();
 
-            _parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
-            _parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
+            if (DefinedAt != null)
+            {
+                _parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
+                _parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
+            }
         }
 
         public string GetLabel(bool markdown)
