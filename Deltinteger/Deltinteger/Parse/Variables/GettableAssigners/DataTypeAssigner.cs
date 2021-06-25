@@ -37,6 +37,8 @@ namespace Deltin.Deltinteger.Parse
             // Assign the index reference
             var value = info.IndexReferenceCreator.Create(_attributes);
 
+            if (info.IsRecursive) value = new RecursiveIndexReference(value);
+
             // Set the initial value.
             if (info.SetInitialValue == SetInitialValue.SetAndFallbackTo0 || (info.SetInitialValue == SetInitialValue.SetIfExists && hasDefaultValue))
             {

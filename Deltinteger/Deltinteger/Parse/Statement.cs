@@ -67,7 +67,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (ReturningValue != null)
                 actionSet.ReturnHandler.ReturnValue(ReturningValue.Parse(actionSet));
-            actionSet.ReturnHandler.Return(ReturningFromScope, actionSet);
+            actionSet.ReturnHandler.Return(actionSet);
         }
     }
 

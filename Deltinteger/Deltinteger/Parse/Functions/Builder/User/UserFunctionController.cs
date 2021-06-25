@@ -26,6 +26,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             _typeArgLinker = typeArgs;
             _allVirtualOptions.Add(function);
 
+            Attributes.IsRecursive = function.Attributes.Recursive;
+
             // If the function is defined in a type.
             if (function.DefinedInType != null)
             {
@@ -145,6 +147,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
     {
         readonly UserFunctionParameter[] _parameters;
         readonly CodeParameter[] _codeParameters;
+        readonly bool _recursiveParameters;
 
         public UserFunctionParameterHandler(
             ActionSet actionSet,
@@ -152,6 +155,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             IVariableInstance[] parameterVariables,
             WorkshopParameter[] providedParameters)
         {
+            _recursiveParameters = actionSet.IsRecursive;
             _codeParameters = codeParameters;
             _parameters = new UserFunctionParameter[codeParameters.Length];
             for (int i = 0; i < _parameters.Length; i++)

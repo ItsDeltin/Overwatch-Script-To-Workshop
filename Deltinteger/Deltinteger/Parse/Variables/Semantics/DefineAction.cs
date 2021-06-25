@@ -17,6 +17,9 @@ namespace Deltin.Deltinteger.Parse
             var variableInstance = DefiningVariable.GetInstance(null, actionSet.ThisTypeLinker);
             var value = variableInstance.GetAssigner(new(actionSet)).GetValue(new GettableAssignerValueInfo(actionSet.SetNextComment(_comment)));
             actionSet.IndexAssigner.Add(DefiningVariable, value);
+
+            if (actionSet.IsRecursive)
+                actionSet.RecursiveVariableTracker.Add(value);
         }
 
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => _comment = comment;

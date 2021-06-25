@@ -45,7 +45,8 @@ namespace Deltin.Deltinteger.Parse
                             initialValue: initialValue?.GetValue(var.Name),
                             inline: inline,
                             indexReferenceCreator: info.IndexReferenceCreator,
-                            isGlobal: info.IsGlobal)));
+                            isGlobal: info.IsGlobal,
+                            isRecursive: info.IsRecursive)));
             
             return new GettableAssignerResult(new StructAssignerValue(values), null);
         }
@@ -138,6 +139,20 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (var child in _children)
                 child.Value.Modify(actionSet, Operation.AppendToArray, structValue.GetValue(child.Key), target, index);
+        }
+
+        public void Push(ActionSet actionSet, IWorkshopTree value)
+        {
+            var structValue = ValueInArrayToWorkshop.ExtractStructValue(value);
+
+            foreach (var child in _children)
+                child.Value.Push(actionSet, structValue.GetValue(child.Key));
+        }
+
+        public void Pop(ActionSet actionSet)
+        {
+            foreach (var child in _children)
+                child.Value.Pop(actionSet);
         }
 
         public IGettable ChildFromClassReference(IWorkshopTree reference)

@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             Context = context;
             ContainingType = containingType;
-            CallInfo = new CallInfo(new RecursiveCallHandler(this, context.Subroutine), parseInfo.Script, ContentReady);
+            CallInfo = new CallInfo(new RecursiveCallHandler(this, context.Subroutine || context.Attributes.Recursive), parseInfo.Script, ContentReady);
 
             DocRange nameRange = context.Identifier.Range;
 
@@ -64,6 +64,7 @@ namespace Deltin.Deltinteger.Parse
             Recursive = attributes.IsRecursive;
             Virtual = attributes.IsVirtual;
             AccessLevel = attributes.Accessor;
+            Recursive = attributes.IsRecursive;
 
             // Get subroutine info.
             if (context.Subroutine)
@@ -197,6 +198,7 @@ namespace Deltin.Deltinteger.Parse
             InstanceInfo = instanceInfo;
             DefinedInType = Attributes.ContainingType = definedIn;
             Attributes.Parallelable = provider.IsSubroutine;
+            Attributes.Recursive = provider.Recursive;
 
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             ParameterVars = new IVariableInstance[Parameters.Length];

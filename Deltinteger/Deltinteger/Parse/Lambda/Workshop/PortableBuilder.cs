@@ -188,7 +188,14 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
             public void Push(ActionSet actionSet, IWorkshopTree[] parameterValues)
             {
                 parameterValues = ExtractStructs(parameterValues);
-                throw new NotImplementedException();
+
+                int i = 0;
+                for (; i < parameterValues.Length; i++)
+                    _recycler.Created[i].Push(actionSet, (Element)parameterValues[i]);
+
+                // Push to remaining values.
+                for (; i < _recycler.Created.Length; i++)
+                    _recycler.Created[i].Push(actionSet, Element.Num(0));
             }
 
             static IWorkshopTree[] ExtractStructs(IWorkshopTree[] parameterValues)
@@ -210,7 +217,8 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
 
             public void Pop(ActionSet actionSet)
             {
-                throw new NotImplementedException();
+                foreach (var parameterStack in _recycler.Created)
+                    parameterStack.Pop(actionSet);
             }
         }
     }

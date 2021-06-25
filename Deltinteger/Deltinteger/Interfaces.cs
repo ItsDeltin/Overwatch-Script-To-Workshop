@@ -52,6 +52,8 @@ namespace Deltin.Deltinteger
         void Set(ActionSet actionSet, IWorkshopTree value) => Set(actionSet, value, null, null);
         void Set(ActionSet actionSet, IWorkshopTree value, Element target, params Element[] index);
         void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, params Element[] index);
+        void Pop(ActionSet actionSet);
+        void Push(ActionSet actionSet, IWorkshopTree value);
         IGettable ChildFromClassReference(IWorkshopTree reference);
     }
 

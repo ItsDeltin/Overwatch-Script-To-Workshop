@@ -318,20 +318,6 @@ namespace Deltin.Deltinteger.Parse
             return found;
         }
 
-        public void EndScope(ActionSet actionSet, bool includeParents)
-        {
-            if (MethodContainer) return;
-
-            foreach (IVariableInstance variable in _variables)
-                if (actionSet.IndexAssigner.TryGet(variable.Provider, out IGettable gettable) && // and the current scopeable is assigned to an index,
-                    gettable is RecursiveIndexReference recursiveIndexReference) // and the assigned index is a RecursiveIndexReference,
-                    // Pop the variable stack.
-                    actionSet.AddAction(recursiveIndexReference.Pop());
-
-            if (includeParents && Parent != null)
-                Parent.EndScope(actionSet, true);
-        }
-
         Scope IScopeProvider.GetObjectBasedScope() => this;
         Scope IScopeProvider.GetStaticBasedScope() => this;
         IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverrideInfo) => throw new NotImplementedException();

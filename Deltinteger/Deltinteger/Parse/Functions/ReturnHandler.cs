@@ -44,11 +44,11 @@ namespace Deltin.Deltinteger.Parse
                 _returningValue = value;
         }
 
-        public virtual void Return(Scope returningFromScope, ActionSet returningSet)
+        public virtual void Return(ActionSet returningSet)
         {
             if (returningSet.IsRecursive)
             {
-                returningFromScope.EndScope(returningSet, true);
+                returningSet.RecursiveVariableTracker.PopAll();
 
                 foreach (var recursiveIndexReference in AdditionalPopOnReturn)
                     returningSet.AddAction(recursiveIndexReference.Pop());
@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
         public override IWorkshopTree GetReturnedValue() => throw new Exception("Can't get the returned value of a rule.");
         public override void ReturnValue(IWorkshopTree value) => throw new Exception("Can't return a value in a rule.");
 
-        public override void Return(Scope returningFromScope, ActionSet returningSet)
+        public override void Return(ActionSet returningSet)
         {
             _actionSet.AddAction(Element.Part("Abort"));
         }

@@ -8,6 +8,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Inline { get; set; }
         public WorkshopVariableAssigner IndexReferenceCreator { get; set; }
         public bool IsGlobal { get; set; }
+        public bool IsRecursive { get; set; }
 
         public GettableAssignerValueInfo(
             ActionSet actionSet,
@@ -15,7 +16,8 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree initialValue,
             bool inline,
             WorkshopVariableAssigner indexReferenceCreator,
-            bool isGlobal)
+            bool isGlobal,
+            bool isRecursive)
         {
             ActionSet = actionSet;
             SetInitialValue = setInitialValue;
@@ -23,6 +25,7 @@ namespace Deltin.Deltinteger.Parse
             Inline = inline;
             IndexReferenceCreator = indexReferenceCreator;
             IsGlobal = isGlobal;
+            IsRecursive = isRecursive;
         }
 
         public GettableAssignerValueInfo(ActionSet actionSet)
@@ -30,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
             ActionSet = actionSet;
             IndexReferenceCreator = new WorkshopVariableAssigner(actionSet.VarCollection);
             IsGlobal = actionSet.IsGlobal;
+            IsRecursive = actionSet.IsRecursive;
         }
 
         public GettableAssignerValueInfo(VarCollection varCollection)

@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
         TranslateRule _subroutineRule;
         ActionSet _actionSet;
+        IParameterHandler _parameterHandler;
         WorkshopFunctionBuilder _functionBuilder;
         IndexReference _objectStore;
 
@@ -29,13 +30,16 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             _subroutineRule = new TranslateRule(_deltinScript, subroutine, _context.RuleName, _context.VariableGlobalDefault);
 
             // Setup the return handler.
-            _actionSet = _subroutineRule.ActionSet.ContainVariableAssigner().SetThisTypeLinker(_context.TypeLinker);
+            _actionSet = _subroutineRule.ActionSet
+                .ContainVariableAssigner()
+                .SetThisTypeLinker(_context.TypeLinker)
+                .New(_context.Controller.Attributes.IsRecursive);
 
             // Create the function builder.
             var controller = _context.Controller;
 
             // Create the parameter handlers.
-            var parameterHandler = controller.CreateParameterHandler(_actionSet, null);
+            _parameterHandler = controller.CreateParameterHandler(_actionSet, null);
             
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             if (controller.Attributes.IsInstance)
@@ -67,12 +71,12 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             _functionBuilder = new WorkshopFunctionBuilder(_actionSet, controller);
             _functionBuilder.ModifySet(a => a.PackThis()); // TODO: is this required?
             _functionBuilder.SetupReturnHandler();
-            parameterHandler.AddParametersToAssigner(_actionSet.IndexAssigner);
+            _parameterHandler.AddParametersToAssigner(_actionSet.IndexAssigner);
 
             // Done.
             return Result = new SubroutineCatalogItem(
                 subroutine: subroutine,
-                parameterHandler: parameterHandler,
+                parameterHandler: _parameterHandler,
                 objectStack: _objectStore,
                 returnHandler: _functionBuilder.ReturnHandler);
         }
@@ -82,9 +86,14 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             _functionBuilder.Controller.Build(_functionBuilder.ActionSet); 
             _functionBuilder.ReturnHandler?.ApplyReturnSkips();
 
-            // Pop object array if recursive.
-            if (_context.Controller.Attributes.IsRecursive && _context.Controller.Attributes.IsInstance)
-                _actionSet.AddAction(_objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(_objectStore.GetVariable()) - 1));
+            if (_context.Controller.Attributes.IsRecursive)
+            {
+                _parameterHandler.Pop(_actionSet);
+
+                // Pop object array.
+                if (_context.Controller.Attributes.IsInstance)
+                    _actionSet.AddAction(_objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(_objectStore.GetVariable()) - 1));
+            }
 
             // Add the subroutine.
             Rule translatedRule = _subroutineRule.GetRule();

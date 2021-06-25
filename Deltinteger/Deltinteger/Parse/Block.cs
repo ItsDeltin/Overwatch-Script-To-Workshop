@@ -31,13 +31,12 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            actionSet = actionSet.ContainVariableAssigner();
+            actionSet = actionSet.ContainVariableAssigner().AddRecursiveVariableTracker();
 
             foreach (var statement in Statements)
                 statement.Translate(actionSet);
 
-            if (!Statements.Any(s => s is ReturnAction))
-                BlockScope?.EndScope(actionSet, false);
+            actionSet.RecursiveVariableTracker.PopLocal();
         }
 
         public PathInfo[] GetPaths() => new PathInfo[] { new PathInfo(this, null, true) };

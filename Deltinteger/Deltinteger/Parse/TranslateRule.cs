@@ -146,6 +146,8 @@ namespace Deltin.Deltinteger.Parse
         public bool IsRecursive { get; private set; }
         public ActionComment CommentNext { get; private set; }
         public InstanceAnonymousTypeLinker ThisTypeLinker { get; private set; }
+        public RecursiveVariableTracker RecursiveVariableTracker { get; private set; }
+
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
@@ -177,6 +179,7 @@ namespace Deltin.Deltinteger.Parse
             IsRecursive = other.IsRecursive;
             CommentNext = other.CommentNext;
             ThisTypeLinker = other.ThisTypeLinker;
+            RecursiveVariableTracker = other.RecursiveVariableTracker;
         }
 
         public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this)
@@ -211,6 +214,7 @@ namespace Deltin.Deltinteger.Parse
 
             return clone;
         }
+        public ActionSet AddRecursiveVariableTracker() => new ActionSet(this) { RecursiveVariableTracker = new RecursiveVariableTracker(this, RecursiveVariableTracker) };
 
         public void AddAction(string comment, params IWorkshopTree[] actions)
         {
