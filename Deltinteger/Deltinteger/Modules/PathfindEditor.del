@@ -184,8 +184,8 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
     for (define i = Segments.Length - 1; i >= 0; i--)
         if (Segments[i].Nodes.Contains(selected))
         {
-            (<Segment>Segments[i]).Hide();
-            delete(<Segment>Segments[i]);
+            Segments[i].Hide();
+            delete(Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
 
@@ -260,7 +260,7 @@ class Node
 
     public VisibleAttributeInfo[] VisibleAttribute = [];
 
-    public Node(define pos)
+    public constructor(define pos)
     {
         Pos = pos;
         ShownLocation = Pos + Vector(0, 1.25, 0);
@@ -369,7 +369,7 @@ class VisibleAttributeInfo
     public define String = "";
     public define InworldText;
 
-    public VisibleAttributeInfo(ref Node source, ref Node link)
+    public constructor(in Node source, in Node link)
     {
         Source = source;
         Link = link;
@@ -468,7 +468,7 @@ class Segment
     define EffectID;
     public define visible = false;
 
-    public Segment(Node node1, Node node2)
+    public constructor(in Node node1, in Node node2)
     {
         Node1 = node1;
         Node2 = node2;
@@ -621,7 +621,7 @@ if (CurrentMode == Mode.Attribute)
     });
 }
 
-void pressLoop(BlockLambda action)
+void pressLoop(const () => void action)
 {
     action.Invoke();
     Wait(0.5, WaitBehavior.AbortWhenFalse);
@@ -666,7 +666,7 @@ class LinkedAttribute
     public Node Node2;
     public define ID;
 
-    public LinkedAttribute(ref Node node1, ref Node node2, ref define id)
+    public constructor(in Node node1, in Node node2, in define id)
     {
         Node1 = node1;
         Node2 = node2;

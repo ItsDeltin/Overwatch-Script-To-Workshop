@@ -1,4 +1,4 @@
-public void ActivateScoper(ref define executor, ref define id, define data)
+public void ActivateScoper(in define executor, in define id, define data)
 {
     data += id / 100;
     Damage(executor, executor, data);
