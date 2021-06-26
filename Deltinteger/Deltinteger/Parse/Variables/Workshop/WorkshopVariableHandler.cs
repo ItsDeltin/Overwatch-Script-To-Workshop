@@ -8,14 +8,27 @@ namespace Deltin.Deltinteger.Parse
 {
     public class WorkshopArrayBuilder
     {
-        private WorkshopVariable Constructor { get; }
-        private readonly IndexReference Store;
+        readonly VarCollection _varCollection;
+        IndexReference _constructor;
+        IndexReference _constructorTemp;
 
-        public WorkshopArrayBuilder(WorkshopVariable constructor, IndexReference store)
-        {
-            Constructor = constructor;
-            Store = store;
+        WorkshopVariable Constructor {
+            get {
+                if (_constructor == null)
+                    _constructor = _varCollection.Assign("_arrayConstructor", true, false);
+                return _constructor.WorkshopVariable;
+            }
         }
+
+        IndexReference ConstructorTemp {
+            get {
+                if (_constructorTemp == null)
+                    _constructorTemp = _varCollection.Assign("_arrayConstructorTemp", true, false);
+                return _constructorTemp;
+            }
+        }
+
+        public WorkshopArrayBuilder(VarCollection varCollection) => _varCollection = varCollection;
 
         public static Element[] SetVariable(WorkshopArrayBuilder builder, Element value, Element targetPlayer, WorkshopVariable variable, bool flat2ndDim, params Element[] index)
         {
@@ -83,7 +96,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Copy the array to the C variable
                 actions.AddRange(
-                    builder.Store.SetVariable(GetRoot(targetPlayer, builder.Constructor), targetPlayer)
+                    builder.ConstructorTemp.SetVariable(GetRoot(targetPlayer, builder.Constructor), targetPlayer)
                 );
 
                 // Copy the next array dimension
@@ -95,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
-                    SetVariable(builder, (Element)builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
+                    SetVariable(builder, (Element)builder.ConstructorTemp.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
                 );
             }
             // Set the final variable using Set At Index.
@@ -175,7 +188,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Copy the array to the C variable
                 actions.AddRange(
-                    builder.Store.SetVariable(GetRoot(targetPlayer, builder.Constructor), targetPlayer)
+                    builder.ConstructorTemp.SetVariable(GetRoot(targetPlayer, builder.Constructor), targetPlayer)
                 );
 
                 // Copy the next array dimension
@@ -187,7 +200,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
-                    SetVariable(builder, (Element)builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
+                    SetVariable(builder, (Element)builder.ConstructorTemp.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
                 );
             }
             // Set the final variable using Set At Index.

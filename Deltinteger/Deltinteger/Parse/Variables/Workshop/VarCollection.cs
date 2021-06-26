@@ -12,8 +12,8 @@ namespace Deltin.Deltinteger.Parse
         public WorkshopArrayBuilder ArrayBuilder { get; private set; }
 
         // Indicates the workshop variables to store the extended collections at.
-        private WorkshopVariable global;
-        private WorkshopVariable player;
+        private WorkshopVariable _global;
+        private WorkshopVariable _player;
 
         // Reserved IDs and names.
         private readonly List<int> reservedGlobalIDs = new List<int>();
@@ -41,14 +41,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Setup()
         {
-            global = AssignWorkshopVariable("_extendedGlobalCollection", true);
-            player = AssignWorkshopVariable("_extendedPlayerCollection", false);
-            var builder = AssignWorkshopVariable("_arrayBuilder", true);
-
-            IndexReference store = Assign("_arrayBuilderStore", true, true);
-            ArrayBuilder = new WorkshopArrayBuilder(builder, store);
-            // The store shouldn't require an instance of the WorkshopArrayBuilder, but if for some reason it does uncomment the line below.
-            // store.ArrayBuilder = arrayBuilder;
+            ArrayBuilder = new WorkshopArrayBuilder(this);
         }
 
         public void Reserve(int id, bool isGlobal, FileDiagnostics diagnostics, DocRange range)
@@ -118,6 +111,22 @@ namespace Deltin.Deltinteger.Parse
                 }
         }
 
+        WorkshopVariable GetExtendedCollection(bool isGlobal)
+        {
+            if (isGlobal)
+            {
+                if (_global == null)
+                    _global = AssignWorkshopVariable("_extendedGlobalCollection", true);
+                return _global;
+            }
+            else
+            {
+                if (_player == null)
+                    _player = AssignWorkshopVariable("_extendedPlayerCollection", false);
+                return _player;
+            }
+        }
+
         public IndexReference Assign(string name, bool isGlobal, bool extended)
         {
             if (!extended)
@@ -125,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 int index = NextFreeExtended(isGlobal);
-                IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, Element.Num(index));
+                IndexReference reference = new IndexReference(ArrayBuilder, GetExtendedCollection(isGlobal), Element.Num(index));
                 ExtendedVariableList(isGlobal).Add(new ExtendedVariable(name, reference, index));
                 return reference;
             }
@@ -149,7 +158,7 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 int index = NextFreeExtended(variableIsGlobal);
-                IndexReference reference = new IndexReference(ArrayBuilder, variableIsGlobal ? global : player, Element.Num(index));
+                IndexReference reference = new IndexReference(ArrayBuilder, GetExtendedCollection(variableIsGlobal), Element.Num(index));
                 ExtendedVariableList(variableIsGlobal).Add(new ExtendedVariable(name, reference, index));
                 return reference;
             }
