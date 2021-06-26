@@ -73,7 +73,7 @@ namespace Deltin.Deltinteger.Parse
                     .Select(extender => new VariableInstanceOption(extender)));
             }
 
-            return new MacroContentBuilder(actionSet, allMacros).Value;
+            return new MacroContentBuilder(actionSet.PackThis(), allMacros).Value;
         }
 
         class VariableInstanceOption : IMacroOption

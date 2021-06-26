@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         /// <summary>Gets the workshop value of a macro.</summary>
         public static IWorkshopTree CallMacroFunction(ActionSet actionSet, DefinedMethodInstance macro, MethodCall methodCall)
         {
-            actionSet = actionSet.ContainVariableAssigner();
+            actionSet = actionSet.ContainVariableAssigner().PackThis();
 
             // The list containing the macro and all of its overriders, recursively.
             var allOptions = new List<MacroOption>();

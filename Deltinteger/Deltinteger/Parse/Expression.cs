@@ -294,17 +294,23 @@ namespace Deltin.Deltinteger.Parse
     public class ThisAction : IExpression
     {
         readonly IDefinedTypeInitializer _typeInitializer;
+        readonly CodeType _type;
 
         public ThisAction(ParseInfo parseInfo, Scope scope, ThisExpression context)
         {
             _typeInitializer = parseInfo.TypeInitializer;
             if (_typeInitializer == null)
+            {
                 parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", context.Range);
+                _type = parseInfo.Types.Unknown();
+            }
+            else
+                _type = _typeInitializer.WorkingInstance;
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => actionSet.This;
-        public CodeType Type() => _typeInitializer.WorkingInstance;
-        public Scope ReturningScope() => _typeInitializer.GetObjectBasedScope();
+        public CodeType Type() => _type;
+        public Scope ReturningScope() => _typeInitializer?.GetObjectBasedScope();
     }
 
     /*
