@@ -183,20 +183,34 @@ namespace Deltin.Deltinteger.Parse
                 builder.AppendLine();
             }
 
-            builder.AppendKeywordLine("variables");
-            builder.AppendLine("{");
-            builder.Indent();
-            builder.AppendKeyword("global"); builder.Append(":"); builder.AppendLine();
-            builder.Indent();
-            WriteCollection(builder, variableList(true));
-            builder.Outdent();
+            bool hasGlobalVariables = variableList(true).Count != 0;
+            bool hasPlayerVariables = variableList(false).Count != 0;
 
-            builder.AppendKeyword("player"); builder.Append(":"); builder.AppendLine();
-            builder.Indent();
-            WriteCollection(builder, variableList(false));
-            builder.Outdent();
-            builder.Outdent();
-            builder.AppendLine("}");
+            if (hasGlobalVariables || hasPlayerVariables)
+            {
+                builder.AppendKeywordLine("variables");
+                builder.AppendLine("{");
+                builder.Indent();
+
+                if (hasGlobalVariables)
+                {
+                    builder.AppendKeyword("global"); builder.Append(":"); builder.AppendLine();
+                    builder.Indent();
+                    WriteCollection(builder, variableList(true));
+                    builder.Outdent();
+                }
+
+                if (hasPlayerVariables)
+                {
+                    builder.AppendKeyword("player"); builder.Append(":"); builder.AppendLine();
+                    builder.Indent();
+                    WriteCollection(builder, variableList(false));
+                    builder.Outdent();
+                }
+
+                builder.Outdent();
+                builder.AppendLine("}");
+            }
 
             bool anyExtendedGlobal = ExtendedVariableList(true).Any(v => v != null);
             bool anyExtendedPlayer = ExtendedVariableList(false).Any(v => v != null);
