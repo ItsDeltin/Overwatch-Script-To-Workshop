@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
-        public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType;
+        public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType ?? parseInfo.Types.Any();
         public IWorkshopTree Parse(ActionSet actionSet)
         {
             IWorkshopTree result = Expression.Parse(actionSet);
