@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class IfAction : IStatement, IBlockContainer
+    public class IfAction : IStatement
     {
         public IExpression Expression { get; }
         public IStatement Block { get; }

@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class SwitchAction : IStatement, IBlockContainer, IBreakContainer
+    public class SwitchAction : IStatement, IBreakContainer
     {
         private readonly IExpression Expression;
         private readonly SwitchSection[] paths;

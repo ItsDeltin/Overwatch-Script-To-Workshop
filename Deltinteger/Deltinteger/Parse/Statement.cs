@@ -17,14 +17,6 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    /// <summary>
-    /// Anything inherting this interface should also inherit IStatement, but not doing so won't cause any problems.
-    /// </summary>
-    public interface IBlockContainer
-    {
-        PathInfo[] GetPaths();
-    }
-
     public class PathInfo
     {
         public IStatement Block { get; }
@@ -55,12 +47,25 @@ namespace Deltin.Deltinteger.Parse
             {
                 ReturningValue = parseInfo.SetExpectType(parseInfo.ReturnType).GetExpression(scope, returnContext.Expression);
                 
-                if (parseInfo.ReturnType != null)
-                    SemanticsHelper.ExpectValueType(parseInfo, ReturningValue, parseInfo.ReturnType, returnContext.Expression.Range);
+                if (parseInfo.ReturnType != null &&
+                    // Make sure that the return type matches.
+                    SemanticsHelper.ExpectValueType(parseInfo, ReturningValue, parseInfo.ReturnType, returnContext.Expression.Range) &&
+                    // There is a return tracker with a return handler already added.
+                    parseInfo.ReturnTracker != null && parseInfo.ReturnTracker.Returns.Count > 0 &&
+                    // The return type is constant.
+                    parseInfo.ReturnType.IsConstant())
+                    // Multiple returns not allowed.
+                    parseInfo.Script.Diagnostics.Error("Cannot have more than one return statement if the function's return type is constant", ErrorRange);
+                
+                // returning value in void method
+                else if (parseInfo.ReturnType == null)
+                    parseInfo.Script.Diagnostics.Error("Return type is void, no value can be returned", ErrorRange);
             }
             // No return value provided, and one was expected.
             else if (parseInfo.ReturnType != null)
                 parseInfo.Script.Diagnostics.Error("Must return a value of type '" + parseInfo.ReturnType.GetName() + "'", returnContext.Token.Range);
+
+            parseInfo.ReturnTracker?.Add(this);
         }
 
         public void Translate(ActionSet actionSet)

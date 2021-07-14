@@ -131,24 +131,13 @@ namespace Deltin.Deltinteger.Parse
             
             if (Context.Block != null)
             {
-                Block = new BlockAction(parseInfo, _methodScope, Context.Block);
+                var returnTracker = new ReturnTracker();
+                Block = new BlockAction(parseInfo.SetReturnTracker(returnTracker), _methodScope, Context.Block);
 
-                // Validate returns.
-                BlockTreeScan validation = new BlockTreeScan(parseInfo, this);
-                validation.ValidateReturns();
-                MultiplePaths = validation.MultiplePaths;
+                MultiplePaths = returnTracker.IsMultiplePaths;
 
                 // If there is only one return statement, set SingleReturnValue.
-                if (validation.Returns.Length == 1) SingleReturnValue = validation.Returns[0].ReturningValue;
-
-                // If the return type is a constant type...
-                if (ReturnType != null && ReturnType.IsConstant())
-                    // ... iterate through each return statement ...
-                    foreach (ReturnAction returnAction in validation.Returns)
-                        // ... If the current return statement returns a value and that value does not implement the return type ...
-                        if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(ReturnType)))
-                            // ... then add a syntax error.
-                            parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
+                if (returnTracker.Returns.Count == 1) SingleReturnValue = returnTracker.Returns[0].ReturningValue;
             }
             else if (Context.MacroValue != null)
             {

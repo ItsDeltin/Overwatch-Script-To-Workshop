@@ -4,7 +4,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class BlockAction : IStatement, IBlockContainer
+    public class BlockAction : IStatement
     {
         public IStatement[] Statements { get; }
         public Scope BlockScope { get; }

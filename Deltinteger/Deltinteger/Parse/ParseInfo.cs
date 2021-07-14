@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType ThisType => TypeInitializer?.WorkingInstance;
         public IDefinedTypeInitializer TypeInitializer { get; private set; }
         public VariableModifierGroup ContextualVariableModifiers { get; private set; }
+        public ReturnTracker ReturnTracker { get; private set; }
 
         // Target
         public CodeType ExpectingType { get; private set; }
@@ -57,6 +58,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnType = other.ReturnType;
             TypeInitializer = other.TypeInitializer;
             ContextualVariableModifiers = other.ContextualVariableModifiers;
+            ReturnTracker = other.ReturnTracker;
             ExpectingType = other.ExpectingType;
             LocalVariableTracker = other.LocalVariableTracker;
             ResolveInvokeInfo = other.ResolveInvokeInfo;
@@ -92,6 +94,7 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetReturnType(CodeType type) => new ParseInfo(this) { ReturnType = type };
         public ParseInfo SetThisType(IDefinedTypeInitializer typeInitializer) => new ParseInfo(this) { TypeInitializer = typeInitializer };
         public ParseInfo SetContextualModifierGroup(VariableModifierGroup modifierGroup) => new ParseInfo(this) { ContextualVariableModifiers = modifierGroup };
+        public ParseInfo SetReturnTracker(ReturnTracker returnTracker) => new ParseInfo(this) { ReturnTracker = returnTracker };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
