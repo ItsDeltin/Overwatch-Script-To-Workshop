@@ -135,10 +135,20 @@ namespace Deltin.Deltinteger.Parse
 
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
         {
-            var structValue = ValueInArrayToWorkshop.ExtractStructValue(value);
+            switch (operation)
+            {
+                case Operation.RemoveFromArrayByIndex:
+                    foreach (var child in _children)
+                        child.Value.Modify(actionSet, operation, value, target, index);
+                    break;
 
-            foreach (var child in _children)
-                child.Value.Modify(actionSet, Operation.AppendToArray, structValue.GetValue(child.Key), target, index);
+                default:
+                    var structValue = ValueInArrayToWorkshop.ExtractStructValue(value);
+
+                    foreach (var child in _children)
+                        child.Value.Modify(actionSet, operation, structValue.GetValue(child.Key), target, index);
+                    break;
+            }
         }
 
         public void Push(ActionSet actionSet, IWorkshopTree value)
@@ -361,7 +371,7 @@ namespace Deltin.Deltinteger.Parse
             var value = _structValue.GetValue(variableName);
 
             // Check if we need to do a value-in-array subsection.
-            if (value is IInlineStructDictionary subvalue)
+            if (value is IStructValue subvalue)
                 return new ValueInStructArray(subvalue, _index);
 
             // Otherwise, get the value in the array normally.
@@ -395,7 +405,7 @@ namespace Deltin.Deltinteger.Parse
             var newPath = _path.Append(variableName);
 
             // Check if we need to do a subsection.
-            if (value is IInlineStructDictionary subvalue)
+            if (value is IStructValue subvalue)
                 return new BridgeGetStructValue(subvalue, _bridge, newPath);
 
             return _bridge(new BridgeArgs(value, newPath));
@@ -460,7 +470,7 @@ namespace Deltin.Deltinteger.Parse
             var value = StructArray.GetValue(variableName);
 
             // Check if we need to do a subsection.
-            if (value is IInlineStructDictionary subvalue)
+            if (value is IStructValue subvalue)
                 return new IndexedStructArray(subvalue, IndexedArray, _operationModifiesLength);
             
             return value;
