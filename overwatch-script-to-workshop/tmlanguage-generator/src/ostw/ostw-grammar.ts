@@ -11,6 +11,7 @@ let grammar = tm.createTextmateGrammar({
     scopeName: 'source.del',
     repository: getRepository(),
     patterns: [
+        { include: Repository.comment },
         { include: Repository.new_ },
         { include: Repository.import_ },
         { include: Repository.class_struct_declaration },

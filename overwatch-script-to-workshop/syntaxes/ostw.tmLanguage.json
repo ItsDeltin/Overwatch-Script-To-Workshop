@@ -8,6 +8,9 @@
   ],
   "patterns": [
     {
+      "include": "#comment"
+    },
+    {
       "include": "#new"
     },
     {
@@ -899,7 +902,7 @@
           "name": "entity.name.function"
         }
       },
-      "end": "(?<=\\})",
+      "end": "(?<=\\}|;)",
       "endCaptures": {},
       "patterns": [
         {
@@ -933,7 +936,7 @@
           },
           "patterns": [
             {
-              "name": "#expression"
+              "include": "#expression"
             }
           ]
         }
@@ -1041,7 +1044,7 @@
           "name": "entity.name.type.enum"
         }
       },
-      "end": "(?=\\})",
+      "end": "(?<=\\})",
       "endCaptures": {},
       "patterns": [
         {

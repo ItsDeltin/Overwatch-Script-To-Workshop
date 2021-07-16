@@ -152,9 +152,7 @@ const functionDeclaration: Pattern = {
         w,
         tm.PositiveLookahead(tm.Or('(', '<')), // Makes sure this is actually a function.
     ],
-    end: tm.PositiveLookbehind('}'),
-    // Match ; (statement end) or } (block end)
-    // end: tm.PositiveLookahead(tm.Or(';', '}')),
+    end: tm.PositiveLookbehind(tm.Or('}', ';')), // Match ; (statement end) or } (block end)
     patterns: [
         { include: Repository.type_args },
         { include: Repository.parameter_list },
@@ -172,7 +170,7 @@ const functionDeclaration: Pattern = {
             end: ';',
             zeroBeginCapture: { name: Names.assignment },
             zeroEndCapture: { name: Names.terminator },
-            patterns: [{ name: Repository.expression }],
+            patterns: [{ include: Repository.expression }],
         },
     ],
 };
@@ -274,7 +272,7 @@ const typeArgs: Pattern = {
 // Enum declaration
 const enumDeclaration: Pattern = {
     begin: utils.createTypeDescriptor('enum'),
-    end: common_nodes.encapsulated_block,
+    end: tm.PositiveLookbehind('}'),
     patterns: [
         includeComment,
         // Enumerator contents ({...})
