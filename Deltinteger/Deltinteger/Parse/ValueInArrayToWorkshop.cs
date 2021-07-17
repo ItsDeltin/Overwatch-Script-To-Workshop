@@ -19,9 +19,9 @@ namespace Deltin.Deltinteger.Parse
             if (value is IStructValue structValue) return structValue;
 
             // Empty array.
-            if (value is Element element &&
-                (element.Function.Name == "Empty Array" ||
-                (element.Function.Name == "Array" && element.ParameterValues.Length == 0)))
+            if (value is Element element && (
+                element.Function.Name == "Empty Array" || element.Function.Name == "Null" || (
+                    element.Function.Name == "Array" && element.ParameterValues.Length == 0)))
                 return new StructArray(new IStructValue[0]);
             
             // Unknown
