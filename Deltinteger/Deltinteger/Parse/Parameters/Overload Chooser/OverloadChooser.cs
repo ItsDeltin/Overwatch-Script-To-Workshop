@@ -252,10 +252,10 @@ namespace Deltin.Deltinteger.Parse.Overload
             {
                 // If the CodeParameter type is a lambda type, get the lambda statement with it.
                 if (bestOption.Option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo) is PortableLambdaType portableLambda)
-                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers((PortableLambdaType)portableLambda.GetRealType(bestOption.TypeArgLinker));
+                    bestOption.OrderedParameters[i].LambdaInfo?.FirstPass((PortableLambdaType)portableLambda.GetRealType(bestOption.TypeArgLinker));
                 // Otherwise, get the lambda statement with the default.
                 else
-                    bestOption.OrderedParameters[i].LambdaInfo?.FinishAppliers();
+                    bestOption.OrderedParameters[i].LambdaInfo?.FirstPass();
             }
 
             // Type-arg inference will need a second pass after we apply the lambdas,
@@ -285,7 +285,18 @@ namespace Deltin.Deltinteger.Parse.Overload
                 // Clear the match's TypeArgLinker.
                 if (!secondPass)
                     bestOption.TypeArgLinker = InstanceAnonymousTypeLinker.Empty;
-            }  
+            }
+            
+            // Finalize lambdas
+            for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
+            {
+                // If the CodeParameter type is a lambda type, get the lambda statement with it.
+                if (bestOption.Option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo) is PortableLambdaType portableLambda)
+                    bestOption.OrderedParameters[i].LambdaInfo?.SecondPass((PortableLambdaType)portableLambda.GetRealType(bestOption.TypeArgLinker));
+                // Otherwise, get the lambda statement with the default.
+                else
+                    bestOption.OrderedParameters[i].LambdaInfo?.SecondPass();
+            }
 
             // Add the diagnostics of the best option.
             bestOption.AddDiagnostics(_parseInfo.Script.Diagnostics);
@@ -453,6 +464,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             // Lambda arg count mismatch.
             if (parameterType is PortableLambdaType portableParameterType && // Parameter type is a lambda.
                 valueType is UnknownLambdaType unknownLambdaType && // Value type is a lambda.
+                unknownLambdaType.ArgumentCount != -1 &&
                 unknownLambdaType.ArgumentCount != portableParameterType.Parameters.Length) // The value lambda's parameter length does not match.
                 // Add the error.
                 _parameterErrors[parameter] = new($"Lambda does not take {unknownLambdaType.ArgumentCount} arguments", errorRange);

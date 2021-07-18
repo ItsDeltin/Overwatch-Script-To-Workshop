@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType[] TypeArgs { get; }
         private readonly ParseInfo _parseInfo;
         private readonly DocRange _range;
-        private PortableLambdaType _type = new PortableLambdaType(new(LambdaKind.Anonymous));
+        private CodeType _type = new UnknownLambdaType(-1);
         public IMethod ChosenFunction { get; private set; }
         private IMethodGroupInvoker _constFunctionInvoker;
         public CallInfo CallInfo => ChosenFunction.Attributes.CallInfo;
@@ -96,31 +96,20 @@ namespace Deltin.Deltinteger.Parse
                 ).Check();
         }
 
-        public void GetLambdaStatement(PortableLambdaType expecting)
+        public void GetLambdaContent(PortableLambdaType expecting)
         {
-            bool found = false;
-            _type = expecting;
-            foreach (var func in Group.Functions)
-            {
-                if (func.Parameters.Length == expecting.Parameters.Length)
-                {
-                    // Make sure the method implements the target lambda.
-                    for (int i = 0; i < func.Parameters.Length; i++)
-                    {
-                        var parameterType = func.Parameters[i].GetCodeType(_parseInfo.TranslateInfo);
-                        
-                        if (parameterType != null && parameterType.Implements(expecting.Parameters[i]))
-                            continue;
-                    }
+            if (SelectFunction(expecting))
+                _type = TypeFromMethod(_parseInfo.TranslateInfo, ChosenFunction);
+        }
 
-                    ChosenFunction = func;
-                    found = true;
-                    break;
-                }
-            }
+        public void GetLambdaContent() => _parseInfo.Script.Diagnostics.Error("Cannot determine method group in the current context. Did you intend to invoke the method?", _range);
+
+        public void Finalize(PortableLambdaType expecting)
+        {
+            _type = expecting;
 
             // If a compatible function was found, get the handler.
-            if (found)
+            if (ChosenFunction != null || SelectFunction(expecting))
             {
                 _constFunctionInvoker = GetLambdaHandler(ChosenFunction);
 
@@ -134,7 +123,40 @@ namespace Deltin.Deltinteger.Parse
                 _parseInfo.Script.Diagnostics.Error("No overload for '" + Group.Name + "' implements " + expecting.GetName(), _range);
         }
 
-        public void GetLambdaStatement() => _parseInfo.Script.Diagnostics.Error("Cannot determine method group in the current context. Did you intend to invoke the method?", _range);
+        bool SelectFunction(PortableLambdaType expecting)
+        {
+            foreach (var func in Group.Functions)
+                if (FuncValid(func, expecting))
+                {
+                    ChosenFunction = func;
+                    return true;
+                }
+
+            return false;
+        }
+
+        bool FuncValid(IMethod method, PortableLambdaType expecting)
+        {
+            if (method.Parameters.Length != expecting.Parameters.Length)
+                return false;
+
+            // Make sure the method implements the target lambda.
+            for (int i = 0; i < method.Parameters.Length; i++)
+            {
+                var parameterType = method.Parameters[i].GetCodeType(_parseInfo.TranslateInfo);
+                if (!parameterType.Implements(expecting.Parameters[i]))
+                    return false;
+            }
+
+            return true;
+        }
+
+        CodeType TypeFromMethod(DeltinScript deltinScript, IMethod method) =>
+            new PortableLambdaType(new PortableLambdaTypeBuilder(
+                LambdaKind.Anonymous,
+                method.Parameters.Select(p => p.GetCodeType(deltinScript)).ToArray(),
+                method.CodeType?.GetCodeType(deltinScript)
+            ));
 
         private static IMethodGroupInvoker GetLambdaHandler(IMethod function)
         {
@@ -186,10 +208,11 @@ namespace Deltin.Deltinteger.Parse
 
         // todo: macros
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues) =>
-            WorkshopFunctionBuilder.Call(
-                actionSet,
-                new Functions.Builder.CallInfo(parameterValues),
-                new UserFunctionController(actionSet.ToWorkshop, _method, null));
+            _method.Parse(actionSet, new MethodCall(parameterValues));
+        // WorkshopFunctionBuilder.Call(
+        //     actionSet,
+        //     new Functions.Builder.CallInfo(parameterValues),
+        //     new UserFunctionController(actionSet.ToWorkshop, _method, null));
     }
 
     class GenericFunctionInvoker : IMethodGroupInvoker

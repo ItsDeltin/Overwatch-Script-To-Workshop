@@ -70,18 +70,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
             // parseInfo.Script.AddHover(context.Arrow.Range, new MarkupBuilder().StartCodeLine().Add(LambdaType.GetName()).EndCodeLine().ToString());
         }
 
-        public void GetLambdaStatement(PortableLambdaType expecting)
-        {
-            _getLambdaStatement(expecting);
+        public void GetLambdaContent() => GetLambdaContent(null);
 
-            // Check if the current lambda implements the expected type.
-            if (!LambdaType.Implements(expecting))
-                _parseInfo.Script.Diagnostics.Error("Expected lambda of type '" + expecting.GetName() + "'", _context.Arrow.Range);
-        }
-
-        public void GetLambdaStatement() => _getLambdaStatement(null);
-
-        private void _getLambdaStatement(PortableLambdaType expectingType)
+        public void GetLambdaContent(PortableLambdaType expectingType)
         {
             _resolved = true;
 
@@ -107,17 +98,15 @@ namespace Deltin.Deltinteger.Parse.Lambda
             // Get the statements.
             if (_context.Statement is Block block)
             {
+                var returnTracker = new ReturnTracker();
+
                 // Parse the block.
-                Statement = new BlockAction(parser, _lambdaScope, block);
+                Statement = new BlockAction(parser.SetReturnTracker(returnTracker), _lambdaScope, block);
 
-                // Validate the block.
-                BlockTreeScan validation = new BlockTreeScan(_parseInfo, (BlockAction)Statement, "lambda", _context.Arrow.Range);
-                validation.ValidateReturns();
-
-                if (validation.ReturnsValue)
+                if (returnTracker.ReturnsValue)
                 {
-                    ReturnType = validation.ReturnType;
-                    MultiplePaths = validation.MultiplePaths;
+                    ReturnType = returnTracker.InferredType;
+                    MultiplePaths = returnTracker.IsMultiplePaths;
                     returnsValue = true;
                 }
             }
@@ -145,11 +134,17 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 parameters: _argumentTypes,
                 returnType: ReturnType,
                 returnsValue: returnsValue,
-                parameterTypesKnown: _isExplicit,
-                callContainer: CallInfo));
+                parameterTypesKnown: _isExplicit));
 
             // Add so the lambda can be recursive-checked.
             _parseInfo.TranslateInfo.GetComponent<RecursionCheckComponent>().AddCheck(CallInfo);
+        }
+
+        public void Finalize(PortableLambdaType expecting)
+        {
+            // Check if the current lambda implements the expected type.
+            if (!LambdaType.Implements(expecting))
+                _parseInfo.Script.Diagnostics.Error("Expected lambda of type '" + expecting.GetName() + "'", _context.Arrow.Range);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet)
@@ -205,7 +200,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnHandler returnHandler = new ReturnHandler(
                 actionSet,
                 ReturnType?.GetGettableAssigner(new AssigningAttributes("lambda", actionSet.IsGlobal, false))
-                           .GetValue(new GettableAssignerValueInfo(actionSet) { SetInitialValue = SetInitialValue.DoNotSet }),
+                           .GetValue(new GettableAssignerValueInfo(actionSet) {
+                               SetInitialValue = SetInitialValue.DoNotSet,
+                               Inline = !MultiplePaths
+                            }),
                 MultiplePaths);
             actionSet = AssignContainedParameters(lambdaAssigner, actionSet, parameterValues).New(returnHandler);
 

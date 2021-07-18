@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public CodeType ReturnType { get; protected set; }
         public bool ReturnsValue { get; protected set; }
         public bool ParameterTypesKnown { get; }
-        public CallInfo CallContainer { get; }
         public LambdaInvoke InvokeFunction { get; private set; }
 
         readonly Scope _scope = new Scope();
@@ -24,7 +23,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnType = builder.ReturnType;
             ReturnsValue = builder.ReturnsValue;
             ParameterTypesKnown = builder.ParameterTypesKnown;
-            CallContainer = builder.CallContainer;
 
             Attributes.ContainsGenerics = (Parameters?.Any(p => p.Attributes.ContainsGenerics) ?? false) || (ReturnsValue && ReturnType.Attributes.ContainsGenerics);
 
@@ -85,8 +83,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 parameters: Parameters.Select(p => p.GetRealType(instanceInfo)).ToArray(),
                 returnType: ReturnType?.GetRealType(instanceInfo),
                 returnsValue: ReturnsValue,
-                parameterTypesKnown: ParameterTypesKnown,
-                callContainer: CallContainer));
+                parameterTypesKnown: ParameterTypesKnown));
         }
 
         public override string GetName(GetTypeName settings = default(GetTypeName))
@@ -142,9 +139,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public bool ReturnsValue { get; } // Does the lambda return a value? May be true when ReturnType is null.
         public bool ParameterTypesKnown { get; } // Are parameter types known?
 
-        public CallInfo CallContainer { get; } // The CallInfo to use when checking recursion or restricted calls. May be null in case of method groups.
-
-        public PortableLambdaTypeBuilder(LambdaKind kind, CodeType[] parameters, CodeType returnType, CallInfo callContainer)
+        public PortableLambdaTypeBuilder(LambdaKind kind, CodeType[] parameters, CodeType returnType)
         {
             Name = "lambda";
             LambdaKind = kind;
@@ -152,7 +147,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnType = returnType;
             ReturnsValue = returnType != null;
             ParameterTypesKnown = true;
-            CallContainer = callContainer;
         }
 
         public PortableLambdaTypeBuilder(
@@ -161,8 +155,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             CodeType[] parameters = null,
             CodeType returnType = null,
             bool returnsValue = false,
-            bool parameterTypesKnown = false,
-            CallInfo callContainer = null)
+            bool parameterTypesKnown = false)
         {
             Name = name;
             LambdaKind = kind;
@@ -170,7 +163,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnType = returnType;
             ReturnsValue = returnsValue;
             ParameterTypesKnown = parameterTypesKnown;
-            CallContainer = callContainer;
         }
     }
 

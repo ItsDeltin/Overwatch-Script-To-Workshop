@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType FuncType;
         public string Function;
         public ISortFunctionExecutor Executor = new GeneralSortFunctionExecutor();
-
+        public IMethodExtensions MethodInfo;
 
         public void Add(Scope addToScope, ITypeSupplier supplier)
         {
@@ -44,7 +44,8 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = Name,
             Documentation = Documentation,
-            ReturnType = ReturnType
+            ReturnType = ReturnType,
+            MethodInfo = MethodInfo
         };
     }
 

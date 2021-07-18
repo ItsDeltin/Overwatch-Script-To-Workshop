@@ -252,6 +252,7 @@ namespace Deltin.Deltinteger.Parse
             public override ISortFunctionExecutor FilteredArray() => new StructSortExecutorReturnsArray(true);
             public override ISortFunctionExecutor All() => new StructSortExecutorReturnsBoolean();
             public override ISortFunctionExecutor Any() => new StructSortExecutorReturnsBoolean();
+            public override ISortFunctionExecutor Map() => new StructMap();
 
             public StructArrayFunctionHandler()
             {
@@ -334,7 +335,69 @@ namespace Deltin.Deltinteger.Parse
                         invoke(arrayed));
                 }
             }
-        
+
+            // Struct mapping.
+            private class StructMap : ISortFunctionExecutor
+            {
+                public IWorkshopTree GetResult(string function, ActionSet actionSet, Func<IWorkshopTree, IWorkshopTree> invoke) => Map(actionSet, invoke);
+
+                IWorkshopTree Map(ActionSet actionSet, Func<IWorkshopTree, IWorkshopTree> invoke)
+                {
+                    // The struct array that is being mapped.
+                    var structArray = str(actionSet.CurrentObject);
+
+                    // Mapping indexed struct array
+                    if (structArray is IndexedStructArray indexedStructArray)
+                        return MapIndexed(actionSet, indexedStructArray, invoke);
+
+                    // The current element's struct values stepped into using ArrayIndex.
+                    var structInset = new ValueInStructArray(structArray, Element.ArrayIndex());
+
+                    // Map the value.
+                    var value = invoke(structInset);
+
+                    // Value is a struct, bridge it.
+                    if (value is IStructValue structValue)
+                        return structValue.Bridge(v => CompleteAndOptimize(structArray, structInset, v.Value));
+                    
+                    return CompleteAndOptimize(structArray, structInset, value);
+                }
+
+                IWorkshopTree CompleteAndOptimize(IStructValue originalArray, ValueInStructArray structInset, IWorkshopTree workshopValue)
+                {
+                    /*
+                    Optimize situations such as 'values.Map(value => value.b)'. 'b' is stored as an array 'global.values_b'.
+                    This will compile like 'Mapped Array(global.values_b, values_b[Current Array Index])', which is the
+                    same exact thing as doing just 'global.values_b'.
+                    */
+                    var extractedInsetValues = structInset.GetAllValues();
+
+                    for (int i = 0; i < extractedInsetValues.Length; i++)
+                        // Scan every extracted inset value to see if the pattern matches.
+                        if (workshopValue.EqualTo(extractedInsetValues[i]))
+                            // If it does, return the respective original array.
+                            return originalArray.GetAllValues()[i];
+
+                    // Do actual map if it cannot be truncated.
+                    return Element.Map(IStructValue.ExtractArbritraryValue(originalArray), workshopValue);
+                }
+
+                IWorkshopTree MapIndexed(ActionSet actionSet, IndexedStructArray indexedStructArray, Func<IWorkshopTree, IWorkshopTree> invoke)
+                {
+                    var structInset = new ValueInStructArray(indexedStructArray.StructArray, Element.ArrayElement());
+                    var value = invoke(structInset);
+
+                    // Value is struct
+                    if (value is IStructValue structValue)
+                    {
+                        indexedStructArray.AppendModification(args => Element.Map(args.indexArray, value));
+                        return indexedStructArray;
+                    }
+                    
+                    return Element.Map(indexedStructArray.IndexedArray, value);
+                }
+            }
+
             // Simply casts an IWorkshopTree to an IStructValue.
             private static IStructValue str(IWorkshopTree reference) => (IStructValue)reference;
         }

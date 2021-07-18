@@ -285,7 +285,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree GetValue(string variableName)
         {
             // Check if we need to do an array subsection.
-            if (Children.Length > 0 && Children[0].GetValue(variableName) is IStructValue)
+            if (Children.Any(child => child.GetValue(variableName) is IStructValue))
             {
                 // If we do, create a new StructArray with the target variable.
                 // This will convert the data structure like so:
@@ -294,7 +294,7 @@ namespace Deltin.Deltinteger.Parse
                 //   [{a: 0, b: {c: 0}}, {a: 0, b: {c: 0}}]
                 //   to
                 //   [b: {c: 0}, b: {c: 0}]
-                var childrenAsSubstructList = Children.Select(c => (IStructValue)c.GetValue(variableName)).ToArray();
+                var childrenAsSubstructList = Children.Select(c => ValueInArrayToWorkshop.ExtractStructValue(c.GetValue(variableName))).ToArray();
                 return new StructArray(childrenAsSubstructList);
             }
 
@@ -380,7 +380,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IGettable GetGettable(string variableName) => _structValue.GetGettable(variableName).ChildFromClassReference(_index);
         public IWorkshopTree GetArbritraryValue() => _structValue;
-        public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues();
+        public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues().Select(value => Element.ValueInArray(value, _index)).ToArray();
     }
 
     /// <summary>Applies a modification to a struct value.</summary>

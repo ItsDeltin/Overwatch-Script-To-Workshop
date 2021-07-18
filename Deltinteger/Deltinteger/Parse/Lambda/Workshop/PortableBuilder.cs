@@ -110,16 +110,18 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
             // Create the switch that chooses the lambda.
             SwitchBuilder lambdaSwitch = new SwitchBuilder(actionSet);
 
-            foreach (var compatibleLambda in _compatibleLambdas)
+            for (int i = 0; i < _compatibleLambdas.Count; i++)
             {
+                var compatibleLambda = _compatibleLambdas[i];
                 _returnRecycler.Reset();
-                
+
                 // Create the return handler for the option.
                 ReturnHandler returnHandler = new ReturnHandler(
                     actionSet,
                     compatibleLambda.Runner.ReturnType?.GetGettableAssigner(new AssigningAttributes("lambdaReturnValue", true, false))
                         // Get the IGettable
-                        .GetValue(new GettableAssignerValueInfo(actionSet) {
+                        .GetValue(new GettableAssignerValueInfo(actionSet)
+                        {
                             SetInitialValue = SetInitialValue.DoNotSet,
                             IndexReferenceCreator = _returnRecycler
                         }),

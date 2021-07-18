@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
@@ -108,7 +109,7 @@ namespace Deltin.Deltinteger.Parse
             }
             
             if (Values.Length == 0)
-                _type = new ArrayType(parseInfo.TranslateInfo.Types, parseInfo.TranslateInfo.Types.Any());
+                _type = new ArrayType(parseInfo.TranslateInfo.Types, parseInfo.TranslateInfo.Types.Unknown());
             else
             {
                 // The type of the array is the type of the first value.
@@ -134,7 +135,7 @@ namespace Deltin.Deltinteger.Parse
                 asWorkshop[i] = Values[i].Parse(actionSet);
             
             // Struct array
-            if (_isStructArray)
+            if (_isStructArray || asWorkshop.Any(value => value is IStructValue))
                 return new StructArray(Array.ConvertAll(asWorkshop, item => (IStructValue)item));
 
             // Normal array

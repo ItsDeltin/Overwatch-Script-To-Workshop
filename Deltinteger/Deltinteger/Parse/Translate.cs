@@ -220,10 +220,10 @@ namespace Deltin.Deltinteger.Parse
 
         void ToWorkshop(Func<VarCollection, Rule[]> addRules)
         {
-            WorkshopConverter = new ToWorkshop(this);
-
             // Set up the variable collection.
             VarCollection.Setup();
+
+            WorkshopConverter = new ToWorkshop(this);
 
             // Set up initial global and player rules.
             InitialGlobal = new TranslateRule(this, "Initial Global", RuleEvent.OngoingGlobal);
@@ -370,7 +370,7 @@ namespace Deltin.Deltinteger.Parse
         public void GetDefaults()
         {
             _anyType = new AnyType(_deltinScript);
-            _unknownType = new AnyType("?", _deltinScript);
+            _unknownType = new AnyType("?", true, _deltinScript);
             AddType(_anyType);
             AddType(_playerType);
             AddType(_vectorType);

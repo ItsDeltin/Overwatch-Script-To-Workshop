@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
                 var newAttributes = attributes;
                 if (_tagName != null) newAttributes.Name = _tagName + "_" + _current;
 
-                _created.Add(base.Create(newAttributes));
+                _created.Add(new RecursiveIndexReference(base.Create(newAttributes)));
             }
 
             return _created[_current++];

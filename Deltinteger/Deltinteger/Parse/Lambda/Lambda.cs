@@ -18,8 +18,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
         IRecursiveCallHandler RecursiveCallHandler { get; }
         IBridgeInvocable[] InvokedState { get; }
         bool ResolvedSource { get; }
-        void GetLambdaStatement(PortableLambdaType expecting);
-        void GetLambdaStatement();
+        void GetLambdaContent(PortableLambdaType expecting);
+        void GetLambdaContent();
+        void Finalize(PortableLambdaType expecting);
         IEnumerable<RestrictedCallType> GetRestrictedCallTypes();
     }
 
@@ -84,20 +85,30 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             if (!RegisterOccursLater)
                 // The arrow registration occurs now, parse the statement.
-                applier.GetLambdaStatement(Type);
+                applier.GetLambdaContent(Type);
             else
                 // Otherwise, add it to the _apply list so we can apply it later.
                 _apply.Add(applier);
         }
 
-        public void FinishAppliers(PortableLambdaType type)
+        public void FirstPass(PortableLambdaType type)
         {
-            foreach (var apply in _apply) apply.GetLambdaStatement(type);
+            foreach (var apply in _apply) apply.GetLambdaContent(type);
         }
 
-        public void FinishAppliers()
+        public void FirstPass()
         {
-            foreach (var apply in _apply) apply.GetLambdaStatement();
+            foreach (var apply in _apply) apply.GetLambdaContent();
+        }
+
+        public void SecondPass(PortableLambdaType type)
+        {
+            foreach (var apply in _apply) apply.Finalize(type);
+        }
+
+        public void SecondPass()
+        {
+            foreach (var apply in _apply) apply.Finalize(null);
         }
     }
 
@@ -125,7 +136,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             {
                 // Parameter data is known.
                 if (ParameterState == ParameterState.CountAndTypesKnown)
-                    Applier.GetLambdaStatement();
+                    Applier.GetLambdaContent();
                 else
                     ParseInfo.Script.Diagnostics.Error(ErrorMessage, Range);
             }

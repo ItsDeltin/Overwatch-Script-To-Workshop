@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual ITypeArrayHandler ArrayHandler { get; protected set; } = new DefaultArrayHandler();
 
         /// <summary>Type operations for assignment, comparison, etc.</summary>
-        public TypeOperatorInfo Operations { get; protected set; }
+        public virtual TypeOperatorInfo Operations { get; protected set; }
 
         public TypeSemantics TypeSemantics { get; protected set; } = new TypeSemantics();
 

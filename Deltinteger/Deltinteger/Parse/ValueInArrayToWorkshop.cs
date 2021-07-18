@@ -19,13 +19,33 @@ namespace Deltin.Deltinteger.Parse
             if (value is IStructValue structValue) return structValue;
 
             // Empty array.
-            if (value is Element element && (
-                element.Function.Name == "Empty Array" || element.Function.Name == "Null" || (
-                    element.Function.Name == "Array" && element.ParameterValues.Length == 0)))
-                return new StructArray(new IStructValue[0]);
+            var emptyArray = MakeEmptyArray(value);
+            if (emptyArray != null) return emptyArray;
             
             // Unknown
             throw new Exception(value.ToString() + " is not a valid struct value.");
+        }
+
+        static StructArray MakeEmptyArray(IWorkshopTree value)
+        {
+            if (value is Element element)
+            {
+                if (element.Function.Name == "Empty Array" || element.Function.Name == "Null")
+                    return new StructArray(new IStructValue[0]);
+                
+                else if (element.Function.Name == "Array")
+                {
+                    var arr = new IStructValue[element.ParameterValues.Length];
+                    for (int i = 0; i < element.ParameterValues.Length; i++)
+                    {
+                        arr[i] = MakeEmptyArray(element.ParameterValues[i]);
+                        if (arr[i] == null) return null;
+                    }
+
+                    return new StructArray(arr);
+                }
+            }
+            return null;
         }
     }
 }

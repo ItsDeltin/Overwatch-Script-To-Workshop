@@ -11,11 +11,26 @@ namespace Deltin.Deltinteger.Parse
     public class ArrayType : CodeType
     {
         public CodeType ArrayOfType { get; }
-        public Scope Scope { get; } = new Scope();
-        private readonly InternalVar _length;
-        private readonly InternalVar _last;
-        private readonly InternalVar _first;
-        private readonly ITypeSupplier _supplier;
+        public Scope Scope {
+            get {
+                SetupScope();
+                return _scopeInstance;
+            }
+        }
+
+        public override TypeOperatorInfo Operations {
+            get {
+                SetupScope();
+                return _operationsInstance;
+            }
+        }
+
+        readonly InternalVar _length;
+        readonly InternalVar _last;
+        readonly InternalVar _first;
+        readonly ITypeSupplier _supplier;
+        Scope _scopeInstance;
+        TypeOperatorInfo _operationsInstance;
 
         public ArrayType(ITypeSupplier supplier, CodeType arrayOfType) : base(arrayOfType.GetNameOrAny() + "[]")
         {
@@ -32,6 +47,14 @@ namespace Deltin.Deltinteger.Parse
             _last = new InternalVar("Last", ArrayOfType, CompletionItemKind.Property) { Ambiguous = false };
             _first = new InternalVar("First", ArrayOfType, CompletionItemKind.Property) { Ambiguous = false };
             _supplier = supplier;
+        }
+
+        void SetupScope()
+        {
+            if (_scopeInstance != null) return;
+
+            _scopeInstance = new Scope();
+            _operationsInstance = new TypeOperatorInfo(this);
 
             Scope.AddNativeVariable(_length);
             Scope.AddNativeVariable(_last);
@@ -47,11 +70,11 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the specified array with any values that do not match the specified condition removed.",
                 ReturnType = this,
                 ArrayOfType = ArrayOfType,
-                FuncType = supplier.Boolean(),
+                FuncType = _supplier.Boolean(),
                 ParameterDocumentation = "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array.",
                 Function = "Filtered Array",
                 Executor = functionHandler.FilteredArray()
-            }.Add(Scope, supplier);
+            }.Add(Scope, _supplier);
             // Sorted Array
             new GenericSortFunction()
             {
@@ -59,54 +82,57 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.",
                 ReturnType = this,
                 ArrayOfType = ArrayOfType,
-                FuncType = supplier.Boolean(),
+                FuncType = _supplier.Boolean(),
                 ParameterDocumentation = "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order.",
                 Function = "Sorted Array",
                 Executor = functionHandler.SortedArray()
-            }.Add(Scope, supplier);
+            }.Add(Scope, _supplier);
             // Is True For Any
             new GenericSortFunction()
             {
                 Name = "IsTrueForAny",
                 Documentation = "Whether the specified condition evaluates to true for any value in the specified array.",
-                ReturnType = supplier.Boolean(),
+                ReturnType = _supplier.Boolean(),
                 ArrayOfType = ArrayOfType,
-                FuncType = supplier.Boolean(),
+                FuncType = _supplier.Boolean(),
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array.",
                 Function = "Is True For Any",
                 Executor = functionHandler.Any()
-            }.Add(Scope, supplier);
+            }.Add(Scope, _supplier);
             // Is True For All
             new GenericSortFunction()
             {
                 Name = "IsTrueForAll",
                 Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
-                ReturnType = supplier.Boolean(),
+                ReturnType = _supplier.Boolean(),
                 ArrayOfType = ArrayOfType,
-                FuncType = supplier.Boolean(),
+                FuncType = _supplier.Boolean(),
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array.",
                 Function = "Is True For All",
                 Executor = functionHandler.All()
-            }.Add(Scope, supplier);
+            }.Add(Scope, _supplier);
             // Mapped
-            if (functionHandler.AllowUnhandled)
+            var mapGenericParameter = new AnonymousType("T", new AnonymousTypeAttributes(false));
+            var mapmethodInfo = new MethodInfo(new[] { mapGenericParameter });
+            mapGenericParameter.Context = mapmethodInfo.Tracker;
             new GenericSortFunction()
             {
                 Name = "Map",
                 Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
-                ReturnType = supplier.Any(),
+                ReturnType = new ArrayType(_supplier, mapGenericParameter),
                 ArrayOfType = ArrayOfType,
-                FuncType = supplier.Any(),
+                FuncType = mapGenericParameter,
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array.",
                 Function = "Mapped Array",
-                Executor = functionHandler.Map()
-            }.Add(Scope, supplier);
+                Executor = functionHandler.Map(),
+                MethodInfo = mapmethodInfo
+            }.Add(Scope, _supplier);
             // Contains
             Func(new FuncMethodBuilder()
             {
                 Name = "Contains",
                 Documentation = "Whether the array contains the specified value.",
-                ReturnType = supplier.Boolean(),
+                ReturnType = _supplier.Boolean(),
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value that is being looked for in the array.", ArrayOfType)
                 },
@@ -162,8 +188,8 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the array containing only values from a specified index range.",
                 ReturnType = this,
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("startIndex", "The first index of the range.", supplier.Number()),
-                    new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.", supplier.Number())
+                    new CodeParameter("startIndex", "The first index of the range.", _supplier.Number()),
+                    new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.", _supplier.Number())
                 },
                 Action = (actionSet, methodCall) => Element.Part("Array Slice", actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
             });
@@ -173,9 +199,9 @@ namespace Deltin.Deltinteger.Parse
             {
                 Name = "IndexOf",
                 Documentation = "The index of a value within an array or -1 if no such value can be found.",
-                ReturnType = supplier.Number(),
+                ReturnType = _supplier.Number(),
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value for which to search.", arrayOfType)
+                    new CodeParameter("value", "The value for which to search.", ArrayOfType)
                 },
                 Action = (actionSet, methodCall) => Element.IndexOfArrayValue(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
@@ -187,7 +213,7 @@ namespace Deltin.Deltinteger.Parse
                     new CodeParameter("value", "The value that is pushed to the array.", pipeType)
                 },
                 OnCall = SourceVariableResolver.GetSourceVariable,
-                ReturnType = supplier.Number(),
+                ReturnType = _supplier.Number(),
                 Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.AppendToArray)
             });
             // Modify Remove By Value
@@ -195,10 +221,10 @@ namespace Deltin.Deltinteger.Parse
                 Name = "ModRemoveByValue",
                 Documentation = "Removes an element from the array by a value. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value that is removed from the array.", arrayOfType)
+                    new CodeParameter("value", "The value that is removed from the array.", ArrayOfType)
                 },
                 OnCall = SourceVariableResolver.GetSourceVariable,
-                ReturnType = supplier.Number(),
+                ReturnType = _supplier.Number(),
                 Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.RemoveFromArrayByValue)
             });
             // Modify Remove By Index
@@ -206,10 +232,10 @@ namespace Deltin.Deltinteger.Parse
                 Name = "ModRemoveByIndex",
                 Documentation = "Removes an element from the array by the index. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("index", "The index of the element that is removed from the array.", supplier.Number())
+                    new CodeParameter("index", "The index of the element that is removed from the array.", _supplier.Number())
                 },
                 OnCall = SourceVariableResolver.GetSourceVariable,
-                ReturnType = supplier.Number(),
+                ReturnType = _supplier.Number(),
                 Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.RemoveFromArrayByIndex)
             });
 
@@ -227,7 +253,7 @@ namespace Deltin.Deltinteger.Parse
                 new AssignmentOperation(AssignmentOperator.SubtractEqual, pipeType, info => info.Modify(Operation.RemoveFromArrayByValue))
             });
 
-            arrayOfType.ArrayHandler.OverrideArray(this);
+            ArrayOfType.ArrayHandler.OverrideArray(this);
         }
 
         private void Func(FuncMethodBuilder builder) => Scope.AddNativeMethod(new FuncMethod(builder));
