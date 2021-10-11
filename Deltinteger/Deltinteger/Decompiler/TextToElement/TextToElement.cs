@@ -147,7 +147,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return true;
         }
 
-        bool MatchAll(bool caseSensitive, params string[] values) => Lookahead(() => { 
+        bool MatchAll(bool caseSensitive, params string[] values) => Lookahead(() => {
             foreach (string value in values)
                 if (!Match(value, caseSensitive))
                     return false;
@@ -598,7 +598,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                         // Match the variable parameter.
                         if (!Identifier(out string identifier))
                             throw new Exception("Failed to retrieve identifier of variable parameter.");
-                        
+
                         AddIfOmitted(identifier, parameter.VariableReferenceIsGlobal.Value);
                         values.Add(new AnonymousVariableExpression(identifier, parameter.VariableReferenceIsGlobal.Value));
                     }
@@ -1022,6 +1022,13 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 {
                     MatchString(out string description);
                     ruleset.Description = description;
+                }
+
+                // Mode name
+                if (Match(Kw("Mode Name") + ":"))
+                {
+                    MatchString(out string modeName);
+                    ruleset.ModeName = modeName;
                 }
 
                 Match("}"); // End main section.

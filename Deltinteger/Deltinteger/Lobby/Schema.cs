@@ -24,6 +24,9 @@ namespace Deltin.Deltinteger.Lobby
         [JsonProperty("description")]
         public string Description;
 
+        [JsonProperty("modeName")]
+        public string ModeName;
+
         [JsonProperty("definitions")]
         public Dictionary<string, RootSchema> Definitions;
 

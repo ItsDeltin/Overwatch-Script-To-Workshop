@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Lobby
         public ModesRoot Modes { get; set; }
         public HeroesRoot Heroes { get; set; }
         public string Description { get; set; }
+        public string ModeName { get; set; }
         public WorkshopValuePair Workshop { get; set; }
         public WorkshopValuePair Extensions { get; set; }
 
@@ -201,7 +202,7 @@ namespace Deltin.Deltinteger.Lobby
 
             RootSchema allHeroesReference = new RootSchema() { Ref = "#/definitions/All Heroes" };
 
-            // Add the map schema reference to the current schema. 
+            // Add the map schema reference to the current schema.
             schema.Properties.Add("Enabled Heroes", allHeroesReference);
             schema.Properties.Add("Disabled Heroes", allHeroesReference);
 
@@ -314,7 +315,7 @@ namespace Deltin.Deltinteger.Lobby
             // Check description.
             if (jobject.TryGetValue("Description", out JToken description) && description.Type != JTokenType.String)
                 validation.IncorrectType("Description", "string");
-            
+
             // Check extensions.
             if (jobject.TryGetValue("Extensions", out JToken extensionsToken)
                 // Make sure the extension group's value is an object.
