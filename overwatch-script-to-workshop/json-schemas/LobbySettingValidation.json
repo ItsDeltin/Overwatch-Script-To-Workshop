@@ -6357,6 +6357,10 @@
       "description": "The description of the custom game.",
       "type": "string"
     },
+    "Mode Name": {
+      "description": "The name of the custom game mode.",
+      "type": "string"
+    },
     "Workshop": {
       "properties": {},
       "type": "object",
