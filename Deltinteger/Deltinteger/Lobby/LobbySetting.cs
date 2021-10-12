@@ -263,7 +263,7 @@ namespace Deltin.Deltinteger.Lobby
                 }
             }
         }
-    
+
         public static RangeValue NewPercentage(string name, double min, double max, double defaultValue = 100) => new RangeValue(false, true, name, min, max, defaultValue);
         public static RangeValue NewPercentage(string name, AbilityNameResolver title, double min, double max, double defaultValue = 100) => new RangeValue(false, true, name, min, max, defaultValue) {
             TitleResolver = title
