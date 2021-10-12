@@ -33,6 +33,8 @@ namespace Deltin.Deltinteger.Lobby
         public ModesRoot Modes { get; set; }
         public HeroesRoot Heroes { get; set; }
         public string Description { get; set; }
+
+        [JsonProperty("Mode Name")]
         public string ModeName { get; set; }
         public WorkshopValuePair Workshop { get; set; }
         public WorkshopValuePair Extensions { get; set; }
@@ -152,6 +154,12 @@ namespace Deltin.Deltinteger.Lobby
                 Type = SchemaObjectType.String
             });
 
+            // Add 'Mode Name' property
+            root.Properties.Add("Mode Name", new RootSchema("The name of the custom game mode.")
+            {
+                Type = SchemaObjectType.String
+            });
+
             // Add 'Workshop' property.
             root.Properties.Add("Workshop", GetCustomSettingsSchema(generate));
 
@@ -257,6 +265,7 @@ namespace Deltin.Deltinteger.Lobby
             keywords.Add("No");
             keywords.Add("main");
             keywords.Add("Description");
+            keywords.Add("Mode Name");
             keywords.Add(AbilityNameResolver.CooldownTime);
             keywords.Add(AbilityNameResolver.RechargeRate);
             keywords.Add(AbilityNameResolver.MaximumTime);
@@ -297,7 +306,7 @@ namespace Deltin.Deltinteger.Lobby
 
             // Check for invalid properties.
             foreach (JProperty setting in jobject.Properties())
-                if (!new string[] { "Lobby", "Modes", "Heroes", "Description", "Workshop", "Extensions" }.Contains(setting.Name))
+                if (!new string[] { "Lobby", "Modes", "Heroes", "Description", "Workshop", "Extensions", "Mode Name" }.Contains(setting.Name))
                     validation.InvalidSetting(setting.Name);
 
             // Check lobby settings.
@@ -315,6 +324,10 @@ namespace Deltin.Deltinteger.Lobby
             // Check description.
             if (jobject.TryGetValue("Description", out JToken description) && description.Type != JTokenType.String)
                 validation.IncorrectType("Description", "string");
+
+            // Check mode name.
+            if (jobject.TryGetValue("Mode Name", out JToken modeName) && modeName.Type != JTokenType.String)
+                validation.IncorrectType("Mode Name", "string");
 
             // Check extensions.
             if (jobject.TryGetValue("Extensions", out JToken extensionsToken)
