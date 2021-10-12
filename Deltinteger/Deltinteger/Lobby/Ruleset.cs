@@ -47,14 +47,21 @@ namespace Deltin.Deltinteger.Lobby
             builder.AppendLine("{");
             builder.Indent();
 
-            // Get the description
-            if (Description != null)
+            // Get the description and/or mode name
+            if (Description != null || ModeName != null)
             {
                 builder.AppendKeywordLine("main")
                     .AppendLine("{")
-                    .Indent()
-                    .AppendKeyword("Description").Append(": \"" + Description + "\"").AppendLine()
-                    .Outdent()
+                    .Indent();
+                if (Description != null)
+                {
+                    builder.AppendKeyword("Description").Append(": \"" + Description + "\"").AppendLine();
+                }
+                if (ModeName != null)
+                {
+                    builder.AppendKeyword("Mode Name").Append(": \"" + ModeName + "\"").AppendLine();
+                }
+                builder.Outdent()
                     .AppendLine("}");
             }
 
