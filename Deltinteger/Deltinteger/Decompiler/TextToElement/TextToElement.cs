@@ -1067,25 +1067,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Match("}"); // End heroes section.
             }
 
-            // Extensions
-            if (Match(Kw("extensions")))
-            {
-                ruleset.Extensions = new WorkshopValuePair();
-                Match("{"); // Start extensions section.
-
-                // Match every extension keyword.
-                bool matchedAny = true;
-                while (matchedAny)
-                {
-                    matchedAny = false;
-                    foreach (var ext in ExtensionInfo.Extensions)
-                        if (matchedAny = Match(Kw(ext.Name)))
-                            ruleset.Extensions.Add(ext.Name, true);
-                }
-
-                Match("}"); // End extensions section.
-            }
-
             // Custom workshop settings
             if (Match(Kw("workshop")))
             {
@@ -1123,6 +1104,25 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     // Add the custom setting.
                     ruleset.Workshop.Add(identifier, value);
                 }
+            }
+
+            // Extensions
+            if (Match(Kw("extensions")))
+            {
+                ruleset.Extensions = new WorkshopValuePair();
+                Match("{"); // Start extensions section.
+
+                // Match every extension keyword.
+                bool matchedAny = true;
+                while (matchedAny)
+                {
+                    matchedAny = false;
+                    foreach (var ext in ExtensionInfo.Extensions)
+                        if (matchedAny = Match(Kw(ext.Name)))
+                            ruleset.Extensions.Add(ext.Name, true);
+                }
+
+                Match("}"); // End extensions section.
             }
 
             Match("}"); // End settings section.
