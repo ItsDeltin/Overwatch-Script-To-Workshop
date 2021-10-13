@@ -26,7 +26,10 @@ namespace Deltin.Deltinteger.Lobby
             new SwitchValue("Use Experimental Update If Available", false, SwitchType.YesNo),
             new SwitchValue("Match Voice Chat", false, SwitchType.EnabledDisabled),
             new SwitchValue("Pause Game On Player Disconnect", false, SwitchType.YesNo),
-            new SelectValue("Data Center Preference", "Best Available", "USA - Central", "Brazil", "Singapore", "USA - West", "Australia 3")
+            // Sources: https://www.reddit.com/r/Overwatch/comments/aipsn7/data_center_switcher/ and https://us.forums.blizzard.com/en/overwatch/t/information-about-the-global-play-server-selection/618941
+            // It's better for this list to be too expansive, since porting modes globally with a valid Data Center set can fail if the datacenter is not available in the importer's region.
+            // It's not OSTW's problem if the datacenter can't be reached for whatever reason (taken offline, unavailable, invalid name). People shouldn't set Data Center anyways. Best we can do is let it compile/decompile.
+            new SelectValue("Data Center Preference", "Best Available", "Netherlands", "France", "China - Hangzhou", "China - Hangzhou 2", "South Korea", "USA - Southwest", "USA - West", "Australia 2", "Australia 3", "Taiwan", "Japan", "Singapore", "Australia", "Brazil", "South Korea 2", "Germany", "Ireland", "USA - East", "USA - Northwest", "China - Beijing", "Argentina", "Chile", "Brazil 2", "Peru", "USA - Central", "Bahrain")
         };
 
         public WorkshopValuePair Lobby { get; set; }
