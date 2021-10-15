@@ -26,7 +26,7 @@ export async function makeLanguageServer()
 
 	// Shows element count.
 	elementCountStatus = window.createStatusBarItem(StatusBarAlignment.Left, 0);
-	elementCountStatus.tooltip = "The number of elements in the workshop output. The workshop will accept a maximum of 20,000.";
+	elementCountStatus.tooltip = "The number of elements in the workshop output. The workshop will accept a maximum of 32,000.";
 	elementCountStatus.show();
 	setElementCount(0);
 	startLanguageServer();
@@ -54,7 +54,7 @@ async function checkServerModule()
 					// View releases
 					if (option == 'View Releases') env.openExternal(Uri.parse('https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases'));
 				});
-			
+
 			serverStatus = 'stopped';
 			return false;
 		}
@@ -86,7 +86,7 @@ async function checkServerModule()
 		serverStatus = 'stopped';
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -121,7 +121,7 @@ export async function startLanguageServer() {
 			options: serverExecutableOptions
 		}
 	};
-	
+
 	// Create the language client and start the client.
 	client = new LanguageClient('ostw', 'Overwatch Script To Workshop', serverOptions, clientOptions);
 
@@ -175,7 +175,7 @@ async function gotVersion(version: string)
 {
 	if (gotVersionThisInstance)
 		return;
-	
+
 	gotVersionThisInstance = true;
 	serverVersion = version;
 	versionSelector.setCurrentVersion('OSTW ' + version);
