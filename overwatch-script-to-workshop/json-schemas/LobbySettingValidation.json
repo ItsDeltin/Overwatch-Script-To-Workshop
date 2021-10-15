@@ -1625,7 +1625,6 @@
     "Weapon Freeze Rate Scalar": {
       "default": 100.0,
       "type": "number",
-      "minimum": 25.0,
       "maximum": 500.0
     },
     "Ultimate Ability (Valkyrie)": {
