@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Hanzo", PlayerSelector.Hanzo),
             ("Junkrat", PlayerSelector.Junkrat),
             ("Lúcio", PlayerSelector.Lucio),
-            ("McCree", PlayerSelector.Mccree),
+            ("Cassidy", PlayerSelector.Cassidy),
             ("Mei", PlayerSelector.Mei),
             ("Mercy", PlayerSelector.Mercy),
             ("Moira", PlayerSelector.Moira),
