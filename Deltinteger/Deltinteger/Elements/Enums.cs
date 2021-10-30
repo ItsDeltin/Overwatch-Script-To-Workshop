@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Elements
         Zenyatta,
         Genji,
         Roadhog,
-        Mccree,
+        Cassidy,
         Junkrat,
         Zarya,
         Soldier76,

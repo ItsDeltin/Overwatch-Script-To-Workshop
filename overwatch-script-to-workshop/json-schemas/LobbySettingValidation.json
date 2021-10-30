@@ -1143,6 +1143,44 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Ultimate Ability (Deadeye)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Deadeye)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Deadeye)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Deadeye)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Combat Roll": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Combat Roll Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Flashbang": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Flashbang Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Ultimate Ability (Self-Destruct)": {
       "default": true,
       "type": "boolean"
@@ -1517,44 +1555,6 @@
       "maximum": 500.0
     },
     "Soundwave Knockback Scalar": {
-      "default": 100.0,
-      "type": "number",
-      "maximum": 500.0
-    },
-    "Ultimate Ability (Deadeye)": {
-      "default": true,
-      "type": "boolean"
-    },
-    "Ultimate Generation (Deadeye)": {
-      "default": 100.0,
-      "type": "number",
-      "minimum": 10.0,
-      "maximum": 500.0
-    },
-    "Ultimate Generation - Passive (Deadeye)": {
-      "default": 100.0,
-      "type": "number",
-      "maximum": 500.0
-    },
-    "Ultimate Generation - Combat (Deadeye)": {
-      "default": 100.0,
-      "type": "number",
-      "maximum": 500.0
-    },
-    "Combat Roll": {
-      "default": true,
-      "type": "boolean"
-    },
-    "Combat Roll Cooldown Time": {
-      "default": 100.0,
-      "type": "number",
-      "maximum": 500.0
-    },
-    "Flashbang": {
-      "default": true,
-      "type": "boolean"
-    },
-    "Flashbang Cooldown Time": {
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
@@ -2534,6 +2534,7 @@
           "Baptiste",
           "Bastion",
           "Brigitte",
+          "Cassidy",
           "D.va",
           "Doomfist",
           "Echo",
@@ -2541,7 +2542,6 @@
           "Hanzo",
           "Junkrat",
           "Lúcio",
-          "Mccree",
           "Mei",
           "Mercy",
           "Moira",
@@ -3075,6 +3075,81 @@
             },
             "Whip Shot Knockback Scalar": {
               "$ref": "#/definitions/Whip Shot Knockback Scalar"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Cassidy": {
+          "description": "'Cassidy' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (Deadeye)": {
+              "$ref": "#/definitions/Ultimate Ability (Deadeye)"
+            },
+            "Ultimate Generation (Deadeye)": {
+              "$ref": "#/definitions/Ultimate Generation (Deadeye)"
+            },
+            "Ultimate Generation - Passive (Deadeye)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Deadeye)"
+            },
+            "Ultimate Generation - Combat (Deadeye)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Deadeye)"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Secondary Fire": {
+              "$ref": "#/definitions/Secondary Fire"
+            },
+            "Combat Roll": {
+              "$ref": "#/definitions/Combat Roll"
+            },
+            "Combat Roll Cooldown Time": {
+              "$ref": "#/definitions/Combat Roll Cooldown Time"
+            },
+            "Flashbang": {
+              "$ref": "#/definitions/Flashbang"
+            },
+            "Flashbang Cooldown Time": {
+              "$ref": "#/definitions/Flashbang Cooldown Time"
             }
           },
           "additionalProperties": false
@@ -3669,81 +3744,6 @@
             },
             "Soundwave Knockback Scalar": {
               "$ref": "#/definitions/Soundwave Knockback Scalar"
-            }
-          },
-          "additionalProperties": false
-        },
-        "Mccree": {
-          "description": "'Mccree' hero settings.",
-          "properties": {
-            "Quick Melee": {
-              "$ref": "#/definitions/Quick Melee"
-            },
-            "Spawn With Ultimate Ready": {
-              "$ref": "#/definitions/Spawn With Ultimate Ready"
-            },
-            "Health": {
-              "$ref": "#/definitions/Health"
-            },
-            "Damage Dealt": {
-              "$ref": "#/definitions/Damage Dealt"
-            },
-            "Damage Received": {
-              "$ref": "#/definitions/Damage Received"
-            },
-            "Healing Received": {
-              "$ref": "#/definitions/Healing Received"
-            },
-            "Jump Vertical Speed": {
-              "$ref": "#/definitions/Jump Vertical Speed"
-            },
-            "Movement Gravity": {
-              "$ref": "#/definitions/Movement Gravity"
-            },
-            "Movement Speed": {
-              "$ref": "#/definitions/Movement Speed"
-            },
-            "Receive Headshots Only": {
-              "$ref": "#/definitions/Receive Headshots Only"
-            },
-            "Primary Fire": {
-              "$ref": "#/definitions/Primary Fire"
-            },
-            "Ammunition Clip Size Scalar": {
-              "$ref": "#/definitions/Ammunition Clip Size Scalar"
-            },
-            "No Ammunition Requirement": {
-              "$ref": "#/definitions/No Ammunition Requirement"
-            },
-            "Ultimate Ability (Deadeye)": {
-              "$ref": "#/definitions/Ultimate Ability (Deadeye)"
-            },
-            "Ultimate Generation (Deadeye)": {
-              "$ref": "#/definitions/Ultimate Generation (Deadeye)"
-            },
-            "Ultimate Generation - Passive (Deadeye)": {
-              "$ref": "#/definitions/Ultimate Generation - Passive (Deadeye)"
-            },
-            "Ultimate Generation - Combat (Deadeye)": {
-              "$ref": "#/definitions/Ultimate Generation - Combat (Deadeye)"
-            },
-            "Projectile Speed": {
-              "$ref": "#/definitions/Projectile Speed"
-            },
-            "Secondary Fire": {
-              "$ref": "#/definitions/Secondary Fire"
-            },
-            "Combat Roll": {
-              "$ref": "#/definitions/Combat Roll"
-            },
-            "Combat Roll Cooldown Time": {
-              "$ref": "#/definitions/Combat Roll Cooldown Time"
-            },
-            "Flashbang": {
-              "$ref": "#/definitions/Flashbang"
-            },
-            "Flashbang Cooldown Time": {
-              "$ref": "#/definitions/Flashbang Cooldown Time"
             }
           },
           "additionalProperties": false

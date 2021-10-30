@@ -612,6 +612,27 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                                 values.Add(new ConstantEnumeratorExpression(member));
                                 break;
                             }
+                        // Legacy enum conversion
+                        if (values.Count <= currentParameter)
+                        {
+                            // Hero renames
+                            if (parameter?.Type == "Hero")
+                            {
+                                if (Match(Kw("Mccree"), false)) values.Add(new ConstantEnumeratorExpression(enumerator.Members.FirstOrDefault(m => m.Name == "Cassidy")));
+                            }
+                            else if (parameter?.Type == "Effect" || parameter?.Type == "PlayEffect")
+                            {
+                                if (Match(Kw("Mccree"), false))
+                                {
+                                    foreach (var member in enumerator.Members.OrderByDescending(m => m.Name.Length))
+                                        if (Match(Kw(member.DecompileName()).Replace("Cassidy", "").TrimStart(), false))
+                                        {
+                                            values.Add(new ConstantEnumeratorExpression(member));
+                                            break;
+                                        }
+                                }
+                            }
+                        }
                     }
                     // Normal parameter
                     else
@@ -1267,6 +1288,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     collection = hero;
                     return true;
                 }
+            if (Match(Kw("Mccree"), false))
+            {
+                collection = HeroSettingCollection.AllHeroSettings.FirstOrDefault(hs => hs.HeroName == "Cassidy");
+                return true;
+            }
             collection = null;
             return false;
         }
