@@ -619,5 +619,13 @@
       "Deathmatch",
       "Team Deathmatch"
     ]
+  },
+  {
+    "Name": "Malevento",
+    "GameModes": [
+      "Bounty Hunter",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
   }
 ]
