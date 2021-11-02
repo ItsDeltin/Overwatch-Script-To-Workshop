@@ -61,34 +61,5 @@ namespace DS.Analysis
 
             throw new NotImplementedException(expressionContext.GetType().ToString());
         }
-
-
-        public Statement GetStatement(IParseStatement statementContext)
-        {
-            switch (statementContext)
-            {
-                // Variable declaration
-                case VariableDeclaration variableDeclaration:
-                    return new VariableDeclarationStatement(new VariableBuilder(new VariableContextHandler(variableDeclaration)).GetVariable(this));
-
-                // If statement
-                case If @if:
-                    return new IfStatement(this, @if);
-            }
-
-            throw new NotImplementedException(statementContext.GetType().ToString());
-        }
-
-
-        public BlockAction GetBlock(Block block)
-        {
-            var context = SetScope(Scope.CreateChild());
-
-            var statements = new Statement[block.Statements.Count];
-            for (int i = 0; i < statements.Length; i++)
-                statements[i] = context.GetStatement(block.Statements[i]);
-            
-            return new BlockAction(statements);
-        }
     }
 }

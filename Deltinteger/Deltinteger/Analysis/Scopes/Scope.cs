@@ -29,6 +29,6 @@ namespace DS.Analysis.Scopes
             return watcher;
         }
 
-        public Scope CreateChild() => new Scope(this, new ScopeSource());
+        public Scope CreateChild(ScopeSource scopeSource) => new Scope(this, scopeSource);
     }
 }

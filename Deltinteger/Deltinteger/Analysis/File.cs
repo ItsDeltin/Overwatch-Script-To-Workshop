@@ -10,7 +10,7 @@ namespace DS.Analysis
     {
         readonly DeltinScriptAnalysis _analysis;
         RootContext _syntax;
-        DeclarationContainer _rootDeclarations;
+        BlockAction _statements;
 
         // The root scope of the file.
         public ScopeSource RootScopeSource { get; } = new ScopeSource();
@@ -34,24 +34,23 @@ namespace DS.Analysis
             RootScopeSource.Clear();
 
             // Get declarations
-            _rootDeclarations = new DeclarationContainer(StructureUtility.DeclarationsFromSyntax(_syntax));
-            _rootDeclarations.GetStructure(new StructureInfo(RootScopeSource));
+            _statements = new StructureContext(RootScopeSource).Block(_syntax.Statements.ToArray());
         }
 
         public void GetMeta()
         {
-            _rootDeclarations.GetMeta(new ContextInfo(_analysis, this, _rootScope));
+            _statements.GetMeta(new ContextInfo(_analysis, this, _rootScope));
         }
 
         public void GetContent()
         {
-            _rootDeclarations.GetContent(new ContextInfo(_analysis, this, _rootScope));
+            _statements.GetContent(new ContextInfo(_analysis, this, _rootScope));
         }
 
         public void Unlink()
         {
             RootScopeSource.Clear();
-            _rootDeclarations?.Dispose();
+            _statements?.Dispose();
         }
     }
 }

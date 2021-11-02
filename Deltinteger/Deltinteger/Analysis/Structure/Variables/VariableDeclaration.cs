@@ -4,12 +4,12 @@ using DS.Analysis.Variables.Builder;
 
 namespace DS.Analysis.Structure.Variables
 {
-    class VariableDeclaration : AbstractDeclaredElement
+    class DeclaredVariable : AbstractDeclaredElement
     {
         readonly VariableBuilder variableBuilder;
         VariableProvider variable;
 
-        public VariableDeclaration(IVariableContextHandler contextHandler)
+        public DeclaredVariable(IVariableContextHandler contextHandler)
         {
             variableBuilder = new VariableBuilder(contextHandler);
         }

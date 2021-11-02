@@ -7,18 +7,23 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 {
     public class RootContext
     {
+        public List<IParseStatement> Statements { get; } = new List<IParseStatement>();
+
+        // === START REMOVE ===
         public List<Import> Imports { get; } = new List<Import>();
         public List<RuleContext> Rules { get; } = new List<RuleContext>();
         public List<ClassContext> Classes { get; } = new List<ClassContext>();
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
 
-		    public List<TypeAliasContext> TypeAliases {get; } = new List<TypeAliasContext>();
+        public List<TypeAliasContext> TypeAliases {get; } = new List<TypeAliasContext>();
 
         public List<Token> PlayervarReservations {get; } = new List<Token>();
         public List<Token> GlobalvarReservations {get; } = new List<Token>();
 
         public List<Hook> Hooks { get; } = new List<Hook>();
+        // === END REMOVE ===
+
         public List<TokenCapture> NodeCaptures { get; set; }
     }
 
@@ -161,7 +166,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool Valid => true;
     }
 
-    public class RuleContext : Node
+    public class RuleContext : Node, IParseStatement
     {
         public Token RuleToken { get; }
         public Token NameToken { get; }
@@ -170,6 +175,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<RuleSetting> Settings { get; }
         public List<IfCondition> Conditions { get; }
         public IParseStatement Statement { get; }
+        public MetaComment Comment { get; set; }
         public string Name => Extras.RemoveQuotes(NameToken.GetText());
 
         public RuleContext(Token ruleToken, Token name, Token disabled, NumberExpression order, List<RuleSetting> settings, List<IfCondition> conditions, IParseStatement statement)
@@ -210,7 +216,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class ClassContext : Node
+    public class ClassContext : Node, IParseStatement
     {
         public Token DeclaringToken { get; }
         public Token Identifier { get; }
@@ -219,6 +225,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<IParseType> Inheriting { get; }
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
         public List<ConstructorContext> Constructors { get; } = new List<ConstructorContext>();
+        public MetaComment Comment { get; set; }
 
         public ClassContext(Token declaringToken, Token identifier, List<TypeArgContext> generics, Token inheritToken, List<IParseType> inheriting)
         {
@@ -230,10 +237,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class EnumContext : Node
+    public class EnumContext : Node, IParseStatement
     {
         public Token Identifier { get; }
         public List<EnumValue> Values { get; }
+        public MetaComment Comment { get; set; }
 
         public EnumContext(Token identifier, List<EnumValue> values)
         {
@@ -254,7 +262,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class FunctionContext : Node, IDeclaration
+    public class FunctionContext : Node, IDeclaration, IParseStatement
     {
         public AttributeTokens Attributes { get; }
         public IParseType Type { get; }
@@ -270,6 +278,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
         // Macro
         public IParseExpression MacroValue { get; }
+        public MetaComment Comment { get; set; }
 
         public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
         {
@@ -343,22 +352,26 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }
 	
-	public class TypeAliasContext : Node
+	public class TypeAliasContext : Node, IParseStatement
 	{
-		public Token NewTypeName;
-		public IParseType OtherType;
+		public Token NewTypeName { get; }
+		public IParseType OtherType { get; }
+        public List<TypeArgContext> Generics { get; }
+        public MetaComment Comment { get; set; }
 
-		public TypeAliasContext(Token newTypeName, IParseType otherType) {
+        public TypeAliasContext(Token newTypeName, IParseType otherType, List<TypeArgContext> generics) {
 			NewTypeName = newTypeName;
 			OtherType = otherType;
+            Generics = generics;
 		}
 	}
 
-    public class Import
+    public class Import : Node, IParseStatement
     {
         public Token File { get; }
         public Token As { get; }
         public Token Identifier { get; }
+        public MetaComment Comment { get; set; }
 
         public Import(Token file, Token @as, Token identifier)
         {

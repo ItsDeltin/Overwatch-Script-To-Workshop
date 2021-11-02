@@ -8,29 +8,19 @@ namespace DS.Analysis.Structure
     {
         public string Name { get; protected set; }
 
-        public ParentedDeclaredElement Parent { get; }
-
-        public Transform Transform { get; }
-
-        public DeclarationObserver Observer { get; } = new DeclarationObserver();
-
-        public virtual void GetStructure(StructureInfo structureInfo) {}
         public virtual void GetMeta(ContextInfo metaContext) {}
         public abstract void GetContent(ContextInfo context);
 
         public virtual ScopedElement MakeScopedElement(ScopedElementParameters parameters) => new ScopedElement(parameters.Alias ?? Name);
 
-        public virtual void Dispose()
-        {
-            Observer.Dispose();
-        }
+        public ScopedElement MakeScopedElement() => MakeScopedElement(default(ScopedElementParameters));
+
+        public virtual void Dispose() {}
     }
 
     abstract class ParentedDeclaredElement : AbstractDeclaredElement
     {
         public AbstractDeclaredElement[] DeclaredElements { get; protected set; }
-
-        public override abstract void GetStructure(StructureInfo structureInfo);
 
         public override void GetMeta(ContextInfo metaContext)
         {

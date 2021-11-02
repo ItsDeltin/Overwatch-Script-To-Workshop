@@ -6,19 +6,21 @@ namespace DS.Analysis.Structure.DataTypes
 {
     class DeclaredDataType : ParentedDeclaredElement
     {
-        readonly AbstractDataTypeContentProvider contentProvider;
+        readonly IDataTypeContentProvider contentProvider;
         CodeTypeProvider codeTypeProvider;
 
-        public DeclaredDataType(AbstractDataTypeContentProvider contentProvider)
+        public DeclaredDataType(StructureContext structure, IDataTypeContentProvider contentProvider)
         {
             this.contentProvider = contentProvider;
             Name = contentProvider.GetName();
             codeTypeProvider = new CodeTypeProvider(contentProvider.GetName());
-        }
 
-        public override void GetStructure(StructureInfo structureInfo)
-        {
-            DeclaredElements = contentProvider.GetDeclarations();
+            structure.ScopeSource.AddScopedElement(MakeScopedElement(default(ScopedElementParameters)));
+
+            // Create a scope source for this class.
+            var scopeSource = new ScopeSource();
+
+            DeclaredElements = contentProvider.GetDeclarations(structure.SetScopeSource(scopeSource));
         }
 
         public override void GetMeta(ContextInfo contextInfo)

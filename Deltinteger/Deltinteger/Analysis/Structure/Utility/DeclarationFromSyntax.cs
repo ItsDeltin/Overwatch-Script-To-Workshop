@@ -1,29 +1,30 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
-using DS.Analysis.Structure.RuleContentProvider;
+using DS.Analysis.Structure.Variables;
 using DS.Analysis.Structure.DataTypes;
 using DS.Analysis.Structure.Methods;
+using DS.Analysis.Variables.Builder;
 
 namespace DS.Analysis.Structure.Utility
 {
     static partial class StructureUtility
     {
-        public static AbstractDeclaredElement DeclarationFromSyntax(IDeclaration declaration)
+        public static AbstractDeclaredElement DeclarationFromSyntax(StructureContext structure, IDeclaration declaration)
         {
             switch (declaration)
-            {
-                // Workshop rule
-                case RuleContext ruleContext:
-                    return new GenericRuleDeclaration(new DeclaredRuleContentProvider(ruleContext));
+            {                
+                // Variable declaration
+                case VariableDeclaration variableDeclaration:
+                    return new DeclaredVariable(new VariableContextHandler(variableDeclaration));
                 
                 // Data type
                 case ClassContext dataTypeContext:
-                    return new DeclaredDataType(new DeclaredDataTypeContentProvider(dataTypeContext));
+                    return new DeclaredDataType(structure, new DataTypeContentProvider(dataTypeContext));
 
                 // Method
                 case FunctionContext functionContext:
-                    return new GenericMethodDeclaration(new DeclaredMethodContentProvider(functionContext));
+                    return new DeclaredMethod(structure, new MethodContentProvider(functionContext));
                 
                 // Unknown type
                 default:
@@ -31,25 +32,12 @@ namespace DS.Analysis.Structure.Utility
             }
         }
         
-        public static AbstractDeclaredElement[] DeclarationsFromSyntax(List<IDeclaration> declarations)
+        public static AbstractDeclaredElement[] DeclarationsFromSyntax(StructureContext structure, List<IDeclaration> declarations)
         {
             var result = new AbstractDeclaredElement[declarations.Count];
             for (int i = 0; i < result.Length; i++)
-                result[i] = DeclarationFromSyntax(declarations[i]);
+                result[i] = DeclarationFromSyntax(structure, declarations[i]);
             return result;
-        }
-
-        public static AbstractDeclaredElement[] DeclarationsFromSyntax(RootContext context)
-        {
-            var elements = new List<AbstractDeclaredElement>();
-
-            foreach (var declaration in context.Declarations)
-                elements.Add(DeclarationFromSyntax(declaration));
-            
-            foreach (var dataType in context.Classes)
-                elements.Add(new DeclaredDataType(new DeclaredDataTypeContentProvider(dataType)));
-            
-            return elements.ToArray();
         }
     }
 }

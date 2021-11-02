@@ -382,6 +382,10 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Switch:
                 case TokenType.While:
                 case TokenType.ActionComment:
+                case TokenType.Class:
+                case TokenType.Struct:
+                case TokenType.Enum:
+                case TokenType.Type:
                     return true;
 
                 default:

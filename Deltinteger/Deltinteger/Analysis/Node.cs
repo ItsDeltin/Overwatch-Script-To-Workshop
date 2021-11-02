@@ -14,5 +14,10 @@ namespace DS.Analysis
             foreach (var disposable in _disposables)
                 disposable.Dispose();
         }
+
+
+        public virtual void GetMeta(ContextInfo contextInfo) {}
+
+        public virtual void GetContent(ContextInfo contextInfo) {}
     }
 }

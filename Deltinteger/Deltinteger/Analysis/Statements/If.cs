@@ -1,19 +1,24 @@
 using System;
 using DS.Analysis.Expressions;
 using DS.Analysis.Types;
+using DS.Analysis.Structure;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Statements
 {
     class IfStatement : Statement
     {
-        public IfStatement(ContextInfo context, If syntax)
+        readonly If syntax;
+
+        public IfStatement(StructureContext context, If syntax)
+        {
+            this.syntax = syntax;
+        }
+
+        public override void GetContent(ContextInfo contextInfo)
         {
             // Get the if expression
-            Expression @if = context.GetExpression(syntax.Expression);
-
-            AddDisposable(@if.Type.Subscribe(type => {
-            }));
+            Expression @if = contextInfo.GetExpression(syntax.Expression);
         }
     }
 }

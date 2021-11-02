@@ -797,11 +797,22 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Foreach: statement = ParseForeach(); break;
                 // Delete
                 case TokenType.Delete: statement = ParseDelete(); break;
+                // Class or struct
+                case TokenType.Struct:
+                case TokenType.Class: statement = ParseClassOrStruct(); break;
+                // Enum
+                case TokenType.Enum: statement = ParseEnum(); break;
+                // Import
+                case TokenType.Import: statement = ParseImport(); break;
+                // Rule
+                case TokenType.Rule: statement = ParseRule(); break;
+                // Type alias
+                case TokenType.Type: statement = ParseTypeAlias(); break;
                 // Declaration and expression statements.
                 default:
                     // Declaration
-                    if (IsDeclaration(false))
-                        statement = ParseDeclaration(parseSemicolon);
+                    if (IsDeclaration(true))
+                        statement = ParseVariableOrFunctionDeclaration();
                     // Expression statement
                     else
                         statement = ParseExpressionStatement(parseSemicolon);
@@ -1282,14 +1293,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
             });
 
-        bool IsHook() => Lookahead(() =>
-        {
-            bool parsedAny = false;
-            do parsedAny = ParseExpected(TokenType.Identifier) || parsedAny;
-            while (ParseOptional(TokenType.Dot));
-            return parsedAny && Is(TokenType.Equal);
-        });
-
         bool IsStartOfParameter() => Is(TokenType.Ref) || Is(TokenType.In) || Kind.IsStartOfType();
 
         bool IsStartOfExpression() => Kind.IsStartOfExpression() || Kind.IsBinaryOperator();
@@ -1378,7 +1381,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return parameters;
         }
 
-        IDeclaration ParseVariableOrFunctionDeclaration()
+        IParseStatement ParseVariableOrFunctionDeclaration()
         {
             StartNode();
             var attributes = ParseAttributes();
@@ -1429,14 +1432,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     return EndNode(new FunctionContext(attributes, type, identifier, typeArgs, parameters, block, globalvar, playervar, subroutine));
                 }
             }
-            // Variable macro
-            // else if (ParseOptional(TokenType.Colon))
-            // {
-            //     // Get the value.
-            //     var macroValue = GetContainExpression();
-            //     ParseSemicolon();
-            //     return EndNode(new MacroVarDeclaration(attributes, type, identifier, macroValue));
-            // }
             // Variable
             else
             {
@@ -1741,6 +1736,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
         /// <returns>Determines whether an element was parsed.</returns>
         void ParseScriptRootElement(RootContext context)
         {
+            context.Statements.Add(ParseStatement());
+            return;
+            // todo: remove
+            /*
             // Return false if the EOF was reached.
             switch (Kind)
             {
@@ -1766,15 +1765,19 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     context.Imports.Add(ParseImport());
                     break;
 
-        				case TokenType.Type:
-                  context.TypeAliases.Add(ParseTypeAlias());
-                  break;  
+                // Type alias
+                case TokenType.Type:
+                    context.TypeAliases.Add(ParseTypeAlias());
+                    break;
 
+                // Global variable reservation
                 case TokenType.GlobalVar:
                     if(Is(TokenType.CurlyBracket_Open, 1)) {
                         context.GlobalvarReservations.AddRange(ParseVariableReservation());
                     } else goto default;
                     break;
+                
+                // Player variable reservation
                 case TokenType.PlayerVar:
                     if(Is(TokenType.CurlyBracket_Open, 1)) {
                         context.PlayervarReservations.AddRange(ParseVariableReservation());
@@ -1786,14 +1789,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Variable declaration
                     if (IsDeclaration(true))
                         context.Declarations.Add(ParseVariableOrFunctionDeclaration());
-                    // Hook
-                    else if (IsHook())
-                        context.Hooks.Add(ParseHook());
                     // Unknown
                     else
                         Unexpected(true);
                     break;
             }
+            */
         }
 
 
@@ -1852,14 +1853,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
 			StartTokenCapture();
 			if (GetIncrementalNode(out TypeAliasContext type)) return EndTokenCapture(type);
 
+            // 'type' keyword
 			ParseExpected(TokenType.Type);
+
+            // Identifier
 			Token nameToken = ParseExpected(TokenType.Identifier);
+
+            // Type parameters
+            var typeArgs = ParseOptionalTypeArguments(out _);
+
 			ParseExpected(TokenType.Equal);
 			var parseType = ParseType();
 			ParseExpected(TokenType.Semicolon);
 
-			return EndTokenCapture(new TypeAliasContext(nameToken, parseType));
-
+			return EndTokenCapture(new TypeAliasContext(nameToken, parseType, typeArgs));
 		}
 
         /// <summary>Parses a class.</summary>
@@ -1889,7 +1896,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Get the class elements.
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
                 if (IsDeclaration(true))
-                    context.Declarations.Add(ParseVariableOrFunctionDeclaration());
+                    context.Declarations.Add((IDeclaration)ParseVariableOrFunctionDeclaration());
                 else if (IsConstructor())
                     context.Constructors.Add(ParseConstructor());
                 else
@@ -2007,15 +2014,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             ParseExpected(TokenType.Semicolon);
             return new Import(fileToken, @as, asIdentifier);
-        }
-
-        Hook ParseHook()
-        {
-            var variableExpression = GetContainExpression();
-            ParseExpected(TokenType.Equal);
-            var variableValue = GetContainExpression();
-            ParseSemicolon();
-            return new Hook(variableExpression, variableValue);
         }
 
         public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
