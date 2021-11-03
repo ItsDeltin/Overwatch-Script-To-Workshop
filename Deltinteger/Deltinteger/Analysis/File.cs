@@ -1,32 +1,37 @@
-using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
 using DS.Analysis.Structure;
-using DS.Analysis.Structure.Utility;
 using DS.Analysis.Scopes;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
+using IOPath = System.IO.Path;
 
 namespace DS.Analysis
 {
     class File
     {
-        readonly DeltinScriptAnalysis _analysis;
-        RootContext _syntax;
-        BlockAction _statements;
+        public string Path { get; }
+        public DeltinScriptAnalysis Analysis { get; }
+
+        RootContext syntax;
+        BlockAction statements;
 
         // The root scope of the file.
         public ScopeSource RootScopeSource { get; } = new ScopeSource();
 
-        readonly Scope _rootScope;
+        readonly Scope rootScope;
 
         public File(DeltinScriptAnalysis analysis)
         {
-            _analysis = analysis;
-            _rootScope = new Scope(RootScopeSource);
+            this.Analysis = analysis;
+            rootScope = new Scope(RootScopeSource);
         }
+
+
+        public string GetRelativePath(string relativePath) => IOPath.GetFullPath(IOPath.Join(Path, relativePath));
+
 
         public void Set(RootContext syntax)
         {
             Unlink();
-            _syntax = syntax;
+            this.syntax = syntax;
         }
 
         public void GetStructure()
@@ -34,23 +39,23 @@ namespace DS.Analysis
             RootScopeSource.Clear();
 
             // Get declarations
-            _statements = new StructureContext(RootScopeSource).Block(_syntax.Statements.ToArray());
+            statements = new StructureContext(this, RootScopeSource).Block(syntax.Statements.ToArray());
         }
 
         public void GetMeta()
         {
-            _statements.GetMeta(new ContextInfo(_analysis, this, _rootScope));
+            statements.GetMeta(new ContextInfo(Analysis, this, rootScope));
         }
 
         public void GetContent()
         {
-            _statements.GetContent(new ContextInfo(_analysis, this, _rootScope));
+            statements.GetContent(new ContextInfo(Analysis, this, rootScope));
         }
 
         public void Unlink()
         {
             RootScopeSource.Clear();
-            _statements?.Dispose();
+            statements?.Dispose();
         }
     }
 }

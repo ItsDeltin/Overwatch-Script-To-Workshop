@@ -1,16 +1,11 @@
-using System.Collections.Generic;
+using DS.Analysis.Files;
 
 namespace DS.Analysis
 {
     class DeltinScriptAnalysis
     {
-        readonly HashSet<File> _files;
+        public FileManager FileManager { get; } = new FileManager();
 
         public DeltinScriptAnalysis() {}
-
-        public void Add(File file)
-        {
-            
-        }
     }
 }

@@ -9,45 +9,64 @@ namespace DS.Analysis.Scopes
     {
         public ScopeWatcherParameters Parameters { get; }
 
-        readonly List<AbstractScopeSource.AbstractUnsubscriber> _sourceUnsubscribers = new List<AbstractScopeSource.AbstractUnsubscriber>();
-        readonly List<ScopedElement> _elements = new List<ScopedElement>();
-        readonly ObserverCollection<ScopeWatcherValue> _observers = new ObserverCollection<ScopeWatcherValue>();
+        readonly ObserverCollection<ScopeWatcherValue> observers = new ObserverCollection<ScopeWatcherValue>();
+        readonly Dictionary<IScopeSource, SourceListenerInfo> subscriptions = new Dictionary<IScopeSource, SourceListenerInfo>();
 
-        public IReadOnlyList<ScopedElement> Matched => _elements;
+        ScopedElement[] current = new ScopedElement[0];
 
         public ScopeWatcher(ScopeWatcherParameters parameters)
         {
             Parameters = parameters;
         }
 
-        public void SubscribeTo(ScopeSource scopeSource)
+        public void SubscribeTo(IScopeSource scopeSource)
         {
-            _sourceUnsubscribers.Add(scopeSource.Subscribe(new SourceListener(this)));
+            // Create a SourceListenerInfo instance.
+            var listenerInfo = new SourceListenerInfo();
+
+            // Link the listenerInfo to the scopeSource.
+            subscriptions.Add(scopeSource, listenerInfo);
+
+            // Subscribe to the scope source.
+            listenerInfo.Subscription = scopeSource.Subscribe(change => {
+                listenerInfo.Elements = change.Elements;
+                Notify();
+            });
         }
 
-        public void Dispose()
+        void Notify()
         {
-            foreach (var unsubscriber in _sourceUnsubscribers)
-                unsubscriber.Dispose();
+            var result = Enumerable.Empty<ScopedElement>();
+            foreach (var subscription in subscriptions)
+                result = result.Concat(subscription.Value.Elements);
             
-            _observers.Complete();
+            current = result.ToArray();
+            observers.Set(new ScopeWatcherValue(current));
         }
 
+
+        // IObservable<ScopeWatcherValue>
         public IDisposable Subscribe(IObserver<ScopeWatcherValue> observer)
         {
-            observer.OnNext(new ScopeWatcherValue(Matched.ToArray()));
-            return _observers.Add(observer);
+            observer.OnNext(new ScopeWatcherValue(current));
+            return observers.Add(observer);
         }
 
-        class SourceListener : IScopeSourceListener
+
+        // IDisposable
+        public void Dispose()
         {
-            readonly ScopeWatcher _watcher;
-            public SourceListener(ScopeWatcher watcher) => _watcher = watcher;
-            public void Notify(ScopedElement element)
-            {
-                _watcher._elements.Add(element);
-                _watcher._observers.Set(new ScopeWatcherValue(_watcher.Matched.ToArray()));
-            }
+            foreach (var sub in subscriptions)
+                sub.Value.Subscription.Dispose();
+            
+            observers.Complete();
+        }
+
+
+        class SourceListenerInfo
+        {
+            public IDisposable Subscription;
+            public ScopedElement[] Elements;
         }
     }
 

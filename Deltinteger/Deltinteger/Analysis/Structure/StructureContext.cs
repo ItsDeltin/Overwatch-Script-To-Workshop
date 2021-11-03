@@ -12,15 +12,18 @@ namespace DS.Analysis.Structure
 {
     class StructureContext
     {
+        public File File { get; }
         public ScopeSource ScopeSource { get; private set; }
 
-        public StructureContext(ScopeSource scopeSource)
+        public StructureContext(File file, ScopeSource scopeSource)
         {
+            File = file;
             ScopeSource = scopeSource;
         }
 
         public StructureContext(StructureContext other)
         {
+            File = other.File;
             ScopeSource = other.ScopeSource;
         }
 

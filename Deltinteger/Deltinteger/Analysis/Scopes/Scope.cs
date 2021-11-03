@@ -5,14 +5,14 @@ namespace DS.Analysis.Scopes
 {
     class Scope
     {
-        IEnumerable<ScopeSource> _sources;
+        IEnumerable<IScopeSource> _sources;
 
-        public Scope(ScopeSource source)
+        public Scope(IScopeSource source)
         {
             _sources = new[] { source };
         }
 
-        public Scope(Scope parent, ScopeSource source)
+        public Scope(Scope parent, IScopeSource source)
         {
             _sources = parent._sources.Append(source);
         }
@@ -29,6 +29,6 @@ namespace DS.Analysis.Scopes
             return watcher;
         }
 
-        public Scope CreateChild(ScopeSource scopeSource) => new Scope(this, scopeSource);
+        public Scope CreateChild(IScopeSource scopeSource) => new Scope(this, scopeSource);
     }
 }

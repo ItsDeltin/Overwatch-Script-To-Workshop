@@ -66,6 +66,8 @@ namespace DS.Analysis.Utility
                 observer.OnCompleted();
         }
 
+        public bool Any() => _observers.Count != 0;
+
         void IDisposable.Dispose() => Complete();
     }
 }
