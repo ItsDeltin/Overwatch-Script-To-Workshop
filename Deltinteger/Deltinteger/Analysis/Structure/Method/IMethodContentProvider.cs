@@ -11,7 +11,7 @@ namespace DS.Analysis.Structure.Methods
         string GetName();
         void GetStructure(StructureContext structure);
         void GetMeta(ContextInfo context);
-        void GetContent(ContextInfo context);
+        void GetContent();
         Parameter[] GetParameters(ContextInfo metaContext);
         TypeReference GetType(ContextInfo metaContext);
     }
@@ -27,7 +27,7 @@ namespace DS.Analysis.Structure.Methods
 
         public void GetStructure(StructureContext structure) => blockAction = structure.Block(syntax.Block);
         public void GetMeta(ContextInfo context) => blockAction.GetMeta(context);
-        public void GetContent(ContextInfo context) => blockAction.GetContent(context);
+        public void GetContent() => blockAction.GetContent();
 
         public Parameter[] GetParameters(ContextInfo context)
         {

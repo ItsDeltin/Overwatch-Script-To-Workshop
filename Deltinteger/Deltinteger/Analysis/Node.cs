@@ -5,6 +5,8 @@ namespace DS.Analysis
 {
     abstract class Node : IDisposable
     {
+        protected ContextInfo ContextInfo { get; private set; }
+
         readonly List<IDisposable> _disposables = new List<IDisposable>();
 
         protected void AddDisposable(IDisposable disposable) => _disposables.Add(disposable);
@@ -16,8 +18,11 @@ namespace DS.Analysis
         }
 
 
-        public virtual void GetMeta(ContextInfo contextInfo) {}
+        public virtual void GetMeta(ContextInfo contextInfo)
+        {
+            ContextInfo = contextInfo;
+        }
 
-        public virtual void GetContent(ContextInfo contextInfo) {}
+        public virtual void GetContent() {}
     }
 }

@@ -15,5 +15,7 @@ namespace DS.Analysis.Scopes
 
         public virtual CodeTypeProvider GetCodeTypeProvider() => null;
         public virtual IIdentifierHandler GetIdentifierHandler() => null;
+
+        public override string ToString() => Alias;
     }
 }

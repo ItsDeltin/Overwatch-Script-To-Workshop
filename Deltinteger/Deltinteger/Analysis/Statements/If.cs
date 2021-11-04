@@ -15,10 +15,10 @@ namespace DS.Analysis.Statements
             this.syntax = syntax;
         }
 
-        public override void GetContent(ContextInfo contextInfo)
+        public override void GetContent()
         {
             // Get the if expression
-            Expression @if = contextInfo.GetExpression(syntax.Expression);
+            Expression @if = ContextInfo.GetExpression(syntax.Expression);
         }
     }
 }

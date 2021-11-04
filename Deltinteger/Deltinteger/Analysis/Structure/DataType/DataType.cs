@@ -23,10 +23,6 @@ namespace DS.Analysis.Structure.DataTypes
             DeclaredElements = contentProvider.GetDeclarations(structure.SetScopeSource(scopeSource));
         }
 
-        public override void GetMeta(ContextInfo contextInfo)
-        {
-        }
-
         public override ScopedElement MakeScopedElement(ScopedElementParameters parameters) => new ScopedDataType(this, parameters.Alias);
 
         class ScopedDataType : ScopedElement

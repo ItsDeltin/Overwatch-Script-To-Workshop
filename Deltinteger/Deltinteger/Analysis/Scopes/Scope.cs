@@ -7,6 +7,11 @@ namespace DS.Analysis.Scopes
     {
         IEnumerable<IScopeSource> _sources;
 
+        public Scope()
+        {
+            _sources = Enumerable.Empty<IScopeSource>();
+        }
+
         public Scope(IScopeSource source)
         {
             _sources = new[] { source };
@@ -30,5 +35,7 @@ namespace DS.Analysis.Scopes
         }
 
         public Scope CreateChild(IScopeSource scopeSource) => new Scope(this, scopeSource);
+
+        public static readonly Scope Empty = new Scope();
     }
 }

@@ -1,8 +1,6 @@
 using System;
 using DS.Analysis.Statements;
 using DS.Analysis.Scopes;
-using DS.Analysis.Structure;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis
 {
@@ -31,12 +29,10 @@ namespace DS.Analysis
             }
         }
 
-        public void GetContent(ContextInfo contextInfo)
+        public void GetContent()
         {
-            contextInfo = contextInfo.SetScope(contextInfo.Scope.CreateChild(scopeSource));
-
             foreach (var statement in Statements)
-                statement.GetContent(contextInfo);
+                statement.GetContent();
         }
 
         public void Dispose()

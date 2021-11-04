@@ -12,14 +12,16 @@ namespace DS.Analysis.Structure.Variables
         public DeclaredVariable(IVariableContextHandler contextHandler)
         {
             variableBuilder = new VariableBuilder(contextHandler);
+            Name = variableBuilder.Name;
         }
 
         public override void GetMeta(ContextInfo metaContext)
         {
+            base.GetMeta(metaContext);
             variable = variableBuilder.GetVariable(metaContext);
         }
 
-        public override void GetContent(ContextInfo context)
+        public override void GetContent()
         {
             // todo
         }

@@ -21,14 +21,12 @@ namespace DS.Analysis
         // The root scope of the file.
         public ScopeSource RootScopeSource { get; } = new ScopeSource();
 
-        readonly Scope rootScope;
 
         public ScriptFile(string path, bool isExternal, DeltinScriptAnalysis analysis)
         {
             Path = path;
             IsExternal = isExternal;
             Analysis = analysis;
-            rootScope = new Scope(RootScopeSource);
         }
 
 
@@ -63,12 +61,12 @@ namespace DS.Analysis
 
         public void GetMeta()
         {
-            statements.GetMeta(new ContextInfo(Analysis, this, rootScope));
+            statements.GetMeta(new ContextInfo(Analysis, this, Scope.Empty));
         }
 
         public void GetContent()
         {
-            statements.GetContent(new ContextInfo(Analysis, this, rootScope));
+            statements.GetContent();
         }
 
 

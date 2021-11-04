@@ -13,6 +13,6 @@ namespace DS.Analysis.Statements
         }
 
         public override void GetMeta(ContextInfo contextInfo) => declaredElement.GetMeta(contextInfo);
-        public override void GetContent(ContextInfo contextInfo) => declaredElement.GetContent(contextInfo);
+        public override void GetContent() => declaredElement.GetContent();
     }
 }

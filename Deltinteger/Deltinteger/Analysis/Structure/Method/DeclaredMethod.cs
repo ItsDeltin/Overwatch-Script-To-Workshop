@@ -14,12 +14,13 @@ namespace DS.Analysis.Structure.Methods
 
         public override void GetMeta(ContextInfo metaContext)
         {
+            base.GetMeta(metaContext);
             Type = contentProvider.GetType(metaContext);
             parameters = contentProvider.GetParameters(metaContext);
             contentProvider.GetMeta(metaContext);
         }
 
-        public override void GetContent(ContextInfo context) => contentProvider.GetContent(context);
+        public override void GetContent() => contentProvider.GetContent();
 
         public override void Dispose()
         {
