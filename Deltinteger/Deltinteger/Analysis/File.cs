@@ -1,13 +1,18 @@
 using DS.Analysis.Structure;
 using DS.Analysis.Scopes;
+using Deltin.Deltinteger.Compiler.Parse;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using IOPath = System.IO.Path;
 
 namespace DS.Analysis
 {
-    class File
+    class ScriptFile
     {
         public string Path { get; }
+        
+        /// <summary>If the file is external, it will be unloaded when there are no more dependencies.</summary>
+        public bool IsExternal { get; }
+        
         public DeltinScriptAnalysis Analysis { get; }
 
         RootContext syntax;
@@ -18,28 +23,42 @@ namespace DS.Analysis
 
         readonly Scope rootScope;
 
-        public File(DeltinScriptAnalysis analysis)
+        public ScriptFile(string path, bool isExternal, DeltinScriptAnalysis analysis)
         {
-            this.Analysis = analysis;
+            Path = path;
+            IsExternal = isExternal;
+            Analysis = analysis;
             rootScope = new Scope(RootScopeSource);
         }
 
 
-        public string GetRelativePath(string relativePath) => IOPath.GetFullPath(IOPath.Join(Path, relativePath));
+        public string GetRelativePath(string relativePath) => IOPath.GetFullPath(IOPath.Join(IOPath.GetDirectoryName(Path), relativePath));
 
 
-        public void Set(RootContext syntax)
+        public void SetFromString(string content)
+        {
+            var lex = new Lexer();
+            var par = new Parser(lex);
+
+            lex.Init(new VersionInstance(content));
+            var context = par.Parse();
+
+            SetFromSyntax(context);
+        }
+
+        public void SetFromSyntax(RootContext syntax)
         {
             Unlink();
             this.syntax = syntax;
         }
+
 
         public void GetStructure()
         {
             RootScopeSource.Clear();
 
             // Get declarations
-            statements = new StructureContext(this, RootScopeSource).Block(syntax.Statements.ToArray());
+            statements = new StructureContext(this, RootScopeSource).Block(syntax.Statements.ToArray(), RootScopeSource);
         }
 
         public void GetMeta()
@@ -51,6 +70,7 @@ namespace DS.Analysis
         {
             statements.GetContent(new ContextInfo(Analysis, this, rootScope));
         }
+
 
         public void Unlink()
         {

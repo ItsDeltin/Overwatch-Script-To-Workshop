@@ -11,12 +11,12 @@ namespace DS.Analysis
     class ContextInfo
     {
         public DeltinScriptAnalysis Analysis { get; }
-        public File File { get; }
+        public ScriptFile File { get; }
         public Scope Scope { get; private set; }
         public Scope Getter { get; private set; }
         public ContextKind ContextKind { get; private set; }
 
-        public ContextInfo(DeltinScriptAnalysis analysis, File file, Scope scope)
+        public ContextInfo(DeltinScriptAnalysis analysis, ScriptFile file, Scope scope)
         {
             Analysis = analysis;
             File = file;

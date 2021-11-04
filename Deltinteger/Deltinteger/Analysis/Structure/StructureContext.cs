@@ -12,10 +12,10 @@ namespace DS.Analysis.Structure
 {
     class StructureContext
     {
-        public File File { get; }
+        public ScriptFile File { get; }
         public ScopeSource ScopeSource { get; private set; }
 
-        public StructureContext(File file, ScopeSource scopeSource)
+        public StructureContext(ScriptFile file, ScopeSource scopeSource)
         {
             File = file;
             ScopeSource = scopeSource;
@@ -35,15 +35,15 @@ namespace DS.Analysis.Structure
             {
                 // Variable declaration
                 case VariableDeclaration variableDeclaration:
-                    return new DeclarationStatement(new DeclaredVariable(new VariableContextHandler(variableDeclaration)));
+                    return new DeclarationStatement(this, new DeclaredVariable(new VariableContextHandler(variableDeclaration)));
                 
                 // Type declaration
                 case ClassContext dataTypeDeclaration:
-                    return new DeclarationStatement(new DeclaredDataType(this, new DataTypeContentProvider(dataTypeDeclaration)));
+                    return new DeclarationStatement(this, new DeclaredDataType(this, new DataTypeContentProvider(dataTypeDeclaration)));
                 
                 // Method declaration
                 case FunctionContext methodDeclaration:
-                    return new DeclarationStatement(new DeclaredMethod(this, new MethodContentProvider(methodDeclaration)));
+                    return new DeclarationStatement(this, new DeclaredMethod(this, new MethodContentProvider(methodDeclaration)));
 
                 // If statement
                 case If @if:
@@ -56,11 +56,11 @@ namespace DS.Analysis.Structure
             throw new NotImplementedException(syntax.GetType().ToString());
         }
 
-        public BlockAction Block(Block block) => Block(block.Statements.ToArray());
+        public BlockAction Block(Block block, ScopeSource scopeSource = null) => Block(block.Statements.ToArray(), scopeSource);
 
-        public BlockAction Block(IParseStatement[] statementSyntaxes)
+        public BlockAction Block(IParseStatement[] statementSyntaxes, ScopeSource scopeSource = null)
         {
-            var scopeSource = new ScopeSource();
+            scopeSource = scopeSource ?? new ScopeSource();
 
             var statements = new Statement[statementSyntaxes.Length];
             for (int i = 0; i < statements.Length; i++)

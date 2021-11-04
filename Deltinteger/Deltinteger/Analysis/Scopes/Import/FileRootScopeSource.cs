@@ -16,7 +16,7 @@ namespace DS.Analysis.Scopes.Import
             fileSubscription = analysis.FileManager.Depend(path, this);
         }
 
-        void IFileDependent.SetFile(File file)
+        void IFileDependent.SetFile(ScriptFile file, Exception exception)
         {
             scopeSubscription?.Dispose();
             scopeSubscription = null;

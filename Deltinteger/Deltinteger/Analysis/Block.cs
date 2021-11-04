@@ -22,7 +22,13 @@ namespace DS.Analysis
             contextInfo = contextInfo.SetScope(contextInfo.Scope.CreateChild(scopeSource));
 
             foreach (var statement in Statements)
+            {
                 statement.GetMeta(contextInfo);
+
+                var continueWithScope = statement.ProceedWithScope();
+                if (continueWithScope != null)
+                    contextInfo = contextInfo.SetScope(continueWithScope);
+            }
         }
 
         public void GetContent(ContextInfo contextInfo)

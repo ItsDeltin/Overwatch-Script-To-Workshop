@@ -1,22 +1,46 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
 
 namespace DS.Analysis.Files
 {
     class FileManager
     {
-        readonly List<File> files = new List<File>();
+        readonly List<ScriptFile> files = new List<ScriptFile>();
         readonly List<FileDependency> dependencies = new List<FileDependency>();
+
+        readonly DeltinScriptAnalysis analysis;
+
+
+        public FileManager(DeltinScriptAnalysis analysis)
+        {
+            this.analysis = analysis;
+        }
+
 
         public IDisposable Depend(string path, IFileDependent dependent)
         {
+            // Create dependency.
             var dependency = new FileDependency(path, dependent);
             dependencies.Add(dependency);
+
+            // Set the dependent's initial value.
+            if (TryGetFile(path, out ScriptFile file))
+                dependent.SetFile(file, null);
+            else
+                LoadExternal(path);
+
             return new UnlinkDependency(this, dependency);
         }
 
-        bool TryGetFile(string path, out File file)
+        void NotifyDependencies(string path, ScriptFile file, Exception ex)
+        {
+            foreach (var dep in dependencies.Where(dep => dep.Path == path))
+                dep.Dependent.SetFile(file, ex);
+        }
+
+        bool TryGetFile(string path, out ScriptFile file)
         {
             foreach (var f in files)
                 if (f.Path == path)
@@ -29,14 +53,36 @@ namespace DS.Analysis.Files
             return false;
         }
 
-        public bool TryLoad(string path, out File file)
+        public void LoadExternal(string path)
         {
+            string text;
+            try
+            {
+                text = File.ReadAllText(path);
+            }
+            catch (Exception ex)
+            {
+                NotifyDependencies(path, null, ex);
+                return;
+            }
 
+            // Create script
+            ScriptFile newFile = new ScriptFile(path, true, analysis);
+            files.Add(newFile);
+
+            // Parse script
+            newFile.SetFromString(text);
+            newFile.GetStructure();
+
+            NotifyDependencies(path, newFile, null);
         }
 
-        public void Unload()
+        void Unload(ScriptFile file)
         {
-
+            if (!files.Remove(file))
+                throw new Exception("file is not loaded");
+            file.Unlink();
+            NotifyDependencies(file.Path, null, null);
         }
 
 
@@ -69,7 +115,16 @@ namespace DS.Analysis.Files
                 // Remove dependency from the list.
                 fileManager.dependencies.Remove(fileDependency);
 
-                // TODO: unload file if references == 0 and external
+                // Unload file if there aren't any more dependencies with the same path.
+                if (fileManager.dependencies.Count(dep => dep.Path == fileDependency.Path) == 0)
+                {
+                    // Find the ScriptFile with the matching path.
+                    ScriptFile file = fileManager.files.FirstOrDefault(dep => dep.Path == fileDependency.Path);
+
+                    // Unload if the ScriptFile exists and the ScriptFile is marked as external.
+                    if (file != null && file.IsExternal)
+                        fileManager.Unload(file);
+                }
             }
         }
     }
