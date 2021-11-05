@@ -32,44 +32,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public DocRange Range { get; set; }
     }
 
-    // Interfaces
-    public interface INodeRange
-    {
-        DocRange Range { get; set; }
-    }
-    public interface IParseExpression : INodeRange { }
-    public interface IParseStatement : INodeRange
-    {
-        MetaComment Comment { get; set; }
-    }
-    public interface IDeclaration
-    {
-        AttributeTokens Attributes { get; }
-        IParseType Type { get; }
-        Token Identifier { get; }
-    }
-    public interface IListComma
-    {
-        Token NextComma { get; set; }
-    }
-    public interface IParseType : INodeRange
-    {
-        Token GenericToken { get; }
-        bool LookaheadValid { get; }
-        bool IsVoid { get; }
-        bool DefinitelyType { get; }
-        bool Infer => false;
-        bool Valid { get; }
-    }
-    public interface ITypeContextHandler
-    {
-        Token Identifier { get; }
-        List<IParseType> TypeArgs { get; }
-        int ArrayCount { get; }
-        bool IsDefault { get; }
-        bool Infer { get; }
-    }
-
     public class ParseType : Node, IParseType, ITypeContextHandler
     {
         public Token Identifier { get; }
@@ -164,6 +126,19 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool IsVoid => false;
         public bool DefinitelyType => true;
         public bool Valid => true;
+    }
+
+    public class ModuleContext : Node, IParseStatement
+    {
+        public MetaComment Comment { get; set; }
+        public Token Identifier { get; }
+        public List<IDeclaration> Declarations { get; }
+
+        public ModuleContext(Token identifier, List<IDeclaration> declarations)
+        {
+            Identifier = identifier;
+            Declarations = declarations;
+        }
     }
 
     public class RuleContext : Node, IParseStatement

@@ -808,6 +808,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Rule: statement = ParseRule(); break;
                 // Type alias
                 case TokenType.Type: statement = ParseTypeAlias(); break;
+                // Module
+                case TokenType.Module: statement = ParseModule(); break;
                 // Declaration and expression statements.
                 default:
                     // Declaration
@@ -1738,65 +1740,19 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             context.Statements.Add(ParseStatement());
             return;
-            // todo: remove
-            /*
-            // Return false if the EOF was reached.
-            switch (Kind)
-            {
-                // Rule
-                case TokenType.Rule:
-                case TokenType.Disabled:
-                    context.Rules.Add(ParseRule());
-                    break;
-
-                // Class
-                case TokenType.Class:
-                case TokenType.Struct:
-                    context.Classes.Add(ParseClassOrStruct());
-                    break;
-
-                // Enum
-                case TokenType.Enum:
-                    context.Enums.Add(ParseEnum());
-                    break;
-
-                // Import
-                case TokenType.Import:
-                    context.Imports.Add(ParseImport());
-                    break;
-
-                // Type alias
-                case TokenType.Type:
-                    context.TypeAliases.Add(ParseTypeAlias());
-                    break;
-
-                // Global variable reservation
-                case TokenType.GlobalVar:
-                    if(Is(TokenType.CurlyBracket_Open, 1)) {
-                        context.GlobalvarReservations.AddRange(ParseVariableReservation());
-                    } else goto default;
-                    break;
-                
-                // Player variable reservation
-                case TokenType.PlayerVar:
-                    if(Is(TokenType.CurlyBracket_Open, 1)) {
-                        context.PlayervarReservations.AddRange(ParseVariableReservation());
-                    } else goto default;
-                    break;
-
-                // Others
-                default:
-                    // Variable declaration
-                    if (IsDeclaration(true))
-                        context.Declarations.Add(ParseVariableOrFunctionDeclaration());
-                    // Unknown
-                    else
-                        Unexpected(true);
-                    break;
-            }
-            */
         }
 
+        ModuleContext ParseModule()
+        {
+            StartTokenCapture();
+            if (GetIncrementalNode(out ModuleContext module)) return EndTokenCapture(module);
+
+            ParseExpected(TokenType.Module);
+            var identifier = ParseExpected(TokenType.Identifier);
+            var declarations = ParseDeclarationList();
+
+            return EndTokenCapture(new ModuleContext(identifier, declarations));
+        }
 
         List<Token> ParseVariableReservation() {
             if(Is(TokenType.GlobalVar)) {
@@ -1894,6 +1850,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ClassContext context = new ClassContext(declareToken, identifier, generics, inheritToken, inheriting);
 
             // Get the class elements.
+            // TODO: use ParseDeclarationList
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
                 if (IsDeclaration(true))
                     context.Declarations.Add((IDeclaration)ParseVariableOrFunctionDeclaration());
@@ -1909,6 +1866,22 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Close);
 
             return EndTokenCapture(context);
+        }
+
+        List<IDeclaration> ParseDeclarationList()
+        {
+            var declarations = new List<IDeclaration>();
+
+            while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
+                if (IsDeclaration(true))
+                    declarations.Add((IDeclaration)ParseVariableOrFunctionDeclaration());
+                else
+                {
+                    // TODO: better error recovery
+                    break;
+                }
+            
+            return declarations;
         }
 
         EnumContext ParseEnum()

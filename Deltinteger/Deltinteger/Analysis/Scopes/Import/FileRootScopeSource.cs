@@ -4,6 +4,9 @@ using DS.Analysis.Utility;
 
 namespace DS.Analysis.Scopes.Import
 {
+    /// <summary>
+    /// Imports the entire root scope of another file into the current scope.
+    /// </summary>
     class FileRootScopeSource : IScopeSource, IFileDependent, IDisposable
     {
         readonly ObserverCollection<ScopeSourceChange> observers = new ObserverCollection<ScopeSourceChange>();

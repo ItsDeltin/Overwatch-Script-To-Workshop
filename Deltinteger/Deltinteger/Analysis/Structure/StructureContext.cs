@@ -2,6 +2,7 @@ using System;
 using DS.Analysis.Structure.Variables;
 using DS.Analysis.Structure.DataTypes;
 using DS.Analysis.Structure.Methods;
+using DS.Analysis.Structure.Modules;
 using DS.Analysis.Utility;
 using DS.Analysis.Statements;
 using DS.Analysis.Variables.Builder;
@@ -33,17 +34,21 @@ namespace DS.Analysis.Structure
         {
             switch (syntax)
             {
-                // Variable declaration
+                // Variable
                 case VariableDeclaration variableDeclaration:
                     return new DeclarationStatement(this, new DeclaredVariable(new VariableContextHandler(variableDeclaration)));
                 
-                // Type declaration
+                // Data Type
                 case ClassContext dataTypeDeclaration:
                     return new DeclarationStatement(this, new DeclaredDataType(this, new DataTypeContentProvider(dataTypeDeclaration)));
                 
-                // Method declaration
+                // Method
                 case FunctionContext methodDeclaration:
                     return new DeclarationStatement(this, new DeclaredMethod(this, new MethodContentProvider(methodDeclaration)));
+                
+                // Module
+                case ModuleContext moduleDeclaration:
+                    return new DeclarationStatement(this, new DeclaredModule(this, new ModuleContentProvider(moduleDeclaration)));
 
                 // If statement
                 case If @if:

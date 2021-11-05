@@ -297,6 +297,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 					MatchKeyword("type", TokenType.Type) ||
                     MatchKeyword("single", TokenType.Single) ||
                     MatchKeyword("const", TokenType.Const) ||
+                    MatchKeyword("module", TokenType.Module) ||
                     MatchIdentifier() ||
                     MatchString();
                 
