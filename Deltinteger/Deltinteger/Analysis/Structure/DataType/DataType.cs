@@ -23,13 +23,14 @@ namespace DS.Analysis.Structure.DataTypes
             DeclaredElements = contentProvider.GetDeclarations(structure.SetScopeSource(scopeSource));
         }
 
-        public override ScopedElement MakeScopedElement(ScopedElementParameters parameters) => new ScopedDataType(this, parameters.Alias);
+        public override ScopedElement MakeScopedElement(ScopedElementParameters parameters)
+            => new ScopedElement(parameters.Alias ?? Name, new ScopedDataTypeData(this));
 
-        class ScopedDataType : ScopedElement
+        class ScopedDataTypeData : ScopedElementData
         {
             readonly DeclaredDataType declaredDataType;
 
-            public ScopedDataType(DeclaredDataType declaredDataType, string alias) : base(alias)
+            public ScopedDataTypeData(DeclaredDataType declaredDataType)
             {
                 this.declaredDataType = declaredDataType;
             }

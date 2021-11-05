@@ -66,16 +66,10 @@ namespace DS.Analysis.Expressions
         }
 
         // Subscribes to the type being pointed to.
-        IDisposable IObservable<CodeType>.Subscribe(IObserver<CodeType> observer)
-        {
-            return _typeObservers.Add(observer);
-        }
+        IDisposable IObservable<CodeType>.Subscribe(IObserver<CodeType> observer) => _typeObservers.Add(observer);
 
         // Subscribes to the scope being pointed to.
-        IDisposable IObservable<Scope>.Subscribe(IObserver<Scope> observer)
-        {
-            return _scopeObservers.Add(observer);
-        }
+        IDisposable IObservable<Scope>.Subscribe(IObserver<Scope> observer) => _scopeObservers.Add(observer);
 
         // Since _currentTypeSubscription may change, we do not want to use 'Node.AddDisposable' as normal.
         // Dispose of it manually.

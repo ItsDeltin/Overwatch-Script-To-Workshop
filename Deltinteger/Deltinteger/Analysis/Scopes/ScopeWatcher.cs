@@ -9,10 +9,8 @@ namespace DS.Analysis.Scopes
     {
         public ScopeWatcherParameters Parameters { get; }
 
-        readonly ObserverCollection<ScopeWatcherValue> observers = new ObserverCollection<ScopeWatcherValue>();
+        readonly ValueObserverCollection<ScopeWatcherValue> observers = new ValueObserverCollection<ScopeWatcherValue>(new ScopeWatcherValue(new ScopedElementData[0]));
         readonly Dictionary<IScopeSource, SourceListenerInfo> subscriptions = new Dictionary<IScopeSource, SourceListenerInfo>();
-
-        ScopedElement[] current = new ScopedElement[0];
 
         public ScopeWatcher(ScopeWatcherParameters parameters)
         {
@@ -22,59 +20,101 @@ namespace DS.Analysis.Scopes
         public void SubscribeTo(IScopeSource scopeSource)
         {
             // Create a SourceListenerInfo instance.
-            var listenerInfo = new SourceListenerInfo();
+            var listenerInfo = new SourceListenerInfo(this);
 
             // Link the listenerInfo to the scopeSource.
             subscriptions.Add(scopeSource, listenerInfo);
 
             // Subscribe to the scope source.
-            listenerInfo.Subscription = scopeSource.Subscribe(change => {
-                listenerInfo.Elements = change.Elements;
-                Notify();
+            listenerInfo.SourceSubscription = scopeSource.Subscribe(change => {
+                listenerInfo.SetElements(change.Elements);
             });
         }
 
         void Notify()
         {
-            var result = Enumerable.Empty<ScopedElement>();
+            var result = Enumerable.Empty<ScopedElementData>();
             foreach (var subscription in subscriptions)
-                result = result.Concat(subscription.Value.Elements);
+                result = result.Concat(subscription.Value.ScopedElementData);
             
-            current = result.ToArray();
-            observers.Set(new ScopeWatcherValue(current));
+            observers.Set(new ScopeWatcherValue(result.ToArray()));
         }
 
 
         // IObservable<ScopeWatcherValue>
-        public IDisposable Subscribe(IObserver<ScopeWatcherValue> observer)
-        {
-            observer.OnNext(new ScopeWatcherValue(current));
-            return observers.Add(observer);
-        }
+        public IDisposable Subscribe(IObserver<ScopeWatcherValue> observer) => observers.Add(observer);
 
 
         // IDisposable
         public void Dispose()
         {
             foreach (var sub in subscriptions)
-                sub.Value.Subscription.Dispose();
+                sub.Value.Dispose();
             
             observers.Complete();
         }
 
 
-        class SourceListenerInfo
+        /// <summary>Contains data about a subscription to a Scope Source.</summary>
+        class SourceListenerInfo : IDisposable
         {
-            public IDisposable Subscription;
-            public ScopedElement[] Elements;
+            /// <summary>The subscription to the scope source.</summary>
+            public IDisposable SourceSubscription { get; set; }
+
+            /// <summary>The data retrieved from the source scope subscription.</summary>
+            public ScopedElement[] Elements { get; private set; }
+
+            /// <summary>The subscriptions to the Elements. Will be the same length as Elements.</summary>
+            IDisposable[] elementSubscriptions;
+
+            /// <summary>The data retrieved from the element subscriptions.</summary>
+            public ScopedElementData[] ScopedElementData { get; private set; }
+
+            readonly ScopeWatcher watcher;
+
+            public SourceListenerInfo(ScopeWatcher watcher) => this.watcher = watcher;
+
+            public void SetElements(ScopedElement[] elements)
+            {
+                Elements = elements;
+
+                // Dispose old element subscriptions.
+                DisposeElementSubscriptions();
+                
+                // Add new element subscriptions
+                elementSubscriptions = new IDisposable[Elements.Length];
+                for (int i = 0; i < Elements.Length; i++)
+                {
+                    int captureI = i;
+
+                    // Subscribe to the scoped element
+                    elementSubscriptions[i] = Elements[i].Subscribe(scopedElementData => {
+                        ScopedElementData[captureI] = scopedElementData;
+                        watcher.Notify();
+                    });
+                }
+            }
+
+            public void Dispose()
+            {
+                SourceSubscription.Dispose();
+                DisposeElementSubscriptions();
+            }
+
+            void DisposeElementSubscriptions()
+            {
+                if (elementSubscriptions != null)
+                    foreach (var elementSub in elementSubscriptions)
+                        elementSub.Dispose();
+            }
         }
     }
 
     struct ScopeWatcherValue
     {
-        public ScopedElement[] FoundElements;
+        public ScopedElementData[] FoundElements;
 
-        public ScopeWatcherValue(ScopedElement[] foundElements)
+        public ScopeWatcherValue(ScopedElementData[] foundElements)
         {
             FoundElements = foundElements;
         }

@@ -1982,11 +1982,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Parse optional 'as'.
             Token asIdentifier = null;
-            if (ParseOptional(TokenType.As, out Token @as))
+            if (ParseOptional(TokenType.As))
                 asIdentifier = ParseExpected(TokenType.Identifier);
 
             ParseExpected(TokenType.Semicolon);
-            return new Import(fileToken, @as, asIdentifier);
+            return new Import(fileToken, asIdentifier);
         }
 
         public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);

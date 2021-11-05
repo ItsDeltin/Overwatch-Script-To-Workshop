@@ -92,7 +92,7 @@ namespace DS.Analysis.Types
             });
         }
 
-        CodeTypeProvider SelectCodeTypeProvider(ScopedElement[] scopedElements)
+        CodeTypeProvider SelectCodeTypeProvider(ScopedElementData[] scopedElements)
         {
             foreach (var element in scopedElements)
             {

@@ -344,15 +344,30 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class Import : Node, IParseStatement
     {
         public Token File { get; }
-        public Token As { get; }
-        public Token Identifier { get; }
+        public List<Token> Module { get; }
+
+        public List<ImportSelection> ImportSelection { get; }
         public MetaComment Comment { get; set; }
 
-        public Import(Token file, Token @as, Token identifier)
+        // TODO: remove
+        public Token Identifier { get; }
+
+        public Import(Token file, Token identifier)
         {
             File = file;
-            As = @as;
             Identifier = identifier;
+        }
+    }
+
+    public class ImportSelection
+    {
+        public Token Identifier { get; }
+        public Token Alias { get; }
+
+        public ImportSelection(Token identifier, Token alias)
+        {
+            Identifier = identifier;
+            Alias = alias;
         }
     }
 

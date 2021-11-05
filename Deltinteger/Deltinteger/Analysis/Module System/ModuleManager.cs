@@ -10,7 +10,7 @@ namespace DS.Analysis.ModuleSystem
 
         public IDisposable AddModuleSource(IModuleSource origin, IScopeSource scopeSource, string[] modulePath) => ModuleFromPath(modulePath).AddSource(origin, scopeSource);
 
-        Module ModuleFromPath(string[] path)
+        public Module ModuleFromPath(string[] path)
         {
             Module current = GetOrAddRootModule(path[0]);
             
