@@ -60,15 +60,13 @@ namespace DS.Analysis.Types
     class IdentifierTypeReference : TypeReference
     {
         readonly ScopeWatcher _identifier;
+        readonly ITypeIdentifierErrorHandler _errorHandler;
         CodeTypeProvider _codeTypeProvider;
-
-        public IdentifierTypeReference(ScopeWatcher identifier, TypeReference[] generics) : this(new TypeIdentifierErrorHandler(), identifier, generics)
-        {
-        }
 
         public IdentifierTypeReference(ITypeIdentifierErrorHandler errorHandler, ScopeWatcher identifier, TypeReference[] generics) : base(generics)
         {
             _identifier = identifier;
+            _errorHandler = errorHandler;
 
             // The IDisposable created here will be not be needed since ScopeWatcher.Dispose will handle it.
             identifier.Subscribe(nextValue => {
@@ -109,28 +107,14 @@ namespace DS.Analysis.Types
         {
             base.Dispose();
             _identifier.Dispose();
+            _errorHandler.Dispose();
         }
     }
 
-    interface ITypeIdentifierErrorHandler
+    interface ITypeIdentifierErrorHandler : IDisposable
     {
         void Success();
         void NoTypesMatchName();
         void GenericCountMismatch();
-    }
-
-    class TypeIdentifierErrorHandler : ITypeIdentifierErrorHandler
-    {
-        public void GenericCountMismatch()
-        {
-        }
-
-        public void NoTypesMatchName()
-        {
-        }
-
-        public void Success()
-        {
-        }
     }
 }

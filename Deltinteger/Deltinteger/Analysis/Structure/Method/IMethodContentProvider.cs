@@ -34,7 +34,7 @@ namespace DS.Analysis.Structure.Methods
             return new Parameter[0];
         }
 
-        public TypeReference GetType(ContextInfo metaContext) => TypeFromContext.TypeReferenceFromContext(metaContext.Scope, syntax.Type);
+        public TypeReference GetType(ContextInfo metaContext) => TypeFromContext.TypeReferenceFromContext(metaContext, syntax.Type);
 
 
         public void Dispose() => blockAction.Dispose();

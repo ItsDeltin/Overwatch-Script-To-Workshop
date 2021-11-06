@@ -25,7 +25,7 @@ namespace DS.Analysis.Expressions
             _errorHandler = errorHandler;
 
             // Create scope watcher.
-            AddDisposable(_scopeWatcher = contextInfo.Scope.Watch(identifier.Token.Text));
+            AddDisposable(_scopeWatcher = contextInfo.Scope.Watch());
 
             // Watch changes.
             _scopeWatcher.Subscribe(FilterIdentifiers);

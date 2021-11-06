@@ -7,15 +7,8 @@ namespace DS.Analysis.Scopes
 {
     class ScopeWatcher : IObservable<ScopeWatcherValue>, IDisposable
     {
-        public ScopeWatcherParameters Parameters { get; }
-
         readonly ValueObserverCollection<ScopeWatcherValue> observers = new ValueObserverCollection<ScopeWatcherValue>(new ScopeWatcherValue(new ScopedElementData[0]));
         readonly Dictionary<IScopeSource, SourceListenerInfo> subscriptions = new Dictionary<IScopeSource, SourceListenerInfo>();
-
-        public ScopeWatcher(ScopeWatcherParameters parameters)
-        {
-            Parameters = parameters;
-        }
 
         public void SubscribeTo(IScopeSource scopeSource)
         {

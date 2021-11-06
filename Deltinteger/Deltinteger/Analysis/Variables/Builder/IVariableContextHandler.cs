@@ -21,6 +21,6 @@ namespace DS.Analysis.Variables.Builder
         }
 
         public string GetName() => declaration.Identifier.Text;
-        public ITypeDirector GetTypeDirector(ContextInfo contextInfo) => TypeFromContext.TypeReferenceFromContext(contextInfo.Scope, declaration.Type);
+        public ITypeDirector GetTypeDirector(ContextInfo contextInfo) => TypeFromContext.TypeReferenceFromContext(contextInfo, declaration.Type);
     }
 }

@@ -22,11 +22,9 @@ namespace DS.Analysis.Scopes
             _sources = parent._sources.Append(source);
         }
 
-        public ScopeWatcher Watch(string name) => Watch(new ScopeWatcherParameters(name));
-
-        public ScopeWatcher Watch(ScopeWatcherParameters parameters)
+        public ScopeWatcher Watch()
         {
-            ScopeWatcher watcher = new ScopeWatcher(parameters);
+            ScopeWatcher watcher = new ScopeWatcher();
             
             foreach (var source in _sources)
                 watcher.SubscribeTo(source);

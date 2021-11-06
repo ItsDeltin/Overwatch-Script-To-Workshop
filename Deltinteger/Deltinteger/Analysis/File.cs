@@ -1,5 +1,6 @@
 using DS.Analysis.Structure;
 using DS.Analysis.Scopes;
+using DS.Analysis.Diagnostics;
 using Deltin.Deltinteger.Compiler.Parse;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using IOPath = System.IO.Path;
@@ -14,6 +15,8 @@ namespace DS.Analysis
         public bool IsExternal { get; }
         
         public DeltinScriptAnalysis Analysis { get; }
+
+        public FileDiagnostics Diagnostics { get; } = new FileDiagnostics();
 
         RootContext syntax;
         BlockAction statements;
