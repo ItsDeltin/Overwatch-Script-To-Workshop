@@ -5,24 +5,31 @@ using DS.Analysis.Structure;
 using DS.Analysis.Scopes;
 using DS.Analysis.Scopes.Import;
 using DS.Analysis.Utility;
+using DS.Analysis.Diagnostics;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Statements
 {
-    class ImportStatement : Statement
+    class ImportStatement : Statement, IFileImportErrorHandler
     {
+        readonly DocRange range;
         readonly IScopeSource scopeSource;
         readonly bool importEntireScope;
+        readonly FileDiagnostics diagnostics;
+        Diagnostic currentDiagnostic;
 
         public ImportStatement(StructureContext structure, Import syntax)
         {
+            diagnostics = structure.File.Diagnostics;
+
             // Importing a file
             // ex: 'import "math.del";'
             if (syntax.File != null)
             {
+                range = syntax.File.Range;
                 // Create file dependency.
-                var fileRootScopeSource = new FileRootScopeSource(structure.File.Analysis, structure.File.GetRelativePath(syntax.File.Text.RemoveQuotes()));
+                var fileRootScopeSource = new FileRootScopeSource(structure.File.Analysis, structure.File.GetRelativePath(syntax.File.Text.RemoveQuotes()), this);
                 AddDisposable(fileRootScopeSource);
                 scopeSource = fileRootScopeSource;
             }
@@ -68,7 +75,16 @@ namespace DS.Analysis.Statements
                 importTo.AddScopedElement(element);
         }
 
-        readonly record struct ImportElement(string name, string alias);
+        struct ImportElement
+        {
+            public string name;
+            public string alias;
+            public ImportElement(string name, string alias)
+            {
+                this.name = name;
+                this.alias = alias;
+            }
+        }
 
         class ImportedElement : ScopedElement
         {
@@ -106,5 +122,28 @@ namespace DS.Analysis.Statements
         /// <summary>Converts a list of tokens into an array of strings.</summary>
         static string[] PathFromSyntax(List<Token> modulePath)
             => modulePath.Select(token => token.Text).ToArray();
+
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            DisposeDiagnostic();
+        }
+
+
+        // IFileImportErrorHandler
+        void IFileImportErrorHandler.Success() => DisposeDiagnostic();
+
+        void IFileImportErrorHandler.Error(string message)
+        {
+            DisposeDiagnostic();
+            currentDiagnostic = diagnostics.Error(message, range);
+        }
+
+        void DisposeDiagnostic()
+        {
+            currentDiagnostic?.Dispose();
+            currentDiagnostic = null;
+        }
     }
 }

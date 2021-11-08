@@ -1,5 +1,5 @@
+using System.Text;
 using System.Collections.Generic;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
@@ -51,6 +51,22 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             pos.Line = GetLine(index);
             pos.Character = GetColumn(index);
+        }
+
+        public VersionInstance Update(params UpdateRange[] updateRanges)
+        {
+            StringBuilder builder = new StringBuilder(Text);
+
+            foreach (var updateRange in updateRanges)
+            {
+                int start = IndexOf(updateRange.Range.Start);
+                int length = IndexOf(updateRange.Range.End) - start;
+
+                builder.Remove(start, length);
+                builder.Insert(start, updateRange.Text);
+            }
+
+            return new VersionInstance(builder.ToString());
         }
     }
 }

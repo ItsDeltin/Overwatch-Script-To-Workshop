@@ -280,6 +280,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Number:
                 case TokenType.True:
                 case TokenType.This:
+                case TokenType.Base:
                 case TokenType.Root:
                 case TokenType.String:
                 case TokenType.Parentheses_Open:
@@ -503,6 +504,7 @@ namespace Deltin.Deltinteger.Compiler
         New,
         Delete,
         This,
+        Base,
         Root,
         As,
         Async,

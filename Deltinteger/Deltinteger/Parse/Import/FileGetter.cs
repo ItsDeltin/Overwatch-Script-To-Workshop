@@ -12,9 +12,9 @@ namespace Deltin.Deltinteger.Parse
         // Importing scripts not being edited.
         private List<ImportedFile> ImportedFiles = new List<ImportedFile>();
 
-        public FileGetter(DocumentHandler documentHandler)
+        public FileGetter(/*DocumentHandler documentHandler*/ object _)
         {
-            DocumentHandler = documentHandler;
+            // DocumentHandler = documentHandler;
         }
 
         public Document GetScript(Uri uri)

@@ -11,10 +11,11 @@ namespace DS.Analysis.Types.Semantics
 
         public static TypeReference TypeReferenceFromContext(ContextInfo context, ITypeContextHandler typeContext)
         {
+            var typeName = typeContext.Identifier.Text;
             var identifierWatcher = context.Scope.Watch();
-            var errorHandler = new TypeIdentifierErrorHandler(context.File.Diagnostics, typeContext.Identifier.Text, typeContext.Identifier.Range);
+            var errorHandler = new TypeIdentifierErrorHandler(context.File.Diagnostics, typeName, typeContext.Identifier.Range);
 
-            return new IdentifierTypeReference(errorHandler, identifierWatcher, null);
+            return new IdentifierTypeReference(typeName, errorHandler, identifierWatcher, null);
         }
 
         class TypeIdentifierErrorHandler : ITypeIdentifierErrorHandler
@@ -31,7 +32,7 @@ namespace DS.Analysis.Types.Semantics
                 this.range = range;
             }
 
-            public void Dispose() => currentDiagnostic.Dispose();
+            public void Dispose() => currentDiagnostic?.Dispose();
 
             public void GenericCountMismatch() => SetDiagnostic(Err(Messages.GenericCountMismatch(name, 0, 0)));
 

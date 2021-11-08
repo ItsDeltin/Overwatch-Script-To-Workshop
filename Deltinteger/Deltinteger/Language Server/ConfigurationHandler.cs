@@ -14,7 +14,7 @@ using DidChangeConfigurationCapability = OmniSharp.Extensions.LanguageServer.Pro
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class ConfigurationHandler : IDidChangeConfigurationHandler
+    class ConfigurationHandler : IDidChangeConfigurationHandler
     {
         public bool OptimizeOutput { get; private set; } = true;
         private DeltintegerLanguageServer _languageServer { get; }

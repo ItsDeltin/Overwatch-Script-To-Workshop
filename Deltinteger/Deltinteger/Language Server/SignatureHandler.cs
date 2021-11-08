@@ -10,7 +10,7 @@ using SignatureHelpCapability = OmniSharp.Extensions.LanguageServer.Protocol.Cli
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class SignatureHandler : ISignatureHelpHandler
+    class SignatureHandler : ISignatureHelpHandler
     {
         private DeltintegerLanguageServer _languageServer { get; }
 

@@ -12,7 +12,7 @@ using HoverCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capa
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class HoverHandler : IHoverHandler
+    class HoverHandler : IHoverHandler
     {
         private readonly DeltintegerLanguageServer _languageServer;
 

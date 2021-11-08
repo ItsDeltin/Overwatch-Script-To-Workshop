@@ -63,6 +63,8 @@ namespace DS.Analysis.Scopes
             /// <summary>The data retrieved from the element subscriptions.</summary>
             public ScopedElementData[] ScopedElementData { get; private set; }
 
+            bool isSubscribing = false;
+
             readonly ScopeWatcher watcher;
 
             public SourceListenerInfo(ScopeWatcher watcher) => this.watcher = watcher;
@@ -76,6 +78,8 @@ namespace DS.Analysis.Scopes
                 
                 // Add new element subscriptions
                 elementSubscriptions = new IDisposable[Elements.Length];
+                ScopedElementData = new ScopedElementData[Elements.Length];
+                isSubscribing = true;
                 for (int i = 0; i < Elements.Length; i++)
                 {
                     int captureI = i;
@@ -83,9 +87,14 @@ namespace DS.Analysis.Scopes
                     // Subscribe to the scoped element
                     elementSubscriptions[i] = Elements[i].Subscribe(scopedElementData => {
                         ScopedElementData[captureI] = scopedElementData;
-                        watcher.Notify();
+                        // When we subscribe to the ScopedElement, this block is called immediately.
+                        // Don't notify while we are in the middle of subscribing.
+                        if (!isSubscribing)
+                            watcher.Notify();
                     });
                 }
+                isSubscribing = false;
+                watcher.Notify();
             }
 
             public void Dispose()

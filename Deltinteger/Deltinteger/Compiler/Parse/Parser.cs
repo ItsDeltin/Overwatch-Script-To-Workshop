@@ -529,6 +529,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Null: return new NullExpression(Consume());
                 // This
                 case TokenType.This: return new ThisExpression(Consume());
+                // Base
+                case TokenType.Base: return new BaseExpression(Consume());
                 // Root
                 case TokenType.Root: return new RootExpression(Consume());
                 // New

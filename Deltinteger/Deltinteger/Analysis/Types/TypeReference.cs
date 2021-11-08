@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using DS.Analysis.Utility;
 using DS.Analysis.Scopes;
+using DS.Analysis.Types.Standard;
 
 namespace DS.Analysis.Types
 {
@@ -63,26 +64,15 @@ namespace DS.Analysis.Types
         readonly ITypeIdentifierErrorHandler _errorHandler;
         CodeTypeProvider _codeTypeProvider;
 
-        public IdentifierTypeReference(ITypeIdentifierErrorHandler errorHandler, ScopeWatcher identifier, TypeReference[] generics) : base(generics)
+        public IdentifierTypeReference(string typeName, ITypeIdentifierErrorHandler errorHandler, ScopeWatcher identifier, TypeReference[] generics) : base(generics)
         {
             _identifier = identifier;
             _errorHandler = errorHandler;
 
             // The IDisposable created here will be not be needed since ScopeWatcher.Dispose will handle it.
             identifier.Subscribe(nextValue => {
-                // Reset (TODO: missing type code provider)
-                _codeTypeProvider = null;
-
-                // No types match the name provided.
-                if (nextValue.FoundElements.Length == 0)
-                {
-                    errorHandler.NoTypesMatchName();
-                    return;
-                }
-
                 // todo: generic filter
-                _codeTypeProvider = SelectCodeTypeProvider(nextValue.FoundElements);
-                errorHandler.Success();
+                _codeTypeProvider = SelectCodeTypeProvider(nextValue.FoundElements, typeName);
 
                 // Update
                 CodeType = GetCodeType();
@@ -90,15 +80,20 @@ namespace DS.Analysis.Types
             });
         }
 
-        CodeTypeProvider SelectCodeTypeProvider(ScopedElementData[] scopedElements)
+        CodeTypeProvider SelectCodeTypeProvider(ScopedElementData[] scopedElements, string name)
         {
             foreach (var element in scopedElements)
             {
                 var provider = element.GetCodeTypeProvider();
-                if (provider != null)
+                if (provider != null && provider.IsMatch(name))
+                {
+                    _errorHandler.Success();
                     return provider;
+                }
             }
-            return null;
+
+            _errorHandler.NoTypesMatchName();
+            return StandardTypeProviders.Unknown;
         }
 
         protected override CodeType GetCodeType() => _codeTypeProvider.CreateInstance(TypeArgs);

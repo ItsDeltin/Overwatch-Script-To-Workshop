@@ -1,6 +1,9 @@
+using System;
+using System.IO;
 using System.Linq;
+using LSUri = OmniSharp.Extensions.LanguageServer.Protocol.DocumentUri;
 
-namespace DS.Analysis.Utility
+namespace DS
 {
     static class Extensions
     {
@@ -15,5 +18,9 @@ namespace DS.Analysis.Utility
         {
             return str.Length >= 2 && str.First() == value && str.Last() == value;
         }
+
+        public static string Normalize(this Uri uri) => Path.GetFullPath(uri.AbsolutePath);
+
+        public static string Normalize(this LSUri uri) => Path.GetFullPath(uri.GetFileSystemPath());
     }
 }

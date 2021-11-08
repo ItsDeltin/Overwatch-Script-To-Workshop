@@ -25,5 +25,10 @@ namespace DS.Analysis.Structure.Variables
         {
             // todo
         }
+
+        public override void Dispose()
+        {
+            variableBuilder.Dispose();
+        }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
+using PublishDiagnosticsParams = OmniSharp.Extensions.LanguageServer.Protocol.Models.PublishDiagnosticsParams;
 
 namespace DS.Analysis.Files
 {
@@ -19,6 +20,24 @@ namespace DS.Analysis.Files
         }
 
 
+        public void AddToWorkspace(string path, string content)
+        {
+            // TODO: ScriptFile.External = false
+            if (!TryGetFile(path, out ScriptFile file))
+                file = CreateFile(path, false);
+            
+            file.SetFromString(content);
+        }
+
+        public void RemoveFromWorkspace(string path)
+        {
+            // TODO: ScriptFile.External = true
+        }
+
+        /// <summary>Creates a dependency to a file.</summary>
+        /// <param name="path">The path to the file to depend on.</param>
+        /// <param name="dependent">The file observer.</param>
+        /// <returns>An IDisposable which can remove the dependency.</returns>
         public IDisposable Depend(string path, IFileDependent dependent)
         {
             // Create dependency.
@@ -53,6 +72,15 @@ namespace DS.Analysis.Files
             return false;
         }
 
+        public ScriptFile GetFile(string path)
+        {
+            if (TryGetFile(path, out var file))
+                return file;
+            throw new Exception($"File '{path}' is not loaded");
+        }
+
+        /// <summary>Loads a file that is not part of the workspace. Will be unloaded once there are no dependencies.</summary>
+        /// <param name="path">The path to the external file to load.</param>
         public void LoadExternal(string path)
         {
             string text;
@@ -67,12 +95,10 @@ namespace DS.Analysis.Files
             }
 
             // Create script
-            ScriptFile newFile = new ScriptFile(path, true, analysis);
-            files.Add(newFile);
+            ScriptFile newFile = CreateFile(path, true);
 
             // Parse script
             newFile.SetFromString(text);
-            newFile.GetStructure();
 
             NotifyDependencies(path, newFile, null);
         }
@@ -84,6 +110,15 @@ namespace DS.Analysis.Files
             file.Unlink();
             NotifyDependencies(file.Path, null, null);
         }
+
+        ScriptFile CreateFile(string path, bool isExternal)
+        {
+            ScriptFile newFile = new ScriptFile(path, isExternal, analysis);
+            files.Add(newFile);
+            return newFile;
+        }
+
+        public PublishDiagnosticsParams[] GetPublishDiagnostics() => files.Select(file => file.Diagnostics.GetLSPPublishParams()).ToArray();
 
 
         class FileDependency

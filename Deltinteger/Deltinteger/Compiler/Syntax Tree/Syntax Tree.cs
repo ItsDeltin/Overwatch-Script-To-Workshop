@@ -602,6 +602,19 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => "this";
     }
 
+    public class BaseExpression : Node, IParseExpression
+    {
+        public Token Token { get; }
+
+        public BaseExpression(Token token)
+        {
+            Token = token;
+            Range = Token.Range;
+        }
+
+        public override string ToString() => "base";
+    }
+
     public class RootExpression : Node, IParseExpression
     {
         public Token Token { get; }

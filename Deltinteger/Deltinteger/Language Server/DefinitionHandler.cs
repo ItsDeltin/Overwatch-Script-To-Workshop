@@ -13,7 +13,7 @@ using TypeDefinitionCapability = OmniSharp.Extensions.LanguageServer.Protocol.Cl
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class DefinitionHandler : IDefinitionHandler
+    class DefinitionHandler : IDefinitionHandler
     {
         private DeltintegerLanguageServer _languageServer { get; }
 

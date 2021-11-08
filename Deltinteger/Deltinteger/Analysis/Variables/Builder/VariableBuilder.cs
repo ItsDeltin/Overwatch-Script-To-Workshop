@@ -1,6 +1,8 @@
+using System;
+
 namespace DS.Analysis.Variables.Builder
 {
-    class VariableBuilder
+    class VariableBuilder : IDisposable
     {
         public string Name { get; }
         protected IVariableContextHandler ContextHandler { get; }
@@ -15,6 +17,11 @@ namespace DS.Analysis.Variables.Builder
         {
             var result = new VariableProvider(Name, ContextHandler.GetTypeDirector(contextInfo));
             return result;
+        }
+
+        public void Dispose()
+        {
+            ContextHandler.Dispose();
         }
     }
 }

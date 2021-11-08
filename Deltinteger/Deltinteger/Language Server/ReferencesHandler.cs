@@ -11,7 +11,7 @@ using ReferenceCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class ReferenceHandler : IReferencesHandler
+    class ReferenceHandler : IReferencesHandler
     {
         private DeltintegerLanguageServer _languageServer { get; }
 

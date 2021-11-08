@@ -9,7 +9,7 @@ using CodeLensCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.C
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class CodeLensHandler : ICodeLensHandler
+    class CodeLensHandler : ICodeLensHandler
     {
         private DeltintegerLanguageServer _languageServer { get; }
 

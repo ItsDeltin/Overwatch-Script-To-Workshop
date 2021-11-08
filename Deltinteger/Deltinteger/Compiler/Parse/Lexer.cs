@@ -290,6 +290,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("playervar", TokenType.PlayerVar) ||
                     MatchKeyword("ref", TokenType.Ref) ||
                     MatchKeyword("this", TokenType.This) ||
+                    MatchKeyword("base", TokenType.Base) ||
                     MatchKeyword("root", TokenType.Root) ||
                     MatchKeyword("async", TokenType.Async) ||
                     MatchKeyword("constructor", TokenType.Constructor) ||

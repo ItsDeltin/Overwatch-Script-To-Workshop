@@ -1,6 +1,7 @@
 using DS.Analysis.Structure;
 using DS.Analysis.Scopes;
 using DS.Analysis.Diagnostics;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using IOPath = System.IO.Path;
@@ -16,13 +17,15 @@ namespace DS.Analysis
         
         public DeltinScriptAnalysis Analysis { get; }
 
-        public FileDiagnostics Diagnostics { get; } = new FileDiagnostics();
-
-        RootContext syntax;
-        BlockAction statements;
+        public FileDiagnostics Diagnostics { get; }
 
         // The root scope of the file.
         public ScopeSource RootScopeSource { get; } = new ScopeSource();
+
+        readonly Lexer lexer;
+
+        RootContext syntax;
+        BlockAction statements;
 
 
         public ScriptFile(string path, bool isExternal, DeltinScriptAnalysis analysis)
@@ -30,27 +33,35 @@ namespace DS.Analysis
             Path = path;
             IsExternal = isExternal;
             Analysis = analysis;
+            Diagnostics = new FileDiagnostics(Path);
+
+            lexer = new Lexer();
         }
 
 
         public string GetRelativePath(string relativePath) => IOPath.GetFullPath(IOPath.Join(IOPath.GetDirectoryName(Path), relativePath));
 
 
+        public FileUpdater GetFileUpdater() => new FileUpdater(this);
+
         public void SetFromString(string content)
         {
-            var lex = new Lexer();
-            var par = new Parser(lex);
-
-            lex.Init(new VersionInstance(content));
-            var context = par.Parse();
-
-            SetFromSyntax(context);
+            lexer.Init(new VersionInstance(content));
+            Parse();
         }
 
         public void SetFromSyntax(RootContext syntax)
         {
             Unlink();
             this.syntax = syntax;
+            GetStructure();
+        }
+
+        void Parse()
+        {
+            var parser = new Parser(lexer);
+            var context = parser.Parse();
+            SetFromSyntax(context);
         }
 
 
@@ -60,23 +71,29 @@ namespace DS.Analysis
 
             // Get declarations
             statements = new StructureContext(this, RootScopeSource).Block(syntax.Statements.ToArray(), RootScopeSource);
+
+            GetMeta();
         }
 
-        public void GetMeta()
-        {
-            statements.GetMeta(new ContextInfo(Analysis, this, Scope.Empty));
-        }
+        public void GetMeta() => statements.GetMeta(new ContextInfo(Analysis, this, Scope.Empty));
 
-        public void GetContent()
-        {
-            statements.GetContent();
-        }
+        public void GetContent() => statements.GetContent();
 
 
         public void Unlink()
         {
             RootScopeSource.Clear();
             statements?.Dispose();
+        }
+
+
+        /// <summary>Incremental script updates.</summary>
+        public class FileUpdater
+        {
+            readonly ScriptFile file;
+            public FileUpdater(ScriptFile file) => this.file = file;
+            public void Update(UpdateRange change) => file.lexer.Update(file.lexer.Content.Update(change), change);
+            public void ApplyUpdates() => file.Parse();
         }
     }
 }

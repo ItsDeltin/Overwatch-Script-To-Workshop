@@ -17,10 +17,11 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using MediatR;
+using DS;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class DocumentHandler : ITextDocumentSyncHandler
+    class DocumentHandler : ITextDocumentSyncHandler
     {
         // Static
         private static readonly TextDocumentSyncKind _syncKind = TextDocumentSyncKind.Incremental;
@@ -35,7 +36,6 @@ namespace Deltin.Deltinteger.LanguageServer
         public DocumentHandler(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
-            SetupUpdateListener();
         }
 
         public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) => new TextDocumentAttributes(uri, "ostw");
@@ -64,13 +64,7 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle save.
         public Task<Unit> Handle(DidSaveTextDocumentParams saveParams, CancellationToken token)
         {
-            if (_sendTextOnSave)
-            {
-                var document = TextDocumentFromUri(saveParams.TextDocument.Uri.ToUri());
-                document.UpdateIfChanged(saveParams.Text);
-                return Parse(document);
-            }
-            else return Parse(saveParams.TextDocument.Uri.ToUri());
+            return Unit.Task;
         }
 
         // Handle close.
@@ -85,27 +79,28 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle open.
         public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
         {
+            _languageServer.Analysis.FileManager.AddToWorkspace(openParams.TextDocument.Uri.Normalize(), openParams.TextDocument.Text);
+
             Documents.Add(new Document(openParams.TextDocument));
-            return Parse(openParams.TextDocument.Uri.ToUri());
+            return Unit.Task;
         }
 
         // Handle change.
         public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
         {
-            var document = TextDocumentFromUri(changeParams.TextDocument.Uri.ToUri());
+            var file = _languageServer.Analysis.FileManager.GetFile(changeParams.TextDocument.Uri.Normalize());
+            var updater = file.GetFileUpdater();
+
             foreach (var change in changeParams.ContentChanges)
-            {
-                int start = PosIndex(document.Content, change.Range.Start);
-                int length = PosIndex(document.Content, change.Range.End) - start;
+                updater.Update(change);
+            
+            updater.ApplyUpdates();
 
-                StringBuilder rep = new StringBuilder(document.Content);
-                rep.Remove(start, length);
-                rep.Insert(start, change.Text);
+            foreach (var publish in _languageServer.Analysis.FileManager.GetPublishDiagnostics())
+                _languageServer.Server.TextDocument.PublishDiagnostics(publish);
 
-                document.Update(rep.ToString(), change, changeParams.TextDocument.Version);
-            }
-            return Parse(document.Uri);
-        }        
+            return Unit.Task;
+        }
 
         public Document TextDocumentFromUri(Uri uri)
         {
@@ -114,33 +109,6 @@ namespace Deltin.Deltinteger.LanguageServer
                 if (Documents[i].Uri == uri)
                     return Documents[i];
             return null;
-        }
-
-        private static int PosIndex(string text, Position pos)
-        {
-            if (pos.Line == 0 && pos.Character == 0) return 0;
-
-            int line = 0;
-            int character = 0;
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] == '\n')
-                {
-                    line++;
-                    character = 0;
-                }
-                else
-                {
-                    character++;
-                }
-
-                if (pos.Line == line && pos.Character == character)
-                    return i + 1;
-
-                if (line > pos.Line)
-                    throw new Exception();
-            }
-            throw new Exception();
         }
 
         Task<Unit> Parse(Uri uri) => Parse(TextDocumentFromUri(uri));

@@ -1,10 +1,11 @@
+using System;
 using DS.Analysis.Types;
 using DS.Analysis.Types.Semantics;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Variables.Builder
 {
-    interface IVariableContextHandler
+    interface IVariableContextHandler : IDisposable
     {
         string GetName();
 
@@ -14,6 +15,7 @@ namespace DS.Analysis.Variables.Builder
     class VariableContextHandler : IVariableContextHandler
     {
         readonly VariableDeclaration declaration;
+        TypeReference typeReference;
 
         public VariableContextHandler(VariableDeclaration declaration)
         {
@@ -21,6 +23,11 @@ namespace DS.Analysis.Variables.Builder
         }
 
         public string GetName() => declaration.Identifier.Text;
-        public ITypeDirector GetTypeDirector(ContextInfo contextInfo) => TypeFromContext.TypeReferenceFromContext(contextInfo, declaration.Type);
+        public ITypeDirector GetTypeDirector(ContextInfo contextInfo) => typeReference = TypeFromContext.TypeReferenceFromContext(contextInfo, declaration.Type);
+
+        public void Dispose()
+        {
+            typeReference.Dispose();
+        }
     }
 }
