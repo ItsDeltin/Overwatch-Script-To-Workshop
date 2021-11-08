@@ -8,6 +8,8 @@ using DS.Analysis.Utility;
 using DS.Analysis.Diagnostics;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using DS.Analysis.Types;
+using DS.Analysis.Expressions;
 
 namespace DS.Analysis.Statements
 {
@@ -23,13 +25,19 @@ namespace DS.Analysis.Statements
         {
             diagnostics = structure.File.Diagnostics;
 
+            string sourceName = null;
+
             // Importing a file
             // ex: 'import "math.del";'
             if (syntax.File != null)
             {
                 range = syntax.File.Range;
+
+                var fileName = syntax.File.Text.RemoveQuotes();
+                sourceName = "file " + fileName;
+
                 // Create file dependency.
-                var fileRootScopeSource = new FileRootScopeSource(structure.File.Analysis, structure.File.GetRelativePath(syntax.File.Text.RemoveQuotes()), this);
+                var fileRootScopeSource = new FileRootScopeSource(structure.File.Analysis, structure.File.GetRelativePath(fileName), this);
                 AddDisposable(fileRootScopeSource);
                 scopeSource = fileRootScopeSource;
             }
@@ -37,6 +45,9 @@ namespace DS.Analysis.Statements
             // ex: 'import Pathmap;'
             else if (syntax.Module != null)
             {
+                var modulePath = PathFromSyntax(syntax.Module);
+                sourceName = "module " + string.Join(".", modulePath);
+
                 // Get the module from the path.
                 var module = structure.File.Analysis.ModuleManager.ModuleFromPath(PathFromSyntax(syntax.Module));
                 
@@ -47,7 +58,7 @@ namespace DS.Analysis.Statements
             // If syntax.ImportSelection != null, the user declared a list of elements to import.
             // ex: 'import { Bakemap } from Pathmap;'
             if (syntax.ImportSelection != null)
-                ImportSelected(ImportElementListFromSyntax(syntax.ImportSelection), scopeSource, structure.ScopeSource);
+                ImportSelected(syntax.ImportSelection.ToArray(), scopeSource, structure.ScopeSource, structure.File.Diagnostics, sourceName);
             // Otherwise, the entire module or file is being imported.
             // ex: 'import Pathmap;'
             else
@@ -56,12 +67,16 @@ namespace DS.Analysis.Statements
 
         public override Scope ProceedWithScope() => importEntireScope ? ContextInfo.Scope.CreateChild(scopeSource) : null;
 
-        void ImportSelected(ImportElement[] importElements, IScopeSource importFrom, IScopeAppender importTo)
+        void ImportSelected(ImportSelection[] importElements, IScopeSource importFrom, IScopeAppender importTo, FileDiagnostics diagnostics, string sourceName)
         {
             // Create the ScopedElement
             var elements = new ImportedElement[importElements.Length];
             for (int i = 0; i < elements.Length; i++)
-                elements[i] = new ImportedElement(importElements[i].alias ?? importElements[i].name, importElements[i].name);
+            {
+                string name = importElements[i].Identifier.Text;
+                string alias = importElements[i].Alias ? importElements[i].Alias.Text : name;
+                AddDisposable(elements[i] = new ImportedElement(alias, name, importElements[i].Identifier.Range, diagnostics, sourceName));
+            }
 
             // Subscribe to the importFrom scope
             AddDisposable(importFrom.Subscribe(value => {
@@ -75,53 +90,72 @@ namespace DS.Analysis.Statements
                 importTo.AddScopedElement(element);
         }
 
-        struct ImportElement
-        {
-            public string name;
-            public string alias;
-            public ImportElement(string name, string alias)
-            {
-                this.name = name;
-                this.alias = alias;
-            }
-        }
-
-        class ImportedElement : ScopedElement
+        class ImportedElement : ScopedElement, IDisposable
         {
             readonly string reference;
+            readonly DocRange referenceRange;
+            readonly FileDiagnostics diagnostics;
+            readonly string sourceName;
+            Diagnostic referenceDiagnostic;
             IDisposable referenceSubscription;
 
-            public ImportedElement(string alias, string reference) : base(alias)
+            public ImportedElement(string alias, string reference, DocRange referenceRange, FileDiagnostics diagnostics, string sourceName) : base(alias)
             {
                 this.reference = reference;
+                this.referenceRange = referenceRange;
+                this.diagnostics = diagnostics;
+                this.sourceName = sourceName;
             }
 
             public void Update(ScopedElement[] elements)
             {
                 referenceSubscription?.Dispose();
                 referenceSubscription = null;
+                DisposeDiagnostic();
 
                 var match = elements.FirstOrDefault(element => element.Alias == reference);
 
                 if (match == null)
                 {
+                    if (sourceName != null)
+                        referenceDiagnostic = diagnostics.Error(Messages.ElementNonexistentInSource(reference, sourceName), referenceRange);
                     Observers.Set(ScopedElementData.Unknown);
                     return;
                 }
                 
                 // Create link
-                referenceSubscription = match.Subscribe(Observers.Set);
+                referenceSubscription = match.Subscribe(scopedElementData => Observers.Set(new ImportedElementData(scopedElementData, Alias)));
+            }
+
+            void DisposeDiagnostic()
+            {
+                referenceDiagnostic?.Dispose();
+                referenceDiagnostic = null;
+            }
+
+            void IDisposable.Dispose() => DisposeDiagnostic();
+
+            class ImportedElementData : ScopedElementData
+            {
+                readonly ScopedElementData baseData;
+                readonly string alias;
+
+                public ImportedElementData(ScopedElementData baseData, string alias)
+                {
+                    this.baseData = baseData;
+                    this.alias = alias;
+                }
+
+
+                public override CodeTypeProvider GetCodeTypeProvider() => baseData.GetCodeTypeProvider();
+                public override IIdentifierHandler GetIdentifierHandler() => baseData.GetIdentifierHandler();
+                public override bool IsMatch(string name) => alias == name;
             }
         }
 
-
-        /// <summary>Converts a list of ImportSelections into an array of ImportElement records.</summary>
-        static ImportElement[] ImportElementListFromSyntax(List<ImportSelection> syntax)
-            => syntax.Select(selection => new ImportElement(selection.Identifier.Text, selection.Alias?.Text)).ToArray();
         
         /// <summary>Converts a list of tokens into an array of strings.</summary>
-        static string[] PathFromSyntax(List<Token> modulePath)
-            => modulePath.Select(token => token.Text).ToArray();
+        static string[] PathFromSyntax(List<Token> modulePath) => modulePath.Select(token => token.Text).ToArray();
 
 
         public override void Dispose()

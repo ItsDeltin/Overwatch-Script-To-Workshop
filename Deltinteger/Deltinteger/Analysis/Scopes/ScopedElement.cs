@@ -25,9 +25,12 @@ namespace DS.Analysis.Scopes
 
     class ScopedElementData
     {
+        // TODO: give Unknown default CodeTypeProvider and IdentfierHandler.
         public static readonly ScopedElementData Unknown = new ScopedElementData();
 
         public virtual CodeTypeProvider GetCodeTypeProvider() => null;
         public virtual IIdentifierHandler GetIdentifierHandler() => null;
+
+        public virtual bool IsMatch(string name) => false;
     }
 }

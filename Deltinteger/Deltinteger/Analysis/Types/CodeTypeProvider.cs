@@ -9,8 +9,6 @@ namespace DS.Analysis.Types
             Name = name;
         }
 
-        public virtual bool IsMatch(string typeName) => typeName == Name;
-
         public CodeType CreateInstance(CodeType[] typeArgs) => new CodeType(this);
     }
 }

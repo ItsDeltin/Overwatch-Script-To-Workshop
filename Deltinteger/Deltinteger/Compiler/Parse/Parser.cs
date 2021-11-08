@@ -1980,15 +1980,28 @@ namespace Deltin.Deltinteger.Compiler.Parse
         Import ParseImport()
         {
             ParseExpected(TokenType.Import);
+
+            // A list of elements to import was specified.
+            // ex: 'import { x, y as z } from module'
+            List<ImportSelection> elements = null;
+            if (ParseOptional(TokenType.CurlyBracket_Open))
+            {
+                elements = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Is(TokenType.Identifier), () => {
+                    // Element name
+                    Token identifier = ParseExpected(TokenType.Identifier), alias = null;
+                    // Alias
+                    if (ParseOptional(TokenType.As))
+                        alias = ParseExpected(TokenType.Identifier);
+                    
+                    return new ImportSelection(identifier, alias);
+                });
+                ParseExpected(TokenType.CurlyBracket_Close);
+            }
+
             var fileToken = ParseExpected(TokenType.String);
 
-            // Parse optional 'as'.
-            Token asIdentifier = null;
-            if (ParseOptional(TokenType.As))
-                asIdentifier = ParseExpected(TokenType.Identifier);
-
             ParseExpected(TokenType.Semicolon);
-            return new Import(fileToken, asIdentifier);
+            return new Import(fileToken, elements);
         }
 
         public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);

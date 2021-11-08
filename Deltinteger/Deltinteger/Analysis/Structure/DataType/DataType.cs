@@ -24,15 +24,20 @@ namespace DS.Analysis.Structure.DataTypes
         }
 
         public override ScopedElement MakeScopedElement(ScopedElementParameters parameters)
-            => new ScopedElement(parameters.Alias ?? Name, new ScopedDataTypeData(this));
+        {
+            string alias = parameters.Alias ?? Name;
+            return new ScopedElement(alias, new ScopedDataTypeData(this, alias));
+        }
 
         class ScopedDataTypeData : ScopedElementData
         {
             readonly DeclaredDataType declaredDataType;
+            readonly string alias;
 
-            public ScopedDataTypeData(DeclaredDataType declaredDataType)
+            public ScopedDataTypeData(DeclaredDataType declaredDataType, string alias)
             {
                 this.declaredDataType = declaredDataType;
+                this.alias = alias;
             }
 
             public override CodeTypeProvider GetCodeTypeProvider()
@@ -42,6 +47,8 @@ namespace DS.Analysis.Structure.DataTypes
                 
                 return declaredDataType.codeTypeProvider;
             }
+
+            public override bool IsMatch(string name) => alias == name;
         }
     }
 }

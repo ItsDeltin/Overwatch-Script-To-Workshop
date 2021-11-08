@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using DS.Analysis.Utility;
 using DS.Analysis.Scopes;
@@ -82,10 +83,10 @@ namespace DS.Analysis.Types
 
         CodeTypeProvider SelectCodeTypeProvider(ScopedElementData[] scopedElements, string name)
         {
-            foreach (var element in scopedElements)
+            foreach (var element in scopedElements.Where(e => e.IsMatch(name)))
             {
                 var provider = element.GetCodeTypeProvider();
-                if (provider != null && provider.IsMatch(name))
+                if (provider != null)
                 {
                     _errorHandler.Success();
                     return provider;
