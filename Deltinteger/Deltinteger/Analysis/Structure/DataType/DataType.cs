@@ -15,8 +15,6 @@ namespace DS.Analysis.Structure.DataTypes
             Name = contentProvider.GetName();
             codeTypeProvider = new CodeTypeProvider(contentProvider.GetName());
 
-            structure.ScopeSource.AddScopedElement(MakeScopedElement(default(ScopedElementParameters)));
-
             // Create a scope source for this class.
             var scopeSource = new ScopeSource();
 

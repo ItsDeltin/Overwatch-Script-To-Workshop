@@ -3,6 +3,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 using DS.Analysis.Scopes;
 using DS.Analysis.Expressions;
 using DS.Analysis.Expressions.Dot;
+using DS.Analysis.Expressions.Identifiers;
 using DS.Analysis.Statements;
 using DS.Analysis.Variables.Builder;
 
@@ -48,7 +49,7 @@ namespace DS.Analysis
             switch (expressionContext)
             {
                 // Identifier
-                case Identifier identifier: return new IdentifierExpression(this, identifier, /* todo */ null);
+                case Identifier identifier: return new IdentifierExpression(this, identifier);
                 // True/false
                 case BooleanExpression boolean: return new BooleanAction(this, boolean);
                 // Operator

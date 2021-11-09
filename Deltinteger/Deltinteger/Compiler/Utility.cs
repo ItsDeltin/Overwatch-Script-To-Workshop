@@ -166,6 +166,8 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator false(Token x) => x == null;
         public static bool operator !(Token x) => x == null;
         public static implicit operator bool(Token x) => x != null;
+        public static implicit operator string(Token x) => x.Text;
+        public static implicit operator TokenType(Token x) => x.TokenType;
         public static implicit operator DocRange(Token x) => x.Range;
     }
 

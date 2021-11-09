@@ -9,6 +9,6 @@ namespace DS.Analysis.Types
             Name = name;
         }
 
-        public CodeType CreateInstance(CodeType[] typeArgs) => new CodeType(this);
+        public CodeType CreateInstance(params CodeType[] typeArgs) => new CodeType(this);
     }
 }

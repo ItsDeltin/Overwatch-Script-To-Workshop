@@ -15,13 +15,11 @@ namespace DS.Analysis.Variables.Builder
 
         public VariableProvider GetVariable(ContextInfo contextInfo)
         {
-            var result = new VariableProvider(Name, ContextHandler.GetTypeDirector(contextInfo));
-            return result;
+            VariableContent content = ContextHandler.GetContent(contextInfo);
+
+            return new VariableProvider(Name, content.TypeDirector);
         }
 
-        public void Dispose()
-        {
-            ContextHandler.Dispose();
-        }
+        public void Dispose() => ContextHandler.Dispose();
     }
 }

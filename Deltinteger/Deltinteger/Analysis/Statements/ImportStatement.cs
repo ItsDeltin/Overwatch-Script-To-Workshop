@@ -9,7 +9,7 @@ using DS.Analysis.Diagnostics;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using DS.Analysis.Types;
-using DS.Analysis.Expressions;
+using DS.Analysis.Expressions.Identifiers;
 
 namespace DS.Analysis.Statements
 {
