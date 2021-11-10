@@ -94,7 +94,7 @@ namespace DS.Analysis.Types
             }
 
             _errorHandler.NoTypesMatchName();
-            return StandardTypeProviders.Unknown;
+            return StandardTypes.Unknown;
         }
 
         protected override CodeType GetCodeType() => _codeTypeProvider.CreateInstance(TypeArgs);

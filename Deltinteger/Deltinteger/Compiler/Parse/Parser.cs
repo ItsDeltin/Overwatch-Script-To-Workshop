@@ -1740,8 +1740,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
         /// <returns>Determines whether an element was parsed.</returns>
         void ParseScriptRootElement(RootContext context)
         {
-            context.Statements.Add(ParseStatement());
-            return;
+            var statement = ParseStatement();
+            if (statement is not SyntaxTree.MissingElement)
+                context.Statements.Add(statement);
         }
 
         ModuleContext ParseModule()

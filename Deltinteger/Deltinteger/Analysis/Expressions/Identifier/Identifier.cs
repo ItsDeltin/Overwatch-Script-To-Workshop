@@ -57,7 +57,7 @@ namespace DS.Analysis.Expressions.Identifiers
                 currentTypeSubscription = typeDirector.Subscribe(typeObservers.Set);
             else
                 // Type is unknown
-                typeObservers.Set(StandardTypeProviders.UnknownInstance);
+                typeObservers.Set(StandardTypes.UnknownInstance);
             
             // Subscribe to the identifier's scope.
             currentScopeSubscription = identifier.GetScopeDirector().Subscribe(scopeObservers.Set);

@@ -18,7 +18,7 @@ namespace DS.Analysis.Expressions.Identifiers
         // ITypeDirector
         public IDisposable Subscribe(IObserver<CodeType> observer)
         {
-            observer.OnNext(StandardTypeProviders.UnknownInstance);
+            observer.OnNext(StandardTypes.UnknownInstance);
             return Disposable.Empty;
         }
 

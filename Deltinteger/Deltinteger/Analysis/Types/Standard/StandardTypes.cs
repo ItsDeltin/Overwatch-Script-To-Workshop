@@ -1,11 +1,11 @@
 namespace DS.Analysis.Types.Standard
 {
-    static class StandardTypeProviders
+    static class StandardTypes
     {
         public static readonly CodeTypeProvider Unknown = new CodeTypeProvider("?");
         public static readonly CodeType UnknownInstance;
 
-        static StandardTypeProviders()
+        static StandardTypes()
         {
             UnknownInstance = Unknown.CreateInstance();
         }

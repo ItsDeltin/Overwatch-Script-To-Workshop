@@ -1,6 +1,7 @@
 using System;
 using DS.Analysis.Expressions.Identifiers;
 using DS.Analysis.Types;
+using DS.Analysis.Types.Standard;
 using DS.Analysis.Utility;
 
 namespace DS.Analysis.Scopes
@@ -28,9 +29,25 @@ namespace DS.Analysis.Scopes
         // TODO: give Unknown default CodeTypeProvider and IdentfierHandler.
         public static readonly ScopedElementData Unknown = new ScopedElementData();
 
-        public virtual CodeTypeProvider GetCodeTypeProvider() => null;
-        public virtual IIdentifierHandler GetIdentifierHandler() => null;
+        public virtual CodeTypeProvider GetCodeTypeProvider() => StandardTypes.Unknown;
+        public virtual IIdentifierHandler GetIdentifierHandler() => UnknownIdentifierHandler.Instance;
 
         public virtual bool IsMatch(string name) => false;
+
+        
+        public static ScopedElementData Create(CodeTypeProvider codeTypeProvider, IIdentifierHandler identifierHandler)
+            => new StaticScopedElementData(codeTypeProvider, identifierHandler);
+
+        class StaticScopedElementData : ScopedElementData
+        {
+            readonly CodeTypeProvider codeTypeProvider;
+            readonly IIdentifierHandler identifierHandler;
+
+            public StaticScopedElementData(CodeTypeProvider codeTypeProvider, IIdentifierHandler identifierHandler)
+            {
+                this.codeTypeProvider = codeTypeProvider;
+                this.identifierHandler = identifierHandler;
+            }
+        }
     }
 }
