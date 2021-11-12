@@ -36,7 +36,7 @@ namespace DS.Analysis.Variables.Builder
 
         public void Dispose()
         {
-            typeReference.Dispose();
+            typeReference?.Dispose();
             expression?.Dispose();
         }
     }

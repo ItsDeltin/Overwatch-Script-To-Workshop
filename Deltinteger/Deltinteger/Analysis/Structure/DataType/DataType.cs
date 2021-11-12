@@ -7,24 +7,41 @@ namespace DS.Analysis.Structure.DataTypes
     class DeclaredDataType : ParentedDeclaredElement
     {
         readonly IDataTypeContentProvider contentProvider;
-        CodeTypeProvider codeTypeProvider;
+        readonly CodeTypeProvider codeTypeProvider;
+        readonly ScopeSource scopeSource;
 
         public DeclaredDataType(StructureContext structure, IDataTypeContentProvider contentProvider)
         {
             this.contentProvider = contentProvider;
             Name = contentProvider.GetName();
-            codeTypeProvider = new CodeTypeProvider(contentProvider.GetName());
 
             // Create a scope source for this class.
-            var scopeSource = new ScopeSource();
+            scopeSource = new ScopeSource();
 
-            DeclaredElements = contentProvider.GetDeclarations(structure.SetScopeSource(scopeSource));
+            var setup = contentProvider.Setup(structure.SetScopeSource(scopeSource));
+            DeclaredElements = setup.Declarations;
+            codeTypeProvider = setup.DataTypeProvider;
+        }
+
+        public override void GetMeta(ContextInfo contextInfo)
+        {
+            contextInfo = contextInfo.AddSource(scopeSource);
+
+            // todo: add anonymous types to scope *then* call base.GetMeta.
+            contentProvider.GetMeta(contextInfo);
+            base.GetMeta(contextInfo);
         }
 
         public override ScopedElement MakeScopedElement(ScopedElementParameters parameters)
         {
             string alias = parameters.Alias ?? Name;
             return new ScopedElement(alias, new ScopedDataTypeData(this, alias));
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            contentProvider.Dispose();
         }
 
         class ScopedDataTypeData : ScopedElementData

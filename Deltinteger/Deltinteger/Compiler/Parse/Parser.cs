@@ -1743,6 +1743,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var statement = ParseStatement();
             if (statement is not SyntaxTree.MissingElement)
                 context.Statements.Add(statement);
+            else
+                Consume();
         }
 
         ModuleContext ParseModule()

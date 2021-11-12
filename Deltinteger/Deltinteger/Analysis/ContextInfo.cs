@@ -43,6 +43,8 @@ namespace DS.Analysis
 
         public ContextInfo SetScope(Scope scope) => new ContextInfo(this) { Scope = scope };
 
+        public ContextInfo AddSource(IScopeSource source) => new ContextInfo(this) { Scope = Scope.CreateChild(source) };
+
 
         public Expression GetExpression(IParseExpression expressionContext)
         {

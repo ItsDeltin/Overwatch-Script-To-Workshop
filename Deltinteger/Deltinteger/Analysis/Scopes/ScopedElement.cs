@@ -26,7 +26,6 @@ namespace DS.Analysis.Scopes
 
     class ScopedElementData
     {
-        // TODO: give Unknown default CodeTypeProvider and IdentfierHandler.
         public static readonly ScopedElementData Unknown = new ScopedElementData();
 
         public virtual CodeTypeProvider GetCodeTypeProvider() => StandardTypes.Unknown;
@@ -35,19 +34,25 @@ namespace DS.Analysis.Scopes
         public virtual bool IsMatch(string name) => false;
 
         
-        public static ScopedElementData Create(CodeTypeProvider codeTypeProvider, IIdentifierHandler identifierHandler)
-            => new StaticScopedElementData(codeTypeProvider, identifierHandler);
+        public static ScopedElementData Create(string name, CodeTypeProvider codeTypeProvider, IIdentifierHandler identifierHandler)
+            => new StaticScopedElementData(name, codeTypeProvider, identifierHandler);
 
         class StaticScopedElementData : ScopedElementData
         {
+            readonly string name;
             readonly CodeTypeProvider codeTypeProvider;
             readonly IIdentifierHandler identifierHandler;
 
-            public StaticScopedElementData(CodeTypeProvider codeTypeProvider, IIdentifierHandler identifierHandler)
+            public StaticScopedElementData(string name, CodeTypeProvider codeTypeProvider, IIdentifierHandler identifierHandler)
             {
+                this.name = name;
                 this.codeTypeProvider = codeTypeProvider;
                 this.identifierHandler = identifierHandler;
             }
+
+            public override CodeTypeProvider GetCodeTypeProvider() => codeTypeProvider;
+            public override IIdentifierHandler GetIdentifierHandler() => identifierHandler;
+            public override bool IsMatch(string name) => name == this.name;
         }
     }
 }

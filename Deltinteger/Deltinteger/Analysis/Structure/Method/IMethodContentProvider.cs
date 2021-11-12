@@ -19,6 +19,7 @@ namespace DS.Analysis.Structure.Methods
     class MethodContentProvider : IMethodContentProvider
     {
         readonly FunctionContext syntax;
+        TypeReference returnType;
         BlockAction blockAction;
 
         public MethodContentProvider(FunctionContext syntax) => this.syntax = syntax;
@@ -34,9 +35,13 @@ namespace DS.Analysis.Structure.Methods
             return new Parameter[0];
         }
 
-        public TypeReference GetType(ContextInfo metaContext) => TypeFromContext.TypeReferenceFromContext(metaContext, syntax.Type);
+        public TypeReference GetType(ContextInfo metaContext) => returnType = TypeFromContext.TypeReferenceFromContext(metaContext, syntax.Type);
 
 
-        public void Dispose() => blockAction.Dispose();
+        public void Dispose()
+        {
+            returnType.Dispose();
+            blockAction.Dispose();
+        }
     }
 }

@@ -38,6 +38,12 @@ namespace DS.Analysis.Structure
             foreach (var element in DeclaredElements)
                 element.GetContent();
         }
+
+        public override void Dispose()
+        {
+            foreach (var element in DeclaredElements)
+                element.Dispose();
+        }
     }
 
     abstract class TypeDeclaredElement : AbstractDeclaredElement

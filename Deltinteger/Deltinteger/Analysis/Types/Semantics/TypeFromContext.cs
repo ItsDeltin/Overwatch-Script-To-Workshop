@@ -1,3 +1,4 @@
+using System.Linq;
 using DS.Analysis.Scopes;
 using DS.Analysis.Diagnostics;
 using Deltin.Deltinteger.Compiler;
@@ -12,31 +13,36 @@ namespace DS.Analysis.Types.Semantics
         public static TypeReference TypeReferenceFromContext(ContextInfo context, ITypeContextHandler typeContext)
         {
             var typeName = typeContext.Identifier.Text;
+
+            // Create the scope watcher and error handler.
             var identifierWatcher = context.Scope.Watch();
             var errorHandler = new TypeIdentifierErrorHandler(context.File.Diagnostics, typeName, typeContext.Identifier.Range);
 
-            return new IdentifierTypeReference(typeName, errorHandler, identifierWatcher, null);
+            // Get the type args
+            var typeArgReferences = typeContext.TypeArgs.Select(typeArg => TypeReferenceFromContext(context, typeArg)).ToArray();
+
+            return new IdentifierTypeReference(typeName, errorHandler, identifierWatcher, typeArgReferences);
         }
 
         class TypeIdentifierErrorHandler : ITypeIdentifierErrorHandler
         {
             readonly FileDiagnostics diagnostics;
-            readonly string name;
+            readonly string referenceName;
             readonly DocRange range;
             Diagnostic currentDiagnostic;
 
             public TypeIdentifierErrorHandler(FileDiagnostics diagnostics, string name, DocRange range)
             {
                 this.diagnostics = diagnostics;
-                this.name = name;
+                this.referenceName = name;
                 this.range = range;
             }
 
             public void Dispose() => currentDiagnostic?.Dispose();
 
-            public void GenericCountMismatch() => SetDiagnostic(Err(Messages.GenericCountMismatch(name, 0, 0)));
+            public void GenericCountMismatch(string typeName, int expected) => SetDiagnostic(Err(Messages.GenericCountMismatch(typeName, 0, expected)));
 
-            public void NoTypesMatchName() => SetDiagnostic(Err(Messages.TypeNameNotFound(name)));
+            public void NoTypesMatchName() => SetDiagnostic(Err(Messages.TypeNameNotFound(referenceName)));
 
             public void Success() => SetDiagnostic(null);
 
