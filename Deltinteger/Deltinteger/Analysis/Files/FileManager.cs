@@ -26,7 +26,7 @@ namespace DS.Analysis.Files
             if (!TryGetFile(path, out ScriptFile file))
                 file = CreateFile(path, false);
             
-            file.SetFromString(content);
+            file.FileParser.SetFromString(content);
         }
 
         public void RemoveFromWorkspace(string path)
@@ -98,7 +98,7 @@ namespace DS.Analysis.Files
             ScriptFile newFile = CreateFile(path, true);
 
             // Parse script
-            newFile.SetFromString(text);
+            newFile.FileParser.SetFromString(text);
 
             NotifyDependencies(path, newFile, null);
         }

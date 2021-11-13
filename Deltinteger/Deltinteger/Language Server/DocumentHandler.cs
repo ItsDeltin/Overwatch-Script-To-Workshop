@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
         {
             var file = _languageServer.Analysis.FileManager.GetFile(changeParams.TextDocument.Uri.Normalize());
-            var updater = file.GetFileUpdater();
+            var updater = file.FileParser.GetFileUpdater();
 
             foreach (var change in changeParams.ContentChanges)
                 updater.Update(change);

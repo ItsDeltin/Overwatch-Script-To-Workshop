@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Collections.Generic;
 using DS.Analysis.Structure;
 using DS.Analysis.Scopes;
 using DS.Analysis.Diagnostics;
@@ -22,9 +24,8 @@ namespace DS.Analysis
         // The root scope of the file.
         public ScopeSource RootScopeSource { get; } = new ScopeSource();
 
-        readonly Lexer lexer;
+        public FileParser FileParser { get; }
 
-        RootContext syntax;
         BlockAction statements;
 
 
@@ -34,43 +35,19 @@ namespace DS.Analysis
             IsExternal = isExternal;
             Analysis = analysis;
             Diagnostics = new FileDiagnostics(Path);
-
-            lexer = new Lexer();
+            FileParser = new FileParser(this);
         }
 
 
         public string GetRelativePath(string relativePath) => IOPath.GetFullPath(IOPath.Join(IOPath.GetDirectoryName(Path), relativePath));
 
 
-        public FileUpdater GetFileUpdater() => new FileUpdater(this);
-
-        public void SetFromString(string content)
-        {
-            lexer.Init(new VersionInstance(content));
-            Parse();
-        }
-
-        public void SetFromSyntax(RootContext syntax)
-        {
-            Unlink();
-            this.syntax = syntax;
-            GetStructure();
-        }
-
-        void Parse()
-        {
-            var parser = new Parser(lexer);
-            var context = parser.Parse();
-            SetFromSyntax(context);
-        }
-
-
         public void GetStructure()
         {
-            RootScopeSource.Clear();
-
             // Get declarations
-            statements = new StructureContext(this, RootScopeSource).Block(syntax.Statements.ToArray(), RootScopeSource);
+            RootScopeSource.Clear();
+            statements?.Dispose();
+            statements = new StructureContext(this, RootScopeSource).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
 
             GetMeta();
         }
@@ -82,18 +59,8 @@ namespace DS.Analysis
 
         public void Unlink()
         {
-            RootScopeSource.Clear();
             statements?.Dispose();
-        }
-
-
-        /// <summary>Incremental script updates.</summary>
-        public class FileUpdater
-        {
-            readonly ScriptFile file;
-            public FileUpdater(ScriptFile file) => this.file = file;
-            public void Update(UpdateRange change) => file.lexer.Update(file.lexer.Content.Update(change), change);
-            public void ApplyUpdates() => file.Parse();
+            FileParser.Dispose();
         }
     }
 }
