@@ -38,10 +38,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             _lastTokenCount = Tokens.Count;
             AffectedAreaInfo affectedArea = GetAffectedArea(updateRange);
 
-            // The number of lines
-            int lineDelta = NumberOfNewLines(updateRange.Text) - updateRange.Range.LineSpan();
-            int columnDelta = NumberOfCharactersInLastLine(updateRange.Text) - updateRange.Range.ColumnSpan();
-
             int indexOffset = updateRange.Text.Length - (Content.IndexOf(updateRange.Range.End) - Content.IndexOf(updateRange.Range.Start));
 
             // Adjust token ranges.
@@ -180,17 +176,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 throw new Exception("Cannot get token delta until the current token push is completed.");
             return Tokens.Count - _lastTokenCount;
         }
-
-        private static int NumberOfNewLines(string text)
-        {
-            int count = 0;
-            for (int i = 0; i < text.Length; i++)
-                if (text[i] == '\n')
-                    count++;
-            return count;
-        }
-
-        private static int NumberOfCharactersInLastLine(string text) => text.Split('\n').Last().Length;
     }
 
     public class LexController

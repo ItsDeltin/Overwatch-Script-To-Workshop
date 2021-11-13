@@ -29,6 +29,7 @@ namespace DS.Analysis
         {
             lexer.Init(new VersionInstance(content));
             Parse();
+            file.GetStructure();
         }
 
         void Parse()
@@ -38,8 +39,6 @@ namespace DS.Analysis
 
             Dispose();
             parserDiagnostics = parser.Errors.Select(error => file.Diagnostics.Error(error.Message(), error.Range)).ToArray();
-
-            file.GetStructure();
         }
 
 
@@ -55,8 +54,12 @@ namespace DS.Analysis
         {
             readonly FileParser fileParser;
             public FileUpdater(FileParser fileParser) => this.fileParser = fileParser;
-            public void Update(UpdateRange change) => fileParser.lexer.Update(fileParser.lexer.Content.Update(change), change);
-            public void ApplyUpdates() => fileParser.Parse();
+            public void Update(UpdateRange change)
+            {
+                fileParser.lexer.Update(fileParser.lexer.Content.Update(change), change);
+                fileParser.Parse();
+            }
+            public void ApplyUpdates() => fileParser.file.GetStructure();
         }
     }
 }
