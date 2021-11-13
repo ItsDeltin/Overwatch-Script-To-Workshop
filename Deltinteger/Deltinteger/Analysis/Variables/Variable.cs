@@ -8,12 +8,11 @@ namespace DS.Analysis.Variables
 {
     class Variable : IIdentifierHandler
     {
-        public VariableProvider VariableProvider { get; }
         public ITypeDirector Type { get; }
 
-        public Variable(VariableProvider variableProvider)
+        public Variable(ITypeDirector type)
         {
-            VariableProvider = variableProvider;
+            Type = type;
         }
 
 

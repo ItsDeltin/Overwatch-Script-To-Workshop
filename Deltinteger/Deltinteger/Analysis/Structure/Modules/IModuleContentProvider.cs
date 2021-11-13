@@ -6,7 +6,7 @@ namespace DS.Analysis.Structure.Modules
     interface IModuleContentProvider
     {
         string GetName();
-        AbstractDeclaredElement[] GetDeclarations(StructureContext structure);
+        AbstractDeclaredElement[] GetDeclarations(ContextInfo contextInfo);
     }
 
     class ModuleContentProvider : IModuleContentProvider
@@ -19,6 +19,6 @@ namespace DS.Analysis.Structure.Modules
         }
 
         public string GetName() => syntax.Identifier.Text;
-        public AbstractDeclaredElement[] GetDeclarations(StructureContext structure) => StructureUtility.DeclarationsFromSyntax(structure, syntax.Declarations);
+        public AbstractDeclaredElement[] GetDeclarations(ContextInfo contextInfo) => StructureUtility.DeclarationsFromSyntax(contextInfo, syntax.Declarations);
     }
 }

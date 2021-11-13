@@ -15,25 +15,6 @@ namespace DS.Analysis
             this.scopeSource = scopeSource;
         }
 
-        public void GetMeta(ContextInfo contextInfo)
-        {
-            contextInfo = contextInfo.SetScope(contextInfo.Scope.CreateChild(scopeSource));
-
-            foreach (var statement in Statements)
-            {
-                statement.GetMeta(contextInfo);
-
-                var continueWithScope = statement.ProceedWithScope();
-                if (continueWithScope != null)
-                    contextInfo = contextInfo.SetScope(continueWithScope);
-            }
-        }
-
-        public void GetContent()
-        {
-            foreach (var statement in Statements)
-                statement.GetContent();
-        }
 
         public void Dispose()
         {

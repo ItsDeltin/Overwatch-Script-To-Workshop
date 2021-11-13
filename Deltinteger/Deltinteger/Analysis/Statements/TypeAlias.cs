@@ -5,7 +5,7 @@ namespace DS.Analysis.Statements
 {
     class TypeAlias : Statement
     {
-        public TypeAlias(StructureContext structure, TypeAliasContext typeAlias)
+        public TypeAlias(ContextInfo context, TypeAliasContext typeAlias)
         {
         }
     }

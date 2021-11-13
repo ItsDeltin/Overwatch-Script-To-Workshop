@@ -21,9 +21,9 @@ namespace DS.Analysis.Statements
         readonly FileDiagnostics diagnostics;
         Diagnostic currentDiagnostic;
 
-        public ImportStatement(StructureContext structure, Import syntax)
+        public ImportStatement(ContextInfo context, Import syntax)
         {
-            diagnostics = structure.File.Diagnostics;
+            diagnostics = context.File.Diagnostics;
 
             string sourceName = null;
 
@@ -37,7 +37,7 @@ namespace DS.Analysis.Statements
                 sourceName = "file " + fileName;
 
                 // Create file dependency.
-                var fileRootScopeSource = new FileRootScopeSource(structure.File.Analysis, structure.File.GetRelativePath(fileName), this);
+                var fileRootScopeSource = new FileRootScopeSource(context.File.Analysis, context.File.GetRelativePath(fileName), this);
                 AddDisposable(fileRootScopeSource);
                 scopeSource = fileRootScopeSource;
             }
@@ -49,7 +49,7 @@ namespace DS.Analysis.Statements
                 sourceName = "module " + string.Join(".", modulePath);
 
                 // Get the module from the path.
-                var module = structure.File.Analysis.ModuleManager.ModuleFromPath(PathFromSyntax(syntax.Module));
+                var module = context.File.Analysis.ModuleManager.ModuleFromPath(PathFromSyntax(syntax.Module));
                 
                 scopeSource = module;
                 AddDisposable(scopeSource.Subscribe()); // Adds a reference to the module.
@@ -58,14 +58,14 @@ namespace DS.Analysis.Statements
             // If syntax.ImportSelection != null, the user declared a list of elements to import.
             // ex: 'import { Bakemap } from Pathmap;'
             if (syntax.ImportSelection != null)
-                ImportSelected(syntax.ImportSelection.ToArray(), scopeSource, structure.ScopeSource, structure.File.Diagnostics, sourceName);
+                ImportSelected(syntax.ImportSelection.ToArray(), scopeSource, context.ScopeAppender, context.File.Diagnostics, sourceName);
             // Otherwise, the entire module or file is being imported.
             // ex: 'import Pathmap;'
             else
                 importEntireScope = true;
         }
 
-        public override Scope ProceedWithScope() => importEntireScope ? ContextInfo.Scope.CreateChild(scopeSource) : null;
+        public override IScopeSource AddSourceToContext() => importEntireScope ? scopeSource : null;
 
         void ImportSelected(ImportSelection[] importElements, IScopeSource importFrom, IScopeAppender importTo, FileDiagnostics diagnostics, string sourceName)
         {

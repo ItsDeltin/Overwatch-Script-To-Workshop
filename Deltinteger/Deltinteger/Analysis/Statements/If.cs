@@ -10,15 +10,12 @@ namespace DS.Analysis.Statements
     {
         readonly If syntax;
 
-        public IfStatement(StructureContext context, If syntax)
+        public IfStatement(ContextInfo context, If syntax)
         {
             this.syntax = syntax;
-        }
 
-        public override void GetContent()
-        {
             // Get the if expression
-            Expression @if = ContextInfo.GetExpression(syntax.Expression);
+            Expression @if = context.GetExpression(syntax.Expression);
         }
     }
 }

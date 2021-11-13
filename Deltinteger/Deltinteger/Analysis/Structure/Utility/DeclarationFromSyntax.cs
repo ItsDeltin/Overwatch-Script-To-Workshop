@@ -10,21 +10,21 @@ namespace DS.Analysis.Structure.Utility
 {
     static partial class StructureUtility
     {
-        public static AbstractDeclaredElement DeclarationFromSyntax(StructureContext structure, IDeclaration declaration)
+        public static AbstractDeclaredElement DeclarationFromSyntax(ContextInfo contextInfo, IDeclaration declaration)
         {
             switch (declaration)
             {                
                 // Variable declaration
                 case VariableDeclaration variableDeclaration:
-                    return new DeclaredVariable(new VariableContextHandler(variableDeclaration));
+                    return new DeclaredVariable(contextInfo, new VariableContextHandler(variableDeclaration));
                 
                 // Data type
                 case ClassContext dataTypeContext:
-                    return new DeclaredDataType(structure, new DataTypeContentProvider(dataTypeContext));
+                    return new DeclaredDataType(contextInfo, new DataTypeContentProvider(dataTypeContext));
 
                 // Method
                 case FunctionContext functionContext:
-                    return new DeclaredMethod(structure, new MethodContentProvider(functionContext));
+                    return new DeclaredMethod(contextInfo, new MethodContentProvider(functionContext));
                 
                 // Unknown type
                 default:
@@ -32,11 +32,11 @@ namespace DS.Analysis.Structure.Utility
             }
         }
         
-        public static AbstractDeclaredElement[] DeclarationsFromSyntax(StructureContext structure, List<IDeclaration> declarations)
+        public static AbstractDeclaredElement[] DeclarationsFromSyntax(ContextInfo contextInfo, List<IDeclaration> declarations)
         {
             var result = new AbstractDeclaredElement[declarations.Count];
             for (int i = 0; i < result.Length; i++)
-                result[i] = DeclarationFromSyntax(structure, declarations[i]);
+                result[i] = DeclarationFromSyntax(contextInfo, declarations[i]);
             return result;
         }
     }

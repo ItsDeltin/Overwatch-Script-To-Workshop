@@ -7,23 +7,19 @@ namespace DS.Analysis.Structure.Variables
     class DeclaredVariable : AbstractDeclaredElement
     {
         readonly VariableBuilder variableBuilder;
-        VariableProvider variable;
+        readonly VariableProvider variable;
 
-        public DeclaredVariable(IVariableContextHandler contextHandler)
+        public DeclaredVariable(ContextInfo contextInfo, IVariableContextHandler contextHandler)
         {
             variableBuilder = new VariableBuilder(contextHandler);
             Name = variableBuilder.Name;
+            variable = variableBuilder.GetVariable(contextInfo);
         }
 
-        public override void GetMeta(ContextInfo metaContext)
+        public override ScopedElement MakeScopedElement(ScopedElementParameters parameters)
         {
-            base.GetMeta(metaContext);
-            variable = variableBuilder.GetVariable(metaContext);
-        }
-
-        public override void GetContent()
-        {
-            // todo
+            string name = parameters.Alias ?? Name;
+            return new ScopedElement(name, ScopedElementData.Create(name, null, variable.CreateInstance()));
         }
 
         public override void Dispose()

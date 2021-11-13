@@ -11,8 +11,7 @@ namespace DS.Analysis.Structure.DataTypes
     interface IDataTypeContentProvider : IDisposable
     {
         string GetName();
-        SetupDataType Setup(StructureContext structure);
-        void GetMeta(ContextInfo contextInfo);
+        SetupDataType Setup(ContextInfo contextInfo);
     }
 
     struct SetupDataType
@@ -43,14 +42,14 @@ namespace DS.Analysis.Structure.DataTypes
 
         public string GetName() => name;
 
-        public SetupDataType Setup(StructureContext structure)
+        public SetupDataType Setup(ContextInfo contextInfo)
         {
             // Get the type args.
             var typeArgs = TypeArgCollection.FromSyntax(syntax.Generics);
-            typeArgs.AddToScope(structure.ScopeSource);
+            typeArgs.AddToScope(contextInfo.ScopeAppender);
 
             return new SetupDataType(
-                declarations: StructureUtility.DeclarationsFromSyntax(structure, syntax.Declarations),
+                declarations: StructureUtility.DeclarationsFromSyntax(contextInfo, syntax.Declarations),
                 dataTypeProvider: new CodeTypeProvider(name, typeArgs)
             );
         }

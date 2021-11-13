@@ -47,14 +47,8 @@ namespace DS.Analysis
             // Get declarations
             RootScopeSource.Clear();
             statements?.Dispose();
-            statements = new StructureContext(this, RootScopeSource).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
-
-            GetMeta();
+            statements = new ContextInfo(Analysis, this, Scope.Empty).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
         }
-
-        public void GetMeta() => statements.GetMeta(new ContextInfo(Analysis, this, Scope.Empty));
-
-        public void GetContent() => statements.GetContent();
 
 
         public void Unlink()

@@ -10,26 +10,18 @@ namespace DS.Analysis.Structure.DataTypes
         readonly CodeTypeProvider codeTypeProvider;
         readonly ScopeSource scopeSource;
 
-        public DeclaredDataType(StructureContext structure, IDataTypeContentProvider contentProvider)
+        public DeclaredDataType(ContextInfo contextInfo, IDataTypeContentProvider contentProvider)
         {
+            // Initialize class values.
             this.contentProvider = contentProvider;
             Name = contentProvider.GetName();
 
-            // Create a scope source for this class.
-            scopeSource = new ScopeSource();
+            scopeSource = new ScopeSource(); // Create a scope source for this class.
+            contextInfo = contextInfo.AddAppendableSource(scopeSource); // Add the source to the context.
 
-            var setup = contentProvider.Setup(structure.SetScopeSource(scopeSource));
+            var setup = contentProvider.Setup(contextInfo);
             DeclaredElements = setup.Declarations;
             codeTypeProvider = setup.DataTypeProvider;
-        }
-
-        public override void GetMeta(ContextInfo contextInfo)
-        {
-            contextInfo = contextInfo.AddSource(scopeSource);
-
-            // todo: add anonymous types to scope *then* call base.GetMeta.
-            contentProvider.GetMeta(contextInfo);
-            base.GetMeta(contextInfo);
         }
 
         public override ScopedElement MakeScopedElement(ScopedElementParameters parameters)

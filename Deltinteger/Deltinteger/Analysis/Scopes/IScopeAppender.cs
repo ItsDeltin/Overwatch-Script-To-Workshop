@@ -1,6 +1,6 @@
 using DS.Analysis.Scopes;
 
-namespace DS.Analysis.Utility
+namespace DS.Analysis.Scopes
 {
     interface IScopeAppender
     {

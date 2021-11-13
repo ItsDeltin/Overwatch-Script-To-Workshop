@@ -33,7 +33,7 @@ namespace DS.Analysis.Expressions
     class TypeScopeObservable : IObservable<Scope>
     {
         readonly ITypeDirector typeDirector;
-        public TypeScopeObservable(ITypeDirector typeDirector) => this.typeDirector = typeDirector;
+        public TypeScopeObservable(ITypeDirector typeDirector) => this.typeDirector = typeDirector ?? throw new ArgumentNullException(nameof(typeDirector));
         public IDisposable Subscribe(IObserver<Scope> observer) => typeDirector.Subscribe(
             onNext: codeType => observer.OnNext(codeType.Scope),
             onError: exception => observer.OnError(exception),

@@ -17,10 +17,10 @@ namespace DS.Analysis.Types.Generics
             TypeArgs = typeArgs;
         }
 
-        public void AddToScope(ScopeSource scopeSource)
+        public void AddToScope(IScopeAppender scopeAppender)
         {
             foreach (var typeArg in TypeArgs)
-                scopeSource.AddScopedElement(typeArg.ScopedElement);
+                scopeAppender.AddScopedElement(typeArg.ScopedElement);
         }
 
         public static TypeArgCollection FromSyntax(List<TypeArgContext> syntax) => new TypeArgCollection(syntax.Select(g => new TypeArg(g.Identifier.Text, g.Single)).ToArray());

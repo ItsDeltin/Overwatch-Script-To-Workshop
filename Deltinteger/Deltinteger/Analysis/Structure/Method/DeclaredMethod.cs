@@ -5,22 +5,16 @@ namespace DS.Analysis.Structure.Methods
         readonly IMethodContentProvider contentProvider;
         Parameter[] parameters;
 
-        public DeclaredMethod(StructureContext structure, IMethodContentProvider contentProvider)
+        public DeclaredMethod(ContextInfo contextInfo, IMethodContentProvider contentProvider)
         {
             this.contentProvider = contentProvider;
             Name = contentProvider.GetName();
-            contentProvider.GetStructure(structure);
+
+            var setup = contentProvider.Setup(contextInfo);
+            Type = setup.ReturnType;
+            parameters = setup.Parameters;
         }
 
-        public override void GetMeta(ContextInfo metaContext)
-        {
-            base.GetMeta(metaContext);
-            Type = contentProvider.GetType(metaContext);
-            parameters = contentProvider.GetParameters(metaContext);
-            contentProvider.GetMeta(metaContext);
-        }
-
-        public override void GetContent() => contentProvider.GetContent();
 
         public override void Dispose()
         {

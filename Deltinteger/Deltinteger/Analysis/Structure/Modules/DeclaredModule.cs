@@ -6,12 +6,12 @@ namespace DS.Analysis.Structure.Modules
     {
         readonly ScopeSource scopeSource;
 
-        public DeclaredModule(StructureContext structure, IModuleContentProvider moduleContent)
+        public DeclaredModule(ContextInfo contextInfo, IModuleContentProvider moduleContent)
         {
             Name = moduleContent.GetName();
             
             scopeSource = new ScopeSource();
-            DeclaredElements = moduleContent.GetDeclarations(structure.SetScopeSource(scopeSource));
+            DeclaredElements = moduleContent.GetDeclarations(contextInfo.AddAppendableSource(scopeSource));
         }
     }
 }

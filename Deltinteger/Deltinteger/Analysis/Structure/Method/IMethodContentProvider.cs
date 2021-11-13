@@ -9,11 +9,19 @@ namespace DS.Analysis.Structure.Methods
     interface IMethodContentProvider : IDisposable
     {
         string GetName();
-        void GetStructure(StructureContext structure);
-        void GetMeta(ContextInfo context);
-        void GetContent();
-        Parameter[] GetParameters(ContextInfo metaContext);
-        TypeReference GetType(ContextInfo metaContext);
+        MethodSetup Setup(ContextInfo context);
+    }
+
+    struct MethodSetup
+    {
+        public readonly Parameter[] Parameters;
+        public readonly TypeReference ReturnType;
+
+        public MethodSetup(Parameter[] parameters, TypeReference returnType)
+        {
+            Parameters = parameters;
+            ReturnType = returnType;
+        }
     }
 
     class MethodContentProvider : IMethodContentProvider
@@ -26,16 +34,15 @@ namespace DS.Analysis.Structure.Methods
 
         public string GetName() => syntax.Identifier.Text;
 
-        public void GetStructure(StructureContext structure) => blockAction = structure.Block(syntax.Block);
-        public void GetMeta(ContextInfo context) => blockAction.GetMeta(context);
-        public void GetContent() => blockAction.GetContent();
-
-        public Parameter[] GetParameters(ContextInfo context)
+        public MethodSetup Setup(ContextInfo contextInfo)
         {
-            return new Parameter[0];
-        }
+            returnType = TypeFromContext.TypeReferenceFromContext(contextInfo, syntax.Type);
 
-        public TypeReference GetType(ContextInfo metaContext) => returnType = TypeFromContext.TypeReferenceFromContext(metaContext, syntax.Type);
+            // Setup the block
+            blockAction = contextInfo.Block(syntax.Block);
+
+            return new MethodSetup(null, returnType);
+        }
 
 
         public void Dispose()
