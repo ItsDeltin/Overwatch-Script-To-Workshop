@@ -55,7 +55,7 @@ namespace DS.Analysis
         public ContextInfo SetScopeAppender(IScopeAppender appender) => new ContextInfo(this) { ScopeAppender = appender };
 
         public ContextInfo AddAppendableSource<T>(T appendableSource)
-            where T: IScopeSource, IScopeAppender
+            where T : IScopeSource, IScopeAppender
             => new ContextInfo(this)
             {
                 Scope = Scope.CreateChild(appendableSource),
@@ -77,6 +77,9 @@ namespace DS.Analysis
                         return new DotExpression(this, op);
                     else
                         break; // todo
+                // Unknown
+                case MissingElement missingElement:
+                    return new UnknownExpression();
             }
 
             throw new NotImplementedException(expressionContext.GetType().ToString());
@@ -90,15 +93,15 @@ namespace DS.Analysis
                 // Variable
                 case VariableDeclaration variableDeclaration:
                     return new DeclarationStatement(this, new DeclaredVariable(this, new VariableContextHandler(variableDeclaration)));
-                
+
                 // Data Type
                 case ClassContext dataTypeDeclaration:
                     return new DeclarationStatement(this, new DeclaredDataType(this, new DataTypeContentProvider(dataTypeDeclaration)));
-                
+
                 // Method
                 case FunctionContext methodDeclaration:
                     return new DeclarationStatement(this, new DeclaredMethod(this, new MethodContentProvider(methodDeclaration)));
-                
+
                 // Module
                 case ModuleContext moduleDeclaration:
                     return new DeclarationStatement(this, new DeclaredModule(this, new ModuleContentProvider(moduleDeclaration)));
@@ -106,10 +109,18 @@ namespace DS.Analysis
                 // If statement
                 case If @if:
                     return new IfStatement(this, @if);
-                
+
                 // Import
                 case Import import:
                     return new ImportStatement(this, import);
+
+                // Block
+                case Block block:
+                    return new BlockStatement(Block(block));
+
+                // Expression
+                case ExpressionStatementSyntax expression:
+                    return new ExpressionStatement(this, expression);
             }
             throw new NotImplementedException(syntax.GetType().ToString());
         }
@@ -127,11 +138,13 @@ namespace DS.Analysis
             {
                 statements[i] = current.StatementFromSyntax(statementSyntaxes[i]);
 
+                // If the statement is providing a ScopeSource,
                 var continueWith = statements[i].AddSourceToContext();
                 if (continueWith != null)
+                    // Then add it to the context.
                     current = current.AddSource(continueWith);
             }
-            
+
             return new BlockAction(statements, scopeSource);
         }
     }

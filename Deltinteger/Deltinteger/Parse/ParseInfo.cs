@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Parse
                 case Block @block: return new BlockAction(this, scope, @block);
                 case FunctionExpression func: return new CallMethodAction(this, scope, func, false, scope);
                 // Expression statements (functions)
-                case ExpressionStatement exprStatement:
+                case ExpressionStatementSyntax exprStatement:
 
                     // Parse the expression
                     var expr = GetExpression(scope, exprStatement.Expression, false);

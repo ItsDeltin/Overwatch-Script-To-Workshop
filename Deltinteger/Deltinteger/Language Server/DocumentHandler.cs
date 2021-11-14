@@ -124,7 +124,7 @@ namespace Deltin.Deltinteger.LanguageServer
         private ManualResetEventSlim _parseDone = new ManualResetEventSlim(false);
         private readonly CancellationTokenSource _stopUpdateListener = new CancellationTokenSource();
 
-        public async Task WaitForParse() => await Task.Run(() => _parseDone.Wait());
+        public async Task WaitForParse() => await Task.CompletedTask;
 
         void SetupUpdateListener()
         {

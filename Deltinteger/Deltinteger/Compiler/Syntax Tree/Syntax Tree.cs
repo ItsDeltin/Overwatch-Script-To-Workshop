@@ -726,13 +726,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     }
 
     // Statements
-    public class ExpressionStatement : Node, IParseStatement
+    public class ExpressionStatementSyntax : Node, IParseStatement
     {
         public IParseExpression Expression { get; }
         public Token ActionComment { get; }
         public MetaComment Comment { get; set; }
 
-        public ExpressionStatement(IParseExpression expression, Token actionComment)
+        public ExpressionStatementSyntax(IParseExpression expression, Token actionComment)
         {
             Expression = expression;
             ActionComment = actionComment;

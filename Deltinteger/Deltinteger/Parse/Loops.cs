@@ -170,7 +170,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Scope varScope = scope.Child();
 
-            IsAutoFor = forContext.Iterator is ExpressionStatement;
+            IsAutoFor = forContext.Iterator is ExpressionStatementSyntax;
 
             // Get the initializer.
             if (!IsAutoFor)
@@ -217,7 +217,7 @@ namespace Deltin.Deltinteger.Parse
                     InitialResolveValue = parseInfo.GetExpression(scope, assignment.Value);
                 }
                 // Variable
-                else if (forContext.Initializer is ExpressionStatement exprStatement && exprStatement.Expression is Identifier identifier)
+                else if (forContext.Initializer is ExpressionStatementSyntax exprStatement && exprStatement.Expression is Identifier identifier)
                 {
                     // The variable is defined but no start value was given. In this case, just start at 0.
                     // Get the variable.
@@ -248,7 +248,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the auto-for
                 if (IsAutoFor)
                 {
-                    Step = parseInfo.GetExpression(varScope, ((ExpressionStatement)forContext.Iterator).Expression);
+                    Step = parseInfo.GetExpression(varScope, ((ExpressionStatementSyntax)forContext.Iterator).Expression);
                     RawContinue = true;
                 }
                 // Get the for assignment.

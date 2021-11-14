@@ -110,7 +110,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                     returnsValue = true;
                 }
             }
-            else if (_context.Statement is ExpressionStatement exprStatement)
+            else if (_context.Statement is ExpressionStatementSyntax exprStatement)
             {
                 // Get the lambda expression.
                 Expression = parser.GetExpression(_lambdaScope, exprStatement.Expression);

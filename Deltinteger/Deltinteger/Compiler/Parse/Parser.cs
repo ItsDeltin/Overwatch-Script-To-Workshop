@@ -2020,7 +2020,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         IParseStatement ExpressionStatement(IParseExpression expression, Token actionComment)
         {
             if (expression is IParseStatement statement) return statement;
-            return new ExpressionStatement(expression, actionComment);
+            return new ExpressionStatementSyntax(expression, actionComment);
         }
     }
 }
