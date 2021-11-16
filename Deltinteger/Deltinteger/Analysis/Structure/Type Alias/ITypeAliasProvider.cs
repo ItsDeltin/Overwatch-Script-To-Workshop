@@ -1,13 +1,29 @@
 using DS.Analysis.Types;
 using DS.Analysis.Types.Semantics;
+using DS.Analysis.Types.Generics;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Structure.TypeAlias
 {
     interface ITypeAliasProvider
     {
-        TypeReference GetTypeReference(ContextInfo context);
+        TypeAliasSetup Setup(ContextInfo context);
     }
+
+    struct TypeAliasSetup
+    {
+        public readonly string Name;
+        public readonly TypeReference TypeReference;
+        public readonly TypeArgCollection TypeArgs;
+
+        public TypeAliasSetup(string name, TypeReference typeReference, TypeArgCollection typeArgs)
+        {
+            Name = name;
+            TypeReference = typeReference;
+            TypeArgs = typeArgs;
+        }
+    }
+
 
     class TypeAliasProvider : ITypeAliasProvider
     {
@@ -18,6 +34,17 @@ namespace DS.Analysis.Structure.TypeAlias
             this.typeAliasSyntax = typeAliasSyntax;
         }
 
-        public TypeReference GetTypeReference(ContextInfo context) => TypeFromContext.TypeReferenceFromContext(context, typeAliasSyntax.OtherType);
+        public TypeAliasSetup Setup(ContextInfo context)
+        {
+            System.Diagnostics.Debugger.Break();
+            var typeArgs = TypeArgCollection.FromSyntax(typeAliasSyntax.Generics);
+            typeArgs.AddToScope(context.ScopeAppender);
+
+            return new TypeAliasSetup(
+                name: typeAliasSyntax.NewTypeName.Text,
+                typeReference: TypeFromContext.TypeReferenceFromContext(context, typeAliasSyntax.OtherType),
+                typeArgs: typeArgs
+            );
+        }
     }
 }

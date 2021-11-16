@@ -35,7 +35,8 @@ namespace DS.Analysis.Types
             {
                 int captureIndex = i;
 
-                typeArgSubscriptions[i] = this.typeArgReferences[i].Subscribe(value => {
+                typeArgSubscriptions[i] = this.typeArgReferences[i].Subscribe(value =>
+                {
                     // Type arg changed
                     TypeArgs[captureIndex] = value;
 
@@ -81,8 +82,8 @@ namespace DS.Analysis.Types
             this.errorHandler = errorHandler;
 
             // The IDisposable created here will be not be needed since ScopeWatcher.Dispose will handle it.
-            identifier.Subscribe(nextValue => {
-                // todo: generic filter
+            identifier.Subscribe(nextValue =>
+            {
                 codeTypeProvider = SelectCodeTypeProvider(nextValue.FoundElements, typeName);
 
                 // Update

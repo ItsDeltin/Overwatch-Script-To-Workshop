@@ -106,6 +106,10 @@ namespace DS.Analysis
                 case ModuleContext moduleDeclaration:
                     return new DeclarationStatement(this, new DeclaredModule(this, new ModuleContentProvider(moduleDeclaration)));
 
+                // Type alias
+                case TypeAliasContext typeAlias:
+                    return new DeclarationStatement(this, new DeclaredTypeAlias(this, new TypeAliasProvider(typeAlias)));
+
                 // If statement
                 case If @if:
                     return new IfStatement(this, @if);
