@@ -36,7 +36,6 @@ namespace DS.Analysis.Structure.TypeAlias
 
         public TypeAliasSetup Setup(ContextInfo context)
         {
-            System.Diagnostics.Debugger.Break();
             var typeArgs = TypeArgCollection.FromSyntax(typeAliasSyntax.Generics);
             typeArgs.AddToScope(context.ScopeAppender);
 

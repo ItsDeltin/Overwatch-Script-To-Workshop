@@ -41,7 +41,7 @@ namespace DS.Analysis.Utility
     {
         public T Value { get; private set; }
 
-        public ValueObserverCollection() {}
+        public ValueObserverCollection() { }
 
         public ValueObserverCollection(T initialValue) => Value = initialValue;
 

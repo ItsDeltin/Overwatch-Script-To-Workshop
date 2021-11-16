@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
+using System.Reactive;
 using DS.Analysis.Utility;
 using DS.Analysis.Scopes;
 using DS.Analysis.Types.Standard;
@@ -41,16 +41,15 @@ namespace DS.Analysis.Types
                     TypeArgs[captureIndex] = value;
 
                     // Update CodeType and flag observers.
-                    CodeType = GetCodeType();
                     Update();
                 });
             }
         }
 
-        protected abstract CodeType GetCodeType();
-
         // Sets observers.
-        protected virtual void Update() => observers.Set(CodeType);
+        protected abstract void Update();
+
+        protected void Set(CodeType value) => observers.Set(value);
 
         // Subscribes to the TypeReference.
         public IDisposable Subscribe(IObserver<CodeType> observer) => observers.Add(observer);
@@ -75,6 +74,7 @@ namespace DS.Analysis.Types
         readonly ScopeWatcher identifier;
         readonly ITypeIdentifierErrorHandler errorHandler;
         CodeTypeProvider codeTypeProvider;
+        IDisposable providerSubscription;
 
         public IdentifierTypeReference(string typeName, ITypeIdentifierErrorHandler errorHandler, ScopeWatcher identifier, TypeReference[] generics) : base(generics)
         {
@@ -85,9 +85,6 @@ namespace DS.Analysis.Types
             identifier.Subscribe(nextValue =>
             {
                 codeTypeProvider = SelectCodeTypeProvider(nextValue.FoundElements, typeName);
-
-                // Update
-                CodeType = GetCodeType();
                 Update();
             });
         }
@@ -112,13 +109,18 @@ namespace DS.Analysis.Types
             return StandardTypes.Unknown;
         }
 
-        protected override CodeType GetCodeType() => codeTypeProvider.CreateInstance(TypeArgs);
+        protected override void Update()
+        {
+            providerSubscription?.Dispose();
+            providerSubscription = codeTypeProvider.CreateInstance(Observer.Create<CodeType>(Set), TypeArgs);
+        }
 
         public override void Dispose()
         {
             base.Dispose();
             identifier.Dispose();
             errorHandler.Dispose();
+            providerSubscription.Dispose();
         }
     }
 

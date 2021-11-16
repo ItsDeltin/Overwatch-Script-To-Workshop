@@ -10,17 +10,13 @@ namespace DS.Analysis.Expressions.Identifiers
     {
         public static UnknownIdentifierHandler Instance { get; } = new UnknownIdentifierHandler();
 
-        private UnknownIdentifierHandler() {}
+        private UnknownIdentifierHandler() { }
 
         public ITypeDirector GetTypeDirector() => this;
         public IObservable<Scope> GetScopeDirector() => this;
 
         // ITypeDirector
-        public IDisposable Subscribe(IObserver<CodeType> observer)
-        {
-            observer.OnNext(StandardTypes.UnknownInstance);
-            return Disposable.Empty;
-        }
+        public IDisposable Subscribe(IObserver<CodeType> observer) => StandardTypes.UnknownInstance.Subscribe(observer);
 
         // IObservable<Scope>
         public IDisposable Subscribe(IObserver<Scope> observer)
