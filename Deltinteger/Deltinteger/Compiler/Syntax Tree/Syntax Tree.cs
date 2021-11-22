@@ -16,10 +16,10 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
 
-        public List<TypeAliasContext> TypeAliases {get; } = new List<TypeAliasContext>();
+        public List<TypeAliasContext> TypeAliases { get; } = new List<TypeAliasContext>();
 
-        public List<Token> PlayervarReservations {get; } = new List<Token>();
-        public List<Token> GlobalvarReservations {get; } = new List<Token>();
+        public List<Token> PlayervarReservations { get; } = new List<Token>();
+        public List<Token> GlobalvarReservations { get; } = new List<Token>();
 
         public List<Hook> Hooks { get; } = new List<Hook>();
         // === END REMOVE ===
@@ -30,102 +30,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class Node : INodeRange
     {
         public DocRange Range { get; set; }
-    }
-
-    public class ParseType : Node, IParseType, ITypeContextHandler
-    {
-        public Token Identifier { get; }
-        public List<IParseType> TypeArgs { get; }
-        public int ArrayCount { get; }
-        public bool IsVoid { get; }
-
-        public ParseType(Token identifier, List<IParseType> typeArgs, int arrayCount)
-        {
-            Identifier = identifier;
-            TypeArgs = typeArgs;
-            ArrayCount = arrayCount;
-            IsVoid = false;
-        }
-
-        public ParseType(Token @void)
-        {
-            Identifier = @void;
-            IsVoid = true;
-        }
-
-        public bool HasTypeArgs => TypeArgs != null && TypeArgs.Count > 0;
-        public bool LookaheadValid => Identifier != null;
-        public bool IsDefault => !Identifier || Identifier.TokenType == TokenType.Define;
-        public bool Infer => Identifier && Identifier.TokenType == TokenType.Define;
-        public bool DefinitelyType => IsVoid || Identifier.TokenType == TokenType.Define || TypeArgs.Count > 0;
-        Token IParseType.GenericToken => Identifier;
-        public bool Valid => Identifier;
-    }
-
-    public class LambdaType : Node, IParseType
-    {
-        public Token ArrowToken { get; }
-        public Token Const { get; }
-        public List<IParseType> Parameters { get; }
-        public IParseType ReturnType { get; }
-
-        public LambdaType(IParseType singleParameter, Token const_, IParseType returnType, Token arrowToken)
-        {
-            ArrowToken = arrowToken;
-            Const = const_;
-            Parameters = new List<IParseType> { singleParameter };
-            ReturnType = returnType;
-        }
-
-        public LambdaType(List<IParseType> parameters, Token const_, IParseType returnType, Token arrowToken)
-        {
-            ArrowToken = arrowToken;
-            Const = const_;
-            Parameters = parameters;
-            ReturnType = returnType;
-        }
-
-        public bool LookaheadValid => ArrowToken && ReturnType.LookaheadValid;
-        public bool IsVoid => false;
-        public bool DefinitelyType => true;
-        public bool Valid => ArrowToken;
-        Token IParseType.GenericToken => null;
-    }
-
-    public class GroupType : Node, IParseType
-    {
-        public IParseType Type { get; }
-        public int ArrayCount { get; }
-
-        public GroupType(IParseType type, int arrayCount)
-        {
-            Type = type;
-            ArrayCount = arrayCount;
-        }
-
-        public bool LookaheadValid => Type.LookaheadValid;
-        public bool IsVoid => Type.IsVoid;
-        public bool DefinitelyType => Type.DefinitelyType;
-        Token IParseType.GenericToken => Type.GenericToken;
-        public bool Valid => Type.Valid;
-    }
-
-    public class PipeTypeContext : Node, IParseType
-    {
-        public IParseType Left { get; }
-        public IParseType Right { get; }
-
-        public PipeTypeContext(IParseType left, IParseType right)
-        {
-            Left = left;
-            Right = right;
-        }
-
-        public Token GenericToken => throw new NotImplementedException();
-        public bool LookaheadValid => true;
-        public bool IsVoid => false;
-        public bool DefinitelyType => true;
-        public bool Valid => true;
     }
 
     public class ModuleContext : Node, IParseStatement
@@ -191,7 +95,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class ClassContext : Node, IParseStatement
+    public class ClassContext : Node, IParseStatement, IDeclaration
     {
         public Token DeclaringToken { get; }
         public Token Identifier { get; }
@@ -244,7 +148,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Identifier { get; }
         public List<TypeArgContext> TypeArguments { get; }
         public List<VariableDeclaration> Parameters { get; }
-        
+
         // Block
         public Block Block { get; }
         public Token GlobalVar { get; }
@@ -326,20 +230,21 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }
-	
-	public class TypeAliasContext : Node, IParseStatement
-	{
-		public Token NewTypeName { get; }
-		public IParseType OtherType { get; }
+
+    public class TypeAliasContext : Node, IParseStatement
+    {
+        public Token NewTypeName { get; }
+        public IParseType OtherType { get; }
         public List<TypeArgContext> Generics { get; }
         public MetaComment Comment { get; set; }
 
-        public TypeAliasContext(Token newTypeName, IParseType otherType, List<TypeArgContext> generics) {
-			NewTypeName = newTypeName;
-			OtherType = otherType;
+        public TypeAliasContext(Token newTypeName, IParseType otherType, List<TypeArgContext> generics)
+        {
+            NewTypeName = newTypeName;
+            OtherType = otherType;
             Generics = generics;
-		}
-	}
+        }
+    }
 
     public class Import : Node, IParseStatement
     {
@@ -500,7 +405,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class InterpolatedStringPart
     {
-        public IParseExpression Expression { get; } 
+        public IParseExpression Expression { get; }
         public Token Right { get; }
 
         public InterpolatedStringPart(IParseExpression expression, Token right)
@@ -510,16 +415,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class Identifier : Node, IParseExpression, ITypeContextHandler
+    public class Identifier : Node, IParseExpression, INamedType
     {
         public Token Token { get; }
         public List<ArrayIndex> Index { get; }
         public List<IParseType> TypeArgs { get; }
 
-        Token ITypeContextHandler.Identifier => Token;
-        int ITypeContextHandler.ArrayCount => 0;
-        bool ITypeContextHandler.IsDefault => false;
-        bool ITypeContextHandler.Infer => false;
+        Token INamedType.Identifier => Token;
+        int INamedType.ArrayCount => 0;
+        bool INamedType.IsDefault => false;
+        bool INamedType.Infer => false;
 
         public Identifier(Token token, List<ArrayIndex> index, List<IParseType> generics)
         {

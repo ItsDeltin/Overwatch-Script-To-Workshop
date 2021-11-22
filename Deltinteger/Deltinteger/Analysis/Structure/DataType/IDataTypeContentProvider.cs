@@ -31,7 +31,7 @@ namespace DS.Analysis.Structure.DataTypes
     {
         readonly ClassContext syntax;
         readonly string name;
-        TypeReference baseReference;
+        IDisposableTypeDirector baseReference;
         IDisposable baseSubscription;
 
         public DataTypeContentProvider(ClassContext syntax)
@@ -54,15 +54,16 @@ namespace DS.Analysis.Structure.DataTypes
             );
         }
 
-        public void GetMeta(ContextInfo contextInfo)
+        void GetBase(ContextInfo contextInfo)
         {
             // Get the type being inherited.
             if (syntax.Inheriting.Count > 0)
             {
-                baseReference = TypeFromContext.TypeReferenceFromContext(contextInfo, syntax.Inheriting[0]);
+                baseReference = TypeFromContext.TypeReferenceFromSyntax(contextInfo, syntax.Inheriting[0]);
 
                 // Subscribe to the base class.
-                baseSubscription = baseReference.Subscribe(type => {
+                baseSubscription = baseReference.Subscribe(type =>
+                {
                 });
             }
         }

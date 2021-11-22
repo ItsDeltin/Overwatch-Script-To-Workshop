@@ -1,13 +1,28 @@
 namespace DS.Analysis.Types.Standard
 {
+    using Scopes;
+
     static class StandardTypes
     {
-        public static readonly CodeTypeProvider Unknown = new CodeTypeProvider("?");
-        public static readonly ITypeDirector UnknownInstance;
+        // Unknown
+        public static readonly SingletonCodeTypeProvider Unknown = Create("?");
+
+        // Number
+        public static readonly SingletonCodeTypeProvider Number = Create("Number");
+
+        // Scope source
+        public static readonly IScopeSource StandardSource;
+
 
         static StandardTypes()
         {
-            UnknownInstance = Unknown.CreateInstance();
+            ScopeSource standardSource = new ScopeSource();
+            standardSource.AddScopedElement(Number.ScopedElement);
+
+            StandardSource = standardSource;
         }
+
+
+        static SingletonCodeTypeProvider Create(string name) => new SingletonCodeTypeProvider(name);
     }
 }

@@ -8,7 +8,7 @@ using DS.Analysis.Types.Standard;
 namespace DS.Analysis.Types
 {
     // Represents a data type identified in the script.
-    abstract class TypeReference : ITypeDirector, IDisposable
+    abstract class TypeReference : IDisposableTypeDirector
     {
         // The current CodeType value that the TypeReference is pointing to.
         protected CodeType CodeType;
@@ -17,16 +17,16 @@ namespace DS.Analysis.Types
         readonly ObserverCollection<CodeType> observers = new ObserverCollection<CodeType>();
 
         // The TypeReferences for the type arguments.
-        readonly TypeReference[] typeArgReferences;
+        readonly IDisposableTypeDirector[] typeArgReferences;
 
         // The subscriptions to the type args. The values obtained from the observable is fed directly into the TypeArg array.
         readonly IDisposable[] typeArgSubscriptions;
 
         protected CodeType[] TypeArgs { get; private set; }
 
-        protected TypeReference(TypeReference[] typeArgReferences)
+        protected TypeReference(IDisposableTypeDirector[] typeArgReferences)
         {
-            this.typeArgReferences = typeArgReferences ?? new TypeReference[0];
+            this.typeArgReferences = typeArgReferences ?? new IDisposableTypeDirector[0];
             TypeArgs = new CodeType[this.typeArgReferences.Length];
             typeArgSubscriptions = new IDisposable[this.typeArgReferences.Length];
 
@@ -76,7 +76,7 @@ namespace DS.Analysis.Types
         CodeTypeProvider codeTypeProvider;
         IDisposable providerSubscription;
 
-        public IdentifierTypeReference(string typeName, ITypeIdentifierErrorHandler errorHandler, ScopeWatcher identifier, TypeReference[] generics) : base(generics)
+        public IdentifierTypeReference(string typeName, ITypeIdentifierErrorHandler errorHandler, ScopeWatcher identifier, IDisposableTypeDirector[] generics) : base(generics)
         {
             this.identifier = identifier;
             this.errorHandler = errorHandler;

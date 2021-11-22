@@ -13,10 +13,10 @@ namespace DS.Analysis
     class ScriptFile
     {
         public string Path { get; }
-        
+
         /// <summary>If the file is external, it will be unloaded when there are no more dependencies.</summary>
         public bool IsExternal { get; }
-        
+
         public DeltinScriptAnalysis Analysis { get; }
 
         public FileDiagnostics Diagnostics { get; }
@@ -47,7 +47,7 @@ namespace DS.Analysis
             // Get declarations
             RootScopeSource.Clear();
             statements?.Dispose();
-            statements = new ContextInfo(Analysis, this, Scope.Empty).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
+            statements = new ContextInfo(Analysis, this, Scope.Default).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
         }
 
 

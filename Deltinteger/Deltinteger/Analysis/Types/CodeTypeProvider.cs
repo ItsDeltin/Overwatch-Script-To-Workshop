@@ -5,6 +5,7 @@ namespace DS.Analysis.Types
     using System.Reactive.Disposables;
     using Generics;
     using Utility;
+    using Scopes;
 
     /// <summary>Contains the metadata of a datatype. Can be used to instantiate type instances.</summary>
     class CodeTypeProvider
@@ -43,13 +44,17 @@ namespace DS.Analysis.Types
         /// <param name="typeArgs">The type arguments for the CodeType instance based off the generics of the provider.</param>
         /// <returns>An InstanceTypeDirector which can be used as a type director and can be disposed to clean up the reference
         /// to the original CodeTypeProvider (this).</returns>
-        public InstanceTypeDirector CreateInstance(params CodeType[] typeArgs) => new InstanceTypeDirector(this, typeArgs);
+        public IDisposableTypeDirector CreateInstance(params CodeType[] typeArgs) => new InstanceTypeDirector(this, typeArgs);
+
+        /// <summary>Creates a ScopedElement from the provider.</summary>
+        /// <returns>A new ScopedElement with the name and provider fulfilled from this provider.</returns>
+        public virtual ScopedElement CreateScopedElement() => new ScopedElement(Name, ScopedElementData.Create(Name, this, null));
     }
 
     /// <summary>
     /// An ITypeDirector implementation linked to a CodeTypeProvider instance.
     /// </summary>
-    class InstanceTypeDirector : ITypeDirector, IDisposable
+    class InstanceTypeDirector : IDisposableTypeDirector
     {
         readonly CodeTypeProvider provider;
         readonly IDisposable subscription;
@@ -64,5 +69,28 @@ namespace DS.Analysis.Types
         public void Dispose() => subscription.Dispose();
 
         public IDisposable Subscribe(IObserver<CodeType> observer) => observers.Add(observer);
+    }
+
+    /// <summary>
+    /// Represents a universal non-generic data type provider.
+    /// </summary>
+    class SingletonCodeTypeProvider : CodeTypeProvider
+    {
+        public CodeType Instance { get; }
+        public ITypeDirector Director { get; }
+        public ScopedElement ScopedElement { get; }
+
+        public SingletonCodeTypeProvider(string name) : base(name)
+        {
+            Instance = new CodeType();
+            Director = CreateInstance();
+            ScopedElement = new ScopedElement(Name, ScopedElementData.Create(Name, this, null));
+        }
+
+        public override IDisposable CreateInstance(IObserver<CodeType> observer, params CodeType[] typeArgs)
+        {
+            observer.OnNext(Instance);
+            return Disposable.Empty;
+        }
     }
 }

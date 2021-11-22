@@ -25,15 +25,17 @@ namespace DS.Analysis.Scopes
         public ScopeWatcher Watch()
         {
             ScopeWatcher watcher = new ScopeWatcher();
-            
+
             foreach (var source in _sources)
                 watcher.SubscribeTo(source);
-            
+
             return watcher;
         }
 
         public Scope CreateChild(IScopeSource scopeSource) => new Scope(this, scopeSource);
 
         public static readonly Scope Empty = new Scope();
+
+        public static readonly Scope Default = new Scope(Types.Standard.StandardTypes.StandardSource);
     }
 }

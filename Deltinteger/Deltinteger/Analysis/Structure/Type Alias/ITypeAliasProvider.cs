@@ -13,10 +13,10 @@ namespace DS.Analysis.Structure.TypeAlias
     struct TypeAliasSetup
     {
         public readonly string Name;
-        public readonly TypeReference TypeReference;
+        public readonly IDisposableTypeDirector TypeReference;
         public readonly TypeArgCollection TypeArgs;
 
-        public TypeAliasSetup(string name, TypeReference typeReference, TypeArgCollection typeArgs)
+        public TypeAliasSetup(string name, IDisposableTypeDirector typeReference, TypeArgCollection typeArgs)
         {
             Name = name;
             TypeReference = typeReference;
@@ -41,7 +41,7 @@ namespace DS.Analysis.Structure.TypeAlias
 
             return new TypeAliasSetup(
                 name: typeAliasSyntax.NewTypeName.Text,
-                typeReference: TypeFromContext.TypeReferenceFromContext(context, typeAliasSyntax.OtherType),
+                typeReference: TypeFromContext.TypeReferenceFromSyntax(context, typeAliasSyntax.OtherType),
                 typeArgs: typeArgs
             );
         }

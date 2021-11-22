@@ -12,16 +12,16 @@ namespace Deltin.Deltinteger.Parse
     {
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, IParseType typeContext)
         {
-            if (typeContext is ITypeContextHandler tch) return GetCodeTypeFromContext(parseInfo, scope, tch);
+            if (typeContext is INamedType tch) return GetCodeTypeFromContext(parseInfo, scope, tch);
             else if (typeContext is LambdaType lambda) return GetCodeTypeFromContext(parseInfo, scope, lambda);
             else if (typeContext is GroupType groupType) return GetCodeTypeFromContext(parseInfo, scope, groupType);
             else if (typeContext is PipeTypeContext pipeType) return GetCodeTypeFromContext(parseInfo, scope, pipeType);
             else throw new NotImplementedException(typeContext.GetType().Name);
         }
 
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, ITypeContextHandler typeContext) => GetCodeTypeFromContext(new DefaultTypeContextError(parseInfo, typeContext, true), parseInfo, scope, typeContext);
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, INamedType typeContext) => GetCodeTypeFromContext(new DefaultTypeContextError(parseInfo, typeContext, true), parseInfo, scope, typeContext);
 
-        public static CodeType GetCodeTypeFromContext(ITypeContextError errorHandler, ParseInfo parseInfo, Scope scope, ITypeContextHandler typeContext)
+        public static CodeType GetCodeTypeFromContext(ITypeContextError errorHandler, ParseInfo parseInfo, Scope scope, INamedType typeContext)
         {
             if (typeContext == null) return parseInfo.TranslateInfo.Types.Any();
 
@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Add the error.
                     errorHandler.IncorrectTypeArgsCount(fallback);
-                    
+
                     // Return the fallback.
                     return fallback.GetInstance();
                 }
@@ -71,10 +71,10 @@ namespace Deltin.Deltinteger.Parse
                 type = provider.GetInstance(instanceInfo);
                 type.Call(parseInfo, typeContext.Identifier.Range);
             }
-            
+
             for (int i = 0; i < typeContext.ArrayCount; i++)
                 type = new ArrayType(parseInfo.TranslateInfo.Types, type);
-            
+
             return type;
         }
 
@@ -94,19 +94,19 @@ namespace Deltin.Deltinteger.Parse
             // Get the return type.
             CodeType returnType = null;
             bool returnsValue = false;
-            
+
             if (!type.ReturnType.IsVoid)
             {
                 returnType = GetCodeTypeFromContext(parseInfo, scope, type.ReturnType);
                 returnsValue = true;
             }
-            
+
             return new PortableLambdaType(new(
                 kind: type.Const ? LambdaKind.Constant : LambdaKind.Portable,
                 parameters: parameters,
                 returnType: returnType,
                 parameterTypesKnown: true,
-                returnsValue: returnsValue ));
+                returnsValue: returnsValue));
         }
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, GroupType type)
@@ -179,23 +179,23 @@ namespace Deltin.Deltinteger.Parse
     {
         public bool Exists { get; private set; } = true;
         private readonly ParseInfo _parseInfo;
-        private readonly ITypeContextHandler _context;
+        private readonly INamedType _context;
         private readonly bool _autoApplyErrors;
         private readonly List<Diagnostic> _diagnostics = new List<Diagnostic>();
 
-        public DefaultTypeContextError(ParseInfo parseInfo, ITypeContextHandler context, bool autoApplyErrors)
+        public DefaultTypeContextError(ParseInfo parseInfo, INamedType context, bool autoApplyErrors)
         {
             _parseInfo = parseInfo;
             _context = context;
             _autoApplyErrors = autoApplyErrors;
         }
 
-        public void Nonexistent() 
+        public void Nonexistent()
         {
             AddError("No types by the name of '" + _context.Identifier.Text + "' exists in the current context", _context.Identifier.Range);
             Exists = false;
         }
-        
+
         public void IncorrectTypeArgsCount(ICodeTypeInitializer fallback)
         {
             // Add the error.

@@ -71,6 +71,8 @@ namespace DS.Analysis
                 case Identifier identifier: return new IdentifierExpression(this, identifier);
                 // True/false
                 case BooleanExpression boolean: return new BooleanAction(this, boolean);
+                // Number
+                case NumberExpression number: return new Number(number.Value);
                 // Operator
                 case BinaryOperatorExpression op:
                     if (op.IsDotExpression())

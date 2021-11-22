@@ -15,9 +15,9 @@ namespace DS.Analysis.Structure.Methods
     struct MethodSetup
     {
         public readonly Parameter[] Parameters;
-        public readonly TypeReference ReturnType;
+        public readonly IDisposableTypeDirector ReturnType;
 
-        public MethodSetup(Parameter[] parameters, TypeReference returnType)
+        public MethodSetup(Parameter[] parameters, IDisposableTypeDirector returnType)
         {
             Parameters = parameters;
             ReturnType = returnType;
@@ -27,7 +27,7 @@ namespace DS.Analysis.Structure.Methods
     class MethodContentProvider : IMethodContentProvider
     {
         readonly FunctionContext syntax;
-        TypeReference returnType;
+        IDisposableTypeDirector returnType;
         BlockAction blockAction;
 
         public MethodContentProvider(FunctionContext syntax) => this.syntax = syntax;
@@ -36,7 +36,7 @@ namespace DS.Analysis.Structure.Methods
 
         public MethodSetup Setup(ContextInfo contextInfo)
         {
-            returnType = TypeFromContext.TypeReferenceFromContext(contextInfo, syntax.Type);
+            returnType = TypeFromContext.TypeReferenceFromSyntax(contextInfo, syntax.Type);
 
             // Setup the block
             blockAction = contextInfo.Block(syntax.Block);

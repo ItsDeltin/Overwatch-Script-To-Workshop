@@ -27,7 +27,8 @@ namespace DS.Analysis.Diagnostics
             return newDiagnostic;
         }
 
-        public PublishDiagnosticsParams GetLSPPublishParams() => new PublishDiagnosticsParams() {
+        public PublishDiagnosticsParams GetLSPPublishParams() => new PublishDiagnosticsParams()
+        {
             Uri = new Uri(Source),
             Diagnostics = diagnostics.Select(diagnostic => diagnostic.ToLSP()).ToArray()
         };

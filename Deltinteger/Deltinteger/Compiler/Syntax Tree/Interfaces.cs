@@ -14,8 +14,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     }
     public interface IDeclaration
     {
-        AttributeTokens Attributes { get; }
-        IParseType Type { get; }
         Token Identifier { get; }
     }
     public interface IListComma
@@ -31,7 +29,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         bool Infer => false;
         bool Valid { get; }
     }
-    public interface ITypeContextHandler
+    public interface INamedType
     {
         Token Identifier { get; }
         List<IParseType> TypeArgs { get; }

@@ -12,7 +12,7 @@ namespace DS.Analysis.Structure
 
         public ScopedElement MakeScopedElement() => MakeScopedElement(default(ScopedElementParameters));
 
-        public virtual void Dispose() {}
+        public virtual void Dispose() { }
     }
 
     abstract class ParentedDeclaredElement : AbstractDeclaredElement
@@ -29,7 +29,7 @@ namespace DS.Analysis.Structure
 
     abstract class TypeDeclaredElement : AbstractDeclaredElement
     {
-        public TypeReference Type { get; protected set; }
+        public IDisposableTypeDirector Type { get; protected set; }
 
         public override void Dispose()
         {

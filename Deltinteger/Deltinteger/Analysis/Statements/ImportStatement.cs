@@ -50,7 +50,7 @@ namespace DS.Analysis.Statements
 
                 // Get the module from the path.
                 var module = context.File.Analysis.ModuleManager.ModuleFromPath(PathFromSyntax(syntax.Module));
-                
+
                 scopeSource = module;
                 AddDisposable(scopeSource.Subscribe()); // Adds a reference to the module.
             }
@@ -79,7 +79,8 @@ namespace DS.Analysis.Statements
             }
 
             // Subscribe to the importFrom scope
-            AddDisposable(importFrom.Subscribe(value => {
+            AddDisposable(importFrom.Subscribe(value =>
+            {
                 // Update the elements when the importFrom scope changes.
                 foreach (var element in elements)
                     element.Update(value.Elements);
@@ -122,7 +123,7 @@ namespace DS.Analysis.Statements
                     Observers.Set(ScopedElementData.Unknown);
                     return;
                 }
-                
+
                 // Create link
                 referenceSubscription = match.Subscribe(scopedElementData => Observers.Set(new ImportedElementData(scopedElementData, Alias)));
             }
@@ -153,7 +154,7 @@ namespace DS.Analysis.Statements
             }
         }
 
-        
+
         /// <summary>Converts a list of tokens into an array of strings.</summary>
         static string[] PathFromSyntax(List<Token> modulePath) => modulePath.Select(token => token.Text).ToArray();
 

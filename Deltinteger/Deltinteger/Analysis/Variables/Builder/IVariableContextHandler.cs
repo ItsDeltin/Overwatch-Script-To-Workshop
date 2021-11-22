@@ -2,6 +2,7 @@ using System;
 using DS.Analysis.Types;
 using DS.Analysis.Types.Semantics;
 using DS.Analysis.Expressions;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Variables.Builder
@@ -16,7 +17,7 @@ namespace DS.Analysis.Variables.Builder
     class VariableContextHandler : IVariableContextHandler
     {
         readonly VariableDeclaration declaration;
-        TypeReference typeReference;
+        IDisposableTypeDirector typeReference;
         Expression expression;
 
         public VariableContextHandler(VariableDeclaration declaration)
@@ -27,11 +28,11 @@ namespace DS.Analysis.Variables.Builder
         public string GetName() => declaration.Identifier.Text;
         public VariableContent GetContent(ContextInfo contextInfo)
         {
-            typeReference = TypeFromContext.TypeReferenceFromContext(contextInfo, declaration.Type);
+            typeReference = TypeFromContext.TypeReferenceFromSyntax(contextInfo, declaration.Type);
             if (declaration.InitialValue != null)
                 expression = contextInfo.GetExpression(declaration.InitialValue);
 
-            return new VariableContent(typeReference, expression);
+            return new VariableContent(typeReference, expression, declaration.InitialValue?.Range);
         }
 
         public void Dispose()
@@ -45,11 +46,13 @@ namespace DS.Analysis.Variables.Builder
     {
         public ITypeDirector TypeDirector { get; }
         public Expression Expression { get; }
+        public DocRange ExpressionRange { get; }
 
-        public VariableContent(ITypeDirector typeDirector, Expression expression)
+        public VariableContent(ITypeDirector typeDirector, Expression expression, DocRange expressionRange)
         {
             TypeDirector = typeDirector;
             Expression = expression;
+            ExpressionRange = expressionRange;
         }
     }
 }

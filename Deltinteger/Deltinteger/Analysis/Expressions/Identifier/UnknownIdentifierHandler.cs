@@ -16,7 +16,7 @@ namespace DS.Analysis.Expressions.Identifiers
         public IObservable<Scope> GetScopeDirector() => this;
 
         // ITypeDirector
-        public IDisposable Subscribe(IObserver<CodeType> observer) => StandardTypes.UnknownInstance.Subscribe(observer);
+        public IDisposable Subscribe(IObserver<CodeType> observer) => StandardTypes.Unknown.Director.Subscribe(observer);
 
         // IObservable<Scope>
         public IDisposable Subscribe(IObserver<Scope> observer)

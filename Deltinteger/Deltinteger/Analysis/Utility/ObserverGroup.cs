@@ -1,60 +1,108 @@
 using System;
-using System.Collections.Generic;
+using System.Reactive.Disposables;
 
 namespace DS.Analysis.Utility
 {
-    class DisposeAction : IDisposable
+    /// <summary>
+    /// Watches multiple observables and combines their broadcasted values into a single event
+    /// </summary>
+    class ObserverGroup : IDisposable
     {
-        readonly Action _action;
-        public DisposeAction(Action action) => _action = action;
-        public void Dispose() => _action();
-    }
+        readonly Func<object[], IDisposable> callback;
+        readonly IDisposable[] subscriptions;
+        readonly object[] values;
+        IDisposable providedDisposable;
+        bool subscribed;
+        bool disposed;
 
-    class ObserverCollection<T> : IDisposable
-    {
-        readonly List<IObserver<T>> _observers = new List<IObserver<T>>();
-
-        public virtual IDisposable Add(IObserver<T> observer)
+        ObserverGroup(Func<object[], IDisposable> callback, params Func<Action<object>, IDisposable>[] getSubscriptions)
         {
-            _observers.Add(observer);
-            return new DisposeAction(() => _observers.Remove(observer));
+            this.callback = callback;
+            subscriptions = new IDisposable[getSubscriptions.Length];
+            values = new object[getSubscriptions.Length];
+
+            // Get the subscriptions
+            for (int i = 0; i < subscriptions.Length; i++)
+            {
+                // The value of 'i' will change in the lambda, store in a new variable.
+                int captureI = i;
+                // Get the subscription
+                subscriptions[i] = getSubscriptions[i](newValue =>
+                {
+                    values[captureI] = newValue;
+                    // Execute the callback if subscribing has completed.
+                    if (subscribed)
+                        Update();
+                });
+            }
+
+            subscribed = true;
+            // Initial update
+            Update();
         }
 
-        public virtual void Set(T value)
+        void Update()
         {
-            foreach (var observer in _observers)
-                observer.OnNext(value);
+            if (disposed)
+                throw new ObjectDisposedException(nameof(ObserverGroup));
+
+            if (subscribed)
+            {
+                providedDisposable?.Dispose();
+                providedDisposable = callback(values);
+            }
         }
 
-        public void Complete()
+
+        public void Dispose()
         {
-            foreach (var observer in _observers)
-                observer.OnCompleted();
+            if (disposed)
+                throw new ObjectDisposedException(nameof(ObserverGroup));
+
+            providedDisposable?.Dispose();
+            foreach (var sub in subscriptions)
+                sub.Dispose();
+
+            disposed = true;
         }
 
-        public bool Any() => _observers.Count != 0;
 
-        void IDisposable.Dispose() => Complete();
-    }
+        /// <summary>Watches multiple observables. If any of them broadcasts a new value, the callback is triggered.</summary>
+        /// <param name="observerA">The first observable.</param>
+        /// <param name="observerB">The second observable.</param>
+        /// <param name="callback">The event to trigger when any of the observables provide a new value. An IDisposable can be returned which will be disposed
+        /// when the event is triggered again or the IDisposable created by this method is disposed.</param>
+        /// <typeparam name="A">The type of the first observable.</typeparam>
+        /// <typeparam name="B">The type of the second observable.</typeparam>
+        /// <returns>IDisposable object which when disposed will unsubscribe from the observables and dispose of any additional data created by the callback.</returns>
+        public static IDisposable Observe<A, B>(IObservable<A> observerA, IObservable<B> observerB, Func<A, B, IDisposable> callback) =>
+            new ObserverGroup(
+                values => callback((A)values[0], (B)values[1]),
+                set => observerA.Subscribe(v => set(v)),
+                set => observerB.Subscribe(v => set(v))
+            );
 
-    class ValueObserverCollection<T> : ObserverCollection<T>
-    {
-        public T Value { get; private set; }
+        public static IDisposable Observe<A, B, C>(IObservable<A> observerA, IObservable<B> observerB, IObservable<C> observerC, Func<A, B, C, IDisposable> callback) =>
+            new ObserverGroup(
+                values => callback((A)values[0], (B)values[1], (C)values[2]),
+                set => observerA.Subscribe(v => set(v)),
+                set => observerB.Subscribe(v => set(v)),
+                set => observerC.Subscribe(v => set(v))
+            );
 
-        public ValueObserverCollection() { }
+        // Action callbacks
+        public static IDisposable Observe<A, B>(IObservable<A> observerA, IObservable<B> observerB, Action<A, B> callback) =>
+            Observe(observerA, observerB, (a, b) =>
+            {
+                callback(a, b);
+                return Disposable.Empty;
+            });
 
-        public ValueObserverCollection(T initialValue) => Value = initialValue;
-
-        public override IDisposable Add(IObserver<T> observer)
-        {
-            observer.OnNext(Value);
-            return base.Add(observer);
-        }
-
-        public override void Set(T value)
-        {
-            Value = value;
-            base.Set(value);
-        }
+        public static IDisposable Observe<A, B, C>(IObservable<A> observerA, IObservable<B> observerB, IObservable<C> observerC, Action<A, B, C> callback) =>
+            Observe(observerA, observerB, observerC, (a, b, c) =>
+            {
+                callback(a, b, c);
+                return Disposable.Empty;
+            });
     }
 }

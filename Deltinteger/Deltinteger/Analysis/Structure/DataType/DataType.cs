@@ -27,35 +27,13 @@ namespace DS.Analysis.Structure.DataTypes
         public override ScopedElement MakeScopedElement(ScopedElementParameters parameters)
         {
             string alias = parameters.Alias ?? Name;
-            return new ScopedElement(alias, new ScopedDataTypeData(this, alias));
+            return new ScopedElement(alias, ScopedElementData.Create(alias, codeTypeProvider, null));
         }
 
         public override void Dispose()
         {
             base.Dispose();
             contentProvider.Dispose();
-        }
-
-        class ScopedDataTypeData : ScopedElementData
-        {
-            readonly DeclaredDataType declaredDataType;
-            readonly string alias;
-
-            public ScopedDataTypeData(DeclaredDataType declaredDataType, string alias)
-            {
-                this.declaredDataType = declaredDataType;
-                this.alias = alias;
-            }
-
-            public override CodeTypeProvider GetCodeTypeProvider()
-            {
-                if (declaredDataType.codeTypeProvider == null)
-                    throw new System.Exception();
-                
-                return declaredDataType.codeTypeProvider;
-            }
-
-            public override bool IsMatch(string name) => alias == name;
         }
     }
 }

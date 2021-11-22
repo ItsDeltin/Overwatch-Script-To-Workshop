@@ -706,7 +706,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             return values;
         }
-        
+
 
         List<T> ParseList<T>(TokenType terminator, Func<bool> isElement, Func<T> parseElement) => ParseList(() => Is(terminator), isElement, parseElement);
 
@@ -980,7 +980,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Open);
 
             // Get the statements.
-            var statements = ParseList(TokenType.CurlyBracket_Close, () => Kind.IsStartOfStatement() || Is(TokenType.Case) || Is(TokenType.Default), () => {
+            var statements = ParseList(TokenType.CurlyBracket_Close, () => Kind.IsStartOfStatement() || Is(TokenType.Case) || Is(TokenType.Default), () =>
+            {
                 // Case
                 if (ParseOptional(TokenType.Case, out var caseToken))
                 {
@@ -1114,33 +1115,41 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StartNode();
 
             if (ParseOptional(TokenType.Void, out var @void))
-                return EndNode(new ParseType(@void));
-            
+                return EndNode(new TypeSyntax(@void));
+
             var const_ = ParseOptional(TokenType.Const);
 
             // If we parse a parentheses, we can assume this is a lambda type.
             if (!ParseOptional(TokenType.Parentheses_Open))
             {
-                // No parentheses found.
-                // This is either a normal type or a lambda with a single parameter.
+                // No parentheses found so this is either a normal type or a lambda with a single parameter.
 
-                // Get the type name.
-                var identifier = ParseExpected(TokenType.Identifier, TokenType.Define);
-                var typeArgs = new List<IParseType>();
+                // The path of the type seperated by dots. This will have at least 1 element.
+                var path = new List<TypeSyntax.TypeNamePart>();
 
-                // Get the type arguments.
-                if (ParseOptional(TokenType.LessThan))
+                // Get the type path.
+                do
                 {
-                    do typeArgs.Add(ParseType());
-                    while (ParseOptional(TokenType.Comma));
+                    var identifier = ParseExpected(TokenType.Identifier, TokenType.Define);
 
-                    ParseExpected(TokenType.GreaterThan);
+                    // Get the type arguments.
+                    var typeArgs = new List<IParseType>();
+                    if (ParseOptional(TokenType.LessThan))
+                    {
+                        do typeArgs.Add(ParseType());
+                        while (ParseOptional(TokenType.Comma));
+
+                        ParseExpected(TokenType.GreaterThan);
+                    }
+
+                    path.Add(new TypeSyntax.TypeNamePart(identifier, typeArgs));
                 }
+                while (ParseOptional(TokenType.Dot));
 
                 // Get the array indices
                 int arrayCount = ParseTypeArray();
-                
-                IParseType result = EndNodeWithoutPopping(new ParseType(identifier, typeArgs, arrayCount));
+
+                IParseType result = EndNodeWithoutPopping(new TypeSyntax(path.ToArray()));
 
                 // Get pipe
                 while (ParseOptional(TokenType.Pipe))
@@ -1301,7 +1310,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         bool IsStartOfExpression() => Kind.IsStartOfExpression() || Kind.IsBinaryOperator();
 
-        bool IsGenerics() => Lookahead(() => {
+        bool IsGenerics() => Lookahead(() =>
+        {
             if (Kind != TokenType.LessThan) return false;
 
             int genericLevel = 0;
@@ -1396,7 +1406,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Get the type args.
             var typeArgs = ParseOptionalTypeArguments(out bool hasGenerics);
-            
+
             // Function
             if (hasGenerics || Is(TokenType.Parentheses_Open))
             {
@@ -1441,7 +1451,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 // Parse an optional variable ID or extended collection marker.
                 Token id = null, ext = null, macro = null;
-                
+
                 if (!ParseOptional(TokenType.Number, out id))
                     ParseOptional(TokenType.Exclamation, out ext);
 
@@ -1464,7 +1474,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Parse an optional variable ID or extended collection marker.
             Token id = null, ext = null, macro = null;
-            
+
             if (!ParseOptional(TokenType.Number, out id))
                 ParseOptional(TokenType.Exclamation, out ext);
 
@@ -1505,7 +1515,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Parse the class identifier.
             var type = ParseType();
-            
+
             // Start the parentheses.
             ParseExpected(TokenType.Parentheses_Open);
 
@@ -1610,7 +1620,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 generics = ParseDelimitedList(
                     TokenType.GreaterThan,
                     () => Kind.IsIdentifier(),
-                    () => {
+                    () =>
+                    {
                         Token single = ParseOptional(TokenType.Single);
                         Token identifier = ParseExpected(TokenType.Identifier);
                         return new TypeArgContext(identifier, single);
@@ -1622,7 +1633,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             else anyGenerics = false;
             return generics;
         }
-        
+
         AsyncContext ParseAsync()
         {
             StartNode();
@@ -1645,14 +1656,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Both of these are accepted:
             // {XYZ: Vector.Up, W: 0}
             // {Vector XYZ: Vector.Up, Number W: 0}
-            var values = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Lookahead(() => ParseType().LookaheadValid), () => {
+            var values = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Lookahead(() => ParseType().LookaheadValid), () =>
+            {
                 StartNode();
                 var typeOrIdentifier = ParseType(); // Parse the variable type.
                 var identifier = ParseOptional(TokenType.Identifier); // Parse the identifier.
                 ParseExpected(TokenType.Colon); // Parse the struct value seperator.
                 var value = GetContainExpression(); // Parse the value.
 
-                if (!identifier && typeOrIdentifier is ITypeContextHandler typeContextHandler)
+                if (!identifier && typeOrIdentifier is INamedType typeContextHandler)
                 {
                     identifier = typeContextHandler.Identifier;
                     typeOrIdentifier = null;
@@ -1667,16 +1679,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndTokenCapture(new StructDeclarationContext(values));
         }
 
-        bool IsStructDeclaration() => Lookahead(() => {
+        bool IsStructDeclaration() => Lookahead(() =>
+        {
             // Start of struct '{'
             if (!ParseExpected(TokenType.CurlyBracket_Open))
                 return false;
-            
+
             var typeOrIdentifier = ParseType();
             var identifier = ParseOptional(TokenType.Identifier);
             var colon = ParseExpected(TokenType.Colon);
-            
-            return ((typeOrIdentifier.LookaheadValid && identifier) || (typeOrIdentifier is ITypeContextHandler && !identifier)) && colon;
+
+            return ((typeOrIdentifier.LookaheadValid && identifier) || (typeOrIdentifier is INamedType && !identifier)) && colon;
         });
 
         InterpolatedStringExpression ParseInterpolatedString()
@@ -1759,17 +1772,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndTokenCapture(new ModuleContext(identifier, declarations));
         }
 
-        List<Token> ParseVariableReservation() {
-            if(Is(TokenType.GlobalVar)) {
+        List<Token> ParseVariableReservation()
+        {
+            if (Is(TokenType.GlobalVar))
+            {
                 ParseExpected(TokenType.GlobalVar);
-            } else {
+            }
+            else
+            {
                 ParseExpected(TokenType.PlayerVar);
             }
             ParseExpected(TokenType.CurlyBracket_Open);
-            var variables = ParseDelimitedList(TokenType.CurlyBracket_Close, () => true, () => ParseOptional(TokenType.String)??ParseOptional(TokenType.Number));
+            var variables = ParseDelimitedList(TokenType.CurlyBracket_Close, () => true, () => ParseOptional(TokenType.String) ?? ParseOptional(TokenType.Number));
             ParseExpected(TokenType.CurlyBracket_Close);
             return variables;
-            
+
             //TODO
         }
 
@@ -1809,26 +1826,27 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndTokenCapture(new RuleContext(ruleToken, name, disabled, order, settings, conditions, statement));
         }
 
-		/// <summary>Parses a type alias. </summary>
-		TypeAliasContext ParseTypeAlias() {
-			StartTokenCapture();
-			if (GetIncrementalNode(out TypeAliasContext type)) return EndTokenCapture(type);
+        /// <summary>Parses a type alias. </summary>
+        TypeAliasContext ParseTypeAlias()
+        {
+            StartTokenCapture();
+            if (GetIncrementalNode(out TypeAliasContext type)) return EndTokenCapture(type);
 
             // 'type' keyword
-			ParseExpected(TokenType.Type);
+            ParseExpected(TokenType.Type);
 
             // Identifier
-			Token nameToken = ParseExpected(TokenType.Identifier);
+            Token nameToken = ParseExpected(TokenType.Identifier);
 
             // Type parameters
             var typeArgs = ParseOptionalTypeArguments(out _);
 
-			ParseExpected(TokenType.Equal);
-			var parseType = ParseType();
-			ParseExpected(TokenType.Semicolon);
+            ParseExpected(TokenType.Equal);
+            var parseType = ParseType();
+            ParseExpected(TokenType.Semicolon);
 
-			return EndTokenCapture(new TypeAliasContext(nameToken, parseType, typeArgs));
-		}
+            return EndTokenCapture(new TypeAliasContext(nameToken, parseType, typeArgs));
+        }
 
         /// <summary>Parses a class.</summary>
         ClassContext ParseClassOrStruct()
@@ -1857,10 +1875,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Get the class elements.
             // TODO: use ParseDeclarationList
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
+                // Variable or method
                 if (IsDeclaration(true))
                     context.Declarations.Add((IDeclaration)ParseVariableOrFunctionDeclaration());
+                // Constructor
                 else if (IsConstructor())
                     context.Constructors.Add(ParseConstructor());
+                // Nested class
+                else if (Is(TokenType.Class) || Is(TokenType.Struct))
+                    context.Declarations.Add(ParseClassOrStruct());
                 else
                 {
                     // TODO: error recovery
@@ -1885,7 +1908,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // TODO: better error recovery
                     break;
                 }
-            
+
             return declarations;
         }
 
@@ -1962,7 +1985,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             if (condition.Comment != null)
             {
-                if(!ParseExpected(TokenType.If, out condition.If))
+                if (!ParseExpected(TokenType.If, out condition.If))
                 {
                     condition = null;
                     return false;
@@ -1989,13 +2012,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
             List<ImportSelection> elements = null;
             if (ParseOptional(TokenType.CurlyBracket_Open))
             {
-                elements = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Is(TokenType.Identifier), () => {
+                elements = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Is(TokenType.Identifier), () =>
+                {
                     // Element name
                     Token identifier = ParseExpected(TokenType.Identifier), alias = null;
                     // Alias
                     if (ParseOptional(TokenType.As))
                         alias = ParseExpected(TokenType.Identifier);
-                    
+
                     return new ImportSelection(identifier, alias);
                 });
                 ParseExpected(TokenType.CurlyBracket_Close);

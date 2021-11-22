@@ -9,7 +9,7 @@ namespace DS.Analysis.Structure.TypeAlias
     class DeclaredTypeAlias : AbstractDeclaredElement
     {
         readonly ITypeAliasProvider content;
-        readonly TypeReference typeReference;
+        readonly IDisposableTypeDirector typeReference;
         readonly AliasProvider aliasProvider;
 
 
