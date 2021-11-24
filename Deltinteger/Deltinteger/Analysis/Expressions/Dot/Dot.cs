@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using DS.Analysis.Types;
+using DS.Analysis.Types.Standard;
 using DS.Analysis.Scopes;
 using DS.Analysis.Utility;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
@@ -15,7 +16,7 @@ namespace DS.Analysis.Expressions.Dot
         readonly FlattenSyntax flattenSyntax;
 
         // Observers watching the right-hand operand's type.
-        readonly ObserverCollection<CodeType> typeObservers = new ObserverCollection<CodeType>();
+        readonly ObserverCollection<CodeType> typeObservers = new ValueObserverCollection<CodeType>(StandardTypes.Unknown.Instance);
 
         Expression[] expressions;
         IDisposable[] partTypeSubscriptions;
@@ -27,6 +28,8 @@ namespace DS.Analysis.Expressions.Dot
 
             expressions = new Expression[flattenSyntax.Parts.Count];
             partTypeSubscriptions = new IDisposable[flattenSyntax.Parts.Count];
+
+            Type = this;
 
             // Initialize expressions
             GetExpression(0, null);
