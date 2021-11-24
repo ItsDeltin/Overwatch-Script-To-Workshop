@@ -23,7 +23,7 @@ namespace DS.Analysis.Expressions
             readonly Expression expression;
             public DefaultScopeSource(Expression expression) => this.expression = expression;
             public IDisposable Subscribe(IObserver<Scope> observer) => expression.Type.Subscribe(
-                onNext: codeType => observer.OnNext(codeType.Scope),
+                onNext: codeType => observer.OnNext(new Scope(codeType.Content.ScopeSource)),
                 onError: exception => observer.OnError(exception),
                 onCompleted: () => observer.OnCompleted()
             );
@@ -35,7 +35,7 @@ namespace DS.Analysis.Expressions
         readonly ITypeDirector typeDirector;
         public TypeScopeObservable(ITypeDirector typeDirector) => this.typeDirector = typeDirector ?? throw new ArgumentNullException(nameof(typeDirector));
         public IDisposable Subscribe(IObserver<Scope> observer) => typeDirector.Subscribe(
-            onNext: codeType => observer.OnNext(codeType.Scope),
+            onNext: codeType => observer.OnNext(new Scope(codeType.Content.ScopeSource)),
             onError: exception => observer.OnError(exception),
             onCompleted: () => observer.OnCompleted()
         );

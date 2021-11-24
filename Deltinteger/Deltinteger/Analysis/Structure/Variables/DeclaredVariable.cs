@@ -22,6 +22,11 @@ namespace DS.Analysis.Structure.Variables
             return new ScopedElement(name, ScopedElementData.Create(name, null, variable.CreateInstance()));
         }
 
+        public override void AddToContent(TypeContentBuilder contentBuilder)
+        {
+            contentBuilder.AddElement(variable.CreateInstance());
+        }
+
         public override void Dispose()
         {
             variableBuilder.Dispose();

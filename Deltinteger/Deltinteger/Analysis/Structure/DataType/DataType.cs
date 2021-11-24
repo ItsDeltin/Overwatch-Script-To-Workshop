@@ -1,5 +1,6 @@
 using System;
 using DS.Analysis.Types;
+using DS.Analysis.Types.Components;
 using DS.Analysis.Scopes;
 
 namespace DS.Analysis.Structure.DataTypes
@@ -29,6 +30,9 @@ namespace DS.Analysis.Structure.DataTypes
             string alias = parameters.Alias ?? Name;
             return new ScopedElement(alias, ScopedElementData.Create(alias, codeTypeProvider, null));
         }
+
+        public override void AddToContent(TypeContentBuilder contentBuilder) => new ProviderTypeElement(codeTypeProvider);
+
 
         public override void Dispose()
         {

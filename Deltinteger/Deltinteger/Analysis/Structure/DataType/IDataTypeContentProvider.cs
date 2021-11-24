@@ -1,5 +1,6 @@
 using System;
-using System.Linq;
+using System.Reactive;
+using DS.Analysis.Utility;
 using DS.Analysis.Structure.Utility;
 using DS.Analysis.Types;
 using DS.Analysis.Types.Semantics;
@@ -29,8 +30,13 @@ namespace DS.Analysis.Structure.DataTypes
 
     class DataTypeContentProvider : IDataTypeContentProvider
     {
+        readonly ObserverCollection<TypeExternals> externalsWatcher = new ValueObserverCollection<TypeExternals>();
         readonly ClassContext syntax;
         readonly string name;
+
+
+        AbstractDeclaredElement[] declaredElements;
+
         IDisposableTypeDirector baseReference;
         IDisposable baseSubscription;
 
@@ -49,8 +55,8 @@ namespace DS.Analysis.Structure.DataTypes
             typeArgs.AddToScope(contextInfo.ScopeAppender);
 
             return new SetupDataType(
-                declarations: StructureUtility.DeclarationsFromSyntax(contextInfo, syntax.Declarations),
-                dataTypeProvider: new CodeTypeProvider(name, typeArgs)
+                declarations: declaredElements = StructureUtility.DeclarationsFromSyntax(contextInfo, syntax.Declarations),
+                dataTypeProvider: new DeclaredCodeTypeProvider(this, name, typeArgs)
             );
         }
 
@@ -72,6 +78,31 @@ namespace DS.Analysis.Structure.DataTypes
         {
             baseReference?.Dispose();
             baseSubscription?.Dispose();
+        }
+
+        record TypeExternals(CodeType baseCodeType);
+
+
+        class DeclaredCodeTypeProvider : CodeTypeProvider
+        {
+            readonly DataTypeContentProvider contentProvider;
+
+            public DeclaredCodeTypeProvider(DataTypeContentProvider contentProvider, string name, TypeArgCollection typeArgCollection) : base(name, typeArgCollection)
+            {
+                this.contentProvider = contentProvider;
+            }
+
+            public override IDisposable CreateInstance(IObserver<CodeType> observer, params CodeType[] typeArgs) =>
+                // Watch for external components changing (base class)
+                contentProvider.externalsWatcher.Add(Observer.Create<TypeExternals>(externals =>
+                {
+                    // Get the content.
+                    var contentBuilder = new TypeContentBuilder();
+                    contentBuilder.AddAll(contentProvider.declaredElements);
+
+                    // Create the type and notify the observer.
+                    observer.OnNext(CodeType.Create(contentBuilder.ToCodeTypeContent()));
+                }));
         }
     }
 }

@@ -54,7 +54,7 @@ namespace DS.Analysis.Types.Semantics
             {
                 this.partSyntaxes = partSyntaxes;
                 parts = new TypeReference[partSyntaxes.Length];
-                partSubscriptions = new IDisposable[partSubscriptions.Length];
+                partSubscriptions = new IDisposable[partSyntaxes.Length];
 
                 SubscribeToPartIndex(0, context);
             }

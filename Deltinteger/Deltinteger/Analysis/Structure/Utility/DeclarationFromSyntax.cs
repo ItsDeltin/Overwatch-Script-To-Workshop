@@ -13,11 +13,11 @@ namespace DS.Analysis.Structure.Utility
         public static AbstractDeclaredElement DeclarationFromSyntax(ContextInfo contextInfo, IDeclaration declaration)
         {
             switch (declaration)
-            {                
+            {
                 // Variable declaration
                 case VariableDeclaration variableDeclaration:
                     return new DeclaredVariable(contextInfo, new VariableContextHandler(variableDeclaration));
-                
+
                 // Data type
                 case ClassContext dataTypeContext:
                     return new DeclaredDataType(contextInfo, new DataTypeContentProvider(dataTypeContext));
@@ -25,13 +25,13 @@ namespace DS.Analysis.Structure.Utility
                 // Method
                 case FunctionContext functionContext:
                     return new DeclaredMethod(contextInfo, new MethodContentProvider(functionContext));
-                
+
                 // Unknown type
                 default:
                     throw new NotImplementedException(declaration.GetType().ToString());
             }
         }
-        
+
         public static AbstractDeclaredElement[] DeclarationsFromSyntax(ContextInfo contextInfo, List<IDeclaration> declarations)
         {
             var result = new AbstractDeclaredElement[declarations.Count];

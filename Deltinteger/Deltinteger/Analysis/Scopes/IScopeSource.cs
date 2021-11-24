@@ -14,7 +14,7 @@ namespace DS.Analysis.Scopes
         readonly List<ScopedElement> _scopedElements = new List<ScopedElement>();
         readonly ObserverCollection<ScopeSourceChange> _subscribers = new ObserverCollection<ScopeSourceChange>();
 
-        public ScopeSource() {}
+        public ScopeSource() { }
 
         public IDisposable Subscribe(IObserver<ScopeSourceChange> observer)
         {

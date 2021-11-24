@@ -15,6 +15,11 @@ namespace DS.Analysis.Structure.Methods
             parameters = setup.Parameters;
         }
 
+        public override void AddToContent(TypeContentBuilder contentBuilder)
+        {
+            // todo
+            throw new System.NotImplementedException();
+        }
 
         public override void Dispose()
         {

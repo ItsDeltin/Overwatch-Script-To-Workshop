@@ -1,5 +1,3 @@
-using DS.Analysis.Scopes;
-
 namespace DS.Analysis.Types
 {
     using Components;
@@ -7,12 +5,16 @@ namespace DS.Analysis.Types
     class CodeType
     {
         public TypeLinker TypeLinker { get; }
-        public Scope Scope { get; }
 
+
+        // Components
+        public CodeTypeContent Content { get; protected set; }
         public IAssignableTo AssignableTo { get; protected set; }
 
         public CodeType()
         {
         }
+
+        public static CodeType Create(CodeTypeContent content) => new CodeType() { Content = content };
     }
 }
