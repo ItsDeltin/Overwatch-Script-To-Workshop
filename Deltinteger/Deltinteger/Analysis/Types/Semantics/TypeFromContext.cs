@@ -24,6 +24,9 @@ namespace DS.Analysis.Types.Semantics
 
         static IDisposableTypeDirector TypeReferenceFromSyntax(ContextInfo context, TypeSyntax syntax)
         {
+            if (syntax.Parts.Length == 1)
+                return TypeReferenceFromName(context, syntax.Parts[0]);
+
             return new TypeTree(context, syntax.Parts);
         }
 
@@ -47,7 +50,7 @@ namespace DS.Analysis.Types.Semantics
             readonly TypeSyntax.TypeNamePart[] partSyntaxes;
             readonly TypeReference[] parts;
             readonly IDisposable[] partSubscriptions;
-            readonly ObserverCollection<CodeType> observers = new ValueObserverCollection<CodeType>(Standard.StandardTypes.Unknown.Instance);
+            readonly ObserverCollection<CodeType> observers = Helper.CreateTypeObserver();
 
 
             public TypeTree(ContextInfo context, TypeSyntax.TypeNamePart[] partSyntaxes)
@@ -72,19 +75,19 @@ namespace DS.Analysis.Types.Semantics
                     else
                     {
                         Dispose(index + 1);
-                        SubscribeToPartIndex(index + 1, context);
+                        SubscribeToPartIndex(index + 1, context.SetScope(new Scope(type.Content.ScopeSource)));
                     }
                 });
             }
 
             public IDisposable Subscribe(IObserver<CodeType> observer) => observers.Add(observer);
 
+
             public void Dispose()
             {
                 Dispose(0);
                 observers.Complete();
             }
-
 
             void Dispose(int startingIndex)
             {

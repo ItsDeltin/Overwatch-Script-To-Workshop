@@ -31,7 +31,7 @@ namespace DS.Analysis.Structure.DataTypes
             return new ScopedElement(alias, ScopedElementData.Create(alias, codeTypeProvider, null));
         }
 
-        public override void AddToContent(TypeContentBuilder contentBuilder) => new ProviderTypeElement(codeTypeProvider);
+        public override void AddToContent(TypeContentBuilder contentBuilder) => contentBuilder.AddElement(new ProviderTypeElement(codeTypeProvider));
 
 
         public override void Dispose()

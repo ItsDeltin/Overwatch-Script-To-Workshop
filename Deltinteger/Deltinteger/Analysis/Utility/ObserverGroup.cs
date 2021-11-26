@@ -11,6 +11,7 @@ namespace DS.Analysis.Utility
         readonly Func<object[], IDisposable> callback;
         readonly IDisposable[] subscriptions;
         readonly object[] values;
+        readonly bool throwIfNull = true;
         IDisposable providedDisposable;
         bool subscribed;
         bool disposed;
@@ -29,11 +30,17 @@ namespace DS.Analysis.Utility
                 // Get the subscription
                 subscriptions[i] = getSubscriptions[i](newValue =>
                 {
+                    if (throwIfNull && newValue == null)
+                        throw new Exception("Observable broadcasted a null value");
+
                     values[captureI] = newValue;
                     // Execute the callback if subscribing has completed.
                     if (subscribed)
                         Update();
                 });
+
+                if (throwIfNull && values[i] == null)
+                    throw new Exception("ObserverGroup value not initialized when subscribed");
             }
 
             subscribed = true;

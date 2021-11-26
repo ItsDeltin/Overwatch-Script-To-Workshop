@@ -75,6 +75,7 @@ namespace DS.Analysis.Types
         readonly ITypeIdentifierErrorHandler errorHandler;
         CodeTypeProvider codeTypeProvider;
         IDisposable providerSubscription;
+        bool readyToUpdate = false;
 
         public IdentifierTypeReference(string typeName, ITypeIdentifierErrorHandler errorHandler, ScopeWatcher identifier, IDisposableTypeDirector[] generics) : base(generics)
         {
@@ -85,6 +86,7 @@ namespace DS.Analysis.Types
             identifier.Subscribe(nextValue =>
             {
                 codeTypeProvider = SelectCodeTypeProvider(nextValue.FoundElements, typeName);
+                readyToUpdate = true;
                 Update();
             });
         }
@@ -111,6 +113,8 @@ namespace DS.Analysis.Types
 
         protected override void Update()
         {
+            if (!readyToUpdate) return;
+
             providerSubscription?.Dispose();
             providerSubscription = codeTypeProvider.CreateInstance(Observer.Create<CodeType>(Set), TypeArgs);
         }

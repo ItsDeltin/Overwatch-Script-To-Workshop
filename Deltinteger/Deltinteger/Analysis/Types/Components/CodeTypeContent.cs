@@ -32,5 +32,8 @@ namespace DS.Analysis.Types.Components
             }
             return scopeSource;
         }
+
+
+        public static readonly CodeTypeContent Empty = new CodeTypeContent();
     }
 }

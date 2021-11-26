@@ -9,38 +9,53 @@ namespace DS.Analysis.Utility
     class ObserverCollection<T> : IObservable<T>, IDisposable
     {
         readonly List<IObserver<T>> _observers = new List<IObserver<T>>();
+        bool completed;
+        bool enumerating;
 
         /// <summary>Adds an observer to the collection.</summary>
         /// <param name="observer">The observer that is added to the collection.</param>
         /// <returns>An IDisposable that when disposed will remove the observer from the collection.</returns>
         public virtual IDisposable Add(IObserver<T> observer)
         {
+            Check();
             _observers.Add(observer);
             return Disposable.Create(() => _observers.Remove(observer));
         }
 
         /// <summary>Pushes a new value to the observers.</summary>
         /// <param name="value">The current notification information. </param>
-        public virtual void Set(T value)
-        {
-            foreach (var observer in _observers)
-                observer.OnNext(value);
-        }
+        public virtual void Set(T value) => Enumerate(o => o.OnNext(value));
 
         /// <summary>Notifies the observers that the provider has experienced an error condition.</summary>
         /// <param name="exception">An object that provides additional information about the error.</param>
-        public void OnError(Exception exception)
-        {
-            foreach (var observer in _observers)
-                observer.OnError(exception);
-        }
+        public void OnError(Exception exception) => Enumerate(o => o.OnError(exception));
 
         /// <summary>Notifies the observers that the provider has finished sending push-based notifications.</summary>
         public void Complete()
         {
-            foreach (var observer in _observers)
-                observer.OnCompleted();
+            Enumerate(o => o.OnCompleted());
+            completed = true;
         }
+
+
+        void Enumerate(Action<IObserver<T>> action)
+        {
+            Check();
+            enumerating = true;
+            foreach (var observer in _observers)
+                action(observer);
+            enumerating = false;
+        }
+
+        void Check()
+        {
+            if (enumerating)
+                throw new Exception(ToString() + " is enumerating");
+
+            if (completed)
+                throw new Exception("Grammar error, " + ToString() + " is completed");
+        }
+
 
         public bool Any() => _observers.Count != 0;
 

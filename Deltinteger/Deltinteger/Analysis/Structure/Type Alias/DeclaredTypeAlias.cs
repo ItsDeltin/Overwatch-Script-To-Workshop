@@ -62,12 +62,11 @@ namespace DS.Analysis.Structure.TypeAlias
 
             class AliasDirector : ITypeDirector, IDisposable
             {
-                readonly ValueObserverCollection<CodeType> observers;
+                readonly ObserverCollection<CodeType> observers = Helper.CreateTypeObserver();
                 readonly IDisposable referenceSubscription;
 
                 public AliasDirector(AliasProvider provider, CodeType[] typeArgs)
                 {
-                    observers = new ValueObserverCollection<CodeType>();
                     referenceSubscription = provider.aliasing.Subscribe(type =>
                     {
                         // todo: substitute the type

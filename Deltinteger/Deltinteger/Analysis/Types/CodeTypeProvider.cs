@@ -58,6 +58,7 @@ namespace DS.Analysis.Types
     {
         readonly CodeTypeProvider provider;
         readonly IDisposable subscription;
+        // Don't use the Helper method for initializing the type observer here since this class may be created while the StandardTypes type is initializing.
         readonly ObserverCollection<CodeType> observers = new ValueObserverCollection<CodeType>();
 
         public InstanceTypeDirector(CodeTypeProvider provider, CodeType[] typeArgs)
@@ -82,7 +83,7 @@ namespace DS.Analysis.Types
 
         public SingletonCodeTypeProvider(string name) : base(name)
         {
-            Instance = new CodeType();
+            Instance = CodeType.Create(Components.CodeTypeContent.Empty, new SingletonComparison(this));
             Director = CreateInstance();
             ScopedElement = new ScopedElement(Name, ScopedElementData.Create(Name, this, null));
         }
@@ -91,6 +92,22 @@ namespace DS.Analysis.Types
         {
             observer.OnNext(Instance);
             return Disposable.Empty;
+        }
+
+
+        class SingletonComparison : Types.Components.ITypeComparison
+        {
+            readonly SingletonCodeTypeProvider provider;
+
+            public SingletonComparison(SingletonCodeTypeProvider provider)
+            {
+                this.provider = provider;
+            }
+
+            public bool CanBeAssignedTo(CodeType other) => Implements(other);
+            public bool Implements(CodeType other) => other == provider.Instance;
+            public bool Is(CodeType other) => other == provider.Instance;
+            public int GetTypeHashCode() => provider.GetHashCode();
         }
     }
 }

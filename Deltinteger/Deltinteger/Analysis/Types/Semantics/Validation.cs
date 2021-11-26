@@ -11,7 +11,7 @@ namespace DS.Analysis.Types.Semantics
         public static IDisposable IsAssignableTo(DiagnosticToken token, CodeType assignToType, CodeType valueType)
         {
             // Types are compatible; no error.
-            if (valueType.AssignableTo.CanBeAssignedTo(assignToType))
+            if (valueType.Comparison.CanBeAssignedTo(assignToType))
                 return Disposable.Empty;
 
             return token.Error("Not assignable");
@@ -29,7 +29,7 @@ namespace DS.Analysis.Types.Semantics
                 Observe(watcher, assignToType, valueType, (scopeInfo, assignToType, valueType) =>
                 {
                     // Types are compatible; no error.
-                    if (valueType.AssignableTo.CanBeAssignedTo(assignToType))
+                    if (valueType.Comparison.CanBeAssignedTo(assignToType))
                         return Disposable.Empty;
 
                     return null;

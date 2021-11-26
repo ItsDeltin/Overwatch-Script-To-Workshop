@@ -12,7 +12,7 @@ namespace DS.Analysis.Expressions.Identifiers
 {
     class IdentifierExpression : Expression, ITypeDirector, IObservable<Scope>
     {
-        readonly ObserverCollection<CodeType> typeObservers = new ObserverCollection<CodeType>();
+        readonly ObserverCollection<CodeType> typeObservers = Helper.CreateTypeObserver();
         readonly ObserverCollection<Scope> scopeObservers = new ObserverCollection<Scope>();
         readonly ScopeWatcher scopeWatcher;
         readonly Token token;

@@ -9,12 +9,14 @@ namespace DS.Analysis.Types
 
         // Components
         public CodeTypeContent Content { get; protected set; }
-        public IAssignableTo AssignableTo { get; protected set; }
+        public ITypeComparison Comparison { get; protected set; }
 
         public CodeType()
         {
         }
 
-        public static CodeType Create(CodeTypeContent content) => new CodeType() { Content = content };
+        public override int GetHashCode() => Comparison.GetTypeHashCode();
+
+        public static CodeType Create(CodeTypeContent content, ITypeComparison comparison) => new CodeType() { Content = content, Comparison = comparison };
     }
 }
