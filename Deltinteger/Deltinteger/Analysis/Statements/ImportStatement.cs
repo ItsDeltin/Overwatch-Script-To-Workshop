@@ -139,18 +139,15 @@ namespace DS.Analysis.Statements
             class ImportedElementData : ScopedElementData
             {
                 readonly ScopedElementData baseData;
-                readonly string alias;
 
-                public ImportedElementData(ScopedElementData baseData, string alias)
+                public ImportedElementData(ScopedElementData baseData, string alias) : base(alias)
                 {
                     this.baseData = baseData;
-                    this.alias = alias;
                 }
 
 
                 public override CodeTypeProvider GetCodeTypeProvider() => baseData.GetCodeTypeProvider();
                 public override IIdentifierHandler GetIdentifierHandler() => baseData.GetIdentifierHandler();
-                public override bool IsMatch(string name) => alias == name;
             }
         }
 

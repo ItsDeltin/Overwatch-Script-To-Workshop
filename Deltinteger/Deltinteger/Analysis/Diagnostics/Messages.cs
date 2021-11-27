@@ -9,5 +9,7 @@ namespace DS.Analysis.Diagnostics
         public static string ElementNonexistentInSource(string elementName, string sourceName) => $"'{elementName}' does not exist in the {sourceName}";
 
         public static string IdentifierDoesNotExist(string name) => $"'{name}' does not exist in the current context";
+
+        public static string NotAssignable(string from, string to) => $"The type '{from}' cannot be assigned to '{to}'";
     }
 }

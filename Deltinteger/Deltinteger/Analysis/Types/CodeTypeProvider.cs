@@ -4,6 +4,7 @@ namespace DS.Analysis.Types
     using System.Reactive;
     using System.Reactive.Disposables;
     using Generics;
+    using Components;
     using Utility;
     using Scopes;
 
@@ -83,7 +84,7 @@ namespace DS.Analysis.Types
 
         public SingletonCodeTypeProvider(string name) : base(name)
         {
-            Instance = CodeType.Create(Components.CodeTypeContent.Empty, new SingletonComparison(this));
+            Instance = CodeType.Create(Components.CodeTypeContent.Empty, new SingletonComparison(this), new UniversalIdentifier(name));
             Director = CreateInstance();
             ScopedElement = new ScopedElement(Name, ScopedElementData.Create(Name, this, null));
         }

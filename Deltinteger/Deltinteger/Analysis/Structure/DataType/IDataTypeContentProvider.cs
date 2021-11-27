@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using System.Reactive;
 using DS.Analysis.Utility;
 using DS.Analysis.Structure.Utility;
 using DS.Analysis.Types;
 using DS.Analysis.Types.Semantics;
 using DS.Analysis.Types.Generics;
+using DS.Analysis.Types.Components;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Structure.DataTypes
@@ -104,11 +106,17 @@ namespace DS.Analysis.Structure.DataTypes
                     var comparison = new DeclaredCodeTypeComparison(externals.baseCodeType, contentProvider, typeArgs);
 
                     // Create the type and notify the observer.
-                    observer.OnNext(CodeType.Create(contentBuilder.ToCodeTypeContent(), comparison));
+                    observer.OnNext(CodeType.Create(contentBuilder.ToCodeTypeContent(), comparison, CreateIGetIdentifier(typeArgs)));
                 }));
 
+            IGetIdentifier CreateIGetIdentifier(CodeType[] typeArgs) => GetStructuredIdentifier.Create(
+                defaultName: contentProvider.name,
+                typeArgs: typeArgs,
+                parent: null,
+                searchName: context => context.Elements.Reverse().FirstOrDefault(element => element.GetCodeTypeProvider() == this)?.Name);
 
-            class DeclaredCodeTypeComparison : Types.Components.ITypeComparison
+
+            class DeclaredCodeTypeComparison : ITypeComparison
             {
                 readonly CodeType baseClass;
                 readonly int hashcode;

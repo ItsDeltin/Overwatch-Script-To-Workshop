@@ -1,11 +1,6 @@
-using System.Linq;
-using System.Collections.Generic;
-using DS.Analysis.Structure;
+using System;
 using DS.Analysis.Scopes;
 using DS.Analysis.Diagnostics;
-using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Compiler.Parse;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
 using IOPath = System.IO.Path;
 
 namespace DS.Analysis
@@ -28,6 +23,8 @@ namespace DS.Analysis
 
         BlockAction statements;
 
+        IDisposable postAnalysisDisposable;
+
 
         public ScriptFile(string path, bool isExternal, DeltinScriptAnalysis analysis)
         {
@@ -47,13 +44,17 @@ namespace DS.Analysis
             // Get declarations
             RootScopeSource.Clear();
             statements?.Dispose();
+            postAnalysisDisposable?.Dispose();
             statements = new ContextInfo(Analysis, this, Scope.Default).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
+
+            postAnalysisDisposable = Analysis.PostAnalysisOperations.ExecuteAndReset();
         }
 
 
         public void Unlink()
         {
             statements?.Dispose();
+            postAnalysisDisposable?.Dispose();
             FileParser.Dispose();
         }
     }

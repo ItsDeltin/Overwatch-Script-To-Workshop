@@ -10,11 +10,8 @@ namespace DS.Analysis.Types
     // Represents a data type identified in the script.
     abstract class TypeReference : IDisposableTypeDirector
     {
-        // The current CodeType value that the TypeReference is pointing to.
-        protected CodeType CodeType;
-
         // Clients watching the CodeType value.
-        readonly ObserverCollection<CodeType> observers = new ObserverCollection<CodeType>();
+        readonly ObserverCollection<CodeType> observers = Helper.CreateTypeObserver();
 
         // The TypeReferences for the type arguments.
         readonly IDisposableTypeDirector[] typeArgReferences;

@@ -11,7 +11,7 @@ namespace DS.Analysis.Scopes
         public string Alias { get; }
         protected ValueObserverCollection<ScopedElementData> Observers { get; }
 
-        public ScopedElement(string alias) : this(alias, ScopedElementData.Unknown) {}
+        public ScopedElement(string alias) : this(alias, ScopedElementData.Unknown) { }
 
         public ScopedElement(string alias, ScopedElementData scopedElementData)
         {
@@ -26,33 +26,38 @@ namespace DS.Analysis.Scopes
 
     class ScopedElementData
     {
-        public static readonly ScopedElementData Unknown = new ScopedElementData();
+        public static readonly ScopedElementData Unknown = new ScopedElementData(null);
+
+
+        public string Name { get; }
+
+        public ScopedElementData(string name)
+        {
+            Name = name;
+        }
 
         public virtual CodeTypeProvider GetCodeTypeProvider() => StandardTypes.Unknown;
         public virtual IIdentifierHandler GetIdentifierHandler() => UnknownIdentifierHandler.Instance;
 
-        public virtual bool IsMatch(string name) => false;
+        public virtual bool IsMatch(string name) => Name == name;
 
-        
+
         public static ScopedElementData Create(string name, CodeTypeProvider codeTypeProvider, IIdentifierHandler identifierHandler)
             => new StaticScopedElementData(name, codeTypeProvider, identifierHandler);
 
         class StaticScopedElementData : ScopedElementData
         {
-            readonly string name;
             readonly CodeTypeProvider codeTypeProvider;
             readonly IIdentifierHandler identifierHandler;
 
-            public StaticScopedElementData(string name, CodeTypeProvider codeTypeProvider, IIdentifierHandler identifierHandler)
+            public StaticScopedElementData(string name, CodeTypeProvider codeTypeProvider, IIdentifierHandler identifierHandler) : base(name)
             {
-                this.name = name;
                 this.codeTypeProvider = codeTypeProvider;
                 this.identifierHandler = identifierHandler;
             }
 
             public override CodeTypeProvider GetCodeTypeProvider() => codeTypeProvider;
             public override IIdentifierHandler GetIdentifierHandler() => identifierHandler;
-            public override bool IsMatch(string name) => name == this.name;
         }
     }
 }

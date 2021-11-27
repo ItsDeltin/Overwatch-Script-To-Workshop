@@ -23,6 +23,7 @@ namespace DS.Analysis.Variables.Builder
             // Ensure that the expression type is assignable to the variable's type.
             if (content.Expression != null)
                 typeAssignmentValidation = TypeValidation.IsAssignableTo(
+                    contextInfo,
                     token: contextInfo.File.Diagnostics.CreateToken(content.ExpressionRange),
                     assignToType: content.TypeDirector,
                     valueType: content.Expression.Type);

@@ -8,20 +8,7 @@ namespace DS.Analysis.Types.Semantics
 
     static class TypeValidation
     {
-        public static IDisposable IsAssignableTo(DiagnosticToken token, CodeType assignToType, CodeType valueType)
-        {
-            // Types are compatible; no error.
-            if (valueType.Comparison.CanBeAssignedTo(assignToType))
-                return Disposable.Empty;
-
-            return token.Error("Not assignable");
-        }
-
-        public static IDisposable IsAssignableTo(DiagnosticToken token, ITypeDirector assignToType, ITypeDirector valueType)
-            => Observe(assignToType, valueType, (a, b) => IsAssignableTo(token, a, b));
-
-
-        public static IDisposable IsAssignableTo(ContextInfo context, ITypeDirector assignToType, ITypeDirector valueType)
+        public static IDisposable IsAssignableTo(ContextInfo context, DiagnosticToken token, ITypeDirector assignToType, ITypeDirector valueType)
         {
             var watcher = context.Scope.Watch();
             return new CompositeDisposable(new[] {
@@ -32,7 +19,16 @@ namespace DS.Analysis.Types.Semantics
                     if (valueType.Comparison.CanBeAssignedTo(assignToType))
                         return Disposable.Empty;
 
-                    return null;
+                    // Not assignable.
+                    return context.PostAnalysisOperations.Add(() => {
+                        // Create the identifier context.
+                        var identifierContext = new Components.GetIdentifierContext(scopeInfo.FoundElements);
+
+                        // Create the error.
+                        return token.Error(Messages.NotAssignable(
+                            valueType.GetIdentifier.PathFromContext(identifierContext),
+                            assignToType.GetIdentifier.PathFromContext(identifierContext)));
+                    });
                 })
             });
         }

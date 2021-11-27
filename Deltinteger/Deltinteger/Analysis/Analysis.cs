@@ -7,6 +7,7 @@ namespace DS.Analysis
     {
         public FileManager FileManager { get; }
         public ModuleManager ModuleManager { get; } = new ModuleManager();
+        public PostAnalysisOperation PostAnalysisOperations { get; } = new PostAnalysisOperation();
 
         public DeltinScriptAnalysis()
         {

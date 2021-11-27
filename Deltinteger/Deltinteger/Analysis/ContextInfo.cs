@@ -23,6 +23,8 @@ namespace DS.Analysis
         public IScopeAppender ScopeAppender { get; private set; }
         public ContextKind ContextKind { get; private set; }
 
+        public PostAnalysisOperation PostAnalysisOperations => File.Analysis.PostAnalysisOperations;
+
         public ContextInfo(DeltinScriptAnalysis analysis, ScriptFile file, Scope scope)
         {
             Analysis = analysis;
