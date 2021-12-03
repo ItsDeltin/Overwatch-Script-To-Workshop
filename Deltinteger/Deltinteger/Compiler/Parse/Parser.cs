@@ -815,7 +815,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Declaration and expression statements.
                 default:
                     // Declaration
-                    if (IsDeclaration(true))
+                    if (IsDeclaration())
                         statement = ParseVariableOrFunctionDeclaration();
                     // Expression statement
                     else
@@ -1226,7 +1226,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return arrayCount;
         }
 
-        bool IsDeclaration(bool functionDeclaration) => Lookahead(() =>
+        bool IsDeclaration() => Lookahead(() =>
         {
             ParseAttributes();
             var typeParse = ParseType();
@@ -1237,7 +1237,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 Is(TokenType.Exclamation) || // Extended collection marker.
                 Is(TokenType.Number) ||      // Assigned workshop ID.
                 Is(TokenType.Colon) ||       // Macro variable value.
-                (functionDeclaration && (Is(TokenType.Parentheses_Open) || Is(TokenType.LessThan))) || // Function parameter start.
+                Is(TokenType.Parentheses_Open) || Is(TokenType.LessThan) || // Function parameter start.
                 IsFinished                   // EOF was reached.
             ));
         });
@@ -1876,7 +1876,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // TODO: use ParseDeclarationList
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
                 // Variable or method
-                if (IsDeclaration(true))
+                if (IsDeclaration())
                     context.Declarations.Add((IDeclaration)ParseVariableOrFunctionDeclaration());
                 // Constructor
                 else if (IsConstructor())
@@ -1898,16 +1898,24 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         List<IDeclaration> ParseDeclarationList()
         {
+            ParseExpected(TokenType.CurlyBracket_Open);
+
             var declarations = new List<IDeclaration>();
 
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
-                if (IsDeclaration(true))
+                // Variable/method declaration
+                if (IsDeclaration())
                     declarations.Add((IDeclaration)ParseVariableOrFunctionDeclaration());
+                // Class/struct
+                else if (Is(TokenType.Class) || Is(TokenType.Struct))
+                    declarations.Add(ParseClassOrStruct());
                 else
                 {
                     // TODO: better error recovery
                     break;
                 }
+
+            ParseExpected(TokenType.CurlyBracket_Close);
 
             return declarations;
         }
@@ -2025,10 +2033,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 ParseExpected(TokenType.CurlyBracket_Close);
             }
 
-            var fileToken = ParseExpected(TokenType.String);
+            // Parse the file or module being imported.
+            var file = ParseExpected(TokenType.String, TokenType.Identifier);
+            var module = new List<Token>();
+
+            // If the file token is an identifier, a file is being imported.
+            if (file.TokenType.IsIdentifier())
+            {
+                module.Add(file);
+                file = null;
+
+                // Get the module path seperated by dots.
+                while (ParseOptional(TokenType.Dot))
+                    module.Add(ParseExpected(TokenType.Identifier));
+            }
 
             ParseExpected(TokenType.Semicolon);
-            return new Import(fileToken, elements);
+            return new Import(file, module, elements);
         }
 
         public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);

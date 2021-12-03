@@ -257,9 +257,10 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         // TODO: remove
         public Token Identifier { get; }
 
-        public Import(Token file, List<ImportSelection> importSelection)
+        public Import(Token file, List<Token> module, List<ImportSelection> importSelection)
         {
             File = file;
+            Module = module;
             ImportSelection = importSelection;
         }
     }
