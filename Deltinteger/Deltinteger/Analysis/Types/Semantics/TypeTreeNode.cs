@@ -20,7 +20,7 @@ namespace DS.Analysis.Types.Semantics
         readonly ITypeIdentifierErrorHandler errorHandler;
         readonly string name;
         readonly ScopeWatcher scopeWatcher;
-        readonly IEnumerable<IDisposableTypeDirector> typeArgDirectors;
+        readonly IDisposableTypeDirector[] typeArgDirectors;
         readonly IDisposable typeArgSubscriptions;
 
         CodeType[] typeArgs;
@@ -36,7 +36,7 @@ namespace DS.Analysis.Types.Semantics
             name = namedType.Identifier;
 
             // Get the type arguments.
-            typeArgDirectors = namedType.TypeArgs.Select(typeArgSyntax => TypeFromContext.TypeReferenceFromSyntax(context, typeArgSyntax));
+            typeArgDirectors = namedType.TypeArgs.Select(typeArgSyntax => TypeFromContext.TypeReferenceFromSyntax(context, typeArgSyntax)).ToArray();
             typeArgSubscriptions = Utility.Helper.Observe<CodeType>(typeArgDirectors, typeArgs =>
             {
                 this.typeArgs = typeArgs;
