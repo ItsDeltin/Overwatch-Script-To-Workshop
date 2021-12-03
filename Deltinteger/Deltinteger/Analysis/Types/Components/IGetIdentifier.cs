@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace DS.Analysis.Types.Components
 {
@@ -63,7 +64,7 @@ namespace DS.Analysis.Types.Components
 
             // Get the default name.
             string def = defaultName;
-            if (typeArgs != null)
+            if (typeArgs != null && typeArgs.Length != 0)
                 def += "<" + string.Join(", ", typeArgs.Select(a => a.GetIdentifier.PathFromContext(context))) + ">";
 
             // Get the parent's path if it exists and prepend it to the current value.
@@ -89,11 +90,32 @@ namespace DS.Analysis.Types.Components
         }
 
 
-        public static GetStructuredIdentifier Create(string defaultName, CodeType[] typeArgs, IGetIdentifier parent, Func<GetIdentifierContext, string> searchName) =>
-            new GetStructuredIdentifier(defaultName, typeArgs, parent, new AnonymousScopeSearch(searchName));
-
         public static GetStructuredIdentifier Create(string defaultName, IGetIdentifier parent, Func<GetIdentifierContext, string> searchName) =>
             new GetStructuredIdentifier(defaultName, null, parent, new AnonymousScopeSearch(searchName));
+
+        public static IScopeSearch PredicateSearch(Func<ScopedElementData, bool> predicate) => new AnonymousScopeSearch(context =>
+        {
+            HashSet<string> conflictableIdentifiers = new HashSet<string>();
+
+            foreach (var element in context.Elements.Reverse())
+            {
+                // Check if the predicate matches the element.
+                if (predicate(element))
+                {
+                    // An identifier with the same name already exists, return null due to conflict.
+                    if (conflictableIdentifiers.Contains(element.Name))
+                        return null;
+
+                    // Identifier is ok to use.
+                    return element.Name;
+                }
+
+                conflictableIdentifiers.Add(element.Name);
+            }
+
+            // Not found
+            return null;
+        });
     }
 
     struct UniversalIdentifier : IGetIdentifier
