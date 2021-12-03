@@ -1,26 +1,26 @@
 using System;
-using System.Reactive.Disposables;
+using System.Linq;
 
 namespace DS.Analysis.Utility
 {
     /// <summary>
     /// Watches multiple observables and combines their broadcasted values into a single event
     /// </summary>
-    class ObserverGroup : IDisposable
+    class ObserverGroup<T> : IDisposable
     {
-        readonly Func<object[], IDisposable> callback;
+        readonly Func<T[], IDisposable> callback;
         readonly IDisposable[] subscriptions;
-        readonly object[] values;
+        readonly T[] values;
         readonly bool throwIfNull = true;
         IDisposable providedDisposable;
         bool subscribed;
         bool disposed;
 
-        ObserverGroup(Func<object[], IDisposable> callback, params Func<Action<object>, IDisposable>[] getSubscriptions)
+        public ObserverGroup(Func<T[], IDisposable> callback, params Func<Action<T>, IDisposable>[] getSubscriptions)
         {
             this.callback = callback;
             subscriptions = new IDisposable[getSubscriptions.Length];
-            values = new object[getSubscriptions.Length];
+            values = new T[getSubscriptions.Length];
 
             // Get the subscriptions
             for (int i = 0; i < subscriptions.Length; i++)
@@ -50,8 +50,7 @@ namespace DS.Analysis.Utility
 
         void Update()
         {
-            if (disposed)
-                throw new ObjectDisposedException(nameof(ObserverGroup));
+            ThrowIfDisposed();
 
             if (subscribed)
             {
@@ -63,8 +62,7 @@ namespace DS.Analysis.Utility
 
         public void Dispose()
         {
-            if (disposed)
-                throw new ObjectDisposedException(nameof(ObserverGroup));
+            ThrowIfDisposed();
 
             providedDisposable?.Dispose();
             foreach (var sub in subscriptions)
@@ -73,43 +71,10 @@ namespace DS.Analysis.Utility
             disposed = true;
         }
 
-
-        /// <summary>Watches multiple observables. If any of them broadcasts a new value, the callback is triggered.</summary>
-        /// <param name="observerA">The first observable.</param>
-        /// <param name="observerB">The second observable.</param>
-        /// <param name="callback">The event to trigger when any of the observables provide a new value. An IDisposable can be returned which will be disposed
-        /// when the event is triggered again or the IDisposable created by this method is disposed.</param>
-        /// <typeparam name="A">The type of the first observable.</typeparam>
-        /// <typeparam name="B">The type of the second observable.</typeparam>
-        /// <returns>IDisposable object which when disposed will unsubscribe from the observables and dispose of any additional data created by the callback.</returns>
-        public static IDisposable Observe<A, B>(IObservable<A> observerA, IObservable<B> observerB, Func<A, B, IDisposable> callback) =>
-            new ObserverGroup(
-                values => callback((A)values[0], (B)values[1]),
-                set => observerA.Subscribe(v => set(v)),
-                set => observerB.Subscribe(v => set(v))
-            );
-
-        public static IDisposable Observe<A, B, C>(IObservable<A> observerA, IObservable<B> observerB, IObservable<C> observerC, Func<A, B, C, IDisposable> callback) =>
-            new ObserverGroup(
-                values => callback((A)values[0], (B)values[1], (C)values[2]),
-                set => observerA.Subscribe(v => set(v)),
-                set => observerB.Subscribe(v => set(v)),
-                set => observerC.Subscribe(v => set(v))
-            );
-
-        // Action callbacks
-        public static IDisposable Observe<A, B>(IObservable<A> observerA, IObservable<B> observerB, Action<A, B> callback) =>
-            Observe(observerA, observerB, (a, b) =>
-            {
-                callback(a, b);
-                return Disposable.Empty;
-            });
-
-        public static IDisposable Observe<A, B, C>(IObservable<A> observerA, IObservable<B> observerB, IObservable<C> observerC, Action<A, B, C> callback) =>
-            Observe(observerA, observerB, observerC, (a, b, c) =>
-            {
-                callback(a, b, c);
-                return Disposable.Empty;
-            });
+        void ThrowIfDisposed()
+        {
+            if (disposed)
+                throw new ObjectDisposedException("ObserverGroup already disposed");
+        }
     }
 }
