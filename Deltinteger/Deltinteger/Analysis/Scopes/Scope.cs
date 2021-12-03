@@ -1,5 +1,7 @@
+using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 
 namespace DS.Analysis.Scopes
 {
@@ -35,6 +37,16 @@ namespace DS.Analysis.Scopes
                 watcher.SubscribeTo(source);
 
             return watcher;
+        }
+
+        public IDisposable WatchAndSubscribe(IObserver<ScopeSourceChange> observer)
+        {
+            var watcher = Watch();
+            return new CompositeDisposable()
+            {
+                watcher,
+                watcher.Subscribe(observer)
+            };
         }
 
         public Scope CreateChild(IScopeSource scopeSource) => new Scope(this, scopeSource);

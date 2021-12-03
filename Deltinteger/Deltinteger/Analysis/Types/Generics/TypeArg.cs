@@ -7,14 +7,14 @@ namespace DS.Analysis.Types.Generics
     {
         public string Name { get; }
         public bool Single { get; }
-        public CodeTypeProvider DataTypeProvider { get; }
+        public SingletonCodeTypeProvider DataTypeProvider { get; }
         public ScopedElement ScopedElement { get; }
 
         public TypeArg(string name, bool single)
         {
             Name = name;
             Single = single;
-            DataTypeProvider = new TypeArgProvider(name);
+            DataTypeProvider = new SingletonCodeTypeProvider(name);
             ScopedElement = ScopedElement.Create(name, DataTypeProvider, UnknownIdentifierHandler.Instance);
         }
     }

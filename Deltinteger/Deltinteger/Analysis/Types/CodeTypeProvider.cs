@@ -13,6 +13,7 @@ namespace DS.Analysis.Types
     {
         public string Name { get; }
         public TypeArgCollection Generics { get; }
+        public IGetIdentifier GetIdentifier { get; protected set; }
 
         public CodeTypeProvider(string name)
         {

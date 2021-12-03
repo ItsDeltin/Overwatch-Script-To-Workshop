@@ -58,7 +58,7 @@ namespace DS.Analysis.Structure.DataTypes
 
             return new SetupDataType(
                 declarations: declaredElements = StructureUtility.DeclarationsFromSyntax(contextInfo, syntax.Declarations),
-                dataTypeProvider: new DeclaredCodeTypeProvider(this, name, typeArgs)
+                dataTypeProvider: new DeclaredCodeTypeProvider(this, name, typeArgs, contextInfo.Parent?.GetIdentifier)
             );
         }
 
@@ -88,10 +88,20 @@ namespace DS.Analysis.Structure.DataTypes
         class DeclaredCodeTypeProvider : CodeTypeProvider
         {
             readonly DataTypeContentProvider contentProvider;
+            readonly GetStructuredIdentifier.IScopeSearch scopeSearch;
 
-            public DeclaredCodeTypeProvider(DataTypeContentProvider contentProvider, string name, TypeArgCollection typeArgCollection) : base(name, typeArgCollection)
+            public DeclaredCodeTypeProvider(DataTypeContentProvider contentProvider, string name, TypeArgCollection typeArgCollection, IGetIdentifier parent) : base(name, typeArgCollection)
             {
                 this.contentProvider = contentProvider;
+
+                scopeSearch = GetStructuredIdentifier.PredicateSearch(element => element.Provider == this);
+
+                GetIdentifier = new GetStructuredIdentifier(
+                    defaultName: name,
+                    typeArgs: typeArgCollection.TypeArgs.Select(typeArg => typeArg.DataTypeProvider.Instance).ToArray(),
+                    parent: parent,
+                    scopeSearcher: scopeSearch
+                );
             }
 
             public override IDisposable CreateInstance(IObserver<CodeType> observer, ProviderArguments arguments) =>
@@ -113,7 +123,7 @@ namespace DS.Analysis.Structure.DataTypes
                 defaultName: contentProvider.name,
                 typeArgs: arguments.TypeArgs,
                 parent: arguments.Parent?.GetIdentifier,
-                scopeSearcher: GetStructuredIdentifier.PredicateSearch(element => element.Provider == this));
+                scopeSearcher: scopeSearch);
 
 
             class DeclaredCodeTypeComparison : ITypeComparison

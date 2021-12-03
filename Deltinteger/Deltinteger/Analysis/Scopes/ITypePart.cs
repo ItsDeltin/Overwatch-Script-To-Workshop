@@ -68,6 +68,8 @@ namespace DS.Analysis.Scopes
 
         public bool Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount)
         {
+            if (typeArgCount != provider.Generics.Count)
+                errorHandler.GenericCountMismatch(provider, provider.Generics.Count);
             return true;
         }
 
