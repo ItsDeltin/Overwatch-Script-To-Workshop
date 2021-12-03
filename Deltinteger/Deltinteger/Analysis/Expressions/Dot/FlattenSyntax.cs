@@ -4,7 +4,13 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Expressions.Dot
 {
-    class FlattenSyntax
+    interface IFlattenSyntax
+    {
+        Token TrailingSeperator { get; }
+        IReadOnlyList<ITreeContextPart> Parts { get; }
+    }
+
+    class FlattenSyntax : IFlattenSyntax
     {
         /// <summary>This is the last dot token when there is no right-hand operand.</summary>
         public Token TrailingSeperator { get; private set; }
@@ -24,18 +30,7 @@ namespace DS.Analysis.Expressions.Dot
                 Flatten(lop);
             // Otherwise, add the expression to the list.
             else
-            {
                 _parts.Add(new ExpressionPart(current.Left));
-
-                // Get the function.
-                // if (current.Left is FunctionExpression method)
-                //     _parts.Add(new FunctionPart(method));
-                // // Get the variable.
-                // else if (current.Left is Identifier variable)
-                //     _parts.Add(new VariableOrTypePart(variable));
-                // // Get the expression.
-                // else _parts.Add(new ExpressionPart(current.Left));
-            }
 
             // Get the expression to the right of the dot.
 
@@ -49,16 +44,6 @@ namespace DS.Analysis.Expressions.Dot
                     TrailingSeperator = current.Operator.Token;
                 else
                     _parts.Add(new ExpressionPart(current.Right));
-
-                // Get the method.
-                // if (current.Right is FunctionExpression rightMethod)
-                //     _parts.Add(new FunctionPart(rightMethod));
-                // // Get the variable.
-                // else if (current.Right is Identifier rightVariable && rightVariable.Token)
-                //     _parts.Add(new VariableOrTypePart(rightVariable));
-                // // Missing function or variable, set the _trailingSeperator.
-                // else
-                //     TrailingSeperator = current.Operator.Token;
             }
         }
     }

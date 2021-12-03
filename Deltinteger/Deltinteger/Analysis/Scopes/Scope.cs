@@ -17,6 +17,11 @@ namespace DS.Analysis.Scopes
             _sources = new[] { source };
         }
 
+        public Scope(params IScopeSource[] sources)
+        {
+            _sources = sources;
+        }
+
         public Scope(Scope parent, IScopeSource source)
         {
             _sources = parent._sources.Append(source);
@@ -35,7 +40,5 @@ namespace DS.Analysis.Scopes
         public Scope CreateChild(IScopeSource scopeSource) => new Scope(this, scopeSource);
 
         public static readonly Scope Empty = new Scope();
-
-        public static readonly Scope Default = new Scope(Types.Standard.StandardTypes.StandardSource);
     }
 }

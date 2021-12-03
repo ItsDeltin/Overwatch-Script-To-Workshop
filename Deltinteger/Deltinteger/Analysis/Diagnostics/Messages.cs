@@ -11,5 +11,7 @@ namespace DS.Analysis.Diagnostics
         public static string IdentifierDoesNotExist(string name) => $"'{name}' does not exist in the current context";
 
         public static string NotAssignable(string from, string to) => $"The type '{from}' cannot be assigned to '{to}'";
+
+        public static string ModuleHasTypeArgs() => $"Modules cannot have type arguments";
     }
 }

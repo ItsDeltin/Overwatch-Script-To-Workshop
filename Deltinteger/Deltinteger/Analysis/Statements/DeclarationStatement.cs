@@ -9,7 +9,7 @@ namespace DS.Analysis.Statements
         public DeclarationStatement(ContextInfo context, AbstractDeclaredElement declaredElement)
         {
             AddDisposable(this.declaredElement = declaredElement);
-            context.ScopeAppender.AddScopedElement(declaredElement.MakeScopedElement());
+            declaredElement.AddToScope(context.ScopeAppender);
         }
     }
 }

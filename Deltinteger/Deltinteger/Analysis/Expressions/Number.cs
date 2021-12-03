@@ -9,7 +9,7 @@ namespace DS.Analysis.Expressions
         public Number(double value)
         {
             this.value = value;
-            Type = StandardTypes.Number.Director;
+            SetTypeDirector(StandardTypes.Number.Director);
         }
     }
 }

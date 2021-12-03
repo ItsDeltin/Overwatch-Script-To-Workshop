@@ -15,7 +15,7 @@ namespace DS.Analysis.Types.Generics
             Name = name;
             Single = single;
             DataTypeProvider = new TypeArgProvider(name);
-            ScopedElement = new ScopedElement(name, ScopedElementData.Create(name, DataTypeProvider, UnknownIdentifierHandler.Instance));
+            ScopedElement = ScopedElement.Create(name, DataTypeProvider, UnknownIdentifierHandler.Instance);
         }
     }
 }

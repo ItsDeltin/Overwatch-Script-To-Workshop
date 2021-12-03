@@ -16,10 +16,9 @@ namespace DS.Analysis.Structure.Variables
             variable = variableBuilder.GetVariable(contextInfo);
         }
 
-        public override ScopedElement MakeScopedElement(ScopedElementParameters parameters)
+        public override void AddToScope(IScopeAppender scopeAppender)
         {
-            string name = parameters.Alias ?? Name;
-            return new ScopedElement(name, ScopedElementData.Create(name, null, variable.CreateInstance()));
+            scopeAppender.AddScopedElement(ScopedElement.Create(Name, null, variable.CreateInstance()));
         }
 
         public override void AddToContent(TypeContentBuilder contentBuilder)

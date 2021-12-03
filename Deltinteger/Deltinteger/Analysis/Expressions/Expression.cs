@@ -1,32 +1,36 @@
 using System;
 using DS.Analysis.Types;
 using DS.Analysis.Scopes;
+using DS.Analysis.Utility;
 
 namespace DS.Analysis.Expressions
 {
-    abstract class Expression : Node
+    abstract class Expression : Node, IObservable<ExpressionData>
     {
-        public ITypeDirector Type { get; protected set; }
+        protected ObserverCollection<ExpressionData> Observers { get; } = new ValueObserverCollection<ExpressionData>();
 
-        public IObservable<Scope> Scope { get; protected set; }
+        public ITypeDirector Type { get; }
 
 
         protected Expression()
         {
-            Scope = new DefaultScopeSource(this);
+            Type = new ExpressionTypeDirector(this);
         }
 
 
-        // DefaultScopeSource gets the scope from the Type of the Expression.
-        class DefaultScopeSource : IObservable<Scope>
+        protected void SetTypeDirector(ITypeDirector director)
+        {
+            AddDisposable(director.Subscribe(type => Observers.Set(new ExpressionData(type, new Scope(type.Content.ScopeSource)))));
+        }
+
+        public IDisposable Subscribe(IObserver<ExpressionData> observer) => Observers.Add(observer);
+
+
+        class ExpressionTypeDirector : ITypeDirector
         {
             readonly Expression expression;
-            public DefaultScopeSource(Expression expression) => this.expression = expression;
-            public IDisposable Subscribe(IObserver<Scope> observer) => expression.Type.Subscribe(
-                onNext: codeType => observer.OnNext(new Scope(codeType.Content.ScopeSource)),
-                onError: exception => observer.OnError(exception),
-                onCompleted: () => observer.OnCompleted()
-            );
+            public ExpressionTypeDirector(Expression expression) => this.expression = expression;
+            public IDisposable Subscribe(IObserver<CodeType> observer) => expression.Observers.Select(observer, expressionData => expressionData.Type);
         }
     }
 
@@ -34,10 +38,6 @@ namespace DS.Analysis.Expressions
     {
         readonly ITypeDirector typeDirector;
         public TypeScopeObservable(ITypeDirector typeDirector) => this.typeDirector = typeDirector ?? throw new ArgumentNullException(nameof(typeDirector));
-        public IDisposable Subscribe(IObserver<Scope> observer) => typeDirector.Subscribe(
-            onNext: codeType => observer.OnNext(new Scope(codeType.Content.ScopeSource)),
-            onError: exception => observer.OnError(exception),
-            onCompleted: () => observer.OnCompleted()
-        );
+        public IDisposable Subscribe(IObserver<Scope> observer) => typeDirector.Select(observer, type => new Scope(type.Content.ScopeSource));
     }
 }

@@ -2,7 +2,7 @@ namespace DS.Analysis.Types
 {
     using Components;
 
-    class CodeType
+    class CodeType : IParentElement
     {
         public TypeLinker TypeLinker { get; }
 

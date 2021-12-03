@@ -4,7 +4,7 @@ using System.Reactive.Disposables;
 namespace DS.Analysis.Types.Semantics
 {
     using Diagnostics;
-    using static Utility.ObserverGroup;
+    using Utility;
 
     static class TypeValidation
     {
@@ -13,7 +13,7 @@ namespace DS.Analysis.Types.Semantics
             var watcher = context.Scope.Watch();
             return new CompositeDisposable(new[] {
                 watcher,
-                Observe(watcher, assignToType, valueType, (scopeInfo, assignToType, valueType) =>
+                Helper.Observe(watcher, assignToType, valueType, (scopeInfo, assignToType, valueType) =>
                 {
                     // Types are compatible; no error.
                     if (valueType.Comparison.CanBeAssignedTo(assignToType))
@@ -22,7 +22,7 @@ namespace DS.Analysis.Types.Semantics
                     // Not assignable.
                     return context.PostAnalysisOperations.Add(() => {
                         // Create the identifier context.
-                        var identifierContext = new Components.GetIdentifierContext(scopeInfo.FoundElements);
+                        var identifierContext = new GetIdentifierContext(scopeInfo.Elements);
 
                         // Create the error.
                         return token.Error(Messages.NotAssignable(

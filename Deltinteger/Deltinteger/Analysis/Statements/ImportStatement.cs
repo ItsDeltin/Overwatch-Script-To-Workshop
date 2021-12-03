@@ -21,6 +21,8 @@ namespace DS.Analysis.Statements
         readonly FileDiagnostics diagnostics;
         Diagnostic currentDiagnostic;
 
+        readonly ScopeSource selectionSource = new ScopeSource();
+
         public ImportStatement(ContextInfo context, Import syntax)
         {
             diagnostics = context.File.Diagnostics;
@@ -65,7 +67,7 @@ namespace DS.Analysis.Statements
                 importEntireScope = true;
         }
 
-        public override IScopeSource AddSourceToContext() => importEntireScope ? scopeSource : null;
+        public override IScopeSource AddSourceToContext() => importEntireScope ? scopeSource : selectionSource;
 
         void ImportSelected(ImportSelection[] importElements, IScopeSource importFrom, IScopeAppender importTo, FileDiagnostics diagnostics, string sourceName)
         {
@@ -73,9 +75,10 @@ namespace DS.Analysis.Statements
             var elements = new ImportedElement[importElements.Length];
             for (int i = 0; i < elements.Length; i++)
             {
-                string name = importElements[i].Identifier.Text;
-                string alias = importElements[i].Alias ? importElements[i].Alias.Text : name;
-                AddDisposable(elements[i] = new ImportedElement(alias, name, importElements[i].Identifier.Range, diagnostics, sourceName));
+                string reference = importElements[i].Identifier.Text;
+                string alias = importElements[i].Alias ? importElements[i].Alias.Text : reference;
+                AddDisposable(elements[i] = new ImportedElement(selectionSource, diagnostics.CreateToken(importElements[i].Identifier.Range), alias, reference, sourceName));
+                selectionSource.AddScopedElement(elements[i]);
             }
 
             // Subscribe to the importFrom scope
@@ -93,62 +96,49 @@ namespace DS.Analysis.Statements
 
         class ImportedElement : ScopedElement, IDisposable
         {
+            readonly ScopeSource selectionSource;
+            readonly DiagnosticToken token;
             readonly string reference;
-            readonly DocRange referenceRange;
-            readonly FileDiagnostics diagnostics;
             readonly string sourceName;
-            Diagnostic referenceDiagnostic;
-            IDisposable referenceSubscription;
 
-            public ImportedElement(string alias, string reference, DocRange referenceRange, FileDiagnostics diagnostics, string sourceName) : base(alias)
+            ScopedElement match;
+            IDisposable diagnostic;
+
+
+            public ImportedElement(ScopeSource selectionSource, DiagnosticToken token, string alias, string reference, string sourceName) : base(alias)
             {
+                this.selectionSource = selectionSource;
+                this.token = token;
                 this.reference = reference;
-                this.referenceRange = referenceRange;
-                this.diagnostics = diagnostics;
                 this.sourceName = sourceName;
             }
 
             public void Update(ScopedElement[] elements)
             {
-                referenceSubscription?.Dispose();
-                referenceSubscription = null;
-                DisposeDiagnostic();
+                Reset();
 
-                var match = elements.FirstOrDefault(element => element.Alias == reference);
+                // Find matching element
+                match = elements.FirstOrDefault(element => element.Name == reference);
 
-                if (match == null)
-                {
-                    if (sourceName != null)
-                        referenceDiagnostic = diagnostics.Error(Messages.ElementNonexistentInSource(reference, sourceName), referenceRange);
-                    Observers.Set(ScopedElementData.Unknown);
-                    return;
-                }
+                if (match == null && sourceName != null)
+                    diagnostic = token.Error(Messages.ElementNonexistentInSource(reference, sourceName));
 
-                // Create link
-                referenceSubscription = match.Subscribe(scopedElementData => Observers.Set(new ImportedElementData(scopedElementData, Alias)));
+                selectionSource.Refresh();
             }
 
-            void DisposeDiagnostic()
+            void Reset()
             {
-                referenceDiagnostic?.Dispose();
-                referenceDiagnostic = null;
+                diagnostic?.Dispose();
+                diagnostic = null;
             }
 
-            void IDisposable.Dispose() => DisposeDiagnostic();
 
-            class ImportedElementData : ScopedElementData
-            {
-                readonly ScopedElementData baseData;
-
-                public ImportedElementData(ScopedElementData baseData, string alias) : base(alias)
-                {
-                    this.baseData = baseData;
-                }
+            public void Dispose() => Reset();
 
 
-                public override CodeTypeProvider GetCodeTypeProvider() => baseData.GetCodeTypeProvider();
-                public override IIdentifierHandler GetIdentifierHandler() => baseData.GetIdentifierHandler();
-            }
+            public override CodeTypeProvider Provider => match?.Provider;
+            public override IIdentifierHandler IdentifierHandler => match?.IdentifierHandler;
+            public override ITypePartHandler TypePartHandler => match?.TypePartHandler;
         }
 
 

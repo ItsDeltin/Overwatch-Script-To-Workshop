@@ -6,7 +6,7 @@ namespace DS.Analysis.Expressions
     {
         public UnknownExpression()
         {
-            Type = StandardTypes.Unknown.Director;
+            SetTypeDirector(StandardTypes.Unknown.Director);
         }
     }
 }

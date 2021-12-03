@@ -45,7 +45,7 @@ namespace DS.Analysis
             RootScopeSource.Clear();
             statements?.Dispose();
             postAnalysisDisposable?.Dispose();
-            statements = new ContextInfo(Analysis, this, Scope.Default).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
+            statements = new ContextInfo(Analysis, this, Analysis.DefaultScope).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
 
             postAnalysisDisposable = Analysis.PostAnalysisOperations.ExecuteAndReset();
         }

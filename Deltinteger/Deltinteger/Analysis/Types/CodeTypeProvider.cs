@@ -32,7 +32,7 @@ namespace DS.Analysis.Types
         /// <param name="observer">The observer where the CodeType instance is broadcasted to. This will be called again when the CodeType content changes.</param>
         /// <param name="typeArgs">The type arguments for the CodeType instance based off the generics of the provider.</param>
         /// <returns>An IDisposable which cleans up the instance provider.</returns>
-        public virtual IDisposable CreateInstance(IObserver<CodeType> observer, params CodeType[] typeArgs)
+        public virtual IDisposable CreateInstance(IObserver<CodeType> observer, ProviderArguments arguments)
         {
             observer.OnNext(new CodeType());
             return Disposable.Empty;
@@ -45,11 +45,11 @@ namespace DS.Analysis.Types
         /// <param name="typeArgs">The type arguments for the CodeType instance based off the generics of the provider.</param>
         /// <returns>An InstanceTypeDirector which can be used as a type director and can be disposed to clean up the reference
         /// to the original CodeTypeProvider (this).</returns>
-        public IDisposableTypeDirector CreateInstance(params CodeType[] typeArgs) => new InstanceTypeDirector(this, typeArgs);
+        public IDisposableTypeDirector CreateInstance(ProviderArguments arguments) => new InstanceTypeDirector(this, arguments);
 
         /// <summary>Creates a ScopedElement from the provider.</summary>
         /// <returns>A new ScopedElement with the name and provider fulfilled from this provider.</returns>
-        public virtual ScopedElement CreateScopedElement() => new ScopedElement(Name, ScopedElementData.Create(Name, this, null));
+        public virtual ScopedElement CreateScopedElement() => ScopedElement.Create(Name, this, null, new ProviderPartHandler(this));
     }
 
     /// <summary>
@@ -62,10 +62,10 @@ namespace DS.Analysis.Types
         // Don't use the Helper method for initializing the type observer here since this class may be created while the StandardTypes type is initializing.
         readonly ObserverCollection<CodeType> observers = new ValueObserverCollection<CodeType>();
 
-        public InstanceTypeDirector(CodeTypeProvider provider, CodeType[] typeArgs)
+        public InstanceTypeDirector(CodeTypeProvider provider, ProviderArguments arguments)
         {
             this.provider = provider;
-            subscription = provider.CreateInstance(Observer.Create<CodeType>(observers.Set), typeArgs);
+            subscription = provider.CreateInstance(Observer.Create<CodeType>(observers.Set), arguments);
         }
 
         public void Dispose() => subscription.Dispose();
@@ -85,11 +85,11 @@ namespace DS.Analysis.Types
         public SingletonCodeTypeProvider(string name) : base(name)
         {
             Instance = CodeType.Create(Components.CodeTypeContent.Empty, new SingletonComparison(this), new UniversalIdentifier(name));
-            Director = CreateInstance();
-            ScopedElement = new ScopedElement(Name, ScopedElementData.Create(Name, this, null));
+            Director = CreateInstance(ProviderArguments.Default);
+            ScopedElement = ScopedElement.Create(Name, this, null);
         }
 
-        public override IDisposable CreateInstance(IObserver<CodeType> observer, params CodeType[] typeArgs)
+        public override IDisposable CreateInstance(IObserver<CodeType> observer, ProviderArguments arguments)
         {
             observer.OnNext(Instance);
             return Disposable.Empty;

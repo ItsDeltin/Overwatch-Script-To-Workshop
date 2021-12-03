@@ -8,11 +8,14 @@ namespace DS.Analysis.Structure
     {
         public string Name { get; protected set; }
 
-        public virtual ScopedElement MakeScopedElement(ScopedElementParameters parameters) => new ScopedElement(parameters.Alias ?? Name);
 
         public abstract void AddToContent(TypeContentBuilder contentBuilder);
 
-        public ScopedElement MakeScopedElement() => MakeScopedElement(default(ScopedElementParameters));
+        public virtual void AddToScope(IScopeAppender scopeAppender)
+        {
+            scopeAppender.AddScopedElement(new ScopedElement(Name));
+        }
+
 
         public virtual void Dispose() { }
     }

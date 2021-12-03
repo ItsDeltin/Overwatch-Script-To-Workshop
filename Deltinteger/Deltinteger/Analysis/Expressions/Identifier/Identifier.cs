@@ -3,17 +3,14 @@ using System.Linq;
 using DS.Analysis.Scopes;
 using DS.Analysis.Types;
 using DS.Analysis.Types.Standard;
-using DS.Analysis.Utility;
 using DS.Analysis.Diagnostics;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Expressions.Identifiers
 {
-    class IdentifierExpression : Expression, ITypeDirector, IObservable<Scope>
+    class IdentifierExpression : Expression
     {
-        readonly ObserverCollection<CodeType> typeObservers = Helper.CreateTypeObserver();
-        readonly ObserverCollection<Scope> scopeObservers = new ObserverCollection<Scope>();
         readonly ScopeWatcher scopeWatcher;
         readonly Token token;
         readonly FileDiagnostics diagnostics;
@@ -22,12 +19,11 @@ namespace DS.Analysis.Expressions.Identifiers
         IDisposable currentTypeSubscription;
         IDisposable currentScopeSubscription;
 
+        CodeType type;
+        Scope scope;
+
         public IdentifierExpression(ContextInfo contextInfo, Identifier identifier)
         {
-            // Set type and scope handlers.
-            Type = this; // ITypeDirector
-            Scope = this; // IObservable<Scope>
-
             this.token = identifier.Token;
             this.diagnostics = contextInfo.File.Diagnostics;
 
@@ -38,7 +34,7 @@ namespace DS.Analysis.Expressions.Identifiers
             scopeWatcher.Subscribe(FilterIdentifiers);
         }
 
-        void FilterIdentifiers(ScopeWatcherValue newIdentifiers)
+        void FilterIdentifiers(ScopeSourceChange newIdentifiers)
         {
             currentTypeSubscription?.Dispose();
             currentTypeSubscription = null;
@@ -47,40 +43,45 @@ namespace DS.Analysis.Expressions.Identifiers
             currentDiagnostic?.Dispose();
             currentDiagnostic = null;
 
-            var identifier = ChooseIdentifierHandler(newIdentifiers.FoundElements);
+            var element = ChooseScopedElement(newIdentifiers.Elements);
 
             // Subscribe to the identifier's type.
-            var typeDirector = identifier.GetTypeDirector();
+            var typeDirector = element.IdentifierHandler?.GetTypeDirector();
 
             if (typeDirector != null)
                 // Identifier has a type
-                currentTypeSubscription = typeDirector.Subscribe(typeObservers.Set);
+                currentTypeSubscription = typeDirector.Subscribe(SetType);
             else
                 // Type is unknown
-                currentTypeSubscription = StandardTypes.Unknown.Director.Subscribe(typeObservers.Set);
+                currentTypeSubscription = StandardTypes.Unknown.Director.Subscribe(SetType);
 
             // Subscribe to the identifier's scope.
-            currentScopeSubscription = identifier.GetScopeDirector().Subscribe(scopeObservers.Set);
+            currentScopeSubscription = element.IdentifierHandler?.GetScopeDirector().Subscribe(SetScope);
         }
 
-        IIdentifierHandler ChooseIdentifierHandler(ScopedElementData[] scopedElements)
+        ScopedElement ChooseScopedElement(ScopedElement[] scopedElements)
         {
-            foreach (var scopedElement in scopedElements.Where(e => e.IsMatch(token)))
-            {
-                var identifierHandler = scopedElement.GetIdentifierHandler();
-                if (identifierHandler != null)
-                    return identifierHandler;
-            }
+            foreach (var scopedElement in scopedElements.Where(e => e.Name == token))
+                return scopedElement;
 
             currentDiagnostic = diagnostics.Error(Messages.IdentifierDoesNotExist(token), token);
-            return UnknownIdentifierHandler.Instance;
+            return ScopedElement.Unknown(token);
         }
 
-        // Subscribes to the type being pointed to.
-        IDisposable IObservable<CodeType>.Subscribe(IObserver<CodeType> observer) => typeObservers.Add(observer);
+        void SetType(CodeType type)
+        {
+            this.type = type;
+            Update();
+        }
 
-        // Subscribes to the scope being pointed to.
-        IDisposable IObservable<Scope>.Subscribe(IObserver<Scope> observer) => scopeObservers.Add(observer);
+        void SetScope(Scope scope)
+        {
+            this.scope = scope;
+            Update();
+        }
+
+        void Update() => Observers.Set(new ExpressionData(type, scope));
+
 
         // Since _currentTypeSubscription may change, we do not want to use 'Node.AddDisposable' as normal.
         // Dispose of it manually.

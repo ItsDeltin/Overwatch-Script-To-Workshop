@@ -3,10 +3,12 @@ using System.Linq;
 using System.Collections.Generic;
 using DS.Analysis.Scopes;
 using DS.Analysis.Utility;
+using DS.Analysis.Types;
+using DS.Analysis.Types.Semantics;
 
 namespace DS.Analysis.ModuleSystem
 {
-    class Module : IDisposable, IScopeSource
+    class Module : IDisposable, IScopeSource, ITypePartHandler, IParentElement
     {
         public string Name { get; }
 
@@ -25,7 +27,9 @@ namespace DS.Analysis.ModuleSystem
             Name = name;
             this.parent = parent;
 
-            parent.AddReference();
+            GetIdentifier = new GetStructuredIdentifier(Name, null, parent?.GetIdentifier, GetStructuredIdentifier.PredicateSearch(element => element.TypePartHandler == this));
+
+            parent?.AddReference();
         }
 
         public IDisposable AddSource(IModuleSource origin, IScopeSource scopeSource) => new ModuleSource(this, origin, scopeSource);
@@ -35,7 +39,7 @@ namespace DS.Analysis.ModuleSystem
             var scopedElements = Enumerable.Empty<ScopedElement>();
             foreach (var provider in providers)
                 scopedElements = scopedElements.Concat(provider.Elements);
-            
+
             observers.Set(new ScopeSourceChange(scopedElements.ToArray()));
         }
 
@@ -48,7 +52,7 @@ namespace DS.Analysis.ModuleSystem
             foreach (var submodule in submodules)
                 if (name == submodule.Name)
                     return submodule;
-            
+
             // Sub module does not exist; create it.
             Module newModule = new Module(name, this);
             submodules.Add(newModule);
@@ -74,12 +78,31 @@ namespace DS.Analysis.ModuleSystem
         // IDisposable
         public void Dispose()
         {
-            parent.submodules.Remove(this);
-            parent.RemoveReference();
+            parent?.submodules.Remove(this);
+            parent?.RemoveReference();
         }
+
 
         // IScopeSource
         public IDisposable Subscribe(IObserver<ScopeSourceChange> observer) => new ModuleScopeDereferencer(this, observers.Add(observer));
+
+
+        // ITypePartHandler
+        bool ITypePartHandler.Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount)
+        {
+            return true;
+        }
+
+        IDisposable ITypePartHandler.Get(IObserver<TypePartResult> observer, ProviderArguments arguments)
+        {
+            observer.OnNext(new TypePartResult(this, new Scope(this)));
+            return System.Reactive.Disposables.Disposable.Empty;
+        }
+
+
+        // IParentElement
+        public IGetIdentifier GetIdentifier { get; }
+
 
         /// <summary>Watches a scope that makes up the module.</summary>
         class ModuleSource : IDisposable

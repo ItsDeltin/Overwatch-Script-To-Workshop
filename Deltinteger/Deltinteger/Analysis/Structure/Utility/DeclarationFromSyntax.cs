@@ -36,7 +36,10 @@ namespace DS.Analysis.Structure.Utility
         {
             var result = new AbstractDeclaredElement[declarations.Count];
             for (int i = 0; i < result.Length; i++)
+            {
                 result[i] = DeclarationFromSyntax(contextInfo, declarations[i]);
+                result[i].AddToScope(contextInfo.ScopeAppender);
+            }
             return result;
         }
     }

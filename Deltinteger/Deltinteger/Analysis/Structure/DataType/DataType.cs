@@ -25,10 +25,9 @@ namespace DS.Analysis.Structure.DataTypes
             codeTypeProvider = setup.DataTypeProvider;
         }
 
-        public override ScopedElement MakeScopedElement(ScopedElementParameters parameters)
+        public override void AddToScope(IScopeAppender scopeAppender)
         {
-            string alias = parameters.Alias ?? Name;
-            return new ScopedElement(alias, ScopedElementData.Create(alias, codeTypeProvider, null));
+            scopeAppender.AddScopedElement(ScopedElement.Create(Name, codeTypeProvider, null, new ProviderPartHandler(codeTypeProvider)));
         }
 
         public override void AddToContent(TypeContentBuilder contentBuilder) => contentBuilder.AddElement(new ProviderTypeElement(codeTypeProvider));

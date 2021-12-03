@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using DS.Analysis.Utility;
 
@@ -27,22 +28,23 @@ namespace DS.Analysis.Scopes
             _scopedElements.Clear();
         }
 
+        public void Refresh() => _subscribers.Set(new ScopeSourceChange(_scopedElements.ToArray()));
+
         public void AddScopedElement(ScopedElement element)
         {
             _scopedElements.Add(element);
-            _subscribers.Set(new ScopeSourceChange(_scopedElements.ToArray()));
+            Refresh();
         }
     }
 
     struct ScopeSourceChange
     {
-        public static readonly ScopeSourceChange Empty = new ScopeSourceChange();
+        public static readonly ScopeSourceChange Empty = new ScopeSourceChange(new ScopedElement[0]);
 
         public ScopedElement[] Elements;
 
-        public ScopeSourceChange(ScopedElement[] elements)
-        {
-            Elements = elements;
-        }
+        public ScopeSourceChange(ScopedElement[] elements) => Elements = elements;
+
+        public ScopeSourceChange(IEnumerable<ScopedElement> elements) => Elements = elements.ToArray();
     }
 }

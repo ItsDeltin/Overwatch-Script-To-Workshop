@@ -26,10 +26,9 @@ namespace DS.Analysis.Structure.TypeAlias
             aliasProvider = new AliasProvider(Name, setup.TypeArgs, typeReference);
         }
 
-        public override ScopedElement MakeScopedElement(ScopedElementParameters parameters)
+        public override void AddToScope(IScopeAppender scopeAppender)
         {
-            string name = parameters.Alias ?? Name;
-            return new ScopedElement(name, ScopedElementData.Create(name, aliasProvider, null));
+            scopeAppender.AddScopedElement(ScopedElement.Create(Name, aliasProvider, null));
         }
 
         public override void AddToContent(TypeContentBuilder contentBuilder) => contentBuilder.AddElement(new ProviderTypeElement(aliasProvider));
@@ -52,9 +51,9 @@ namespace DS.Analysis.Structure.TypeAlias
             }
 
 
-            public override IDisposable CreateInstance(IObserver<CodeType> observer, params CodeType[] typeArgs)
+            public override IDisposable CreateInstance(IObserver<CodeType> observer, ProviderArguments arguments)
             {
-                var aliasDirector = new AliasDirector(this, typeArgs);
+                var aliasDirector = new AliasDirector(this, arguments.TypeArgs);
                 aliasDirector.Subscribe(observer);
                 return aliasDirector;
             }

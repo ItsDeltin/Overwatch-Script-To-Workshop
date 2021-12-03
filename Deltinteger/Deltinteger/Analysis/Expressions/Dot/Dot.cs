@@ -27,7 +27,7 @@ namespace DS.Analysis.Expressions.Dot
             expressions = new Expression[flattenSyntax.Parts.Count];
             partTypeSubscriptions = new IDisposable[flattenSyntax.Parts.Count];
 
-            Type = this;
+            SetTypeDirector(this);
 
             // Initialize expressions
             GetExpression(0, null);
@@ -57,7 +57,7 @@ namespace DS.Analysis.Expressions.Dot
             if (index < expressions.Length - 1)
             {
                 // ... then subscribe to the expression's type to update the next expression in the list.
-                partTypeSubscriptions[index] = expressions[index].Scope.Subscribe(scope => GetExpression(index + 1, scope));
+                partTypeSubscriptions[index] = expressions[index].Subscribe(expressionData => GetExpression(index + 1, expressionData.Scope));
             }
             // This is the last expression.
             else
@@ -69,7 +69,7 @@ namespace DS.Analysis.Expressions.Dot
             int last = partTypeSubscriptions.Length - 1;
 
             partTypeSubscriptions[last]?.Dispose(); // Dispose existing if it exists.
-            partTypeSubscriptions[last] = expressions[last].Type.Subscribe(typeObservers.Set);
+            partTypeSubscriptions[last] = expressions[last].Subscribe(expressionData => typeObservers.Set(expressionData.Type));
         }
 
         public override void Dispose()

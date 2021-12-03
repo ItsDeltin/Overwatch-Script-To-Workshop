@@ -1,4 +1,7 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using DS.Analysis.Scopes;
 using DS.Analysis.Expressions;
@@ -11,6 +14,7 @@ using DS.Analysis.Structure.Methods;
 using DS.Analysis.Structure.Modules;
 using DS.Analysis.Structure.TypeAlias;
 using DS.Analysis.Structure.Variables;
+using DS.Analysis.Types;
 
 namespace DS.Analysis
 {
@@ -21,7 +25,9 @@ namespace DS.Analysis
         public Scope Scope { get; private set; }
         public Scope Getter { get; private set; }
         public IScopeAppender ScopeAppender { get; private set; }
+        public IParentElement Parent { get; private set; }
         public ContextKind ContextKind { get; private set; }
+        public IEnumerable<string> ModulePath { get; private set; } = new string[0];
 
         public PostAnalysisOperation PostAnalysisOperations => File.Analysis.PostAnalysisOperations;
 
@@ -40,7 +46,9 @@ namespace DS.Analysis
             Scope = other.Scope;
             Getter = other.Getter;
             ScopeAppender = other.ScopeAppender;
+            Parent = other.Parent;
             ContextKind = other.ContextKind;
+            ModulePath = other.ModulePath;
         }
 
 
@@ -63,6 +71,12 @@ namespace DS.Analysis
                 Scope = Scope.CreateChild(appendableSource),
                 ScopeAppender = appendableSource
             };
+
+        public ContextInfo SetParent(IParentElement parent) => new ContextInfo(this) { Parent = parent };
+
+        public ContextInfo AppendToModulePath(string moduleName) => new ContextInfo(this) { ModulePath = ModulePath.Append(moduleName) };
+
+        public ContextInfo SetModulePath(IEnumerable<string> path) => new ContextInfo(this) { ModulePath = path };
 
 
         public Expression GetExpression(IParseExpression expressionContext)
@@ -155,5 +169,15 @@ namespace DS.Analysis
 
             return new BlockAction(statements, scopeSource);
         }
+
+
+        public IDisposable Error(string message, DocRange range) => File.Diagnostics.Error(message, range);
+
+
+        public IGetIdentifier CreateStructuredIdentifier(string name, CodeType[] typeArgs, Func<ScopedElement, bool> predicate) =>
+            new GetStructuredIdentifier(name, typeArgs, Parent?.GetIdentifier, GetStructuredIdentifier.PredicateSearch(predicate));
+
+        public IGetIdentifier CreateStructuredIdentifier(string name, Func<ScopedElement, bool> predicate) =>
+            CreateStructuredIdentifier(name, null, predicate);
     }
 }

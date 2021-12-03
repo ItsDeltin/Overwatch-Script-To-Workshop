@@ -94,7 +94,7 @@ namespace DS.Analysis.Structure.DataTypes
                 this.contentProvider = contentProvider;
             }
 
-            public override IDisposable CreateInstance(IObserver<CodeType> observer, params CodeType[] typeArgs) =>
+            public override IDisposable CreateInstance(IObserver<CodeType> observer, ProviderArguments arguments) =>
                 // Watch for external components changing (base class)
                 contentProvider.externalsWatcher.Add(Observer.Create<TypeExternals>(externals =>
                 {
@@ -103,17 +103,17 @@ namespace DS.Analysis.Structure.DataTypes
                     contentBuilder.AddAll(contentProvider.declaredElements);
 
                     // Type comparison
-                    var comparison = new DeclaredCodeTypeComparison(externals.baseCodeType, contentProvider, typeArgs);
+                    var comparison = new DeclaredCodeTypeComparison(externals.baseCodeType, contentProvider, arguments.TypeArgs);
 
                     // Create the type and notify the observer.
-                    observer.OnNext(CodeType.Create(contentBuilder.ToCodeTypeContent(), comparison, CreateIGetIdentifier(typeArgs)));
+                    observer.OnNext(CodeType.Create(contentBuilder.ToCodeTypeContent(), comparison, CreateIGetIdentifier(arguments)));
                 }));
 
-            IGetIdentifier CreateIGetIdentifier(CodeType[] typeArgs) => GetStructuredIdentifier.Create(
+            IGetIdentifier CreateIGetIdentifier(ProviderArguments arguments) => new GetStructuredIdentifier(
                 defaultName: contentProvider.name,
-                typeArgs: typeArgs,
-                parent: null,
-                searchName: context => context.Elements.Reverse().FirstOrDefault(element => element.GetCodeTypeProvider() == this)?.Name);
+                typeArgs: arguments.TypeArgs,
+                parent: arguments.Parent?.GetIdentifier,
+                scopeSearcher: GetStructuredIdentifier.PredicateSearch(element => element.Provider == this));
 
 
             class DeclaredCodeTypeComparison : ITypeComparison
