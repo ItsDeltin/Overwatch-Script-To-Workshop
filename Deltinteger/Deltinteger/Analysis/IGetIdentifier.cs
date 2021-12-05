@@ -59,20 +59,23 @@ namespace DS.Analysis
         public string PathFromContext(GetIdentifierContext context)
         {
             // Search for the element in the scope. If it is found, return the alias.
-            var result = scopeSearcher.Find(context);
-            if (result != null)
-                return result;
+            string result = scopeSearcher.Find(context);
 
-            // Get the default name.
-            string def = defaultName;
+            if (result == null)
+            {
+                // Not found in the context, use the default name.
+                result = defaultName;
+
+                // Get the parent's path if it exists and prepend it to the current value.
+                if (parent != null)
+                    result = parent.PathFromContext(context) + "." + result;
+            }
+
+            // Get the type arguments.
             if (typeArgs != null && typeArgs.Length != 0)
-                def += "<" + string.Join(", ", typeArgs.Select(a => a.GetIdentifier.PathFromContext(context))) + ">";
+                result += "<" + string.Join(", ", typeArgs.Select(a => a.GetIdentifier.PathFromContext(context))) + ">";
 
-            // Get the parent's path if it exists and prepend it to the current value.
-            if (parent != null)
-                def = parent.PathFromContext(context) + "." + def;
-
-            return def;
+            return result;
         }
 
 
