@@ -1,21 +1,20 @@
-using System;
 using DS.Analysis.Expressions;
-using DS.Analysis.Types;
-using DS.Analysis.Structure;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Statements
 {
     class IfStatement : Statement
     {
-        readonly If syntax;
+        readonly Expression @if;
+        readonly Statement block;
 
         public IfStatement(ContextInfo context, If syntax)
         {
-            this.syntax = syntax;
-
             // Get the if expression
-            Expression @if = context.GetExpression(syntax.Expression);
+            AddDisposable(@if = context.GetExpression(syntax.Expression));
+
+            // Get the block
+            AddDisposable(block = context.StatementFromSyntax(syntax.Statement));
         }
     }
 }

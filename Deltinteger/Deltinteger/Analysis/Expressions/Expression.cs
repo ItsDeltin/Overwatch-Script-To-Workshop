@@ -20,7 +20,7 @@ namespace DS.Analysis.Expressions
 
         protected void SetTypeDirector(ITypeDirector director)
         {
-            AddDisposable(director.Subscribe(type => Observers.Set(new ExpressionData(type, new Scope(type.Content.ScopeSource)))));
+            AddDisposable(director.Subscribe(type => Observers.Set(new ExpressionData(type))));
         }
 
         public IDisposable Subscribe(IObserver<ExpressionData> observer) => Observers.Add(observer);

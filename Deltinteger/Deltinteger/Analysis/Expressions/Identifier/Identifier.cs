@@ -80,7 +80,7 @@ namespace DS.Analysis.Expressions.Identifiers
             Update();
         }
 
-        void Update() => Observers.Set(new ExpressionData(type, scope));
+        void Update() => Observers.Set(new ExpressionData(type, scope, new VariableExpressionData()));
 
 
         // Since _currentTypeSubscription may change, we do not want to use 'Node.AddDisposable' as normal.

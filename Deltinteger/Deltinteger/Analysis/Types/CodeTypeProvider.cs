@@ -4,7 +4,6 @@ namespace DS.Analysis.Types
     using System.Reactive;
     using System.Reactive.Disposables;
     using Generics;
-    using Components;
     using Utility;
     using Scopes;
 
@@ -87,7 +86,7 @@ namespace DS.Analysis.Types
         {
             Instance = CodeType.Create(Components.CodeTypeContent.Empty, new SingletonComparison(this), new UniversalIdentifier(name));
             Director = CreateInstance(ProviderArguments.Default);
-            ScopedElement = ScopedElement.Create(Name, this, null);
+            ScopedElement = ScopedElement.Create(Name, this, null, new ProviderPartHandler(this));
         }
 
         public override IDisposable CreateInstance(IObserver<CodeType> observer, ProviderArguments arguments)

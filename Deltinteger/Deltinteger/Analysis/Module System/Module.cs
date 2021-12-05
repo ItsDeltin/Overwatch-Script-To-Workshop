@@ -90,6 +90,8 @@ namespace DS.Analysis.ModuleSystem
         // ITypePartHandler
         bool ITypePartHandler.Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount)
         {
+            if (typeArgCount > 0)
+                errorHandler.ModuleHasTypeArgs();
             return true;
         }
 

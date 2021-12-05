@@ -13,5 +13,7 @@ namespace DS.Analysis.Diagnostics
         public static string NotAssignable(string from, string to) => $"The type '{from}' cannot be assigned to '{to}'";
 
         public static string ModuleHasTypeArgs() => $"Modules cannot have type arguments";
+
+        public static string ExpectedVariable() => "Assignment expression must be a variable";
     }
 }

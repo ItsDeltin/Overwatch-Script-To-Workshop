@@ -7,7 +7,11 @@ namespace DS.Analysis
     {
         readonly List<IDisposable> _disposables = new List<IDisposable>();
 
-        protected void AddDisposable(IDisposable disposable) => _disposables.Add(disposable);
+        protected T AddDisposable<T>(T disposable) where T : IDisposable
+        {
+            _disposables.Add(disposable);
+            return disposable;
+        }
 
         public virtual void Dispose()
         {

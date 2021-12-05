@@ -15,6 +15,7 @@ using DS.Analysis.Structure.Modules;
 using DS.Analysis.Structure.TypeAlias;
 using DS.Analysis.Structure.Variables;
 using DS.Analysis.Types;
+using DS.Analysis.Diagnostics;
 
 namespace DS.Analysis
 {
@@ -29,6 +30,7 @@ namespace DS.Analysis
         public ContextKind ContextKind { get; private set; }
         public IEnumerable<string> ModulePath { get; private set; } = new string[0];
 
+        public FileDiagnostics Diagnostics => File.Diagnostics;
         public PostAnalysisOperation PostAnalysisOperations => File.Analysis.PostAnalysisOperations;
 
         public ContextInfo(DeltinScriptAnalysis analysis, ScriptFile file, Scope scope)
@@ -143,6 +145,10 @@ namespace DS.Analysis
                 // Expression
                 case ExpressionStatementSyntax expression:
                     return new ExpressionStatement(this, expression);
+
+                // Assignment
+                case Assignment assignment:
+                    return new AssignmentStatement(this, assignment);
             }
             throw new NotImplementedException(syntax.GetType().ToString());
         }
