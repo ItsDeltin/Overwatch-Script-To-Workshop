@@ -9,8 +9,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
         // IParseType
         public bool IsVoid { get; }
-        public bool LookaheadValid => Parts[0].Identifier;
-        public bool Infer => Parts[0].Identifier && Parts[0].Identifier.TokenType == TokenType.Define;
+        public bool LookaheadValid => IsVoid || Parts[0].Identifier;
+        public bool Infer => !IsVoid && Parts[0].Identifier && Parts[0].Identifier.TokenType == TokenType.Define;
         public bool DefinitelyType => IsVoid;
         Token IParseType.GenericToken => Parts[0].Identifier;
         public bool Valid => valid;

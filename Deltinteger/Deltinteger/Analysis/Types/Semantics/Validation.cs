@@ -5,6 +5,7 @@ namespace DS.Analysis.Types.Semantics
 {
     using Diagnostics;
     using Utility;
+    using Scopes;
 
     static class TypeValidation
     {
@@ -13,23 +14,26 @@ namespace DS.Analysis.Types.Semantics
             var watcher = context.Scope.Watch();
             return new CompositeDisposable(new[] {
                 watcher,
-                Helper.Observe(watcher, assignToType, valueType, (scopeInfo, assignToType, valueType) =>
-                {
-                    // Types are compatible; no error.
-                    if (valueType.Comparison.CanBeAssignedTo(assignToType))
-                        return Disposable.Empty;
+                Helper.Observe(watcher, assignToType, valueType, (scopeInfo, assignToType, valueType) => IsAssignableTo(context, token, scopeInfo, assignToType, valueType))
+            });
+        }
 
-                    // Not assignable.
-                    return context.PostAnalysisOperations.Add(() => {
-                        // Create the identifier context.
-                        var identifierContext = new GetIdentifierContext(scopeInfo.Elements);
+        public static IDisposable IsAssignableTo(ContextInfo context, DiagnosticToken token, ScopeSourceChange scopeInfo, CodeType assignToType, CodeType valueType)
+        {
+            // Types are compatible; no error.
+            if (valueType.Comparison.CanBeAssignedTo(assignToType))
+                return Disposable.Empty;
 
-                        // Create the error.
-                        return token.Error(Messages.NotAssignable(
-                            valueType.GetIdentifier.PathFromContext(identifierContext),
-                            assignToType.GetIdentifier.PathFromContext(identifierContext)));
-                    });
-                })
+            // Not assignable.
+            return context.PostAnalysisOperations.Add(() =>
+            {
+                // Create the identifier context.
+                var identifierContext = new GetIdentifierContext(scopeInfo.Elements);
+
+                // Create the error.
+                return token.Error(Messages.NotAssignable(
+                    valueType.GetIdentifier.PathFromContext(identifierContext),
+                    assignToType.GetIdentifier.PathFromContext(identifierContext)));
             });
         }
     }

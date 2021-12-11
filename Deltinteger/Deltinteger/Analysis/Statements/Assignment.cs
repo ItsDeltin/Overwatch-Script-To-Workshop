@@ -4,6 +4,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Statements
 {
+    using Utility;
     using Diagnostics;
     using Expressions;
     using Types.Semantics;
@@ -18,21 +19,19 @@ namespace DS.Analysis.Statements
             Expression variable = AddDisposable(context.GetExpression(syntax.VariableExpression));
             value = AddDisposable(context.GetExpression(syntax.Value));
 
-            SerialDisposable variableStatus = AddDisposable(new SerialDisposable());
-
-            // Extract the variable.
-            AddDisposable(variable.Subscribe(variableExpressionData =>
+            var scopeWatcher = AddDisposable(context.Scope.Watch());
+            AddDisposable(Helper.Observe(scopeWatcher, variable, value, (scopeElements, variableData, valueData) =>
             {
                 // Not a variable.
-                if (variableExpressionData.Variable == null)
-                    variableStatus.Disposable = context.Diagnostics.Error(Messages.ExpectedVariable(), syntax.VariableExpression.Range);
+                if (variableData.Variable == null)
+                    return context.Diagnostics.Error(Messages.ExpectedVariable(), syntax.VariableExpression.Range);
 
                 // Make sure the value type is assignable to the variable type.
                 else if (value != null)
-                    variableStatus.Disposable = TypeValidation.IsAssignableTo(context, context.Diagnostics.CreateToken(syntax.Value.Range), variable.Type, value.Type);
+                    return TypeValidation.IsAssignableTo(context, context.Diagnostics.CreateToken(syntax.Value.Range), scopeElements, variableData.Type, valueData.Type);
 
                 else
-                    variableStatus.Disposable = null;
+                    return Disposable.Empty;
             }));
         }
     }

@@ -28,7 +28,7 @@ namespace DS.Analysis.Structure.TypeAlias
 
         public override void AddToScope(IScopeAppender scopeAppender)
         {
-            scopeAppender.AddScopedElement(ScopedElement.Create(Name, aliasProvider, null));
+            scopeAppender.AddScopedElement(ScopedElement.Create(Name, aliasProvider, null, new ProviderPartHandler(aliasProvider)));
         }
 
         public override void AddToContent(TypeContentBuilder contentBuilder) => contentBuilder.AddElement(new ProviderTypeElement(aliasProvider));

@@ -85,6 +85,8 @@ namespace DS.Analysis
         {
             switch (expressionContext)
             {
+                // Group
+                case ExpressionGroup group: return GetExpression(group.Expression);
                 // Identifier
                 case Identifier identifier: return new IdentifierExpression(this, identifier);
                 // True/false
