@@ -14,6 +14,12 @@ namespace DS.Analysis.Diagnostics
             this.range = range;
         }
 
-        public IDisposable Error(string message) => fileDiagnostics.Error(message, range);
+        public IDisposable Error(string message)
+        {
+            if (range != null)
+                return fileDiagnostics.Error(message, range);
+
+            return System.Reactive.Disposables.Disposable.Empty;
+        }
     }
 }

@@ -12,28 +12,28 @@ namespace DS.Analysis.Types.Semantics
     /// <summary>
     /// A node in a type tree. May be a module or type.
     /// </summary>
-    class TypeTreeNode : IObservable<TypePartResult>, IDisposable
+    class TypeTreeNode : IDisposable
     {
-        readonly ObserverCollection<TypePartResult> observers = new ValueObserverCollection<TypePartResult>(new TypePartResult(null, Scope.Empty));
+        readonly ContextInfo context; // The current context.
+        readonly ITypeIdentifierErrorHandler errorHandler; // Error handler.
+        readonly Action<TypePartResult> onChange; // The action to broadcast updates to.
+        readonly string name; // The name of the type or module.
+        readonly ScopeWatcher scopeWatcher; // The scope watcher.
+        readonly IDisposableTypeDirector[] typeArgDirectors; // The type arguments.
+        readonly IDisposable typeArgSubscriptions; // The subscriptions to the type arguments.
 
-        readonly ContextInfo context;
-        readonly ITypeIdentifierErrorHandler errorHandler;
-        readonly string name;
-        readonly ScopeWatcher scopeWatcher;
-        readonly IDisposableTypeDirector[] typeArgDirectors;
-        readonly IDisposable typeArgSubscriptions;
+        CodeType[] typeArgs; // The actual CodeTypes of the type arguments. Is the same length as 'typeArgDirectors'.
+        bool readyToUpdate; // Will be set to true once the ScopeWatcher provides a value.
 
-        CodeType[] typeArgs;
-        bool readyToUpdate;
+        ITypePartHandler partHandler; // The current part handler.
+        IDisposable partSubscription; // The subscription to the current part handler.
 
-        ITypePartHandler partHandler;
-        IDisposable partSubscription;
-
-        public TypeTreeNode(ContextInfo context, ITypeIdentifierErrorHandler errorHandler, INamedType namedType)
+        public TypeTreeNode(ContextInfo context, ITypeIdentifierErrorHandler errorHandler, INamedType namedType, Action<TypePartResult> onChange)
         {
             this.context = context;
             this.errorHandler = errorHandler;
-            name = namedType.Identifier;
+            this.onChange = onChange;
+            name = namedType.Identifier?.Text;
 
             // Get the type arguments.
             typeArgDirectors = namedType.TypeArgs.Select(typeArgSyntax => TypeFromContext.TypeReferenceFromSyntax(context, typeArgSyntax)).ToArray();
@@ -43,14 +43,18 @@ namespace DS.Analysis.Types.Semantics
                 Update();
             });
 
-            scopeWatcher = context.Scope.Watch();
-            // The IDisposable created here will be not be needed since ScopeWatcher.Dispose will handle it.
-            scopeWatcher.Subscribe(change =>
+
+            if (name != null)
             {
-                partHandler = GetPartHandler(change.Elements);
-                readyToUpdate = true;
-                Update();
-            });
+                scopeWatcher = context.Scope.Watch();
+                // The IDisposable created here will be not be needed since ScopeWatcher.Dispose will handle it.
+                scopeWatcher.Subscribe(change =>
+                {
+                    partHandler = GetPartHandler(change.Elements);
+                    readyToUpdate = true;
+                    Update();
+                });
+            }
         }
 
 
@@ -76,19 +80,17 @@ namespace DS.Analysis.Types.Semantics
                 return;
 
             partSubscription?.Dispose();
-            partSubscription = partHandler.Get(Observer.Create<TypePartResult>(observers.Set), new ProviderArguments(typeArgs, context.Parent));
+            partSubscription = partHandler.Get(Observer.Create<TypePartResult>(onChange), new ProviderArguments(typeArgs, context.Parent));
         }
 
 
         public void Dispose()
         {
-            scopeWatcher.Dispose();
+            scopeWatcher?.Dispose();
             typeArgDirectors.Dispose();
             typeArgSubscriptions.Dispose();
             errorHandler.Dispose();
-            partSubscription.Dispose();
+            partSubscription?.Dispose();
         }
-
-        public IDisposable Subscribe(IObserver<TypePartResult> observer) => observers.Add(observer);
     }
 }

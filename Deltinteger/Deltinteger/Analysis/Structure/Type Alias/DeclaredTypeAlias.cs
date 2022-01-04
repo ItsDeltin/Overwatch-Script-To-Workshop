@@ -23,7 +23,7 @@ namespace DS.Analysis.Structure.TypeAlias
             Name = setup.Name;
             typeReference = setup.TypeReference;
 
-            aliasProvider = new AliasProvider(Name, setup.TypeArgs, typeReference);
+            aliasProvider = new AliasProvider(Name, setup.TypeArgs, typeReference, context.Parent?.GetIdentifier);
         }
 
         public override void AddToScope(IScopeAppender scopeAppender)
@@ -43,11 +43,13 @@ namespace DS.Analysis.Structure.TypeAlias
         class AliasProvider : CodeTypeProvider
         {
             readonly ITypeDirector aliasing;
+            readonly IGetIdentifier parent;
 
 
-            public AliasProvider(string name, TypeArgCollection typeArgs, ITypeDirector aliasing) : base(name, typeArgs)
+            public AliasProvider(string name, TypeArgCollection typeArgs, ITypeDirector aliasing, IGetIdentifier parent) : base(name, typeArgs)
             {
                 this.aliasing = aliasing;
+                this.parent = parent;
             }
 
 
@@ -68,8 +70,17 @@ namespace DS.Analysis.Structure.TypeAlias
                 {
                     referenceSubscription = provider.aliasing.Subscribe(type =>
                     {
-                        // todo: substitute the type
-                        observers.Set(type);
+                        // Substitute the type.
+                        CodeType substitution = new CodeType(type)
+                        {
+                            GetIdentifier = GetStructuredIdentifier.Create(
+                                provider.Name,
+                                typeArgs,
+                                provider.parent,
+                                element => element.Provider == provider
+                            )
+                        };
+                        observers.Set(substitution);
                     });
                 }
 

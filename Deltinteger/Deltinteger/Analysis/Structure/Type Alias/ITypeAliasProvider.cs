@@ -1,6 +1,7 @@
 using DS.Analysis.Types;
 using DS.Analysis.Types.Semantics;
 using DS.Analysis.Types.Generics;
+using DS.Analysis.Scopes;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Structure.TypeAlias
@@ -36,8 +37,16 @@ namespace DS.Analysis.Structure.TypeAlias
 
         public TypeAliasSetup Setup(ContextInfo context)
         {
+            var source = new ScopeSource();
+
+            // Contain type arguments.
+            context = context.AddAppendableSource(source);
+
+            // Get the type arguments.
             var typeArgs = TypeArgCollection.FromSyntax(typeAliasSyntax.Generics);
-            typeArgs.AddToScope(context.ScopeAppender);
+
+            // Add the type arguments to the scope.
+            typeArgs.AddToScope(source);
 
             return new TypeAliasSetup(
                 name: typeAliasSyntax.NewTypeName.Text,

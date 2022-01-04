@@ -19,14 +19,13 @@ namespace DS.Analysis.Types.Semantics
     class TypeIdentifierErrorHandler : ITypeIdentifierErrorHandler
     {
         readonly ContextInfo context;
-        readonly string referenceName;
-        readonly DiagnosticToken token;
+        readonly IdentifierDiagnostic token;
+
         IDisposable currentDiagnostic;
 
-        public TypeIdentifierErrorHandler(ContextInfo context, string name, DiagnosticToken token)
+        public TypeIdentifierErrorHandler(ContextInfo context, IdentifierDiagnostic token)
         {
             this.context = context;
-            this.referenceName = name;
             this.token = token;
         }
 
@@ -53,7 +52,7 @@ namespace DS.Analysis.Types.Semantics
 
         public void ModuleHasTypeArgs() => SetDiagnostic(token.Error(Messages.ModuleHasTypeArgs()));
 
-        public void NoTypesMatchName() => SetDiagnostic(token.Error(Messages.TypeNameNotFound(referenceName)));
+        public void NoTypesMatchName() => SetDiagnostic(token.Error(name => Messages.TypeNameNotFound(name)));
 
         public void Clear() => SetDiagnostic(null);
 

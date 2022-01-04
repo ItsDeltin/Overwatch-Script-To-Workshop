@@ -4,6 +4,7 @@ using DS.Analysis.Scopes;
 using DS.Analysis.Types;
 using DS.Analysis.Types.Standard;
 using DS.Analysis.Diagnostics;
+using DS.Analysis.Utility;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
@@ -15,9 +16,7 @@ namespace DS.Analysis.Expressions.Identifiers
         readonly Token token;
         readonly FileDiagnostics diagnostics;
 
-        Diagnostic currentDiagnostic;
-        IDisposable currentTypeSubscription;
-        IDisposable currentScopeSubscription;
+        readonly SerializedDisposableCollection state = new SerializedDisposableCollection();
 
         CodeType type;
         Scope scope;
@@ -36,12 +35,7 @@ namespace DS.Analysis.Expressions.Identifiers
 
         void FilterIdentifiers(ScopeSourceChange newIdentifiers)
         {
-            currentTypeSubscription?.Dispose();
-            currentTypeSubscription = null;
-            currentScopeSubscription?.Dispose();
-            currentScopeSubscription = null;
-            currentDiagnostic?.Dispose();
-            currentDiagnostic = null;
+            state.Dispose();
 
             var element = ChooseScopedElement(newIdentifiers.Elements);
 
@@ -50,13 +44,13 @@ namespace DS.Analysis.Expressions.Identifiers
 
             if (typeDirector != null)
                 // Identifier has a type
-                currentTypeSubscription = typeDirector.Subscribe(SetType);
+                state.Add(typeDirector.Subscribe(SetType));
             else
                 // Type is unknown
-                currentTypeSubscription = StandardTypes.Unknown.Director.Subscribe(SetType);
+                state.Add(StandardTypes.Unknown.Director.Subscribe(SetType));
 
             // Subscribe to the identifier's scope.
-            currentScopeSubscription = element.IdentifierHandler?.GetScopeDirector().Subscribe(SetScope);
+            state.Add(element.IdentifierHandler?.GetScopeDirector().Subscribe(SetScope));
         }
 
         ScopedElement ChooseScopedElement(ScopedElement[] scopedElements)
@@ -64,7 +58,7 @@ namespace DS.Analysis.Expressions.Identifiers
             foreach (var scopedElement in scopedElements.Where(e => e.Name == token))
                 return scopedElement;
 
-            currentDiagnostic = diagnostics.Error(Messages.IdentifierDoesNotExist(token), token);
+            state.Add(diagnostics.Error(Messages.IdentifierDoesNotExist(token), token));
             return ScopedElement.Unknown(token);
         }
 
@@ -88,9 +82,7 @@ namespace DS.Analysis.Expressions.Identifiers
         public override void Dispose()
         {
             base.Dispose();
-            currentTypeSubscription?.Dispose();
-            currentScopeSubscription?.Dispose();
-            currentDiagnostic?.Dispose();
+            state.Dispose();
         }
     }
 }

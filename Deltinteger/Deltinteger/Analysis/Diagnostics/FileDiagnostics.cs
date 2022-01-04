@@ -29,6 +29,8 @@ namespace DS.Analysis.Diagnostics
 
         public DiagnosticToken CreateToken(DocRange range) => new DiagnosticToken(this, range);
 
+        public IdentifierDiagnostic CreateToken(Token token) => new IdentifierDiagnostic(this, token);
+
         public PublishDiagnosticsParams GetLSPPublishParams() => new PublishDiagnosticsParams()
         {
             Uri = new Uri(Source),

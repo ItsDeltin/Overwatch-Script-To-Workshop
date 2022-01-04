@@ -99,6 +99,8 @@ namespace DS.Analysis
                         return new DotExpression(this, op);
                     else
                         break; // todo
+                // Method call
+                case FunctionExpression method: return new CallExpression(new MethodAnalysis(this, method));
                 // Unknown
                 case MissingElement missingElement:
                     return new UnknownExpression();
@@ -120,7 +122,7 @@ namespace DS.Analysis
                 case ClassContext dataTypeDeclaration:
                     return new DeclarationStatement(this, new DeclaredDataType(this, new DataTypeContentProvider(dataTypeDeclaration)));
 
-                // Method
+                // Method declaration
                 case FunctionContext methodDeclaration:
                     return new DeclarationStatement(this, new DeclaredMethod(this, new MethodContentProvider(methodDeclaration)));
 
@@ -151,6 +153,10 @@ namespace DS.Analysis
                 // Assignment
                 case Assignment assignment:
                     return new AssignmentStatement(this, assignment);
+
+                // Method call
+                case FunctionExpression method:
+                    return new CallStatement(new MethodAnalysis(this, method));
             }
             throw new NotImplementedException(syntax.GetType().ToString());
         }

@@ -21,7 +21,8 @@ namespace DS.Analysis
     /// </summary>
     interface IGetIdentifier
     {
-        /// <summary>Gets the name.</summary>
+        /// <summary>Gets the name of the identifier using the provided context data. This may be an expensive operation, so it is recommended
+        /// to execute after analysis is completed.</summary>
         /// <param name="context">Data about the current context.</param>
         /// <returns>The name as represented by the current context.</returns>
         string PathFromContext(GetIdentifierContext context);
@@ -94,8 +95,8 @@ namespace DS.Analysis
         }
 
 
-        public static GetStructuredIdentifier Create(string defaultName, IGetIdentifier parent, Func<GetIdentifierContext, string> searchName) =>
-            new GetStructuredIdentifier(defaultName, null, parent, new AnonymousScopeSearch(searchName));
+        public static GetStructuredIdentifier Create(string defaultName, CodeType[] typeArgs, IGetIdentifier parent, Func<ScopedElement, bool> predicate) =>
+            new GetStructuredIdentifier(defaultName, typeArgs, parent, PredicateSearch(predicate));
 
         public static IScopeSearch PredicateSearch(Func<ScopedElement, bool> predicate) => new AnonymousScopeSearch(context =>
         {

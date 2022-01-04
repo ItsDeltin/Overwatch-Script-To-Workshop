@@ -8,12 +8,19 @@ namespace DS.Analysis.Types
 
 
         // Components
-        public CodeTypeContent Content { get; protected set; }
-        public ITypeComparison Comparison { get; protected set; }
-        public IGetIdentifier GetIdentifier { get; protected set; }
+        public CodeTypeContent Content { get; set; }
+        public ITypeComparison Comparison { get; set; }
+        public IGetIdentifier GetIdentifier { get; set; }
 
         public CodeType()
         {
+        }
+
+        public CodeType(CodeType other)
+        {
+            Content = other.Content;
+            Comparison = other.Comparison;
+            GetIdentifier = other.GetIdentifier;
         }
 
         public override int GetHashCode() => Comparison.GetTypeHashCode();

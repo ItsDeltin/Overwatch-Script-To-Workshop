@@ -1,6 +1,5 @@
 using System;
 using DS.Analysis.Scopes;
-using DS.Analysis.Types;
 
 namespace DS.Analysis.Structure
 {
@@ -11,10 +10,7 @@ namespace DS.Analysis.Structure
 
         public abstract void AddToContent(TypeContentBuilder contentBuilder);
 
-        public virtual void AddToScope(IScopeAppender scopeAppender)
-        {
-            scopeAppender.AddScopedElement(new ScopedElement(Name));
-        }
+        public abstract void AddToScope(IScopeAppender scopeAppender);
 
 
         public virtual void Dispose() { }
@@ -29,17 +25,6 @@ namespace DS.Analysis.Structure
         {
             foreach (var element in DeclaredElements)
                 element.Dispose();
-        }
-    }
-
-    abstract class TypeDeclaredElement : AbstractDeclaredElement
-    {
-        public IDisposableTypeDirector Type { get; protected set; }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            Type.Dispose();
         }
     }
 }

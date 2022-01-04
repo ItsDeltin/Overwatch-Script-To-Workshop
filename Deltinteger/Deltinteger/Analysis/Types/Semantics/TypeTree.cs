@@ -15,7 +15,6 @@ namespace DS.Analysis.Types.Semantics
         readonly ContextInfo context;
         readonly INamedType[] partSyntaxes;
         readonly TypeTreeNode[] parts;
-        readonly IDisposable[] partSubscriptions;
 
         IDisposable resultingDiagnostic;
 
@@ -25,7 +24,6 @@ namespace DS.Analysis.Types.Semantics
             this.context = context;
             this.partSyntaxes = partSyntaxes;
             parts = new TypeTreeNode[partSyntaxes.Length];
-            partSubscriptions = new IDisposable[partSyntaxes.Length];
 
             SubscribeToPartIndex(0, context);
         }
@@ -33,13 +31,10 @@ namespace DS.Analysis.Types.Semantics
         void SubscribeToPartIndex(int index, ContextInfo context)
         {
             // Create the error handler for the tree part.
-            var errorHandler = new TypeIdentifierErrorHandler(context, partSyntaxes[index].Identifier, context.File.Diagnostics.CreateToken(partSyntaxes[index].Identifier));
+            var errorHandler = new TypeIdentifierErrorHandler(context, context.File.Diagnostics.CreateToken(partSyntaxes[index].Identifier));
 
             // Create the node.
-            parts[index] = new TypeTreeNode(context, errorHandler, partSyntaxes[index]);
-
-            // Subscribe to the node.
-            partSubscriptions[index] = parts[index].Subscribe(result =>
+            parts[index] = new TypeTreeNode(context, errorHandler, partSyntaxes[index], result =>
             {
                 // If this is the last part, notify the observers.
                 if (index == parts.Length - 1)
@@ -47,7 +42,10 @@ namespace DS.Analysis.Types.Semantics
                     if (result.Type == null)
                     {
                         // Not a type.
-                        resultingDiagnostic = context.Error(partSyntaxes[index].Identifier + " is a module, not a type", partSyntaxes[index].Identifier);
+                        // Make sure the identifier token exists before adding the error.
+                        if (partSyntaxes[index].Identifier)
+                            resultingDiagnostic = context.Error(partSyntaxes[index].Identifier + " is a module, not a type", partSyntaxes[index].Identifier);
+
                         observers.Set(Standard.StandardTypes.Unknown.Instance);
                     }
                     else
@@ -76,10 +74,8 @@ namespace DS.Analysis.Types.Semantics
 
             for (int i = startingIndex; i < parts.Length; i++)
             {
-                partSubscriptions[i]?.Dispose();
                 parts[i]?.Dispose();
-
-                partSubscriptions[i] = parts[i] = null;
+                parts[i] = null;
             }
         }
 

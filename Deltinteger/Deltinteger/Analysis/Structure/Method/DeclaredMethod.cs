@@ -1,8 +1,12 @@
 namespace DS.Analysis.Structure.Methods
 {
-    class DeclaredMethod : TypeDeclaredElement
+    using DS.Analysis.Scopes;
+    using Types;
+
+    class DeclaredMethod : AbstractDeclaredElement
     {
         readonly IMethodContentProvider contentProvider;
+        IDisposableTypeDirector returnTypeDirector;
         Parameter[] parameters;
 
         public DeclaredMethod(ContextInfo contextInfo, IMethodContentProvider contentProvider)
@@ -11,7 +15,7 @@ namespace DS.Analysis.Structure.Methods
             Name = contentProvider.GetName();
 
             var setup = contentProvider.Setup(contextInfo);
-            Type = setup.ReturnType;
+            returnTypeDirector = setup.ReturnType;
             parameters = setup.Parameters;
         }
 
@@ -21,9 +25,13 @@ namespace DS.Analysis.Structure.Methods
             throw new System.NotImplementedException();
         }
 
+        public override void AddToScope(IScopeAppender scopeAppender)
+        {
+            scopeAppender.AddScopedElement(ScopedElement.Create(Name, null, null));
+        }
+
         public override void Dispose()
         {
-            base.Dispose();
             contentProvider.Dispose();
         }
     }

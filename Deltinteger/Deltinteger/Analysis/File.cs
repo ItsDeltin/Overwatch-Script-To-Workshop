@@ -41,10 +41,12 @@ namespace DS.Analysis
 
         public void GetStructure()
         {
-            // Get declarations
+            // Reset declarations
             RootScopeSource.Clear();
             statements?.Dispose();
             postAnalysisDisposable?.Dispose();
+
+            // Get the statements
             statements = new ContextInfo(Analysis, this, Analysis.DefaultScope).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
 
             postAnalysisDisposable = Analysis.PostAnalysisOperations.ExecuteAndReset();
