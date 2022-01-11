@@ -1,7 +1,7 @@
 using System;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
-namespace DS.Analysis
+namespace DS.Analysis.Methods
 {
     using Expressions;
 

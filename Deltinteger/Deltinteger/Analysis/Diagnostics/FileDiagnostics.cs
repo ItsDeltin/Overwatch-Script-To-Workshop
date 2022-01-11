@@ -29,7 +29,7 @@ namespace DS.Analysis.Diagnostics
 
         public DiagnosticToken CreateToken(DocRange range) => new DiagnosticToken(this, range);
 
-        public IdentifierDiagnostic CreateToken(Token token) => new IdentifierDiagnostic(this, token);
+        public NamedDiagnosticToken CreateNamedToken(Token token) => new NamedDiagnosticToken(this, token);
 
         public PublishDiagnosticsParams GetLSPPublishParams() => new PublishDiagnosticsParams()
         {

@@ -2,17 +2,15 @@ using System;
 using System.Reactive.Disposables;
 using Deltin.Deltinteger.Compiler;
 
-namespace DS.Analysis
+namespace DS.Analysis.Diagnostics
 {
-    using Diagnostics;
-
     /// <summary>Manages diagnostics for a written identifier that may or may not exist.</summary>
-    struct IdentifierDiagnostic
+    struct NamedDiagnosticToken
     {
         readonly FileDiagnostics diagnostics;
         readonly Token token;
 
-        public IdentifierDiagnostic(FileDiagnostics diagnostics, Token token)
+        public NamedDiagnosticToken(FileDiagnostics diagnostics, Token token)
         {
             this.diagnostics = diagnostics;
             this.token = token;

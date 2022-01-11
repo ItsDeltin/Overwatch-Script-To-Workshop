@@ -19,11 +19,11 @@ namespace DS.Analysis.Types.Semantics
     class TypeIdentifierErrorHandler : ITypeIdentifierErrorHandler
     {
         readonly ContextInfo context;
-        readonly IdentifierDiagnostic token;
+        readonly NamedDiagnosticToken token;
 
         IDisposable currentDiagnostic;
 
-        public TypeIdentifierErrorHandler(ContextInfo context, IdentifierDiagnostic token)
+        public TypeIdentifierErrorHandler(ContextInfo context, NamedDiagnosticToken token)
         {
             this.context = context;
             this.token = token;

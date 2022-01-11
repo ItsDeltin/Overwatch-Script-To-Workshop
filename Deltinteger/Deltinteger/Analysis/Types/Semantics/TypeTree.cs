@@ -31,7 +31,7 @@ namespace DS.Analysis.Types.Semantics
         void SubscribeToPartIndex(int index, ContextInfo context)
         {
             // Create the error handler for the tree part.
-            var errorHandler = new TypeIdentifierErrorHandler(context, context.File.Diagnostics.CreateToken(partSyntaxes[index].Identifier));
+            var errorHandler = new TypeIdentifierErrorHandler(context, context.File.Diagnostics.CreateNamedToken(partSyntaxes[index].Identifier));
 
             // Create the node.
             parts[index] = new TypeTreeNode(context, errorHandler, partSyntaxes[index], result =>

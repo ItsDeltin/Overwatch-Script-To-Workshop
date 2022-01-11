@@ -16,6 +16,7 @@ using DS.Analysis.Structure.TypeAlias;
 using DS.Analysis.Structure.Variables;
 using DS.Analysis.Types;
 using DS.Analysis.Diagnostics;
+using DS.Analysis.Methods;
 
 namespace DS.Analysis
 {
