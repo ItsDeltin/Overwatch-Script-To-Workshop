@@ -13,27 +13,34 @@ using DS.Analysis.Expressions.Identifiers;
 
 namespace DS.Analysis.Statements
 {
+    /// <summary>User-declared import statement.</summary>
     class ImportStatement : Statement, IFileImportErrorHandler
     {
-        readonly DocRange range;
+        /// <summary>The import error token.</summary>
+        readonly DiagnosticToken token;
+
+        /// <summary>The current import diagnostic.</summary>
+        IDisposable currentDiagnostic;
+
+        /// <summary>The scope to import from.</summary>
         readonly IScopeSource scopeSource;
+
+        /// <summary>If true, the entire scopeSource will be imported. Otherwise, only select items will be imported from within the scope.</summary>
         readonly bool importEntireScope;
-        readonly FileDiagnostics diagnostics;
-        Diagnostic currentDiagnostic;
+
+        readonly bool valid = true;
 
         readonly ScopeSource selectionSource = new ScopeSource();
 
         public ImportStatement(ContextInfo context, Import syntax)
         {
-            diagnostics = context.File.Diagnostics;
-
             string sourceName = null;
 
             // Importing a file
             // ex: 'import "math.del";'
             if (syntax.File != null)
             {
-                range = syntax.File.Range;
+                token = context.Diagnostics.CreateToken(syntax.File.Range);
 
                 var fileName = syntax.File.Text.RemoveQuotes();
                 sourceName = "file " + fileName;
@@ -56,15 +63,21 @@ namespace DS.Analysis.Statements
                 scopeSource = module;
                 AddDisposable(scopeSource.Subscribe()); // Adds a reference to the module.
             }
-
-            // If syntax.ImportSelection != null, the user declared a list of elements to import.
-            // ex: 'import { Bakemap } from Pathmap;'
-            if (syntax.ImportSelection != null)
-                ImportSelected(syntax.ImportSelection.ToArray(), scopeSource, context.ScopeAppender, context.File.Diagnostics, sourceName);
-            // Otherwise, the entire module or file is being imported.
-            // ex: 'import Pathmap;'
+            // Syntax eror
             else
-                importEntireScope = true;
+                valid = false;
+
+            if (valid)
+            {
+                // If syntax.ImportSelection != null, the user declared a list of elements to import.
+                // ex: 'import { Bakemap } from Pathmap;'
+                if (syntax.ImportSelection != null)
+                    ImportSelected(syntax.ImportSelection.ToArray(), scopeSource, context.ScopeAppender, context.File.Diagnostics, sourceName);
+                // Otherwise, the entire module or file is being imported.
+                // ex: 'import Pathmap;'
+                else
+                    importEntireScope = true;
+            }
         }
 
         public override IScopeSource AddSourceToContext() => importEntireScope ? scopeSource : selectionSource;
@@ -159,7 +172,7 @@ namespace DS.Analysis.Statements
         void IFileImportErrorHandler.Error(string message)
         {
             DisposeDiagnostic();
-            currentDiagnostic = diagnostics.Error(message, range);
+            currentDiagnostic = token.Error(message);
         }
 
         void DisposeDiagnostic()

@@ -2035,11 +2035,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Parse the file or module being imported.
             var file = ParseExpected(TokenType.String, TokenType.Identifier);
-            var module = new List<Token>();
+            List<Token> module = null;
 
             // If the file token is an identifier, a file is being imported.
-            if (file.TokenType.IsIdentifier())
+            if (file && file.TokenType.IsIdentifier())
             {
+                module = new List<Token>();
                 module.Add(file);
                 file = null;
 

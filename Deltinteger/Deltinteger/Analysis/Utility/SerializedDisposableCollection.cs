@@ -20,7 +20,13 @@ namespace DS.Analysis.Utility
         }
 
 
-        public void Add(IDisposable item) => disposables.Add(item);
+        public void Add(IDisposable item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
+
+            disposables.Add(item);
+        }
 
         public void Dispose()
         {

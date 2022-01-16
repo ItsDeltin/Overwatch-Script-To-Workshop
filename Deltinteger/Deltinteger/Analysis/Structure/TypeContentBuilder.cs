@@ -1,11 +1,18 @@
 using System.Collections.Generic;
+using DS.Analysis.Types;
 using DS.Analysis.Types.Components;
 
 namespace DS.Analysis.Structure
 {
     class TypeContentBuilder
     {
+        public TypeLinker TypeLinker { get; }
         readonly List<ICodeTypeElement> elements = new List<ICodeTypeElement>();
+
+        public TypeContentBuilder(TypeLinker typeLinker)
+        {
+            TypeLinker = typeLinker;
+        }
 
         public void AddElement(ICodeTypeElement element)
         {

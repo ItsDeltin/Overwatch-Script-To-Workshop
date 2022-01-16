@@ -41,7 +41,7 @@ namespace DS.Analysis.Scopes
     {
         public static readonly ScopeSourceChange Empty = new ScopeSourceChange(new ScopedElement[0]);
 
-        public ScopedElement[] Elements;
+        public readonly ScopedElement[] Elements;
 
         public ScopeSourceChange(ScopedElement[] elements) => Elements = elements;
 

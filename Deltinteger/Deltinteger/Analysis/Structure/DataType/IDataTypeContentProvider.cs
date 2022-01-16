@@ -56,13 +56,17 @@ namespace DS.Analysis.Structure.DataTypes
             var typeArgs = TypeArgCollection.FromSyntax(syntax.Generics);
             typeArgs.AddToScope(contextInfo.ScopeAppender);
 
+            // Setup externals
+            SetupExternals(contextInfo);
+
             return new SetupDataType(
                 declarations: declaredElements = StructureUtility.DeclarationsFromSyntax(contextInfo, syntax.Declarations),
                 dataTypeProvider: new DeclaredCodeTypeProvider(this, name, typeArgs, contextInfo.Parent?.GetIdentifier)
             );
         }
 
-        void GetBase(ContextInfo contextInfo)
+        /// <summary>Subscribes to the type being inheritted.</summary>
+        void SetupExternals(ContextInfo contextInfo)
         {
             // Get the type being inherited.
             if (syntax.Inheriting.Count > 0)
@@ -72,6 +76,7 @@ namespace DS.Analysis.Structure.DataTypes
                 // Subscribe to the base class.
                 baseSubscription = baseReference.Subscribe(type =>
                 {
+                    externalsWatcher.Set(new TypeExternals(type));
                 });
             }
         }
@@ -82,9 +87,12 @@ namespace DS.Analysis.Structure.DataTypes
             baseSubscription?.Dispose();
         }
 
+
+        /// <summary>A data type containing class attributes that reference external elements.</summary>
         record TypeExternals(CodeType baseCodeType);
 
 
+        /// <summary>The type provider for a declared data type.</summary>
         class DeclaredCodeTypeProvider : CodeTypeProvider
         {
             readonly DataTypeContentProvider contentProvider;
@@ -109,7 +117,7 @@ namespace DS.Analysis.Structure.DataTypes
                 contentProvider.externalsWatcher.Add(Observer.Create<TypeExternals>(externals =>
                 {
                     // Get the content.
-                    var contentBuilder = new TypeContentBuilder();
+                    var contentBuilder = new TypeContentBuilder(new TypeLinker(Generics, arguments.TypeArgs));
                     contentBuilder.AddAll(contentProvider.declaredElements);
 
                     // Type comparison

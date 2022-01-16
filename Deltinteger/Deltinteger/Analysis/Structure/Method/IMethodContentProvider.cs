@@ -24,6 +24,9 @@ namespace DS.Analysis.Structure.Methods
         }
     }
 
+    /// <summary>
+    /// IMethodContentProvider imlpementation for user declared methods
+    /// </summary>
     class MethodContentProvider : IMethodContentProvider
     {
         readonly FunctionContext syntax;

@@ -19,19 +19,24 @@ namespace DS.Analysis.Types.Components
         }
 
 
-        public ScopeSource ScopeSource => GenerateSource();
-        ScopeSource scopeSource;
-
-        ScopeSource GenerateSource()
+        public ScopeSource ScopeSource
         {
-            if (scopeSource == null)
+            get
             {
-                scopeSource = new ScopeSource();
-                foreach (var element in Elements)
-                    scopeSource.AddScopedElement(element.ScopedElement);
+                // If the scope source is null, generate it.
+                if (scopeSource == null)
+                {
+                    var scopeBuilder = new CodeTypeScopeBuilder();
+
+                    foreach (var element in Elements)
+                        element.Construct(scopeBuilder);
+
+                    scopeSource = scopeBuilder.ToScope();
+                }
+                return scopeSource;
             }
-            return scopeSource;
         }
+        ScopeSource scopeSource;
 
 
         public static readonly CodeTypeContent Empty = new CodeTypeContent();
