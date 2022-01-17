@@ -7,6 +7,9 @@ namespace DS.Analysis.Types.Standard
         // Unknown
         public static readonly SingletonCodeTypeProvider Unknown = Create("?");
 
+        // Method group
+        public static readonly SingletonCodeTypeProvider MethodGroup = Create("method group");
+
         // Void
         public static readonly SingletonCodeTypeProvider Void = Create("void");
 

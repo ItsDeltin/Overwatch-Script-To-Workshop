@@ -1,15 +1,14 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using DS.Analysis.Structure;
 using DS.Analysis.Scopes;
 using DS.Analysis.Scopes.Import;
+using DS.Analysis.Scopes.Selector;
 using DS.Analysis.Utility;
 using DS.Analysis.Diagnostics;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
-using DS.Analysis.Types;
-using DS.Analysis.Expressions.Identifiers;
+using DS.Analysis.Methods;
 
 namespace DS.Analysis.Statements
 {
@@ -18,9 +17,6 @@ namespace DS.Analysis.Statements
     {
         /// <summary>The import error token.</summary>
         readonly DiagnosticToken token;
-
-        /// <summary>The current import diagnostic.</summary>
-        IDisposable currentDiagnostic;
 
         /// <summary>The scope to import from.</summary>
         readonly IScopeSource scopeSource;
@@ -40,7 +36,7 @@ namespace DS.Analysis.Statements
             // ex: 'import "math.del";'
             if (syntax.File != null)
             {
-                token = context.Diagnostics.CreateToken(syntax.File.Range);
+                token = AddDisposable(context.Diagnostics.CreateToken(syntax.File.Range));
 
                 var fileName = syntax.File.Text.RemoveQuotes();
                 sourceName = "file " + fileName;
@@ -90,8 +86,7 @@ namespace DS.Analysis.Statements
             {
                 string reference = importElements[i].Identifier.Text;
                 string alias = importElements[i].Alias ? importElements[i].Alias.Text : reference;
-                AddDisposable(elements[i] = new ImportedElement(selectionSource, diagnostics.CreateToken(importElements[i].Identifier.Range), alias, reference, sourceName));
-                selectionSource.AddScopedElement(elements[i]);
+                AddDisposable(elements[i] = new ImportedElement(importTo, diagnostics.CreateToken(importElements[i].Identifier.Range), alias, reference, sourceName));
             }
 
             // Subscribe to the importFrom scope
@@ -100,58 +95,49 @@ namespace DS.Analysis.Statements
                 // Update the elements when the importFrom scope changes.
                 foreach (var element in elements)
                     element.Update(value.Elements);
-            }));
 
-            // Add the imported elements to the scope.
-            foreach (var element in elements)
-                importTo.AddScopedElement(element);
+                selectionSource.Refresh();
+            }));
         }
 
-        class ImportedElement : ScopedElement, IDisposable
+        class ImportedElement : IDisposable
         {
-            readonly ScopeSource selectionSource;
+            readonly IScopeAppender scopeAppender;
             readonly DiagnosticToken token;
+            readonly string alias;
             readonly string reference;
             readonly string sourceName;
 
-            ScopedElement match;
-            IDisposable diagnostic;
-
-
-            public ImportedElement(ScopeSource selectionSource, DiagnosticToken token, string alias, string reference, string sourceName) : base(alias)
+            public ImportedElement(IScopeAppender scopeAppender, DiagnosticToken token, string alias, string reference, string sourceName)
             {
-                this.selectionSource = selectionSource;
+                this.scopeAppender = scopeAppender;
                 this.token = token;
+                this.alias = alias;
                 this.reference = reference;
                 this.sourceName = sourceName;
             }
 
+            public void Dispose() => token.Dispose();
+
             public void Update(ScopedElement[] elements)
             {
-                Reset();
+                token.Dispose();
 
-                // Find matching element
-                match = elements.FirstOrDefault(element => element.Name == reference);
+                // Find the elements with a matching name.
+                var matchesName = elements.Where(element => element.Name == reference);
+                var match = elements.FirstOrDefault();
 
-                if (match == null && sourceName != null)
-                    diagnostic = token.Error(Messages.ElementNonexistentInSource(reference, sourceName));
-
-                selectionSource.Refresh();
+                // Not found
+                if (match == null)
+                {
+                    if (sourceName != null)
+                        token.Error(Messages.ElementNonexistentInSource(reference, sourceName));
+                }
+                else
+                {
+                    match.ElementSelector.Alias(new RelatedElements(matchesName), alias, scopeAppender);
+                }
             }
-
-            void Reset()
-            {
-                diagnostic?.Dispose();
-                diagnostic = null;
-            }
-
-
-            public void Dispose() => Reset();
-
-
-            public override CodeTypeProvider Provider => match?.Provider;
-            public override IIdentifierHandler IdentifierHandler => match?.IdentifierHandler;
-            public override ITypePartHandler TypePartHandler => match?.TypePartHandler;
         }
 
 
@@ -159,26 +145,8 @@ namespace DS.Analysis.Statements
         static string[] PathFromSyntax(List<Token> modulePath) => modulePath.Select(token => token.Text).ToArray();
 
 
-        public override void Dispose()
-        {
-            base.Dispose();
-            DisposeDiagnostic();
-        }
-
-
         // IFileImportErrorHandler
-        void IFileImportErrorHandler.Success() => DisposeDiagnostic();
-
-        void IFileImportErrorHandler.Error(string message)
-        {
-            DisposeDiagnostic();
-            currentDiagnostic = token.Error(message);
-        }
-
-        void DisposeDiagnostic()
-        {
-            currentDiagnostic?.Dispose();
-            currentDiagnostic = null;
-        }
+        void IFileImportErrorHandler.Success() => token.Dispose();
+        void IFileImportErrorHandler.Error(string message) => token.Error(message);
     }
 }

@@ -28,7 +28,7 @@ namespace DS.Analysis.Structure.TypeAlias
 
         public override void AddToScope(IScopeAppender scopeAppender)
         {
-            scopeAppender.AddScopedElement(ScopedElement.Create(Name, aliasProvider, null, new ProviderPartHandler(aliasProvider)));
+            scopeAppender.AddScopedElement(ScopedElement.CreateType(Name, aliasProvider));
         }
 
         public override void AddToContent(TypeContentBuilder contentBuilder) => contentBuilder.AddElement(new ProviderTypeElement(aliasProvider));
@@ -77,7 +77,7 @@ namespace DS.Analysis.Structure.TypeAlias
                                 provider.Name,
                                 typeArgs,
                                 provider.parent,
-                                element => element.Provider == provider
+                                element => element.TypePartHandler == provider
                             )
                         };
                         observers.Set(substitution);

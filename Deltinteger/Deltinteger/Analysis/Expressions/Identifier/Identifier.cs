@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using DS.Analysis.Scopes;
+using DS.Analysis.Scopes.Selector;
 using DS.Analysis.Types;
 using DS.Analysis.Types.Standard;
 using DS.Analysis.Diagnostics;
@@ -18,13 +19,13 @@ namespace DS.Analysis.Expressions.Identifiers
 
         readonly SerializedDisposableCollection state = new SerializedDisposableCollection();
 
-        CodeType type;
-        Scope scope;
+        readonly AutoPushExpressionData expressionData;
 
         public IdentifierExpression(ContextInfo contextInfo, Identifier identifier)
         {
             this.token = identifier.Token;
             this.diagnostics = contextInfo.File.Diagnostics;
+            expressionData = new AutoPushExpressionData(Observers.Set);
 
             // Create scope watcher.
             AddDisposable(scopeWatcher = contextInfo.Scope.Watch());
@@ -36,6 +37,7 @@ namespace DS.Analysis.Expressions.Identifiers
         void FilterIdentifiers(ScopeSourceChange newIdentifiers)
         {
             state.Dispose();
+            expressionData.AutoPush = false;
 
             var element = ChooseScopedElement(newIdentifiers.Elements);
 
@@ -44,38 +46,33 @@ namespace DS.Analysis.Expressions.Identifiers
 
             if (typeDirector != null)
                 // Identifier has a type
-                state.Add(typeDirector.Subscribe(SetType));
+                state.Add(typeDirector.Subscribe(expressionData.SetType));
             else
                 // Type is unknown
-                state.Add(StandardTypes.Unknown.Director.Subscribe(SetType));
+                state.Add(StandardTypes.Unknown.Director.Subscribe(expressionData.SetType));
 
             // Subscribe to the identifier's scope.
-            state.Add(element.IdentifierHandler?.GetScopeDirector().Subscribe(SetScope));
+            if (element.IdentifierHandler != null)
+                state.Add(element.IdentifierHandler.GetScopeDirector().Subscribe(expressionData.SetScope));
+
+            // Set method groups.
+            expressionData.MethodGroup = element.MethodGroup;
+
+            expressionData.AutoPush = true;
+            expressionData.Push();
         }
 
-        ScopedElement ChooseScopedElement(ScopedElement[] scopedElements)
+        IdentifiedElement ChooseScopedElement(ScopedElement[] scopedElements)
         {
-            foreach (var scopedElement in scopedElements.Where(e => e.Name == token))
-                return scopedElement;
+            var matchingName = scopedElements.Reverse().Where(e => e.Name == token);
+            var match = matchingName.FirstOrDefault();
+
+            if (match != null)
+                return match.ElementSelector.GetIdentifiedElement(new RelatedElements(matchingName));
 
             state.Add(diagnostics.Error(Messages.IdentifierDoesNotExist(token), token));
-            return ScopedElement.Unknown(token);
+            return IdentifiedElement.Unknown;
         }
-
-        void SetType(CodeType type)
-        {
-            this.type = type;
-            Update();
-        }
-
-        void SetScope(Scope scope)
-        {
-            this.scope = scope;
-            Update();
-        }
-
-        void Update() => Observers.Set(new ExpressionData(type, scope, new VariableExpressionData()));
-
 
         // Since _currentTypeSubscription may change, we do not want to use 'Node.AddDisposable' as normal.
         // Dispose of it manually.

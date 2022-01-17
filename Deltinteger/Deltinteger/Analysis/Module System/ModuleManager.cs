@@ -62,7 +62,7 @@ namespace DS.Analysis.ModuleSystem
 
             public void Refresh()
             {
-                var result = moduleManager.modules.Select(module => ScopedElement.Create(module.Name, null, null, module));
+                var result = moduleManager.modules.Select(module => ScopedElement.CreateType(module.Name, module));
                 observers.Set(new ScopeSourceChange(result.ToArray()));
             }
 

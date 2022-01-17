@@ -102,7 +102,7 @@ namespace DS.Analysis.Structure.DataTypes
             {
                 this.contentProvider = contentProvider;
 
-                scopeSearch = GetStructuredIdentifier.PredicateSearch(element => element.Provider == this);
+                scopeSearch = GetStructuredIdentifier.PredicateSearch(element => element.TypePartHandler == this);
 
                 GetIdentifier = new GetStructuredIdentifier(
                     defaultName: name,

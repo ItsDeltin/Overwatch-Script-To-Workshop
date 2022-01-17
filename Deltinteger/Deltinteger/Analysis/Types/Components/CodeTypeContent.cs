@@ -26,12 +26,10 @@ namespace DS.Analysis.Types.Components
                 // If the scope source is null, generate it.
                 if (scopeSource == null)
                 {
-                    var scopeBuilder = new CodeTypeScopeBuilder();
+                    scopeSource = new ScopeSource();
 
                     foreach (var element in Elements)
-                        element.Construct(scopeBuilder);
-
-                    scopeSource = scopeBuilder.ToScope();
+                        scopeSource.AddScopedElement(element.ScopedElement);
                 }
                 return scopeSource;
             }

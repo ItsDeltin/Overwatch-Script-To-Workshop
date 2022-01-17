@@ -53,26 +53,4 @@ namespace DS.Analysis.Scopes
             return Disposable.Empty;
         }
     }
-
-    /// <summary>
-    /// CodeTypeProvider as a type part handler.
-    /// </summary>
-    class ProviderPartHandler : ITypePartHandler
-    {
-        readonly CodeTypeProvider provider;
-
-        public ProviderPartHandler(CodeTypeProvider provider)
-        {
-            this.provider = provider;
-        }
-
-        public bool Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount)
-        {
-            if (typeArgCount != provider.Generics.Count)
-                errorHandler.GenericCountMismatch(provider, provider.Generics.Count);
-            return true;
-        }
-
-        public IDisposable Get(IObserver<TypePartResult> observer, ProviderArguments arguments) => provider.CreateInstance(observer.Convert((CodeType type) => new TypePartResult(type)), arguments);
-    }
 }

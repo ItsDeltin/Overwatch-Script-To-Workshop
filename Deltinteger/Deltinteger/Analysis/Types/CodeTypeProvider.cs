@@ -6,9 +6,10 @@ namespace DS.Analysis.Types
     using Generics;
     using Utility;
     using Scopes;
+    using DS.Analysis.Types.Semantics;
 
     /// <summary>Contains the metadata of a datatype. Can be used to instantiate type instances.</summary>
-    class CodeTypeProvider
+    class CodeTypeProvider : ITypePartHandler
     {
         public string Name { get; }
         public TypeArgCollection Generics { get; }
@@ -49,7 +50,21 @@ namespace DS.Analysis.Types
 
         /// <summary>Creates a ScopedElement from the provider.</summary>
         /// <returns>A new ScopedElement with the name and provider fulfilled from this provider.</returns>
-        public virtual ScopedElement CreateScopedElement() => ScopedElement.Create(Name, this, null, new ProviderPartHandler(this));
+        public virtual ScopedElement CreateScopedElement() => ScopedElement.CreateType(Name, this);
+
+
+        // ITypePartHandler
+        bool ITypePartHandler.Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount)
+        {
+            if (typeArgCount != Generics.Count)
+                errorHandler.GenericCountMismatch(this, Generics.Count);
+            return true;
+        }
+
+        IDisposable ITypePartHandler.Get(IObserver<TypePartResult> observer, ProviderArguments arguments)
+        {
+            return CreateInstance(observer.Convert((CodeType type) => new TypePartResult(type)), arguments);
+        }
     }
 
     /// <summary>
@@ -86,7 +101,7 @@ namespace DS.Analysis.Types
         {
             Instance = CodeType.Create(Components.CodeTypeContent.Empty, new SingletonComparison(this), new UniversalIdentifier(name));
             Director = CreateInstance(ProviderArguments.Default);
-            ScopedElement = ScopedElement.Create(Name, this, null, new ProviderPartHandler(this));
+            ScopedElement = ScopedElement.CreateType(Name, this);
         }
 
         public override IDisposable CreateInstance(IObserver<CodeType> observer, ProviderArguments arguments)

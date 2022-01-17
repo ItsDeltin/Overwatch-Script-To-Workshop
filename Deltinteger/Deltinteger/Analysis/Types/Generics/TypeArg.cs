@@ -15,7 +15,7 @@ namespace DS.Analysis.Types.Generics
             Name = name;
             Single = single;
             DataTypeProvider = new SingletonCodeTypeProvider(name);
-            ScopedElement = ScopedElement.Create(name, DataTypeProvider, UnknownIdentifierHandler.Instance, new ProviderPartHandler(DataTypeProvider));
+            ScopedElement = ScopedElement.CreateType(name, DataTypeProvider);
         }
     }
 }

@@ -2,6 +2,8 @@ namespace DS.Analysis.Structure.Methods
 {
     using DS.Analysis.Scopes;
     using Types;
+    using Types.Components;
+    using Analysis.Methods;
 
     class DeclaredMethod : AbstractDeclaredElement
     {
@@ -21,18 +23,23 @@ namespace DS.Analysis.Structure.Methods
 
         public override void AddToContent(TypeContentBuilder contentBuilder)
         {
-            // todo
-            throw new System.NotImplementedException();
+            contentBuilder.AddElement(new MethodClassElement(CreateInstance()));
         }
 
         public override void AddToScope(IScopeAppender scopeAppender)
         {
-            scopeAppender.AddScopedElement(ScopedElement.Create(Name, null, null));
+            scopeAppender.AddScopedElement(ScopedElement.CreateMethod(CreateInstance()));
         }
 
         public override void Dispose()
         {
             contentProvider.Dispose();
+        }
+
+
+        MethodInstance CreateInstance()
+        {
+            return new MethodInstance(Name);
         }
     }
 }
