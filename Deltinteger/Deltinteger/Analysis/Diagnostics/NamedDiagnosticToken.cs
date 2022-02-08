@@ -7,6 +7,8 @@ namespace DS.Analysis.Diagnostics
     /// <summary>Manages diagnostics for a written identifier that may or may not exist.</summary>
     struct NamedDiagnosticToken
     {
+        public string Name => token;
+
         readonly FileDiagnostics diagnostics;
         readonly Token token;
 

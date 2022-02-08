@@ -8,7 +8,7 @@ namespace DS.Analysis.Statements
         readonly Expression @if;
         readonly Statement block;
 
-        public IfStatement(ContextInfo context, If syntax)
+        public IfStatement(ContextInfo context, If syntax) : base(context)
         {
             // Get the if expression
             AddDisposable(@if = context.GetExpression(syntax.Expression));

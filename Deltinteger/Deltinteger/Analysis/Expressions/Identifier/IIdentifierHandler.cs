@@ -6,7 +6,7 @@ namespace DS.Analysis.Expressions.Identifiers
 {
     interface IIdentifierHandler
     {
-        ITypeDirector GetTypeDirector();
+        ITypeDirector TypeDirector { get; }
         IObservable<Scope> GetScopeDirector();
     }
 }

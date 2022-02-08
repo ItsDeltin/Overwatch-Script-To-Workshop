@@ -6,10 +6,10 @@ namespace DS.Analysis.Expressions
     {
         readonly double value;
 
-        public Number(double value)
+        public Number(ContextInfo context, double value) : base(context)
         {
             this.value = value;
-            SetTypeDirector(StandardTypes.Number.Director);
+            PhysicalType = StandardTypes.Number.Instance;
         }
     }
 }

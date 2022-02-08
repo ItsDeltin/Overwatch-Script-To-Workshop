@@ -5,9 +5,12 @@ using System.Reactive.Disposables;
 
 namespace DS.Analysis.Scopes
 {
+    using Core;
+
     class Scope
     {
-        IEnumerable<IScopeSource> _sources;
+        readonly IEnumerable<IScopeSource> _sources;
+        ScopeWatcher watcher;
 
         public Scope()
         {
@@ -29,24 +32,21 @@ namespace DS.Analysis.Scopes
             _sources = parent._sources.Append(source);
         }
 
-        public ScopeWatcher Watch()
+        public ScopeWatcher Watch(IMaster master)
         {
-            ScopeWatcher watcher = new ScopeWatcher();
+            if (watcher == null)
+            {
+                watcher = new ScopeWatcher(master, () =>
+                {
+                    watcher.Dispose();
+                    watcher = null;
+                });
 
-            foreach (var source in _sources)
-                watcher.SubscribeTo(source);
+                foreach (var source in _sources)
+                    watcher.SubscribeTo(source);
+            }
 
             return watcher;
-        }
-
-        public IDisposable WatchAndSubscribe(IObserver<ScopeSourceChange> observer)
-        {
-            var watcher = Watch();
-            return new CompositeDisposable()
-            {
-                watcher,
-                watcher.Subscribe(observer)
-            };
         }
 
         public Scope CreateChild(IScopeSource scopeSource) => new Scope(this, scopeSource);

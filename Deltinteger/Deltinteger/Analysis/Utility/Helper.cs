@@ -6,6 +6,7 @@ using System.Reactive.Disposables;
 
 namespace DS.Analysis.Utility
 {
+    using Core;
     using Types;
     using Types.Standard;
 
@@ -99,6 +100,35 @@ namespace DS.Analysis.Utility
         {
             foreach (var value in collection)
                 value.Dispose();
+        }
+
+        public static IDependent EmptyDependent { get; } = new EmptyIDependent();
+
+        public static IDependent CreateDependent(IMaster master, Action onUpdate) =>
+            new AnonymousDependentQueue(master, onUpdate);
+
+        public static IDependent CreateDependent(Action onStale) =>
+            new AnonymousDependentImmediate(onStale);
+
+        class AnonymousDependentQueue : IDependent, IUpdatable
+        {
+            readonly IMaster master;
+            readonly Action onUpdate;
+            public AnonymousDependentQueue(IMaster master, Action onUpdate) => (this.master, this.onUpdate) = (master, onUpdate);
+            public void MarkAsStale() => master.AddStaleObject(this);
+            public void Update() => onUpdate();
+        }
+
+        class AnonymousDependentImmediate : IDependent
+        {
+            readonly Action onStale;
+            public AnonymousDependentImmediate(Action onStale) => this.onStale = onStale;
+            public void MarkAsStale() => onStale();
+        }
+
+        class EmptyIDependent : IDependent
+        {
+            public void MarkAsStale() { }
         }
     }
 }

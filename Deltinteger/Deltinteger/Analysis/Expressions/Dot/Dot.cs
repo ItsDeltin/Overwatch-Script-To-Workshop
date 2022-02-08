@@ -1,90 +1,99 @@
 using System;
+using System.Linq;
 using DS.Analysis.Types;
 using DS.Analysis.Scopes;
 using DS.Analysis.Utility;
+using DS.Analysis.Core;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Expressions.Dot
 {
-    class DotExpression : Expression, ITypeDirector
+    class DotExpression : Expression
     {
-        readonly ContextInfo contextInfo;
-
         // Operands in a dot tree (x.(y.z)) flattened (x.y.z)
         readonly FlattenSyntax flattenSyntax;
+        readonly DotNode[] nodes;
 
-        // Observers watching the right-hand operand's type.
-        readonly ObserverCollection<CodeType> typeObservers = Helper.CreateTypeObserver();
-
-        Expression[] expressions;
-        IDisposable[] partTypeSubscriptions;
-
-        public DotExpression(ContextInfo contextInfo, BinaryOperatorExpression binaryOperatorSyntax)
+        public DotExpression(ContextInfo context, BinaryOperatorExpression binaryOperatorSyntax) : base(context)
         {
-            this.contextInfo = contextInfo;
             flattenSyntax = new FlattenSyntax(binaryOperatorSyntax);
 
-            expressions = new Expression[flattenSyntax.Parts.Count];
-            partTypeSubscriptions = new IDisposable[flattenSyntax.Parts.Count];
+            // Create the expression nodes array.
+            nodes = new DotNode[flattenSyntax.Count];
 
-            SetTypeDirector(this);
+            // Assign the values in the nodes array.
+            for (int i = 0; i < nodes.Length; i++)
+                nodes[i] = AddDisposable(new DotNode(
+                    context: Context,
+                    syntax: flattenSyntax.Parts[i],
+                    parent: i == 0 ? null : nodes[i - 1],
+                    position: i == 0 ? NodePosition.First :
+                              i == nodes.Length - 1 ? NodePosition.Last : NodePosition.Middle
+                ));
 
-            // Initialize expressions
-            GetExpression(0, null);
+            // Depend on the final node.
+            DependOn(nodes.Last());
         }
 
-        void GetExpression(int index, Scope scope)
+        public override void Update()
         {
-            // 'scope' is null if 'index' is 0
+            base.Update();
+            CopyStateOf(nodes.Last().Expression);
+        }
 
-            // Dispose
-            partTypeSubscriptions[index]?.Dispose();
-            partTypeSubscriptions[index] = null;
-            expressions[index]?.Dispose();
-            expressions[index] = null;
+        class DotNode : PhysicalObject
+        {
+            public Expression Expression { get; }
 
-            ContextInfo partContext = contextInfo;
+            /// <summary>The position of the DotNode in the list of nodes.</summary>
+            readonly NodePosition position;
 
-            // If this is not the first expression, clear tail data and set the source expression.
-            if (index != 0) partContext = partContext.ClearTail().SetSourceExpression(expressions[index - 1]).SetScope(scope);
-            // If this is not the last expression, clear head data.
-            if (index != expressions.Length) partContext = partContext.ClearHead();
+            readonly Scope scope;
+            readonly ScopeWatcher expressionScopeWatcher;
+            readonly SerialScope serialScope;
 
-            // Get the expression.
-            expressions[index] = flattenSyntax.Parts[index].GetExpression(partContext);
-
-            // If this is not the last expression...
-            if (index < expressions.Length - 1)
+            public DotNode(ContextInfo context, IParseExpression syntax, DotNode parent, NodePosition position)
+                : base(context)
             {
-                // ... then subscribe to the expression's type to update the next expression in the list.
-                partTypeSubscriptions[index] = expressions[index].Subscribe(expressionData => GetExpression(index + 1, expressionData.Scope));
+                this.position = position;
+
+                // Get the expression.
+                ContextInfo partContext = Context;
+
+                // If this is not the first expression, clear tail data and set the source expression.
+                if (position != NodePosition.First)
+                    partContext = partContext.ClearTail().SetSourceExpression(Expression).SetScope(parent.scope);
+                // If this is not the last expression, clear head data.
+                if (position != NodePosition.Last)
+                    partContext = partContext.ClearHead();
+
+                // Get the expression.
+                GetExpression(syntax, partContext);
+
+                // Create the scope that the next DotNode will use.
+                expressionScopeWatcher = DependOnExternalScope(Expression.Scope);
+
+                // Create the serialScope.
+                serialScope = new SerialScope(expressionScopeWatcher.Elements);
+                scope = new Scope(serialScope);
             }
-            // This is the last expression.
-            else
-                UpdateRighthandTypeSubscription();
-        }
 
-        void UpdateRighthandTypeSubscription()
-        {
-            int last = partTypeSubscriptions.Length - 1;
-
-            partTypeSubscriptions[last]?.Dispose(); // Dispose existing if it exists.
-            partTypeSubscriptions[last] = expressions[last].Subscribe(expressionData => typeObservers.Set(expressionData.Type));
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            for (int i = 0; i < expressions.Length; i++)
+            // This will only be called once the parent scope is updated.
+            public override void Update()
             {
-                expressions[i].Dispose();
-                partTypeSubscriptions[i].Dispose();
+                base.Update();
+
+                // Update the serialScope.
+                if (position != NodePosition.First)
+                    serialScope.Elements = expressionScopeWatcher.Elements;
             }
-            typeObservers.Complete();
         }
 
-        // ITypeDirector
-        public IDisposable Subscribe(IObserver<CodeType> observer) => typeObservers.Add(observer);
+        enum NodePosition
+        {
+            First,
+            Middle,
+            Last
+        }
     }
 }

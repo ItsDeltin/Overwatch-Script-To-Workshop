@@ -2,8 +2,11 @@ using System;
 
 namespace DS.Analysis.Types
 {
-    interface ITypeDirector : IObservable<CodeType>
+    using Core;
+
+    interface ITypeDirector : IDependable
     {
+        CodeType Type { get; }
     }
 
     interface IDisposableTypeDirector : ITypeDirector, IDisposable

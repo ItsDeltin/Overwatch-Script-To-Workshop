@@ -5,43 +5,56 @@ using DS.Analysis.Scopes;
 using DS.Analysis.Utility;
 using DS.Analysis.Types;
 using DS.Analysis.Types.Semantics;
+using DS.Analysis.Core;
 
 namespace DS.Analysis.ModuleSystem
 {
-    class Module : IDisposable, IScopeSource, ITypePartHandler, IParentElement
+    class Module : AnalysisObject, IScopeSource, ITypePartHandler, IParentElement
     {
         public string Name { get; }
+
+        // IScopeSource
+        public ScopedElement[] ScopedElements { get; private set; }
 
         readonly Module parent;
         readonly List<Module> submodules = new List<Module>();
 
         readonly List<ModuleSource> providers = new List<ModuleSource>();
 
-        readonly ValueObserverCollection<ScopeSourceChange> observers = new ValueObserverCollection<ScopeSourceChange>(ScopeSourceChange.Empty);
-
         int referenceCount = 0;
 
 
-        public Module(string name, Module parent)
+        public Module(IMaster master, string name, Module parent) : base(master)
         {
             Name = name;
             this.parent = parent;
 
             GetIdentifier = new GetStructuredIdentifier(Name, null, parent?.GetIdentifier, GetStructuredIdentifier.PredicateSearch(element => element.TypePartHandler == this));
 
-            parent?.AddReference();
+            if (parent != null)
+                AddDisposable(parent.AddDependent(Helper.EmptyDependent));
         }
 
-        public IDisposable AddSource(IModuleSource origin, IScopeSource scopeSource) => new ModuleSource(this, origin, scopeSource);
-
-        void RefreshScope()
+        public override void Dispose()
         {
+            base.Dispose();
+            parent?.submodules.Remove(this);
+            parent?.RemoveReference();
+        }
+
+        public override void Update()
+        {
+            base.Update();
+
+            // Refresh the scope.
             var scopedElements = Enumerable.Empty<ScopedElement>();
             foreach (var provider in providers)
                 scopedElements = scopedElements.Concat(provider.Elements);
 
-            observers.Set(new ScopeSourceChange(scopedElements.ToArray()));
+            ScopedElements = scopedElements.ToArray();
         }
+
+        public IDisposable AddSource(IModuleSource origin, IScopeSource scopeSource) => new ModuleSource(this, origin, scopeSource);
 
 
         /// <summary>Gets a submodule, or creates one if it does not exist.</summary>
@@ -54,7 +67,7 @@ namespace DS.Analysis.ModuleSystem
                     return submodule;
 
             // Sub module does not exist; create it.
-            Module newModule = new Module(name, this);
+            Module newModule = new Module(Master, name, this);
             submodules.Add(newModule);
             return newModule;
         }
@@ -75,11 +88,10 @@ namespace DS.Analysis.ModuleSystem
                 Dispose();
         }
 
-        // IDisposable
-        public void Dispose()
+        void TryRemove()
         {
-            parent?.submodules.Remove(this);
-            parent?.RemoveReference();
+            if (submodules.Count == 0)
+                return;
         }
 
 

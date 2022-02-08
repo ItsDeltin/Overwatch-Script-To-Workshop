@@ -15,5 +15,7 @@ namespace DS.Analysis.Diagnostics
         public static string ModuleHasTypeArgs() => $"Modules cannot have type arguments";
 
         public static string ExpectedVariable() => "Assignment expression must be a variable";
+
+        public static string PickyParameterAlreadySet(string name) => $"The parameter '{name}' was already set";
     }
 }

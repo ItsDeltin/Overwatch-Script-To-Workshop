@@ -1,43 +1,74 @@
-using System;
-using DS.Analysis.Types;
-using DS.Analysis.Scopes;
-using DS.Analysis.Utility;
-
 namespace DS.Analysis.Expressions
 {
-    abstract class Expression : Node, IObservable<ExpressionData>
+    using Core;
+    using Types;
+    using Types.Semantics;
+    using Types.Standard;
+    using Variables;
+    using Methods;
+    using Scopes;
+
+    abstract class Expression : PhysicalObject
     {
-        protected ObserverCollection<ExpressionData> Observers { get; } = new ValueObserverCollection<ExpressionData>();
+        protected Expression(ContextInfo context) : base(context) { }
 
-        public ITypeDirector Type { get; }
-
-
-        protected Expression()
+        /// <summary>The type of the expression.</summary>
+        public PhysicalType PhysicalType
         {
-            Type = new ExpressionTypeDirector(this);
+            get => _type;
+            protected set
+            {
+                _type = value ?? StandardTypes.Unknown.Instance;
+                MarkDependentsAsStale();
+            }
         }
 
-
-        protected void SetTypeDirector(ITypeDirector director)
+        /// <summary>The scope of the expression. Will usually be the same as Type.Content.Scope.</summary>
+        public Scope Scope
         {
-            AddDisposable(director.Subscribe(type => Observers.Set(new ExpressionData(type))));
+            get => _scope ?? new Scope(_type.Type.Content.ScopeSource);
+            protected set
+            {
+                _scope = value;
+                MarkDependentsAsStale();
+            }
         }
 
-        public IDisposable Subscribe(IObserver<ExpressionData> observer) => Observers.Add(observer);
-
-
-        class ExpressionTypeDirector : ITypeDirector
+        /// <summary>The method group that the expression points to. May be null.</summary>
+        public MethodGroup MethodGroup
         {
-            readonly Expression expression;
-            public ExpressionTypeDirector(Expression expression) => this.expression = expression;
-            public IDisposable Subscribe(IObserver<CodeType> observer) => expression.Observers.Select(observer, expressionData => expressionData.Type);
+            get => _methodGroup;
+            protected set
+            {
+                _methodGroup = value;
+                MarkDependentsAsStale();
+            }
         }
-    }
 
-    class TypeScopeObservable : IObservable<Scope>
-    {
-        readonly ITypeDirector typeDirector;
-        public TypeScopeObservable(ITypeDirector typeDirector) => this.typeDirector = typeDirector ?? throw new ArgumentNullException(nameof(typeDirector));
-        public IDisposable Subscribe(IObserver<Scope> observer) => typeDirector.Select(observer, type => new Scope(type.Content.ScopeSource));
+        /// <summary>The variable that the expression points to. May be null.</summary>
+        public VariableExpressionData Variable
+        {
+            get => _variable;
+            protected set
+            {
+                _variable = value;
+                MarkDependentsAsStale();
+            }
+        }
+
+        // Backing variables
+        PhysicalType _type;
+        Scope _scope;
+        MethodGroup _methodGroup;
+        VariableExpressionData _variable;
+
+        protected void CopyStateOf(Expression other)
+        {
+            _type = other._type;
+            _scope = other._scope;
+            _methodGroup = other._methodGroup;
+            _variable = other._variable;
+            MarkDependentsAsStale();
+        }
     }
 }

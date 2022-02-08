@@ -49,6 +49,8 @@ namespace DS.Analysis
             // Get the statements
             statements = new ContextInfo(Analysis, this, Analysis.DefaultScope).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
 
+            Analysis.Update();
+
             postAnalysisDisposable = Analysis.PostAnalysisOperations.ExecuteAndReset();
         }
 

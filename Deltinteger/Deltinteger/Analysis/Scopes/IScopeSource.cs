@@ -5,35 +5,35 @@ using DS.Analysis.Utility;
 
 namespace DS.Analysis.Scopes
 {
+    using Core;
+
     // Contains a source of declarations that can be accessed.
-    interface IScopeSource : IObservable<ScopeSourceChange>
+    interface IScopeSource : IDependable
     {
+        ScopedElement[] Elements { get; }
     }
 
     class ScopeSource : IScopeSource, IScopeAppender
     {
-        readonly List<ScopedElement> _scopedElements = new List<ScopedElement>();
-        readonly ObserverCollection<ScopeSourceChange> _subscribers = new ObserverCollection<ScopeSourceChange>();
+        public ScopedElement[] Elements => scopedElements.ToArray();
+
+        readonly List<ScopedElement> scopedElements = new List<ScopedElement>();
+        readonly DependentCollection dependents = new DependentCollection();
 
         public ScopeSource() { }
 
-        public IDisposable Subscribe(IObserver<ScopeSourceChange> observer)
-        {
-            observer.OnNext(new ScopeSourceChange(_scopedElements.ToArray()));
-            return _subscribers.Add(observer);
-        }
+        public IDisposable AddDependent(IDependent dependent) => dependents.Add(dependent);
 
         public void Clear()
         {
-            _scopedElements.Clear();
+            scopedElements.Clear();
+            dependents.MarkAsStale();
         }
-
-        public void Refresh() => _subscribers.Set(new ScopeSourceChange(_scopedElements.ToArray()));
 
         public void AddScopedElement(ScopedElement element)
         {
-            _scopedElements.Add(element);
-            Refresh();
+            scopedElements.Add(element);
+            dependents.MarkAsStale();
         }
     }
 

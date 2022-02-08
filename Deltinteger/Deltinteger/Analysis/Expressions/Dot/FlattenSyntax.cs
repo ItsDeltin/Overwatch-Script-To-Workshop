@@ -4,19 +4,16 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Expressions.Dot
 {
-    interface IFlattenSyntax
-    {
-        Token TrailingSeperator { get; }
-        IReadOnlyList<ITreeContextPart> Parts { get; }
-    }
-
-    class FlattenSyntax : IFlattenSyntax
+    class FlattenSyntax
     {
         /// <summary>This is the last dot token when there is no right-hand operand.</summary>
         public Token TrailingSeperator { get; private set; }
-        public IReadOnlyList<ITreeContextPart> Parts => _parts;
+        /// <summary>The list of dot expressions.</summary>
+        public IReadOnlyList<IParseExpression> Parts => _parts;
+        /// <summary>The number of expressions.</summary>
+        public int Count => _parts.Count;
 
-        readonly List<ITreeContextPart> _parts = new List<ITreeContextPart>();
+        readonly List<IParseExpression> _parts = new List<IParseExpression>();
 
         public FlattenSyntax(BinaryOperatorExpression binaryOperatorExpression)
         {
@@ -30,7 +27,7 @@ namespace DS.Analysis.Expressions.Dot
                 Flatten(lop);
             // Otherwise, add the expression to the list.
             else
-                _parts.Add(new ExpressionPart(current.Left));
+                _parts.Add(current.Left);
 
             // Get the expression to the right of the dot.
 
@@ -43,7 +40,7 @@ namespace DS.Analysis.Expressions.Dot
                 if (current.Right is MissingElement)
                     TrailingSeperator = current.Operator.Token;
                 else
-                    _parts.Add(new ExpressionPart(current.Right));
+                    _parts.Add(current.Right);
             }
         }
     }

@@ -7,9 +7,9 @@ namespace DS.Analysis.Statements
     {
         Expression expression;
 
-        public ExpressionStatement(ContextInfo contextInfo, ExpressionStatementSyntax expressionStatement)
+        public ExpressionStatement(ContextInfo context, ExpressionStatementSyntax syntax) : base(context)
         {
-            AddDisposable(expression = contextInfo.GetExpression(expressionStatement.Expression));
+            AddDisposable(expression = context.GetExpression(syntax.Expression));
         }
     }
 }

@@ -6,7 +6,7 @@ namespace DS.Analysis.Expressions
     {
         readonly MethodAnalysis analysis;
 
-        public CallExpression(MethodAnalysis analysis)
+        public CallExpression(ContextInfo context, MethodAnalysis analysis) : base(context)
         {
             this.analysis = AddDisposable(analysis);
         }

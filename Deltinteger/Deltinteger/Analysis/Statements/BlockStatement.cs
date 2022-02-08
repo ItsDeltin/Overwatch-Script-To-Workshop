@@ -4,7 +4,7 @@ namespace DS.Analysis.Statements
     {
         readonly BlockAction block;
 
-        public BlockStatement(BlockAction block)
+        public BlockStatement(ContextInfo context, BlockAction block) : base(context)
         {
             AddDisposable(this.block = block);
         }

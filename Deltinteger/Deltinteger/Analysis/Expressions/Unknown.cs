@@ -4,9 +4,9 @@ namespace DS.Analysis.Expressions
 
     class UnknownExpression : Expression
     {
-        public UnknownExpression()
+        public UnknownExpression(ContextInfo context) : base(context)
         {
-            SetTypeDirector(StandardTypes.Unknown.Director);
+            PhysicalType = StandardTypes.Unknown.Instance;
         }
     }
 }

@@ -1,74 +1,40 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 using DS.Analysis.Utility;
+using DS.Analysis.Core;
 
 namespace DS.Analysis.Scopes
 {
-    class ScopeWatcher : IScopeSource, IDisposable
+    class ScopeWatcher : AnalysisObject, IScopeSource
     {
-        readonly ValueObserverCollection<ScopeSourceChange> observers = new ValueObserverCollection<ScopeSourceChange>(ScopeSourceChange.Empty);
-        readonly Dictionary<IScopeSource, SourceListenerInfo> subscriptions = new Dictionary<IScopeSource, SourceListenerInfo>();
+        readonly List<IScopeSource> sources = new List<IScopeSource>();
+        public ScopedElement[] Elements { get; private set; }
+        readonly Action onEmpty;
+
+        public ScopeWatcher(IMaster master, Action onEmpty) : base(master)
+        {
+            this.onEmpty = onEmpty;
+        }
 
         public void SubscribeTo(IScopeSource scopeSource)
         {
-            // Create a SourceListenerInfo instance.
-            var listenerInfo = new SourceListenerInfo();
-
-            // Link the listenerInfo to the scopeSource.
-            subscriptions.Add(scopeSource, listenerInfo);
-
-            // Subscribe to the scope source.
-            listenerInfo.SourceSubscription = scopeSource.Subscribe(change =>
-            {
-                listenerInfo.SetElements(change.Elements);
-                Notify();
-            });
+            sources.Add(scopeSource);
+            DependOn(scopeSource);
         }
 
-        public void UnsubscribeFrom(IScopeSource scopeSource)
+        public override void Update()
         {
-            subscriptions[scopeSource].Dispose();
-            subscriptions.Remove(scopeSource);
-            Notify();
-        }
+            base.Update();
 
-        void Notify()
-        {
             var result = Enumerable.Empty<ScopedElement>();
-            foreach (var subscription in subscriptions)
-                result = result.Concat(subscription.Value.Elements);
+            foreach (var source in sources)
+                result = result.Concat(source.Elements);
 
-            observers.Set(new ScopeSourceChange(result.ToArray()));
+            Elements = result.ToArray();
         }
 
-
-        // IObservable<ScopeWatcherValue>
-        public IDisposable Subscribe(IObserver<ScopeSourceChange> observer) => observers.Add(observer);
-
-
-        // IDisposable
-        public void Dispose()
-        {
-            foreach (var sub in subscriptions)
-                sub.Value.Dispose();
-
-            observers.Complete();
-        }
-
-
-        /// <summary>Contains data about a subscription to a Scope Source.</summary>
-        class SourceListenerInfo : IDisposable
-        {
-            /// <summary>The subscription to the scope source.</summary>
-            public IDisposable SourceSubscription { get; set; }
-
-            /// <summary>The data retrieved from the source scope subscription.</summary>
-            public ScopedElement[] Elements { get; private set; }
-
-            public void SetElements(ScopedElement[] elements) => Elements = elements;
-
-            public void Dispose() => SourceSubscription.Dispose();
-        }
+        protected override void NoMoreDependents() => onEmpty();
     }
 }

@@ -6,7 +6,7 @@ namespace DS.Analysis.Expressions
     {
         public bool Value { get; }
 
-        public BooleanAction(ContextInfo contextInfo, BooleanExpression syntax)
+        public BooleanAction(ContextInfo context, BooleanExpression syntax) : base(context)
         {
             Value = syntax.Value;
         }

@@ -18,6 +18,9 @@ namespace DS.Analysis.Statements
         /// <summary>The import error token.</summary>
         readonly DiagnosticToken token;
 
+        /// <summary>The name of the item being imported from.</summary>
+        readonly string sourceName;
+
         /// <summary>The scope to import from.</summary>
         readonly IScopeSource scopeSource;
 
@@ -28,10 +31,11 @@ namespace DS.Analysis.Statements
 
         readonly ScopeSource selectionSource = new ScopeSource();
 
-        public ImportStatement(ContextInfo context, Import syntax)
-        {
-            string sourceName = null;
+        /// <summary>Importing specific elements from another file.</summary>
+        ImportedElement[] importedElements;
 
+        public ImportStatement(ContextInfo context, Import syntax) : base(context)
+        {
             // Importing a file
             // ex: 'import "math.del";'
             if (syntax.File != null)
@@ -57,7 +61,7 @@ namespace DS.Analysis.Statements
                 var module = context.File.Analysis.ModuleManager.ModuleFromPath(PathFromSyntax(syntax.Module));
 
                 scopeSource = module;
-                AddDisposable(scopeSource.Subscribe()); // Adds a reference to the module.
+                DependOn(module); // Adds a reference to the module.
             }
             // Syntax eror
             else
@@ -68,7 +72,7 @@ namespace DS.Analysis.Statements
                 // If syntax.ImportSelection != null, the user declared a list of elements to import.
                 // ex: 'import { Bakemap } from Pathmap;'
                 if (syntax.ImportSelection != null)
-                    ImportSelected(syntax.ImportSelection.ToArray(), scopeSource, context.ScopeAppender, context.File.Diagnostics, sourceName);
+                    ImportSelected(syntax.ImportSelection.ToArray());
                 // Otherwise, the entire module or file is being imported.
                 // ex: 'import Pathmap;'
                 else
@@ -78,43 +82,46 @@ namespace DS.Analysis.Statements
 
         public override IScopeSource AddSourceToContext() => importEntireScope ? scopeSource : selectionSource;
 
-        void ImportSelected(ImportSelection[] importElements, IScopeSource importFrom, IScopeAppender importTo, FileDiagnostics diagnostics, string sourceName)
+        void ImportSelected(ImportSelection[] importElements)
         {
+            DependOn(scopeSource);
+
             // Create the ScopedElement
             var elements = new ImportedElement[importElements.Length];
             for (int i = 0; i < elements.Length; i++)
             {
                 string reference = importElements[i].Identifier.Text;
                 string alias = importElements[i].Alias ? importElements[i].Alias.Text : reference;
-                AddDisposable(elements[i] = new ImportedElement(importTo, diagnostics.CreateToken(importElements[i].Identifier.Range), alias, reference, sourceName));
+                AddDisposable(elements[i] = new ImportedElement(
+                    import: this,
+                    token: Context.Diagnostics.CreateToken(importElements[i].Identifier.Range),
+                    alias,
+                    reference));
             }
+        }
 
-            // Subscribe to the importFrom scope
-            AddDisposable(importFrom.Subscribe(value =>
-            {
-                // Update the elements when the importFrom scope changes.
-                foreach (var element in elements)
-                    element.Update(value.Elements);
+        public override void Update()
+        {
+            base.Update();
 
-                selectionSource.Refresh();
-            }));
+            selectionSource.Clear();
+            foreach (var element in importedElements)
+                element.Update(scopeSource.Elements);
         }
 
         class ImportedElement : IDisposable
         {
-            readonly IScopeAppender scopeAppender;
+            readonly ImportStatement import;
             readonly DiagnosticToken token;
             readonly string alias;
             readonly string reference;
-            readonly string sourceName;
 
-            public ImportedElement(IScopeAppender scopeAppender, DiagnosticToken token, string alias, string reference, string sourceName)
+            public ImportedElement(ImportStatement import, DiagnosticToken token, string alias, string reference)
             {
-                this.scopeAppender = scopeAppender;
+                this.import = import;
                 this.token = token;
                 this.alias = alias;
                 this.reference = reference;
-                this.sourceName = sourceName;
             }
 
             public void Dispose() => token.Dispose();
@@ -130,12 +137,12 @@ namespace DS.Analysis.Statements
                 // Not found
                 if (match == null)
                 {
-                    if (sourceName != null)
-                        token.Error(Messages.ElementNonexistentInSource(reference, sourceName));
+                    if (import.sourceName != null)
+                        token.Error(Messages.ElementNonexistentInSource(reference, import.sourceName));
                 }
                 else
                 {
-                    match.ElementSelector.Alias(new RelatedElements(matchesName), alias, scopeAppender);
+                    match.ElementSelector.Alias(new RelatedElements(matchesName), alias, import.selectionSource);
                 }
             }
         }

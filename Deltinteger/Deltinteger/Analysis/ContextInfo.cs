@@ -17,6 +17,7 @@ using DS.Analysis.Structure.Variables;
 using DS.Analysis.Types;
 using DS.Analysis.Diagnostics;
 using DS.Analysis.Methods;
+using DS.Analysis.Core;
 
 namespace DS.Analysis
 {
@@ -93,7 +94,7 @@ namespace DS.Analysis
                 // True/false
                 case BooleanExpression boolean: return new BooleanAction(this, boolean);
                 // Number
-                case NumberExpression number: return new Number(number.Value);
+                case NumberExpression number: return new Number(this, number.Value);
                 // Operator
                 case BinaryOperatorExpression op:
                     if (op.IsDotExpression())
@@ -104,7 +105,7 @@ namespace DS.Analysis
                 case FunctionExpression method: return new CallExpression(new MethodAnalysis(this, method));
                 // Unknown
                 case MissingElement missingElement:
-                    return new UnknownExpression();
+                    return new UnknownExpression(this);
             }
 
             throw new NotImplementedException(expressionContext.GetType().ToString());

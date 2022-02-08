@@ -4,7 +4,7 @@ namespace DS.Analysis.Expressions
 {
     class BaseExpression : Expression
     {
-        public BaseExpression()
+        public BaseExpression(ContextInfo context) : base(context)
         {
         }
     }

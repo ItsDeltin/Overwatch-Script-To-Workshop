@@ -13,73 +13,43 @@ namespace DS.Analysis.Expressions.Identifiers
 {
     class IdentifierExpression : Expression
     {
-        readonly ScopeWatcher scopeWatcher;
-        readonly Token token;
-        readonly FileDiagnostics diagnostics;
+        readonly NamedDiagnosticToken token;
 
-        readonly SerializedDisposableCollection state = new SerializedDisposableCollection();
-
-        readonly AutoPushExpressionData expressionData;
-
-        public IdentifierExpression(ContextInfo contextInfo, Identifier identifier)
+        public IdentifierExpression(ContextInfo context, Identifier identifier) : base(context)
         {
-            this.token = identifier.Token;
-            this.diagnostics = contextInfo.File.Diagnostics;
-            expressionData = new AutoPushExpressionData(Observers.Set);
-
-            // Create scope watcher.
-            AddDisposable(scopeWatcher = contextInfo.Scope.Watch());
-
-            // Watch changes.
-            scopeWatcher.Subscribe(FilterIdentifiers);
+            this.token = context.Diagnostics.CreateNamedToken(identifier.Token);
+            DependOnScope();
         }
 
-        void FilterIdentifiers(ScopeSourceChange newIdentifiers)
+        public override void Update()
         {
-            state.Dispose();
-            expressionData.AutoPush = false;
+            base.Update();
 
-            var element = ChooseScopedElement(newIdentifiers.Elements);
+            var identified = ChooseScopedElement();
 
-            // Subscribe to the identifier's type.
-            var typeDirector = element.IdentifierHandler?.GetTypeDirector();
-
+            // Get the type director.
+            var typeDirector = identified.IdentifierHandler.TypeDirector;
             if (typeDirector != null)
-                // Identifier has a type
-                state.Add(typeDirector.Subscribe(expressionData.SetType));
-            else
-                // Type is unknown
-                state.Add(StandardTypes.Unknown.Director.Subscribe(expressionData.SetType));
+            {
+                DependOn(typeDirector, DependencyMode.RemoveOnUpdate);
+                PhysicalType = typeDirector.Type;
+            }
+            else // Type is unknown
+                PhysicalType = StandardTypes.Unknown.Instance;
 
-            // Subscribe to the identifier's scope.
-            if (element.IdentifierHandler != null)
-                state.Add(element.IdentifierHandler.GetScopeDirector().Subscribe(expressionData.SetScope));
-
-            // Set method groups.
-            expressionData.MethodGroup = element.MethodGroup;
-
-            expressionData.AutoPush = true;
-            expressionData.Push();
+            MethodGroup = identified.MethodGroup;
         }
 
-        IdentifiedElement ChooseScopedElement(ScopedElement[] scopedElements)
+        IdentifiedElement ChooseScopedElement()
         {
-            var matchingName = scopedElements.Reverse().Where(e => e.Name == token);
+            var matchingName = ScopedElements.Reverse().Where(e => e.Name == token.Name);
             var match = matchingName.FirstOrDefault();
 
             if (match != null)
                 return match.ElementSelector.GetIdentifiedElement(new RelatedElements(matchingName));
 
-            state.Add(diagnostics.Error(Messages.IdentifierDoesNotExist(token), token));
+            AddDisposable(token.Error(name => Messages.IdentifierDoesNotExist(name)), true);
             return IdentifiedElement.Unknown;
-        }
-
-        // Since _currentTypeSubscription may change, we do not want to use 'Node.AddDisposable' as normal.
-        // Dispose of it manually.
-        public override void Dispose()
-        {
-            base.Dispose();
-            state.Dispose();
         }
     }
 }

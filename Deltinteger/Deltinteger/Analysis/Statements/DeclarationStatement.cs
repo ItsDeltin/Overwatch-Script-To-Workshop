@@ -6,7 +6,7 @@ namespace DS.Analysis.Statements
     {
         readonly AbstractDeclaredElement declaredElement;
 
-        public DeclarationStatement(ContextInfo context, AbstractDeclaredElement declaredElement)
+        public DeclarationStatement(ContextInfo context, AbstractDeclaredElement declaredElement) : base(context)
         {
             AddDisposable(this.declaredElement = declaredElement);
             declaredElement.AddToScope(context.ScopeAppender);
