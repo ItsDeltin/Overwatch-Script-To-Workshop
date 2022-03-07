@@ -9,49 +9,57 @@ namespace Deltin.Deltinteger.Parse
     {
         // These functions are shared with both Player and Player[] types.
         // * Teleport *
-        FuncMethod Teleport => new FuncMethodBuilder() {
+        FuncMethod Teleport => new FuncMethodBuilder()
+        {
             Name = "Teleport",
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to teleport the player or players to. Can be a player or a vector.", _supplier.PlayerOrVector())
             },
             Documentation = "Teleports one or more players to the specified location.",
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Element.Part("Teleport", actionSet.CurrentObject, methodCall.ParameterValues[0]));
                 return null;
             }
         };
         // * SetMoveSpeed *
-        FuncMethod SetMoveSpeed => new FuncMethodBuilder() {
+        FuncMethod SetMoveSpeed => new FuncMethodBuilder()
+        {
             Name = "SetMoveSpeed",
             Parameters = new CodeParameter[] {
                 new CodeParameter("moveSpeedPercent", "The percentage of raw move speed to which the player or players will set their move speed.", _supplier.Number())
             },
             Documentation = "Sets the move speed of one or more players.",
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Element.Part("Set Move Speed", actionSet.CurrentObject, methodCall.ParameterValues[0]));
                 return null;
             }
         };
         // * SetMaxHealth *
-        FuncMethod SetMaxHealth => new FuncMethodBuilder() {
+        FuncMethod SetMaxHealth => new FuncMethodBuilder()
+        {
             Name = "SetMaxHealth",
             Parameters = new CodeParameter[] {
                 new CodeParameter("healthPercent", "The percentage of raw max health to which the player or players will set their max health.", _supplier.Number())
             },
             Documentation = "Sets the move speed of one or more players.",
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Element.Part("Set Max Health", actionSet.CurrentObject, methodCall.ParameterValues[0]));
                 return null;
             }
         };
         // * AllowButton *
-        FuncMethod AllowButton => new FuncMethodBuilder() {
+        FuncMethod AllowButton => new FuncMethodBuilder()
+        {
             Name = "AllowButton",
             Parameters = new CodeParameter[] {
                 new CodeParameter("button", "The logical button that is being reenabled.", _supplier.Button())
             },
             Documentation = "Undoes the effect of the disallow button action for one or more players.",
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.AddAction(Element.Part("Allow Button", actionSet.CurrentObject, methodCall.ParameterValues[0]));
                 return null;
             }
@@ -75,33 +83,45 @@ namespace Deltin.Deltinteger.Parse
             _objectScope = PlayerVariableScope.Child();
             AddSharedFunctionsToScope(_objectScope);
 
-            AddFunc(new FuncMethodBuilder() {
+            AddFunc(new FuncMethodBuilder()
+            {
                 Name = "IsButtonHeld",
                 Parameters = new[] { new CodeParameter("button", _supplier.EnumType("Button")) },
                 ReturnType = _supplier.Boolean(),
                 Action = (set, call) => Element.Part("Is Button Held", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is holding a button."
             });
-            AddFunc(new FuncMethodBuilder() {
+            AddFunc(new FuncMethodBuilder()
+            {
                 Name = "IsCommunicating",
                 Parameters = new[] { new CodeParameter("communication", _supplier.EnumType("Communication")) },
                 ReturnType = _supplier.Boolean(),
                 Action = (set, call) => Element.Part("Is Communicating", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is communicating."
             });
-            AddFunc(new FuncMethodBuilder() {
-               Name = "Stat",
-               Parameters = new[] { new CodeParameter("stat", _supplier.EnumType("PlayerStat")) },
-               ReturnType = _supplier.Number(),
-               Action = (set, call) => Element.Part("Player Stat", set.CurrentObject, call.ParameterValues[0]),
-               Documentation = "Provides a statistic of the specified Player (limited to the current match). Statistics are only gathered when the game is in progress. Dummy bots do not gather statistics.",
+            AddFunc(new FuncMethodBuilder()
+            {
+                Name = "Stat",
+                Parameters = new[] { new CodeParameter("stat", _supplier.EnumType("PlayerStat")) },
+                ReturnType = _supplier.Number(),
+                Action = (set, call) => Element.Part("Player Stat", set.CurrentObject, call.ParameterValues[0]),
+                Documentation = "Provides a statistic of the specified Player (limited to the current match). Statistics are only gathered when the game is in progress. Dummy bots do not gather statistics.",
             });
-            AddFunc(new FuncMethodBuilder() {
-               Name = "HeroStat",
-               Parameters = new[] { new CodeParameter("hero", _supplier.Hero()), new CodeParameter("stat", _supplier.EnumType("PlayerHeroStat")) },
-               ReturnType = _supplier.Number(),
-               Action = (set, call) => Element.Part("Player Hero Stat", set.CurrentObject, call.ParameterValues[0], call.ParameterValues[1]),
-               Documentation = "Provides a statistic of the specified Player's time playing a specific hero (limited to the current match). Statistics are only gathered when the game is in progress. Dummy bots do not gather statistics.",
+            AddFunc(new FuncMethodBuilder()
+            {
+                Name = "HeroStat",
+                Parameters = new[] { new CodeParameter("hero", _supplier.Hero()), new CodeParameter("stat", _supplier.EnumType("PlayerHeroStat")) },
+                ReturnType = _supplier.Number(),
+                Action = (set, call) => Element.Part("Player Hero Stat", set.CurrentObject, call.ParameterValues[0], call.ParameterValues[1]),
+                Documentation = "Provides a statistic of the specified Player's time playing a specific hero (limited to the current match). Statistics are only gathered when the game is in progress. Dummy bots do not gather statistics.",
+            });
+            AddFunc(new FuncMethodBuilder()
+            {
+                Name = "DistanceTo",
+                Parameters = new[] { new CodeParameter("position", _supplier.PlayerOrVector()) },
+                ReturnType = _supplier.Number(),
+                Action = (set, call) => Element.DistanceBetween(set.CurrentObject, call.ParameterValues[0]),
+                Documentation = "The distance between the player and the specified player or vector",
             });
             AddFunc("Position", _supplier.Vector(), set => Element.PositionOf(set.CurrentObject), "The position of the player.");
             AddFunc("EyePosition", _supplier.Vector(), set => Element.EyePosition(set.CurrentObject), "The position of the player's head.");
@@ -129,7 +149,8 @@ namespace Deltin.Deltinteger.Parse
             AddFunc("IsUsingAbility2", _supplier.Boolean(), set => Element.Part("Is Using Ability 2", set.CurrentObject), "Determines if the player is using their ability 2.");
         }
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Struct
         };
@@ -160,14 +181,16 @@ namespace Deltin.Deltinteger.Parse
 
         private void AddFunc(FuncMethodBuilder builder) => _objectScope.AddNativeMethod(new FuncMethod(builder));
         private void AddFunc(string name, CodeType returnType, Func<ActionSet, IWorkshopTree> action, string documentation)
-            => AddFunc(new FuncMethodBuilder() {
+            => AddFunc(new FuncMethodBuilder()
+            {
                 Name = name,
                 ReturnType = returnType,
                 Action = (actionSet, methodCall) => action(actionSet),
                 Documentation = documentation
             });
-        
-        private FuncMethod SetAbilityEnabled(string abilityName) => new FuncMethodBuilder() {
+
+        private FuncMethod SetAbilityEnabled(string abilityName) => new FuncMethodBuilder()
+        {
             Name = "Set" + abilityName.Replace(" ", "") + "Enabled",
             Documentation = $"Enables or disables the {abilityName.ToLower()} for one or more players.",
             Parameters = new[] { new CodeParameter("enabled", $"Specifies whether the player or players are able to use their {abilityName.ToLower()}.", _supplier.Boolean()) },

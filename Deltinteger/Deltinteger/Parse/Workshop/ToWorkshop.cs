@@ -22,17 +22,12 @@ namespace Deltin.Deltinteger.Parse.Workshop
             LambdaBuilder = new LambdaBuilder(this);
         }
 
-        public T GetComponent<T>() where T: IComponent, new() => DeltinScript.GetComponent<T>();
+        public T GetComponent<T>() where T : IComponent, new() => DeltinScript.GetComponent<T>();
 
         public void InitStatic()
         {
             foreach (var staticVariable in DeltinScript.GetComponent<StaticVariableCollection>().StaticVariables)
-                DeltinScript.DefaultIndexAssigner.Add(
-                    staticVariable.Provider,
-                    staticVariable
-                        .GetAssigner(new GetVariablesAssigner(DeltinScript.InitialGlobal.ActionSet))
-                        .GetValue(new GettableAssignerValueInfo(DeltinScript.InitialGlobal.ActionSet))
-                );
+                staticVariable.Assign(DeltinScript.InitialGlobal.ActionSet);
         }
 
         IEnumerable<T> CollectScriptElements<T>(Func<ScriptElements, IEnumerable<T>> selector)

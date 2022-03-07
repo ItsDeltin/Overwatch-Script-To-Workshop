@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public CompletionItemKind CompletionItemKind { get; set; } = CompletionItemKind.Property;
         public IVariableInstanceAttributes Attributes { get; set; } = new VariableInstanceAttributes();
         public CodeType CodeType { get; set; }
-        
+
         ICodeTypeSolver IScopeable.CodeType => CodeType;
 
         public InternalVar(string name, CodeType type)
@@ -53,15 +53,5 @@ namespace Deltin.Deltinteger.Parse
         public void AddDefaultInstance(IScopeAppender scopeAppender) => scopeAppender.Add(this, Static);
         public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetGettableAssigner(new AssigningAttributes());
         public bool CanBeAmbiguous() => Ambiguous;
-    }
-
-    class InternalVarValue : InternalVar
-    {
-        readonly IWorkshopTree _value;
-
-        public InternalVarValue(string name, CodeType type, IWorkshopTree value, CompletionItemKind kind) : base(name, type, kind) =>
-            _value = value;
-        
-        public override IWorkshopTree ToWorkshop(ActionSet actionSet) => _value;
     }
 }

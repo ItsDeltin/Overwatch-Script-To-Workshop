@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         {
             Provider = provider;
             _typeLinker = typeLinker;
-            
+
             Parameters = new CodeParameter[provider.ParameterProviders.Length];
             ParameterVars = new IVariableInstance[Parameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
         {
             WorkshopFunctionBuilder.Call(
                 actionSet,
-                new Functions.Builder.CallInfo(parameters.Select(p => p.Value).ToArray()),
+                new MethodCall(parameters),
                 new UserConstructorController(this, actionSet.ToWorkshop));
         }
 
@@ -69,17 +69,17 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             // Create the parameter handler for the constructor.
             public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
                 => new UserFunctionParameterHandler(actionSet, _instance.Parameters, _instance.ParameterVars, providedParameters);
-            
+
             // Create the return handler for the constructor.
             public ReturnHandler GetReturnHandler(ActionSet actionSet) => new ReturnHandler(actionSet);
-            
+
             // Gets the subroutine, or creates it if it does not exist yet.
             public SubroutineCatalogItem GetSubroutine()
             {
                 // Do not create a subroutine if the constructor is not a subroutine.
                 if (_instance.Provider.SubroutineName == null)
                     return null;
-                
+
                 // The default key used for identifying the subroutine that is linked to this constructor.
                 // A similiar implementation of this can be found in the UserFunctionController.
                 // Since we are working with just class type-args without the possibility of function type-args,
@@ -100,7 +100,8 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
                 }
 
                 return _toWorkshop.SubroutineCatalog.GetSubroutine(key, () =>
-                    new(new SubroutineBuilder(_toWorkshop.DeltinScript, new() {
+                    new(new SubroutineBuilder(_toWorkshop.DeltinScript, new()
+                    {
                         ContainingType = _instance.Type,
                         Controller = this,
                         RuleName = _instance.Provider.SubroutineName,

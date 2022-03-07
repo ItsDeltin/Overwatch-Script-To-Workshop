@@ -1,4 +1,4 @@
-namespace Deltin.Deltinteger.Models
+namespace Deltin.Deltinteger.Assets
 {
     class Face
     {

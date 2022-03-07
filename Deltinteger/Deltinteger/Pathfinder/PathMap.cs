@@ -5,7 +5,7 @@ using System.IO;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Csv;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Models;
+using Deltin.Deltinteger.Assets;
 using Deltin.Deltinteger.Decompiler.TextToElement;
 using Newtonsoft.Json;
 
@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Vertex[] attributeArray = null;
 
             const string nodesOut = "nodesOut", segmentsOut = "segmentsOut", attributesOut = "attributesOut";
-            
+
             // Get the variable values.
             foreach (var action in workshop.Actions)
                 if (action is SetVariableAction setVariable)
@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         double x = ExtractVertexComponent(errorHandler, 0, vectorFunction),
                             y = ExtractVertexComponent(errorHandler, 1, vectorFunction),
                             z = ExtractVertexComponent(errorHandler, 2, vectorFunction);
-                        
+
                         vertices[i] = new Vertex(x, y, z);
                     }
                     else
@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         errorHandler.Error("An element in the " + variableName + " array is not a vector.");
                         return new Vertex[0];
                     }
-                
+
                 return vertices;
             }
             else

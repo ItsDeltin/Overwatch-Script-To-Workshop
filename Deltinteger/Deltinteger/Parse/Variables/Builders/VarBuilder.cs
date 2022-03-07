@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             _scopeHandler = scopeHandler;
             _contextHandler = contextHandler;
         }
-        
+
         public Var GetVar()
         {
             _parseInfo = _contextHandler.ParseInfo;
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Apply attributes.
             ComponentCollection.Apply(_varInfo);
-            
+
             Apply();
             TypeCheck();
             _varInfo.Recursive = IsRecursive();
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse
                         _scope,
                         _contextHandler.GetCodeType()
                     );
-                
+
                 ApplyCodeType(type);
             }
         }
@@ -114,11 +114,11 @@ namespace Deltin.Deltinteger.Parse
         protected virtual void TypeCheck()
         {
             if (_nameRange == null) return;
-            
+
             // If the type of the variable is a constant workshop value and there is no initial value, throw a syntax error.
             if (_varInfo.Type != null && _varInfo.Type.IsConstant() && _varInfo.InitialValueContext == null)
                 _diagnostics.Error("Variables with constant workshop types must have an initial value", _nameRange);
-            
+
             if (ComponentCollection.IsAttribute(AttributeType.Static) && SemanticsHelper.RecursivelyGetGenerics(_varInfo.Type).Any(type => type is AnonymousType))
                 _diagnostics.Error("Static variables cannot use anonymous types", _nameRange);
         }
@@ -134,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
             // Make sure the overriden variable's type matches.
             if (!overridingType.Is(_varInfo.Type))
                 _parseInfo.Script.Diagnostics.Error($"'{_name}' type must be {overridingType.GetName()}", _typeRange);
-            
+
             _varInfo.Overriding = overriding;
         }
 
@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>True if the function the variable was declared in is marked as recursive.</returns>
         protected virtual bool IsRecursive()
             => _parseInfo.CurrentCallInfo != null && _parseInfo.CurrentCallInfo.Function is IMethod iMethod && iMethod.Attributes.Recursive;
-        
+
         /// <summary>Rejects variable components.</summary>
         /// <param name="rejectComponents">The rejectors that will be reject the components.</param>
         protected void RejectAttributes(params IComponentIdentifier[] rejectComponents)
@@ -151,7 +151,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var reject in rejectComponents)
                 ComponentCollection.RejectComponent(reject);
         }
-        
+
         /// <summary>If the variable is not a macro, the 'virtual' and 'override' attributes will be rejected.</summary>
         protected void RejectVirtualIfNotMacro()
         {

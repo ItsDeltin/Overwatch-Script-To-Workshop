@@ -92,7 +92,7 @@ namespace Deltin.Deltinteger.Parse
                 GetInitialValue();
             else
                 _parseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.Content, GetInitialValue);
-            
+
             if (DefinedAt != null)
             {
                 _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, varInfo.CodeLensType, DefinedAt.range));
@@ -148,6 +148,13 @@ namespace Deltin.Deltinteger.Parse
                             (VariableType == VariableType.Player && call.CallType != RestrictedCallType.EventPlayer))
                             // ... then add the error.
                             call.AddDiagnostic(parseInfo.Script.Diagnostics);
+            }
+
+            else if (_inferType && CodeType == null)
+            {
+                CodeType = _parseInfo.Types.Any();
+                _variableTypeHandler.SetType(CodeType);
+                AddScriptData();
             }
 
             ValueReady.Set();

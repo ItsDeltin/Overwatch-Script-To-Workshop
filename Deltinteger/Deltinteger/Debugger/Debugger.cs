@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Debugger
                     case "Null": return new CsvNull();
                     // Vector
                     case "Vector":
-                        return new CsvVector(new Models.Vertex(
+                        return new CsvVector(new Assets.Vertex(
                             ExtractComponent(func, 0, "X"),
                             ExtractComponent(func, 1, "Y"),
                             ExtractComponent(func, 2, "Z")

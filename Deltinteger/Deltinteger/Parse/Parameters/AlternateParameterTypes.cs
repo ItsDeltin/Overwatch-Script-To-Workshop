@@ -5,6 +5,7 @@ using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Cache;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -35,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
             // Syntax error if the expression is not a variable.
             if (!resolvedVariable.DoesResolveToVariable)
                 parseInfo.Script.Diagnostics.Error("Expected a variable.", valueRange);
-                        
+
             else if (VariableType != VariableType.Dynamic && resolvedVariable.SetVariable.Calling.Provider.VariableType != VariableType)
             {
                 if (VariableType == VariableType.Global)
@@ -79,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private double DefaultConstValue { get; }
 
-        public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Number()) {}
+        public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Number()) { }
         public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier, double defaultValue) : base(name, documentation, typeSupplier.Number(), new ExpressionOrWorkshopValue(Element.Num(defaultValue)))
         {
             DefaultConstValue = defaultValue;
@@ -301,6 +302,11 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddHover(valueRange, resultingPath);
 
             return resultingPath;
+        }
+
+        protected T GetFile<T>(ParseInfo parseInfo, string path, Func<Uri, T> factory) where T : LoadedFile
+        {
+            return Cache.FileIdentifier<T>.FromFile(parseInfo.Script.Document.Cache, path, factory);
         }
     }
 }

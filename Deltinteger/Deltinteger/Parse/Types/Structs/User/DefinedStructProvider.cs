@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
                 _objectScope.AddType(new GenericCodeTypeInitializer(type));
             }
 
-            var declarationParseInfo = _parseInfo.SetContextualModifierGroup(_contextualVariableModifiers); 
+            var declarationParseInfo = _parseInfo.SetContextualModifierGroup(_contextualVariableModifiers);
 
             // Get declarations.
             foreach (var declaration in _context.Declarations)
@@ -69,6 +69,9 @@ namespace Deltin.Deltinteger.Parse
                 if (element is IMethodProvider method)
                     Methods.Add(method);
             }
+
+            if (Variables.Count == 0)
+                _parseInfo.Script.Diagnostics.Error("Structs require at least 1 assignable variable", DefinedAt.range);
         }
 
         public void GetContent()
@@ -79,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override StructInstance GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
         public override StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new DefinedStructInstance(this, typeLinker);
-        
+
         public override bool BuiltInTypeMatches(Type type) => false;
         public Scope GetObjectBasedScope() => _objectScope;
         public Scope GetStaticBasedScope() => _staticScope;
@@ -119,7 +122,7 @@ namespace Deltin.Deltinteger.Parse
                         if (index != -1)
                             GenericAssigns[index] = true;
                     }
-                
+
                 _variablesCallTypeAssigners.Add(structCalls);
             }
         }
@@ -128,7 +131,7 @@ namespace Deltin.Deltinteger.Parse
             _staticScope.CopyVariable(variable);
             _objectScope.CopyVariable(variable);
             StaticVariables.Add(variable.Provider);
-            _parseInfo.TranslateInfo.GetComponent<StaticVariableCollection>().AddVariable(variable);
+            _parseInfo.TranslateInfo.GetComponent<StaticVariableCollection>().AddVariable(variable.Provider);
         }
         public void CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range) => SemanticsHelper.ErrorIfConflicts(
             parseInfo: parseInfo,
@@ -143,15 +146,15 @@ namespace Deltin.Deltinteger.Parse
         bool DoesRecursiveCall()
         {
             foreach (var variable in _variablesCallTypeAssigners)
-            foreach (var root in variable)
-            {
-                var watched = new HashSet<DefinedStructInitializer>();
-                foreach (var rootCall in EnumerateRootCallsRecursively(root))
+                foreach (var root in variable)
                 {
-                    if (!watched.Add(rootCall)) return false;
-                    if (rootCall == this) return true;
+                    var watched = new HashSet<DefinedStructInitializer>();
+                    foreach (var rootCall in EnumerateRootCallsRecursively(root))
+                    {
+                        if (!watched.Add(rootCall)) return false;
+                        if (rootCall == this) return true;
+                    }
                 }
-            }
             return false;
         }
 
@@ -159,9 +162,9 @@ namespace Deltin.Deltinteger.Parse
         {
             yield return target;
             foreach (var variable in target._variablesCallTypeAssigners)
-            foreach (var root in variable)
-            foreach (var recursive in EnumerateRootCallsRecursively(root))
-                yield return recursive;
+                foreach (var root in variable)
+                    foreach (var recursive in EnumerateRootCallsRecursively(root))
+                        yield return recursive;
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.Models;
+using Deltin.Deltinteger.Assets;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Elements
 
             for (int i = 0; (Function.Parameters != null && i < Function.Parameters.Length) || (ParameterValues != null && i < ParameterValues.Length); i++)
                 parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? Function.Parameters[i].GetDefaultValue() ?? throw new Exception("Null argument"));
-            
+
             ParameterValues = parameters.ToArray();
         }
 
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Elements
                 if (ParameterValues[i] != null && (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || (ParameterValues[i] is Element element && createsRandom.Contains(element.Function.Name))))
                     return false;
             }
-            
+
             return true;
         }
 
@@ -107,7 +107,7 @@ namespace Deltin.Deltinteger.Elements
 
             if (OptimizeElements.Optimizations.TryGetValue(Function.Name, out var optimizer))
                 return optimizer(this);
-            
+
             return this;
         }
 
@@ -134,11 +134,11 @@ namespace Deltin.Deltinteger.Elements
             else if (Function.Name == "Down") vertex = new Vertex(0, -1, 0);
             else if (Function.Name == "Forward") vertex = new Vertex(0, 0, 1);
             else if (Function.Name == "Backward") vertex = new Vertex(0, 0, -1);
-			else if (Function.Name == "Subtract" 
-					&& ParameterValues[0] is Element le && le.Function.Name == "Left"  
-					&& ParameterValues[1] is Element re && re.Function.Name == "Left") vertex = new Vertex(0,0,0);
+            else if (Function.Name == "Subtract"
+                    && ParameterValues[0] is Element le && le.Function.Name == "Left"
+                    && ParameterValues[1] is Element re && re.Function.Name == "Left") vertex = new Vertex(0, 0, 0);
             else
-            {   
+            {
                 vertex = null;
                 return false;
             }
@@ -176,7 +176,7 @@ namespace Deltin.Deltinteger.Elements
 
             foreach (var parameter in ParameterValues)
                 count += parameter.ElementCount() + parameterOffset;
-            
+
             return count;
         }
 
@@ -288,12 +288,12 @@ namespace Deltin.Deltinteger.Elements
         public Element this[IWorkshopTree i]
         {
             get => Part("Value In Array", this, i);
-            private set {}
+            private set { }
         }
         public Element this[Element i]
         {
             get => Part("Value In Array", this, i);
-            private set {}
+            private set { }
         }
         public static implicit operator Element(double number) => Num(number);
         public static implicit operator Element(int number) => Num(number);
@@ -368,7 +368,7 @@ namespace Deltin.Deltinteger.Elements
         {
             Value = value;
         }
-        public NumberElement() : this(0) {}
+        public NumberElement() : this(0) { }
 
         public override bool TryGetConstant(out double number)
         {

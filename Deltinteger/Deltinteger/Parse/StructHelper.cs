@@ -3,13 +3,22 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    static class ValueInArrayToWorkshop
+    static class StructHelper
     {
+        public static IWorkshopTree ExtractArbritraryValue(IWorkshopTree workshopValue)
+        {
+            IWorkshopTree current = workshopValue;
+            while (current is IStructValue step)
+                current = step.GetArbritraryValue();
+
+            return current;
+        }
+
         public static IWorkshopTree ValueInArray(IWorkshopTree array, IWorkshopTree index)
         {
             if (array is IStructValue structArray)
                 return new ValueInStructArray(structArray, index);
-            
+
             return Element.ValueInArray(array, index);
         }
 
@@ -21,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
             // Empty array.
             var emptyArray = MakeEmptyArray(value);
             if (emptyArray != null) return emptyArray;
-            
+
             // Unknown
             throw new Exception(value.ToString() + " is not a valid struct value.");
         }
@@ -32,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (element.Function.Name == "Empty Array" || element.Function.Name == "Null")
                     return new StructArray(new IStructValue[0]);
-                
+
                 else if (element.Function.Name == "Array")
                 {
                     var arr = new IStructValue[element.ParameterValues.Length];

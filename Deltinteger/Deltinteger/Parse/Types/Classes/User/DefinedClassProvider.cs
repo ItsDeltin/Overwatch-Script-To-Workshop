@@ -120,7 +120,7 @@ namespace Deltin.Deltinteger.Parse
             //     ));
             // _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, CodeLensSourceType.Type, _definedAt.range));
         }
-        
+
         void TryToExtend(CodeType type, DocRange range)
         {
             // Make sure the type is a class.
@@ -129,7 +129,7 @@ namespace Deltin.Deltinteger.Parse
                 _parseInfo.Script.Diagnostics.Error("'" + type.Name + "' is not a class", range);
                 return;
             }
-            
+
             // Do not extend self.
             if (classType.Provider == this)
             {
@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse
             _operationalStaticScope.AddNativeVariable(variable);
             _operationalObjectScope.AddNativeVariable(variable);
             _conflictScope.AddNative(variable);
-            _parseInfo.TranslateInfo.GetComponent<StaticVariableCollection>().AddVariable(variable);
+            _parseInfo.TranslateInfo.GetComponent<StaticVariableCollection>().AddVariable(variable.Provider);
         }
         CodeType IScopeAppender.DefinedIn() => WorkingInstance;
 

@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree result = Calling.ToWorkshop(actionSet);
 
             for (int i = 0; i < Index.Length; i++)
-                result = ValueInArrayToWorkshop.ValueInArray(result, Index[i].Parse(actionSet));
+                result = StructHelper.ValueInArray(result, Index[i].Parse(actionSet));
 
             return result;
         }
@@ -44,6 +44,6 @@ namespace Deltin.Deltinteger.Parse
             return type;
         }
 
-        public void Accept() {}
+        public void Accept() { }
     }
 }

@@ -21,14 +21,14 @@ namespace Deltin.Deltinteger.Parse
         public GettableAssignerResult GetResult(GettableAssignerValueInfo info)
         {
             IStructValue initialValue = null;
-            
+
             // Set the initial value.
             // If an initial value is provided, use that.
             if (info.InitialValueOverride != null)
-                initialValue = ValueInArrayToWorkshop.ExtractStructValue(info.InitialValueOverride);
+                initialValue = StructHelper.ExtractStructValue(info.InitialValueOverride);
             // Otherwise, use the default initial value if it exists.
             else if (_attributes.DefaultValue != null)
-                initialValue = ValueInArrayToWorkshop.ExtractStructValue(_attributes.DefaultValue.Parse(info.ActionSet));
+                initialValue = StructHelper.ExtractStructValue(_attributes.DefaultValue.Parse(info.ActionSet));
             // 'initialValue' may still be null.
 
             bool inline = info.Inline || _attributes.StoreType == StoreType.None;
@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
                             indexReferenceCreator: info.IndexReferenceCreator,
                             isGlobal: info.IsGlobal,
                             isRecursive: info.IsRecursive)));
-            
+
             return new GettableAssignerResult(new StructAssignerValue(values), null);
         }
 
@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
             // Link the variable values to their names.
             foreach (var variable in _variables)
                 values.Add(variable.Name, variable.GetAssigner(new(actionSet)).GetValue(new GettableAssignerValueInfo(actionSet) { Inline = true }).GetVariable());
-            
+
             return new LinkedStructAssigner(values);
         }
 
@@ -73,7 +73,7 @@ namespace Deltin.Deltinteger.Parse
                 values.Add(var.Name, assigner.AssignClassStacks(new GetClassStacks(info.ClassData, offset)));
                 offset += assigner.StackDelta();
             }
-            
+
             return new StructAssignerValue(values);
         }
 
@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
                 values.Add(var.Name, var.GetAssigner().Unfold(unfolder));
-            
+
             return new StructAssignerValue(values);
         }
     }
@@ -127,7 +127,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
         {
-            var structValue = ValueInArrayToWorkshop.ExtractStructValue(value);
+            var structValue = StructHelper.ExtractStructValue(value);
 
             foreach (var child in _children)
                 child.Value.Set(actionSet, structValue.GetValue(child.Key), target, index);
@@ -143,7 +143,7 @@ namespace Deltin.Deltinteger.Parse
                     break;
 
                 default:
-                    var structValue = ValueInArrayToWorkshop.ExtractStructValue(value);
+                    var structValue = StructHelper.ExtractStructValue(value);
 
                     foreach (var child in _children)
                         child.Value.Modify(actionSet, operation, structValue.GetValue(child.Key), target, index);
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Push(ActionSet actionSet, IWorkshopTree value)
         {
-            var structValue = ValueInArrayToWorkshop.ExtractStructValue(value);
+            var structValue = StructHelper.ExtractStructValue(value);
 
             foreach (var child in _children)
                 child.Value.Push(actionSet, structValue.GetValue(child.Key));
@@ -171,7 +171,7 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (var child in _children)
                 values.Add(child.Key, child.Value.ChildFromClassReference(reference));
-            
+
             return new StructAssignerValue(values);
         }
 
@@ -206,15 +206,6 @@ namespace Deltin.Deltinteger.Parse
         bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new NotImplementedException();
         void IWorkshopTree.ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => throw new NotImplementedException();
 
-        public static IWorkshopTree ExtractArbritraryValue(IStructValue structValue)
-        {
-            IWorkshopTree current = structValue;
-            while (current is IStructValue step)
-                current = step.GetArbritraryValue();
-            
-            return current;
-        }
-
         /// <summary>Flattens structs within an array of workshop values.</summary>
         public static IWorkshopTree[] ExtractAllValues(IEnumerable<IWorkshopTree> children)
         {
@@ -238,7 +229,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree current = structValue;
             foreach (var step in path)
                 current = ((IStructValue)current).GetValue(step);
-            
+
             return current;
         }
     }
@@ -294,7 +285,7 @@ namespace Deltin.Deltinteger.Parse
                 //   [{a: 0, b: {c: 0}}, {a: 0, b: {c: 0}}]
                 //   to
                 //   [b: {c: 0}, b: {c: 0}]
-                var childrenAsSubstructList = Children.Select(c => ValueInArrayToWorkshop.ExtractStructValue(c.GetValue(variableName))).ToArray();
+                var childrenAsSubstructList = Children.Select(c => StructHelper.ExtractStructValue(c.GetValue(variableName))).ToArray();
                 return new StructArray(childrenAsSubstructList);
             }
 
@@ -308,7 +299,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // This isn't possible, but if it was, we would return an empty array.
             if (Children.Length == 0) return new IWorkshopTree[0];
-    
+
             // The first child is used as a reference for the other children, 'Children[x].GetAllValues().Length' will all equal the same thing.
             var primaryStructValues = Children[0].GetAllValues();
             int valueCount = primaryStructValues.Length;
@@ -324,7 +315,7 @@ namespace Deltin.Deltinteger.Parse
             // Add the primary values (Children[0]).
             for (int v = 0; v < valueCount; v++)
                 transposed[v, 0] = primaryStructValues[v];
-            
+
             // Add other values. Start at 1 since 0 was added earlier.
             for (int c = 1; c < arrayCount; c++)
             {
@@ -344,7 +335,7 @@ namespace Deltin.Deltinteger.Parse
                 var array = new IWorkshopTree[arrayCount];
                 for (int a = 0; a < arrayCount; a++)
                     array[a] = transposed[v, a];
-                
+
                 // Turn that array into a singular element.
                 arrays[v] = Element.CreateArray(array);
             }
@@ -472,7 +463,7 @@ namespace Deltin.Deltinteger.Parse
             // Check if we need to do a subsection.
             if (value is IStructValue subvalue)
                 return new IndexedStructArray(subvalue, IndexedArray, _operationModifiesLength);
-            
+
             return value;
         }
 

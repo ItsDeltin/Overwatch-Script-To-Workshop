@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Models;
+using Deltin.Deltinteger.Assets;
 
 namespace Deltin.Deltinteger.Csv
 {

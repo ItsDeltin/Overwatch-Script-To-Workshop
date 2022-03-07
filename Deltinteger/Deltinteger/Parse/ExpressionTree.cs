@@ -203,7 +203,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         var workshopIndex = callVariableAction.Index[ai].Parse(actionSet);
                         resultIndex[ai] = (Element)workshopIndex;
-                        current = ValueInArrayToWorkshop.ValueInArray(current, workshopIndex);
+                        current = StructHelper.ValueInArray(current, workshopIndex);
                     }
 
                     // Set the resulting variable.
@@ -253,7 +253,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (!ExprContextTree[i].CanBeSetDirectly())
                     settable = false;
-                
+
                 else if (!settable && ExprContextTree[i - 1].CanBeSetReference())
                     settable = true;
             }
@@ -367,7 +367,8 @@ namespace Deltin.Deltinteger.Parse
                 _chosenPath = _potentialPaths[0];
                 // This is the last expression in the tree, which means RetrievedScopeable will not be called. At this point, nothing can be done about ambiguities.
                 // If ParseInfo implements something like ExpectingCodeType, that can be used to further narrow down the chosen path.
-                if (tcParseInfo.IsLast) {
+                if (tcParseInfo.IsLast)
+                {
                     CheckAmbiguitiesAndAccept();
                 }
             }
@@ -414,7 +415,7 @@ namespace Deltin.Deltinteger.Parse
                 if (typeErrorHandler.Exists)
                     potentialPaths.Add(new TypeOption(typeErrorHandler, type, tcParseInfo.ParseInfo, _range));
             }
-            
+
             return potentialPaths;
         }
 
@@ -426,7 +427,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = _potentialPaths.Count - 1; i >= 0; i--)
                 if (!_potentialPaths[i].GetScope().ScopeContains(scopeable))
                     _potentialPaths.RemoveAt(i);
-            
+
             // Done
             CheckAmbiguitiesAndAccept();
         }
@@ -462,7 +463,7 @@ namespace Deltin.Deltinteger.Parse
         void CheckAmbiguitiesAndAccept()
         {
             CheckAmbiguities();
-            
+
             if (_potentialPaths.Count == 0)
             {
                 NoPathsError();
@@ -478,12 +479,12 @@ namespace Deltin.Deltinteger.Parse
         void CheckAmbiguities()
         {
             for (int i = 0; i < _potentialPaths.Count; i++)
-            for (int a = 0; a < _potentialPaths.Count; a++)
-            if (a != i && _potentialPaths[i].IsAmbiguousTo(_potentialPaths[a]))
-            {
-                _tcParseInfo.Error("'" + _name + "' is ambiguous.", _range);
-                return;
-            }
+                for (int a = 0; a < _potentialPaths.Count; a++)
+                    if (a != i && _potentialPaths[i].IsAmbiguousTo(_potentialPaths[a]))
+                    {
+                        _tcParseInfo.Error("'" + _name + "' is ambiguous.", _range);
+                        return;
+                    }
         }
 
         private readonly List<Action<IExpression>> _onResolve = new List<Action<IExpression>>();
@@ -512,8 +513,9 @@ namespace Deltin.Deltinteger.Parse
             private readonly ParseInfo _parseInfo;
             private readonly DocRange _callRange;
             private readonly ITypeContextError _errorHandler;
-            
-            public TypeOption(ITypeContextError typeErrorHandler, CodeType type, ParseInfo parseInfo, DocRange callRange) {
+
+            public TypeOption(ITypeContextError typeErrorHandler, CodeType type, ParseInfo parseInfo, DocRange callRange)
+            {
                 _type = type;
                 _parseInfo = parseInfo;
                 _callRange = callRange;
@@ -541,7 +543,8 @@ namespace Deltin.Deltinteger.Parse
             private readonly bool _accessorMatches;
             private readonly IExpression _expression;
 
-            public VariableOption(ITreeContextPart parent, VariableApply apply, ParseInfo parseInfo, bool accessorMatches) {
+            public VariableOption(ITreeContextPart parent, VariableApply apply, ParseInfo parseInfo, bool accessorMatches)
+            {
                 _parent = parent;
                 _apply = apply;
                 _variable = apply.Variable;
@@ -560,7 +563,7 @@ namespace Deltin.Deltinteger.Parse
                 // Check accessor.
                 if (!_accessorMatches)
                     _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", _variable.Name), _callRange);
-                
+
                 // Notify parent about which element was retrieved with it's scope.
                 if (_expression is CallMethodGroup callMethodGroup)
                     _parent?.RetrievedScopeable(callMethodGroup.ChosenFunction);
@@ -579,7 +582,7 @@ namespace Deltin.Deltinteger.Parse
                 }
                 return false;
             }
-        
+
             public bool CanBeSetDirectly() => _variable.Attributes.CanBeSet;
             public bool CanBeSetReference() => _variable.CodeType.GetCodeType(_parseInfo.TranslateInfo).AsReferenceResetSettability;
         }

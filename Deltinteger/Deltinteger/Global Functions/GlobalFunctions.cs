@@ -39,6 +39,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
             UpdateEveryFrame(deltinScript),
             WorkshopSettingCombo(deltinScript),
             WorkshopSettingHero(deltinScript),
+            GetLines(deltinScript),
+            GetPoints(deltinScript)
         };
     }
 }

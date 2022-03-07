@@ -14,7 +14,7 @@ rule: "Controls hud"
     CreateHudText(AllPlayers(),
         Location: Location.Top,
         SortOrder: 1,
-        Text: <"<0>: Create Dummy Bot\n<1>: Create Jump Pad\nHello: Pathfind to cursor", InputBindingString(ButtonValue(Button.Crouch)), InputBindingString(ButtonValue(Button.Interact))>
+        Text: <"<0>: Create Dummy Bot\n<1>: Create Jump Pad\nHello: Pathfind to cursor", InputBindingString(Button.Crouch), InputBindingString(Button.Interact)>
     );
 }
 
@@ -68,10 +68,10 @@ globalvar define lastDummyBot; // The pathfinder
 
 globalvar Pathmap pathmap = new Pathmap("Map.pathmap");
 // This hook will cause the condition for when the next node is reached to become more relaxed when the event player is having trouble reaching the next node.
-Pathmap.IsNodeReachedDeterminer = Vector pos => DistanceBetween(eventPlayer, pos) < (Pathmap.IsPathfindStuck(eventPlayer) ? 1 : 0.5);
+Pathmap.IsNodeReachedDeterminer = pos => DistanceBetween(eventPlayer, pos) < (Pathmap.IsPathfindStuck(eventPlayer) ? 1 : 0.5);
 
 playervar define placingJumpPad = false; // Determines if a jump pad is currently being placed.
-playervar define effects = []; // The effects created for the jump-pad-placer.
+playervar Any[] effects = []; // The effects created for the jump-pad-placer.
 playervar define destinationEffectPos; // The jump pad's destination.
 playervar define padPlaceText; // The hud text created for the jump-pad-placer.
 playervar define effectSeed; // The arc marker's position on the arc.
@@ -94,7 +94,7 @@ if (IsButtonHeld(eventPlayer, Button.Interact))
     // Create controls text.
     CreateHudText(
         eventPlayer,
-        Text: <" \n\n\n\n\n\n\n\n\n\n\n\n<0> Place\n<1> Cancel", InputBindingString(ButtonValue(Button.PrimaryFire)), InputBindingString(ButtonValue(Button.SecondaryFire))>,
+        Text: <" \n\n\n\n\n\n\n\n\n\n\n\n<0> Place\n<1> Cancel", InputBindingString(Button.PrimaryFire), InputBindingString(Button.SecondaryFire)>,
         Location: Location.Top,
         SortOrder: 2
     );
@@ -103,22 +103,16 @@ if (IsButtonHeld(eventPlayer, Button.Interact))
     // Create the arc trail effect.
     effectSeed = 0;
     ChaseVariableAtRate(effectSeed, 200 * 0.01, 1.5, RateChaseReevaluation.DestinationAndRate);
-    ref define max1 = effectSeed - 0.05;
-    ref define max2 = effectSeed - 0.1;
-    ref define max3 = effectSeed - 0.15;
+    define max1: effectSeed - 0.05;
+    define max2: effectSeed - 0.1;
+    define max3: effectSeed - 0.15;
 
-    CreateEffect(AllPlayers(), Effect.LightShaft, Color.Aqua, destinationEffectPos, 0.15, EffectRev.VisibleToPositionAndRadius);
-    ModifyVariable(effects, Operation.AppendToArray, LastCreatedEntity());
-    CreateEffect(AllPlayers(), Effect.Sphere, Color.Aqua, placeRay, 0.35, EffectRev.VisibleToPositionAndRadius);
-    ModifyVariable(effects, Operation.AppendToArray, LastCreatedEntity());
-    CreateEffect(AllPlayers(), Effect.Sphere, Color.Orange, gravityArc(effectPos, effectDir, effectSeed), 0.25, EffectRev.VisibleToPositionAndRadius);
-    ModifyVariable(effects, Operation.AppendToArray, LastCreatedEntity());
-    CreateBeamEffect(AllPlayers(), BeamType.GoodBeam, gravityArc(effectPos, effectDir, effectSeed), gravityArc(effectPos, effectDir, max1), Color.Orange, EffectRev.VisibleToPositionAndRadius);
-    ModifyVariable(effects, Operation.AppendToArray, LastCreatedEntity());
-    CreateBeamEffect(AllPlayers(), BeamType.GoodBeam, gravityArc(effectPos, effectDir, max1), gravityArc(effectPos, effectDir, max2), Color.Orange, EffectRev.VisibleToPositionAndRadius);
-    ModifyVariable(effects, Operation.AppendToArray, LastCreatedEntity());
-    CreateBeamEffect(AllPlayers(), BeamType.GoodBeam, gravityArc(effectPos, effectDir, max2), gravityArc(effectPos, effectDir, max3), Color.Orange, EffectRev.VisibleToPositionAndRadius);
-    ModifyVariable(effects, Operation.AppendToArray, LastCreatedEntity());
+    effects += CreateEffect(AllPlayers(), Effect.LightShaft, Color.Aqua, destinationEffectPos, 0.15, EffectRev.VisibleToPositionAndRadius);
+    effects += CreateEffect(AllPlayers(), Effect.Sphere, Color.Aqua, placeRay, 0.35, EffectRev.VisibleToPositionAndRadius);
+    effects += CreateEffect(AllPlayers(), Effect.Sphere, Color.Orange, gravityArc(effectPos, effectDir, effectSeed), 0.25, EffectRev.VisibleToPositionAndRadius);
+    effects += CreateBeamEffect(AllPlayers(), BeamType.GoodBeam, gravityArc(effectPos, effectDir, effectSeed), gravityArc(effectPos, effectDir, max1), Color.Orange, EffectRev.VisibleToPositionAndRadius);
+    effects += CreateBeamEffect(AllPlayers(), BeamType.GoodBeam, gravityArc(effectPos, effectDir, max1), gravityArc(effectPos, effectDir, max2), Color.Orange, EffectRev.VisibleToPositionAndRadius);
+    effects += CreateBeamEffect(AllPlayers(), BeamType.GoodBeam, gravityArc(effectPos, effectDir, max2), gravityArc(effectPos, effectDir, max3), Color.Orange, EffectRev.VisibleToPositionAndRadius);
 }
 
 rule: "Jump Pad Construct: Confirm"
@@ -132,6 +126,8 @@ if (IsButtonHeld(eventPlayer, Button.PrimaryFire))
     define position = placeRay;
     define direction = placeDir;
     define destination = RayCastArc(position, direction);
+
+    Teleport(AllPlayers(), position);
 
     // Create the node for the jump pad.
     define startNode = pathmap.AddNode(position);
@@ -217,7 +213,7 @@ void CleanUpJumpPad() playervar "Jump Pad Construct: Clean up"
 }
 
 // Gets the jump pad's destination.
-Vector RayCastArc(define pos, define dir)
+Vector RayCastArc(define pos, define dir) 'subroutine: ray cast arc'
 {
     define iterations = 0;
     define hitGround = false;
@@ -231,11 +227,13 @@ Vector RayCastArc(define pos, define dir)
         define last = current;
         current = gravityArc(pos, dir, iterations * 0.01);
 
-        if (last == null) continue;
-
-        destination = ray(last, current);
-        hitGround = destination != current;
+        if (last != null)
+        {
+            destination = ray(last, current);
+            hitGround = destination != current;
+        }
     }
+    MinWait();
 
     return destination;
 }
@@ -257,9 +255,9 @@ rule: "Jump pad: Pathfind Jump"
 Event.OngoingPlayer
 if (Pathmap.IsPathfinding(eventPlayer))
 if (Pathmap.CurrentSegmentAttribute(eventPlayer).Contains(1))
-if (JumpPads.IsTrueForAny(JumpPad pad => pad.DestinationNode == Pathmap.CurrentNode(eventPlayer)))
+if (JumpPads.IsTrueForAny(pad => pad.DestinationNode == Pathmap.CurrentNode(eventPlayer)))
 {
-    JumpPad chosen = JumpPads.FilteredArray(JumpPad pad => pad.DestinationNode == Pathmap.CurrentNode(eventPlayer)).First;
+    JumpPad chosen = JumpPads.FilteredArray(pad => pad.DestinationNode == Pathmap.CurrentNode(eventPlayer)).First;
     chosen.Jump();
 }
 
@@ -267,9 +265,9 @@ if (JumpPads.IsTrueForAny(JumpPad pad => pad.DestinationNode == Pathmap.CurrentN
 rule: "Jump pad: Normal Jump"
 Event.OngoingPlayer
 if (!Pathmap.IsPathfinding(eventPlayer))
-if (JumpPads.IsTrueForAny(JumpPad pad => pad.Position.DistanceTo(eventPlayer) < 0.4))
+if (JumpPads.IsTrueForAny(pad => pad.Position.DistanceTo(eventPlayer) < 0.4))
 {
-    JumpPad chosen = JumpPads.FilteredArray(JumpPad pad => pad.Position.DistanceTo(eventPlayer) < 0.4).First;
+    JumpPad chosen = JumpPads.FilteredArray(pad => pad.Position.DistanceTo(eventPlayer) < 0.4).First;
     chosen.Jump();
 }
 
@@ -281,7 +279,7 @@ class JumpPad
     public define Direction;
     public define Effect;
 
-    public JumpPad(ref Vector position, ref define start, ref define destination, ref define direction)
+    public constructor(in Vector position, in define start, in define destination, in define direction)
     {
         Position = position;
         StartNode = start;

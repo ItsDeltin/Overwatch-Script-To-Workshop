@@ -9,10 +9,14 @@ namespace Deltin.Deltinteger.Parse
 {
     public class StructInstance : CodeType, ITypeArrayHandler, IScopeAppender
     {
-        public IVariableInstance[] Variables { get {
-            SetupMeta();
-            return _variables;   
-        }}
+        public IVariableInstance[] Variables
+        {
+            get
+            {
+                SetupMeta();
+                return _variables;
+            }
+        }
         protected IVariableInstance[] _variables { get; private set; }
 
         protected Scope ObjectScope { get; }
@@ -83,13 +87,13 @@ namespace Deltin.Deltinteger.Parse
         {
             SetupMeta();
 
-            foreach(var utype in type.UnionTypes())
+            foreach (var utype in type.UnionTypes())
             {
                 if (!(utype is StructInstance other && other.Variables.Length == Variables.Length))
                     continue;
-                
+
                 bool structVariablesMatch = true;
-            
+
                 for (int i = 0; i < Variables.Length; i++)
                 {
                     var matchingVariable = other.Variables.FirstOrDefault(v => Variables[i].Name == v.Name);
@@ -143,7 +147,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override AccessLevel LowestAccessLevel(CodeType other)
-        {            
+        {
             if (other != null && other is StructInstance structInstance && _provider == structInstance._provider)
                 return AccessLevel.Private;
             else
@@ -166,7 +170,7 @@ namespace Deltin.Deltinteger.Parse
             _provider.DependMeta();
             if (!_instanceReady) Setup();
         }
-        
+
         void SetupContent()
         {
             SetupMeta();
@@ -177,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), false);
 
         IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), true);
-        void ITypeArrayHandler.OverrideArray(ArrayType array) {}
+        void ITypeArrayHandler.OverrideArray(ArrayType array) { }
         ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler() => new StructArrayFunctionHandler();
 
         void IScopeAppender.AddObjectBasedScope(IMethod function) => ObjectScope.AddNativeMethod(function);
@@ -221,7 +225,7 @@ namespace Deltin.Deltinteger.Parse
 
                 if (arrayValues.Length != contains.Length)
                     throw new Exception("Lengths of struct pair do not match.");
-                
+
                 // If the struct only has one value, we can just use the default Contains.
                 if (arrayValues.Length == 1 && allowFirstElementQuickSkip)
                     return Element.Contains(iterator, contains[0]);
@@ -295,7 +299,7 @@ namespace Deltin.Deltinteger.Parse
 
                     var indexedArray = Element.Part(
                         function,
-                        Element.Map(IStructValue.ExtractArbritraryValue(currentStructArray), Element.ArrayIndex()),
+                        Element.Map(StructHelper.ExtractArbritraryValue(currentStructArray), Element.ArrayIndex()),
                         invoke(arrayed));
 
                     // Return the struct array.
@@ -331,7 +335,7 @@ namespace Deltin.Deltinteger.Parse
                     // Return the workshop function.
                     return Element.Part(
                         function,
-                        IStructValue.ExtractArbritraryValue(currentStructArray),
+                        StructHelper.ExtractArbritraryValue(currentStructArray),
                         invoke(arrayed));
                 }
             }
@@ -359,7 +363,7 @@ namespace Deltin.Deltinteger.Parse
                     // Value is a struct, bridge it.
                     if (value is IStructValue structValue)
                         return structValue.Bridge(v => CompleteAndOptimize(structArray, structInset, v.Value));
-                    
+
                     return CompleteAndOptimize(structArray, structInset, value);
                 }
 
@@ -379,7 +383,7 @@ namespace Deltin.Deltinteger.Parse
                             return originalArray.GetAllValues()[i];
 
                     // Do actual map if it cannot be truncated.
-                    return Element.Map(IStructValue.ExtractArbritraryValue(originalArray), workshopValue);
+                    return Element.Map(StructHelper.ExtractArbritraryValue(originalArray), workshopValue);
                 }
 
                 IWorkshopTree MapIndexed(ActionSet actionSet, IndexedStructArray indexedStructArray, Func<IWorkshopTree, IWorkshopTree> invoke)
@@ -393,7 +397,7 @@ namespace Deltin.Deltinteger.Parse
                         indexedStructArray.AppendModification(args => Element.Map(args.indexArray, value));
                         return indexedStructArray;
                     }
-                    
+
                     return Element.Map(indexedStructArray.IndexedArray, value);
                 }
             }
@@ -401,24 +405,26 @@ namespace Deltin.Deltinteger.Parse
             // Simply casts an IWorkshopTree to an IStructValue.
             private static IStructValue str(IWorkshopTree reference) => (IStructValue)reference;
         }
-    
+
         class StructAttributes : TypeAttributes
         {
             readonly StructInstance _structInstance;
             int _stackLength = -1;
-            
+
             public StructAttributes(StructInstance structInstance) : base(true, structInstance.Generics.Any(g => g.Attributes.ContainsGenerics)) =>
                 _structInstance = structInstance;
-            
-            public override int StackLength {
-                get {
+
+            public override int StackLength
+            {
+                get
+                {
                     _structInstance.SetupContent();
                     return _stackLength;
                 }
                 set => _stackLength = value;
             }
         }
-    
+
         class StructSemantics : TypeSemantics
         {
             readonly StructInstance _structInstance;

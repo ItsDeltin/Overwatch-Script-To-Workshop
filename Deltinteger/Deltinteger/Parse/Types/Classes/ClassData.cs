@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Parse
         {
             ClassIndexes = deltinScript.VarCollection.Assign(ClassIndexesTag, true, false);
             deltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
+            deltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(-1, index: 0));
         }
 
         public IndexReference CreateObject(int classIdentifier, ActionSet actionSet, string internalName)

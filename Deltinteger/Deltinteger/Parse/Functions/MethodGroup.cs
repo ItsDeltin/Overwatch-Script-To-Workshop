@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
         IVariableInstance IVariable.GetDefaultInstance(CodeType definedIn) => this;
         IScopeable IElementProvider.AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker) => throw new NotImplementedException();
 
-        void IVariableInstance.Call(ParseInfo parseInfo, DocRange callRange) {}
+        void IVariableInstance.Call(ParseInfo parseInfo, DocRange callRange) { }
     }
 
     public class CallMethodGroup : ICallVariable, IExpression, ILambdaApplier, ILambdaInvocable, IWorkshopTree
@@ -106,6 +106,8 @@ namespace Deltin.Deltinteger.Parse
 
         public void Finalize(PortableLambdaType expecting)
         {
+            if (expecting == null) return;
+
             _type = expecting;
 
             // If a compatible function was found, get the handler.
@@ -137,7 +139,7 @@ namespace Deltin.Deltinteger.Parse
 
         bool FuncValid(IMethod method, PortableLambdaType expecting)
         {
-            if (method.Parameters.Length != expecting.Parameters.Length)
+            if (expecting == null || method.Parameters.Length != expecting.Parameters.Length)
                 return false;
 
             // Make sure the method implements the target lambda.
@@ -163,7 +165,7 @@ namespace Deltin.Deltinteger.Parse
             // If the chosen function is a DefinedMethod, use the DefinedFunctionHandler.
             if (function is DefinedMethodInstance definedMethod)
                 return new DefinedMethodInvoker(definedMethod);
-            
+
             // Otherwise, use the generic function handler.
             return new GenericFunctionInvoker(function);
         }
@@ -181,7 +183,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => _type;
         public IEnumerable<RestrictedCallType> GetRestrictedCallTypes() => ChosenFunction.Attributes.GetRestrictedCallTypes?.GetRestrictedCallTypes() ?? Enumerable.Empty<RestrictedCallType>();
-        
+
         public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
     }

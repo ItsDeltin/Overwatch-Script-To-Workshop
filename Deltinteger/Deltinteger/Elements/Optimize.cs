@@ -1,13 +1,13 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Vertex = Deltin.Deltinteger.Models.Vertex;
+using Vertex = Deltin.Deltinteger.Assets.Vertex;
 
 namespace Deltin.Deltinteger.Elements
 {
     public static class OptimizeElements
     {
-		static readonly List<String> vecFunctions = new List<String> {"Vector", "Left", "Right", "Up", "Down", "Velocity Of", "Facing Direction" };
+        static readonly List<String> vecFunctions = new List<String> { "Vector", "Left", "Right", "Up", "Down", "Velocity Of", "Facing Direction" };
         public static readonly Dictionary<string, Func<Element, Element>> Optimizations = new Dictionary<string, Func<Element, Element>>() {
             {"Absolute Value", element => {
                 if (element.ParameterValues[0] is NumberElement a)
@@ -279,7 +279,7 @@ namespace Deltin.Deltinteger.Elements
                 if (b != null && b.Value == 0) return 0;
 
                 if (((Element)element.ParameterValues[0]).EqualTo(element.ParameterValues[1])) return 0;
-                
+
                 return element;
             }},
             {"Multiply", element => OptimizeMultiplyOperation(
@@ -338,7 +338,7 @@ namespace Deltin.Deltinteger.Elements
 
                 // If either condition is already true, return true. This may or may not work due to short-circuiting.
                 if (a.Function.Name == "True" || b.Function.Name == "True") return true;
-                
+
                 if (a.EqualTo(b)) return a;
 
                 if (a.Function.Name == "Not")
@@ -372,7 +372,7 @@ namespace Deltin.Deltinteger.Elements
                     if (b.Value == 0) return 1;
                     if (b.Value == 1) return a;
                 }
-                
+
                 return element;
             }},
             {"Round To Integer", element => {
@@ -421,7 +421,7 @@ namespace Deltin.Deltinteger.Elements
                 return element;
             }},
             {"Value In Array", element => {
-                
+
                 if (element.ParameterValues[1] is NumberElement num)
                 {
                     Element array = (Element)((Element)element).ParameterValues[0];
@@ -438,7 +438,7 @@ namespace Deltin.Deltinteger.Elements
                     else if (num.Value == 0)
                         return Element.FirstOf(element.ParameterValues[0]);
                 }
-                
+
                 return element;
             }},
             {"Vector", element => {
@@ -460,14 +460,14 @@ namespace Deltin.Deltinteger.Elements
                 IWorkshopTree oX = element.ParameterValues[0];
                 IWorkshopTree oY = element.ParameterValues[1];
                 IWorkshopTree oZ = element.ParameterValues[2];
-				bool oXIsZero = false;
-				bool oYIsZero = false;
-				bool oZIsZero = false;
+                bool oXIsZero = false;
+                bool oYIsZero = false;
+                bool oZIsZero = false;
                 if (oX is NumberElement oXNum && oXNum.Value == 0){ oX = Element.EmptyArray(); oXIsZero = true;}
                 if (oY is NumberElement oYNum && oYNum.Value == 0){ oY = Element.EmptyArray(); oYIsZero = true;}
                 if (oZ is NumberElement oZNum && oZNum.Value == 0){ oZ = Element.EmptyArray(); oZIsZero = true;}
-				if(oXIsZero && oYIsZero && oZIsZero)
-					return Element.Subtract(Element.Part("Left"), Element.Part("Left"));
+                if(oXIsZero && oYIsZero && oZIsZero)
+                    return Element.Subtract(Element.Part("Left"), Element.Part("Left"));
 
                 if (oX != element.ParameterValues[0] ||
                     oY != element.ParameterValues[1] ||
@@ -500,7 +500,7 @@ namespace Deltin.Deltinteger.Elements
 
                 if (a.Function.Name == "Vector")
                     return (Element)a.ParameterValues[0];
-                
+
                 return element;
             }},
             {"Y Component Of", element => {
@@ -508,7 +508,7 @@ namespace Deltin.Deltinteger.Elements
 
                 if (a.Function.Name == "Vector")
                     return (Element)a.ParameterValues[1];
-                
+
                 return element;
             }},
             {"Z Component Of", element => {
@@ -516,7 +516,7 @@ namespace Deltin.Deltinteger.Elements
 
                 if (a.Function.Name == "Vector")
                     return (Element)a.ParameterValues[2];
-                
+
                 return element;
             }}
         };
@@ -537,27 +537,27 @@ namespace Deltin.Deltinteger.Elements
             // If a and b are numbers, operate them.
             if (aAsNumber != null && bAsNumber != null)
                 return op(aAsNumber.Value, bAsNumber.Value);
-            
+
             // If a is 0, return b.
             if (aAsNumber != null && aAsNumber.Value == 0 && returnBIf0)
                 return b;
-            
+
             // If b is 0, return a.
             if (bAsNumber != null && bAsNumber.Value == 0)
                 return a;
 
             if (a.EqualTo(b))
-				if(a.Function.CodeName() =="Left")
-					return element;
+                if (a.Function.CodeName() == "Left")
+                    return element;
                 else return areEqual(a, b);
-            
+
             if (a.TryGetConstant(out Vertex aVertex) && b.TryGetConstant(out Vertex bVertex))
                 return Element.Vector(
                     op(aVertex.X, bVertex.X),
                     op(aVertex.Y, bVertex.Y),
                     op(aVertex.Z, bVertex.Z)
                 );
-            
+
             return element;
         }
 
@@ -613,7 +613,7 @@ namespace Deltin.Deltinteger.Elements
 
             if (a.EqualTo(b))
                 return areEqual(a, b);
-            
+
             return element;
         }
     }

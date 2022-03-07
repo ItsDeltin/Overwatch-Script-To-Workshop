@@ -109,7 +109,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Create a normal while loop.
                 actionSet.AddAction(Element.While(condition));
-                
+
                 // Translate the block.
                 Block.Translate(actionSet);
 
@@ -298,7 +298,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (Iterator != null)
                 Iterator.Translate(actionSet);
-                        
+
             actionSet.AddAction(Element.End());
 
             // Resolve breaks.
@@ -325,7 +325,8 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 // Get the gettable assigner for the for variable.
-                var assignerResult = DefinedVariable.GetDefaultInstance(null).GetAssigner(new(actionSet)).GetResult(new GettableAssignerValueInfo(actionSet) {
+                var assignerResult = DefinedVariable.GetDefaultInstance(null).GetAssigner(new(actionSet)).GetResult(new GettableAssignerValueInfo(actionSet)
+                {
                     SetInitialValue = SetInitialValue.DoNotSet
                 });
 
@@ -386,6 +387,21 @@ namespace Deltin.Deltinteger.Parse
             // Get the array that will be iterated on.
             Array = parseInfo.GetExpression(scope, foreachContext.Expression);
 
+            // Strict when struct
+            if (Array.Type().Attributes.IsStruct)
+            {
+                // Get the declared variable's type.
+                var variableType = ForeachVar.GetDefaultInstance(null).CodeType.GetCodeType(parseInfo.TranslateInfo);
+
+                // Make sure the struct is an array.
+                if (Array.Type() is not ArrayType arrayType)
+                    parseInfo.Script.Diagnostics.Error("Struct must be an array", foreachContext.Expression.Range);
+
+                // Make sure the type matches the array's type.
+                else if (!variableType.Is(arrayType.ArrayOfType))
+                    parseInfo.Script.Diagnostics.Error("Variable type must match the array's type", foreachContext.Identifier.Range);
+            }
+
             // Get the foreach block.
             Block = parseInfo.SetLoop(this).GetStatement(varScope, foreachContext.Statement);
             // Get the path info.
@@ -423,9 +439,9 @@ namespace Deltin.Deltinteger.Parse
                 _foreachContext = foreachContext;
             }
 
-            public void GetComponents(VariableComponentCollection componentCollection) {}
+            public void GetComponents(VariableComponentCollection componentCollection) { }
             public IParseType GetCodeType() => _foreachContext.Type;
-            public Location GetDefineLocation() =>_foreachContext.Identifier ? new Location(ParseInfo.Script.Uri, GetNameRange()) : null;
+            public Location GetDefineLocation() => _foreachContext.Identifier ? new Location(ParseInfo.Script.Uri, GetNameRange()) : null;
             public string GetName() => _foreachContext.Identifier?.Text;
 
             public DocRange GetNameRange() => _foreachContext.Identifier?.Range;

@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 _onLoop.Invoke(ActionSet);
         }
 
-        protected virtual void Init() {}
+        protected virtual void Init() { }
         public abstract void OnLoopEnd();
         public abstract void Finished();
 
@@ -138,7 +138,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Loop through each player and get the closest node.
             ForeachBuilder getClosestNodes = new ForeachBuilder(ActionSet, _players);
-            ActionSet.AddAction(_closestNodesToPlayers.ModifyVariable(Operation.AppendToArray, NodeFromPosition(getClosestNodes.IndexValue)));
+            ActionSet.AddAction(_closestNodesToPlayers.ModifyVariable(Operation.AppendToArray, NodeFromPosition((Element)getClosestNodes.IndexValue)));
             getClosestNodes.Finish();
         }
 
@@ -150,7 +150,7 @@ namespace Deltin.Deltinteger.Pathfinder
             )
         );
 
-        public override void OnLoopEnd() {}
+        public override void OnLoopEnd() { }
 
         public override void Finished()
         {
@@ -175,16 +175,20 @@ namespace Deltin.Deltinteger.Pathfinder
         }
         public ResolvePathfind(Element position, Element destination, SharedPathfinderInfoValues pathfinderInfo) : this(position, pathfinderInfo) => _destination = destination;
 
-        public override Element LoopCondition { get {
-            if (_destination == null)
-                // return Element.Part<V_CountOf>(Builder.Unvisited.GetVariable()) > 0;
-                return Builder.AnyAccessableUnvisited();
-            else
-                return Contains(
-                    Builder.Unvisited.GetVariable(),
-                    _sourceNode.GetVariable()
-                );
-        }}
+        public override Element LoopCondition
+        {
+            get
+            {
+                if (_destination == null)
+                    // return Element.Part<V_CountOf>(Builder.Unvisited.GetVariable()) > 0;
+                    return Builder.AnyAccessableUnvisited();
+                else
+                    return Contains(
+                        Builder.Unvisited.GetVariable(),
+                        _sourceNode.GetVariable()
+                    );
+            }
+        }
 
         protected override void Init()
         {
@@ -253,7 +257,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ActionSet.AddAction(_potentialDestinationNodes.SetVariable(EmptyArray()));
 
             ForeachBuilder getClosestNodes = new ForeachBuilder(ActionSet, _destinations);
-            ActionSet.AddAction(_potentialDestinationNodes.ModifyVariable(Operation.AppendToArray, NodeFromPosition(getClosestNodes.IndexValue)));
+            ActionSet.AddAction(_potentialDestinationNodes.ModifyVariable(Operation.AppendToArray, NodeFromPosition((Element)getClosestNodes.IndexValue)));
             getClosestNodes.Finish();
         }
 
@@ -315,7 +319,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ActionSet.AddAction(_finalPath.SetVariable(EmptyArray()));
         }
 
-        public override void OnLoopEnd() {}
+        public override void OnLoopEnd() { }
 
         public override void Finished()
         {

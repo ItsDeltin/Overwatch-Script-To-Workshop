@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 // Get the index from the segment data
                 neighborIndex.SetVariable(
                     FirstOf(Filter(
-                        BothNodes(forBuilder.IndexValue),
+                        BothNodes((Element)forBuilder.IndexValue),
                         Compare(ArrayElement(), Operator.NotEqual, Current.GetVariable())
                     ))
                 ),
@@ -145,7 +145,7 @@ back by 1 when used.",
                 ParentArray.SetVariable(0)
             ));
         }
-    
+
         /// <summary>Initializes the variables used by the pathfiner.</summary>
         void InitializeVariables()
         {

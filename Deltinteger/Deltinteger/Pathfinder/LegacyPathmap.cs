@@ -3,7 +3,7 @@ using System.Linq;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using Deltin.Deltinteger.Models;
+using Deltin.Deltinteger.Assets;
 
 namespace Deltin.Deltinteger.Pathfinder
 {

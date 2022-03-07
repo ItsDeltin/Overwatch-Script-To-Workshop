@@ -5,12 +5,12 @@ using System.Security.Cryptography;
 
 namespace Deltin.Deltinteger.Cache
 {
-    class FileIdentifier<T> : ICacheIdentifier where T: LoadedFile
+    class FileIdentifier<T> : ICacheIdentifier where T : LoadedFile
     {
         private readonly Uri _uri;
         private readonly Func<Uri, T> _make;
 
-        public FileIdentifier(Uri uri, Func<Uri, T> makeFile) 
+        public FileIdentifier(Uri uri, Func<Uri, T> makeFile)
         {
             _uri = uri;
             _make = makeFile;

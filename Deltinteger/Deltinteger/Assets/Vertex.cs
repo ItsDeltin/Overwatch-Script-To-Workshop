@@ -3,7 +3,7 @@ using System.Xml.Serialization;
 using Deltin.Deltinteger.Elements;
 using Newtonsoft.Json;
 
-namespace Deltin.Deltinteger.Models
+namespace Deltin.Deltinteger.Assets
 {
     public class Vertex : ICloneable
     {

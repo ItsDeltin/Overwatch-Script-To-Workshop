@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         private Element Condition { get; }
         public IWorkshopTree Array { get; }
         public Element Index { get; }
-        public Element IndexValue { get; }
+        public IWorkshopTree IndexValue { get; }
         private bool Recursive { get; }
 
         public ForeachBuilder(ActionSet actionSet, IWorkshopTree array, bool recursive = false)
@@ -35,10 +35,10 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(IndexStore.SetVariable(0));
 
             Array = array;
-            Condition = Element.Compare(IndexStore.GetVariable(), Operator.LessThan, Element.CountOf(Array));
+            Condition = Element.Compare(IndexStore.GetVariable(), Operator.LessThan, Element.CountOf(StructHelper.ExtractArbritraryValue(Array)));
             Index = (Element)IndexStore.GetVariable();
-            IndexValue = Element.ValueInArray(Array, IndexStore.GetVariable());
-            
+            IndexValue = StructHelper.ValueInArray(Array, IndexStore.GetVariable());
+
             actionSet.AddAction(Element.While(Condition));
         }
 

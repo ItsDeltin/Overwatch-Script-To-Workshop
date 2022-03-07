@@ -29,10 +29,10 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] index)
             => WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
-        
+
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
             => actionSet.AddAction(ModifyVariable(operation, (Element)value, target, index));
-        
+
         public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
             => actionSet.AddAction(SetVariable((Element)value, target, index));
 
@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index) => Throw();
         public void Pop(ActionSet actionSet) => Throw();
         public void Push(ActionSet actionSet, IWorkshopTree value) => Throw();
-        IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => new WorkshopElementReference(ValueInArrayToWorkshop.ValueInArray(WorkshopElement, reference));
+        IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => new WorkshopElementReference(StructHelper.ValueInArray(WorkshopElement, reference));
         public bool CanBeSet() => false;
     }
 }

@@ -1,11 +1,10 @@
 using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace Deltin.Deltinteger.Models.Import
+namespace Deltin.Deltinteger.Assets
 {
-    class ObjModel : IModelLoader
+    class ObjModel
     {
         public List<Vertex> Vertices { get; } = new List<Vertex>();
 
