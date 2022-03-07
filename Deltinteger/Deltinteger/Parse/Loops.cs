@@ -24,13 +24,17 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Stores skips that break the loop.</summary>
         private readonly List<SkipStartMarker> Break = new List<SkipStartMarker>();
 
+        // If statements nested in while loops will cause the workshop's Continue action
+        // to restart right before the if statement instead of at the end of the loop.
+        const bool ContinueWorkaround = true;
+
         public abstract void Translate(ActionSet actionSet);
 
         public PathInfo[] GetPaths() => new PathInfo[] { Path };
 
         public void AddContinue(ActionSet actionSet, string comment)
         {
-            if (RawContinue)
+            if (RawContinue && !ContinueWorkaround)
             {
                 Element con = Element.Part("Continue");
                 con.Comment = comment;
