@@ -19,6 +19,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
             ClassMemory(deltinScript),
             ClassMemoryRemaining(deltinScript),
             ClassMemoryUsed(deltinScript),
+            TruncateClassData(deltinScript),
+            DeleteAllClasses(deltinScript),
             CompareMap(deltinScript),
             CustomColor(deltinScript),
             Destination(deltinScript),
@@ -40,7 +42,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
             WorkshopSettingCombo(deltinScript),
             WorkshopSettingHero(deltinScript),
             GetLines(deltinScript),
-            GetPoints(deltinScript)
+            GetPoints(deltinScript),
+            DoNotOptimize(deltinScript),
         };
     }
 }

@@ -31,24 +31,33 @@ namespace Deltin.Deltinteger.GlobalFunctions
             string valueDescription // The description of the function's value parameter.
         )
         {
+            // Create a new FuncMethod.
+            var builder = new FuncMethodBuilder()
+            {
+                Name = ostwFunctionName,
+                Documentation = description,
+                Action = (actionSet, methodCall) => Element.Part(workshopFunctionName, methodCall.Get(0)),
+            };
+
+            MakeSharedParameterAndReturnType(ref builder, valueDescription);
+
+            return builder;
+        }
+
+        static void MakeSharedParameterAndReturnType(ref FuncMethodBuilder builder, string valueDescription)
+        {
             // The return type and the parameter type of the evaluation modifier.
             var parameterAndReturnType = new AnonymousType("T", new(single: true));
 
             var methodInfo = new MethodInfo(new[] { parameterAndReturnType });
             parameterAndReturnType.Context = methodInfo.Tracker;
 
-            // Create a new FuncMethod.
-            return new FuncMethodBuilder()
-            {
-                Name = ostwFunctionName,
-                Documentation = description,
-                Parameters = new[] {
-                    new CodeParameter("value", valueDescription, parameterAndReturnType)
-                },
-                MethodInfo = methodInfo,
-                ReturnType = parameterAndReturnType,
-                Action = (actionSet, methodCall) => Element.Part(workshopFunctionName, methodCall.Get(0)),
+            // Set builder values
+            builder.Parameters = new[] {
+                new CodeParameter("value", valueDescription, parameterAndReturnType)
             };
+            builder.MethodInfo = methodInfo;
+            builder.ReturnType = parameterAndReturnType;
         }
     }
 }

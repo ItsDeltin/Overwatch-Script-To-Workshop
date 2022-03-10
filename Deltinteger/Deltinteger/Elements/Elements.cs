@@ -16,6 +16,7 @@ namespace Deltin.Deltinteger.Elements
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
         public string Comment { get; set; }
+        public bool Optimize { get; set; } = true;
 
         public Element(ElementBaseJson function, params IWorkshopTree[] parameterValues)
         {
@@ -103,6 +104,8 @@ namespace Deltin.Deltinteger.Elements
 
         public Element Optimized()
         {
+            if (!Optimize) return this;
+
             OptimizeChildren();
 
             if (OptimizeElements.Optimizations.TryGetValue(Function.Name, out var optimizer))

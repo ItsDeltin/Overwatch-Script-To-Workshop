@@ -4,6 +4,8 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
+    using static Element;
+
     public class ClassData : IComponent
     {
         public const string ObjectVariableTag = "_objectVariable_";
@@ -13,7 +15,8 @@ namespace Deltin.Deltinteger.Parse
         public void Init(DeltinScript deltinScript)
         {
             ClassIndexes = deltinScript.VarCollection.Assign(ClassIndexesTag, true, false);
-            deltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
+            // Prematurely extends indexes array
+            // deltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
             deltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(-1, index: 0));
         }
 
@@ -26,14 +29,16 @@ namespace Deltin.Deltinteger.Parse
 
         public void GetClassIndex(int classIdentifier, IndexReference classReference, ActionSet actionSet)
         {
-            actionSet.AddAction(classReference.SetVariable(
-                Element.IndexOfArrayValue(ClassIndexes.Get(), 0)
+            // Assign the class reference to the first available slot.
+            classReference.Set(actionSet, IndexOfArrayValue(ClassIndexes.Get(), 0));
+            // If the class reference is -1, set it to the length of the classIndexes array.
+            classReference.Set(actionSet, TernaryConditional(
+                Compare(classReference.Get(), Operator.Equal, Num(-1)),
+                CountOf(ClassIndexes.Get()),
+                classReference.Get()
             ));
-            actionSet.AddAction(ClassIndexes.SetVariable(
-                classIdentifier,
-                null,
-                (Element)classReference.GetVariable()
-            ));
+            // Register the class.
+            ClassIndexes.Set(actionSet, classIdentifier, index: classReference.Get());
         }
     }
 }

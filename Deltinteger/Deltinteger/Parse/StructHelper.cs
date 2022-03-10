@@ -22,6 +22,14 @@ namespace Deltin.Deltinteger.Parse
             return Element.ValueInArray(array, index);
         }
 
+        public static IWorkshopTree BridgeIfRequired(IWorkshopTree value, Func<IWorkshopTree, IWorkshopTree> converter)
+        {
+            if (value is IStructValue structValue)
+                return structValue.Bridge(args => converter(args.Value));
+
+            return converter(value);
+        }
+
         public static IStructValue ExtractStructValue(IWorkshopTree value)
         {
             // Struct value.
