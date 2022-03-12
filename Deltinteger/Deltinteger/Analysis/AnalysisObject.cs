@@ -80,7 +80,7 @@ namespace DS.Analysis
 
         protected virtual void NoMoreDependents() { }
 
-        protected T DependOnAndHost<T>(T analysisObject) where T : AnalysisObject
+        protected T DependOnAndHost<T>(T analysisObject) where T : IDisposable, IDependable
         {
             DependOn(analysisObject);
             AddDisposable(analysisObject);

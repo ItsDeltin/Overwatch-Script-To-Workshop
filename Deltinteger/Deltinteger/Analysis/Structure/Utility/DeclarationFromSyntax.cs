@@ -20,7 +20,7 @@ namespace DS.Analysis.Structure.Utility
 
                 // Data type
                 case ClassContext dataTypeContext:
-                    return new DeclaredDataType(contextInfo, new DataTypeContentProvider(dataTypeContext));
+                    return new DeclaredDataType(contextInfo, new UserContentProvider(dataTypeContext));
 
                 // Method
                 case FunctionContext functionContext:

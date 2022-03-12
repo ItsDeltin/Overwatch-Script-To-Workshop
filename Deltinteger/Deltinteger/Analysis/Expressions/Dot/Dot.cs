@@ -32,7 +32,7 @@ namespace DS.Analysis.Expressions.Dot
                 ));
 
             // Depend on the final node.
-            DependOn(nodes.Last());
+            DependOn(nodes.Last().Expression);
         }
 
         public override void Update()
@@ -41,51 +41,48 @@ namespace DS.Analysis.Expressions.Dot
             CopyStateOf(nodes.Last().Expression);
         }
 
-        class DotNode : PhysicalObject
+        class DotNode : IDisposable
         {
-            public Expression Expression { get; }
+            public IExpressionHost Expression { get; }
 
-            /// <summary>The position of the DotNode in the list of nodes.</summary>
-            readonly NodePosition position;
+            readonly SerialScopeSource serialScope;
 
-            readonly Scope scope;
-            readonly ScopeWatcher expressionScopeWatcher;
-            readonly SerialScope serialScope;
+            readonly DependencyHandler dependencyHandler;
 
             public DotNode(ContextInfo context, IParseExpression syntax, DotNode parent, NodePosition position)
-                : base(context)
             {
-                this.position = position;
+                dependencyHandler = new DependencyHandler(context.Analysis, updateHelper =>
+                {
+                    // Update the serialScope.
+                    if (position != NodePosition.First)
+                        serialScope.Elements = Expression.ScopeSource.Elements;
+                });
 
                 // Get the expression.
-                ContextInfo partContext = Context;
+                ContextInfo partContext = context;
 
                 // If this is not the first expression, clear tail data and set the source expression.
                 if (position != NodePosition.First)
-                    partContext = partContext.ClearTail().SetSourceExpression(Expression).SetScope(parent.scope);
+                    partContext = partContext.ClearTail().SetSourceExpression(parent.Expression).SetScope(parent.serialScope);
                 // If this is not the last expression, clear head data.
                 if (position != NodePosition.Last)
                     partContext = partContext.ClearHead();
 
                 // Get the expression.
-                GetExpression(syntax, partContext);
+                Expression = partContext.GetExpression(syntax);
+
+                dependencyHandler.AddDisposable(Expression);
 
                 // Create the scope that the next DotNode will use.
-                expressionScopeWatcher = DependOnExternalScope(Expression.Scope);
+                dependencyHandler.DependOn(Expression.ScopeSource);
 
                 // Create the serialScope.
-                serialScope = new SerialScope(expressionScopeWatcher.Elements);
-                scope = new Scope(serialScope);
+                serialScope = new SerialScopeSource(Expression.ScopeSource.Elements);
             }
 
-            // This will only be called once the parent scope is updated.
-            public override void Update()
+            public void Dispose()
             {
-                base.Update();
-
-                // Update the serialScope.
-                if (position != NodePosition.First)
-                    serialScope.Elements = expressionScopeWatcher.Elements;
+                dependencyHandler.Dispose();
             }
         }
 

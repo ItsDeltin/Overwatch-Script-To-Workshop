@@ -6,7 +6,7 @@ namespace DS.Analysis.Expressions
     {
         public UnknownExpression(ContextInfo context) : base(context)
         {
-            PhysicalType = StandardTypes.Unknown.Instance;
+            Type = StandardTypes.Unknown.Instance;
         }
     }
 }

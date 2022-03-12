@@ -8,12 +8,12 @@ namespace DS.Analysis.Expressions
     using Methods;
     using Scopes;
 
-    abstract class Expression : PhysicalObject
+    abstract class Expression : PhysicalObject, IExpressionHost
     {
         protected Expression(ContextInfo context) : base(context) { }
 
         /// <summary>The type of the expression.</summary>
-        public PhysicalType PhysicalType
+        public PhysicalType Type
         {
             get => _type;
             protected set
@@ -24,9 +24,9 @@ namespace DS.Analysis.Expressions
         }
 
         /// <summary>The scope of the expression. Will usually be the same as Type.Content.Scope.</summary>
-        public Scope Scope
+        public IScopeSource ScopeSource
         {
-            get => _scope ?? new Scope(_type.Type.Content.ScopeSource);
+            get => _scope ?? _type.Type.Content.ScopeSource;
             protected set
             {
                 _scope = value;
@@ -58,16 +58,16 @@ namespace DS.Analysis.Expressions
 
         // Backing variables
         PhysicalType _type;
-        Scope _scope;
+        IScopeSource _scope;
         MethodGroup _methodGroup;
         VariableExpressionData _variable;
 
-        protected void CopyStateOf(Expression other)
+        protected void CopyStateOf(IExpressionHost other)
         {
-            _type = other._type;
-            _scope = other._scope;
-            _methodGroup = other._methodGroup;
-            _variable = other._variable;
+            _type = other.Type;
+            _scope = other.ScopeSource;
+            _methodGroup = other.MethodGroup;
+            _variable = other.Variable;
             MarkDependentsAsStale();
         }
     }

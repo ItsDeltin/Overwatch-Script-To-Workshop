@@ -25,14 +25,6 @@ namespace DS.Analysis.Expressions
         public MethodGroup MethodGroup { get; }
 
 
-        /// <summary>Creates an ExpressionData from a CodeType. This is adequate for most expression types.</summary>
-        /// <param name="type">The type of the expression.</param>
-        public ExpressionData(CodeType type)
-        {
-            Type = type ?? throw new ArgumentNullException(nameof(type));
-            Scope = new Scope(type.Content.ScopeSource);
-        }
-
         /// <summary>Creates an ExpressionData.</summary>
         /// <param name="type">The type of the expression</param>
         /// <param name="scope">The scope of the expression.</param>

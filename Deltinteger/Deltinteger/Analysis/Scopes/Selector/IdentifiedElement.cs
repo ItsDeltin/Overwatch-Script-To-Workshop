@@ -11,7 +11,7 @@ namespace DS.Analysis.Scopes.Selector
     class IdentifiedElement
     {
         /// <summary>The element's variable data. May be null.</summary>
-        public IIdentifierHandler IdentifierHandler { get; init; }
+        public IdentifierInfo IdentifierHandler { get; init; }
 
         /// <summary>Handles the element's usage as a type. May be null.</summary>
         public ITypePartHandler TypePartHandler { get; init; }
@@ -20,7 +20,7 @@ namespace DS.Analysis.Scopes.Selector
         public MethodGroup MethodGroup { get; init; }
 
 
-        public IdentifiedElement(IIdentifierHandler identifierHandler, ITypePartHandler typePartHandler, MethodGroup methodGroup)
+        public IdentifiedElement(IdentifierInfo identifierHandler, ITypePartHandler typePartHandler, MethodGroup methodGroup)
         {
             IdentifierHandler = identifierHandler;
             TypePartHandler = typePartHandler;
@@ -28,7 +28,7 @@ namespace DS.Analysis.Scopes.Selector
         }
 
         /// <summary>An identified variable.</summary>
-        public IdentifiedElement(IIdentifierHandler identifierHandler)
+        public IdentifiedElement(IdentifierInfo identifierHandler)
         {
             IdentifierHandler = identifierHandler;
         }
@@ -47,6 +47,6 @@ namespace DS.Analysis.Scopes.Selector
         }
 
 
-        public static readonly IdentifiedElement Unknown = new IdentifiedElement(UnknownIdentifierHandler.Instance, StandardTypes.Unknown, null);
+        public static readonly IdentifiedElement Unknown = new IdentifiedElement(IdentifierInfo.Unknown, StandardTypes.Unknown, null);
     }
 }

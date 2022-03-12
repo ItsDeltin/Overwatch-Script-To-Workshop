@@ -9,7 +9,7 @@ namespace DS.Analysis.Expressions
         public Number(ContextInfo context, double value) : base(context)
         {
             this.value = value;
-            PhysicalType = StandardTypes.Number.Instance;
+            Type = StandardTypes.Number.Instance;
         }
     }
 }

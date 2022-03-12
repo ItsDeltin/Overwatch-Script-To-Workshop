@@ -4,19 +4,20 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 namespace DS.Analysis.Methods
 {
     using Expressions;
+    using Core;
 
     class MethodAnalysis : IDisposable
     {
-        readonly Expression target;
-        readonly IDisposable targetSubscription;
+        readonly IExpressionHost target;
+        readonly DependencyHandler dependencyHandler;
 
-        public MethodAnalysis(ContextInfo contextInfo, FunctionExpression syntax)
+        public MethodAnalysis(ContextInfo context, FunctionExpression syntax)
         {
-            target = contextInfo.GetExpression(syntax.Target);
-            targetSubscription = target.Subscribe(exprData =>
+            target = context.GetExpression(syntax.Target);
+            dependencyHandler = new DependencyHandler(context.Analysis, updateHelper =>
             {
                 // If the expression is a method group
-                if (exprData.MethodGroup != null)
+                if (target.MethodGroup != null)
                 {
 
                 }
@@ -26,11 +27,12 @@ namespace DS.Analysis.Methods
 
                 }
             });
+            dependencyHandler.AddDisposable(target);
         }
 
         public void Dispose()
         {
-            target.Dispose();
+            dependencyHandler.Dispose();
         }
     }
 }

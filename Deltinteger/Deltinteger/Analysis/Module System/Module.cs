@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 using DS.Analysis.Scopes;
 using DS.Analysis.Utility;
 using DS.Analysis.Types;
@@ -9,52 +10,99 @@ using DS.Analysis.Core;
 
 namespace DS.Analysis.ModuleSystem
 {
-    class Module : AnalysisObject, IScopeSource, ITypePartHandler, IParentElement
+    class Module : IScopeSource, IParentElement
     {
+        /// <summary>The name of the module.</summary>
         public string Name { get; }
 
         // IScopeSource
-        public ScopedElement[] ScopedElements { get; private set; }
+        public ScopedElement[] Elements { get; private set; }
 
+        public ITypePartHandler TypePartHandler { get; }
+
+        /// <summary>The parent module.</summary>
         readonly Module parent;
+        /// <summary>The submodules.</summary>
         readonly List<Module> submodules = new List<Module>();
 
+        /// <summary>The module scope sources.</summary>
         readonly List<ModuleSource> providers = new List<ModuleSource>();
 
-        int referenceCount = 0;
+        readonly DependencyHandler dependencyHandler;
 
 
-        public Module(IMaster master, string name, Module parent) : base(master)
+        public Module(IMaster master, string name, Module parent)
         {
             Name = name;
             this.parent = parent;
 
+            dependencyHandler = new DependencyHandler(master, Update);
+
             GetIdentifier = new GetStructuredIdentifier(Name, null, parent?.GetIdentifier, GetStructuredIdentifier.PredicateSearch(element => element.TypePartHandler == this));
 
-            if (parent != null)
-                AddDisposable(parent.AddDependent(Helper.EmptyDependent));
+            TypePartHandler = Utility2.CreateTypePartHandler((errorHandler, typeArgCount) =>
+            {
+                // Modules cannot be used with type arguments.
+                if (typeArgCount > 0)
+                    errorHandler.ModuleHasTypeArgs();
+                return true;
+            }, arguments =>
+            {
+                var info = new SerialTypePartInfo(this, this);
+                return new TypePartInfoResult(info, Disposable.Empty);
+            });
         }
 
-        public override void Dispose()
+        // Adds a dependency to the module.
+        public IDisposable AddDependent(IDependent dependent)
         {
-            base.Dispose();
-            parent?.submodules.Remove(this);
-            parent?.RemoveReference();
+            // Add the dependency to the dependency handler.
+            var removeDependency = dependencyHandler.AddDependent(dependent);
+
+            // The disposable that the caller disposes when they want to remove the dependency.
+            return Disposable.Create(() =>
+            {
+                // Remove the dependency when the caller disposes the disposable.
+                removeDependency.Dispose();
+                // Try to remove the module in case there are no more references.
+                TryComplete();
+            });
         }
 
-        public override void Update()
+        void Update(UpdateHelper updateHelper)
         {
-            base.Update();
-
             // Refresh the scope.
             var scopedElements = Enumerable.Empty<ScopedElement>();
             foreach (var provider in providers)
-                scopedElements = scopedElements.Concat(provider.Elements);
+                scopedElements = scopedElements.Concat(provider.ScopeSource.Elements);
 
-            ScopedElements = scopedElements.ToArray();
+            Elements = scopedElements.ToArray();
         }
 
-        public IDisposable AddSource(IModuleSource origin, IScopeSource scopeSource) => new ModuleSource(this, origin, scopeSource);
+        void TryComplete()
+        {
+            if (dependencyHandler.HasDependents || submodules.Count > 0)
+                return;
+
+            dependencyHandler.Dispose();
+            parent?.submodules.Remove(this);
+        }
+
+        public IDisposable AddSource(IModuleSource origin, IScopeSource scopeSource)
+        {
+            var removeDependency = dependencyHandler.DependOn(scopeSource);
+            var moduleSource = new ModuleSource(origin, scopeSource);
+            providers.Add(moduleSource);
+
+            return Disposable.Create(() =>
+            {
+                if (providers.Remove(moduleSource))
+                {
+                    removeDependency.Dispose();
+                    TryComplete();
+                }
+            });
+        }
 
 
         /// <summary>Gets a submodule, or creates one if it does not exist.</summary>
@@ -67,50 +115,9 @@ namespace DS.Analysis.ModuleSystem
                     return submodule;
 
             // Sub module does not exist; create it.
-            Module newModule = new Module(Master, name, this);
+            Module newModule = new Module(dependencyHandler.Master, name, this);
             submodules.Add(newModule);
             return newModule;
-        }
-
-
-        /// <summary>Adds to the reference count of the module.</summary>
-        void AddReference() => referenceCount++;
-
-        /// <summary>Subtracts from the reference count of the module.</summary>
-        void RemoveReference()
-        {
-            referenceCount--;
-
-            if (referenceCount < 0)
-                throw new Exception("Module referenceCount < 0");
-
-            if (referenceCount == 0)
-                Dispose();
-        }
-
-        void TryRemove()
-        {
-            if (submodules.Count == 0)
-                return;
-        }
-
-
-        // IScopeSource
-        public IDisposable Subscribe(IObserver<ScopeSourceChange> observer) => new ModuleScopeDereferencer(this, observers.Add(observer));
-
-
-        // ITypePartHandler
-        bool ITypePartHandler.Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount)
-        {
-            if (typeArgCount > 0)
-                errorHandler.ModuleHasTypeArgs();
-            return true;
-        }
-
-        IDisposable ITypePartHandler.Get(IObserver<TypePartResult> observer, ProviderArguments arguments)
-        {
-            observer.OnNext(new TypePartResult(this, new Scope(this)));
-            return System.Reactive.Disposables.Disposable.Empty;
         }
 
 
@@ -119,54 +126,12 @@ namespace DS.Analysis.ModuleSystem
 
 
         /// <summary>Watches a scope that makes up the module.</summary>
-        class ModuleSource : IDisposable
+        class ModuleSource
         {
-            public IDisposable ScopeSubscription { get; }
-            public ScopedElement[] Elements { get; private set; }
+            public IModuleSource Origin { get; }
+            public IScopeSource ScopeSource { get; }
 
-            readonly Module module;
-
-            public ModuleSource(Module module, IModuleSource origin, IScopeSource scopeSource)
-            {
-                this.module = module;
-
-                module.providers.Add(this);
-                module.AddReference();
-
-                ScopeSubscription = scopeSource.Subscribe(value =>
-                {
-                    Elements = value.Elements;
-                    module.RefreshScope();
-                });
-            }
-
-            public void Dispose()
-            {
-                // The source is presumptuously no longer valid. 
-                ScopeSubscription.Dispose();
-                module.providers.Remove(this);
-                module.RemoveReference();
-            }
-        }
-
-        /// <summary>Removes a reference from the module.</summary>
-        class ModuleScopeDereferencer : IDisposable
-        {
-            readonly Module module;
-            readonly IDisposable collectionDisposer;
-
-            public ModuleScopeDereferencer(Module module, IDisposable collectionDisposer)
-            {
-                this.module = module;
-                this.collectionDisposer = collectionDisposer;
-                module.AddReference();
-            }
-
-            public void Dispose()
-            {
-                collectionDisposer.Dispose();
-                module.RemoveReference();
-            }
+            public ModuleSource(IModuleSource origin, IScopeSource scopeSource) => (Origin, ScopeSource) = (origin, scopeSource);
         }
     }
 }

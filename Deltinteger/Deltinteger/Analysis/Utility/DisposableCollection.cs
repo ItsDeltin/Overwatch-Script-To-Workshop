@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 
 namespace DS.Analysis.Utility
 {
@@ -10,9 +11,14 @@ namespace DS.Analysis.Utility
         readonly HashSet<IDisposable> disposables = new HashSet<IDisposable>();
         private bool disposedValue;
 
-        public void Add(IDisposable disposable)
+        public IDisposable Add(IDisposable disposable)
         {
             disposables.Add(disposable);
+            return Disposable.Create(() =>
+            {
+                if (disposables.Remove(disposable))
+                    disposable.Dispose();
+            });
         }
 
         public void Dispose()

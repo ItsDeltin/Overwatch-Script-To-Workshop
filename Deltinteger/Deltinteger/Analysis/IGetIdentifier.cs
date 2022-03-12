@@ -98,6 +98,9 @@ namespace DS.Analysis
         public static GetStructuredIdentifier Create(string defaultName, CodeType[] typeArgs, IGetIdentifier parent, Func<ScopedElement, bool> predicate) =>
             new GetStructuredIdentifier(defaultName, typeArgs, parent, PredicateSearch(predicate));
 
+        public static GetStructuredIdentifier Create(string defaultName, CodeType[] typeArgs, IGetIdentifier parent, IScopeSearch scopeSearch) =>
+            new GetStructuredIdentifier(defaultName, typeArgs, parent, scopeSearch);
+
         public static IScopeSearch PredicateSearch(Func<ScopedElement, bool> predicate) => new AnonymousScopeSearch(context =>
         {
             HashSet<string> conflictableIdentifiers = new HashSet<string>();

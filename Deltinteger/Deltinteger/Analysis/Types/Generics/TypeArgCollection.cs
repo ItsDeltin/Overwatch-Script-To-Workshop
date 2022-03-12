@@ -23,6 +23,8 @@ namespace DS.Analysis.Types.Generics
                 scopeAppender.AddScopedElement(typeArg.ScopedElement);
         }
 
+        public CodeType[] GetTypeArgInstances() => TypeArgs.Select(typeArg => typeArg.DataTypeProvider.Instance).ToArray();
+
         public static TypeArgCollection FromSyntax(List<TypeArgContext> syntax) => new TypeArgCollection(syntax.Select(g => new TypeArg(g.Identifier.Text, g.Single)).ToArray());
     }
 }

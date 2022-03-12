@@ -3,6 +3,7 @@ using System;
 namespace DS.Analysis.Types
 {
     using Core;
+    using Utility;
 
     interface ITypeDirector : IDependable
     {
@@ -11,6 +12,30 @@ namespace DS.Analysis.Types
 
     interface IDisposableTypeDirector : ITypeDirector, IDisposable
     {
+    }
+
+    class SerialDisposableTypeDirector : IDisposableTypeDirector
+    {
+        public CodeType Type
+        {
+            get => type; set
+            {
+                type = value;
+                dependents.MarkAsStale();
+            }
+        }
+
+        CodeType type;
+
+        readonly IDisposable disposable;
+
+        readonly DependentCollection dependents = new DependentCollection();
+
+        public IDisposable AddDependent(IDependent dependent) => dependents.Add(dependent);
+
+        public SerialDisposableTypeDirector(IDisposable disposable) => this.disposable = disposable;
+
+        public void Dispose() => disposable.Dispose();
     }
 
 

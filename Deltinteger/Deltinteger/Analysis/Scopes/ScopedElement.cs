@@ -27,9 +27,9 @@ namespace DS.Analysis.Scopes
         public override string ToString() => Name;
 
 
-        public static ScopedElement CreateVariable(string name, IIdentifierHandler identifierHandler) => new ScopedElement(name)
+        public static ScopedElement CreateVariable(string name, IdentifierInfo identifierInfo) => new ScopedElement(name)
         {
-            ElementSelector = new UnambiguousSelector(new IdentifiedElement(identifierHandler))
+            ElementSelector = new UnambiguousSelector(new IdentifiedElement(identifierInfo))
         };
 
         public static ScopedElement CreateAlias(string name, IdentifiedElement identifiedElement) => new ScopedElement(name)

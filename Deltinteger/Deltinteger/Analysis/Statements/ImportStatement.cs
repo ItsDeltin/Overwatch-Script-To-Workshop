@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using DS.Analysis.Scopes;
-using DS.Analysis.Scopes.Import;
 using DS.Analysis.Scopes.Selector;
 using DS.Analysis.Utility;
 using DS.Analysis.Diagnostics;
@@ -58,7 +57,7 @@ namespace DS.Analysis.Statements
                 sourceName = "module " + string.Join(".", modulePath);
 
                 // Get the module from the path.
-                var module = context.File.Analysis.ModuleManager.ModuleFromPath(PathFromSyntax(syntax.Module));
+                var module = context.File.Analysis.ModuleManager.ModuleFromPath(modulePath);
 
                 scopeSource = module;
                 DependOn(module); // Adds a reference to the module.
@@ -87,12 +86,15 @@ namespace DS.Analysis.Statements
             DependOn(scopeSource);
 
             // Create the ScopedElement
-            var elements = new ImportedElement[importElements.Length];
-            for (int i = 0; i < elements.Length; i++)
+            this.importedElements = new ImportedElement[importElements.Length];
+            for (int i = 0; i < this.importedElements.Length; i++)
             {
+                // The name of the element being imported.
                 string reference = importElements[i].Identifier.Text;
+                // The imported element's name in the current scope.
                 string alias = importElements[i].Alias ? importElements[i].Alias.Text : reference;
-                AddDisposable(elements[i] = new ImportedElement(
+
+                AddDisposable(this.importedElements[i] = new ImportedElement(
                     import: this,
                     token: Context.Diagnostics.CreateToken(importElements[i].Identifier.Range),
                     alias,
@@ -142,6 +144,7 @@ namespace DS.Analysis.Statements
                 }
                 else
                 {
+                    // Found; add alias
                     match.ElementSelector.Alias(new RelatedElements(matchesName), alias, import.selectionSource);
                 }
             }

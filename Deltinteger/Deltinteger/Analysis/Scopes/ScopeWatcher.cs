@@ -7,34 +7,38 @@ using DS.Analysis.Core;
 
 namespace DS.Analysis.Scopes
 {
-    class ScopeWatcher : AnalysisObject, IScopeSource
+    class ScopeWatcher : IScopeSource
     {
-        readonly List<IScopeSource> sources = new List<IScopeSource>();
+        // IScopeSource
         public ScopedElement[] Elements { get; private set; }
-        readonly Action onEmpty;
 
-        public ScopeWatcher(IMaster master, Action onEmpty) : base(master)
+        readonly IMaster master;
+        readonly IEnumerable<IScopeSource> sources;
+        readonly DependencyHandler dependencyHandler;
+
+        public ScopeWatcher(IMaster master, IEnumerable<IScopeSource> sources)
         {
-            this.onEmpty = onEmpty;
-        }
+            this.master = master;
+            this.sources = sources;
+            dependencyHandler = new DependencyHandler(master, update =>
+            {
+                // Concat all sources
+                var result = Enumerable.Empty<ScopedElement>();
+                foreach (var source in sources)
+                    result = result.Concat(source.Elements);
 
-        public void SubscribeTo(IScopeSource scopeSource)
-        {
-            sources.Add(scopeSource);
-            DependOn(scopeSource);
-        }
+                Elements = result.ToArray();
 
-        public override void Update()
-        {
-            base.Update();
+                update.MakeDependentsStale();
+            });
 
-            var result = Enumerable.Empty<ScopedElement>();
             foreach (var source in sources)
-                result = result.Concat(source.Elements);
-
-            Elements = result.ToArray();
+                dependencyHandler.DependOn(source);
         }
 
-        protected override void NoMoreDependents() => onEmpty();
+        public ScopeWatcher CreateChild(IScopeSource scopeSource) => new ScopeWatcher(master, sources.Append(scopeSource));
+
+        // IDependable
+        public IDisposable AddDependent(IDependent dependent) => dependencyHandler.AddDependent(dependencyHandler);
     }
 }

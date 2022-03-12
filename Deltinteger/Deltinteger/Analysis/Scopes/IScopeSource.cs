@@ -13,6 +13,31 @@ namespace DS.Analysis.Scopes
         ScopedElement[] Elements { get; }
     }
 
+    class SerialScopeSource : IScopeSource
+    {
+        /// <summary>
+        /// The elements in the scope. When changed, the scope dependents are marked as stale.
+        /// </summary>
+        public ScopedElement[] Elements
+        {
+            get => _elements; set
+            {
+                _elements = value;
+                dependentCollection.MarkAsStale();
+            }
+        }
+        // Backing variable
+        ScopedElement[] _elements;
+
+        readonly DependentCollection dependentCollection = new DependentCollection();
+
+        public IDisposable AddDependent(IDependent dependent) => dependentCollection.Add(dependent);
+
+        public SerialScopeSource() { }
+
+        public SerialScopeSource(ScopedElement[] initialElements) => _elements = initialElements;
+    }
+
     class ScopeSource : IScopeSource, IScopeAppender
     {
         public ScopedElement[] Elements => scopedElements.ToArray();

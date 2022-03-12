@@ -55,7 +55,7 @@ namespace DS.Analysis.Types.Semantics
                 else
                 {
                     Dispose(index + 1);
-                    SubscribeToPartIndex(index + 1, context.SetScope(result.Scope).SetParent(result.ParentElement));
+                    SubscribeToPartIndex(index + 1, context.SetScope(result.ScopeSource).SetParent(result.ParentElement));
                 }
             });
         }

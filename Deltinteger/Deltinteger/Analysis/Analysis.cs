@@ -10,7 +10,7 @@ namespace DS.Analysis
     class DeltinScriptAnalysis : IMaster
     {
         public FileManager FileManager { get; }
-        public ModuleManager ModuleManager { get; } = new ModuleManager();
+        public ModuleManager ModuleManager { get; }
         public PostAnalysisOperation PostAnalysisOperations { get; } = new PostAnalysisOperation();
 
         public Scope DefaultScope { get; }
@@ -21,7 +21,8 @@ namespace DS.Analysis
         public DeltinScriptAnalysis()
         {
             FileManager = new FileManager(this);
-            DefaultScope = new Scope(Types.Standard.StandardTypes.StandardSource, ModuleManager.Root);
+            ModuleManager = new ModuleManager(this);
+            DefaultScope = new Scope(this, Types.Standard.StandardTypes.StandardSource, ModuleManager.Root);
         }
 
         public void Update()

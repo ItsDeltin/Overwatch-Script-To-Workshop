@@ -7,7 +7,7 @@ using DS.Analysis.Expressions.Identifiers;
 
 namespace DS.Analysis.Variables
 {
-    class Variable : IIdentifierHandler, ICodeTypeElement
+    class Variable : ICodeTypeElement
     {
         public ITypeDirector Type { get; }
 
@@ -15,11 +15,6 @@ namespace DS.Analysis.Variables
         {
             Type = type;
         }
-
-
-        // IIdentifierHandler
-        ITypeDirector IIdentifierHandler.GetTypeDirector() => Type;
-        IObservable<Scope> IIdentifierHandler.GetScopeDirector() => new TypeScopeObservable(Type);
 
         // ICodeTypeElement todo
         ScopedElement ICodeTypeElement.ScopedElement => throw new NotImplementedException();

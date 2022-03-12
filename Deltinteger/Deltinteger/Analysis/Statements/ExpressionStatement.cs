@@ -5,7 +5,7 @@ namespace DS.Analysis.Statements
 {
     class ExpressionStatement : Statement
     {
-        Expression expression;
+        IExpressionHost expression;
 
         public ExpressionStatement(ContextInfo context, ExpressionStatementSyntax syntax) : base(context)
         {

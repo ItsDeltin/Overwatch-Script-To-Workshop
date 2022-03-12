@@ -60,11 +60,11 @@ namespace DS.Analysis
 
         public ContextInfo ClearHead() => new ContextInfo(this);
 
-        public ContextInfo SetSourceExpression(Expression source) => new ContextInfo(this);
+        public ContextInfo SetSourceExpression(IExpressionHost source) => new ContextInfo(this);
 
-        public ContextInfo SetScope(Scope scope) => new ContextInfo(this) { Scope = scope };
+        public ContextInfo SetScope(IScopeSource scope) => new ContextInfo(this) { Scope = new Scope(Analysis, scope) };
 
-        public ContextInfo AddSource(IScopeSource source) => new ContextInfo(this) { Scope = Scope.CreateChild(source) };
+        public ContextInfo AddSource(IScopeSource source) => new ContextInfo(this) { Scope = Scope.CreateChild(Analysis, source) };
 
         public ContextInfo SetScopeAppender(IScopeAppender appender) => new ContextInfo(this) { ScopeAppender = appender };
 
@@ -72,7 +72,7 @@ namespace DS.Analysis
             where T : IScopeSource, IScopeAppender
             => new ContextInfo(this)
             {
-                Scope = Scope.CreateChild(appendableSource),
+                Scope = Scope.CreateChild(Analysis, appendableSource),
                 ScopeAppender = appendableSource
             };
 
@@ -83,14 +83,14 @@ namespace DS.Analysis
         public ContextInfo SetModulePath(IEnumerable<string> path) => new ContextInfo(this) { ModulePath = path };
 
 
-        public Expression GetExpression(IParseExpression expressionContext)
+        public IExpressionHost GetExpression(IParseExpression expressionContext)
         {
             switch (expressionContext)
             {
                 // Group
                 case ExpressionGroup group: return GetExpression(group.Expression);
                 // Identifier
-                case Identifier identifier: return new IdentifierExpression(this, identifier);
+                case Identifier identifier: return new IdentifierExpression(this, identifier).ExpressionHost;
                 // True/false
                 case BooleanExpression boolean: return new BooleanAction(this, boolean);
                 // Number
@@ -102,7 +102,7 @@ namespace DS.Analysis
                     else
                         break; // todo
                 // Method call
-                case FunctionExpression method: return new CallExpression(new MethodAnalysis(this, method));
+                case FunctionExpression method: return new CallExpression(this, new MethodAnalysis(this, method));
                 // Unknown
                 case MissingElement missingElement:
                     return new UnknownExpression(this);
@@ -122,7 +122,7 @@ namespace DS.Analysis
 
                 // Data Type
                 case ClassContext dataTypeDeclaration:
-                    return new DeclarationStatement(this, new DeclaredDataType(this, new DataTypeContentProvider(dataTypeDeclaration)));
+                    return new DeclarationStatement(this, new DeclaredDataType(this, new UserContentProvider(dataTypeDeclaration)));
 
                 // Method declaration
                 case FunctionContext methodDeclaration:
@@ -146,7 +146,7 @@ namespace DS.Analysis
 
                 // Block
                 case Block block:
-                    return new BlockStatement(Block(block));
+                    return new BlockStatement(this, Block(block));
 
                 // Expression
                 case ExpressionStatementSyntax expression:
@@ -158,7 +158,7 @@ namespace DS.Analysis
 
                 // Method call
                 case FunctionExpression method:
-                    return new CallStatement(new MethodAnalysis(this, method));
+                    return new CallStatement(this, new MethodAnalysis(this, method));
             }
             throw new NotImplementedException(syntax.GetType().ToString());
         }
@@ -195,5 +195,10 @@ namespace DS.Analysis
 
         public IGetIdentifier CreateStructuredIdentifier(string name, Func<ScopedElement, bool> predicate) =>
             CreateStructuredIdentifier(name, null, predicate);
+
+        public AutoExpressionHost CreateExpressionHost(Action<UpdateHelper> updater)
+        {
+            return new AutoExpressionHost(new DependencyHandler(Analysis, updater));
+        }
     }
 }

@@ -1,56 +1,59 @@
 using System;
 using System.IO;
+using DS.Analysis.Core;
 using DS.Analysis.Files;
-using DS.Analysis.Utility;
 
-namespace DS.Analysis.Scopes.Import
+namespace DS.Analysis.Scopes
 {
     /// <summary>
     /// Imports the entire root scope of another file into the current scope.
     /// </summary>
     class FileRootScopeSource : IScopeSource, IFileDependent, IDisposable
     {
-        readonly ObserverCollection<ScopeSourceChange> observers = new ObserverCollection<ScopeSourceChange>();
+        // IScopeSource
+        public ScopedElement[] Elements { get; private set; }
+
+        readonly DependencyHandler dependencyHandler;
         readonly IDisposable fileSubscription;
         readonly string path;
         readonly IFileImportErrorHandler errorHandler;
         IDisposable scopeSubscription;
-        ScopeSourceChange currentValue;
+
+        ScriptFile file;
 
         public FileRootScopeSource(DeltinScriptAnalysis analysis, string path, IFileImportErrorHandler errorHandler)
         {
+            dependencyHandler = new DependencyHandler(analysis, updateHelper =>
+            {
+                Elements = file.RootScopeSource.Elements;
+                updateHelper.MakeDependentsStale();
+            });
             this.path = path;
             this.errorHandler = errorHandler;
             fileSubscription = analysis.FileManager.Depend(path, this);
         }
 
+        // IFileDependent
         void IFileDependent.SetFile(ScriptFile file, Exception exception)
         {
+            this.file = file;
             scopeSubscription?.Dispose();
             scopeSubscription = null;
-            currentValue = ScopeSourceChange.Empty;
 
             // File does not exist.
             if (file == null)
             {
-                observers.Set(ScopeSourceChange.Empty);
+                Elements = new ScopedElement[0];
                 DispatchError(exception);
+                dependencyHandler.MakeDependentsStale();
                 return;
             }
 
-            scopeSubscription = file.RootScopeSource.Subscribe(value => {
-                currentValue = value;
-                observers.Set(value);
-            });
+            scopeSubscription = dependencyHandler.DependOn(file.RootScopeSource);
             errorHandler.Success();
         }
 
-        public IDisposable Subscribe(IObserver<ScopeSourceChange> observer)
-        {
-            observer.OnNext(currentValue);
-            return observers.Add(observer);
-        }
-
+        // IDisposable
         public void Dispose()
         {
             fileSubscription.Dispose();
@@ -62,26 +65,29 @@ namespace DS.Analysis.Scopes.Import
             if (exception is ArgumentException ||
                 exception is NotSupportedException)
                 errorHandler.Error($"Invalid path format: '{path}'");
-            
+
             else if (exception is PathTooLongException)
                 errorHandler.Error($"Path is too long: '{path}'");
-            
+
             else if (exception is DirectoryNotFoundException)
                 errorHandler.Error($"Directory not found: '{path}'");
-            
+
             else if (exception is FileNotFoundException)
                 errorHandler.Error($"File not found: '{path}'");
-            
+
             else if (exception is UnauthorizedAccessException ||
                      exception is System.Security.SecurityException)
                 errorHandler.Error($"Unauthorized: '{path}': {exception.Message}");
-            
+
             else if (exception is IOException)
                 errorHandler.Error($"IO error: '{path}': {exception.Message}");
 
             else
                 throw exception;
         }
+
+        // IScopeSource
+        public IDisposable AddDependent(IDependent dependent) => dependencyHandler.AddDependent(dependent);
     }
 
     interface IFileImportErrorHandler

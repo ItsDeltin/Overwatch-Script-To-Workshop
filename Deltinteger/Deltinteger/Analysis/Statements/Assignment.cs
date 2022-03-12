@@ -13,8 +13,8 @@ namespace DS.Analysis.Statements
     class AssignmentStatement : Statement
     {
         readonly Assignment syntax;
-        readonly Expression variable;
-        readonly Expression value;
+        readonly IExpressionHost variable;
+        readonly IExpressionHost value;
 
         public AssignmentStatement(ContextInfo context, Assignment syntax) : base(context)
         {
@@ -39,9 +39,9 @@ namespace DS.Analysis.Statements
                 AddDisposable(TypeValidation.IsAssignableTo(
                     context: Context,
                     token: Context.Diagnostics.CreateToken(syntax.Value.Range),
-                    scopedElements: ScopedElements,
-                    assignToType: variable.PhysicalType,
-                    valueType: value.PhysicalType), true);
+                    scopedElements: Context.Scope.Elements,
+                    assignToType: variable.Type,
+                    valueType: value.Type), true);
         }
     }
 }

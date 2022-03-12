@@ -4,6 +4,7 @@ using DS.Analysis.Types.Generics;
 using DS.Analysis.Types.Components;
 using DS.Analysis.Scopes;
 using DS.Analysis.Utility;
+using DS.Analysis.Core;
 
 namespace DS.Analysis.Structure.TypeAlias
 {
@@ -61,17 +62,19 @@ namespace DS.Analysis.Structure.TypeAlias
             }
 
 
-            class AliasDirector : ITypeDirector, IDisposable
+            class AliasDirector : IDisposableTypeDirector
             {
-                readonly ObserverCollection<CodeType> observers = Helper.CreateTypeObserver();
-                readonly IDisposable referenceSubscription;
+                public CodeType Type { get; private set; }
 
-                public AliasDirector(AliasProvider provider, CodeType[] typeArgs)
+                readonly DependencyHandler dependencyHandler;
+
+                public AliasDirector(IMaster master, AliasProvider provider, CodeType[] typeArgs)
                 {
-                    referenceSubscription = provider.aliasing.Subscribe(type =>
+                    // Watch the type being aliased
+                    dependencyHandler = new DependencyHandler(master, updateHelper =>
                     {
-                        // Substitute the type.
-                        CodeType substitution = new CodeType(type)
+                        // Substitute the type
+                        Type = new CodeType(provider.aliasing.Type)
                         {
                             GetIdentifier = GetStructuredIdentifier.Create(
                                 provider.Name,
@@ -80,17 +83,15 @@ namespace DS.Analysis.Structure.TypeAlias
                                 element => element.TypePartHandler == provider
                             )
                         };
-                        observers.Set(substitution);
+
+                        dependencyHandler.MakeDependentsStale();
                     });
+                    dependencyHandler.DependOn(provider.aliasing);
                 }
 
-                public void Dispose()
-                {
-                    observers.Complete();
-                    referenceSubscription.Dispose();
-                }
+                public IDisposable AddDependent(IDependent dependent) => dependencyHandler.AddDependent(dependent);
 
-                public IDisposable Subscribe(IObserver<CodeType> observer) => observers.Add(observer);
+                public void Dispose() => dependencyHandler.Dispose();
             }
         }
     }

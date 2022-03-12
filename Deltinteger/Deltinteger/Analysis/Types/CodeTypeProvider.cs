@@ -61,9 +61,9 @@ namespace DS.Analysis.Types
             return true;
         }
 
-        IDisposable ITypePartHandler.Get(IObserver<TypePartResult> observer, ProviderArguments arguments)
+        IDisposable ITypePartHandler.Get(IObserver<TypePartInfo> observer, ProviderArguments arguments)
         {
-            return CreateInstance(observer.Convert((CodeType type) => new TypePartResult(type)), arguments);
+            return CreateInstance(observer.Convert((CodeType type) => new TypePartInfo(type)), arguments);
         }
     }
 

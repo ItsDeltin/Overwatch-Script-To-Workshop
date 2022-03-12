@@ -5,7 +5,7 @@ namespace DS.Analysis.Statements
 {
     class IfStatement : Statement
     {
-        readonly Expression @if;
+        readonly IExpressionHost @if;
         readonly Statement block;
 
         public IfStatement(ContextInfo context, If syntax) : base(context)

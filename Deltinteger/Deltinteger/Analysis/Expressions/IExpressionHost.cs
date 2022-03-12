@@ -1,3 +1,5 @@
+using System;
+
 namespace DS.Analysis.Expressions
 {
     using Core;
@@ -5,7 +7,10 @@ namespace DS.Analysis.Expressions
     using Scopes;
     using Methods;
 
-    interface IExpression : IDependable
+    /// <summary>
+    /// Represents an expression.
+    /// </summary>
+    interface IExpressionHost : IDependable, IDisposable
     {
         /// <summary>The type of the expression.</summary>
         PhysicalType Type { get; }

@@ -8,6 +8,7 @@ namespace DS.Analysis.Types.Semantics
 {
     using Scopes;
     using Utility;
+    using Core;
 
     /// <summary>
     /// A node in a type tree. May be a module or type.
@@ -16,45 +17,35 @@ namespace DS.Analysis.Types.Semantics
     {
         readonly ContextInfo context; // The current context.
         readonly ITypeIdentifierErrorHandler errorHandler; // Error handler.
-        readonly Action<TypePartResult> onChange; // The action to broadcast updates to.
         readonly string name; // The name of the type or module.
-        readonly ScopeWatcher scopeWatcher; // The scope watcher.
         readonly IDisposableTypeDirector[] typeArgDirectors; // The type arguments.
-        readonly IDisposable typeArgSubscriptions; // The subscriptions to the type arguments.
+
+        readonly DependencyHandler dependencyHandler;
 
         CodeType[] typeArgs; // The actual CodeTypes of the type arguments. Is the same length as 'typeArgDirectors'.
-        bool readyToUpdate; // Will be set to true once the ScopeWatcher provides a value.
 
         ITypePartHandler partHandler; // The current part handler.
-        IDisposable partSubscription; // The subscription to the current part handler.
+        ITypePartInfo typePartInfo; // The subscription to the current part handler.
 
-        public TypeTreeNode(ContextInfo context, ITypeIdentifierErrorHandler errorHandler, INamedType namedType, Action<TypePartResult> onChange)
+        public TypeTreeNode(ContextInfo context, ITypeIdentifierErrorHandler errorHandler, INamedType namedType, Action<TypePartInfo> onChange)
         {
             this.context = context;
             this.errorHandler = errorHandler;
             this.onChange = onChange;
             name = namedType.Identifier?.Text;
 
+            dependencyHandler = new DependencyHandler(context.Analysis);
+
             // Get the type arguments.
             typeArgDirectors = namedType.TypeArgs.Select(typeArgSyntax => TypeFromContext.TypeReferenceFromSyntax(context, typeArgSyntax)).ToArray();
-            typeArgSubscriptions = Utility.Helper.Observe<CodeType>(typeArgDirectors, typeArgs =>
+            dependencyHandler.AddDisposables(typeArgDirectors);
+
+            dependencyHandler.DependOn(helper => Update(), typeArgDirectors);
+            dependencyHandler.DependOn(helper =>
             {
-                this.typeArgs = typeArgs;
+                partHandler = GetPartHandler(context.Scope.Elements);
                 Update();
-            });
-
-
-            if (name != null)
-            {
-                scopeWatcher = context.Scope.Watch();
-                // The IDisposable created here will be not be needed since ScopeWatcher.Dispose will handle it.
-                scopeWatcher.Subscribe(change =>
-                {
-                    partHandler = GetPartHandler(change.Elements);
-                    readyToUpdate = true;
-                    Update();
-                });
-            }
+            }, context.Scope);
         }
 
 
@@ -76,19 +67,18 @@ namespace DS.Analysis.Types.Semantics
 
         void Update()
         {
-            if (!readyToUpdate)
+            // Make sure we have a part handler already
+            if (partHandler == null)
                 return;
 
             partSubscription?.Dispose();
-            partSubscription = partHandler.Get(Observer.Create<TypePartResult>(onChange), new ProviderArguments(typeArgs, context.Parent));
+            typePartInfo = partHandler.GetPartInfo(new ProviderArguments(typeArgs, context.Parent));
         }
 
 
         public void Dispose()
         {
-            scopeWatcher?.Dispose();
-            typeArgDirectors.Dispose();
-            typeArgSubscriptions.Dispose();
+            dependencyHandler.Dispose();
             errorHandler.Dispose();
             partSubscription?.Dispose();
         }
