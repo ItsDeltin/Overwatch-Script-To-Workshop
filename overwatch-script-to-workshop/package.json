@@ -332,7 +332,7 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
-    "async": "^3.2.0",
+    "async": "^3.2.2",
     "axios": "^0.19.2",
     "chokidar": "^3.4.3",
     "glob": "^7.1.6",
