@@ -44,16 +44,17 @@ namespace DS.Analysis.Types.Semantics.Path
 
             // Get the type arg directors.
             typeArgDirectors = namedType.TypeArgs.Select(typeArgSyntax => TypeFromContext.TypeReferenceFromSyntax(Context, typeArgSyntax)).ToArray();
+            dependencyHandler.AddDisposables(typeArgDirectors);
 
             // Update when type arguments change.
-            dependencyHandler.DependOn(helper =>
+            dependencyHandler.CreateNode(() =>
             {
                 typeArgs = typeArgDirectors.Select(director => director.Type).ToArray();
                 Update();
             }, typeArgDirectors);
 
             // Update when the scope updates.
-            dependencyHandler.DependOn(helper =>
+            dependencyHandler.CreateNode(() =>
             {
                 GetPartHandler();
                 Update();

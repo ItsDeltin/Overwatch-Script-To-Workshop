@@ -14,7 +14,7 @@ namespace DS.Analysis
         /// <summary>If the file is external, it will be unloaded when there are no more dependencies.</summary>
         public bool IsExternal { get; }
 
-        public DeltinScriptAnalysis Analysis { get; }
+        public DSAnalysis Analysis { get; }
 
         public FileDiagnostics Diagnostics { get; }
 
@@ -30,7 +30,7 @@ namespace DS.Analysis
         IDisposable postAnalysisDisposable;
 
 
-        public ScriptFile(string path, bool isExternal, DeltinScriptAnalysis analysis)
+        public ScriptFile(string path, bool isExternal, DSAnalysis analysis)
         {
             Path = path;
             IsExternal = isExternal;

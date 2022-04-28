@@ -13,7 +13,7 @@ namespace DS.Analysis.Scopes
         // IScopeSource
         public ScopedElement[] Elements { get; private set; }
 
-        readonly DependencyHandler dependencyHandler;
+        readonly SingleNode node;
         readonly IDisposable fileSubscription;
         readonly string path;
         readonly IFileImportErrorHandler errorHandler;
@@ -21,12 +21,12 @@ namespace DS.Analysis.Scopes
 
         ScriptFile file;
 
-        public FileRootScopeSource(DeltinScriptAnalysis analysis, string path, IFileImportErrorHandler errorHandler)
+        public FileRootScopeSource(DSAnalysis analysis, string path, IFileImportErrorHandler errorHandler)
         {
-            dependencyHandler = new DependencyHandler(analysis, updateHelper =>
+            node = analysis.SingleNode(() =>
             {
                 Elements = file.RootScopeSource.Elements;
-                updateHelper.MakeDependentsStale();
+                node.MakeDependentsStale();
             });
             this.path = path;
             this.errorHandler = errorHandler;
@@ -45,11 +45,11 @@ namespace DS.Analysis.Scopes
             {
                 Elements = new ScopedElement[0];
                 DispatchError(exception);
-                dependencyHandler.MakeDependentsStale();
+                node.MakeDependentsStale();
                 return;
             }
 
-            scopeSubscription = dependencyHandler.DependOn(file.RootScopeSource);
+            scopeSubscription = node.DependOn(file.RootScopeSource);
             errorHandler.Success();
         }
 
@@ -87,7 +87,7 @@ namespace DS.Analysis.Scopes
         }
 
         // IScopeSource
-        public IDisposable AddDependent(IDependent dependent) => dependencyHandler.AddDependent(dependent);
+        public IDisposable AddDependent(IDependent dependent) => node.AddDependent(dependent);
     }
 
     interface IFileImportErrorHandler

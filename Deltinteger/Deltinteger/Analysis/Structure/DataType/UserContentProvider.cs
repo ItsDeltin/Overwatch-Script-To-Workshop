@@ -17,12 +17,12 @@ namespace DS.Analysis.Structure.DataTypes
         readonly ClassContext syntax;
         readonly string name;
 
-
-        // For elements that depend on externals
-        readonly DependentCollection externalsDependents = new DependentCollection();
-
         // Searches the scope for this type
         readonly GetStructuredIdentifier.IScopeSearch scopeSearcher;
+
+        readonly ObserverCollection<int> externalsChanged = new ObserverCollection<int>();
+
+        SingleNode node;
 
         // The elements declared in the type.
         AbstractDeclaredElement[] declaredElements;
@@ -48,6 +48,8 @@ namespace DS.Analysis.Structure.DataTypes
 
         public SetupDataType Setup(ContextInfo contextInfo)
         {
+            node = contextInfo.Analysis.SingleNode(() => externalsChanged.Set(0));
+
             // Get the type args.
             typeParams = TypeArgCollection.FromSyntax(syntax.Generics);
             typeParams.AddToScope(contextInfo.ScopeAppender);
@@ -58,32 +60,27 @@ namespace DS.Analysis.Structure.DataTypes
             return new SetupDataType(
                 declarations: declaredElements = StructureUtility.DeclarationsFromSyntax(contextInfo, syntax.Declarations),
                 // Create the provider that generates directors from type arguments.
-                dataTypeProvider: typeProvider = Utility2.CreateProvider(
+                dataTypeProvider: typeProvider = Utility2.CreateProviderAndDirector(
                     name: name,
-                    generics: typeParams,
+                    typeParams: typeParams,
                     getIdentifier: GetStructuredIdentifier.Create(name, typeParams.GetTypeArgInstances(), contextInfo.Parent?.GetIdentifier, scopeSearcher),
-                    instanceFactory: arguments =>
+                    instanceFactory: helper =>
                 {
-                    // Create the type director from the provided arguments.
-                    return Utility2.CreateDirector(setType =>
+                    helper.AddDisposable(externalsChanged.Add(_ =>
                     {
-                        // Update the director's type when a depended external element is updated.
-                        return externalsDependents.Add(Utility2.CreateDependent(contextInfo.Analysis, () =>
-                        {
-                            // Get the content.
-                            var contentBuilder = new TypeContentBuilder(new TypeLinker(typeParams, arguments.TypeArgs));
-                            contentBuilder.AddAll(declaredElements);
+                        // Get the content.
+                        var contentBuilder = new TypeContentBuilder(new TypeLinker(typeParams, helper.TypeArgs));
+                        contentBuilder.AddAll(declaredElements);
 
-                            // Type comparison
-                            var comparison = new DeclaredCodeTypeComparison(baseReference.Type, this, arguments.TypeArgs);
+                        // Type comparison
+                        var comparison = new DeclaredCodeTypeComparison(baseReference.Type, this, helper.TypeArgs);
 
-                            // Create the type and notify the observer.
-                            setType(CodeType.Create(
-                                content: contentBuilder.ToCodeTypeContent(),
-                                comparison: comparison,
-                                getIdentifier: GetStructuredIdentifier.Create(name, arguments.TypeArgs, arguments.Parent?.GetIdentifier, scopeSearcher)));
-                        }));
-                    });
+                        // Create the type and notify the observer.
+                        helper.SetType(CodeType.Create(
+                            content: contentBuilder.ToCodeTypeContent(),
+                            comparison: comparison,
+                            getIdentifier: GetStructuredIdentifier.Create(name, helper.TypeArgs, helper.Parent?.GetIdentifier, scopeSearcher)));
+                    }));
                 })
             );
         }
@@ -97,7 +94,7 @@ namespace DS.Analysis.Structure.DataTypes
                 baseReference = TypeFromContext.TypeReferenceFromSyntax(contextInfo, syntax.Inheriting[0]);
 
                 // Subscribe to the base class.
-                baseSubscription = baseReference.AddDependent(Utility2.CreateDependent(contextInfo.Analysis, externalsDependents.MarkAsStale));
+                node.DependOn(baseReference);
             }
         }
 

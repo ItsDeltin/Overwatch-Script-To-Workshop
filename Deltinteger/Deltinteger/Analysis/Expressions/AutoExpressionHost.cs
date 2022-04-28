@@ -59,30 +59,30 @@ namespace DS.Analysis.Expressions
 
 
         // Operators
-        public DependencyHandler DependencyHandler { get; }
+        readonly SingleNode singleNode;
 
 
-        public AutoExpressionHost(DependencyHandler dependencyHandler)
+        public AutoExpressionHost(SingleNode singleNode)
         {
-            this.DependencyHandler = dependencyHandler;
+            this.singleNode = singleNode;
         }
 
 
         // Called when an expression attribute is changed.
-        private void Update() => DependencyHandler.MakeDependentsStale();
+        private void Update() => singleNode.MakeDependentsStale();
 
 
-        public T AddDisposable<T>(T disposable, DisposableLifetime lifetime = default(DisposableLifetime)) where T : IDisposable
-            => DependencyHandler.AddDisposable(disposable);
+        public IDisposable AddDisposable(IDisposable disposable) => singleNode.AddDisposable(disposable);
+        public void DisposeOnUpdate(IDisposable disposable) => singleNode.DisposeOnUpdate(disposable);
 
-        public void DependOn(IDependable dependable, DisposableLifetime lifetime = default(DisposableLifetime))
-            => DependencyHandler.DependOn(dependable);
+        public void DependOn(IDependable dependable) => singleNode.DependOn(dependable);
+        public void DependOnUntilUpdate(IDependable dependable) => singleNode.DisposeOnUpdate(singleNode.DependOn(dependable));
 
 
         // IDependable
-        public IDisposable AddDependent(IDependent dependent) => DependencyHandler.AddDependent(dependent);
+        public IDisposable AddDependent(IDependent dependent) => singleNode.AddDependent(dependent);
 
         // IDisposable
-        public void Dispose() => DependencyHandler.Dispose();
+        public void Dispose() => singleNode.Dispose();
     }
 }

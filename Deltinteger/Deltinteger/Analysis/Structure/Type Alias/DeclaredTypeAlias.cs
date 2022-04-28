@@ -25,8 +25,7 @@ namespace DS.Analysis.Structure.TypeAlias
 
             provider = CreateProviderAndDirector(Name, setup.TypeArgs, null /* todo: IGetIdentifier */, arguments =>
             {
-                // Create a dependency for the type being referenced.
-                arguments.AddDisposable(typeReference.AddDependent(CreateDependent(context.Analysis, () =>
+                var node = context.Analysis.SingleNode(() =>
                 {
                     // Substitute the type.
                     arguments.SetType(new CodeType(typeReference.Type)
@@ -38,7 +37,9 @@ namespace DS.Analysis.Structure.TypeAlias
                             element => element.TypePartHandler == provider
                         )
                     });
-                })));
+                });
+                node.DependOn(typeReference);
+                arguments.AddDisposable(node);
             });
         }
 

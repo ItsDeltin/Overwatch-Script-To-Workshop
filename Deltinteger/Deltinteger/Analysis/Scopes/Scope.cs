@@ -12,24 +12,24 @@ namespace DS.Analysis.Scopes
         public ScopedElement[] Elements { get; private set; }
 
         readonly IEnumerable<IScopeSource> sources;
-        readonly DependencyHandler dependencyHandler;
+        readonly SingleNode node;
 
         public Scope()
         {
             sources = Enumerable.Empty<IScopeSource>();
         }
 
-        public Scope(IMaster master, params IScopeSource[] sources)
+        public Scope(DSAnalysis master, params IScopeSource[] sources)
         {
             this.sources = sources;
-            dependencyHandler = new DependencyHandler(master, Update);
+            node = master.SingleNode(Update);
             Subscribe();
         }
 
-        private Scope(IMaster master, Scope parent, IScopeSource source)
+        private Scope(DSAnalysis master, Scope parent, IScopeSource source)
         {
             sources = parent.sources.Append(source);
-            dependencyHandler = new DependencyHandler(master, Update);
+            node = master.SingleNode(Update);
             Subscribe();
         }
 
@@ -37,10 +37,10 @@ namespace DS.Analysis.Scopes
         void Subscribe()
         {
             foreach (var source in sources)
-                dependencyHandler.DependOn(source);
+                node.DependOn(source);
         }
 
-        void Update(UpdateHelper updater)
+        void Update()
         {
             var elements = Enumerable.Empty<ScopedElement>();
 
@@ -48,15 +48,15 @@ namespace DS.Analysis.Scopes
                 elements = elements.Concat(source.Elements);
 
             Elements = elements.ToArray();
-            updater.MakeDependentsStale();
+            node.MakeDependentsStale();
         }
 
-        public Scope CreateChild(IMaster master, IScopeSource scopeSource) => new Scope(master, this, scopeSource);
+        public Scope CreateChild(DSAnalysis master, IScopeSource scopeSource) => new Scope(master, this, scopeSource);
 
         // IDependable
-        public IDisposable AddDependent(IDependent dependent) => dependencyHandler.AddDependent(dependent);
+        public IDisposable AddDependent(IDependent dependent) => node.AddDependent(dependent);
 
-        public void Dispose() => dependencyHandler.Dispose();
+        public void Dispose() => node.Dispose();
 
         public static readonly Scope Empty = new Scope();
     }

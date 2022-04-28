@@ -30,7 +30,7 @@ namespace DS.Analysis.Types
 
         readonly IDisposable disposable;
 
-        readonly DependentCollection dependents = new DependentCollection();
+        readonly DependencyList dependents = new DependencyList();
 
         public IDisposable AddDependent(IDependent dependent) => dependents.Add(dependent);
 

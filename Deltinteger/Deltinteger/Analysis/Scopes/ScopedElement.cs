@@ -38,7 +38,8 @@ namespace DS.Analysis.Scopes
 
         public static ScopedElement CreateType(string name, ITypeNodeManager partHandler) => new ScopedElement(name)
         {
-            ElementSelector = new UnambiguousSelector(new IdentifiedElement(partHandler))
+            ElementSelector = new UnambiguousSelector(new IdentifiedElement(partHandler)),
+            TypePartHandler = partHandler
         };
 
         public static ScopedElement CreateMethod(MethodInstance instance) => CreateMethod(instance.Name, instance);

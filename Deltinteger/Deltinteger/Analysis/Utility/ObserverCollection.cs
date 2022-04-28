@@ -22,6 +22,8 @@ namespace DS.Analysis.Utility
             return Disposable.Create(() => _observers.Remove(observer));
         }
 
+        public IDisposable Add(Action<T> onNext) => Add(System.Reactive.Observer.Create(onNext));
+
         /// <summary>Pushes a new value to the observers.</summary>
         /// <param name="value">The current notification information. </param>
         public virtual void Set(T value) => Enumerate(o => o.OnNext(value));

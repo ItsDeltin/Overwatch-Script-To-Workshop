@@ -18,7 +18,7 @@ namespace DS.Analysis
         protected IMaster Master { get; }
 
         /// <summary>The objects that depend on this.</summary>
-        private readonly DependentCollection dependents;
+        private readonly DependencyList dependents;
 
         private readonly DisposableCollection disposables = new DisposableCollection();
 
@@ -27,7 +27,7 @@ namespace DS.Analysis
 
         protected AnalysisObject(IMaster master)
         {
-            dependents = new DependentCollection(NoMoreDependents);
+            dependents = new DependencyList(NoMoreDependents);
             this.Master = master;
         }
 

@@ -9,12 +9,12 @@ namespace DS.Analysis.Methods
     class MethodAnalysis : IDisposable
     {
         readonly IExpressionHost target;
-        readonly DependencyHandler dependencyHandler;
+        readonly SingleNode dependencyHandler;
 
         public MethodAnalysis(ContextInfo context, FunctionExpression syntax)
         {
             target = context.GetExpression(syntax.Target);
-            dependencyHandler = new DependencyHandler(context.Analysis, updateHelper =>
+            dependencyHandler = context.Analysis.SingleNode(() =>
             {
                 // If the expression is a method group
                 if (target.MethodGroup != null)

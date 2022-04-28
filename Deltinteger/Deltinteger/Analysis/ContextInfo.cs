@@ -24,7 +24,7 @@ namespace DS.Analysis
 {
     class ContextInfo
     {
-        public DeltinScriptAnalysis Analysis { get; }
+        public DSAnalysis Analysis { get; }
         public ScriptFile File { get; }
         public Scope Scope { get; private set; }
         public Scope Getter { get; private set; }
@@ -38,7 +38,7 @@ namespace DS.Analysis
 
         readonly SerializedDisposableCollection disposables;
 
-        public ContextInfo(DeltinScriptAnalysis analysis, ScriptFile file, Scope scope, SerializedDisposableCollection disposables)
+        public ContextInfo(DSAnalysis analysis, ScriptFile file, Scope scope, SerializedDisposableCollection disposables)
         {
             Analysis = analysis;
             File = file;
@@ -215,9 +215,9 @@ namespace DS.Analysis
         public IGetIdentifier CreateStructuredIdentifier(string name, Func<ScopedElement, bool> predicate) =>
             CreateStructuredIdentifier(name, null, predicate);
 
-        public AutoExpressionHost CreateExpressionHost(Action<UpdateHelper> updater)
+        public AutoExpressionHost CreateExpressionHost(Action updater)
         {
-            return new AutoExpressionHost(new DependencyHandler(Analysis, updater));
+            return new AutoExpressionHost(Analysis.SingleNode(updater));
         }
     }
 }

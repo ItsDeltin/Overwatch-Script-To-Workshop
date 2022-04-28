@@ -15,12 +15,12 @@ namespace DS.Analysis.ModuleSystem
 
         readonly List<Module> modules = new List<Module>();
 
-        readonly IMaster master;
+        readonly DSAnalysis master;
         // The scope containing the modules.
         readonly SerialScopeSource moduleListScope = new SerialScopeSource();
 
 
-        public ModuleManager(IMaster master)
+        public ModuleManager(DSAnalysis master)
         {
             this.master = master;
         }

@@ -28,15 +28,15 @@ namespace DS.Analysis.ModuleSystem
         /// <summary>The module scope sources.</summary>
         readonly List<ModuleSource> providers = new List<ModuleSource>();
 
-        readonly DependencyHandler dependencyHandler;
+        readonly SingleNode node;
 
 
-        public Module(IMaster master, string name, Module parent)
+        public Module(DSAnalysis master, string name, Module parent)
         {
             Name = name;
             this.parent = parent;
 
-            dependencyHandler = new DependencyHandler(master, Update);
+            node = master.SingleNode(Update);
 
             GetIdentifier = new GetStructuredIdentifier(Name, null, parent?.GetIdentifier, GetStructuredIdentifier.PredicateSearch(element => element.TypePartHandler == this));
 
@@ -55,7 +55,7 @@ namespace DS.Analysis.ModuleSystem
         public IDisposable AddDependent(IDependent dependent)
         {
             // Add the dependency to the dependency handler.
-            var removeDependency = dependencyHandler.AddDependent(dependent);
+            var removeDependency = node.AddDependent(dependent);
 
             // The disposable that the caller disposes when they want to remove the dependency.
             return Disposable.Create(() =>
@@ -67,7 +67,7 @@ namespace DS.Analysis.ModuleSystem
             });
         }
 
-        void Update(UpdateHelper updateHelper)
+        void Update()
         {
             // Refresh the scope.
             var scopedElements = Enumerable.Empty<ScopedElement>();
@@ -79,16 +79,16 @@ namespace DS.Analysis.ModuleSystem
 
         void TryComplete()
         {
-            if (dependencyHandler.HasDependents || submodules.Count > 0)
+            if (node.HasDependents || submodules.Count > 0)
                 return;
 
-            dependencyHandler.Dispose();
+            node.Dispose();
             parent?.submodules.Remove(this);
         }
 
         public IDisposable AddSource(IModuleSource origin, IScopeSource scopeSource)
         {
-            var removeDependency = dependencyHandler.DependOn(scopeSource);
+            var removeDependency = node.DependOn(scopeSource);
             var moduleSource = new ModuleSource(origin, scopeSource);
             providers.Add(moduleSource);
 
@@ -113,7 +113,7 @@ namespace DS.Analysis.ModuleSystem
                     return submodule;
 
             // Sub module does not exist; create it.
-            Module newModule = new Module(dependencyHandler.Master, name, this);
+            Module newModule = new Module(node.Master, name, this);
             submodules.Add(newModule);
             return newModule;
         }

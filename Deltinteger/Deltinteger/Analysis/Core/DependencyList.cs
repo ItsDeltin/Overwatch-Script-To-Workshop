@@ -21,8 +21,8 @@ namespace DS.Analysis.Core
             dependents.Add(dependent);
             return Disposable.Create(() =>
             {
-                if (dependents.Remove(dependent) && dependents.Count == 0)
-                    noMoreDependencies?.Invoke();
+                if (dependents.Remove(dependent) && dependents.Count == 0 && noMoreDependencies != null)
+                    noMoreDependencies();
             });
         }
 

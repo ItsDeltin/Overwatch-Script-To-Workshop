@@ -12,15 +12,15 @@ namespace DS.Analysis.Scopes
         // IScopeSource
         public ScopedElement[] Elements { get; private set; }
 
-        readonly IMaster master;
+        readonly DSAnalysis master;
         readonly IEnumerable<IScopeSource> sources;
-        readonly DependencyHandler dependencyHandler;
+        readonly SingleNode node;
 
-        public ScopeWatcher(IMaster master, IEnumerable<IScopeSource> sources)
+        public ScopeWatcher(DSAnalysis master, IEnumerable<IScopeSource> sources)
         {
             this.master = master;
             this.sources = sources;
-            dependencyHandler = new DependencyHandler(master, update =>
+            node = master.SingleNode(() =>
             {
                 // Concat all sources
                 var result = Enumerable.Empty<ScopedElement>();
@@ -29,16 +29,16 @@ namespace DS.Analysis.Scopes
 
                 Elements = result.ToArray();
 
-                update.MakeDependentsStale();
+                node.MakeDependentsStale();
             });
 
             foreach (var source in sources)
-                dependencyHandler.DependOn(source);
+                node.DependOn(source);
         }
 
         public ScopeWatcher CreateChild(IScopeSource scopeSource) => new ScopeWatcher(master, sources.Append(scopeSource));
 
         // IDependable
-        public IDisposable AddDependent(IDependent dependent) => dependencyHandler.AddDependent(dependencyHandler);
+        public IDisposable AddDependent(IDependent dependent) => node.AddDependent(dependent);
     }
 }

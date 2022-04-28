@@ -24,7 +24,7 @@ namespace DS.Analysis.Expressions.Identifiers
             expressionHost.DependOn(context.Scope);
         }
 
-        public void Update(UpdateHelper updater)
+        public void Update()
         {
             var identified = ChooseScopedElement();
 
@@ -32,14 +32,13 @@ namespace DS.Analysis.Expressions.Identifiers
             var typeDirector = identified.IdentifierHandler.TypeDirector;
             if (typeDirector != null)
             {
-                expressionHost.DependOn(typeDirector, DisposableLifetime.UntilUpdate);
+                expressionHost.DependOnUntilUpdate(typeDirector);
                 expressionHost.Type = typeDirector.Type;
             }
             else // Type is unknown
                 expressionHost.Type = StandardType.Unknown.Instance;
 
             expressionHost.MethodGroup = identified.MethodGroup;
-            updater.MakeDependentsStale();
         }
 
         IdentifiedElement ChooseScopedElement()
@@ -50,7 +49,7 @@ namespace DS.Analysis.Expressions.Identifiers
             if (match != null)
                 return match.ElementSelector.GetIdentifiedElement(new RelatedElements(matchingName));
 
-            expressionHost.AddDisposable(token.Error(name => Messages.IdentifierDoesNotExist(name)), DisposableLifetime.UntilUpdate);
+            expressionHost.DisposeOnUpdate(token.Error(name => Messages.IdentifierDoesNotExist(name)));
             return IdentifiedElement.Unknown;
         }
     }

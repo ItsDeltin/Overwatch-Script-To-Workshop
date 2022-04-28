@@ -12,19 +12,6 @@ namespace DS.Analysis
 
     static class Utility2
     {
-        /// <summary>Creates an IUpdatable from an action.</summary>
-        /// <param name="action">The action that is executed when the IUpdatable is triggered.</param>
-        /// <returns></returns>
-        public static IUpdatable CreateUpdatable(Action action) => new GenericUpdatable(action);
-
-        public static IDependent CreateDependent(IMaster master, Action update)
-        {
-            var dep = new AnonymousDependent(master, update);
-            master.AddStaleObject(dep);
-            return dep;
-        }
-
-
         public static ICodeTypeProvider CreateProvider(string name,
                 TypeArgCollection generics,
                 IGetIdentifier getIdentifier,

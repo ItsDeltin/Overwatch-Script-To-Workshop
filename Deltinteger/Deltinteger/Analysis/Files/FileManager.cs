@@ -11,10 +11,10 @@ namespace DS.Analysis.Files
         readonly List<ScriptFile> files = new List<ScriptFile>();
         readonly List<FileDependency> dependencies = new List<FileDependency>();
 
-        readonly DeltinScriptAnalysis analysis;
+        readonly DSAnalysis analysis;
 
 
-        public FileManager(DeltinScriptAnalysis analysis)
+        public FileManager(DSAnalysis analysis)
         {
             this.analysis = analysis;
         }
@@ -25,7 +25,7 @@ namespace DS.Analysis.Files
             // TODO: ScriptFile.External = false
             if (!TryGetFile(path, out ScriptFile file))
                 file = CreateFile(path, false);
-            
+
             file.FileParser.SetFromString(content);
         }
 
@@ -67,7 +67,7 @@ namespace DS.Analysis.Files
                     file = f;
                     return true;
                 }
-            
+
             file = null;
             return false;
         }

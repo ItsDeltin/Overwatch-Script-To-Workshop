@@ -47,11 +47,11 @@ namespace DS.Analysis.Expressions.Dot
 
             readonly SerialScopeSource serialScope;
 
-            readonly DependencyHandler dependencyHandler;
+            readonly SingleNode node;
 
             public DotNode(ContextInfo context, IParseExpression syntax, DotNode parent, NodePosition position)
             {
-                dependencyHandler = new DependencyHandler(context.Analysis, updateHelper =>
+                node = context.Analysis.SingleNode(() =>
                 {
                     // Update the serialScope.
                     if (position != NodePosition.First)
@@ -71,10 +71,10 @@ namespace DS.Analysis.Expressions.Dot
                 // Get the expression.
                 Expression = partContext.GetExpression(syntax);
 
-                dependencyHandler.AddDisposable(Expression);
+                node.AddDisposable(Expression);
 
                 // Create the scope that the next DotNode will use.
-                dependencyHandler.DependOn(Expression.ScopeSource);
+                node.DependOn(Expression.ScopeSource);
 
                 // Create the serialScope.
                 serialScope = new SerialScopeSource(Expression.ScopeSource.Elements);
@@ -82,7 +82,7 @@ namespace DS.Analysis.Expressions.Dot
 
             public void Dispose()
             {
-                dependencyHandler.Dispose();
+                node.Dispose();
             }
         }
 

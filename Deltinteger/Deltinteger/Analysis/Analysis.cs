@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace DS.Analysis
@@ -7,7 +8,7 @@ namespace DS.Analysis
     using Scopes;
     using Core;
 
-    class DeltinScriptAnalysis : IMaster
+    class DSAnalysis : IMaster
     {
         public FileManager FileManager { get; }
         public ModuleManager ModuleManager { get; }
@@ -16,9 +17,9 @@ namespace DS.Analysis
         public Scope DefaultScope { get; }
 
         /// <summary>The objects that need to be updated.</summary>
-        readonly Queue<IUpdatable> staleObjects = new Queue<IUpdatable>();
+        readonly List<IUpdatable> staleObjects = new List<IUpdatable>();
 
-        public DeltinScriptAnalysis()
+        public DSAnalysis()
         {
             FileManager = new FileManager(this);
             ModuleManager = new ModuleManager(this);
@@ -27,14 +28,26 @@ namespace DS.Analysis
 
         public void Update()
         {
-            while (staleObjects.TryDequeue(out var nextStaleObject))
-                nextStaleObject.Update();
+            while (staleObjects.Count > 0)
+            {
+                staleObjects[0].Update();
+                staleObjects.RemoveAt(0);
+            }
         }
 
         public void AddStaleObject(IUpdatable analysisObject)
         {
-            if (!staleObjects.TryPeek(out var currentStaleObject) || currentStaleObject != analysisObject)
-                staleObjects.Enqueue(analysisObject);
+            if (!staleObjects.Contains(analysisObject))
+                staleObjects.Add(analysisObject);
         }
+
+        public void RemoveObject(IUpdatable updatable)
+        {
+            staleObjects.Remove(updatable);
+        }
+
+
+        // Creates a DependencyHandler with a node.
+        public SingleNode SingleNode(Action updateAction) => new SingleNode(new DependencyHandler(this), updateAction);
     }
 }

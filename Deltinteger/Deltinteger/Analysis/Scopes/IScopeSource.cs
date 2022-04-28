@@ -29,7 +29,7 @@ namespace DS.Analysis.Scopes
         // Backing variable
         ScopedElement[] _elements = new ScopedElement[0];
 
-        readonly DependentCollection dependentCollection = new DependentCollection();
+        readonly DependencyList dependentCollection = new DependencyList();
 
         public IDisposable AddDependent(IDependent dependent) => dependentCollection.Add(dependent);
 
@@ -43,7 +43,7 @@ namespace DS.Analysis.Scopes
         public ScopedElement[] Elements => scopedElements.ToArray();
 
         readonly List<ScopedElement> scopedElements = new List<ScopedElement>();
-        readonly DependentCollection dependents = new DependentCollection();
+        readonly DependencyList dependents = new DependencyList();
 
         public ScopeSource() { }
 
