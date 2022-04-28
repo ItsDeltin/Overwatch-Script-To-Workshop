@@ -26,6 +26,7 @@ namespace DS.Analysis.Core
             });
         }
 
+        [System.Diagnostics.DebuggerStepThrough]
         public void MarkAsStale()
         {
             foreach (var dependent in dependents)

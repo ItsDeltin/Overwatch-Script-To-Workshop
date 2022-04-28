@@ -4,7 +4,6 @@ using System.Collections.Generic;
 namespace DS.Analysis.Scopes.Selector
 {
     using Methods;
-    using Types.Standard;
 
     /// <summary>An implementation of IElementSelector that generates a method group when a method is identified.</summary>
     class MethodGroupSelector : IElementSelector

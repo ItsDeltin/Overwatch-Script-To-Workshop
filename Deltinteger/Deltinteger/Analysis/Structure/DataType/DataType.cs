@@ -8,7 +8,7 @@ namespace DS.Analysis.Structure.DataTypes
     class DeclaredDataType : ParentedDeclaredElement
     {
         readonly IDataTypeContentProvider contentProvider;
-        readonly CodeTypeProvider codeTypeProvider;
+        readonly ICodeTypeProvider codeTypeProvider;
         readonly ScopeSource scopeSource;
 
         public DeclaredDataType(ContextInfo contextInfo, IDataTypeContentProvider contentProvider)

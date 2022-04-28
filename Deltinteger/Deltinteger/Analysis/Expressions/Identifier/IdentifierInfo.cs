@@ -13,6 +13,6 @@ namespace DS.Analysis.Expressions.Identifiers
             TypeDirector = typeDirector;
         }
 
-        public static readonly IdentifierInfo Unknown = new IdentifierInfo(Types.Standard.StandardTypes.Unknown.Director);
+        public static readonly IdentifierInfo Unknown = new IdentifierInfo(Types.StandardType.Unknown.Director);
     }
 }

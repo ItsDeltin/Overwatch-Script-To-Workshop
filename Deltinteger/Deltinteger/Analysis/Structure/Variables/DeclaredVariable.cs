@@ -18,7 +18,8 @@ namespace DS.Analysis.Structure.Variables
 
         public override void AddToScope(IScopeAppender scopeAppender)
         {
-            scopeAppender.AddScopedElement(ScopedElement.CreateVariable(Name, variable.CreateInstance()));
+            // todo: Maybe use variable.CreateInstance() directly instead of encasing it in IdentifierInfo
+            scopeAppender.AddScopedElement(ScopedElement.CreateVariable(Name, new Expressions.Identifiers.IdentifierInfo(variable.CreateInstance().Type)));
         }
 
         public override void AddToContent(TypeContentBuilder contentBuilder)

@@ -7,7 +7,7 @@ namespace DS.Analysis.Scopes
 {
     using Core;
 
-    class Scope : IDependable
+    class Scope : IDependable, IDisposable
     {
         public ScopedElement[] Elements { get; private set; }
 
@@ -30,6 +30,7 @@ namespace DS.Analysis.Scopes
         {
             sources = parent.sources.Append(source);
             dependencyHandler = new DependencyHandler(master, Update);
+            Subscribe();
         }
 
 
@@ -54,6 +55,8 @@ namespace DS.Analysis.Scopes
 
         // IDependable
         public IDisposable AddDependent(IDependent dependent) => dependencyHandler.AddDependent(dependent);
+
+        public void Dispose() => dependencyHandler.Dispose();
 
         public static readonly Scope Empty = new Scope();
     }

@@ -5,60 +5,29 @@ namespace DS.Analysis
 {
     using Core;
     using Types;
-    using Types.Standard;
     using Types.Semantics;
     using Scopes;
 
     /// <summary>
     /// Handles element usage in a type tree.
     /// </summary>
-    interface ITypePartHandler
+    interface ITypeNodeManager
     {
         bool Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount);
-        TypePartInfoResult GetPartInfo(ProviderArguments arguments);
+        ITypeNodeInstance GetPartInfo(ProviderArguments arguments);
     }
 
-    struct TypePartInfoResult
+    interface ITypeNodeInstance : IDependable, IDisposable
     {
-        public readonly ITypePartInfo TypePartInfo;
-        public readonly IDisposable Disposable;
-
-        public TypePartInfoResult(ITypePartInfo typePartInfo, IDisposable disposable)
-        {
-            TypePartInfo = typePartInfo;
-            Disposable = disposable;
-        }
-    }
-
-    interface ITypePartInfo : IDependable
-    {
+        // The scope of the type for the next part in the type tree.
         public IScopeSource ScopeSource { get; }
+        // The CodeType that this points to. May be null.
         public CodeType Type { get; }
+        // The parenting element.
         public IParentElement ParentElement { get; }
     }
 
-    struct TypePartInfo
-    {
-        public readonly IScopeSource ScopeSource;
-        public readonly CodeType Type;
-        public readonly IParentElement ParentElement;
-
-        public TypePartInfo(CodeType type)
-        {
-            ScopeSource = type.Content.ScopeSource;
-            Type = type;
-            ParentElement = type;
-        }
-
-        public TypePartInfo(IParentElement parentElement, IScopeSource scopeSource)
-        {
-            ScopeSource = scopeSource;
-            Type = null;
-            ParentElement = parentElement;
-        }
-    }
-
-    class SerialTypePartInfo : ITypePartInfo
+    class SerialTypePartInfo : ITypeNodeInstance
     {
         public IScopeSource ScopeSource
         {
@@ -114,20 +83,28 @@ namespace DS.Analysis
         readonly DependencyList dependencyList = new DependencyList();
 
         public IDisposable AddDependent(IDependent dependent) => dependencyList.Add(dependent);
+
+        public void Dispose() { }
     }
 
 
     /// <summary>
     /// Invalid type part handler.
     /// </summary>
-    class UnknownTypePartHandler : ITypePartHandler
+    class UnknownTypePartHandler : ITypeNodeManager, ITypeNodeInstance
     {
         public static readonly UnknownTypePartHandler Instance = new UnknownTypePartHandler();
 
-        public TypePartInfo PartInfo { get; } = new TypePartInfo(StandardTypes.Unknown.Instance);
+        public ITypeNodeInstance GetPartInfo(ProviderArguments arguments) => this;
+
+        public bool Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount) => false;
+
+        public IScopeSource ScopeSource => EmptyScopeSource.Instance;
+        public CodeType Type => StandardType.Unknown.Instance;
+        public IParentElement ParentElement => null;
 
         public IDisposable AddDependent(IDependent dependent) => Disposable.Empty;
 
-        public bool Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount) => false;
+        public void Dispose() { }
     }
 }

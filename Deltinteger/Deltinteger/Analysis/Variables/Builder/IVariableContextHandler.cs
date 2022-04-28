@@ -18,7 +18,7 @@ namespace DS.Analysis.Variables.Builder
     {
         readonly VariableDeclaration declaration;
         IDisposableTypeDirector typeReference;
-        Expression expression;
+        IExpressionHost expression;
 
         public VariableContextHandler(VariableDeclaration declaration)
         {
@@ -45,10 +45,10 @@ namespace DS.Analysis.Variables.Builder
     struct VariableContent
     {
         public ITypeDirector TypeDirector { get; }
-        public Expression Expression { get; }
+        public IExpressionHost Expression { get; }
         public DocRange ExpressionRange { get; }
 
-        public VariableContent(ITypeDirector typeDirector, Expression expression, DocRange expressionRange)
+        public VariableContent(ITypeDirector typeDirector, IExpressionHost expression, DocRange expressionRange)
         {
             TypeDirector = typeDirector;
             Expression = expression;

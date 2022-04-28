@@ -9,7 +9,7 @@ namespace DS.Analysis.Types
     using DS.Analysis.Types.Semantics;
 
     /// <summary>Contains the metadata of a datatype. Can be used to instantiate type instances.</summary>
-    class CodeTypeProvider : ITypePartHandler
+    class CodeTypeProvider : ITypeNodeManager
     {
         public string Name { get; }
         public TypeArgCollection Generics { get; }
@@ -54,14 +54,14 @@ namespace DS.Analysis.Types
 
 
         // ITypePartHandler
-        bool ITypePartHandler.Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount)
+        bool ITypeNodeManager.Valid(ITypeIdentifierErrorHandler errorHandler, int typeArgCount)
         {
             if (typeArgCount != Generics.Count)
-                errorHandler.GenericCountMismatch(this, Generics.Count);
+                errorHandler.GenericCountMismatch(GetIdentifier, Generics.Count);
             return true;
         }
 
-        IDisposable ITypePartHandler.Get(IObserver<TypePartInfo> observer, ProviderArguments arguments)
+        IDisposable ITypeNodeManager.Get(IObserver<TypePartInfo> observer, ProviderArguments arguments)
         {
             return CreateInstance(observer.Convert((CodeType type) => new TypePartInfo(type)), arguments);
         }

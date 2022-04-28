@@ -11,8 +11,10 @@ namespace DS.Analysis.Types.Semantics
     {
         void Clear();
         void NoTypesMatchName();
-        void GenericCountMismatch(CodeTypeProvider provider, int expected);
+        void GenericCountMismatch(IGetIdentifier typeIdentifier, int expected);
         void ModuleHasTypeArgs();
+        void GotModuleExpectedType();
+        bool HasError();
     }
 
 
@@ -22,6 +24,7 @@ namespace DS.Analysis.Types.Semantics
         readonly NamedDiagnosticToken token;
 
         IDisposable currentDiagnostic;
+        bool disposed;
 
         public TypeIdentifierErrorHandler(ContextInfo context, NamedDiagnosticToken token)
         {
@@ -29,32 +32,48 @@ namespace DS.Analysis.Types.Semantics
             this.token = token;
         }
 
-        public void Dispose() => currentDiagnostic?.Dispose();
+        public void Dispose()
+        {
+            if (disposed)
+                throw new ObjectDisposedException(ToString());
+            disposed = true;
 
-        public void GenericCountMismatch(CodeTypeProvider provider, int expected) =>
+            currentDiagnostic?.Dispose();
+        }
+
+        public void GenericCountMismatch(IGetIdentifier typeIdentifier, int expected) =>
             SetDiagnostic(
                 // Add the error after analyzation.
                 context.PostAnalysisOperations.Add(() =>
                 {
-                    SerialDisposable error = new SerialDisposable();
-                    return new CompositeDisposable() {
-                        error,
-                        // Watch the current scope.
-                        context.Scope.WatchAndSubscribe(Observer.Create<ScopeSourceChange>(
-                            // Add the error.
-                            change => error.Disposable = token.Error(Messages.GenericCountMismatch(
-                                // Extract the type name.
-                                typeName: provider.GetIdentifier.PathFromContext(new GetIdentifierContext(change.Elements)),
-                                provided: 0,
-                                expected: expected))))
-                    };
+                    return token.Error(Messages.GenericCountMismatch(
+                        // Extract the type name.
+                        typeName: typeIdentifier.PathFromContext(new GetIdentifierContext(context.Scope.Elements)),
+                        provided: 0,
+                        expected: expected));
+                    // SerialDisposable error = new SerialDisposable();
+                    // return new CompositeDisposable() {
+                    //     error,
+                    //     // Watch the current scope.
+                    //     context.Scope.WatchAndSubscribe(Observer.Create<ScopeSourceChange>(
+                    //         // Add the error.
+                    //         change => error.Disposable = token.Error(Messages.GenericCountMismatch(
+                    //             // Extract the type name.
+                    //             typeName: provider.GetIdentifier.PathFromContext(new GetIdentifierContext(change.Elements)),
+                    //             provided: 0,
+                    //             expected: expected))))
+                    // };
                 }));
 
         public void ModuleHasTypeArgs() => SetDiagnostic(token.Error(Messages.ModuleHasTypeArgs()));
 
         public void NoTypesMatchName() => SetDiagnostic(token.Error(name => Messages.TypeNameNotFound(name)));
 
+        public void GotModuleExpectedType() => SetDiagnostic(token.Error(name => Messages.GotModuleExpectedType(name)));
+
         public void Clear() => SetDiagnostic(null);
+
+        public bool HasError() => currentDiagnostic != null;
 
 
         void SetDiagnostic(IDisposable newDiagnostic)

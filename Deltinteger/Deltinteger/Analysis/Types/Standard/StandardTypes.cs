@@ -1,35 +1,73 @@
-namespace DS.Analysis.Types.Standard
+using System.Reactive.Disposables;
+
+namespace DS.Analysis.Types
 {
     using Scopes;
 
-    static class StandardTypes
+    class StandardType
     {
         // Unknown
-        public static readonly SingletonCodeTypeProvider Unknown = Create("?");
+        public static readonly StandardType Unknown = Create("?");
 
         // Method group
-        public static readonly SingletonCodeTypeProvider MethodGroup = Create("method group");
+        public static readonly StandardType MethodGroup = Create("method group");
 
         // Void
-        public static readonly SingletonCodeTypeProvider Void = Create("void");
+        public static readonly StandardType Void = Create("void");
 
         // Number
-        public static readonly SingletonCodeTypeProvider Number = Create("Number");
+        public static readonly StandardType Number = Create("Number");
 
         // Scope source
         public static readonly IScopeSource StandardSource;
 
 
-        static StandardTypes()
+        static StandardType()
         {
             ScopeSource standardSource = new ScopeSource();
             StandardSource = standardSource;
 
             // Add types to source.
-            standardSource.AddScopedElement(Number.ScopedElement);
+            standardSource.AddScopedElement(Number.Provider.CreateScopedElement());
         }
 
+        static StandardType Create(string name) => new StandardType(name);
 
-        static SingletonCodeTypeProvider Create(string name) => new SingletonCodeTypeProvider(name);
+
+
+        public CodeType Instance { get; }
+        public IDisposableTypeDirector Director { get; }
+        public ICodeTypeProvider Provider { get; }
+        readonly string name;
+
+        public StandardType(string name)
+        {
+            this.name = name;
+            var identifier = new UniversalIdentifier(name);
+
+            Instance = CodeType.Create(Components.CodeTypeContent.Empty, new StandardTypeComparison(this), identifier);
+            Director = Utility2.CreateDirector(setType =>
+            {
+                setType(Instance);
+                return Disposable.Empty;
+            });
+
+            Provider = Utility2.CreateProvider(name, Generics.TypeArgCollection.Empty, identifier, args => Director);
+        }
+
+        class StandardTypeComparison : Types.Components.ITypeComparison
+        {
+            readonly StandardType standardType;
+
+            public StandardTypeComparison(StandardType standardType)
+            {
+                this.standardType = standardType;
+            }
+
+            public bool CanBeAssignedTo(CodeType other) => Implements(other);
+            public bool Implements(CodeType other) => other == standardType.Instance;
+            public bool Is(CodeType other) => other == standardType.Instance;
+            public int GetTypeHashCode() => standardType.GetHashCode();
+        }
     }
 }

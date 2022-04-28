@@ -1,7 +1,5 @@
 using System;
 using DS.Analysis.Expressions.Identifiers;
-using DS.Analysis.Types;
-using DS.Analysis.Types.Standard;
 using DS.Analysis.Methods;
 using DS.Analysis.Scopes.Selector;
 
@@ -11,7 +9,7 @@ namespace DS.Analysis.Scopes
     {
         public string Name { get; }
 
-        public virtual ITypePartHandler TypePartHandler { get; protected set; }
+        public virtual ITypeNodeManager TypePartHandler { get; protected set; }
 
         public virtual MethodInstance Method { get; protected set; }
 
@@ -38,7 +36,7 @@ namespace DS.Analysis.Scopes
             ElementSelector = new UnambiguousSelector(identifiedElement)
         };
 
-        public static ScopedElement CreateType(string name, ITypePartHandler partHandler) => new ScopedElement(name)
+        public static ScopedElement CreateType(string name, ITypeNodeManager partHandler) => new ScopedElement(name)
         {
             ElementSelector = new UnambiguousSelector(new IdentifiedElement(partHandler))
         };

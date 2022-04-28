@@ -18,7 +18,7 @@ namespace DS.Analysis.ModuleSystem
         // IScopeSource
         public ScopedElement[] Elements { get; private set; }
 
-        public ITypePartHandler TypePartHandler { get; }
+        public ITypeNodeManager TypePartHandler { get; }
 
         /// <summary>The parent module.</summary>
         readonly Module parent;
@@ -40,17 +40,15 @@ namespace DS.Analysis.ModuleSystem
 
             GetIdentifier = new GetStructuredIdentifier(Name, null, parent?.GetIdentifier, GetStructuredIdentifier.PredicateSearch(element => element.TypePartHandler == this));
 
+            // The TypePartHandler manages how the module is used in a type path,
+            // for example: MyModule.TypeInModule
             TypePartHandler = Utility2.CreateTypePartHandler((errorHandler, typeArgCount) =>
             {
                 // Modules cannot be used with type arguments.
                 if (typeArgCount > 0)
                     errorHandler.ModuleHasTypeArgs();
                 return true;
-            }, arguments =>
-            {
-                var info = new SerialTypePartInfo(this, this);
-                return new TypePartInfoResult(info, Disposable.Empty);
-            });
+            }, arguments => new SerialTypePartInfo(this, this));
         }
 
         // Adds a dependency to the module.

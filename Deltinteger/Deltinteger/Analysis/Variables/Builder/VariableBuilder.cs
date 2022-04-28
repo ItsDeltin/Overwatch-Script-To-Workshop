@@ -25,7 +25,8 @@ namespace DS.Analysis.Variables.Builder
                 typeAssignmentValidation = TypeValidation.IsAssignableTo(
                     contextInfo,
                     token: contextInfo.File.Diagnostics.CreateToken(content.ExpressionRange),
-                    assignToType: content.TypeDirector,
+                    scopedElements: contextInfo.Scope.Elements,
+                    assignToType: content.TypeDirector.Type,
                     valueType: content.Expression.Type);
 
             return new VariableProvider(Name, content.TypeDirector);

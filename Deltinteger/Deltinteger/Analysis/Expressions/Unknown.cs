@@ -1,12 +1,12 @@
 namespace DS.Analysis.Expressions
 {
-    using Types.Standard;
+    using Types;
 
     class UnknownExpression : Expression
     {
         public UnknownExpression(ContextInfo context) : base(context)
         {
-            Type = StandardTypes.Unknown.Instance;
+            Type = StandardType.Unknown.Instance;
         }
     }
 }

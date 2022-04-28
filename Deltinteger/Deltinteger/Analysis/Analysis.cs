@@ -22,7 +22,7 @@ namespace DS.Analysis
         {
             FileManager = new FileManager(this);
             ModuleManager = new ModuleManager(this);
-            DefaultScope = new Scope(this, Types.Standard.StandardTypes.StandardSource, ModuleManager.Root);
+            DefaultScope = new Scope(this, Types.StandardType.StandardSource, ModuleManager.Root);
         }
 
         public void Update()
@@ -33,7 +33,7 @@ namespace DS.Analysis
 
         public void AddStaleObject(IUpdatable analysisObject)
         {
-            if (staleObjects.Peek() != analysisObject)
+            if (!staleObjects.TryPeek(out var currentStaleObject) || currentStaleObject != analysisObject)
                 staleObjects.Enqueue(analysisObject);
         }
     }

@@ -5,6 +5,8 @@ using IOPath = System.IO.Path;
 
 namespace DS.Analysis
 {
+    using Utility;
+
     class ScriptFile
     {
         public string Path { get; }
@@ -20,6 +22,8 @@ namespace DS.Analysis
         public ScopeSource RootScopeSource { get; } = new ScopeSource();
 
         public FileParser FileParser { get; }
+
+        readonly SerializedDisposableCollection disposables = new SerializedDisposableCollection();
 
         BlockAction statements;
 
@@ -45,9 +49,10 @@ namespace DS.Analysis
             RootScopeSource.Clear();
             statements?.Dispose();
             postAnalysisDisposable?.Dispose();
+            disposables.Dispose();
 
             // Get the statements
-            statements = new ContextInfo(Analysis, this, Analysis.DefaultScope).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
+            statements = new ContextInfo(Analysis, this, Analysis.DefaultScope, disposables).Block(FileParser.Syntax.Statements.ToArray(), RootScopeSource);
 
             Analysis.Update();
 

@@ -8,14 +8,13 @@ namespace DS.Analysis.Utility
 {
     using Core;
     using Types;
-    using Types.Standard;
 
     /// <summary>Contains helper methods for DeltinScript analysis.</summary>
     static class Helper
     {
-        /// <summary>Creates a new CodeType ObserverCollection initialized with StandardTypes.Unknown.Instance.</summary>
+        /// <summary>Creates a new CodeType ObserverCollection initialized with StandardType.Unknown.Instance.</summary>
         /// <returns>The newly initialized CodeType ObserverCollection.</returns>
-        public static ObserverCollection<CodeType> CreateTypeObserver() => new ValueObserverCollection<CodeType>(StandardTypes.Unknown.Instance);
+        public static ObserverCollection<CodeType> CreateTypeObserver() => new ValueObserverCollection<CodeType>(StandardType.Unknown.Instance);
 
 
         /// <summary>Subscribes an observer of differing type to an observable sequence.</summary>

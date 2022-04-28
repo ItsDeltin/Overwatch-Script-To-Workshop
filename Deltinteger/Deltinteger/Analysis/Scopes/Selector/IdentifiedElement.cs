@@ -2,7 +2,7 @@ namespace DS.Analysis.Scopes.Selector
 {
     using Methods;
     using Expressions.Identifiers;
-    using Types.Standard;
+    using Types;
 
     /// <summary>
     /// Contains data about an identifier chosen via filtering the current scope for a named element.
@@ -14,13 +14,13 @@ namespace DS.Analysis.Scopes.Selector
         public IdentifierInfo IdentifierHandler { get; init; }
 
         /// <summary>Handles the element's usage as a type. May be null.</summary>
-        public ITypePartHandler TypePartHandler { get; init; }
+        public ITypeNodeManager TypePartHandler { get; init; }
 
         /// <summary>The method group that the variable points to. May be null.</summary>
         public MethodGroup MethodGroup { get; init; }
 
 
-        public IdentifiedElement(IdentifierInfo identifierHandler, ITypePartHandler typePartHandler, MethodGroup methodGroup)
+        public IdentifiedElement(IdentifierInfo identifierHandler, ITypeNodeManager typePartHandler, MethodGroup methodGroup)
         {
             IdentifierHandler = identifierHandler;
             TypePartHandler = typePartHandler;
@@ -34,7 +34,7 @@ namespace DS.Analysis.Scopes.Selector
         }
 
         /// <summary>An identified type or module.</summary>
-        public IdentifiedElement(ITypePartHandler typePartHandler)
+        public IdentifiedElement(ITypeNodeManager typePartHandler)
         {
             TypePartHandler = typePartHandler;
         }
@@ -42,11 +42,11 @@ namespace DS.Analysis.Scopes.Selector
         /// <summary>An identified method group.</summary>
         public IdentifiedElement(MethodGroup methodGroup)
         {
-            TypePartHandler = StandardTypes.MethodGroup;
+            TypePartHandler = StandardType.MethodGroup.Provider;
             MethodGroup = methodGroup;
         }
 
 
-        public static readonly IdentifiedElement Unknown = new IdentifiedElement(IdentifierInfo.Unknown, StandardTypes.Unknown, null);
+        public static readonly IdentifiedElement Unknown = new IdentifiedElement(IdentifierInfo.Unknown, StandardType.Unknown.Provider, null);
     }
 }

@@ -8,91 +8,51 @@ using DS.Analysis.Core;
 
 namespace DS.Analysis.Structure.TypeAlias
 {
+    using static Utility2;
+
     class DeclaredTypeAlias : AbstractDeclaredElement
     {
-        readonly ITypeAliasProvider content;
         readonly IDisposableTypeDirector typeReference;
-        readonly AliasProvider aliasProvider;
+        readonly ICodeTypeProvider provider;
 
 
         public DeclaredTypeAlias(ContextInfo context, ITypeAliasProvider content)
         {
-            this.content = content;
-
             // Setup
             var setup = content.Setup(context);
             Name = setup.Name;
             typeReference = setup.TypeReference;
 
-            aliasProvider = new AliasProvider(Name, setup.TypeArgs, typeReference, context.Parent?.GetIdentifier);
+            provider = CreateProviderAndDirector(Name, setup.TypeArgs, null /* todo: IGetIdentifier */, arguments =>
+            {
+                // Create a dependency for the type being referenced.
+                arguments.AddDisposable(typeReference.AddDependent(CreateDependent(context.Analysis, () =>
+                {
+                    // Substitute the type.
+                    arguments.SetType(new CodeType(typeReference.Type)
+                    {
+                        GetIdentifier = GetStructuredIdentifier.Create(
+                            Name,
+                            arguments.TypeArgs,
+                            context.Parent?.GetIdentifier,
+                            element => element.TypePartHandler == provider
+                        )
+                    });
+                })));
+            });
         }
 
         public override void AddToScope(IScopeAppender scopeAppender)
         {
-            scopeAppender.AddScopedElement(ScopedElement.CreateType(Name, aliasProvider));
+            scopeAppender.AddScopedElement(ScopedElement.CreateType(Name, provider));
         }
 
-        public override void AddToContent(TypeContentBuilder contentBuilder) => contentBuilder.AddElement(new ProviderTypeElement(aliasProvider));
+        public override void AddToContent(TypeContentBuilder contentBuilder) => contentBuilder.AddElement(new ProviderTypeElement(provider));
 
 
         public override void Dispose()
         {
             typeReference.Dispose();
-        }
-
-
-        class AliasProvider : CodeTypeProvider
-        {
-            readonly ITypeDirector aliasing;
-            readonly IGetIdentifier parent;
-
-
-            public AliasProvider(string name, TypeArgCollection typeArgs, ITypeDirector aliasing, IGetIdentifier parent) : base(name, typeArgs)
-            {
-                this.aliasing = aliasing;
-                this.parent = parent;
-            }
-
-
-            public override IDisposable CreateInstance(IObserver<CodeType> observer, ProviderArguments arguments)
-            {
-                var aliasDirector = new AliasDirector(this, arguments.TypeArgs);
-                aliasDirector.Subscribe(observer);
-                return aliasDirector;
-            }
-
-
-            class AliasDirector : IDisposableTypeDirector
-            {
-                public CodeType Type { get; private set; }
-
-                readonly DependencyHandler dependencyHandler;
-
-                public AliasDirector(IMaster master, AliasProvider provider, CodeType[] typeArgs)
-                {
-                    // Watch the type being aliased
-                    dependencyHandler = new DependencyHandler(master, updateHelper =>
-                    {
-                        // Substitute the type
-                        Type = new CodeType(provider.aliasing.Type)
-                        {
-                            GetIdentifier = GetStructuredIdentifier.Create(
-                                provider.Name,
-                                typeArgs,
-                                provider.parent,
-                                element => element.TypePartHandler == provider
-                            )
-                        };
-
-                        dependencyHandler.MakeDependentsStale();
-                    });
-                    dependencyHandler.DependOn(provider.aliasing);
-                }
-
-                public IDisposable AddDependent(IDependent dependent) => dependencyHandler.AddDependent(dependent);
-
-                public void Dispose() => dependencyHandler.Dispose();
-            }
         }
     }
 }

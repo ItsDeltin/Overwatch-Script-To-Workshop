@@ -18,6 +18,7 @@ using DS.Analysis.Types;
 using DS.Analysis.Diagnostics;
 using DS.Analysis.Methods;
 using DS.Analysis.Core;
+using DS.Analysis.Utility;
 
 namespace DS.Analysis
 {
@@ -35,12 +36,15 @@ namespace DS.Analysis
         public FileDiagnostics Diagnostics => File.Diagnostics;
         public PostAnalysisOperation PostAnalysisOperations => File.Analysis.PostAnalysisOperations;
 
-        public ContextInfo(DeltinScriptAnalysis analysis, ScriptFile file, Scope scope)
+        readonly SerializedDisposableCollection disposables;
+
+        public ContextInfo(DeltinScriptAnalysis analysis, ScriptFile file, Scope scope, SerializedDisposableCollection disposables)
         {
             Analysis = analysis;
             File = file;
             Scope = scope;
             Getter = scope;
+            this.disposables = disposables;
         }
 
         private ContextInfo(ContextInfo other)
@@ -53,6 +57,7 @@ namespace DS.Analysis
             Parent = other.Parent;
             ContextKind = other.ContextKind;
             ModulePath = other.ModulePath;
+            disposables = other.disposables;
         }
 
 
@@ -62,19 +67,33 @@ namespace DS.Analysis
 
         public ContextInfo SetSourceExpression(IExpressionHost source) => new ContextInfo(this);
 
-        public ContextInfo SetScope(IScopeSource scope) => new ContextInfo(this) { Scope = new Scope(Analysis, scope) };
+        public ContextInfo SetScope(IScopeSource scope)
+        {
+            var newScope = new Scope(Analysis, scope);
+            disposables.Add(newScope);
+            return new ContextInfo(this) { Scope = newScope };
+        }
 
-        public ContextInfo AddSource(IScopeSource source) => new ContextInfo(this) { Scope = Scope.CreateChild(Analysis, source) };
+        public ContextInfo AddSource(IScopeSource source)
+        {
+            var newScope = Scope.CreateChild(Analysis, source);
+            disposables.Add(newScope);
+            return new ContextInfo(this) { Scope = newScope };
+        }
 
         public ContextInfo SetScopeAppender(IScopeAppender appender) => new ContextInfo(this) { ScopeAppender = appender };
 
         public ContextInfo AddAppendableSource<T>(T appendableSource)
             where T : IScopeSource, IScopeAppender
-            => new ContextInfo(this)
+        {
+            var newScope = Scope.CreateChild(Analysis, appendableSource);
+            disposables.Add(newScope);
+            return new ContextInfo(this)
             {
-                Scope = Scope.CreateChild(Analysis, appendableSource),
+                Scope = newScope,
                 ScopeAppender = appendableSource
             };
+        }
 
         public ContextInfo SetParent(IParentElement parent) => new ContextInfo(this) { Parent = parent };
 

@@ -17,5 +17,7 @@ namespace DS.Analysis.Diagnostics
         public static string ExpectedVariable() => "Assignment expression must be a variable";
 
         public static string PickyParameterAlreadySet(string name) => $"The parameter '{name}' was already set";
+
+        public static string GotModuleExpectedType(string moduleName) => $"{moduleName} is a module, not a type";
     }
 }

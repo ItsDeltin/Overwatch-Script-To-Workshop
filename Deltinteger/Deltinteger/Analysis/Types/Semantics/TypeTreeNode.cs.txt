@@ -24,8 +24,8 @@ namespace DS.Analysis.Types.Semantics
 
         CodeType[] typeArgs; // The actual CodeTypes of the type arguments. Is the same length as 'typeArgDirectors'.
 
-        ITypePartHandler partHandler; // The current part handler.
-        ITypePartInfo typePartInfo; // The subscription to the current part handler.
+        ITypeNodeManager partHandler; // The current part handler.
+        ITypeNodeInstance typePartInfo; // The subscription to the current part handler.
 
         public TypeTreeNode(ContextInfo context, ITypeIdentifierErrorHandler errorHandler, INamedType namedType, Action<TypePartInfo> onChange)
         {
@@ -49,7 +49,7 @@ namespace DS.Analysis.Types.Semantics
         }
 
 
-        ITypePartHandler GetPartHandler(IEnumerable<ScopedElement> scopedElements)
+        ITypeNodeManager GetPartHandler(IEnumerable<ScopedElement> scopedElements)
         {
             // Reset the current error.
             errorHandler.Clear();

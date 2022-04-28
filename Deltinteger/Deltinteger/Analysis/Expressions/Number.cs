@@ -1,4 +1,4 @@
-using DS.Analysis.Types.Standard;
+using DS.Analysis.Types;
 
 namespace DS.Analysis.Expressions
 {
@@ -9,7 +9,7 @@ namespace DS.Analysis.Expressions
         public Number(ContextInfo context, double value) : base(context)
         {
             this.value = value;
-            Type = StandardTypes.Number.Instance;
+            Type = StandardType.Number.Instance;
         }
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using DS.Analysis.Scopes.Selector;
-using DS.Analysis.Types.Standard;
+using DS.Analysis.Types;
 using DS.Analysis.Diagnostics;
 using DS.Analysis.Core;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
@@ -36,7 +36,7 @@ namespace DS.Analysis.Expressions.Identifiers
                 expressionHost.Type = typeDirector.Type;
             }
             else // Type is unknown
-                expressionHost.Type = StandardTypes.Unknown.Instance;
+                expressionHost.Type = StandardType.Unknown.Instance;
 
             expressionHost.MethodGroup = identified.MethodGroup;
             updater.MakeDependentsStale();

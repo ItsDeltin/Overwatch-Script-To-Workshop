@@ -10,7 +10,7 @@ namespace DS.Analysis.Types.Components
     class ProviderTypeElement : ICodeTypeElement
     {
         public ScopedElement ScopedElement => typeProvider.CreateScopedElement();
-        readonly CodeTypeProvider typeProvider;
-        public ProviderTypeElement(CodeTypeProvider typeProvider) => this.typeProvider = typeProvider;
+        readonly ICodeTypeProvider typeProvider;
+        public ProviderTypeElement(ICodeTypeProvider typeProvider) => this.typeProvider = typeProvider;
     }
 }

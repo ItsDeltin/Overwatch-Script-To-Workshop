@@ -22,12 +22,12 @@ namespace DS.Analysis.Scopes
         {
             get => _elements; set
             {
-                _elements = value;
+                _elements = value ?? throw new NullReferenceException();
                 dependentCollection.MarkAsStale();
             }
         }
         // Backing variable
-        ScopedElement[] _elements;
+        ScopedElement[] _elements = new ScopedElement[0];
 
         readonly DependentCollection dependentCollection = new DependentCollection();
 
@@ -60,6 +60,16 @@ namespace DS.Analysis.Scopes
             scopedElements.Add(element);
             dependents.MarkAsStale();
         }
+    }
+
+    class EmptyScopeSource : IScopeSource
+    {
+        public static readonly EmptyScopeSource Instance = new EmptyScopeSource();
+
+        private EmptyScopeSource() { }
+
+        public ScopedElement[] Elements { get; } = new ScopedElement[0];
+        public IDisposable AddDependent(IDependent dependent) => System.Reactive.Disposables.Disposable.Empty;
     }
 
     struct ScopeSourceChange

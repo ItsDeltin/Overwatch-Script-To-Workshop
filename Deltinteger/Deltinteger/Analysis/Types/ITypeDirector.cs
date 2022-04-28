@@ -18,7 +18,8 @@ namespace DS.Analysis.Types
     {
         public CodeType Type
         {
-            get => type; set
+            get => type ?? throw new Exception("SerialDisposableTypeDirector's Type not set");
+            set
             {
                 type = value;
                 dependents.MarkAsStale();
@@ -47,7 +48,9 @@ namespace DS.Analysis.Types
         readonly ITypeDirector typeDirector;
         public EmptyDisposableTypeDirector(ITypeDirector typeDirector) => this.typeDirector = typeDirector;
 
+        public CodeType Type => typeDirector.Type;
+        public IDisposable AddDependent(IDependent dependent) => typeDirector.AddDependent(dependent);
+
         public void Dispose() { }
-        public IDisposable Subscribe(IObserver<CodeType> observer) => typeDirector.Subscribe(observer);
     }
 }

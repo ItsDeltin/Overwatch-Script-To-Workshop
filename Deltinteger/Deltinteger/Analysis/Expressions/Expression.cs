@@ -3,7 +3,6 @@ namespace DS.Analysis.Expressions
     using Core;
     using Types;
     using Types.Semantics;
-    using Types.Standard;
     using Variables;
     using Methods;
     using Scopes;
@@ -18,7 +17,7 @@ namespace DS.Analysis.Expressions
             get => _type;
             protected set
             {
-                _type = value ?? StandardTypes.Unknown.Instance;
+                _type = value ?? StandardType.Unknown.Instance;
                 MarkDependentsAsStale();
             }
         }

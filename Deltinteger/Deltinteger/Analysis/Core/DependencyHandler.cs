@@ -29,6 +29,7 @@ namespace DS.Analysis.Core
             this.updater = updater;
             this.noMoreDependencies = noMoreDependencies;
             this.updateHelper = new UpdateHelper(this);
+            MarkAsStale();
         }
 
 
@@ -53,6 +54,7 @@ namespace DS.Analysis.Core
             return disposables;
         }
 
+        [System.Diagnostics.DebuggerStepThrough]
         public void MakeDependentsStale() => dependents.MarkAsStale();
 
         public T AddDisposable<T>(T disposable, DisposableLifetime lifetime = default(DisposableLifetime)) where T : IDisposable
@@ -81,7 +83,8 @@ namespace DS.Analysis.Core
         {
             MakeDependentsStale();
             serializedDisposables.Dispose();
-            Master.AddStaleObject(Utility2.CreateUpdatable(() => updater(updateHelper)));
+            if (updater != null)
+                Master.AddStaleObject(Utility2.CreateUpdatable(() => updater(updateHelper)));
         }
 
         // IDisposable
@@ -98,6 +101,7 @@ namespace DS.Analysis.Core
 
         public UpdateHelper(DependencyHandler dependencyHandler) => this.dependencyHandler = dependencyHandler;
 
+        [System.Diagnostics.DebuggerStepThrough]
         public void MakeDependentsStale() => dependencyHandler.MakeDependentsStale();
     }
 
