@@ -20,7 +20,7 @@ namespace DS.Analysis.Structure.DataTypes
         // Searches the scope for this type
         readonly GetStructuredIdentifier.IScopeSearch scopeSearcher;
 
-        readonly ObserverCollection<int> externalsChanged = new ObserverCollection<int>();
+        readonly ObserverCollection<int> externalsChanged = new ValueObserverCollection<int>();
 
         SingleNode node;
 
@@ -73,7 +73,7 @@ namespace DS.Analysis.Structure.DataTypes
                         contentBuilder.AddAll(declaredElements);
 
                         // Type comparison
-                        var comparison = new DeclaredCodeTypeComparison(baseReference.Type, this, helper.TypeArgs);
+                        var comparison = new DeclaredCodeTypeComparison(baseReference?.Type, this, helper.TypeArgs);
 
                         // Create the type and notify the observer.
                         helper.SetType(CodeType.Create(

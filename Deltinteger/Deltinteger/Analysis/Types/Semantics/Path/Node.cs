@@ -7,7 +7,7 @@ namespace DS.Analysis.Types.Semantics.Path
     using Core;
     using Scopes;
 
-    class TypeTreeNode : IDotCrumbNode
+    class TypeTreeNode : IDotCrumbNode, IParentElement
     {
         // The node's identifier.
         readonly string name;
@@ -31,6 +31,7 @@ namespace DS.Analysis.Types.Semantics.Path
         CodeType[] typeArgs; // The current type arguments.
         ITypeNodeManager partHandler; // The current part handler.
         ITypeNodeInstance partInstance;
+        IDisposable partInstanceSubscription;
 
         public TypeTreeNode(CrumbNodeFactoryHelper helper, INamedType namedType, ITypeIdentifierErrorHandler errorHandler, Utility2.SetDirectorType broadcastType)
         {
@@ -86,23 +87,33 @@ namespace DS.Analysis.Types.Semantics.Path
             if (partHandler == null)
                 return;
 
+            // Dispose the existing instance if it exists then replace it using the new parameters.
             partInstance?.Dispose();
+            // partInstanceSubscription?.Dispose();
             partInstance = partHandler.GetPartInfo(new ProviderArguments(typeArgs, Context.Parent));
 
-            helper.UpdateScope(partInstance.ScopeSource.Elements);
-
-            if (broadcastType != null)
+            // Subscribe to the part instance.
+            var partNode = dependencyHandler.CreateNode(() =>
             {
-                if (partInstance.Type == null)
+                helper.UpdateScope(partInstance.ScopeSource.Elements);
+
+                if (broadcastType != null)
                 {
-                    if (!errorHandler.HasError())
-                        errorHandler.GotModuleExpectedType();
-                    broadcastType(Types.StandardType.Unknown.Instance);
+                    if (partInstance.Type == null)
+                    {
+                        if (!errorHandler.HasError())
+                            errorHandler.GotModuleExpectedType();
+                        broadcastType(Types.StandardType.Unknown.Instance);
+                    }
+                    else
+                        broadcastType(partInstance.Type);
                 }
-                else
-                    broadcastType(partInstance.Type);
-            }
+            }, out partInstanceSubscription);
+            partNode.DependOn(partInstance);
         }
+
+        // IParentElement
+        public IGetIdentifier GetIdentifier => partInstance.Type.GetIdentifier;
 
         // IDotCrumbNode
         public IScopeSource ScopeSource => partInstance.ScopeSource;
@@ -112,8 +123,9 @@ namespace DS.Analysis.Types.Semantics.Path
             dependencyHandler.Dispose();
             errorHandler.Dispose();
             partInstance?.Dispose();
+            // partInstanceSubscription?.Dispose();
         }
 
-        public ContextInfo SetChildContext(ContextInfo current) => current;
+        public ContextInfo SetChildContext(ContextInfo current) => current.SetParent(this);
     }
 }

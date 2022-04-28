@@ -49,5 +49,7 @@ namespace DS.Analysis
 
         // Creates a DependencyHandler with a node.
         public SingleNode SingleNode(Action updateAction) => new SingleNode(new DependencyHandler(this), updateAction);
+
+        public DependencyNode OnlyNode(Action updateAction) => new DependencyNode(updateAction.Invoke, this);
     }
 }

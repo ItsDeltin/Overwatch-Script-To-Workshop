@@ -25,7 +25,7 @@ namespace DS.Analysis.Scopes
         {
             node = analysis.SingleNode(() =>
             {
-                Elements = file.RootScopeSource.Elements;
+                Elements = file == null ? new ScopedElement[0] : file.RootScopeSource.Elements;
                 node.MakeDependentsStale();
             });
             this.path = path;

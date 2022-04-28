@@ -18,6 +18,9 @@ namespace DS.Analysis.Core
 
         public IDisposable Add(IDependent dependent)
         {
+            // todo
+            dependent.MarkAsStale();
+
             dependents.Add(dependent);
             return Disposable.Create(() =>
             {

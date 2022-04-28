@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DS.Analysis.Types
 {
@@ -25,11 +26,11 @@ namespace DS.Analysis.Types
             if (values == null)
                 throw new ArgumentNullException(nameof(values));
 
-            if (arguments.Count != values.Length)
-                throw new ArgumentException(nameof(values), "values must be the same length as arguments");
+            // if (arguments.Count != values.Length)
+            //     throw new ArgumentException(nameof(values), "values must be the same length as arguments");
 
             for (int i = 0; i < values.Length; i++)
-                map.Add(arguments.TypeArgs[i].DataTypeProvider.Instance, values[i]);
+                map.Add(arguments.TypeArgs[i].DataTypeProvider.Instance, values.ElementAtOrDefault(i) ?? arguments.TypeArgs[i].DataTypeProvider.Instance);
         }
 
         /// <summary>Gets the CodeType that another CodeType is mapped to,</summary>

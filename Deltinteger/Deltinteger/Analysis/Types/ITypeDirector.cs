@@ -18,7 +18,7 @@ namespace DS.Analysis.Types
     {
         public CodeType Type
         {
-            get => type ?? throw new Exception("SerialDisposableTypeDirector's Type not set");
+            get => type ?? StandardType.Unknown.Instance;
             set
             {
                 type = value;

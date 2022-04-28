@@ -40,6 +40,13 @@ namespace DS.Analysis.Core
             return node;
         }
 
+        public DependencyNode CreateNode(UpdateAction updateAction, out IDisposable removeNode)
+        {
+            var node = new DependencyNode(updateAction, Master);
+            removeNode = AddDisposable(node);
+            return node;
+        }
+
         [System.Diagnostics.DebuggerStepThrough]
         public void MakeDependentsStale() => dependents.MarkAsStale();
 
