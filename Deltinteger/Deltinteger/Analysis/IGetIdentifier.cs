@@ -28,6 +28,9 @@ namespace DS.Analysis
         string PathFromContext(GetIdentifierContext context);
     }
 
+    /// <summary>
+    /// Contains information about the context that is getting path of an identifier.
+    /// </summary>
     class GetIdentifierContext
     {
         public ScopedElement[] Elements { get; }

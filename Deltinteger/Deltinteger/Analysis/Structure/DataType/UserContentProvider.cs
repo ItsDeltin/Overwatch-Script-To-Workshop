@@ -12,7 +12,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Structure.DataTypes
 {
-    class UserContentProvider : IDataTypeContentProvider
+    class UserContentProvider : IDataTypeContentProvider, IParentElement
     {
         readonly ClassContext syntax;
         readonly string name;
@@ -36,6 +36,9 @@ namespace DS.Analysis.Structure.DataTypes
         // The dependency to the base type
         IDisposable baseSubscription;
 
+        // IParentElement
+        public IGetIdentifier GetIdentifier { get; private set; }
+
         public UserContentProvider(ClassContext syntax)
         {
             this.syntax = syntax;
@@ -57,13 +60,16 @@ namespace DS.Analysis.Structure.DataTypes
             // Setup externals
             SetupExternals(contextInfo);
 
+            // Assign GetIdentifier
+            GetIdentifier = GetStructuredIdentifier.Create(name, typeParams.GetTypeArgInstances(), contextInfo.Parent?.GetIdentifier, scopeSearcher);
+
             return new SetupDataType(
-                declarations: declaredElements = StructureUtility.DeclarationsFromSyntax(contextInfo, syntax.Declarations),
+                declarations: declaredElements = StructureUtility.DeclarationsFromSyntax(contextInfo.SetParent(this), syntax.Declarations),
                 // Create the provider that generates directors from type arguments.
                 dataTypeProvider: typeProvider = Utility2.CreateProviderAndDirector(
                     name: name,
                     typeParams: typeParams,
-                    getIdentifier: GetStructuredIdentifier.Create(name, typeParams.GetTypeArgInstances(), contextInfo.Parent?.GetIdentifier, scopeSearcher),
+                    getIdentifier: GetIdentifier,
                     instanceFactory: helper =>
                 {
                     helper.AddDisposable(externalsChanged.Add(_ =>

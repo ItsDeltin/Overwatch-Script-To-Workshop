@@ -114,31 +114,6 @@ namespace DS.Analysis
         public delegate ITypeNodeInstance GetTypePartInfo(ProviderArguments arguments);
 
 
-        class GenericUpdatable : IUpdatable
-        {
-            readonly Action action;
-            public GenericUpdatable(Action action) => this.action = action;
-            [System.Diagnostics.DebuggerStepThrough]
-            public void Update() => action();
-        }
-
-        class AnonymousDependent : IDependent, IUpdatable
-        {
-            readonly IMaster master;
-            readonly Action update;
-
-            public AnonymousDependent(IMaster master, Action update) => (this.master, this.update) = (master, update);
-
-            [System.Diagnostics.DebuggerStepThrough]
-            public void MarkAsStale()
-            {
-                master.AddStaleObject(this);
-            }
-
-            [System.Diagnostics.DebuggerStepThrough]
-            public void Update() => update();
-        }
-
         class AnonymousCodeTypeProvider : ICodeTypeProvider
         {
             public string Name { get; }
