@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
@@ -22,16 +23,19 @@ namespace Deltin.Deltinteger.Parse.Strings
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            var values = new IWorkshopTree[1 + _parts.Length * 2];
-            values[0] = Element.CustomString(_tail);
-            
-            for (int i = 0; i < _parts.Length; i++)
+            var values = new List<IWorkshopTree>();
+
+            if (_tail != string.Empty)
+                values.Add(Element.CustomString(_tail));
+
+            foreach (var part in _parts)
             {
-                values[1 + i * 2] = _parts[i].Value.Parse(actionSet);
-                values[2 + i * 2] = Element.CustomString(_parts[i].Right);
+                values.Add(part.Value.Parse(actionSet));
+                if (part.Right != string.Empty)
+                    values.Add(Element.CustomString(part.Right));
             }
 
-            return StringElement.Join(values);
+            return StringElement.Join(values.ToArray());
         }
 
         public CodeType Type() => _parseInfo.TranslateInfo.Types.String();
@@ -48,7 +52,7 @@ namespace Deltin.Deltinteger.Parse.Strings
                 // Remove the quotes.
                 case Compiler.TokenType.InterpolatedStringMiddle:
                     return token.Text.Substring(0, token.Text.Length - 1);
-                
+
                 // 'Head' will begin with $ if 'isStart' is true.
                 case Compiler.TokenType.InterpolatedStringHead:
                     if (isStart) goto case Compiler.TokenType.InterpolatedStringTail;

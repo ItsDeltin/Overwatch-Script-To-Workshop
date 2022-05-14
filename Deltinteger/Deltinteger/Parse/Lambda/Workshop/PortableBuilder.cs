@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Workshop;
@@ -21,17 +22,68 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
         public LambdaBuilder(ToWorkshop toWorkshop)
         {
             _toWorkshop = toWorkshop;
-            _parameterRecycler = new RecycleWorkshopVariableAssigner(toWorkshop.VarCollection, "lambdaParameter");
-            _returnRecycler = new RecycleWorkshopVariableAssigner(toWorkshop.VarCollection, "lambdaValue");
+            _parameterRecycler = new RecycleWorkshopVariableAssigner(toWorkshop.VarCollection, "lambdaParameter", true);
+            _returnRecycler = new RecycleWorkshopVariableAssigner(toWorkshop.VarCollection, "lambdaValue", false);
             _parameterHandler = new LambdaParameterHandler(_parameterRecycler);
+
+            AssignStacks();
         }
+
+        /// <summary>
+        /// Assigns stacks to _parameterRecycler and _returnRecycler
+        /// </summary>
+        void AssignStacks()
+        {
+            int parameterStacks = 0;
+            int returnStacks = 0;
+
+            foreach (var tracker in _toWorkshop.TypeArgGlob.Trackers)
+                if (tracker.Key is LambdaTracker lambdaTracker)
+                {
+                    var combos = tracker.Value.TypeArgCombos;
+
+                    // Get the number of stacks this tracked lambda will need.
+                    parameterStacks = Math.Max(parameterStacks, combos.Max(combo =>
+                    {
+                        // Return the number of stacks this lambda type combo will need.
+
+                        // The lambda's parameters.
+                        var parameters = combo.TypeArgs;
+
+                        // If the lambda returns a value, the first element in combo.TypeArgs is
+                        // the return type, so skip it.
+                        if (lambdaTracker.LambdaReturnsValue)
+                            parameters = parameters.Skip(1).ToArray();
+
+                        // Return the sum of the parameter type's stack length.
+                        return parameters.Sum(typeArg => typeArg.Attributes.StackLength);
+                    }));
+
+                    if (lambdaTracker.LambdaReturnsValue)
+                        // Get the number of stacks the return type needs.
+                        returnStacks = Math.Max(returnStacks, combos.Max(combo => combo.TypeArgs[0].Attributes.StackLength));
+                }
+
+            // Assign stacks for parameters.
+            _parameterRecycler.CreateWithTag(parameterStacks);
+            _parameterRecycler.Reset();
+            _parameterRecycler.Complete();
+
+            // Assign stacks for return value.
+            _returnRecycler.CreateWithTag(returnStacks);
+            _returnRecycler.Reset();
+            _returnRecycler.Complete();
+        }
+
 
         // Gets the identifier for a portable function.
         public int GetIdentifier(ActionSet actionSet, IWorkshopPortableFunctionIdentifier portableFunction)
         {
-            var compatible = GetCompatibleLambda(actionSet.ThisTypeLinker, portableFunction);
+            var typeLinker = actionSet.ThisTypeLinker ?? InstanceAnonymousTypeLinker.Empty;
+
+            var compatible = GetCompatibleLambda(typeLinker, portableFunction);
             if (compatible != null) return compatible.Identifier;
-            return CreateCompatibleLambda(actionSet.ThisTypeLinker, portableFunction).Identifier;
+            return CreateCompatibleLambda(typeLinker, portableFunction).Identifier;
         }
 
         // Gets a CompatibleLambda that supports the provided type linker and portable function.
@@ -44,7 +96,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                     compatibleLambda.TypeLinker.Compatible(typeLinker))
                     // This lambda is compatible with the provided lambda.
                     return compatibleLambda;
-            
+
             // No compatible lambdas were found.
             return null;
         }
@@ -72,7 +124,8 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
             _returnRecycler.Reset();
 
             return expectedType.GetRealType(actionSet.ThisTypeLinker).GetGettableAssigner(new AssigningAttributes("todo:name", true, false))
-                .GetValue(new GettableAssignerValueInfo(actionSet) {
+                .GetValue(new GettableAssignerValueInfo(actionSet)
+                {
                     IndexReferenceCreator = _returnRecycler,
                     SetInitialValue = SetInitialValue.DoNotSet
                 })
@@ -80,7 +133,8 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
         }
 
         // The attributes of the subroutine.
-        WorkshopFunctionControllerAttributes IWorkshopFunctionController.Attributes { get; } = new WorkshopFunctionControllerAttributes() {
+        WorkshopFunctionControllerAttributes IWorkshopFunctionController.Attributes { get; } = new WorkshopFunctionControllerAttributes()
+        {
             IsInstance = true,
             IsRecursive = true,
             RecursiveRequiresObjectStack = true
@@ -90,15 +144,19 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
         ReturnHandler IWorkshopFunctionController.GetReturnHandler(ActionSet actionSet) => null;
 
         // Creates the subroutine.
-        SubroutineCatalogItem IWorkshopFunctionController.GetSubroutine() => _toWorkshop.SubroutineCatalog.GetSubroutine(this, () => {
+        SubroutineCatalogItem IWorkshopFunctionController.GetSubroutine() => _toWorkshop.SubroutineCatalog.GetSubroutine(this, () =>
+        {
             // Create the builder.
-            _subroutineBuilder = new SubroutineBuilder(_toWorkshop.DeltinScript, new SubroutineContext() {
+            _subroutineBuilder = new SubroutineBuilder(_toWorkshop.DeltinScript, new SubroutineContext()
+            {
                 Controller = this,
-                ElementName = "func group", ObjectStackName = "func group", RuleName = "lambda",
+                ElementName = "func group",
+                ObjectStackName = "func group",
+                RuleName = "lambda",
                 VariableGlobalDefault = true
             });
 
-            return new SetupSubroutine(_subroutineBuilder.Initiate(), () => {});
+            return new SetupSubroutine(_subroutineBuilder.Initiate(), () => { });
         });
 
         object IWorkshopFunctionController.StackIdentifier() => this;
@@ -123,7 +181,8 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                         .GetValue(new GettableAssignerValueInfo(actionSet)
                         {
                             SetInitialValue = SetInitialValue.DoNotSet,
-                            IndexReferenceCreator = _returnRecycler
+                            IndexReferenceCreator = _returnRecycler,
+                            IsRecursive = false
                         }),
                     compatibleLambda.Runner.ReturnType != null);
                 returnHandlers.Add(returnHandler);
@@ -177,7 +236,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
             readonly RecycleWorkshopVariableAssigner _recycler;
             public LambdaParameterHandler(RecycleWorkshopVariableAssigner recycler) => _recycler = recycler;
 
-            public void AddParametersToAssigner(VarIndexAssigner assigner) {}
+            public void AddParametersToAssigner(VarIndexAssigner assigner) { }
 
             public void Set(ActionSet actionSet, IWorkshopTree[] parameterValues)
             {

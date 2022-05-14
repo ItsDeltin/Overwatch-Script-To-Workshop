@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Add the error.
                     errorHandler.IncorrectTypeArgsCount(fallback);
-                    
+
                     // Return the fallback.
                     return fallback.GetInstance();
                 }
@@ -71,10 +71,10 @@ namespace Deltin.Deltinteger.Parse
                 type = provider.GetInstance(instanceInfo);
                 type.Call(parseInfo, typeContext.Identifier.Range);
             }
-            
+
             for (int i = 0; i < typeContext.ArrayCount; i++)
                 type = new ArrayType(parseInfo.TranslateInfo.Types, type);
-            
+
             return type;
         }
 
@@ -94,19 +94,24 @@ namespace Deltin.Deltinteger.Parse
             // Get the return type.
             CodeType returnType = null;
             bool returnsValue = false;
-            
+
             if (!type.ReturnType.IsVoid)
             {
                 returnType = GetCodeTypeFromContext(parseInfo, scope, type.ReturnType);
                 returnsValue = true;
             }
-            
+
+
+            // Track the type args being used.
+            parseInfo.Script.Elements.AddTypeArgCall(LambdaTracker.CreateTrackingCall(returnType, parameters));
+
+
             return new PortableLambdaType(new(
                 kind: type.Const ? LambdaKind.Constant : LambdaKind.Portable,
                 parameters: parameters,
                 returnType: returnType,
                 parameterTypesKnown: true,
-                returnsValue: returnsValue ));
+                returnsValue: returnsValue));
         }
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, Scope scope, GroupType type)
@@ -190,12 +195,12 @@ namespace Deltin.Deltinteger.Parse
             _autoApplyErrors = autoApplyErrors;
         }
 
-        public void Nonexistent() 
+        public void Nonexistent()
         {
             AddError("No types by the name of '" + _context.Identifier.Text + "' exists in the current context", _context.Identifier.Range);
             Exists = false;
         }
-        
+
         public void IncorrectTypeArgsCount(ICodeTypeInitializer fallback)
         {
             // Add the error.

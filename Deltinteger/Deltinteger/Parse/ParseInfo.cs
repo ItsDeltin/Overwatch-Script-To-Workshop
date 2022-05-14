@@ -86,7 +86,8 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetLambdaInfo(ExpectingLambdaInfo lambdaInfo) => new ParseInfo(this) { ExpectingLambda = lambdaInfo };
         public ParseInfo SetInvokeInfo(ResolveInvokeInfo invokeInfo) => new ParseInfo(this) { ResolveInvokeInfo = invokeInfo };
         public ParseInfo SetAsyncInfo(AsyncInfo asyncInfo) => new ParseInfo(this) { AsyncInfo = asyncInfo };
-        public ParseInfo SetUsageResolver(UsageResolver currentUsageResolver, UsageResolver sourceUsageResolver) => new ParseInfo(this) {
+        public ParseInfo SetUsageResolver(UsageResolver currentUsageResolver, UsageResolver sourceUsageResolver) => new ParseInfo(this)
+        {
             CurrentUsageResolver = currentUsageResolver,
             SourceUsageResolver = sourceUsageResolver
         };
@@ -114,10 +115,11 @@ namespace Deltin.Deltinteger.Parse
         {
             switch (statementContext)
             {
-                case VariableDeclaration declare: {
-                    var newVar = new ScopedVariable(true, scope, new DefineContextHandler(this, declare)).GetVar();
-                    return new DefineAction(newVar);
-                }
+                case VariableDeclaration declare:
+                    {
+                        var newVar = new ScopedVariable(true, scope, new DefineContextHandler(this, declare)).GetVar();
+                        return new DefineAction(newVar);
+                    }
                 case Assignment assignment: return new SetVariableAction(this, scope, assignment);
                 case Increment increment: return new IncrementAction(this, scope, increment);
                 case If @if: return new IfAction(this, scope, @if);
@@ -215,7 +217,7 @@ namespace Deltin.Deltinteger.Parse
                 Script.Diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, scope.ErrorName), range);
                 variable = new MissingVariable(TranslateInfo, name);
             }
-            
+
             // Check the access level.
             if (!SemanticsHelper.AccessLevelMatches(variable.AccessLevel, variable.Attributes.ContainingType, ThisType))
             {
@@ -236,7 +238,7 @@ namespace Deltin.Deltinteger.Parse
 
         public ParseInfo ClearTail() => new ParseInfo(this)
         {
-            LocalVariableTracker = null
+            // LocalVariableTracker = null
         };
 
         public ParseInfo ClearHead() => new ParseInfo(this)
@@ -250,7 +252,8 @@ namespace Deltin.Deltinteger.Parse
             ExpectingType = null
         };
 
-        public ParseInfo ClearContextual() => new ParseInfo(this) {
+        public ParseInfo ClearContextual() => new ParseInfo(this)
+        {
             SourceExpression = null
         }.ClearTail().ClearHead().ClearTargetted();
 
@@ -298,7 +301,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Callable
             Variable.Call(_parseInfo, CallRange);
-            
+
             // If the type of the variable being called is Player, check if the variable is calling Event Player.
             // If the source expression is null, Event Player is used by default.
             // Otherwise, confirm that the source expression is returning the player variable scope.
@@ -308,17 +311,18 @@ namespace Deltin.Deltinteger.Parse
                 if (_parseInfo.SourceExpression == null)
                     DefaultEventPlayerRestrictedCall();
                 else // There is a source expression.
-                    _parseInfo.SourceExpression.OnResolve(expr => {
-                    // An expression that is not targettable.
-                    if (expr is RootAction)
-                        DefaultEventPlayerRestrictedCall();
-                });
+                    _parseInfo.SourceExpression.OnResolve(expr =>
+                    {
+                        // An expression that is not targettable.
+                        if (expr is RootAction)
+                            DefaultEventPlayerRestrictedCall();
+                    });
             }
-                
+
             // If there is a local variable tracker and the variable requires capture.
             if (Variable.Provider.RequiresCapture)
                 _parseInfo.LocalVariableAccessed(Variable);
-            
+
             VariableCall.Accept();
         }
 

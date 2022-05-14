@@ -25,27 +25,75 @@ namespace Deltin.Deltinteger.Parse
     {
         readonly List<IndexReference> _created = new List<IndexReference>();
         readonly string _tagName;
-        int _current = 0;
+        bool _stackStyle;
+        int _current;
+        bool _complete;
 
-        public RecycleWorkshopVariableAssigner(VarCollection collection) : base(collection) {}
-        public RecycleWorkshopVariableAssigner(VarCollection collection, string tagName) : base(collection) => _tagName = tagName;
+        public RecycleWorkshopVariableAssigner(VarCollection collection, string tagName, bool stackStyle) : base(collection) =>
+            (_tagName, _stackStyle) = (tagName, stackStyle);
 
         public override IndexReference Create(AssigningAttributes attributes)
         {
             // New workshop variable must be assigned.
             if (_current == _created.Count)
             {
-                var newAttributes = attributes;
-                if (_tagName != null) newAttributes.Name = _tagName + "_" + _current;
+                ThrowIfCompleted();
 
-                _created.Add(new RecursiveIndexReference(base.Create(newAttributes)));
+                var newAttributes = attributes;
+                if (_tagName != null) newAttributes.Name = GetTag();
+
+                // Create the IndexReference.
+                var reference = base.Create(newAttributes);
+
+                // If _stackStyle is true, turn it into a RecursiveIndexReference.
+                if (_stackStyle)
+                    reference = new RecursiveIndexReference(reference);
+
+                // Add the IndexReference to the list.
+                _created.Add(reference);
             }
 
             return _created[_current++];
         }
 
-        public void Reset() => _current = 0;
+        /// <summary>
+        /// Creates an assigned workshop variable.
+        /// </summary>
+        public void CreateWithTag()
+        {
+            Create(new AssigningAttributes(GetTag(), true, false));
+        }
+
+        public void CreateWithTag(int count)
+        {
+            for (int i = 0; i < count; i++)
+                CreateWithTag();
+        }
+
+        public void Reset()
+        {
+            _current = 0;
+        }
+
+        public void Complete()
+        {
+            ThrowIfCompleted();
+            _complete = true;
+        }
 
         public IndexReference[] Created => _created.ToArray();
+
+        private string GetTag()
+        {
+            if (_tagName == null)
+                throw new System.Exception("RecycleWorkshopVariableAssigner has no tag name");
+            return _tagName + "_" + _current;
+        }
+
+        private void ThrowIfCompleted()
+        {
+            if (_complete)
+                throw new System.Exception("RecycleWorkshopVariableAssigner was completed");
+        }
     }
 }

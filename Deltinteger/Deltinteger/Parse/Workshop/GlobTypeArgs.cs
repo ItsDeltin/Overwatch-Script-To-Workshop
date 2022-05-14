@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
                 foreach (var arg in tracker.Value.TypeArgs)
                     if (typeArg == arg.Source)
                         return arg;
-            
+
             return null;
         }
 
@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
                     // Add the trackee call.
                     info.Calls.Add(new TrackeeCall() { TypeArgs = typeArgCall.TypeArgs });
                 }
-            
+
             return collected;
         }
 
@@ -151,7 +151,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
         {
             foreach (var existing in _codeTypes)
                 action(existing);
-            
+
             _actions += action;
         }
     }
@@ -216,7 +216,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
             for (int i = 0; i < TypeArgs.Length; i++)
                 if (!TypeArgs[i].CompatibleWith(other.TypeArgs[i]))
                     return false;
-            
+
             return true;
         }
 

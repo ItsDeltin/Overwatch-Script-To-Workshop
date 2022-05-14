@@ -261,7 +261,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.CurlyBracket_Close:
                 case TokenType.CurlyBracket_Open:
                 case TokenType.EOF:
-				case TokenType.Type:
+                case TokenType.Type:
                     return false;
 
                 default:
@@ -282,6 +282,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.This:
                 case TokenType.Root:
                 case TokenType.String:
+                case TokenType.InterpolatedStringTail:
                 case TokenType.Parentheses_Open:
                 case TokenType.SquareBracket_Open:
                 case TokenType.CurlyBracket_Open:
@@ -356,7 +357,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Identifier:
                 case TokenType.Comma:
                     return true;
-                
+
                 default:
                     return false;
             }
