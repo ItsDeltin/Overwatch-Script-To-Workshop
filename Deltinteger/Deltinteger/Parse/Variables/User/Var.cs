@@ -115,7 +115,13 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo = parseInfo.SetRestrictedCallHandler(restrictedCalls);
                 }
 
-                ParseInfo initialValueParseInfo = parseInfo.SetExpectType(CodeType);
+                // The parseInfo used to get the variable's value.
+                ParseInfo initialValueParseInfo = parseInfo;
+
+                // If the variable type is known, set the expected type.
+                if (CodeType != null)
+                    initialValueParseInfo = initialValueParseInfo.SetExpectType(CodeType);
+
                 if (parseInfo.CurrentCallInfo == null)
                 {
                     CallInfo callInfo = new CallInfo(parseInfo.Script);

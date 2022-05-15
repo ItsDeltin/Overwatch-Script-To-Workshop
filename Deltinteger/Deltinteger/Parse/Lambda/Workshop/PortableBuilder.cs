@@ -42,6 +42,9 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                 {
                     var combos = tracker.Value.TypeArgCombos;
 
+                    if (combos.Count == 0)
+                        continue;
+
                     // Get the number of stacks this tracked lambda will need.
                     parameterStacks = Math.Max(parameterStacks, combos.Max(combo =>
                     {

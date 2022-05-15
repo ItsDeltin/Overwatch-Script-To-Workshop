@@ -46,8 +46,10 @@ namespace Deltin.Deltinteger.Parse
             // Empty struct error.
             if (_context.Values.Count == 0)
                 _parseInfo.Script.Diagnostics.Error("Empty structs are not allowed", _context.Range);
-            
+
             var scopeHandler = new StructValueScopeHandler(_scope);
+
+            var expectingStruct = _parseInfo.ExpectingType as StructInstance;
 
             // Create the struct type from the values.
             Variables = new IVariable[_context.Values.Count];
@@ -61,9 +63,22 @@ namespace Deltin.Deltinteger.Parse
                 // No type in an explicit struct declaration.
                 if (_isExplicit && _context.Values[i].Type == null)
                     _parseInfo.Script.Diagnostics.Error("Inconsistent struct value usage; value types must be all explicit or all implicit", _context.Values[i].Identifier.Range);
-                
+
+                ParseInfo variableParseInfo = _parseInfo;
+
+                // Is there an expected struct type in the current context?
+                if (expectingStruct != null)
+                {
+                    // Find a variable in the expected struct with the matching name.
+                    var expectingVariable = expectingStruct.Variables.FirstOrDefault(var => var.Name == variableNames[i]);
+
+                    // If the variable in the expected type exists, set expected type for the variable being declared.
+                    if (expectingVariable != null)
+                        variableParseInfo = variableParseInfo.SetExpectType(expectingVariable.CodeType.GetCodeType(variableParseInfo.TranslateInfo));
+                }
+
                 // Create the struct variable.
-                Variables[i] = new StructValueVariable(scopeHandler, new StructValueContextHandler(_parseInfo, _context.Values[i])).GetVar();
+                Variables[i] = new StructValueVariable(scopeHandler, new StructValueContextHandler(variableParseInfo, _context.Values[i])).GetVar();
 
                 // Add the variable label.
                 Name += Variables[i].GetDefaultInstance(null).GetLabel(_parseInfo.TranslateInfo);
@@ -72,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
             Name += "}";
 
             // Add completion.
-            if (_parseInfo.ExpectingType is StructInstance expectingStruct)
+            if (expectingStruct != null)
             {
                 // Create completions from the expected struct's variables.
                 var completions = expectingStruct.Variables
@@ -100,8 +115,8 @@ namespace Deltin.Deltinteger.Parse
 
         public StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new StructInstance(this, typeLinker);
 
-        void IStructProvider.DependMeta() {}
-        void IStructProvider.DependContent() {}
+        void IStructProvider.DependMeta() { }
+        void IStructProvider.DependContent() { }
 
         // Handles the syntax tree context for struct variables.
         class StructValueContextHandler : IVarContextHandler
@@ -137,8 +152,8 @@ namespace Deltin.Deltinteger.Parse
             Scope IScopeProvider.GetStaticBasedScope() => _scope;
             IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo provider) => null;
             IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => null;
-            void IScopeAppender.AddObjectBasedScope(IMethod function) {}
-            void IScopeAppender.AddStaticBasedScope(IMethod function) {}
+            void IScopeAppender.AddObjectBasedScope(IMethod function) { }
+            void IScopeAppender.AddStaticBasedScope(IMethod function) { }
             void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => _variableNames.Add(variable.Name);
             void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => _variableNames.Add(variable.Name);
             void IConflictChecker.CheckConflict(ParseInfo parseInfo, CheckConflict identifier, DocRange range)
