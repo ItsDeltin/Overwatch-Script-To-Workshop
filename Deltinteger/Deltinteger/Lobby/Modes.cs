@@ -22,6 +22,8 @@ namespace Deltin.Deltinteger.Lobby
 
         public ModeSettings Hybrid { get; set; }
 
+        public ModeSettings Push { get; set; }
+
         [JsonProperty("Capture The Flag")]
         public ModeSettings CaptureTheFlag { get; set; }
 
@@ -66,6 +68,7 @@ namespace Deltin.Deltinteger.Lobby
             Elimination?.ToWorkshop(builder, allSettings, "Elimination");
             Escort?.ToWorkshop(builder, allSettings, "Escort");
             Hybrid?.ToWorkshop(builder, allSettings, "Hybrid");
+            Push?.ToWorkshop(builder, allSettings, "Push");
             PracticeRange?.ToWorkshop(builder, allSettings, "PracticeRange");
             Skirmish?.ToWorkshop(builder, allSettings, "Skirmish");
             TeamDeathmatch?.ToWorkshop(builder, allSettings, "TeamDeathmatch");
@@ -101,6 +104,9 @@ namespace Deltin.Deltinteger.Lobby
                 case "Hybrid":
                     if (Hybrid == null) Hybrid = new ModeSettings();
                     return Hybrid;
+                case "Push":
+                    if (Push == null) Push = new ModeSettings();
+                    return Push;
                 case "Practice Range":
                     if (PracticeRange == null) PracticeRange = new ModeSettings();
                     return PracticeRange;
@@ -195,6 +201,8 @@ namespace Deltin.Deltinteger.Lobby
         };
         private static readonly LobbySetting CaptureSpeed = new RangeValue(false, true, "Capture Speed Modifier", 10, 500);
         private static readonly LobbySetting PayloadSpeed = new RangeValue(false, true, "Payload Speed Modifier", 10, 500);
+        private static readonly LobbySetting TS1WalkSpeed = new RangeValue(false, true, "TS-1 Walk Speed Modifier", 10, 500);
+        private static readonly LobbySetting TS1PushSpeed = new RangeValue(false, true, "TS-1 Push Speed Modifier", 10, 500);
         private static readonly LobbySetting CompetitiveRules = new SwitchValue("Competitive Rules", false);
         private static readonly LobbySetting Enabled_DefaultOn = new SwitchValue("Enabled", true) { ReferenceName = "Enabled On" };
         private static readonly LobbySetting Enabled_DefaultOff = new SwitchValue("Enabled", false) { ReferenceName = "Enabled Off" };
@@ -244,6 +252,18 @@ namespace Deltin.Deltinteger.Lobby
         public ModeSettingCollection AddPayloadSpeed()
         {
             Add(PayloadSpeed);
+            return this;
+        }
+
+        public ModeSettingCollection AddTS1WalkSpeed()
+        {
+            Add(TS1WalkSpeed);
+            return this;
+        }
+
+        public ModeSettingCollection AddTS1PushSpeed()
+        {
+            Add(TS1PushSpeed);
             return this;
         }
 
@@ -300,6 +320,7 @@ namespace Deltin.Deltinteger.Lobby
                 new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", false, 1, 3, 2, "Score To Win 1-3").AddRange("Scoring Speed Modifier", 10, 500),
                 new ModeSettingCollection("Escort", true).Competitive().AddPayloadSpeed(),
                 new ModeSettingCollection("Hybrid", true).Competitive().AddCaptureSpeed().AddPayloadSpeed(),
+                new ModeSettingCollection("Push", true).Competitive().AddTS1WalkSpeed().AddTS1PushSpeed(),
                 new ModeSettingCollection("Capture The Flag", false).AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
                     .AddSelect("Flag Carrier Abilities", "Restricted", "All", "None").AddRange("Flag Dropped Lock Time", 0, 10, 5).AddRange("Flag Pickup Time", 0, 5, 0).AddRange("Flag Return Time", 0, 5, 4)
                     .AddRange("Flag Score Respawn Time", 0, 20, 15).AddIntRange("Game Length (Minutes)", false, 5, 15, 8).AddRange("Respawn Speed Buff Duration", 0, 60, 0).Add(ScoreToWin_1to9)

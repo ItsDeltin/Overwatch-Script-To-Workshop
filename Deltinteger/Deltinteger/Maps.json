@@ -83,7 +83,10 @@
     "Name": "Route 66",
     "GameModes": [
       "Escort",
-      "Skirmish"
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch",
+      "Bounty Hunter"
     ]
   },
   {
@@ -626,6 +629,48 @@
       "Bounty Hunter",
       "Deathmatch",
       "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Circuit Royal",
+    "GameModes": [
+      "Escort",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Midtown",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Paraíso",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Colloseo",
+    "GameModes": [
+      "Push",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "New Queen Street",
+    "GameModes": [
+      "Push",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Esperança",
+    "GameModes": [
+      "Push",
+      "Skirmish"
     ]
   }
 ]

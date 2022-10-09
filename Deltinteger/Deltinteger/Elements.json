@@ -6403,7 +6403,10 @@
         "Ashe",
         "Echo",
         "Baptiste",
-        "Sigma"
+        "Sigma",
+        "Sojourn",
+        "Junker Queen",
+        "Kiriko"
       ]
     },
     "Hero": [
@@ -6420,7 +6423,9 @@
       "Echo",
       "Genji",
       "Hanzo",
+      "Junker Queen",
       "Junkrat",
+      "Kiriko",
       {
         "name": "Lúcio",
         "alias": "Lucio"
@@ -6439,6 +6444,7 @@
         "name": "Soldier: 76",
         "alias": "Soldier76"
       },
+      "Sojourn",
       "Sombra",
       "Symmetra",
       {
@@ -7070,6 +7076,11 @@
         "name": "Château Guillard (Halloween)",
         "alias": "Chateau_Guillard_Halloween"
       },
+      {
+        "name": "Circuit Royal",
+        "alias": "Circuit_Royal"
+      },
+      "Colosseo",
       "Dorado",
       {
         "name": "Ecopoint: Antarctica",
@@ -7078,6 +7089,10 @@
       {
         "name": "Ecopoint: Antarctica (Winter)",
         "alias": "Ecopoint_Antarctica_Winter"
+      },
+      {
+        "name": "Esperança",
+        "alias": "Esperanca"
       },
       "Eichenwalde",
       {
@@ -7161,6 +7176,7 @@
         "name": "Lijiang Tower (Lunar New Year)",
         "alias": "Lijiang_Tower_Lunar"
       },
+      "Midtown",
       "Necropolis",
       "Nepal",
       {
@@ -7175,6 +7191,10 @@
         "name": "Nepal Village",
         "alias": "Nepal_Village"
       },
+      {
+        "name": "New Queen Street",
+        "alias": "New_Queen_Street"
+      },
       "Numbani",
       "Oasis",
       {
@@ -7188,6 +7208,10 @@
       {
         "name": "Oasis University",
         "alias": "Oasis_University"
+      },
+      {
+        "name": "Paraíso",
+        "alias": "Paraiso"
       },
       "Paris",
       "Petra",
@@ -7261,6 +7285,7 @@
         "alias": "MeisSnowballOffensive"
       },
       "Practice Range",
+      "Push",
       "Skirmish",
       "Team Deathmatch",
       "Yeti Hunter",
