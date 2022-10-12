@@ -73,7 +73,10 @@ namespace Deltin.Deltinteger.Elements
         Ashe,
         Echo,
         Baptiste,
-        Sigma
+        Sigma,
+        Sojourn,
+        JunkerQueen,
+        Kiriko
     }
 
     public enum Team
