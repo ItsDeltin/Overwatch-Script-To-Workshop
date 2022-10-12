@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
                 parameters[i] = GetCodeTypeFromContext(parseInfo, scope, type.Parameters[i]);
 
                 // Constant types are not allowed.
-                if (parameters[i] != null && parameters[i].IsConstant())
+                if (parameters[i] != null && parameters[i].IsConstant() && !type.Const)
                     parseInfo.Script.Diagnostics.Error("The constant type '" + parameters[i].GetName() + "' cannot be used in method types", type.Parameters[i].Range);
             }
 
