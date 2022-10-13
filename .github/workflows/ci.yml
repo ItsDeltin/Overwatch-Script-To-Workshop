@@ -1,0 +1,43 @@
+name: CI
+run-name: ${{ github.actor }} is generating a release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-on-all-platforms:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 5.0.x
+      - name: Restore dependencies
+        run: dotnet restore $GITHUB_WORKSPACE/Deltinteger
+      - name: Test
+        run: dotnet test --no-build --verbosity normal $GITHUB_WORKSPACE/Deltinteger
+      - name: Publish win-x64
+        run: dotnet publish --runtime win-x64 --configuration Release -o bin/win-x64 --no-restore --self-contained true $GITHUB_WORKSPACE/Deltinteger
+      - name: Publish win-x86
+        run: dotnet publish --runtime win-x86 --configuration Release -o bin/win-x86 --no-restore --self-contained true $GITHUB_WORKSPACE/Deltinteger
+      - name: Publish Linux-64
+        run: dotnet publish --runtime linux-x64 --configuration Release -o bin/linux-x64 --no-restore --self-contained true $GITHUB_WORKSPACE/Deltinteger
+      - name: Zip binaries
+        run: |
+          zip -r -q bin/win-x64.zip bin/win-x64/
+          zip -r -q bin/win-x86.zip bin/win-x86/
+          zip -r -q bin/linux-x64.zip bin/linux-x64/
+      - name: Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Master Build"
+          files: |
+            bin/win-x64.zip
+            bin/win-x86.zip
+            bin/linux-x64.zip
