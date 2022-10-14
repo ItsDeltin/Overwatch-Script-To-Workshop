@@ -14,15 +14,14 @@ import * as semantics from './semantics';
 import { createVersionStatusBar } from './versionSelector';
 
 export let extensionContext: ExtensionContext;
-export let globalStoragePath:string;
-export let defaultServerFolder:string;
+export let defaultServerFolder: string;
+export const KEY_DOWNLOADED_SERVER_DATE = "downloaded server date";
 
 export const selector = { language: 'ostw', scheme: 'file' };
 
 export async function activate(context: ExtensionContext) {
 	extensionContext = context;
-	globalStoragePath = context.globalStoragePath;
-	defaultServerFolder = path.join(globalStoragePath, 'Server');
+	defaultServerFolder = path.join(context.globalStorageUri.fsPath, 'Server');
 
 	setupConfig();
 	subscribe(context);
@@ -32,8 +31,7 @@ export async function activate(context: ExtensionContext) {
 	semantics.setupSemantics();
 }
 
-export function addSubscribable(disposable)
-{
+export function addSubscribable(disposable) {
 	extensionContext.subscriptions.push(disposable);
 }
 
@@ -43,10 +41,9 @@ export function deactivate(): Thenable<void> | undefined {
 	return client.stop();
 }
 
-function subscribe(context: ExtensionContext)
-{
+function subscribe(context: ExtensionContext) {
 	register(context);
-	
+
 	// Push provider.
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ow_ostw', workshopPanelProvider));
 
@@ -60,15 +57,15 @@ function subscribe(context: ExtensionContext)
 		// Encode uri.
 		let uri = vscode.Uri.parse('ow_ostw:Workshop Output.ow');
 
-		let doc : vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+		let doc: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
 		await vscode.window.showTextDocument(doc, { preview: false });
 	}, this));
 
 	// showReferences link
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.showReferences', (uriStr: string, position: LSPosition, locations: LSLocation[]) => {
-		let uri : Uri = Uri.parse(uriStr);
+		let uri: Uri = Uri.parse(uriStr);
 		let pos: Position = client.protocol2CodeConverter.asPosition(position);
-		let locs: Location[] = locations.map(client.protocol2CodeConverter.asLocation);
+		let locs: (Location | undefined)[] = locations.map(client.protocol2CodeConverter.asLocation);
 
 		vscode.commands.executeCommand('editor.action.showReferences', uri, pos, locs);
 	}, this));
@@ -78,8 +75,7 @@ function subscribe(context: ExtensionContext)
 		// Send the 'pathmapFromClipboard' request to the language server.
 		client.sendRequest('pathmapFromClipboard').then((result: string) => {
 			// The request will return 'success' if the pathmap was successfully created. Any other string is an error message.
-			if (result != 'success')
-			{
+			if (result != 'success') {
 				vscode.window.showErrorMessage('Pathmap generator error: ' + result);
 				return;
 			}
@@ -107,8 +103,8 @@ function subscribe(context: ExtensionContext)
 	// Pathmap editor
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.pathmapEditorCode', () => {
 
-		var editPathmap:string = null; // Stores the currently opened .pathmap file contents.
-		var editPathmapFile:string = null; // Stores the currently opened .pathmap file path.
+		var editPathmap: string | undefined = undefined; // Stores the currently opened .pathmap file contents.
+		var editPathmapFile: string | undefined = undefined; // Stores the currently opened .pathmap file path.
 		// If the active text editor is a .pathmap file, set 'editPathmap' and 'editPathmapFile'.
 		if (window.activeTextEditor != undefined && window.activeTextEditor.document.fileName.toLowerCase().endsWith('.pathmap')) {
 			editPathmap = window.activeTextEditor.document.getText();
@@ -116,11 +112,10 @@ function subscribe(context: ExtensionContext)
 		}
 
 		// Send the 'pathmapEditor' request with the 'editPathmap' contents for the parameter to the language server.
-		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap, File: editPathmapFile}).then((result: any) => {
+		client.sendRequest<boolean>('pathmapEditor', { Text: editPathmap, File: editPathmapFile }).then((result: any) => {
 			// The request will return true if successful.
 			// It can return false if PathfindEditor.del was tinkered with by the user (or there is a bug).
-			if (result.success)
-			{
+			if (result.success) {
 				// Send a success message depending on if the editor is the default editor or the editor is editing a .pathmap file.
 				if (editPathmapFile == null)
 					vscode.window.showInformationMessage('Default pathmap editor copied to clipboard. Paste the rules in Overwatch to edit.');
@@ -139,9 +134,11 @@ function subscribe(context: ExtensionContext)
 
 	// Copy workshop code
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.copyWorkshopCode', () => {
-		vscode.env.clipboard.writeText(lastWorkshopOutput);
+		if (lastWorkshopOutput) {
+			vscode.env.clipboard.writeText(lastWorkshopOutput);
+		}
 	}));
-	
+
 	// Decompile clipboard
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.decompile.clipboard', () => {
 		decompileClipboard();
@@ -158,7 +155,6 @@ function subscribe(context: ExtensionContext)
 	}));
 }
 
-export function openIssues()
-{
+export function openIssues() {
 	vscode.env.openExternal(vscode.Uri.parse('https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/issues'));
 }
