@@ -1,7 +1,7 @@
 import { window, commands, workspace, env, Uri, StatusBarAlignment, StatusBarItem, ExtensionContext, TextDocument, QuickPickItem, ThemeColor } from 'vscode';
 import * as download from './download';
 import { serverVersion, restartLanguageServer } from './languageServer'
-import { openIssues } from './extensions'
+import { openIssues, openDefaultServerDirectory } from './extensions'
 import { Release } from "./githubApi"
 
 let versionStatus: StatusBarItem;
@@ -24,7 +24,9 @@ export function createVersionStatusBar(context: ExtensionContext) {
             // Download new version option
             { label: 'Download new server version' + (serverVersion != null ? ' (current: ' + serverVersion + ')' : ''), action: selectVersion },
             // Choose server location
-            { label: 'Choose server location', action: download.chooseServerLocation }
+            { label: 'Choose server location', action: download.chooseServerLocation },
+            // Open default server directory
+            { label: 'Open default server directory', action: openDefaultServerDirectory }
         ];
 
         let option = await window.showQuickPick(items);
@@ -54,7 +56,7 @@ async function selectVersion() {
                 download.progressBarDownload(async (token, progress, resolve, reject) => {
                     let url = await download.assetFromRelease(release, token);
                     if (url != null) {
-                        download.doDownload(url, token, progress, resolve, reject);
+                        await download.doDownload(url, token, progress, resolve, reject);
                     }
                 });
             }

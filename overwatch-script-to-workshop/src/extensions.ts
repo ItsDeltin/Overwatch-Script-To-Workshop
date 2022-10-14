@@ -158,3 +158,7 @@ function subscribe(context: ExtensionContext) {
 export function openIssues() {
 	vscode.env.openExternal(vscode.Uri.parse('https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/issues'));
 }
+
+export function openDefaultServerDirectory() {
+	vscode.env.openExternal(Uri.file(defaultServerFolder));
+}

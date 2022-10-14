@@ -38,14 +38,14 @@ export async function isDotnetInstalled(): Promise<boolean> {
 export async function downloadLatest() {
 	await progressBarDownload(async (token, progress, resolve, reject) => {
 		// Get the downloadable url for the ostw server.
-		await assetFromRelease(await getLatestRelease(), token).then(asset => {
+		await assetFromRelease(await getLatestRelease(), token).then(async asset => {
 			if (asset == undefined) {
 				// Could not retrieve asset url.
 				reject('Could not get release assets, do you have a connection?');
 				return;
 			}
 
-			doDownload(asset, token, progress, resolve, reject);
+			await doDownload(asset, token, progress, resolve, reject);
 		}, err => {
 			reject("Error getting release assets: " + err);
 		});

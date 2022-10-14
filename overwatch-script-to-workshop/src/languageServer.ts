@@ -11,7 +11,6 @@ import * as semver from 'semver';
 export let client: LanguageClient;
 
 export let serverStatus: 'stopped' | 'starting' | 'started' | 'ready' = 'stopped';
-let clientStartInstance;
 export let onServerReady = new EventEmitter();
 export let serverVersion: string;
 let gotVersionThisInstance = false;
@@ -115,7 +114,7 @@ export async function startLanguageServer() {
 			clientReady();
 		}
 	}, this);
-	clientStartInstance = client.start();
+	client.start();
 	serverStatus = 'started';
 }
 
@@ -149,7 +148,6 @@ export async function stopLanguageServer() {
 	if (serverStatus == 'stopped') return;
 	serverStatus = 'stopped';
 	if (client.needsStop()) await client.stop();
-	clientStartInstance.dispose();
 }
 
 export async function restartLanguageServer(timeout: number = 5000) {
