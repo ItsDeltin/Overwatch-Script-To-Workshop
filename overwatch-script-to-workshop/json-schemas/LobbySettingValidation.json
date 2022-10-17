@@ -1193,11 +1193,11 @@
       "type": "number",
       "maximum": 500.0
     },
-    "Flashbang": {
+    "Magnetic Grenade": {
       "default": true,
       "type": "boolean"
     },
-    "Flashbang Cooldown Time": {
+    "Magnetic Grenade Cooldown Time": {
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
@@ -3166,11 +3166,11 @@
             "Combat Roll Cooldown Time": {
               "$ref": "#/definitions/Combat Roll Cooldown Time"
             },
-            "Flashbang": {
-              "$ref": "#/definitions/Flashbang"
+            "Magnetic Grenade": {
+              "$ref": "#/definitions/Magnetic Grenade"
             },
-            "Flashbang Cooldown Time": {
-              "$ref": "#/definitions/Flashbang Cooldown Time"
+            "Magnetic Grenade Cooldown Time": {
+              "$ref": "#/definitions/Magnetic Grenade Cooldown Time"
             }
           },
           "additionalProperties": false
