@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Pathfinder
         void IPathfinderInfo.Finished() => _bakemap.Set(ActionSet, _builder.ParentArray.Get(), index: _nodeLoop.Value);
 
         // Wait on loop.
-        void IPathfinderInfo.OnConnectLoop() {}
+        void IPathfinderInfo.OnConnectLoop() { }
         void IPathfinderInfo.OnLoop()
         {
             if (_onLoop == null)
@@ -78,13 +78,13 @@ namespace Deltin.Deltinteger.Pathfinder
                 _onLoop.Invoke(ActionSet);
         }
 
-        void IPathfinderInfo.OnLoopEnd() {}
+        void IPathfinderInfo.OnLoopEnd() { }
 
         Element IPathfinderInfo.InitialNode => _nodeLoop.Value;
-        public Element NodeArray => _pathmapClass.Nodes.Get(ActionSet.ToWorkshop, _pathmapObject);
+        public Element NodeArray => _pathmapClass.Nodes.GetWithReference(ActionSet.ToWorkshop, _pathmapObject);
         Element NodeArrayLength => Element.CountOf(NodeArray);
-        Element IPathfinderInfo.SegmentArray => _pathmapClass.Segments.Get(ActionSet.ToWorkshop, _pathmapObject);
-        Element IPathfinderInfo.AttributeArray => _pathmapClass.Attributes.Get(ActionSet.ToWorkshop, _pathmapObject);
+        Element IPathfinderInfo.SegmentArray => _pathmapClass.Segments.GetWithReference(ActionSet.ToWorkshop, _pathmapObject);
+        Element IPathfinderInfo.AttributeArray => _pathmapClass.Attributes.GetWithReference(ActionSet.ToWorkshop, _pathmapObject);
         Element IPathfinderInfo.LoopCondition => _builder.AnyAccessableUnvisited();
         public Element EnabledAttributes { get; }
     }

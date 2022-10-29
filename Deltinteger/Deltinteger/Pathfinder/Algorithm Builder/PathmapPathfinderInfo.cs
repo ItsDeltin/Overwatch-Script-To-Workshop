@@ -74,9 +74,9 @@ namespace Deltin.Deltinteger.Pathfinder
         public abstract void Finished();
 
         public abstract Element LoopCondition { get; }
-        public Element NodeArray => _pathmapClass.Nodes.Get(ActionSet.ToWorkshop, PathmapObject);
-        public Element SegmentArray => _pathmapClass.Segments.Get(ActionSet.ToWorkshop, PathmapObject);
-        public Element AttributeArray => _pathmapClass.Attributes.Get(ActionSet.ToWorkshop, PathmapObject);
+        public Element NodeArray => _pathmapClass.Nodes.GetWithReference(ActionSet.ToWorkshop, PathmapObject);
+        public Element SegmentArray => _pathmapClass.Segments.GetWithReference(ActionSet.ToWorkshop, PathmapObject);
+        public Element AttributeArray => _pathmapClass.Attributes.GetWithReference(ActionSet.ToWorkshop, PathmapObject);
 
         protected Element NodeFromPosition(Element position) => _nodeFromPosition.NodeFromPosition(position);
     }

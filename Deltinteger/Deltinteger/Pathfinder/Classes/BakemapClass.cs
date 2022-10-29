@@ -7,11 +7,11 @@ namespace Deltin.Deltinteger.Pathfinder
     public class BakemapClass : ISelfContainedClass
     {
         public string Name => "Bakemap";
-        public SelfContainedClassProvider Provider { get; }
-        public SelfContainedClassInstance Instance => Provider.Instance;
+        public SCClassProvider Provider { get; }
+        public ClassType Instance => Provider.Instance;
 
-        public ObjectVariable NodeBake { get; private set; }
-        public ObjectVariable Pathmap { get; private set; }
+        public ITypeVariable NodeBake { get; private set; }
+        public ITypeVariable Pathmap { get; private set; }
 
         readonly DeltinScript _deltinScript;
         readonly PathfinderTypesComponent _pathfinderTypes;
@@ -21,20 +21,21 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             _deltinScript = deltinScript;
             _pathfinderTypes = _deltinScript.GetComponent<PathfinderTypesComponent>();
-            Provider = new SelfContainedClassProvider(deltinScript, this);
+            Provider = new SCClassProvider(deltinScript, this);
         }
 
         void ISelfContainedClass.Setup(SetupSelfContainedClass setup)
         {
             NodeBake = setup.AddObjectVariable(new InternalVar("NodeBake", Types.Any()));
             Pathmap = setup.AddObjectVariable(new InternalVar("Pathmap", _pathfinderTypes.Pathmap.Instance));
-            setup.ObjectScope.AddNativeMethod(Pathfind);
+            setup.AddObjectMethod(Pathfind);
         }
 
-        void ISelfContainedClass.New(ActionSet actionSet, NewClassInfo newClassInfo) {}
+        void ISelfContainedClass.New(ActionSet actionSet, NewClassInfo newClassInfo) { }
         MarkupBuilder ISelfContainedClass.Documentation => throw new System.NotImplementedException();
 
-        private FuncMethod Pathfind => new FuncMethodBuilder() {
+        private FuncMethodBuilder Pathfind => new FuncMethodBuilder()
+        {
             Name = "Pathfind",
             Documentation = "Pathfinds specified players to the destination.",
             Parameters = new CodeParameter[] {
@@ -50,19 +51,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 PathmapClass pathmapClass = actionSet.DeltinScript.GetComponent<PathfinderTypesComponent>().Pathmap;
 
                 Element destination = call.Get(1);
-                Element nodeArray = pathmapClass.Nodes.Get(actionSet.ToWorkshop, Pathmap.Get(actionSet));
+                Element nodeArray = pathmapClass.Nodes.GetWithReference(actionSet.ToWorkshop, Pathmap.Get(actionSet));
 
                 // Get the node closest to the destination.
-                Element targetNode = IndexOfArrayValue(
-                    nodeArray,
-                    FirstOf(Sort(
-                        // Sort non-null nodes
-                        /*Element.Part<V_FilteredArray>(nodeArray, new V_ArrayElement()),*/
-                        nodeArray,
-                        // Sort by distance to destination
-                        DistanceBetween(ArrayElement(), destination)
-                    ))
-                );
+                Element targetNode = PathfindUtility.GetBakemapTargetNode(nodeArray, destination);
 
                 // For each of the players, get the current.
                 resolveInfo.Pathfind(actionSet, call.Get(0), Pathmap.Get(actionSet), ValueInArray(NodeBake.Get(actionSet), targetNode), destination);

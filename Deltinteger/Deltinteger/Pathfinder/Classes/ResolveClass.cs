@@ -7,15 +7,15 @@ namespace Deltin.Deltinteger.Pathfinder
     public class PathResolveClass : ISelfContainedClass
     {
         public string Name => "PathResolve";
-        public SelfContainedClassProvider Provider { get; }
-        public SelfContainedClassInstance Instance => Provider.Instance;
+        public SCClassProvider Provider { get; }
+        public ClassType Instance => Provider.Instance;
 
         /// <summary>An array of numbers where each value is that index's parent index. Following the path will lead to the source. Subtract value by -1 since 0 is used for unset.</summary>
-        public ObjectVariable ParentArray { get; private set; }
+        public ITypeVariable ParentArray { get; private set; }
         /// <summary>A reference to the source pathmap.</summary>
-        public ObjectVariable Pathmap { get; private set; }
+        public ITypeVariable Pathmap { get; private set; }
         /// <summary>A vector determining the destination.</summary>
-        public ObjectVariable Destination { get; private set; }
+        public ITypeVariable Destination { get; private set; }
 
         readonly ITypeSupplier _supplier;
         readonly PathfinderTypesComponent _pathfinderTypes;
@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             _supplier = deltinScript.Types;
             _pathfinderTypes = deltinScript.GetComponent<PathfinderTypesComponent>();
-            Provider = new SelfContainedClassProvider(deltinScript, this);
+            Provider = new SCClassProvider(deltinScript, this);
         }
 
         public void Setup(SetupSelfContainedClass setup)
@@ -33,14 +33,15 @@ namespace Deltin.Deltinteger.Pathfinder
             Pathmap = setup.AddObjectVariable(new InternalVar("OriginMap", _pathfinderTypes.Pathmap.Instance));
             Destination = setup.AddObjectVariable(new InternalVar("Destination", _supplier.Vector()));
 
-            setup.ObjectScope.AddNativeMethod(PathfindFunction);
-            setup.ObjectScope.AddNativeMethod(Next);
+            setup.AddObjectMethod(PathfindFunction);
+            setup.AddObjectMethod(Next);
         }
 
         public void WorkshopInit(DeltinScript translateInfo) => throw new NotImplementedException();
         public void New(ActionSet actionSet, NewClassInfo newClassInfo) => throw new NotImplementedException();
 
-        private FuncMethod PathfindFunction => new FuncMethodBuilder() {
+        private FuncMethodBuilder PathfindFunction => new FuncMethodBuilder()
+        {
             Name = "Pathfind",
             Documentation = "Pathfinds the specified players to the destination.",
             Parameters = new CodeParameter[] {
@@ -58,7 +59,7 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
-        private FuncMethod Next => new FuncMethodBuilder()
+        private FuncMethodBuilder Next => new FuncMethodBuilder()
         {
             Name = "Next",
             Documentation = new MarkupBuilder().Add("Gets a node's parent index from a node index. Continuously feeding the result back into this function will eventually lead to the source of the resolved path. The node's actual position can be obtained by calling ").Code("PathResolve.OriginMap.Nodes[node_index]").Add(".")

@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public Element NodeFromPosition(Element position)
         {
-            Element nodes = _pathmapClass.Nodes.Get(_actionSet.ToWorkshop, _pathmapObject), sortArray = nodes;
+            Element nodes = _pathmapClass.Nodes.GetWithReference(_actionSet.ToWorkshop, _pathmapObject), sortArray = nodes;
 
             // If nodes can be null, filter out the null nodes.
             if (_actionSet.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes)
@@ -57,6 +57,6 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         public Element NodeFromPosition(Element position) =>
-            (Element)_invocable.Invoke(_actionSet, _pathmapClass.Nodes.Get(_actionSet.ToWorkshop, _pathmapObject), position);
+            (Element)_invocable.Invoke(_actionSet, _pathmapClass.Nodes.GetWithReference(_actionSet.ToWorkshop, _pathmapObject), position);
     }
 }

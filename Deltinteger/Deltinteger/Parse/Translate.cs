@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Parse
             AddComponent<Pathfinder.PathfinderTypesComponent>();
         }
 
-        private T AddComponent<T>() where T: IComponent, new()
+        private T AddComponent<T>() where T : IComponent, new()
         {
             T newT = new T();
 
@@ -130,24 +130,24 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var enumContext in script.Context.Enums)
-            {
-                var newEnum = new GenericCodeTypeInitializer(new DefinedEnum(new ParseInfo(script, this), enumContext));
-                RulesetScope.AddType(newEnum);
-                Types.AllTypes.Add(newEnum); 
-                Types.DefinedTypes.Add(newEnum);
-            }
+                foreach (var enumContext in script.Context.Enums)
+                {
+                    var newEnum = new GenericCodeTypeInitializer(new DefinedEnum(new ParseInfo(script, this), enumContext));
+                    RulesetScope.AddType(newEnum);
+                    Types.AllTypes.Add(newEnum);
+                    Types.DefinedTypes.Add(newEnum);
+                }
 
             // Get the types
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var typeContext in script.Context.Classes)
-            {
-                var newType = IDefinedTypeInitializer.GetInitializer(new ParseInfo(script, this), RulesetScope, typeContext);
-                RulesetScope.AddType(newType);
-                Types.AllTypes.Add(newType);
-                Types.DefinedTypes.Add(newType);
-            }
-                        
+                foreach (var typeContext in script.Context.Classes)
+                {
+                    var newType = IDefinedTypeInitializer.GetInitializer(new ParseInfo(script, this), RulesetScope, typeContext);
+                    RulesetScope.AddType(newType);
+                    Types.AllTypes.Add(newType);
+                    Types.DefinedTypes.Add(newType);
+                }
+
             // Get the variable reservations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
@@ -155,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     string text = reservation.GetText().RemoveQuotes();
 
-                    if(Int32.TryParse(text, out int id))
+                    if (Int32.TryParse(text, out int id))
                         VarCollection.Reserve(id, true, script.Diagnostics, reservation.Range);
                     else
                         VarCollection.Reserve(text, true);
@@ -164,7 +164,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     string text = reservation.GetText().RemoveQuotes();
 
-                    if(Int32.TryParse(text, out int id))
+                    if (Int32.TryParse(text, out int id))
                         VarCollection.Reserve(id, false, script.Diagnostics, reservation.Range);
                     else
                         VarCollection.Reserve(text, false);
@@ -186,7 +186,7 @@ namespace Deltin.Deltinteger.Parse
                                 PlayerVariableScope.CopyVariable(var.GetDefaultInstance(null));
                         }
                     }
-            
+
             ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
             GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
 
@@ -210,7 +210,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var ruleContext in script.Context.Rules)
                     rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
-            
+
             GetComponent<SymbolLinkComponent>().Collect();
         }
 
@@ -244,11 +244,12 @@ namespace Deltin.Deltinteger.Parse
                 IGettable value = variable
                     .GetDefaultInstance(null)
                     .GetAssigner(new(addToInitialRule.ActionSet))
-                    .GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet) {
+                    .GetValue(new GettableAssignerValueInfo(addToInitialRule.ActionSet)
+                    {
                         SetInitialValue = SetInitialValue.SetIfExists
                     });
                 DefaultIndexAssigner.Add(variable, value);
-                
+
                 if (value is IndexReference indexReference)
                     DebugVariables.Add(variable, indexReference);
             }
@@ -274,7 +275,7 @@ namespace Deltin.Deltinteger.Parse
             // Additional
             if (addRules != null)
                 WorkshopRules.AddRange(addRules.Invoke(VarCollection).Where(rule => rule != null));
-            
+
             // Complete portable functions
             WorkshopConverter.LambdaBuilder.Complete();
 
@@ -307,7 +308,7 @@ namespace Deltin.Deltinteger.Parse
                 ElementCount += WorkshopRules[i].ElementCount();
                 if (i != WorkshopRules.Count - 1) result.AppendLine();
             }
-            
+
             WorkshopCode = result.GetResult();
         }
 
@@ -380,7 +381,7 @@ namespace Deltin.Deltinteger.Parse
             // Enums
             foreach (var type in ValueGroupType.GetEnumTypes(this))
                 AddType(type);
-            
+
             _deltinScript.GetComponent<Pathfinder.PathfinderTypesComponent>();
 
             _deltinScript.PlayerVariableScope = _playerType.PlayerVariableScope;
@@ -394,10 +395,6 @@ namespace Deltin.Deltinteger.Parse
             foreach (var type in AllTypes)
                 scope.AddType(type);
         }
-
-        public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.BuiltInTypeMatches(typeof(T))).GetInstance();
-        public CodeType GetInstanceFromInitializer<T>() where T: ICodeTypeInitializer => AllTypes.First(type => type.GetType() == typeof(T)).GetInstance();
-        public T GetInitializer<T>() where T: ICodeTypeInitializer => (T)AllTypes.First(type => type.GetType() == typeof(T));
 
         public CodeType Default() => Any();
         public CodeType Any() => _anyType;

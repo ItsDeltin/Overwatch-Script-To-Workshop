@@ -58,8 +58,12 @@ namespace Deltin.Deltinteger.Parse
             foreach (var variable in _provider.StaticVariables)
                 variable.AddInstance(this, _typeLinker);
 
-            // Functions
+            // Methods
             foreach (var method in _provider.Methods)
+                method.AddInstance(this, _typeLinker);
+
+            // Static methods
+            foreach (var method in _provider.StaticMethods)
                 method.AddInstance(this, _typeLinker);
         }
 

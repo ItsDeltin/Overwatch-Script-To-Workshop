@@ -20,8 +20,9 @@ namespace Deltin.Deltinteger.Parse
 
         // We do not need to worry about these values.
         public AnonymousType[] GenericTypes { get; } = new AnonymousType[0];
-        public IMethodProvider[] Methods { get; } = new IMethodProvider[0]; // The methods of the struct declaration. This is currently unused.
         public IVariable[] StaticVariables { get; } = new IVariable[0];
+        public IElementProvider[] Methods { get; } = new IElementProvider[0]; // The methods of the struct declaration. This is currently unused.
+        public IElementProvider[] StaticMethods { get; } = new IElementProvider[0];
 
         private readonly ParseInfo _parseInfo;
         private readonly Scope _scope;

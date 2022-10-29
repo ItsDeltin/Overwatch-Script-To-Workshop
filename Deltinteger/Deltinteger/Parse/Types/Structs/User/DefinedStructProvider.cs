@@ -80,10 +80,8 @@ namespace Deltin.Deltinteger.Parse
                 _parseInfo.Script.Diagnostics.Error("A variable defined in the struct recursively calls the struct", DefinedAt.range);
         }
 
-        public override StructInstance GetInstance() => new DefinedStructInstance(this, InstanceAnonymousTypeLinker.Empty);
         public override StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new DefinedStructInstance(this, typeLinker);
 
-        public override bool BuiltInTypeMatches(Type type) => false;
         public Scope GetObjectBasedScope() => _objectScope;
         public Scope GetStaticBasedScope() => _staticScope;
         public IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverloadInfo) => throw new NotImplementedException();

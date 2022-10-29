@@ -105,7 +105,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the attributes where the first node is the current and the second node is the next.
             Element.Filter(
                 // Get the attribute array.
-                PathmapInstance.Attributes.Get(ActionSet.ToWorkshop, ResolveInfo.PathmapReference.Get(Target)),
+                PathmapInstance.Attributes.GetWithReference(ActionSet.ToWorkshop, ResolveInfo.PathmapReference.Get(Target)),
                 // Filter.
                 Element.And(
                     // Compare the first node to current.

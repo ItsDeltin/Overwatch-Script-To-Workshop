@@ -55,5 +55,16 @@ namespace Deltin.Deltinteger.Parse
         public static implicit operator FuncMethod(FuncMethodBuilder builder) => new FuncMethod(builder);
 
         public FuncMethod GetMethod() => new FuncMethod(this);
+
+        public IElementProvider AsProvider(bool isStatic) => new FuncMethodProvider(this, isStatic);
+
+        public record FuncMethodProvider(FuncMethod method, bool isStatic) : IElementProvider
+        {
+            public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
+            {
+                scopeHandler.Add(method, isStatic);
+                return method;
+            }
+        }
     }
 }

@@ -20,10 +20,13 @@ namespace Deltin.Deltinteger.Parse
 
         ICodeTypeSolver IScopeable.CodeType => CodeType;
 
-        public InternalVar(string name, CodeType type)
+        readonly StoreType storeType = StoreType.None;
+
+        public InternalVar(string name, CodeType type, StoreType storeType = StoreType.None)
         {
             Name = name;
             CodeType = type;
+            this.storeType = storeType;
         }
 
         public InternalVar(string name, CodeType type, CompletionItemKind kind)
@@ -51,7 +54,10 @@ namespace Deltin.Deltinteger.Parse
             return this;
         }
         public void AddDefaultInstance(IScopeAppender scopeAppender) => scopeAppender.Add(this, Static);
-        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetGettableAssigner(new AssigningAttributes());
+        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetGettableAssigner(new AssigningAttributes(Name, getAssigner.IsGlobal, false)
+        {
+            StoreType = storeType
+        });
         public bool CanBeAmbiguous() => Ambiguous;
     }
 }

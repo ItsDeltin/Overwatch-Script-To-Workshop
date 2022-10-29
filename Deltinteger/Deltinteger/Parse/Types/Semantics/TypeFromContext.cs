@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
                 if (providers.Length == 0)
                 {
                     errorHandler.Nonexistent();
-                    return parseInfo.TranslateInfo.Types.GetInstance<AnyType>();
+                    return parseInfo.TranslateInfo.Types.Any();
                 }
 
                 var fallback = providers[0]; // Used when no types match.

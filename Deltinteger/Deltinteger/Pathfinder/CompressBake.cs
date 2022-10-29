@@ -10,8 +10,6 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class CompressedBakeComponent : IComponent
     {
-        public Element Result { get; private set; }
-
         private int _maxNodeCount;
         private Element _matcher;
 
@@ -20,9 +18,9 @@ namespace Deltin.Deltinteger.Pathfinder
             _maxNodeCount = Math.Max(_maxNodeCount, maxNodesValue);
         }
 
-        public void Init(DeltinScript deltinScript) {}
+        public void Init(DeltinScript deltinScript) { }
 
-        public void Build(ActionSet actionSet, Element compressedNodeArray, Action<Element> printProgress, ILambdaInvocable onLoop)
+        public Element Build(ActionSet actionSet, Element compressedNodeArray, Action<Element> printProgress, ILambdaInvocable onLoop)
         {
             var matcher = GetMatcher(actionSet); // Get the character matcher.
             var nodeArray = actionSet.VarCollection.Assign("compressedNodes", actionSet.IsGlobal, false); // The index the node array is stored in.
@@ -35,7 +33,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Loop through each node.
             var nodeArrayLoop = new ForBuilder(actionSet, "compressBakeNodeLoop", nodeCount);
-            printProgress(nodeArrayLoop.Value / nodeCount); // Print the node count.
+            printProgress?.Invoke(nodeArrayLoop.Value / nodeCount); // Print the node count.
             nodeArrayLoop.Init();
 
             compressCurrentNodeArray.Set(actionSet, Element.EmptyArray());
@@ -73,7 +71,7 @@ namespace Deltin.Deltinteger.Pathfinder
             stringArrayLoop.End();
             actionSet.AddAction(bakeResult.SetVariable(index: nodeArrayLoop.Value, value: compressCurrentNodeArray.Get()));
             nodeArrayLoop.End();
-            Result = bakeResult.Get();
+            return bakeResult.Get();
         }
 
         Element GetMatcher(ActionSet actionSet)
@@ -93,7 +91,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             return _matcher;
         }
-    
+
         public static Element Create(Pathmap map, int[] attributes)
         {
             var nodeArray = new Element[map.Nodes.Length];
@@ -138,7 +136,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     .Select(segment => segment.Node1 == current ? segment.Node2 : segment.Node1)
                     // Only use the unvisited neighbors.
                     .Where(node => unvisited.Contains(node));
-                
+
                 foreach (var neighbor in neighbors)
                 {
                     var neighborAttributes = map.Attributes.Where(m => m.Node1 == neighbor && m.Node2 == current);
@@ -191,18 +189,18 @@ namespace Deltin.Deltinteger.Pathfinder
 
             if (addCurrentStringAfterLoop)
                 strings.Add(current);
-            
+
             return strings;
         }
-    
+
         static Encoding WorkshopEncoding => Encoding.Unicode;
         static char CharFromInt(int value)
         {
             var illegal = new[] { '\"', '\n', '\r', '\\', '{' };
 
-            for (int i = 0, c = 0;; i++)
+            for (int i = 0, c = 0; ; i++)
             {
-                char r = WorkshopEncoding.GetString(BitConverter.GetBytes(i + 1))[0]; 
+                char r = WorkshopEncoding.GetString(BitConverter.GetBytes(i + 1))[0];
 
                 if (illegal.Contains(r)) continue;
                 if (value == c) return r;

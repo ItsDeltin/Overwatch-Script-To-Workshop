@@ -166,7 +166,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // If so, go to the destination.
             Destination.GetVariable(player),
             // Otherwise, go to the current node.
-            PathmapInstance.Nodes.Get(_toWorkshop, PathmapReference.Get(player))[node]
+            PathmapInstance.Nodes.GetWithReference(_toWorkshop, PathmapReference.Get(player))[node]
         );
 
         /// <summary>The position of the current player: `Position Of(Event Player)`</summary>
@@ -237,7 +237,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element defaultSpeed = 5.5;
             Element nodeDistance = DistanceToNextNode.Get(player);
             Element timeSinceLastNode = Element.Part("Total Time Elapsed") - TimeSinceLastNode.Get(player);
-            
+
             Element isStuck = Element.Compare(
                 nodeDistance - ((defaultSpeed * scalar * timeSinceLastNode) / leniency),
                 Operator.LessThanOrEqual,
@@ -256,7 +256,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         /// <summary>Gets the next pathfinding attribute.</summary>
         Element GetCurrentSegmentAttribute(Element player) => Element.Map(Element.Filter(
-            PathmapInstance.Attributes.Get(_toWorkshop, PathmapReference.Get(player)),
+            PathmapInstance.Attributes.GetWithReference(_toWorkshop, PathmapReference.Get(player)),
             Element.And(
                 Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, Current.Get(player)),
                 Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1)
@@ -264,13 +264,13 @@ namespace Deltin.Deltinteger.Pathfinder
         ), Element.ZOf(Element.ArrayElement()));
 
         Element GetNextSegmentAttribute(Element player) => Element.Map(Element.Filter(
-            PathmapInstance.Attributes.Get(_toWorkshop, PathmapReference.Get(player)),
+            PathmapInstance.Attributes.GetWithReference(_toWorkshop, PathmapReference.Get(player)),
             Element.And(
                 Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[Current.Get(player)] - 1),
                 Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, ParentArray.Get(player)[ParentArray.Get(player)[Current.Get(player)] - 1] - 1)
             )
         ), Element.ZOf(Element.ArrayElement()));
-    
+
         /// <summary>Throttles the event player to the next node.</summary>
         public void ThrottleEventPlayerToNextNode(ActionSet actionSet)
         {

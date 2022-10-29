@@ -203,7 +203,24 @@ namespace Deltin.Deltinteger.Parse
         IWorkshopTree[] GetAllValues();
         BridgeGetStructValue Bridge(Func<BridgeArgs, IWorkshopTree> bridge) => new BridgeGetStructValue(this, bridge);
         BridgeGetStructValue BridgeArbritrary(Func<IWorkshopTree, IWorkshopTree> bridge) => Bridge(b => bridge(b.Value));
-        bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new NotImplementedException();
+        bool IWorkshopTree.EqualTo(IWorkshopTree other)
+        {
+            if (other is IStructValue otherStruct)
+            {
+                var values = GetAllValues();
+                var otherValues = otherStruct.GetAllValues();
+
+                if (values.Length != otherValues.Length)
+                    return false;
+
+                for (int i = 0; i < values.Length; i++)
+                    if (!values[i].EqualTo(otherValues[i]))
+                        return false;
+
+                return true;
+            }
+            return false;
+        }
         void IWorkshopTree.ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => throw new NotImplementedException();
 
         /// <summary>Flattens structs within an array of workshop values.</summary>

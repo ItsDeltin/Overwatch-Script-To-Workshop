@@ -9,7 +9,6 @@ namespace Deltin.Deltinteger.Parse
         string Name { get; }
         CodeType GetInstance();
         CodeType GetInstance(GetInstanceInfo instanceInfo);
-        bool BuiltInTypeMatches(Type type);
         CompletionItem GetCompletion();
     }
 
