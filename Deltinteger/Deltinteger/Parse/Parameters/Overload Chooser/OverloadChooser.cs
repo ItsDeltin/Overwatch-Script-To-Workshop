@@ -129,7 +129,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             // Check type arg count.
             if (_genericsProvided && _generics.Length != option.TypeArgCount)
                 match.IncorrectTypeArgCount(_parseInfo.TranslateInfo, _targetRange);
-            
+
             // Iterate through the option's parameters.
             for (int i = 0; i < inputParameters.Length; i++)
             {
@@ -199,6 +199,14 @@ namespace Deltin.Deltinteger.Parse.Overload
 
         private bool ExtractInferredGenerics(OverloadMatch match, CodeType parameterType, CodeType expressionType)
         {
+            // TODO
+            // If ostw was competently made, which it is not, this would never be null.
+            // ExpressionOrWorkshopValue will return null because it is created in contexts
+            // which it can't get references to built-in CodeTypes because I decided to make
+            // things as hard as possible.
+            if (expressionType == null)
+                return true;
+
             if (expressionType is UnknownLambdaType)
             {
                 // A second pass will be required.
@@ -225,7 +233,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                 else if (!expressionType.Is(typeLinker.Links[pat]))
                     match.InferSuccessful = result = false;
             }
-            
+
             // Recursively match generics.
             for (int i = 0; i < parameterType.Generics.Length; i++)
                 // Make sure the expression's type's structure is usable.
@@ -237,7 +245,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                 }
                 else if (parameterType.Generics[i].Attributes.ContainsGenerics)
                     match.InferSuccessful = result = false;
-            
+
             return result;
         }
 
@@ -275,7 +283,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                             bestOption.Option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo),
                             parameterValue.Type());
                 }
-                
+
                 // Update the inference status. Will be true if ExtractInferredGenerics returned true with every iteration.
                 secondPass = secondPass && bestOption.TypeArgLinkerCompleted;
 
@@ -286,7 +294,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                 if (!secondPass)
                     bestOption.TypeArgLinker = InstanceAnonymousTypeLinker.Empty;
             }
-            
+
             // Finalize lambdas
             for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
             {
@@ -355,7 +363,8 @@ namespace Deltin.Deltinteger.Parse.Overload
                 // Create the signature information.
                 signatureInformations[i] = new SignatureInformation()
                 {
-                    Label = overload.GetLabel(_parseInfo.TranslateInfo, new LabelInfo() {
+                    Label = overload.GetLabel(_parseInfo.TranslateInfo, new LabelInfo()
+                    {
                         IncludeDocumentation = false,
                         IncludeParameterNames = true,
                         IncludeParameterTypes = true,
@@ -468,18 +477,18 @@ namespace Deltin.Deltinteger.Parse.Overload
                 unknownLambdaType.ArgumentCount != portableParameterType.Parameters.Length) // The value lambda's parameter length does not match.
                 // Add the error.
                 _parameterErrors[parameter] = new($"Lambda does not take {unknownLambdaType.ArgumentCount} arguments", errorRange);
-            
+
             // Do not add other errors if the value's type is an UnknownLambdaType.
             else if (valueType is UnknownLambdaType == false)
             {
                 // The parameter type does not match.
                 if (parameterType.CodeTypeParameterInvalid(valueType))
                     _parameterErrors[parameter] = new(string.Format("Cannot convert type '{0}' to '{1}'", valueType.GetName(), parameterType.GetName()), errorRange);
-                
+
                 // fixme Constant used in bad place.
                 else if (valueType != null && parameterType == null && valueType.IsConstant())
                     _parameterErrors[parameter] = new($"The type '{valueType.Name}' cannot be used here", errorRange);
-                
+
                 // Ref parameter
                 else if (Option.Parameters[parameter].Attributes.Ref)
                 {
@@ -564,10 +573,10 @@ namespace Deltin.Deltinteger.Parse.Overload
                             Option.RestrictedValuesAreFatal
                         ));
         }
-    
+
         public void IncorrectTypeArgCount(DeltinScript deltinScript, DocRange range) =>
             Error("The function '" + Option.GetLabel(deltinScript, LabelInfo.OverloadError) + "' requires " + Option.TypeArgCount + " type arguments", range);
-                
+
         class OverloadMatchError
         {
             public string Message;

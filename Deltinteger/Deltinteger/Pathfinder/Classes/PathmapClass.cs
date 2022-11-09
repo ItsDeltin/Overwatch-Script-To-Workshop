@@ -199,8 +199,8 @@ namespace Deltin.Deltinteger.Pathfinder
             return (Element)containParameter.GetVariable();
         }
 
-        private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), new ExpressionOrWorkshopValue());
-        private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), new ExpressionOrWorkshopValue());
+        private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), new ExpressionOrWorkshopValue(Element.Null()));
+        private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), new ExpressionOrWorkshopValue(Element.Null()));
         private CodeParameter PrintProgress => new CodeParameter(
             "printProgress",
             new MarkupBuilder().Add("An action that is invoked with the progress of the bake. The value will be between 0 and 1, and will equal 1 when completed.")
@@ -260,7 +260,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The array of players to move.", _supplier.PlayerArray()),
                 new CodeParameter("destination", "The destination to move the players to.", _supplier.Vector()),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), new ExpressionOrWorkshopValue(workshopValue:null)),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), new ExpressionOrWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
