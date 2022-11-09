@@ -114,9 +114,9 @@ namespace Deltin.Deltinteger.Lobby
 
             // Add the settings.
             Add(new SwitchValue(isEnabled, true) { TitleResolver = enabledResolver });
-            Add(RangeValue.NewPercentage(generation, generationResolver, min:10, max:500));
-            Add(RangeValue.NewPercentage(passive, passiveGenerationResolver, min:0, max:500));
-            Add(RangeValue.NewPercentage(combat, combatGenerationResolver, min:0, max:500));
+            Add(RangeValue.NewPercentage(generation, generationResolver, min: 10, max: 500));
+            Add(RangeValue.NewPercentage(passive, passiveGenerationResolver, min: 0, max: 500));
+            Add(RangeValue.NewPercentage(combat, combatGenerationResolver, min: 0, max: 500));
 
             if (hasDuration)
             {
@@ -125,7 +125,7 @@ namespace Deltin.Deltinteger.Lobby
                 Add(InfiniteDuration);
             }
 
-            if (hasKnockback) Add(RangeValue.NewPercentage(knockback, min:0, max:500));
+            if (hasKnockback) Add(RangeValue.NewPercentage(knockback, min: 0, max: 500));
 
             return this;
         }
@@ -138,18 +138,18 @@ namespace Deltin.Deltinteger.Lobby
             if (hasCooldown)
             {
                 string cooldownTimeTitle = name + " Cooldown Time";
-                Add(RangeValue.NewPercentage(cooldownTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name), min:0, max:500));
+                Add(RangeValue.NewPercentage(cooldownTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name), min: 0, max: 500));
             }
 
             // If the ability has a knockback scalar, add the knockback option.
             if (hasKnockback)
             {
                 if (!selfKnockback)
-                    Add(RangeValue.NewPercentage(name + " Knockback Scalar", min:0, max:500));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar", min: 0, max: 500));
                 else
                 {
-                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Enemy)", min:0, max:300));
-                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Self)", min:0, max:300));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Enemy)", min: 0, max: 300));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Self)", min: 0, max: 300));
                 }
             }
 
@@ -157,12 +157,12 @@ namespace Deltin.Deltinteger.Lobby
             if (rechargeable)
             {
                 string rechargeRateTitle = name + " Recharge Rate";
-                Add(RangeValue.NewPercentage(rechargeRateTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name), min:0, max:500));
+                Add(RangeValue.NewPercentage(rechargeRateTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name), min: 0, max: 500));
 
                 if (!noMaximumTime)
                 {
                     string maximumTimeTitle = name + " Maximum Time";
-                    Add(RangeValue.NewPercentage(maximumTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name), min:20, max:500));
+                    Add(RangeValue.NewPercentage(maximumTimeTitle, new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name), min: 20, max: 500));
                 }
             }
             return this;
@@ -199,7 +199,7 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Barrier Shield", rechargeable: true).AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
                 new HeroSettingCollection("Cassidy").AddUlt("Deadeye").AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Magnetic Grenade").AddProjectile(true),
                 new HeroSettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", hasCooldown: false, rechargeable: true).AddRange("Call Mech Knockback Scalar", 0, 400).AddSwitch("Spawn Without Mech", false).RemoveAmmunition(),
-                new HeroSettingCollection("Doomfist").AddUlt("Meteor Strike", hasKnockback: true, hasDuration: true).AddProjectile(false).AddAbility("Power Block").AddAbility("Rocket Punch", hasKnockback: true).AddAbility("Seismic Slam").AddRange("Ammunition Regeneration Time Scalar", 33, 500).AddRange("Meteor Strike Knockback Scalar", 0, 300),
+                new HeroSettingCollection("Doomfist").AddUlt("Meteor Strike", hasKnockback: true, hasDuration: true).AddProjectile(false).AddAbility("Power Block").AddAbility("Rocket Punch", hasKnockback: true).AddAbility("Seismic Slam").AddRange("Ammunition Regeneration Time Scalar", 33, 500),
                 new HeroSettingCollection("Echo").AddUlt("Duplicate").AddProjectile(false).AddAbility("Flight").AddAbility("Focusing Beam").AddAbility("Glide", hasCooldown: false).AddAbility("Sticky Bombs"),
                 new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Swift Strike"),
                 new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrows").AddIntRange("Storm Arrows Quantity", false, 3, 12, 5),
