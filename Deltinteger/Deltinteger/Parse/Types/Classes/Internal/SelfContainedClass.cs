@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Workshop;
 
-namespace Deltin.Deltinteger.Parse
+namespace Deltin.Deltinteger.Parse.Types.Internal
 {
     public interface ISelfContainedClass
     {
@@ -48,10 +48,10 @@ namespace Deltin.Deltinteger.Parse
 
         public IEnumerable<Constructor> Constructors => constructors;
 
-        readonly ISelfContainedTypeMaker typeMaker;
+        readonly ISCTypeMaker typeMaker;
         readonly List<Constructor> constructors = new List<Constructor>();
 
-        public SetupSelfContainedClass(ISelfContainedTypeMaker typeMaker, CodeType typeInstance)
+        public SetupSelfContainedClass(ISCTypeMaker typeMaker, CodeType typeInstance)
         {
             this.typeMaker = typeMaker;
             TypeInstance = typeInstance;
@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
         public T Match<T>(Func<T> isClass, Func<T> isStruct) => typeMaker.Match(isClass, isStruct);
     }
 
-    public interface ISelfContainedTypeMaker
+    public interface ISCTypeMaker
     {
         ITypeVariable CreateObjectVariable(IVariableInstance variableInstance);
 
@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new SCClassInstance(deltinScript, typeInfo, this);
 
-        class SCClassInstance : ClassType, IGetMeta, ISelfContainedTypeMaker
+        class SCClassInstance : ClassType, IGetMeta, ISCTypeMaker
         {
             readonly ISelfContainedClass typeInfo;
             readonly List<ObjectVariable> objectVariables = new List<ObjectVariable>();
@@ -134,7 +134,12 @@ namespace Deltin.Deltinteger.Parse
 
             protected override void New(ActionSet actionSet, NewClassInfo classInfo) => typeInfo.New(actionSet, classInfo);
 
-            ITypeVariable ISelfContainedTypeMaker.CreateObjectVariable(IVariableInstance variableInstance)
+            public override bool Is(CodeType type)
+            {
+                return type is SCClassInstance other && typeInfo == other.typeInfo;
+            }
+
+            ITypeVariable ISCTypeMaker.CreateObjectVariable(IVariableInstance variableInstance)
             {
                 this._variables.Add(variableInstance);
                 var objectVariable = new ObjectVariable(this, variableInstance);
@@ -143,7 +148,7 @@ namespace Deltin.Deltinteger.Parse
                 return new SelfContainedClassVariable(objectVariable);
             }
 
-            IWorkshopTree ISelfContainedTypeMaker.CreateInstanceWithValues(ActionSet actionSet, params IWorkshopTree[] values)
+            IWorkshopTree ISCTypeMaker.CreateInstanceWithValues(ActionSet actionSet, params IWorkshopTree[] values)
             {
                 var reference = Create(actionSet, actionSet.DeltinScript.GetComponent<ClassData>());
 
@@ -153,19 +158,19 @@ namespace Deltin.Deltinteger.Parse
                 return reference.Get();
             }
 
-            T ISelfContainedTypeMaker.Match<T>(Func<T> isClass, Func<T> isStruct) => isClass();
+            T ISCTypeMaker.Match<T>(Func<T> isClass, Func<T> isStruct) => isClass();
 
-            void ISelfContainedTypeMaker.AddStaticMethod(FuncMethodBuilder builder)
+            void ISCTypeMaker.AddStaticMethod(FuncMethodBuilder builder)
             {
                 StaticScope.AddNativeMethod(builder.GetMethod());
             }
 
-            void ISelfContainedTypeMaker.AddObjectMethod(FuncMethodBuilder builder)
+            void ISCTypeMaker.AddObjectMethod(FuncMethodBuilder builder)
             {
                 ObjectScope.AddNativeMethod(builder.GetMethod());
             }
 
-            void ISelfContainedTypeMaker.AddStaticVariable(IVariableInstance variable)
+            void ISCTypeMaker.AddStaticVariable(IVariableInstance variable)
             {
                 StaticScope.AddNativeVariable(variable);
             }
@@ -189,7 +194,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class SCStructProvider : StructInitializer, ISelfContainedTypeMaker, IGetMeta
+    public class SCStructProvider : StructInitializer, ISCTypeMaker, IGetMeta
     {
         readonly ISelfContainedClass typeInfo;
         readonly DeltinScript deltinScript;
@@ -208,23 +213,23 @@ namespace Deltin.Deltinteger.Parse
 
         public override StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new StructInstance(this, typeLinker);
 
-        ITypeVariable ISelfContainedTypeMaker.CreateObjectVariable(IVariableInstance variableInstance)
+        ITypeVariable ISCTypeMaker.CreateObjectVariable(IVariableInstance variableInstance)
         {
             Variables.Add(variableInstance.Provider);
             return new SCStructVariable(variableInstance);
         }
 
-        IWorkshopTree ISelfContainedTypeMaker.CreateInstanceWithValues(ActionSet actionSet, params IWorkshopTree[] values)
+        IWorkshopTree ISCTypeMaker.CreateInstanceWithValues(ActionSet actionSet, params IWorkshopTree[] values)
         {
             var structValues = this.Variables.Zip(values, (var, value) => new { var.Name, value }).ToDictionary(v => v.Name, v => v.value);
             return new LinkedStructAssigner(structValues);
         }
 
-        T ISelfContainedTypeMaker.Match<T>(Func<T> isClass, Func<T> isStruct) => isStruct();
+        T ISCTypeMaker.Match<T>(Func<T> isClass, Func<T> isStruct) => isStruct();
 
-        void ISelfContainedTypeMaker.AddStaticMethod(FuncMethodBuilder builder) => StaticMethods.Add(builder.AsProvider(true));
-        void ISelfContainedTypeMaker.AddObjectMethod(FuncMethodBuilder builder) => Methods.Add(builder.AsProvider(false));
-        void ISelfContainedTypeMaker.AddStaticVariable(IVariableInstance variable) => StaticVariables.Add(variable.Provider);
+        void ISCTypeMaker.AddStaticMethod(FuncMethodBuilder builder) => StaticMethods.Add(builder.AsProvider(true));
+        void ISCTypeMaker.AddObjectMethod(FuncMethodBuilder builder) => Methods.Add(builder.AsProvider(false));
+        void ISCTypeMaker.AddStaticVariable(IVariableInstance variable) => StaticVariables.Add(variable.Provider);
 
         void IGetMeta.GetMeta()
         {

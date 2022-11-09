@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Parse.Types.Internal;
 
 namespace Deltin.Deltinteger.Pathfinder
 {

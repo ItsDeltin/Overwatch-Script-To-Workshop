@@ -1,4 +1,5 @@
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Parse.Types.Internal;
 using Deltin.Deltinteger.Elements;
 using static Deltin.Deltinteger.Elements.Element;
 

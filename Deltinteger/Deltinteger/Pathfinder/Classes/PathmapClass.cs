@@ -5,6 +5,7 @@ using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Parse.Lambda;
 using Deltin.Deltinteger.Parse.Workshop;
+using Deltin.Deltinteger.Parse.Types.Internal;
 using static Deltin.Deltinteger.Elements.Element;
 
 namespace Deltin.Deltinteger.Pathfinder
