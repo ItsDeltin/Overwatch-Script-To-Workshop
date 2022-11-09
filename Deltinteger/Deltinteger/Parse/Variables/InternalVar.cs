@@ -54,10 +54,13 @@ namespace Deltin.Deltinteger.Parse
             return this;
         }
         public void AddDefaultInstance(IScopeAppender scopeAppender) => scopeAppender.Add(this, Static);
-        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetGettableAssigner(new AssigningAttributes(Name, getAssigner.IsGlobal, false)
+        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetGettableAssigner(new AssigningAttributes()
         {
+            Name = (getAssigner.Tag ?? string.Empty) + Name,
+            IsGlobal = getAssigner.IsGlobal,
             StoreType = storeType
         });
+
         public bool CanBeAmbiguous() => Ambiguous;
     }
 }
