@@ -54,10 +54,10 @@ namespace Deltin.Deltinteger.Pathfinder
 
                 setup.AddStaticMethod(new FuncMethodBuilder()
                 {
-                    Name = "Load",
+                    Name = "LoadAll",
                     Documentation = "todo",
                     Parameters = new CodeParameter[] {
-                        new PathmapFileParameter("originalPathmapFile", "The original file of this pathmap.", types),
+                        new PathmapFileParameter("pathmapFile", "The pathmap file.", types),
                         new ConstIntegerArrayParameter("attributes", "todo", types, true),
                     },
                     ReturnType = setup.TypeInstance,
@@ -75,6 +75,56 @@ namespace Deltin.Deltinteger.Pathfinder
                             map.AttributesAsWorkshopData(), // Attributes variable
                             baked // Bake variable
                         );
+                    }
+                });
+
+                setup.AddStaticMethod(new FuncMethodBuilder()
+                {
+                    Name = "LoadNodes",
+                    Documentation = "todo",
+                    Parameters = new CodeParameter[] {
+                        new PathmapFileParameter("pathmapFile", "The pathmap file.", types),
+                    },
+                    ReturnType = types.VectorArray(),
+                    Action = (actionSet, methodCall) =>
+                    {
+                        // Get the pathmap.
+                        var map = (Pathmap)methodCall.AdditionalParameterData[0];
+                        return map.NodesAsWorkshopData();
+                    }
+                });
+
+                setup.AddStaticMethod(new FuncMethodBuilder()
+                {
+                    Name = "LoadAttributes",
+                    Documentation = "todo",
+                    Parameters = new CodeParameter[] {
+                        new PathmapFileParameter("pathmapFile", "The pathmap file.", types),
+                    },
+                    ReturnType = types.VectorArray(),
+                    Action = (actionSet, methodCall) =>
+                    {
+                        // Get the pathmap.
+                        var map = (Pathmap)methodCall.AdditionalParameterData[0];
+                        return map.AttributesAsWorkshopData();
+                    }
+                });
+
+                setup.AddStaticMethod(new FuncMethodBuilder()
+                {
+                    Name = "LoadBake",
+                    Documentation = "todo",
+                    Parameters = new CodeParameter[] {
+                        new PathmapFileParameter("pathmapFile", "The pathmap file.", types),
+                        new ConstIntegerArrayParameter("attributes", "todo", types, true),
+                    },
+                    ReturnType = types.Any(),
+                    Action = (actionSet, methodCall) =>
+                    {
+                        // Get the pathmap.
+                        var map = (Pathmap)methodCall.AdditionalParameterData[0];
+                        var attributes = ((List<int>)methodCall.AdditionalParameterData[1]).ToArray();
+                        return PathfindUtility.DecompressPathmap(actionSet, map, attributes);
                     }
                 });
             }).AsStruct(deltinScript);

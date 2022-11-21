@@ -58,7 +58,9 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = (getAssigner.Tag ?? string.Empty) + Name,
             IsGlobal = getAssigner.IsGlobal,
-            StoreType = storeType
+            StoreType = storeType,
+            ID = -1,
+            Extended = false
         });
 
         public bool CanBeAmbiguous() => Ambiguous;
