@@ -41,6 +41,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Moira", PlayerSelector.Moira),
             ("Orisa", PlayerSelector.Orisa),
             ("Pharah", PlayerSelector.Pharah),
+            ("Ramattra", PlayerSelector.Ramattra),
             ("Reaper", PlayerSelector.Reaper),
             ("Reinhardt", PlayerSelector.Reinhardt),
             ("Roadhog", PlayerSelector.Roadhog),
