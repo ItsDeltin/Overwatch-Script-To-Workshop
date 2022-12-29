@@ -7,6 +7,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public IEnumerable<StaticVariable> StaticVariables => _staticVariables;
         readonly List<StaticVariable> _staticVariables = new List<StaticVariable>();
+        private readonly GetVariablesAssigner defaultStaticAssigner = new GetVariablesAssigner(null as InstanceAnonymousTypeLinker);
 
         // Static variable with known value
         public void AddVariable(IVariable variable, IWorkshopTree value) =>
@@ -15,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         // User-defined static variable
         public void AddVariable(IVariable variable) =>
             _staticVariables.Add(new StaticVariable(variable, actionSet => actionSet.DeltinScript.DefaultIndexAssigner.Add(variable,
-                variable.GetDefaultInstance(null).GetAssigner().GetValue(
+                variable.GetDefaultInstance(null).GetAssigner(defaultStaticAssigner).GetValue(
                     new GettableAssignerValueInfo(actionSet)))));
 
         public void Init(DeltinScript deltinScript) { }
