@@ -671,5 +671,12 @@
       "Push",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "Shambali Monastery",
+    "GameModes": [
+      "Escort",
+      "Skirmish"
+    ]
   }
 ]
