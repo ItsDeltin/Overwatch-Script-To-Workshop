@@ -678,5 +678,12 @@
       "Escort",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "Antarctic Peninsula",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
   }
 ]
