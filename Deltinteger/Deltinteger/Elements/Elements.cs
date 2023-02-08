@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Elements
                     && ParameterValues[1] is Element re && re.Function.Name == "Left") vertex = new Vertex(0, 0, 0);
             else
             {
-                vertex = null;
+                vertex = Vertex.ZERO;
                 return false;
             }
             return true;
@@ -230,7 +230,9 @@ namespace Deltin.Deltinteger.Elements
         public static Element Break() => Part("Break");
         public static Element Continue() => Part("Continue");
         public static Element TimeElapsed() => Part("Total Time Elapsed");
-        public static Element Wait() => Part("Wait", Num(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"));
+        public static Element Wait() => Wait(Constants.MINIMUM_WAIT);
+        public static Element Wait(double duration) => Wait(Num(duration));
+        public static Element Wait(Element duration) => Part("Wait", duration, ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"));
         public static Element LoopIfConditionIsTrue() => Part("Loop If Condition Is True");
         public static Element XOf(IWorkshopTree expression) => Part("X Component Of", expression);
         public static Element YOf(IWorkshopTree expression) => Part("Y Component Of", expression);
@@ -255,6 +257,8 @@ namespace Deltin.Deltinteger.Elements
         public static Element CallSubroutine(Subroutine subroutine) => Element.Part("Call Subroutine", subroutine);
         public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyExecuting", restartRule ? "RestartRule" : "DoNothing"));
         public static Element SkipIf(Element condition, Element count) => Element.Part("Skip If", condition, count);
+        public static Element AllPlayers() => Element.Part("All Players");
+        public static Element SmallMessage(string message, params Element[] formats) => Part("Small Message", AllPlayers(), Element.CustomString(message, formats));
 
         public static Element Hud(
             IWorkshopTree players = null,

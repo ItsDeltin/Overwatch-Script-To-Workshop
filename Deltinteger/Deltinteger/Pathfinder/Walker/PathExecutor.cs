@@ -1,8 +1,5 @@
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.Parse.Lambda;
-using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Elements;
-using static Deltin.Deltinteger.Elements.Element;
 
 namespace Deltin.Deltinteger.Pathfinder.Walker
 {
@@ -17,7 +14,7 @@ namespace Deltin.Deltinteger.Pathfinder.Walker
 
     interface IPathExecutor
     {
-        void Pathfind(ActionSet actionSet, Element players, Element parentArray, Element destination);
+        void Pathfind(ExecutorArgs executorArgs);
     }
 
     class ClassReferenceRule : IPathRule
@@ -52,14 +49,14 @@ namespace Deltin.Deltinteger.Pathfinder.Walker
         // IPathExecutor
         record WithReferenceExecutor(ClassReferenceRule rules, Element reference) : IPathExecutor
         {
-            public void Pathfind(ActionSet actionSet, Element players, Element parentArray, Element destination)
+            public void Pathfind(ExecutorArgs executorArgs)
             {
                 // Set target's pathmap reference.
-                actionSet.AddAction(rules.pathmapReference.SetVariable(
+                executorArgs.ActionSet.AddAction(rules.pathmapReference.SetVariable(
                     value: reference,
-                    targetPlayer: players
+                    targetPlayer: executorArgs.Players
                 ));
-                rules.instance.Pathfind(actionSet, players, parentArray, destination);
+                rules.instance.Pathfind(executorArgs);
             }
         }
     }
@@ -78,9 +75,9 @@ namespace Deltin.Deltinteger.Pathfinder.Walker
             instance.Setup(this);
         }
 
-        public void Pathfind(ActionSet actionSet, Element players, Element parentArray, Element destination)
+        public void Pathfind(ExecutorArgs executorArgs)
         {
-            instance.Pathfind(actionSet, players, parentArray, destination);
+            instance.Pathfind(executorArgs);
         }
 
         Element IPathRule.GetNodeArray(Element player) => (Element)((IStructValue)Source).GetValue(BakemapStruct.NODES_VAR_NAME);

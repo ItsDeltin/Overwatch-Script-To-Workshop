@@ -33,11 +33,10 @@ namespace Deltin.Deltinteger.Pathfinder
                     },
                     Action = (actionSet, methodCall) =>
                     {
-                        var nodeArray = nodesVariable.Get(actionSet);
+                        var nodes = nodesVariable.Get(actionSet);
                         var players = methodCall.Get(0);
                         var destination = methodCall.Get(1);
-
-                        var destinationNode = PathfindUtility.GetBakemapTargetNode(nodeArray, destination);
+                        var bake = bakeVariable.Get(actionSet);
 
                         var pathExecutorComponent = actionSet.DeltinScript.GetComponent<PathExecutorComponent>();
                         var pathExecutor = setup.Match(
@@ -45,9 +44,8 @@ namespace Deltin.Deltinteger.Pathfinder
                             isStruct: () => pathExecutorComponent.StructExecutor(actionSet.CurrentObject)
                         );
 
-                        var parentArray = bakeVariable.Get(actionSet)[destinationNode];
-
-                        pathExecutor.Pathfind(actionSet, players, parentArray, destination);
+                        var args = new ExecutorArgs(actionSet, players, bake, nodes, destination);
+                        pathExecutor.Pathfind(args);
                         return null;
                     }
                 });
@@ -71,7 +69,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
                         return setup.CreateInstanceWithValues(
                             actionSet,
-                            map.NodesAsWorkshopData(), // Nodes variable
+                            map.NodesAsWorkshopDataWithEncodedIndex(), // Nodes variable
                             map.AttributesAsWorkshopData(), // Attributes variable
                             baked // Bake variable
                         );
@@ -90,7 +88,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     {
                         // Get the pathmap.
                         var map = (Pathmap)methodCall.AdditionalParameterData[0];
-                        return map.NodesAsWorkshopData();
+                        return map.NodesAsWorkshopDataWithEncodedIndex();
                     }
                 });
 

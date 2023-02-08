@@ -18,7 +18,9 @@ namespace Deltin.Deltinteger.Assets
                     if (line.Vertex1.X == line.Vertex2.X &&
                         line.Vertex1.Z == line.Vertex2.Z)
                     {
-                        line.Vertex2.X += 0.0001;
+                        // todo: this won't compile because Vertex2 is a property.
+                        // This code is currently unused so I will not bother fixing it right now.
+                        // line.Vertex2.X += 0.0001;
                     }
 
             Lines = addLines.ToArray();

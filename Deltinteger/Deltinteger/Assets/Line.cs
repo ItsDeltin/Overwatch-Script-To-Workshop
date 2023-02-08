@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Assets
 
         public object Clone()
         {
-            return new Line((Vertex)Vertex1.Clone(), (Vertex)Vertex2.Clone());
+            return new Line(Vertex1, Vertex2);
         }
 
         public static void RemoveDuplicateLines(List<Line> lines)

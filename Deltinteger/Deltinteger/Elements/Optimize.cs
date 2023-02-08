@@ -587,7 +587,7 @@ namespace Deltin.Deltinteger.Elements
                 );
 
             // Multiply vector and number
-            Vertex mVertexB = null;
+            Vertex mVertexB = Vertex.ZERO;
             if ((a.TryGetConstant(out Vertex mVertexA) && bAsNumber != null) || (aAsNumber != null && b.TryGetConstant(out mVertexB)))
             {
                 Vertex vector = bAsNumber != null ? mVertexA : mVertexB;

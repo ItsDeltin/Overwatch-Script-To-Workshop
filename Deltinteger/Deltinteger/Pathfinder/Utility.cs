@@ -20,6 +20,17 @@ namespace Deltin.Deltinteger.Pathfinder
             );
         }
 
+        public static Element GetEncodedTargetNode(Element nodes, Element destination)
+        {
+            return FirstOf(Map(
+                CreateArray(FirstOf(Sort(
+                    nodes,
+                    DistanceBetween(ArrayElement(), destination)
+                ))),
+                (ArrayElement() * 100 - RoundToInt(ArrayElement() * 100, Rounding.Down)) * 100
+            ));
+        }
+
         public static Element CompressedBakemapFromPathmapAndAttributes(Pathmap pathmap, int[] attributes)
             => Cache.CacheWatcher.Global.Get<Element>(new CompressedBakeCacheObject(pathmap, attributes));
 

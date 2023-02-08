@@ -161,9 +161,32 @@ namespace Deltin.Deltinteger.Pathfinder
         public Element NodesAsWorkshopData() => Element.CreateArray(
             Nodes.Select(node => node.ToVector()).ToArray()
         );
+
+        /// <summary>Gets the nodes as an array of workshop vectors.</summary>
+        /// <returns>The Y component of each vector will have the index of the node encoded inside it.
+        /// The first 3 decimal places will be part of the actual value, then the next 3 will contain the index.
+        /// For example if node #6 is { 10.2, 56.6572, 39 }, it would be turned into `{ 10.2, 56.657006, 39 }`
+        /// 
+        /// This won't work if the number of nodes exceed 1000, but most maps won't reach even a third of that.</returns>
+        public Element NodesAsWorkshopDataWithEncodedIndex() => Element.CreateArray(
+            Nodes.Select((node, i) =>
+            {
+                // Limit actual value to 3 decimal places.
+                node.Y = Math.Truncate(node.Y * 1000) / 1000;
+                // Encode index in the 4th, 5th, and 6th decimal places.
+                node.Y += (double)i / 1000000;
+                // todo: can double imprecisions occur? Do we need to switch to decimal?
+                // A potential solution would be to create a special Element that behaves
+                // exactly like 'num' but with the decimal type.
+
+                return node.ToVector();
+            }).ToArray()
+        );
+
         public Element SegmentsAsWorkshopData() => Element.CreateArray(
             Segments.Select(segment => segment.AsWorkshopData()).ToArray()
         );
+
         public Element AttributesAsWorkshopData() => Element.CreateArray(
             Attributes.Select(attribute => attribute.AsWorkshopData()).ToArray()
         );

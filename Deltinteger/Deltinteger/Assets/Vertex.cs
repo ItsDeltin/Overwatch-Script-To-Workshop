@@ -5,17 +5,19 @@ using Newtonsoft.Json;
 
 namespace Deltin.Deltinteger.Assets
 {
-    public class Vertex : ICloneable
+    public struct Vertex
     {
+        public static readonly Vertex ZERO = new Vertex();
+
         [XmlAttribute]
-        public double X { get; set; }
+        public double X;
         [XmlAttribute]
-        public double Y { get; set; }
+        public double Y;
         [XmlAttribute]
-        public double Z { get; set; }
+        public double Z;
         [XmlIgnore]
         [JsonIgnore]
-        public double W { get; set; }
+        public double W;
 
         public Vertex(double x, double y, double z, double w)
         {
@@ -80,17 +82,8 @@ namespace Deltin.Deltinteger.Assets
             Z += z;
         }
 
-        public object Clone()
-        {
-            return new Vertex(X, Y, Z, W);
-        }
-
         public static double GetAngle(Vertex a, Vertex b, Vertex c)
         {
-            if (a == null) throw new ArgumentNullException("a");
-            if (b == null) throw new ArgumentNullException("b");
-            if (c == null) throw new ArgumentNullException("c");
-
             double[] ab = { b.X - a.X, b.Y - a.Y, b.Z - a.Z };
             double[] bc = { c.X - b.X, c.Y - b.Y, c.Z - b.Z };
 

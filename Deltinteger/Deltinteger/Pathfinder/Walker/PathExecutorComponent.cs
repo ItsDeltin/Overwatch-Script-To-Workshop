@@ -161,12 +161,16 @@ namespace Deltin.Deltinteger.Pathfinder.Walker
             TranslateRule next = new TranslateRule(DeltinScript, "Pathfinder: Resolve Next (" + id + ")", RuleEvent.OngoingPlayer);
             next.Conditions.Add(new Condition(pec.CurrentPathmapExecutorID.Get(), Operator.Equal, Num(id)));
             next.Conditions.Add(NodeReachedCondition(next.ActionSet));
-            // TODO: parent array check is wierd
+            // TODO: parent array check is weird
             // next.Conditions.Add(new Condition(pec.ParentArray.Get(), Operator.NotEqual, Element.Null()));
+
+            // TODO: Remove later. For debugging.
+            next.ActionSet.AddAction(SmallMessage("Executing 'Resolve Next' rule"));
 
             SetNextNode(next.ActionSet, EventPlayer());
 
             // Loop the next rule if the condition is true.
+            next.ActionSet.AddAction(Wait(0.5));
             next.ActionSet.AddAction(LoopIfConditionIsTrue());
 
             // Add rule
@@ -311,19 +315,19 @@ namespace Deltin.Deltinteger.Pathfinder.Walker
         public void ActivateGetCurrentNodeRule(ActionSet actionSet, Element players) =>
             actionSet.AddAction(pec.DoGetCurrent.SetVariable(value: Element.True(), targetPlayer: players));
 
-        public void Pathfind(ActionSet actionSet, Element players, Element parentArray, Element destination)
+        public void Pathfind(ExecutorArgs executorArgs)
         {
             // Set the executor ID.
-            pec.CurrentPathmapExecutorID.Set(actionSet, Num(id), players);
+            pec.CurrentPathmapExecutorID.Set(executorArgs.ActionSet, Num(id), executorArgs.Players);
 
             // Set target's parent array.
-            pec.ParentArray.Set(actionSet, parentArray, players);
+            pec.ParentArray.Set(executorArgs.ActionSet, PathfindUtility.GetEncodedTargetNode(executorArgs.Nodes, executorArgs.Destination), executorArgs.Players);
 
             // Set target's destination.
-            pec.Destination.Set(actionSet, destination, players);
+            pec.Destination.Set(executorArgs.ActionSet, executorArgs.Destination, executorArgs.Players);
 
             // Activate the rule that gets the current node.
-            ActivateGetCurrentNodeRule(actionSet, players);
+            ActivateGetCurrentNodeRule(executorArgs.ActionSet, executorArgs.Players);
         }
 
         /// <summary>Stops pathfinding for the specified players.</summary>
