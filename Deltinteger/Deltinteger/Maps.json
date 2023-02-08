@@ -671,5 +671,19 @@
       "Push",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "Shambali Monastery",
+    "GameModes": [
+      "Escort",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Antarctic Peninsula",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
   }
 ]

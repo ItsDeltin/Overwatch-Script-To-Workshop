@@ -7041,6 +7041,10 @@
     "Map": [
       "Ayutthaya",
       {
+        "name": "Antarctic Peninsula",
+        "alias": "Antarctic_Peninsula"
+      },
+      {
         "name": "Black Forest",
         "alias": "Black_Forest"
       },
@@ -7221,6 +7225,10 @@
       {
         "name": "Route 66",
         "alias": "Route_66"
+      },
+      {
+        "name": "Shambali Monastery",
+        "alias": "Shambali_Monastery"
       },
       {
         "name": "Sydney Harbour Arena",
