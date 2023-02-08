@@ -96,6 +96,12 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetThisType(IDefinedTypeInitializer typeInitializer) => new ParseInfo(this) { TypeInitializer = typeInitializer };
         public ParseInfo SetContextualModifierGroup(VariableModifierGroup modifierGroup) => new ParseInfo(this) { ContextualVariableModifiers = modifierGroup };
         public ParseInfo SetReturnTracker(ReturnTracker returnTracker) => new ParseInfo(this) { ReturnTracker = returnTracker };
+        public ParseInfo ClearExpectations() => new ParseInfo(this)
+        {
+            ExpectingType = null,
+            ExpectingLambda = null,
+            ReturnType = null
+        };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>

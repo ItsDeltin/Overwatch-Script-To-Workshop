@@ -142,8 +142,12 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public void Finalize(PortableLambdaType expecting)
         {
+            // Todo: Standardize compiler bug errors.
+            if (expecting == null)
+                _parseInfo.Script.Diagnostics.Error("<Compiler error> Second pass finalized with no value", _context.Arrow.Range);
+
             // Check if the current lambda implements the expected type.
-            if (!LambdaType.Implements(expecting))
+            else if (!LambdaType.Implements(expecting))
                 _parseInfo.Script.Diagnostics.Error("Expected lambda of type '" + expecting.GetName() + "'", _context.Arrow.Range);
         }
 
@@ -194,16 +198,17 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             return actionSet;
         }
-        
+
         private IWorkshopTree OutputContant(VarIndexAssigner lambdaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             ReturnHandler returnHandler = new ReturnHandler(
                 actionSet,
                 ReturnType?.GetGettableAssigner(new AssigningAttributes("lambda", actionSet.IsGlobal, false))
-                           .GetValue(new GettableAssignerValueInfo(actionSet) {
+                           .GetValue(new GettableAssignerValueInfo(actionSet)
+                           {
                                SetInitialValue = SetInitialValue.DoNotSet,
                                Inline = !MultiplePaths
-                            }),
+                           }),
                 MultiplePaths);
             actionSet = AssignContainedParameters(lambdaAssigner, actionSet, parameterValues).New(returnHandler);
 

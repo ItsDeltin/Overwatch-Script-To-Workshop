@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (Attributes.Ref) result = "ref ";
             else if (Attributes.In) result = "in ";
-            
+
             result += labelInfo.NameFromSolver(deltinScript, _type) + " " + Name;
             if (DefaultValue != null) result = "[" + result + "]";
             return result;
@@ -186,11 +186,11 @@ namespace Deltin.Deltinteger.Parse
 
         public ExpressionOrWorkshopValue(IExpression expression)
         {
-            Expression = expression;
+            Expression = expression ?? throw new ArgumentNullException(nameof(expression));
         }
         public ExpressionOrWorkshopValue(IWorkshopTree workshopValue)
         {
-            WorkshopValue = workshopValue;
+            WorkshopValue = workshopValue ?? throw new ArgumentNullException(nameof(workshopValue));
         }
         public ExpressionOrWorkshopValue() { }
 

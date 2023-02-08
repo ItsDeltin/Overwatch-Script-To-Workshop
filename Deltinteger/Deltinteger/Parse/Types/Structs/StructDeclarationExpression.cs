@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
                 if (_isExplicit && _context.Values[i].Type == null)
                     _parseInfo.Script.Diagnostics.Error("Inconsistent struct value usage; value types must be all explicit or all implicit", _context.Values[i].Identifier.Range);
 
-                ParseInfo variableParseInfo = _parseInfo;
+                ParseInfo variableParseInfo = _parseInfo.ClearExpectations();
 
                 // Is there an expected struct type in the current context?
                 if (expectingStruct != null)

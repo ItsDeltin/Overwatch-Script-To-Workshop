@@ -85,8 +85,7 @@
       "Escort",
       "Skirmish",
       "Deathmatch",
-      "Team Deathmatch",
-      "Bounty Hunter"
+      "Team Deathmatch"
     ]
   },
   {
@@ -670,6 +669,20 @@
     "Name": "Esperança",
     "GameModes": [
       "Push",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Shambali Monastery",
+    "GameModes": [
+      "Escort",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Antarctic Peninsula",
+    "GameModes": [
+      "Control",
       "Skirmish"
     ]
   }

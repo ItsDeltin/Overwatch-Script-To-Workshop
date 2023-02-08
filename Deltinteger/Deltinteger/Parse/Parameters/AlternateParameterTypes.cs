@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly string _elementKindName;
 
         protected ConstArrayParameter(ICodeTypeSolver type, string elementKindName, string name, MarkupBuilder documentation, bool optional = false)
-            : base(name, documentation, type, optional ? new ExpressionOrWorkshopValue() : null)
+            : base(name, documentation, type, optional ? new ExpressionOrWorkshopValue(Element.EmptyArray()) : null)
         {
             _elementKindName = elementKindName;
         }
