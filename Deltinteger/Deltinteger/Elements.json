@@ -7039,6 +7039,10 @@
     ],
     "ThrottleRev": ["Direction And Magnitude", "None"],
     "Map": [
+      {
+        "name": "Antarctic Peninsula",
+        "alias": "Antarctic_Peninsula"
+      }
       "Ayutthaya",
       {
         "name": "Black Forest",

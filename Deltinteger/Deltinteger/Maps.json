@@ -671,5 +671,11 @@
       "Push",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "Antarctic Peninsula",
+    "GameModes": [
+      "Control"
+    ]
   }
 ]
