@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             return new GettableAssignerResult(new StructAssignerValue(values), null);
         }
 
-        public LinkedStructAssigner GetValues(ActionSet actionSet)
+        public LinkedStructValue GetValues(ActionSet actionSet)
         {
             // Create an array linking variable names and their values.
             var values = new Dictionary<string, IWorkshopTree>();
@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var variable in _variables)
                 values.Add(variable.Name, variable.GetAssigner(new(actionSet)).GetValue(new GettableAssignerValueInfo(actionSet) { Inline = true }).GetVariable());
 
-            return new LinkedStructAssigner(values);
+            return new LinkedStructValue(values);
         }
 
         public IGettable AssignClassStacks(GetClassStacks info)
@@ -109,12 +109,9 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class StructAssignerValue : IGettable, IAssignedStructDictionary
+    class StructAssignerValue : IGettable, IStructValue
     {
         private readonly Dictionary<string, IGettable> _children;
-        IGettable[] IAssignedStructDictionary.ChildGettables => _children.Select(c => c.Value).ToArray();
-        IWorkshopTree IInlineStructDictionary.this[string variableName] => _children[variableName].GetVariable();
-        IGettable IAssignedStructDictionary.this[string variableName] => _children[variableName];
         IWorkshopTree IStructValue.GetValue(string variableName) => _children[variableName].GetVariable();
         IGettable IStructValue.GetGettable(string variableName) => _children[variableName];
 
@@ -123,9 +120,12 @@ namespace Deltin.Deltinteger.Parse
             _children = children;
         }
 
-        public IWorkshopTree GetVariable(Element eventPlayer = null) => this;
+        // *** IGettable ***
 
-        public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
+        // Encode target player into struct.
+        IWorkshopTree IGettable.GetVariable(Element eventPlayer) => new TargetPlayerStruct(eventPlayer, this);
+
+        void IGettable.Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
         {
             var structValue = StructHelper.ExtractStructValue(value);
 
@@ -133,7 +133,7 @@ namespace Deltin.Deltinteger.Parse
                 child.Value.Set(actionSet, structValue.GetValue(child.Key), target, index);
         }
 
-        public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
+        void IGettable.Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
         {
             switch (operation)
             {
@@ -151,7 +151,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public void Push(ActionSet actionSet, IWorkshopTree value)
+        void IGettable.Push(ActionSet actionSet, IWorkshopTree value)
         {
             var structValue = StructHelper.ExtractStructValue(value);
 
@@ -159,13 +159,13 @@ namespace Deltin.Deltinteger.Parse
                 child.Value.Push(actionSet, structValue.GetValue(child.Key));
         }
 
-        public void Pop(ActionSet actionSet)
+        void IGettable.Pop(ActionSet actionSet)
         {
             foreach (var child in _children)
                 child.Value.Pop(actionSet);
         }
 
-        public IGettable ChildFromClassReference(IWorkshopTree reference)
+        IGettable IGettable.ChildFromClassReference(IWorkshopTree reference)
         {
             var values = new Dictionary<string, IGettable>();
 
@@ -175,11 +175,48 @@ namespace Deltin.Deltinteger.Parse
             return new StructAssignerValue(values);
         }
 
-        public bool CanBeSet() => _children.All(c => c.Value.CanBeSet());
+        bool IGettable.CanBeSet() => _children.All(c => c.Value.CanBeSet());
 
-        public IWorkshopTree GetArbritraryValue() => _children.First().Value.GetVariable();
+        // *** IStructValue ***
+        IWorkshopTree IStructValue.GetArbritraryValue() => GetArbritraryGettable().GetVariable();
 
-        public IWorkshopTree[] GetAllValues() => IStructValue.ExtractAllValues(_children.Select(child => child.Value.GetVariable()));
+        IWorkshopTree[] IStructValue.GetAllValues() => GetAllValuesWithTarget(null);
+
+        private IGettable GetArbritraryGettable() => _children.First().Value;
+        private IWorkshopTree[] GetAllValuesWithTarget(Element target) => IStructValue.ExtractAllValues(_children.Select(child => child.Value.GetVariable(target)));
+
+        /// <summary>Targets a player struct variable with a known player.</summary>
+        class TargetPlayerStruct : IStructValue
+        {
+            readonly StructAssignerValue _parent;
+            readonly Element _target;
+
+            public TargetPlayerStruct(Element target, StructAssignerValue parent) => (_parent, _target) = (parent, target);
+
+            // Wrap the parent with the known target.
+            public IWorkshopTree[] GetAllValues() => _parent.GetAllValuesWithTarget(this._target);
+            public IWorkshopTree GetArbritraryValue() => _parent.GetArbritraryGettable().GetVariable(_target);
+            public IGettable GetGettable(string variableName) => new TargetGettable(_parent._children[variableName], _target);
+            public IWorkshopTree GetValue(string variableName) => _parent._children[variableName].GetVariable(_target);
+
+            // Wraps an IGettable with a known target.
+            class TargetGettable : IGettable
+            {
+                readonly IGettable _parent;
+                readonly Element _target;
+
+                public TargetGettable(IGettable parent, Element target) => (_parent, _target) = (parent, target);
+
+                public bool CanBeSet() => _parent.CanBeSet();
+                public IGettable ChildFromClassReference(IWorkshopTree reference) => new TargetGettable(_parent.ChildFromClassReference(reference), _target);
+                public IWorkshopTree GetVariable(Element eventPlayer = null) => _parent.GetVariable(_target);
+                public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, params Element[] index) =>
+                    _parent.Modify(actionSet, operation, value, _target, index);
+                public void Pop(ActionSet actionSet) => _parent.Pop(actionSet);
+                public void Push(ActionSet actionSet, IWorkshopTree value) => _parent.Push(actionSet, value);
+                public void Set(ActionSet actionSet, IWorkshopTree value, Element target, params Element[] index) => _parent.Set(actionSet, value, _target, index);
+            }
+        }
     }
 
     /*
@@ -234,30 +271,16 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    /// <summary>The interface for variable-linked struct values. 'this[variableName]' will get the struct variable's value.</summary>
-    public interface IInlineStructDictionary : IStructValue
-    {
-        IWorkshopTree this[string variableName] { get; }
-    }
-
-    /// <summary>A struct value that has assigned indices.</summary>
-    public interface IAssignedStructDictionary : IInlineStructDictionary
-    {
-        IGettable[] ChildGettables { get; }
-        new IGettable this[string variableName] { get; }
-    }
-
     /// <summary>Struct variables linked to workshop values.</summary>
-    public class LinkedStructAssigner : IInlineStructDictionary
+    public class LinkedStructValue : IStructValue
     {
         public Dictionary<string, IWorkshopTree> Values { get; }
-        public IWorkshopTree this[string variableName] => Values[variableName];
         public IWorkshopTree GetValue(string variableName) => Values[variableName];
         public IWorkshopTree GetArbritraryValue() => Values.First().Value;
         public IWorkshopTree[] GetAllValues() => IStructValue.ExtractAllValues(Values.Select(v => v.Value));
         public IGettable GetGettable(string variableName) => new WorkshopElementReference(Values[variableName]);
 
-        public LinkedStructAssigner(Dictionary<string, IWorkshopTree> values)
+        public LinkedStructValue(Dictionary<string, IWorkshopTree> values)
         {
             Values = values;
         }
