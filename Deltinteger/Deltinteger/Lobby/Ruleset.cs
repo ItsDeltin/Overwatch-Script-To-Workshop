@@ -560,7 +560,9 @@ namespace Deltin.Deltinteger.Lobby
         {
             RootSchema schema = new RootSchema(Title).InitProperties();
             schema.AdditionalProperties = false;
-            foreach (var value in this) schema.Properties.Add(value.Name, value.GetSchema(generate));
+            foreach (var value in this)
+                if (!schema.Properties.ContainsKey(value.Name))
+                    schema.Properties.Add(value.Name, value.GetSchema(generate));
             return schema;
         }
 

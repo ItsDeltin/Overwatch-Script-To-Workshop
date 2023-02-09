@@ -109,6 +109,8 @@ namespace Deltin.Deltinteger.Lobby
             value = null;
             return false;
         }
+
+        public override string ToString() => "[Select] " + Name;
     }
 
     /// <summary>Boolean lobby setting.</summary>
@@ -172,6 +174,8 @@ namespace Deltin.Deltinteger.Lobby
             else if (SwitchType == SwitchType.YesNo) return "No";
             else return "Disabled";
         }
+
+        public override string ToString() => "[Switch] " + Name;
     }
 
     /// <summary>Number range lobby setting.</summary>
@@ -265,9 +269,12 @@ namespace Deltin.Deltinteger.Lobby
         }
 
         public static RangeValue NewPercentage(string name, double min, double max, double defaultValue = 100) => new RangeValue(false, true, name, min, max, defaultValue);
-        public static RangeValue NewPercentage(string name, AbilityNameResolver title, double min, double max, double defaultValue = 100) => new RangeValue(false, true, name, min, max, defaultValue) {
+        public static RangeValue NewPercentage(string name, AbilityNameResolver title, double min, double max, double defaultValue = 100) => new RangeValue(false, true, name, min, max, defaultValue)
+        {
             TitleResolver = title
         };
+
+        public override string ToString() => "[Range] " + Name;
     }
 
     enum SwitchType
