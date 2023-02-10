@@ -1,7 +1,87 @@
+using Deltin.Deltinteger.LanguageServer;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
+    static class VariableMaker
+    {
+        public static IVariable New(string name, CodeType type) =>
+            new GenericVariableProvider(name, type, VariableType.Dynamic, false);
+
+        public static IVariable NewStatic(string name, CodeType type) =>
+            new GenericVariableProvider(name, type, VariableType.Dynamic, true);
+
+        public static IVariable NewPropertyLike(string name, CodeType type) =>
+            new GenericVariableProvider(name, type, VariableType.ElementReference, false);
+
+        public static IVariable NewUnambiguousPropertyLike(string name, CodeType type) =>
+            new GenericVariableProvider(name, type, VariableType.ElementReference, false)
+            {
+                CanBeAmbiguous = false
+            };
+
+        class GenericVariableProvider : IVariable
+        {
+            public string Name { get; }
+            public VariableType VariableType { get; }
+            readonly CodeType type;
+            readonly bool isStatic;
+            readonly MarkupBuilder documentation = new MarkupBuilder();
+            public bool CanBeAmbiguous { get; init; }
+
+            public GenericVariableProvider(string name, CodeType type, VariableType variableType, bool isStatic)
+            {
+                Name = name;
+                VariableType = variableType;
+                this.type = type;
+                this.isStatic = isStatic;
+            }
+
+            public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
+            {
+                var instance = GetInstance(scopeHandler.DefinedIn(), genericsLinker);
+                scopeHandler.Add(instance, isStatic);
+                return instance;
+            }
+
+            public IVariableInstance GetDefaultInstance(CodeType definedIn) =>
+                GetInstance(definedIn, InstanceAnonymousTypeLinker.Empty);
+
+            public IVariableInstance GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker) =>
+                new GenericVariableInstance(this, definedIn, type.GetRealType(genericsLinker));
+
+            class GenericVariableInstance : IVariableInstance,
+                IAmbiguityCheck // Note: IAmbiguityCheck should be redesigned.
+            {
+                public string Name => provider.Name;
+                public IVariable Provider => provider;
+                public MarkupBuilder Documentation => provider.documentation;
+                public IVariableInstanceAttributes Attributes { get; }
+                public ICodeTypeSolver CodeType => type;
+                public bool WholeContext { get; } = true; // ?
+                public Location DefinedAt { get; } = null;
+                public AccessLevel AccessLevel { get; } = AccessLevel.Public;
+
+                readonly GenericVariableProvider provider;
+                readonly CodeType type;
+
+                public GenericVariableInstance(GenericVariableProvider provider, CodeType definedIn, CodeType type)
+                {
+                    this.provider = provider;
+                    this.type = type;
+
+                    var attributes = new VariableInstanceAttributes();
+                    attributes.ContainingType = definedIn;
+                    Attributes = attributes;
+                }
+
+                public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner = default) => type.GetGettableAssigner(new AssigningAttributes());
+
+                public bool CanBeAmbiguous() => provider.CanBeAmbiguous;
+            }
+        }
+    }
+
     public class InternalVar : IVariable, IVariableInstance, IAmbiguityCheck
     {
         public string Name { get; }

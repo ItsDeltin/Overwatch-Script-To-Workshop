@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Empty linker.
-        public InstanceAnonymousTypeLinker() {}
+        public InstanceAnonymousTypeLinker() { }
 
         // Extracts an array of type values from an array of type-args.
         // An exception will be thrown if a provided type-arg is not contained in the 'Links' dictionary.
@@ -29,7 +29,12 @@ namespace Deltin.Deltinteger.Parse
         public CodeType[] SafeTypeArgsFromAnonymousTypes(AnonymousType[] anonymousTypes) => (from a in anonymousTypes select Links.TryGetValue(a, out var value) ? value : a).ToArray();
 
         // Adds a link between a type-arg and a type-value.
-        public void Add(AnonymousType typeArg, CodeType typeValue) => Links.Add(typeArg, typeValue);
+        // Will return itself.
+        public InstanceAnonymousTypeLinker Add(AnonymousType typeArg, CodeType typeValue)
+        {
+            Links.Add(typeArg, typeValue);
+            return this;
+        }
 
         // Determines if the type linker is compatible with another.
         public bool Compatible(InstanceAnonymousTypeLinker other)
@@ -37,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var link in Links)
                 if (!(other.Links.TryGetValue(link.Key, out var otherPairedWith) && link.Value.CompatibleWith(otherPairedWith)))
                     return false;
-            
+
             return true;
         }
 
