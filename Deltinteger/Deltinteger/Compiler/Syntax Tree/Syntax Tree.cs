@@ -13,10 +13,10 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
 
-		    public List<TypeAliasContext> TypeAliases {get; } = new List<TypeAliasContext>();
+        public List<TypeAliasContext> TypeAliases { get; } = new List<TypeAliasContext>();
 
-        public List<Token> PlayervarReservations {get; } = new List<Token>();
-        public List<Token> GlobalvarReservations {get; } = new List<Token>();
+        public List<Token> PlayervarReservations { get; } = new List<Token>();
+        public List<Token> GlobalvarReservations { get; } = new List<Token>();
 
         public List<Hook> Hooks { get; } = new List<Hook>();
         public List<TokenCapture> NodeCaptures { get; set; }
@@ -261,7 +261,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Identifier { get; }
         public List<TypeArgContext> TypeArguments { get; }
         public List<VariableDeclaration> Parameters { get; }
-        
+
         // Block
         public Block Block { get; }
         public Token GlobalVar { get; }
@@ -342,17 +342,18 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }
-	
-	public class TypeAliasContext : Node
-	{
-		public Token NewTypeName;
-		public IParseType OtherType;
 
-		public TypeAliasContext(Token newTypeName, IParseType otherType) {
-			NewTypeName = newTypeName;
-			OtherType = otherType;
-		}
-	}
+    public class TypeAliasContext : Node
+    {
+        public Token NewTypeName;
+        public IParseType OtherType;
+
+        public TypeAliasContext(Token newTypeName, IParseType otherType)
+        {
+            NewTypeName = newTypeName;
+            OtherType = otherType;
+        }
+    }
 
     public class Import
     {
@@ -497,7 +498,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class InterpolatedStringPart
     {
-        public IParseExpression Expression { get; } 
+        public IParseExpression Expression { get; }
         public Token Right { get; }
 
         public InterpolatedStringPart(IParseExpression expression, Token right)
@@ -811,10 +812,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseStatement Statement { get; }
         public MetaComment Comment { get; set; }
 
-        public ElseIf(IParseExpression expression, IParseStatement statement)
+        public ElseIf(IParseExpression expression, IParseStatement statement, MetaComment comment)
         {
             Expression = expression;
             Statement = statement;
+            Comment = comment;
         }
     }
 
@@ -824,9 +826,10 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseStatement Statement { get; }
         public MetaComment Comment { get; set; }
 
-        public Else(IParseStatement statement)
+        public Else(IParseStatement statement, MetaComment comment)
         {
             Statement = statement;
+            Comment = comment;
         }
     }
 

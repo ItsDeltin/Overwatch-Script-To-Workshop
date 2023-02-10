@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public IStatement ElseBlock { get; }
         private PathInfo[] Paths { get; }
         private string Comment;
+        private string ElseComment;
         private string EndComment;
 
         public IfAction(ParseInfo parseInfo, Scope scope, If ifContext)
@@ -45,12 +46,14 @@ namespace Deltin.Deltinteger.Parse
             if (ifContext.Else != null)
             {
                 ElseBlock = parseInfo.GetStatement(scope, ifContext.Else.Statement);
+                ElseComment = ifContext.Else.Comment?.GetContents();
 
                 // Add the else path info.
                 paths.Add(new PathInfo(ElseBlock, ifContext.Range, true));
             }
             Paths = paths.ToArray();
-            if(Block is BlockAction block) {
+            if (Block is BlockAction block)
+            {
                 EndComment = block.EndComment;
             }
         }
@@ -143,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < ElseIfs.Length; i++)
             {
                 // Add the else-if action.
-                actionSet.AddAction(Element.ElseIf(ElseIfs[i].Expression.Parse(actionSet)));
+                actionSet.AddAction(Element.ElseIf(ElseIfs[i].Expression.Parse(actionSet)).AddComment(ElseIfs[i].Comment));
 
                 // Translate the else-if block.
                 ElseIfs[i].Block.Translate(actionSet);
@@ -152,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
             // If there is an else block, translate it.
             if (ElseBlock != null)
             {
-                actionSet.AddAction(Element.Else());
+                actionSet.AddAction(Element.Else().AddComment(ElseComment));
                 ElseBlock.Translate(actionSet);
             }
 
@@ -167,6 +170,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Expression { get; }
         public IStatement Block { get; }
+        public string Comment { get; }
 
         public ElseIfAction(ParseInfo parseInfo, Scope scope, ElseIf elseIfContext)
         {
@@ -177,6 +181,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the else-if's block.
             Block = parseInfo.GetStatement(scope, elseIfContext.Statement);
+
+            Comment = elseIfContext.Comment?.GetContents();
         }
     }
 }

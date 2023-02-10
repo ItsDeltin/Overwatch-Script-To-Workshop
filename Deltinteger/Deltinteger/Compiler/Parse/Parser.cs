@@ -274,6 +274,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return false;
         }
 
+        bool ParseOptionalWithMetaComment(TokenType type, out Token result, out MetaComment comment)
+        {
+            int forwardToken = 0;
+            for (; Is(TokenType.ActionComment, forwardToken); forwardToken++) { }
+            if (Is(type, forwardToken))
+            {
+                comment = ParseMetaComment();
+                result = Consume();
+                return true;
+            }
+            result = null;
+            comment = null;
+            return false;
+        }
+
         bool Parse(TokenType type, bool isExpected, out Token result)
         {
             if (isExpected)
@@ -919,7 +934,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Else els = null;
 
             // Get the else-ifs and elses.
-            while (ParseOptional(TokenType.Else))
+            while (ParseOptionalWithMetaComment(TokenType.Else, out _, out MetaComment branchComment))
             {
                 // Else if
                 if (ParseOptional(TokenType.If))
@@ -932,14 +947,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Parse the else-if's statement.
                     var elifStatement = ParseStatement();
 
-                    elifs.Add(new ElseIf(elifExpr, elifStatement));
+                    elifs.Add(new ElseIf(elifExpr, elifStatement, branchComment));
                 }
                 // Else
                 else
                 {
                     // Parse the else's block.
                     var elseStatement = ParseStatement();
-                    els = new Else(elseStatement);
+                    els = new Else(elseStatement, branchComment);
 
                     // Since this is an else, break since we don't need any more else-if or elses.
                     break;
