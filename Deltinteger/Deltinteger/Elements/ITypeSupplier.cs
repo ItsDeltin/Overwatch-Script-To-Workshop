@@ -27,6 +27,7 @@ namespace Deltin.Deltinteger.Elements
         CodeType Team() => EnumType("Team");
         CodeType Button() => EnumType("Button");
         CodeType Color() => EnumType("Color");
+        ArrayProvider ArrayProvider();
 
         public CodeType FromString(string value)
         {
