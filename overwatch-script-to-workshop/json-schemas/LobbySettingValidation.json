@@ -324,7 +324,8 @@
           "Ilios",
           "Oasis",
           "Lijiang Tower (Lunar New Year)",
-          "Busan"
+          "Busan",
+          "Antarctic Peninsula"
         ]
       }
     },
@@ -339,7 +340,8 @@
           "Route 66",
           "Junkertown",
           "Havana",
-          "Circuit Royal"
+          "Circuit Royal",
+          "Shambali Monastery"
         ]
       }
     },
@@ -470,11 +472,11 @@
         ]
       }
     },
-    "Score To Win 1-50": {
+    "Score To Win 1-5000": {
       "default": 20.0,
-      "type": "integer",
+      "type": "number",
       "minimum": 1.0,
-      "maximum": 50.0
+      "maximum": 5000.0
     },
     "Deathmatch Maps": {
       "type": "array",
@@ -697,7 +699,9 @@
           "Paraíso",
           "Colloseo",
           "New Queen Street",
-          "Esperança"
+          "Esperança",
+          "Shambali Monastery",
+          "Antarctic Peninsula"
         ]
       }
     },
@@ -763,12 +767,6 @@
       "type": "integer",
       "maximum": 1000.0
     },
-    "Score To Win 1-5000": {
-      "default": 20.0,
-      "type": "integer",
-      "minimum": 1.0,
-      "maximum": 5000.0
-    },
     "Bounty Hunter Maps": {
       "type": "array",
       "uniqueItems": true,
@@ -780,7 +778,6 @@
           "Hanamura",
           "Hollywood",
           "Dorado",
-          "Route 66",
           "Eichenwalde",
           "King's Row (Winter)",
           "Hanamura (Winter)",
@@ -2026,6 +2023,57 @@
       "type": "number",
       "maximum": 400.0
     },
+    "Ultimate Ability (Annihilation)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Annihilation)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Annihilation)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Annihilation)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Void Barrier Omnic Form": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Void Barrier Omnic Form Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Nemisis Form": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Nemisis Form Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Block Nemesis Form": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ravenous Vortex": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ravenous Vortex Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Ultimate Ability (Death Blossom)": {
       "default": true,
       "type": "boolean"
@@ -2753,6 +2801,7 @@
           "Moira",
           "Orisa",
           "Pharah",
+          "Ramattra",
           "Reaper",
           "Reinhardt",
           "Roadhog",
@@ -4578,6 +4627,87 @@
             },
             "Rocket Launcher Knockback Scalar": {
               "$ref": "#/definitions/Rocket Launcher Knockback Scalar"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Ramattra": {
+          "description": "'Ramattra' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (Annihilation)": {
+              "$ref": "#/definitions/Ultimate Ability (Annihilation)"
+            },
+            "Ultimate Generation (Annihilation)": {
+              "$ref": "#/definitions/Ultimate Generation (Annihilation)"
+            },
+            "Ultimate Generation - Passive (Annihilation)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Annihilation)"
+            },
+            "Ultimate Generation - Combat (Annihilation)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Annihilation)"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Void Barrier Omnic Form": {
+              "$ref": "#/definitions/Void Barrier Omnic Form"
+            },
+            "Void Barrier Omnic Form Cooldown Time": {
+              "$ref": "#/definitions/Void Barrier Omnic Form Cooldown Time"
+            },
+            "Nemisis Form": {
+              "$ref": "#/definitions/Nemisis Form"
+            },
+            "Nemisis Form Cooldown Time": {
+              "$ref": "#/definitions/Nemisis Form Cooldown Time"
+            },
+            "Block Nemesis Form": {
+              "$ref": "#/definitions/Block Nemesis Form"
+            },
+            "Ravenous Vortex": {
+              "$ref": "#/definitions/Ravenous Vortex"
+            },
+            "Ravenous Vortex Cooldown Time": {
+              "$ref": "#/definitions/Ravenous Vortex Cooldown Time"
             }
           },
           "additionalProperties": false
@@ -6410,7 +6540,7 @@
               "$ref": "#/definitions/Self Initiated Respawn"
             },
             "Score To Win": {
-              "$ref": "#/definitions/Score To Win 1-50"
+              "$ref": "#/definitions/Score To Win 1-5000"
             },
             "Enabled Maps": {
               "$ref": "#/definitions/Deathmatch Maps",

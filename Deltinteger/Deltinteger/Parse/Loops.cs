@@ -17,6 +17,8 @@ namespace Deltin.Deltinteger.Parse
         protected bool RawContinue = true;
         /// <summary>Determines if the break action is used directly.</summary>
         protected readonly bool RawBreak = true; // Remove the readonly if this needs to be changed.
+        /// <summary>The meta comment preceeding the loop.</summary>
+        protected string Comment { get; private set; }
 
         /// <summary>Stores skips that continue the loop.</summary>
         private readonly List<SkipStartMarker> Continue = new List<SkipStartMarker>();
@@ -84,6 +86,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (SkipStartMarker startMarker in skips)
                 startMarker.SetEndMarker(endMarker);
         }
+
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => Comment = comment;
     }
 
     class WhileAction : LoopAction
@@ -112,7 +116,7 @@ namespace Deltin.Deltinteger.Parse
             if (!actionsAdded)
             {
                 // Create a normal while loop.
-                actionSet.AddAction(Element.While(condition));
+                actionSet.AddAction(Element.While(condition).AddComment(Comment));
 
                 // Translate the block.
                 Block.Translate(actionSet);
@@ -129,7 +133,7 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 // The while condition requires actions to get the value.
-                actionSet.ActionList.Insert(actionCountPreCondition, new ALAction(Element.While(Element.True())));
+                actionSet.ActionList.Insert(actionCountPreCondition, new ALAction(Element.While(Element.True()).AddComment(Comment)));
 
                 SkipStartMarker whileEndSkip = new SkipStartMarker(actionSet, condition);
                 actionSet.AddAction(whileEndSkip);
@@ -280,6 +284,8 @@ namespace Deltin.Deltinteger.Parse
 
         void TranslateFor(ActionSet actionSet)
         {
+            actionSet = actionSet.SetNextComment(Comment);
+
             if (DefinedVariable != null)
             {
                 // Add the defined variable to the index assigner.
@@ -351,14 +357,14 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(Element.Part("For Global Variable",
                     variable,
                     start, stop, step
-                ));
+                ).AddComment(Comment));
             // Player
             else
                 actionSet.AddAction(Element.Part("For Player Variable",
                     target,
                     variable,
                     start, stop, step
-                ));
+                ).AddComment(Comment));
 
             // Translate the block.
             Block.Translate(actionSet);
@@ -414,6 +420,8 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Translate(ActionSet actionSet)
         {
+            actionSet = actionSet.SetNextComment(Comment);
+
             ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet), actionSet.IsRecursive);
 
             // Add the foreach value to the assigner.

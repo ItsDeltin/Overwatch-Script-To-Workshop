@@ -209,6 +209,7 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting GameLengthInMinutes = new RangeValue(true, false, "Game Length In Minutes", 5, 15, 10);
         private static readonly LobbySetting SelfInitiatedRespawn = new SwitchValue("Self Initiated Respawn", true);
         private static readonly LobbySetting ScoreToWin_1to9 = new RangeValue(false, false, "Score To Win", 1, 9, 3) { ReferenceName = "Score To Win 1-9" };
+        private static readonly LobbySetting ScoreToWin_1to5000 = new RangeValue(false, false, "Score To Win", 1, 5000, 20) { ReferenceName = "Score To Win 1-5000" };
         private static readonly LobbySetting LimitValidControlPoints = new SelectValue("Limit Valid Control Points", "All", "First", "Second", "Third");
         private static readonly LobbySetting HeroSelectionTime = new RangeValue(true, false, "Hero Selection Time", 20, 60, 20);
         private static readonly LobbySetting RestrictPreviouslyUsedHeroes = new SelectValue("Restrict Previously Used Heroes", "Off", "After Round Won", "After Round Played");
@@ -325,7 +326,7 @@ namespace Deltin.Deltinteger.Lobby
                     .AddSelect("Flag Carrier Abilities", "Restricted", "All", "None").AddRange("Flag Dropped Lock Time", 0, 10, 5).AddRange("Flag Pickup Time", 0, 5, 0).AddRange("Flag Return Time", 0, 5, 4)
                     .AddRange("Flag Score Respawn Time", 0, 20, 15).AddIntRange("Game Length (Minutes)", false, 5, 15, 8).AddRange("Respawn Speed Buff Duration", 0, 60, 0).Add(ScoreToWin_1to9)
                     .AddSwitch("Team Needs Flag At Base To Score", false),
-                new ModeSettingCollection("Deathmatch", false).Add(GameLengthInMinutes).Add(SelfInitiatedRespawn).AddIntRange("Score To Win", false, 1, 5000, 20, "Score To Win 1-5000"),
+                new ModeSettingCollection("Deathmatch", false).Add(GameLengthInMinutes).Add(SelfInitiatedRespawn).Add(ScoreToWin_1to5000),
                 new ModeSettingCollection("Elimination", false).Elimination(),
                 new ModeSettingCollection("Team Deathmatch", false).Add(GameLengthInMinutes).AddSwitch("Mercy Resurrect Counteracts Kills", true).AddIntRange("Score To Win", false, 1, 200, 30, "Score To Win 1-200").Add(SelfInitiatedRespawn).AddSwitch("Imbalanced Team Score To Win", false)
                     .AddIntRange("Team 1 Score To Win", false, 1, 200, 30).AddIntRange("Team 2 Score To Win", false, 1, 200, 30),
@@ -333,7 +334,7 @@ namespace Deltin.Deltinteger.Lobby
                 new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500),
                 new ModeSettingCollection("Freezethaw Elimination", false).Elimination(),
                 new ModeSettingCollection("Bounty Hunter").Add(Enabled_DefaultOff).AddIntRange("Base Score For Killing A Bounty Target", false, 0, 100, 300).AddIntRange("Bounty Increase Per Kill As Bounty Target", false, 0, 1000, 0).AddIntRange("Bounty Target Count", false, 1, 1, 1).AddIntRange("Score Per Kill", false, 0, 1000, 100).AddIntRange("Score Per Kill As Bounty Target", false, 0, 1000, 300)
-                    .Add(GameLengthInMinutes).AddIntRange("Score To Win", false, 1, 5000, 20, "Score To Win 1-5000").Add(SelfInitiatedRespawn)
+                    .Add(GameLengthInMinutes).Add(ScoreToWin_1to5000).Add(SelfInitiatedRespawn)
             };
 
             // Get re-occurring settings.

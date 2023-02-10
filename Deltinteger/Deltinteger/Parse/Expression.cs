@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IWorkshopTree result = Expression.Parse(actionSet);
 
-            foreach(var index in Index)
+            foreach (var index in Index)
                 result = Element.ValueInArray(result, index.Parse(actionSet));
 
             return result;
@@ -107,7 +107,7 @@ namespace Deltin.Deltinteger.Parse
 
                 Values[i] = parseInfo.SetExpectType(expectingType).GetExpression(scope, createArrayContext.Values[i]);
             }
-            
+
             if (Values.Length == 0)
                 _type = new ArrayType(parseInfo.TranslateInfo.Types, parseInfo.TranslateInfo.Types.Unknown());
             else
@@ -133,7 +133,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree[] asWorkshop = new IWorkshopTree[Values.Length];
             for (int i = 0; i < asWorkshop.Length; i++)
                 asWorkshop[i] = Values[i].Parse(actionSet);
-            
+
             // Struct array
             if (_isStructArray || asWorkshop.Any(value => value is IStructValue))
                 return new StructArray(Array.ConvertAll(asWorkshop, item => (IStructValue)item));
@@ -183,7 +183,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (Value.Type().IsConstant())
                 return null;
-            
+
             switch (op)
             {
                 case "!": return new UnaryTypeOperation(UnaryTypeOperation.OperatorFromString(op), supplier.Boolean(), v => !(Element)v);
@@ -225,7 +225,7 @@ namespace Deltin.Deltinteger.Parse
             // If the types are the same, the ternary type is that type.
             if (consequentType.Is(alternativeType))
                 return consequentType;
-            
+
             // Otherwise, if the types are compatible, create a union with those types.
             if (consequentType.CompatibleWith(alternativeType))
                 return new PipeType(consequentType, alternativeType);
@@ -265,7 +265,7 @@ namespace Deltin.Deltinteger.Parse
                 var alternative = _alternative.GetValue(variableName);
 
                 // Check if we need to do a ternary subsection.
-                if (consequent is IInlineStructDictionary consequentStruct)
+                if (consequent is IStructValue consequentStruct)
                     return new TernaryConditionalStruct(_condition, consequentStruct, (IStructValue)alternative);
 
                 // Otherwise, create the ternary normally.

@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                 if (gettable is IStructValue structValue)
                     foreach (var child in structValue.GetAllValues())
                         meta.Add(child);
-                
+
                 // Normal
                 else
                     meta.Add(gettable.GetVariable());

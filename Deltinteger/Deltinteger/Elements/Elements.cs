@@ -183,6 +183,12 @@ namespace Deltin.Deltinteger.Elements
             return count;
         }
 
+        public Element AddComment(string comment)
+        {
+            this.Comment = comment;
+            return this;
+        }
+
         public static Element True() => Part("True");
         public static Element False() => Part("False");
         public static Element EmptyArray() => Part("Empty Array");
