@@ -222,7 +222,7 @@ namespace Deltin.Deltinteger.Parse.Types.Internal
         IWorkshopTree ISCTypeMaker.CreateInstanceWithValues(ActionSet actionSet, params IWorkshopTree[] values)
         {
             var structValues = this.Variables.Zip(values, (var, value) => new { var.Name, value }).ToDictionary(v => v.Name, v => v.value);
-            return new LinkedStructAssigner(structValues);
+            return new LinkedStructValue(structValues);
         }
 
         T ISCTypeMaker.Match<T>(Func<T> isClass, Func<T> isStruct) => isStruct();

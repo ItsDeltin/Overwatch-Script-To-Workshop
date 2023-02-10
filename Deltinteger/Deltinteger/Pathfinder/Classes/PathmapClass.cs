@@ -683,7 +683,7 @@ namespace Deltin.Deltinteger.Pathfinder
             var component = actionSet.DeltinScript.GetComponent<CompressedBakeComponent>();
 
             // Call the decompresser.
-            var result = component.Build(actionSet, compressedBakemap, p => printProgress.Invoke(actionSet, p), onLoopStart);
+            var result = component.WorkshopDecompress(actionSet, compressedBakemap, p => printProgress.Invoke(actionSet, p), onLoopStart);
 
             // Get the bakemapClass instance.
             var bakemapClass = _pathfinderTypes.Bakemap.Instance;

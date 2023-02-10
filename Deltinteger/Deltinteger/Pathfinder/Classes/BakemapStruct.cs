@@ -125,6 +125,20 @@ namespace Deltin.Deltinteger.Pathfinder
                         return PathfindUtility.DecompressPathmap(actionSet, map, attributes);
                     }
                 });
+
+                setup.AddStaticMethod(new FuncMethodBuilder()
+                {
+                    Name = "GenerateMatchArray",
+                    Documentation = "todo",
+                    Parameters = new[] {
+                        new ConstNumberParameter("length", "todo", types)
+                    },
+                    ReturnType = types.Array(types.String()),
+                    Action = (actionSet, methodCall) =>
+                    {
+                        return CompressedBakeComponent.CreateMatcherArray((int)(double)methodCall.AdditionalParameterData[0]);
+                    }
+                });
             }).AsStruct(deltinScript);
         }
     }

@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Pathfinder
             var component = actionSet.DeltinScript.GetComponent<CompressedBakeComponent>();
 
             // Call the decompresser.
-            return component.Build(actionSet, compressed, null, null);
+            return component.WorkshopDecompress(actionSet, compressed, null, null);
         }
     }
 }

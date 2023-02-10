@@ -20,9 +20,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public void Init(DeltinScript deltinScript) { }
 
-        public Element Build(ActionSet actionSet, Element compressedNodeArray, Action<Element> printProgress, ILambdaInvocable onLoop)
+        public Element WorkshopDecompress(ActionSet actionSet, Element compressedNodeArray, Action<Element> printProgress, ILambdaInvocable onLoop)
         {
-            var matcher = GetMatcher(actionSet); // Get the character matcher.
+            var matcher = CreateMatcherVariable(actionSet); // Get the character matcher.
             var nodeArray = actionSet.VarCollection.Assign("compressedNodes", actionSet.IsGlobal, false); // The index the node array is stored in.
             var nodeCount = Element.CountOf(nodeArray.Get()); // The number of nodes.
             var bakeResult = actionSet.VarCollection.Assign("compressBakeResult", true, false); // Assign the nodeResult.
@@ -74,22 +74,29 @@ namespace Deltin.Deltinteger.Pathfinder
             return bakeResult.Get();
         }
 
-        Element GetMatcher(ActionSet actionSet)
+        private Element CreateMatcherVariable(ActionSet actionSet)
         {
             if (_matcher == null)
             {
                 // Create an array of strings with a single character.
-                var matcherArray = new Element[_maxNodeCount + 1];
-                for (int i = 0; i <= _maxNodeCount; i++)
-                    matcherArray[i] = Element.CustomString(CharFromInt(i).ToString());
+                var matcherValue = CreateMatcherArray(_maxNodeCount);
 
                 // Set matcher.
                 var storeMatcher = actionSet.VarCollection.Assign("compressBakeMatcher", true, false);
-                storeMatcher.Set(actionSet.DeltinScript.InitialGlobal.ActionSet, Element.CreateArray(matcherArray));
+                storeMatcher.Set(actionSet.DeltinScript.InitialGlobal.ActionSet, matcherValue);
                 _matcher = storeMatcher.Get();
             }
 
             return _matcher;
+        }
+
+        public static Element CreateMatcherArray(int length)
+        {
+            var matcherArray = new Element[length];
+            for (int i = 0; i < length; i++)
+                matcherArray[i] = Element.CustomString(CharFromInt(i).ToString());
+
+            return Element.CreateArray(matcherArray);
         }
 
         public static Element Create(Pathmap map, int[] attributes)
@@ -196,6 +203,7 @@ namespace Deltin.Deltinteger.Pathfinder
         static Encoding WorkshopEncoding => Encoding.Unicode;
         static char CharFromInt(int value)
         {
+            // todo: this can be very much optimized
             var illegal = new[] { '\"', '\n', '\r', '\\', '{' };
 
             for (int i = 0, c = 0; ; i++)
