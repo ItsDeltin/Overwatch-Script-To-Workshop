@@ -391,11 +391,19 @@ namespace Deltin.Deltinteger.Parse
                     var structInset = new ValueInStructArray(indexedStructArray.StructArray, Element.ArrayElement());
                     var value = invoke(structInset);
 
-                    // Value is struct
+                    // Value is struct, append the modification to that struct.
                     if (value is IStructValue structValue)
                     {
                         indexedStructArray.AppendModification(args => Element.Map(args.indexArray, value));
                         return indexedStructArray;
+                    }
+                    // This case will be true if mapping a filtered/sorted struct array, like so:
+                    // `structArray.Filter(s => s.Value).Map((v, i) => i);`
+                    // Since the Filter indexes the struct array, we can just return that without adding an
+                    // extra, expensive, and redundant map.
+                    else if (Element.ArrayIndex().EqualTo(value))
+                    {
+                        return indexedStructArray.IndexedArray;
                     }
 
                     return Element.Map(indexedStructArray.IndexedArray, value);
