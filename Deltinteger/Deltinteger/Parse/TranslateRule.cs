@@ -205,7 +205,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Clone the ActionSet.
             var clone = new ActionSet(this);
-            
+
             // If there was no type linker to begin with, set the type linker to the one provided.
             if (clone.ThisTypeLinker == null)
                 clone.ThisTypeLinker = thisTypeLinker;

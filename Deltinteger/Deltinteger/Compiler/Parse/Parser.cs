@@ -1082,6 +1082,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Get the variable.
             var type = ParseType();
             var identifier = ParseExpected(TokenType.Identifier);
+            var extended = ParseOptional(TokenType.Exclamation);
 
             // Parse in.
             ParseExpected(TokenType.In);
@@ -1095,7 +1096,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var statement = ParseStatement();
 
             // Done
-            return EndTokenCapture(new Foreach(type, identifier, value, statement));
+            return EndTokenCapture(new Foreach(type, identifier, value, statement, extended));
         }
 
         Delete ParseDelete()

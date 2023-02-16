@@ -354,17 +354,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Global
             if (variable.IsGlobal)
-                actionSet.AddAction(Element.Part("For Global Variable",
-                    variable,
-                    start, stop, step
-                ).AddComment(Comment));
+                actionSet.AddAction(Element.ForGlobalVariable(variable, start, stop, step)
+                    .AddComment(Comment));
             // Player
             else
-                actionSet.AddAction(Element.Part("For Player Variable",
-                    target,
-                    variable,
-                    start, stop, step
-                ).AddComment(Comment));
+                actionSet.AddAction(Element.ForPlayerVariable(target, variable, start, stop, step)
+                    .AddComment(Comment));
 
             // Translate the block.
             Block.Translate(actionSet);
@@ -382,9 +377,10 @@ namespace Deltin.Deltinteger.Parse
 
     class ForeachAction : LoopAction
     {
-        private IVariable ForeachVar { get; }
-        private IExpression Array { get; }
-        private IStatement Block { get; }
+        readonly IVariable foreachVar;
+        readonly IExpression array;
+        readonly IStatement block;
+        readonly bool isExtended;
 
         public ForeachAction(ParseInfo parseInfo, Scope scope, Foreach foreachContext)
         {
@@ -392,19 +388,19 @@ namespace Deltin.Deltinteger.Parse
 
             Scope varScope = scope.Child();
 
-            ForeachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext)).GetVar();
+            foreachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext)).GetVar();
 
             // Get the array that will be iterated on.
-            Array = parseInfo.GetExpression(scope, foreachContext.Expression);
+            array = parseInfo.GetExpression(scope, foreachContext.Expression);
 
             // Strict when struct
-            if (Array.Type().Attributes.IsStruct)
+            if (array.Type().Attributes.IsStruct)
             {
                 // Get the declared variable's type.
-                var variableType = ForeachVar.GetDefaultInstance(null).CodeType.GetCodeType(parseInfo.TranslateInfo);
+                var variableType = foreachVar.GetDefaultInstance(null).CodeType.GetCodeType(parseInfo.TranslateInfo);
 
                 // Make sure the struct is an array.
-                if (Array.Type() is not ArrayType arrayType)
+                if (array.Type() is not ArrayType arrayType)
                     parseInfo.Script.Diagnostics.Error("Struct must be an array", foreachContext.Expression.Range);
 
                 // Make sure the type matches the array's type.
@@ -413,22 +409,24 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Get the foreach block.
-            Block = parseInfo.SetLoop(this).GetStatement(varScope, foreachContext.Statement);
+            block = parseInfo.SetLoop(this).GetStatement(varScope, foreachContext.Statement);
             // Get the path info.
-            Path = new PathInfo(Block, foreachContext.Range, false);
+            Path = new PathInfo(block, foreachContext.Range, false);
+
+            isExtended = foreachContext.Extended;
         }
 
         public override void Translate(ActionSet actionSet)
         {
             actionSet = actionSet.SetNextComment(Comment);
 
-            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet), actionSet.IsRecursive);
+            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, array.Parse(actionSet), actionSet.IsRecursive, isExtended);
 
             // Add the foreach value to the assigner.
-            actionSet.IndexAssigner.Add(ForeachVar, foreachBuilder.IndexValue);
+            actionSet.IndexAssigner.Add(foreachVar, foreachBuilder.IndexValue);
 
             // Translate the block.
-            Block.Translate(actionSet);
+            block.Translate(actionSet);
 
             // Resolve continues.
             ResolveContinues(actionSet);
