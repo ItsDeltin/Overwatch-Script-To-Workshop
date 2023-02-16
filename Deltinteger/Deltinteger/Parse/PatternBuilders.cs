@@ -8,49 +8,64 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ForeachBuilder
     {
-        private ActionSet ActionSet { get; }
-        public IndexReference IndexStore { get; }
-        private Element Condition { get; }
-        public IWorkshopTree Array { get; }
-        public Element Index { get; }
         public IWorkshopTree IndexValue { get; }
-        private bool Recursive { get; }
 
-        public ForeachBuilder(ActionSet actionSet, IWorkshopTree array, bool recursive = false)
+        readonly IndexReference forIndex;
+        readonly ActionSet actionSet;
+        readonly bool recursive;
+        readonly bool extended;
+
+        public ForeachBuilder(ActionSet actionSet, IWorkshopTree array, bool recursive = false, bool extended = true)
         {
-            ActionSet = actionSet;
-            IndexStore = actionSet.VarCollection.Assign("foreachIndex,", actionSet.IsGlobal, !recursive);
-            Recursive = recursive;
+            this.actionSet = actionSet;
+            this.recursive = recursive;
+            this.extended = extended;
+            forIndex = actionSet.VarCollection.Assign("foreachIndex", actionSet.IsGlobal, extended);
 
+            // Initialize recursive variable.
             if (recursive)
             {
-                RecursiveIndexReference recursiveStore = new RecursiveIndexReference(IndexStore);
-                IndexStore = recursiveStore;
+                RecursiveIndexReference recursiveFor = new RecursiveIndexReference(forIndex);
+                forIndex = recursiveFor;
 
-                actionSet.InitialSet().AddAction(recursiveStore.Reset());
-                actionSet.AddAction(recursiveStore.Push(0));
-                actionSet.ReturnHandler.AdditionalPopOnReturn.Add(recursiveStore);
+                actionSet.InitialSet().AddAction(recursiveFor.Reset());
+                actionSet.AddAction(recursiveFor.Push(0));
+                actionSet.ReturnHandler.AdditionalPopOnReturn.Add(recursiveFor);
+            }
+            // Initialize extended variable.
+            else if (extended)
+                actionSet.AddAction(forIndex.SetVariable(0));
+
+            var arrayLength = Element.CountOf(StructHelper.ExtractArbritraryValue(array));
+
+            if (recursive || extended)
+            {
+                var condition = Element.Compare(forIndex.GetVariable(), Operator.LessThan, arrayLength);
+                actionSet.AddAction(Element.While(condition));
             }
             else
-                actionSet.AddAction(IndexStore.SetVariable(0));
+            {
+                if (actionSet.IsGlobal)
+                    actionSet.AddAction(Element.ForGlobalVariable(forIndex.WorkshopVariable, 0, arrayLength, 1));
+                else
+                    actionSet.AddAction(Element.ForPlayerVariable(Element.EventPlayer(), forIndex.WorkshopVariable, 0, arrayLength, 1));
+            }
 
-            Array = array;
-            Condition = Element.Compare(IndexStore.GetVariable(), Operator.LessThan, Element.CountOf(StructHelper.ExtractArbritraryValue(Array)));
-            Index = (Element)IndexStore.GetVariable();
-            IndexValue = StructHelper.ValueInArray(Array, IndexStore.GetVariable());
-
-            actionSet.AddAction(Element.While(Condition));
+            IndexValue = StructHelper.ValueInArray(array, forIndex.GetVariable());
         }
 
         public void Finish()
         {
-            ActionSet.AddAction(IndexStore.ModifyVariable(Operation.Add, 1));
-            ActionSet.AddAction(Element.End());
+            // Not using auto-for, manually increment variable.
+            if (recursive || extended)
+                actionSet.AddAction(forIndex.ModifyVariable(Operation.Add, 1));
+            // End block.
+            actionSet.AddAction(Element.End());
 
-            if (Recursive)
+            if (recursive)
             {
-                ActionSet.AddAction(((RecursiveIndexReference)IndexStore).Pop());
-                ActionSet.ReturnHandler.AdditionalPopOnReturn.Remove((RecursiveIndexReference)IndexStore);
+                actionSet.AddAction(((RecursiveIndexReference)forIndex).Pop());
+                actionSet.ReturnHandler.AdditionalPopOnReturn.Remove((RecursiveIndexReference)forIndex);
             }
         }
     }
@@ -74,20 +89,9 @@ namespace Deltin.Deltinteger.Parse
             var var = Variable.WorkshopVariable;
 
             if (var.IsGlobal)
-                _actionSet.AddAction(Element.Part("For Global Variable",
-                    var,
-                    (Element)0,
-                    _end,
-                    (Element)1
-                ));
+                _actionSet.AddAction(Element.ForGlobalVariable(var, (Element)0, _end, (Element)1));
             else
-                _actionSet.AddAction(Element.Part("For Player Variable",
-                    Element.EventPlayer(),
-                    var,
-                    (Element)0,
-                    _end,
-                    (Element)1
-                ));
+                _actionSet.AddAction(Element.ForPlayerVariable(Element.EventPlayer(), var, (Element)0, _end, (Element)1));
         }
 
         public void End() => _actionSet.AddAction(Element.End());

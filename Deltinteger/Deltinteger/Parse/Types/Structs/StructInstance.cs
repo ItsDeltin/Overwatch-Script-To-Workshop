@@ -77,14 +77,21 @@ namespace Deltin.Deltinteger.Parse
         {
             SetupMeta();
 
-            if (Name != other.Name || Generics.Length != other.Generics.Length)
+            if (other is not StructInstance otherStruct)
+                return false;
+
+            if (Generics.Length != other.Generics.Length || Variables.Length != otherStruct.Variables.Length)
                 return false;
 
             for (int i = 0; i < Generics.Length; i++)
                 if (!Generics[i].Is(other.Generics[i]))
                     return false;
 
-            return true;
+            return Variables.All(var =>
+            {
+                var matchingVariable = otherStruct.Variables.FirstOrDefault(otherVar => var.Name == otherVar.Name);
+                return matchingVariable != null && ((CodeType)var.CodeType).Is((CodeType)matchingVariable.CodeType);
+            });
         }
 
         public override bool Implements(CodeType type)
@@ -395,11 +402,19 @@ namespace Deltin.Deltinteger.Parse
                     var structInset = new ValueInStructArray(indexedStructArray.StructArray, Element.ArrayElement());
                     var value = invoke(structInset);
 
-                    // Value is struct
+                    // Value is struct, append the modification to that struct.
                     if (value is IStructValue structValue)
                     {
                         indexedStructArray.AppendModification(args => Element.Map(args.indexArray, value));
                         return indexedStructArray;
+                    }
+                    // This case will be true if mapping a filtered/sorted struct array, like so:
+                    // `structArray.Filter(s => s.Value).Map((v, i) => i);`
+                    // Since the Filter indexes the struct array, we can just return that without adding an
+                    // extra, expensive, and redundant map.
+                    else if (Element.ArrayIndex().EqualTo(value))
+                    {
+                        return indexedStructArray.IndexedArray;
                     }
 
                     return Element.Map(indexedStructArray.IndexedArray, value);

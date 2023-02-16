@@ -906,13 +906,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseExpression Expression { get; }
         public IParseStatement Statement { get; }
         public MetaComment Comment { get; set; }
+        public Token Extended { get; set; }
 
-        public Foreach(IParseType type, Token identifier, IParseExpression expression, IParseStatement statement)
+        public Foreach(IParseType type, Token identifier, IParseExpression expression, IParseStatement statement, Token extended)
         {
             Type = type;
             Identifier = identifier;
             Expression = expression;
             Statement = statement;
+            Extended = extended;
         }
     }
 

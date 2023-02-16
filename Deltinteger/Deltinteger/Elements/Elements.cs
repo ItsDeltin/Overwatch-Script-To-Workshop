@@ -265,6 +265,8 @@ namespace Deltin.Deltinteger.Elements
         public static Element SkipIf(Element condition, Element count) => Element.Part("Skip If", condition, count);
         public static Element AllPlayers() => Element.Part("All Players");
         public static Element SmallMessage(string message, params Element[] formats) => Part("Small Message", AllPlayers(), Element.CustomString(message, formats));
+        public static Element ForGlobalVariable(WorkshopVariable variable, Element start, Element end, Element step) => Element.Part("For Global Variable", variable, start, end, step);
+        public static Element ForPlayerVariable(Element player, WorkshopVariable variable, Element start, Element end, Element step) => Element.Part("For Player Variable", player, variable, start, end, step);
 
         public static Element Hud(
             IWorkshopTree players = null,
