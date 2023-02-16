@@ -73,14 +73,21 @@ namespace Deltin.Deltinteger.Parse
         {
             SetupMeta();
 
-            if (Name != other.Name || Generics.Length != other.Generics.Length)
+            if (other is not StructInstance otherStruct)
+                return false;
+
+            if (Generics.Length != other.Generics.Length || Variables.Length != otherStruct.Variables.Length)
                 return false;
 
             for (int i = 0; i < Generics.Length; i++)
                 if (!Generics[i].Is(other.Generics[i]))
                     return false;
 
-            return true;
+            return Variables.All(var =>
+            {
+                var matchingVariable = otherStruct.Variables.FirstOrDefault(otherVar => var.Name == otherVar.Name);
+                return matchingVariable != null && ((CodeType)var.CodeType).Is((CodeType)matchingVariable.CodeType);
+            });
         }
 
         public override bool Implements(CodeType type)
