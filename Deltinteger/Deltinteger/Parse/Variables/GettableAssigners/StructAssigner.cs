@@ -317,7 +317,12 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
-        public IWorkshopTree GetArbritraryValue() => Children[0];
+        public IWorkshopTree GetArbritraryValue()
+        {
+            // Shouldn't be possible, but just in case.
+            if (Children.Length == 0) return Element.EmptyArray();
+            return GetAllValues()[0];
+        }
         public IWorkshopTree[] GetAllValues()
         {
             // This isn't possible, but if it was, we would return an empty array.
@@ -325,7 +330,9 @@ namespace Deltin.Deltinteger.Parse
 
             // The first child is used as a reference for the other children, 'Children[x].GetAllValues().Length' will all equal the same thing.
             var primaryStructValues = Children[0].GetAllValues();
+            // The number of values in each array.
             int valueCount = primaryStructValues.Length;
+            // The number of arrays.
             int arrayCount = Children.Length;
 
             // 'transposed' is the struct values shifted into their respective arrays.
