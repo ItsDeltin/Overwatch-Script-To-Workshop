@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
                 // Virtual function
                 if (element is DefinedMethodProvider provider && provider.Virtual)
                     Elements.AddVirtualFunction((IMethod)instance);
-                
+
                 // Virtual variable
                 if (element is Var var && var.Virtual)
                     Elements.AddVirtualVariable((IVariableInstance)instance);
@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
                 if (Generics[i] is AnonymousType at && instanceInfo.Links.ContainsKey(at))
                     newGenerics[i] = instanceInfo.Links[at];
                 else
-                    newGenerics[i] = Generics[i];
+                    newGenerics[i] = Generics[i].GetRealType(instanceInfo);
             }
 
             return _definedInitializer.GetInstance(new GetInstanceInfo(newGenerics));

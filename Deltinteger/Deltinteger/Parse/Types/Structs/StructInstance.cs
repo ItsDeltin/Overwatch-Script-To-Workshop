@@ -135,7 +135,7 @@ namespace Deltin.Deltinteger.Parse
                 if (Generics[i] is AnonymousType at && instanceInfo.Links.ContainsKey(at))
                     newLinker.Add(_provider.GenericTypes[i], instanceInfo.Links[at]);
                 else
-                    newLinker.Add(_provider.GenericTypes[i], Generics[i]);
+                    newLinker.Add(_provider.GenericTypes[i], Generics[i].GetRealType(instanceInfo));
             }
 
             return _provider.GetInstance(newLinker);
