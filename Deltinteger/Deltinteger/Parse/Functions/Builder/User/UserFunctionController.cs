@@ -56,12 +56,18 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                                }),
             IsMultiplePaths());
 
-        bool IsMultiplePaths() => _function.Provider.ReturnType != null && (
-            _function.Provider.MultiplePaths || _function.Attributes.Recursive || _function.Provider.SubroutineName != null) || _function.Provider.Virtual;
+        bool IsMultiplePaths() => _function.Provider.ReturnType != null &&
+            (_function.Provider.MultiplePaths || _function.Attributes.Recursive || _function.Provider.SubroutineName != null || _function.Provider.Virtual);
 
         // Creates parameters assigned to this function.
         public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
-            => new UserFunctionParameterHandler(actionSet, _function.Parameters, _function.ParameterVars, providedParameters);
+            => new UserFunctionParameterHandler(
+                actionSet,
+                _function.Parameters,
+                _function.ParameterVars,
+                providedParameters,
+                from virtualOption in _allVirtualOptions select virtualOption.ParameterVars
+            );
 
         // Create or get the subroutine.
         public SubroutineCatalogItem GetSubroutine()
@@ -156,7 +162,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             ActionSet actionSet,
             CodeParameter[] codeParameters,
             IVariableInstance[] parameterVariables,
-            WorkshopParameter[] providedParameters)
+            WorkshopParameter[] providedParameters,
+            IEnumerable<IVariableInstance[]> virtualParameterVariables)
         {
             _recursiveParameters = actionSet.IsRecursive;
             _codeParameters = codeParameters;
@@ -177,7 +184,9 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                             InitialValueOverride = providedParameters?[i].Value
                         });
 
-                _parameters[i] = new UserFunctionParameter(gettable, new[] { parameterVariables[i].Provider }); //todo: linkedVariables for virtual
+                _parameters[i] = new UserFunctionParameter(
+                    gettable,
+                    virtualParameterVariables.Select(v => v[i].Provider).ToArray());
             }
         }
 
