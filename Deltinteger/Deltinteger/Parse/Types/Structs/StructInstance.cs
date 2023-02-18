@@ -203,28 +203,33 @@ namespace Deltin.Deltinteger.Parse
             public override IWorkshopTree Length(IWorkshopTree reference) => str(reference).BridgeArbritrary(v => Element.CountOf(v)).GetWorkshopValue();
             public override IWorkshopTree FirstOf(IWorkshopTree reference) => str(reference).Bridge(v => Element.FirstOf(v.Value));
             public override IWorkshopTree LastOf(IWorkshopTree reference) => str(reference).Bridge(v => Element.LastOf(v.Value));
-            public override IWorkshopTree Contains(IWorkshopTree reference, IWorkshopTree value)
+            public override IWorkshopTree Contains(IWorkshopTree reference, IWorkshopTree value) => SearchStructArray(reference, value, SearchType.Contains);
+            public override IWorkshopTree IndexOf(IWorkshopTree reference, IWorkshopTree value) => SearchStructArray(reference, value, SearchType.IndexOf);
+
+            IWorkshopTree SearchStructArray(IWorkshopTree reference, IWorkshopTree value, SearchType searchType)
             {
                 // Extract the values from the 'reference' struct array.
-                IWorkshopTree[] arrayValues;
-                IWorkshopTree iterator;
-                IWorkshopTree targetter;
-                bool allowFirstElementQuickSkip;
+                IWorkshopTree[] arrayValues; // Flattened struct values.
+                IWorkshopTree iterator; // An arbritrary pointer to an array that will be iterated on.
+                IWorkshopTree mappedIterator; // The iterator as an array of indexes like [0, 1, 2, 3...]
+                IWorkshopTree targetter; // The workshop element that will retrieve the current array value while iterating.
+                bool allowFirstElementQuickSkip; // If the struct has only one value, we can use normal means to do the search.
 
                 // 'Contains' is being executed on an indexed struct array.
                 if (reference is IndexedStructArray indexedStructArray)
                 {
                     arrayValues = indexedStructArray.StructArray.GetAllValues();
-                    iterator = indexedStructArray.IndexedArray;
                     targetter = Element.ArrayElement();
                     allowFirstElementQuickSkip = false;
+                    iterator = mappedIterator = indexedStructArray.IndexedArray;
                 }
                 else
                 {
                     arrayValues = str(reference).GetAllValues();
-                    iterator = arrayValues[0];
                     targetter = Element.ArrayIndex();
                     allowFirstElementQuickSkip = true;
+                    iterator = arrayValues[0];
+                    mappedIterator = Element.Map(arrayValues[0], Element.ArrayIndex());
                 }
 
                 // Extract values from the 'value' struct.
@@ -235,7 +240,12 @@ namespace Deltin.Deltinteger.Parse
 
                 // If the struct only has one value, we can just use the default Contains.
                 if (arrayValues.Length == 1 && allowFirstElementQuickSkip)
-                    return Element.Contains(iterator, contains[0]);
+                {
+                    if (searchType == SearchType.Contains)
+                        return Element.Contains(iterator, contains[0]);
+                    else
+                        return Element.IndexOfArrayValue(iterator, contains[0]);
+                }
 
                 // The list of struct comparisons.
                 var comparisons = new Queue<IWorkshopTree>();
@@ -245,7 +255,8 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Later in this function, 'Is True For Any's array is arrayValues[0], so for the first struct value, just use Array Element.
                     // Otherwise, it will result in 'Is True For Any(x, x[Array Index] == ...' when 'Array Element' would suffice for 'x[Array Index]'
-                    var compareFrom = allowFirstElementQuickSkip && i == 0 ?
+                    // Do not use shortcut if the search type is IndexOf because the iterator will be indexes.
+                    var compareFrom = allowFirstElementQuickSkip && i == 0 && searchType == SearchType.Contains ?
                         Element.ArrayElement() :
                         Element.ValueInArray(arrayValues[i], targetter);
 
@@ -257,8 +268,13 @@ namespace Deltin.Deltinteger.Parse
                 while (comparisons.Count > 0)
                     condition = Element.And(condition, comparisons.Dequeue());
 
-                return Element.Any(iterator, condition);
+                if (searchType == SearchType.Contains)
+                    return Element.Any(iterator, condition);
+                else
+                    // -1 is added to the list of indexes. When no structs match the value being searched for, -1 will be chosen.
+                    return Element.FirstOf(Element.Append(Element.Filter(mappedIterator, condition), Element.Num(-1)));
             }
+
             public override IWorkshopTree Append(IWorkshopTree reference, IWorkshopTree value) =>
                 str(reference).Bridge(v => Element.Append(v.Value, IStructValue.GetValueWithPath(str(value), v.Path)));
             public override IWorkshopTree Slice(IWorkshopTree reference, IWorkshopTree start, IWorkshopTree count) =>
@@ -272,6 +288,13 @@ namespace Deltin.Deltinteger.Parse
             public StructArrayFunctionHandler()
             {
                 AllowUnhandled = false;
+            }
+
+            // Used by the SearchStructArray method.
+            private enum SearchType
+            {
+                Contains,
+                IndexOf
             }
 
             // For struct array iterators that returns a struct array (Filtered Array, Sorted Array).

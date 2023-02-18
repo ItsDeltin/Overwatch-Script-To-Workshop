@@ -194,17 +194,16 @@ namespace Deltin.Deltinteger.Parse
                 Action = (actionSet, methodCall) => functionHandler.Slice(actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
             });
             // Index Of
-            if (functionHandler.AllowUnhandled)
-                Func(new FuncMethodBuilder()
-                {
-                    Name = "IndexOf",
-                    Documentation = "The index of a value within an array or -1 if no such value can be found.",
-                    ReturnType = _supplier.Number(),
-                    Parameters = new CodeParameter[] {
+            Func(new FuncMethodBuilder()
+            {
+                Name = "IndexOf",
+                Documentation = "The index of a value within an array or -1 if no such value can be found.",
+                ReturnType = _supplier.Number(),
+                Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value for which to search.", ArrayOfType)
                 },
-                    Action = (actionSet, methodCall) => Element.IndexOfArrayValue(actionSet.CurrentObject, methodCall.ParameterValues[0])
-                });
+                Action = (actionSet, methodCall) => functionHandler.IndexOf(actionSet.CurrentObject, methodCall.ParameterValues[0])
+            });
             // Modify Append
             Func(new FuncMethodBuilder()
             {
