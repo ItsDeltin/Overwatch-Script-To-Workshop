@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
                 // Set expression and expressionRange.
                 parameter.LambdaInfo = new ExpectingLambdaInfo();
-                parameter.Value = _parseInfo.SetLambdaInfo(parameter.LambdaInfo).GetExpression(_getter, context[i].Expression);
+                parameter.Value = _parseInfo.ClearContextual().SetLambdaInfo(parameter.LambdaInfo).GetExpression(_getter, context[i].Expression);
                 parameter.ExpressionRange = context[i].Expression.Range;
             }
 
