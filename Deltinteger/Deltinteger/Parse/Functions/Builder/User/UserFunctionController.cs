@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             IsMultiplePaths());
 
         bool IsMultiplePaths() => _function.Provider.ReturnType != null && (
-            _function.Provider.MultiplePaths || _function.Attributes.Recursive || _function.Provider.SubroutineName != null) || _function.Provider.Virtual;
+            _function.Provider.MultiplePaths || _function.Attributes.Recursive || _function.Provider.SubroutineName != null) || (_function.Provider.Virtual && _function.Provider.ReturnType.GetNameOrVoid() != "void");
 
         // Creates parameters assigned to this function.
         public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
