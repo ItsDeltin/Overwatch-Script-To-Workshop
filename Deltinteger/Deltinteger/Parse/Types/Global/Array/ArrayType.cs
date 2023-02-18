@@ -159,17 +159,16 @@ namespace Deltin.Deltinteger.Parse
                     Action = (actionSet, methodCall) => Element.Part("Randomized Array", actionSet.CurrentObject)
                 });
             // Append
-            if (functionHandler.AllowUnhandled)
-                Func(new FuncMethodBuilder()
-                {
-                    Name = "Append",
-                    Documentation = "A copy of the array with the specified value appended to it.",
-                    ReturnType = this,
-                    Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value that is appended to the array. If the value is an array, it will be flattened.", pipeType)
-                },
-                    Action = (actionSet, methodCall) => Element.Append(actionSet.CurrentObject, methodCall.ParameterValues[0])
-                });
+            Func(new FuncMethodBuilder()
+            {
+                Name = "Append",
+                Documentation = "A copy of the array with the specified value appended to it.",
+                ReturnType = this,
+                Parameters = new CodeParameter[] {
+                new CodeParameter("value", "The value that is appended to the array. If the value is an array, it will be flattened.", pipeType)
+            },
+                Action = (actionSet, methodCall) => functionHandler.Append(actionSet.CurrentObject, methodCall.ParameterValues[0])
+            });
             // Remove
             if (functionHandler.AllowUnhandled)
                 Func(new FuncMethodBuilder()
@@ -183,18 +182,17 @@ namespace Deltin.Deltinteger.Parse
                     Action = (actionSet, methodCall) => Element.Part("Remove From Array", actionSet.CurrentObject, methodCall.ParameterValues[0])
                 });
             // Slice
-            if (functionHandler.AllowUnhandled)
-                Func(new FuncMethodBuilder()
-                {
-                    Name = "Slice",
-                    Documentation = "A copy of the array containing only values from a specified index range.",
-                    ReturnType = this,
-                    Parameters = new CodeParameter[] {
-                    new CodeParameter("startIndex", "The first index of the range.", _supplier.Number()),
-                    new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.", _supplier.Number())
-                },
-                    Action = (actionSet, methodCall) => Element.Part("Array Slice", actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
-                });
+            Func(new FuncMethodBuilder()
+            {
+                Name = "Slice",
+                Documentation = "A copy of the array containing only values from a specified index range.",
+                ReturnType = this,
+                Parameters = new CodeParameter[] {
+                new CodeParameter("startIndex", "The first index of the range.", _supplier.Number()),
+                new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.", _supplier.Number())
+            },
+                Action = (actionSet, methodCall) => functionHandler.Slice(actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
+            });
             // Index Of
             if (functionHandler.AllowUnhandled)
                 Func(new FuncMethodBuilder()

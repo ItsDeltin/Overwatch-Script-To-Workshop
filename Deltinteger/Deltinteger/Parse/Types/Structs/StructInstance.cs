@@ -259,6 +259,10 @@ namespace Deltin.Deltinteger.Parse
 
                 return Element.Any(iterator, condition);
             }
+            public override IWorkshopTree Append(IWorkshopTree reference, IWorkshopTree value) =>
+                str(reference).Bridge(v => Element.Append(v.Value, IStructValue.GetValueWithPath(str(value), v.Path)));
+            public override IWorkshopTree Slice(IWorkshopTree reference, IWorkshopTree start, IWorkshopTree count) =>
+                str(reference).Bridge(v => Element.Slice(v.Value, start, count));
             public override ISortFunctionExecutor SortedArray() => new StructSortExecutorReturnsArray(false);
             public override ISortFunctionExecutor FilteredArray() => new StructSortExecutorReturnsArray(true);
             public override ISortFunctionExecutor All() => new StructSortExecutorReturnsBoolean();
