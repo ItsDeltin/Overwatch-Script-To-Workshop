@@ -247,6 +247,10 @@
       {
         "fileMatch": "Elements.json",
         "url": "./json-schemas/ElementValidation.json"
+      },
+      {
+          "fileMatch": "module.json",
+          "url": "./json-schemas/ConfigValidation.json"
       }
     ],
     "debuggers": [

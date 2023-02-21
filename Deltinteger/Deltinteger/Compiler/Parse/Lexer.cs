@@ -12,17 +12,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public LexController CurrentController { get; private set; }
         public int IncrementalChangeStart { get; private set; }
         public int IncrementalChangeEnd { get; private set; }
+        public bool IsPushCompleted { get; private set; }
         public int TokenCount => Tokens.Count;
         private ITokenPush _currentTokenPush;
         private int _lastTokenCount;
-        public bool IsPushCompleted { get; private set; }
+        private readonly ParserSettings _parseSettings;
 
-        public Lexer() { }
+        public Lexer(ParserSettings parseSettings)
+        {
+            _parseSettings = parseSettings;
+        }
 
         public void Init(VersionInstance content)
         {
             Content = content;
-            CurrentController = new LexController(Content.Text, _currentTokenPush = new InitTokenPush(this));
+            CurrentController = new LexController(_parseSettings, Content.Text, _currentTokenPush = new InitTokenPush(this));
         }
 
         public void Reset()
@@ -60,7 +64,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             _currentTokenPush = new IncrementalTokenInsert(this, affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex);
-            CurrentController = new LexController(newContent.Text, _currentTokenPush);
+            CurrentController = new LexController(_parseSettings, newContent.Text, _currentTokenPush);
 
             // Set start range
             CurrentController.Index = affectedArea.StartIndex;
@@ -200,11 +204,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public int Column;
         public string Content { get; }
         private readonly ITokenPush _push;
+        private readonly ParserSettings _settings;
 
-        public LexController(string content, ITokenPush push)
+        public LexController(ParserSettings settings, string content, ITokenPush push)
         {
             Content = content;
             _push = push;
+            _settings = settings;
         }
 
         public void MatchOne()

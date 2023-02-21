@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
-using System.Text;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Pathfinder;
 using Deltin.Deltinteger.Debugger;
@@ -14,10 +11,8 @@ using Serilog;
 using TextCopy;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Server;
-using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -51,6 +46,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         public DocumentHandler DocumentHandler { get; private set; }
+        public ServerWorkspace Workspace { get; } = new ServerWorkspace();
         public FileGetter FileGetter { get; private set; }
         public ConfigurationHandler ConfigurationHandler { get; private set; }
         private readonly ClipboardListener _debugger;
@@ -70,8 +66,10 @@ namespace Deltin.Deltinteger.LanguageServer
 
             Serilog.Log.Information("Deltinteger Language Server");
 
-            DocumentHandler = new DocumentHandler(this);
-            FileGetter = new FileGetter(DocumentHandler);
+            var builder = new LanguageServerBuilder(this);
+
+            DocumentHandler = new DocumentHandler(builder);
+            FileGetter = new FileGetter(DocumentHandler, builder.ParserSettingsResolver);
             CompletionHandler completionHandler = new CompletionHandler(this);
             SignatureHandler signatureHandler = new SignatureHandler(this);
             ConfigurationHandler = new ConfigurationHandler(this);
@@ -99,7 +97,12 @@ namespace Deltin.Deltinteger.LanguageServer
                 .AddHandler(codeLensHandler)
                 .AddHandler(renameHandler)
                 .AddHandler(colorHandler)
+                .AddHandler(builder.FileHandlerBuilder.GetHandler())
             ));
+
+            Workspace.SetWorkspaceFolders(Server.ClientSettings.WorkspaceFolders);
+            builder.ProjectSettings.GetInitialFiles();
+            builder.ParserSettingsResolver.GetInitialFiles();
 
             Server.SendNotification(Version, Program.VERSION);
             await Server.WaitForExit;
@@ -322,6 +325,11 @@ namespace Deltin.Deltinteger.LanguageServer
             {
                 Language = "ostw",
                 Pattern = "**/*.workshop"
+            },
+            new DocumentFilter()
+            {
+                Language = "ostw",
+                Pattern = "ds.toml"
             }
         );
     }
