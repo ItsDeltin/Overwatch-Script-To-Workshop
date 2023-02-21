@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
 
             // Create the parameter handler for the constructor.
             public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
-                => new UserFunctionParameterHandler(actionSet, _instance.Parameters, _instance.ParameterVars, providedParameters);
+                => new UserFunctionParameterHandler(actionSet, _instance.Parameters, _instance.ParameterVars, providedParameters, new[] { _instance.ParameterVars });
 
             // Create the return handler for the constructor.
             public ReturnHandler GetReturnHandler(ActionSet actionSet) => new ReturnHandler(actionSet);

@@ -11,6 +11,9 @@ namespace Deltin.Deltinteger.Parse
         public virtual IWorkshopTree FirstOf(IWorkshopTree reference) => Element.FirstOf(reference);
         public virtual IWorkshopTree LastOf(IWorkshopTree reference) => Element.LastOf(reference);
         public virtual IWorkshopTree Contains(IWorkshopTree reference, IWorkshopTree value) => Element.Contains(reference, value);
+        public virtual IWorkshopTree Append(IWorkshopTree reference, IWorkshopTree value) => Element.Append(reference, value);
+        public virtual IWorkshopTree Slice(IWorkshopTree reference, IWorkshopTree start, IWorkshopTree count) => Element.Slice(reference, start, count);
+        public virtual IWorkshopTree IndexOf(IWorkshopTree reference, IWorkshopTree value) => Element.IndexOfArrayValue(reference, value);
         public virtual ISortFunctionExecutor SortedArray() => new GeneralSortFunctionExecutor();
         public virtual ISortFunctionExecutor FilteredArray() => new GeneralSortFunctionExecutor();
         public virtual ISortFunctionExecutor Any() => new GeneralSortFunctionExecutor();

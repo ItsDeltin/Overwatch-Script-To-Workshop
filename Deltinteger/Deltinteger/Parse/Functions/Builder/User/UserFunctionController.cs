@@ -49,17 +49,25 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             _function.CodeType?.GetCodeType(actionSet.DeltinScript)
                                .GetRealType(_typeArgLinker)
                                .GetGettableAssigner(new AssigningAttributes("returnValue_" + _function.Name, actionSet.IsGlobal, false))
-                               .GetValue(new GettableAssignerValueInfo(actionSet) {
-                                    SetInitialValue = SetInitialValue.DoNotSet,
-                                    Inline = !IsMultiplePaths()
-                                }),
+                               .GetValue(new GettableAssignerValueInfo(actionSet)
+                               {
+                                   SetInitialValue = SetInitialValue.DoNotSet,
+                                   Inline = !IsMultiplePaths()
+                               }),
             IsMultiplePaths());
 
-        bool IsMultiplePaths() => _function.Provider.ReturnType != null && (_function.Provider.MultiplePaths || _function.Attributes.Recursive || _function.Provider.SubroutineName != null);
+        bool IsMultiplePaths() => _function.Provider.ReturnType != null &&
+            (_function.Provider.MultiplePaths || _function.Attributes.Recursive || _function.Provider.SubroutineName != null || _function.Provider.Virtual);
 
         // Creates parameters assigned to this function.
         public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)
-            => new UserFunctionParameterHandler(actionSet, _function.Parameters, _function.ParameterVars, providedParameters);
+            => new UserFunctionParameterHandler(
+                actionSet,
+                _function.Parameters,
+                _function.ParameterVars,
+                providedParameters,
+                from virtualOption in _allVirtualOptions select virtualOption.ParameterVars
+            );
 
         // Create or get the subroutine.
         public SubroutineCatalogItem GetSubroutine()
@@ -67,9 +75,9 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             // Not a subroutine.
             if (!_function.Provider.IsSubroutine)
                 return null;
-            
+
             var providedTypeArgs = _typeArgLinker?.TypeArgsFromAnonymousTypes(_function.Provider.GenericTypes);
-            
+
             // The subroutine identifier is used to determine if a compatible subroutine was already created.
             var identifier = new UniqueSubroutineIdentifier(
                 // The function's provider.
@@ -79,11 +87,12 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 // The combo of the type args.
                 _typeArgLinker == null ? null : _toWorkshop.TypeArgGlob.Trackers[_function.Provider].GetCompatibleCombo(providedTypeArgs)
             );
-            
+
             // Get or create the subroutine.
             return _toWorkshop.SubroutineCatalog.GetSubroutine(identifier, () =>
                 // Create the subroutine.
-                new(new SubroutineBuilder(_toWorkshop.DeltinScript, new() {
+                new(new SubroutineBuilder(_toWorkshop.DeltinScript, new()
+                {
                     Controller = this,
                     ElementName = _function.Name,
                     RuleName = _function.Provider.SubroutineName,
@@ -114,7 +123,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             public void Build(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet);
             public ClassType ContainingType() => (ClassType)_method.DefinedInType;
         }
-    
+
         // This class is used as the key for identifying existing compatible subroutines.
         class UniqueSubroutineIdentifier
         {
@@ -133,11 +142,11 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             {
                 if (obj == null || GetType() != obj.GetType())
                     return false;
-                
+
                 var other = (UniqueSubroutineIdentifier)obj;
                 return _provider == other._provider && _classCombo == other._classCombo && _functionCombo == other._functionCombo;
             }
-            
+
             // Create the hash code from the object references of the input fields.
             public override int GetHashCode() => HashCode.Combine(_provider, _classCombo, _functionCombo);
         }
@@ -153,7 +162,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             ActionSet actionSet,
             CodeParameter[] codeParameters,
             IVariableInstance[] parameterVariables,
-            WorkshopParameter[] providedParameters)
+            WorkshopParameter[] providedParameters,
+            IEnumerable<IVariableInstance[]> virtualParameterVariables)
         {
             _recursiveParameters = actionSet.IsRecursive;
             _codeParameters = codeParameters;
@@ -168,12 +178,15 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                     // Create a gettable for the parameter.
                     gettable = parameterVariables[i]
                         .GetAssigner(new(actionSet))
-                        .GetValue(new GettableAssignerValueInfo(actionSet) {
+                        .GetValue(new GettableAssignerValueInfo(actionSet)
+                        {
                             SetInitialValue = SetInitialValue.DoNotSet,
                             InitialValueOverride = providedParameters?[i].Value
                         });
 
-                _parameters[i] = new UserFunctionParameter(gettable, new[] { parameterVariables[i].Provider }); //todo: linkedVariables for virtual
+                _parameters[i] = new UserFunctionParameter(
+                    gettable,
+                    virtualParameterVariables.Select(v => v[i].Provider).ToArray());
             }
         }
 
@@ -181,7 +194,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         {
             if (parameterValues.Length != _parameters.Length)
                 throw new Exception("Parameter count mismatch");
-            
+
             for (int i = 0; i < _parameters.Length; i++)
                 if (!_codeParameters[i].Attributes.Ref)
                     _parameters[i].Set(actionSet, parameterValues[i]);
@@ -191,7 +204,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         {
             if (parameterValues.Length != _parameters.Length)
                 throw new Exception("Parameter count mismatch");
-            
+
             for (int i = 0; i < _parameters.Length; i++)
                 _parameters[i].Push(actionSet, parameterValues[i]);
         }
@@ -220,7 +233,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 LinkedVariables = linkedVariables;
             }
 
-            public void Set(ActionSet actionSet, IWorkshopTree value) 
+            public void Set(ActionSet actionSet, IWorkshopTree value)
             {
                 if (Gettable.CanBeSet())
                     Gettable.Set(actionSet, value);

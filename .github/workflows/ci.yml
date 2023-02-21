@@ -20,11 +20,11 @@ jobs:
       - name: Test
         run: dotnet test --no-build --verbosity normal $GITHUB_WORKSPACE/Deltinteger
       - name: Publish win-x64
-        run: dotnet publish --runtime win-x64 --configuration Release -o bin/win-x64 --no-restore --self-contained true $GITHUB_WORKSPACE/Deltinteger
+        run: dotnet publish --runtime win-x64 --configuration Release -o bin/win-x64 --no-restore --self-contained true $GITHUB_WORKSPACE/Deltinteger/Deltinteger
       - name: Publish win-x86
-        run: dotnet publish --runtime win-x86 --configuration Release -o bin/win-x86 --no-restore --self-contained true $GITHUB_WORKSPACE/Deltinteger
+        run: dotnet publish --runtime win-x86 --configuration Release -o bin/win-x86 --no-restore --self-contained true $GITHUB_WORKSPACE/Deltinteger/Deltinteger
       - name: Publish Linux-64
-        run: dotnet publish --runtime linux-x64 --configuration Release -o bin/linux-x64 --no-restore --self-contained true $GITHUB_WORKSPACE/Deltinteger
+        run: dotnet publish --runtime linux-x64 --configuration Release -o bin/linux-x64 --no-restore --self-contained true $GITHUB_WORKSPACE/Deltinteger/Deltinteger
       - name: Zip binaries
         run: |
           zip -r -q bin/win-x64.zip bin/win-x64/

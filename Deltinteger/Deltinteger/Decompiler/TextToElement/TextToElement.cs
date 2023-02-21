@@ -1200,6 +1200,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                                     // Add the map.
                                     maps.Add(map.Name);
 
+                                    // Attempt to match an integer at the end (since OW2 introduced numbers at the end of map names)
+                                    Integer(out int _unused);
+
                                     // Indicate that a map was matched in this iteration.
                                     matched = true;
                                     break;
