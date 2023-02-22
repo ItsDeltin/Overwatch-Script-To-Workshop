@@ -774,7 +774,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
 
             //End Comment
-            MetaComment metaComment = Is(TokenType.ActionComment) ? ParseMetaComment() : null;
+            MetaComment metaComment = ParseMetaComment();
             // Close block
             ParseExpected(TokenType.CurlyBracket_Close);
 
@@ -789,7 +789,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         IParseStatement ParseStatement(bool parseSemicolon = true)
         {
-            MetaComment metaComment = Is(TokenType.ActionComment) ? ParseMetaComment() : null;
+            MetaComment metaComment = ParseMetaComment();
 
             IParseStatement statement;
 
@@ -2003,7 +2003,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool TryGetIfStatement(out IfCondition condition)
         {
             condition = new IfCondition();
-            condition.Comment = Is(TokenType.ActionComment) ? ParseMetaComment() : null;
+            condition.Comment = ParseMetaComment();
 
             if (condition.Comment != null)
             {
@@ -2051,6 +2051,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
         MetaComment ParseMetaComment()
         {
+            if (!Is(TokenType.ActionComment))
+                return null;
+
             StartNode();
             List<Token> comments = new List<Token>();
             while (ParseOptional(TokenType.ActionComment, out Token comment)) comments.Add(comment);
