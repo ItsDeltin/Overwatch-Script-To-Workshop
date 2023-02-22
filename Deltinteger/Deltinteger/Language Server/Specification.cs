@@ -82,5 +82,13 @@ namespace Deltin.Deltinteger.LanguageServer
                 Range = range
             };
         }
+
+        /// <summary>Returns the location but with the uri as a String type rather than a Uri type.
+        /// This exists because JObject.FromObject is sometimes used to encode data to pass to the clients
+        /// of the language server. However, doing JObject.FromObject on a Uri will replace spaces with '%20', which
+        /// the clients don't like very much. E.g for vscode in particular the references codelens (in CodeLens.cs) will
+        /// only work for files the user as opened for some reason.</summary>
+        public StringLocation AsStringLocation() => new StringLocation(uri.ToString(), range);
+        public record struct StringLocation(string uri, DocRange range);
     }
 }

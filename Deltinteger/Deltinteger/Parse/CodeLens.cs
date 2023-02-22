@@ -53,9 +53,10 @@ namespace Deltin.Deltinteger.Parse
         public override Command GetCommand()
         {
             var locations = _parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().CallsFromDeclaration(DeclarationKey)
-                .Where(c => !c.IsDeclaration).Select(c => c.Location);
+                .Where(c => !c.IsDeclaration).Select(c => c.Location.AsStringLocation());
 
-            return new Command {
+            return new Command
+            {
                 Name = "ostw.showReferences",
                 Title = locations.Count().ToString() + " references",
                 Arguments = new JArray {
@@ -127,7 +128,8 @@ namespace Deltin.Deltinteger.Parse
                 "- actions, - elements" :
                 actionCount + " actions, " + elementCount + " elements";
 
-            return new Command {
+            return new Command
+            {
                 Name = null,
                 Title = title,
                 Arguments = new JArray()
