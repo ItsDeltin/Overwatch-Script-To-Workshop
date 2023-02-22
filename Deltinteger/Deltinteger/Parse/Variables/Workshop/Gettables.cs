@@ -131,4 +131,22 @@ namespace Deltin.Deltinteger.Parse
         IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => new WorkshopElementReference(StructHelper.ValueInArray(WorkshopElement, reference));
         public bool CanBeSet() => false;
     }
+
+    // Wraps an IGettable with a known target.
+    class TargetGettable : IGettable
+    {
+        readonly IGettable _parent;
+        readonly Element _target;
+
+        public TargetGettable(IGettable parent, Element target) => (_parent, _target) = (parent, target);
+
+        public bool CanBeSet() => _parent.CanBeSet();
+        public IGettable ChildFromClassReference(IWorkshopTree reference) => new TargetGettable(_parent.ChildFromClassReference(reference), _target);
+        public IWorkshopTree GetVariable(Element eventPlayer = null) => _parent.GetVariable(_target);
+        public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, params Element[] index) =>
+            _parent.Modify(actionSet, operation, value, _target, index);
+        public void Pop(ActionSet actionSet) => _parent.Pop(actionSet);
+        public void Push(ActionSet actionSet, IWorkshopTree value) => _parent.Push(actionSet, value);
+        public void Set(ActionSet actionSet, IWorkshopTree value, Element target, params Element[] index) => _parent.Set(actionSet, value, _target, index);
+    }
 }

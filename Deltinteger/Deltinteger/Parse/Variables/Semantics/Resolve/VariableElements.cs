@@ -20,7 +20,8 @@ namespace Deltin.Deltinteger.Parse
             var current = IndexReference;
             for (int i = 0; i < Index.Length; i++)
                 current = current.ChildFromClassReference(Index[i]);
-            return current;
+
+            return Target == null ? current : new TargetGettable(current, Target);
         }
     }
 }
