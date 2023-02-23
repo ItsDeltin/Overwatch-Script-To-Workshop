@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             AttributesGetter.GetAttributes(parseInfo.Script.Diagnostics, context.Attributes, attributes);
 
             // Set the attributes.
-            Static = attributes.IsStatic;            
+            Static = attributes.IsStatic;
             Recursive = attributes.IsRecursive;
             Virtual = attributes.IsVirtual;
             AccessLevel = attributes.Accessor;
@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.Parse
             var containingScope = scopeProvider.GetScope(Static);
             containingScope.MethodContainer = true;
             _methodScope = containingScope.Child(true);
-            
+
             // Get the generics.
             GenericTypes = AnonymousType.GetGenerics(parseInfo, context.TypeArguments, this);
             foreach (var type in GenericTypes)
@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the type.
             if (!context.Type.IsVoid)
                 ReturnType = TypeFromContext.GetCodeTypeFromContext(parseInfo, _methodScope, context.Type);
-            
+
             // Setup the parameters.
             ParameterProviders = ParameterProvider.GetParameterProviders(parseInfo, _methodScope, context.Parameters, IsSubroutine);
             ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
                 .SetReturnType(ReturnType)
                 .SetThisType(ContainingType)
                 .SetCallInfo(CallInfo);
-            
+
             if (Context.Block != null)
             {
                 var returnTracker = new ReturnTracker();
@@ -136,19 +136,24 @@ namespace Deltin.Deltinteger.Parse
 
                 MultiplePaths = returnTracker.IsMultiplePaths;
 
+                // todo: there should be smarter return branch checking like earlier versions of ostw had,
+                // this will have to do for now to prevent compiling without a return.
+                if (!CodeTypeHelpers.IsVoid(ReturnType) && returnTracker.Returns.Count == 0)
+                    _parseInfo.Script.Diagnostics.Error("Method must return a value", Context.Identifier);
+
                 // If there is only one return statement, set SingleReturnValue.
                 if (returnTracker.Returns.Count == 1) SingleReturnValue = returnTracker.Returns[0].ReturningValue;
             }
             else if (Context.MacroValue != null)
             {
                 MacroValue = SingleReturnValue = parseInfo.SetExpectType(ReturnType).GetExpression(_methodScope, Context.MacroValue);
-                
+
                 SemanticsHelper.ExpectValueType(parseInfo, MacroValue, ReturnType, Context.MacroValue.Range);
             }
-            
+
             ContentReady.Set();
         }
-    
+
         public IMethod GetDefaultInstance(CodeType definedIn) => new DefinedMethodInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes), definedIn);
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
@@ -207,7 +212,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet = actionSet
                 .SetThisTypeLinker(methodCall.TypeArgs)
                 .MergeTypeLinker(InstanceInfo);
-            
+
             if (Provider.Block != null)
                 return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.ToWorkshop, this, methodCall.TypeArgs));
             else
