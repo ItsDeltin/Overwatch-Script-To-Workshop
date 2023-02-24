@@ -317,17 +317,17 @@ namespace Deltin.Deltinteger.Parse
 
         void TranslateAutoFor(ActionSet actionSet)
         {
-            WorkshopVariable variable;
             Element target;
             Element start;
+
+            IndexReference indexReference;
 
             // Existing variable being used in for.
             if (VariableResolve != null)
             {
                 VariableElements elements = VariableResolve.ParseElements(actionSet);
-                var indexReference = (IndexReference)elements.IndexReference;
+                indexReference = (IndexReference)elements.IndexReference;
 
-                variable = indexReference.WorkshopVariable;
                 target = elements.Target;
                 start = (Element)InitialResolveValue?.Parse(actionSet) ?? Element.Num(0);
             }
@@ -344,7 +344,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.IndexAssigner.Add(DefinedVariable, assignerResult.Gettable);
 
                 // Set variable, target, and stop.
-                variable = ((IndexReference)actionSet.IndexAssigner[DefinedVariable]).WorkshopVariable; // Extract the workshop variable.
+                indexReference = (IndexReference)actionSet.IndexAssigner.Get(DefinedVariable); // Extract the workshop variable.
                 target = Element.EventPlayer(); // Set target to Event Player since declaring variables has no target.
                 start = (Element)assignerResult.InitialValue ?? Element.Num(0); // Set start to InitialValue or 0 if null.
             }
@@ -352,20 +352,37 @@ namespace Deltin.Deltinteger.Parse
             Element stop = (Element)Condition.Parse(actionSet);
             Element step = (Element)Step.Parse(actionSet);
 
-            // Global
-            if (variable.IsGlobal)
-                actionSet.AddAction(Element.ForGlobalVariable(variable, start, stop, step)
-                    .AddComment(Comment));
-            // Player
+            // We can only auto for if there are no indices.
+            bool canAutoFor = indexReference.Index.Length == 0;
+
+            if (canAutoFor)
+            {
+                var variable = indexReference.WorkshopVariable;
+
+                // Global
+                if (variable.IsGlobal)
+                    actionSet.AddAction(Element.ForGlobalVariable(variable, start, stop, step)
+                        .AddComment(Comment));
+                // Player
+                else
+                    actionSet.AddAction(Element.ForPlayerVariable(target, variable, start, stop, step)
+                        .AddComment(Comment));
+            }
             else
-                actionSet.AddAction(Element.ForPlayerVariable(target, variable, start, stop, step)
-                    .AddComment(Comment));
+            {
+                actionSet.AddAction(Element.While(Element.Compare(
+                    indexReference.Get(target), Operator.LessThan, stop
+                )));
+            }
 
             // Translate the block.
             Block.Translate(actionSet);
 
             // Resolve continues.
             ResolveContinues(actionSet);
+
+            if (!canAutoFor)
+                indexReference.Modify(actionSet, Operation.Add, Element.Num(1), target, new Element[0]);
 
             // Cap the for.
             actionSet.AddAction(Element.End());
