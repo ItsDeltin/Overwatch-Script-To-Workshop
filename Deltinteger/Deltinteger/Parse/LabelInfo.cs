@@ -1,4 +1,5 @@
 using System.Linq;
+using MetaComment = Deltin.Deltinteger.Compiler.SyntaxTree.MetaComment;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -10,28 +11,32 @@ namespace Deltin.Deltinteger.Parse
         public bool IncludeDocumentation;
         public AnonymousLabelInfo AnonymousLabelInfo = AnonymousLabelInfo.Default;
 
-        public static readonly LabelInfo Hover = new LabelInfo() {
+        public static readonly LabelInfo Hover = new LabelInfo()
+        {
             IncludeDocumentation = true,
             IncludeReturnType = true,
             IncludeParameterTypes = true,
             IncludeParameterNames = true
         };
 
-        public static readonly LabelInfo SignatureOverload = new LabelInfo() {
+        public static readonly LabelInfo SignatureOverload = new LabelInfo()
+        {
             IncludeDocumentation = false,
             IncludeReturnType = true,
             IncludeParameterTypes = true,
             IncludeParameterNames = true
         };
 
-        public static readonly LabelInfo OverloadError = new LabelInfo() {
+        public static readonly LabelInfo OverloadError = new LabelInfo()
+        {
             IncludeDocumentation = false,
             IncludeReturnType = false,
             IncludeParameterTypes = false,
             IncludeParameterNames = true
         };
 
-        public static readonly LabelInfo RecursionError = new LabelInfo() {
+        public static readonly LabelInfo RecursionError = new LabelInfo()
+        {
             IncludeDocumentation = false,
             IncludeReturnType = false,
             IncludeParameterTypes = true,
@@ -44,22 +49,22 @@ namespace Deltin.Deltinteger.Parse
 
             if (IncludeReturnType)
                 builder.Add(type.GetName()).Add(" ");
-            
+
             return builder.Add(name).EndCodeLine();
         }
 
-        public MarkupBuilder MakeFunctionLabel(DeltinScript deltinScript, CodeType type, string name, IParameterLike[] parameters, AnonymousType[] typeArgs)
+        public MarkupBuilder MakeFunctionLabel(DeltinScript deltinScript, CodeType type, string name, IParameterLike[] parameters, AnonymousType[] typeArgs, ParsedMetaComment metaComment)
         {
             var builder = new MarkupBuilder().StartCodeLine();
 
             if (IncludeReturnType)
                 builder.Add(AnonymousLabelInfo.NameFromSolver(deltinScript, type) + " ");
-            
+
             builder.Add(name);
 
             if (typeArgs.Length != 0)
                 builder.Add("<" + string.Join(", ", typeArgs.Select(typeArg => typeArg.GetDeclarationName())) + ">");
-            
+
             builder.Add("(");
 
             for (int i = 0; i < parameters.Length; i++)
@@ -67,8 +72,16 @@ namespace Deltin.Deltinteger.Parse
                 if (i != 0) builder.Add(", ");
                 builder.Add(parameters[i].GetLabel(deltinScript, AnonymousLabelInfo));
             }
-            
-            return builder.Add(")").EndCodeLine();
+
+            builder.Add(")").EndCodeLine();
+
+            if (metaComment != null)
+            {
+                builder.NewLine();
+                builder.Add(metaComment.Description);
+            }
+
+            return builder;
         }
     }
 
@@ -76,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public static readonly AnonymousLabelInfo Default = new AnonymousLabelInfo();
 
-        public AnonymousLabelInfo() {}
+        public AnonymousLabelInfo() { }
         public AnonymousLabelInfo(InstanceAnonymousTypeLinker typeLinker)
         {
             TypeLinker = typeLinker;

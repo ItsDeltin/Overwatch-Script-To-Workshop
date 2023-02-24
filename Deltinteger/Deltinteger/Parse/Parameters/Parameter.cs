@@ -95,37 +95,11 @@ namespace Deltin.Deltinteger.Parse
 
         override public string ToString() => Name;
 
-        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, List<VariableDeclaration> context, bool subroutineParameter)
+        public MarkupBuilder GetSignatureDocumentation()
         {
-            if (context == null) return new ParameterParseResult(new CodeParameter[0], new Var[0]);
-
-            var parameters = new CodeParameter[context.Count];
-            var vars = new Var[parameters.Length];
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                Var newVar;
-
-                CodeParameter parameter = new CodeParameter(context[i].Identifier.GetText());
-
-                // Set up the context handler.
-                IVarContextHandler contextHandler = new DefineContextHandler(parseInfo.SetRestrictedCallHandler(parameter), context[i]);
-
-                // Normal parameter
-                if (!subroutineParameter)
-                    newVar = (Var)new ParameterVariable(methodScope, contextHandler, parameter.Invoked).GetVar();
-                // Subroutine parameter.
-                else
-                    newVar = (Var)new SubroutineParameterVariable(methodScope, contextHandler).GetVar();
-
-                vars[i] = newVar;
-                parameter._type = newVar.CodeType;
-
-                if (newVar.InitialValue != null) parameter.DefaultValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
-
-                parameters[i] = parameter;
-            }
-
-            return new ParameterParseResult(parameters, vars);
+            if (Documentation == null)
+                return null;
+            return new MarkupBuilder().Code(Name).Add(":").NewLine().Add(Documentation).NewSection();
         }
 
         public static string GetLabels(DeltinScript deltinScript, AnonymousLabelInfo labelInfo, CodeParameter[] parameters)
@@ -143,18 +117,6 @@ namespace Deltin.Deltinteger.Parse
         {
             Ref = isRef;
             In = in_;
-        }
-    }
-
-    public class ParameterParseResult
-    {
-        public CodeParameter[] Parameters { get; }
-        public Var[] Variables { get; }
-
-        public ParameterParseResult(CodeParameter[] parameters, Var[] parameterVariables)
-        {
-            Parameters = parameters;
-            Variables = parameterVariables;
         }
     }
 

@@ -30,6 +30,9 @@
     },
     {
       "include": "#variable-declaration"
+    },
+    {
+      "include": "#expression"
     }
   ],
   "firstLineMatch": "\\brule\\b",
@@ -74,15 +77,52 @@
           "endCaptures": {}
         },
         {
-          "name": "comment.block.documentation",
           "begin": "#",
           "beginCaptures": {
             "0": {
               "name": "punctuation.definition.comment"
             }
           },
-          "end": "(?=$)",
-          "endCaptures": {}
+          "end": "(?=^)\\s*(?!#)",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "begin": "```",
+              "beginCaptures": {
+                "0": {
+                  "name": "markup.fenced_code.block.markdown"
+                }
+              },
+              "end": "```|^\\s*(?!#)",
+              "endCaptures": {
+                "0": {
+                  "name": "markup.fenced_code.block.markdown"
+                }
+              },
+              "patterns": [
+                {
+                  "match": "(#)(.*?($|(?=```)))",
+                  "captures": {
+                    "1": {
+                      "name": "comment.block.documentation"
+                    },
+                    "2": {
+                      "patterns": [
+                        {
+                          "include": "$self"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "comment.block.documentation",
+              "match": "(?!```).+?(?=```|$)",
+              "captures": {}
+            }
+          ]
         }
       ]
     },
@@ -552,7 +592,7 @@
           ]
         },
         {
-          "begin": "(for)\\s*(\\()",
+          "begin": "(foreach)\\s*(\\()",
           "beginCaptures": {
             "1": {
               "name": "keyword.control.loop.foreach"

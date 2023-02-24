@@ -29,6 +29,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type { get; private set; }
         public ExpressionOrWorkshopValue DefaultValue { get; private set; }
         public ParameterAttributes Attributes { get; private set; }
+        public MarkupBuilder Description { get; private set; }
         private readonly ParameterInvokedInfo _invoked = new ParameterInvokedInfo();
         private readonly List<RestrictedCallType> _restrictedCalls = new List<RestrictedCallType>();
 
@@ -37,7 +38,8 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
         }
 
-        public ParameterInstance GetInstance(InstanceAnonymousTypeLinker instanceInfo) => new ParameterInstance(new CodeParameter(Name, Type.GetRealType(instanceInfo), DefaultValue) {
+        public ParameterInstance GetInstance(InstanceAnonymousTypeLinker instanceInfo) => new ParameterInstance(new CodeParameter(Name, Description, Type.GetRealType(instanceInfo), DefaultValue)
+        {
             Attributes = Attributes,
             Invoked = _invoked,
             RestrictedCalls = _restrictedCalls,
@@ -50,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
                 _restrictedCalls.Add(restrictedCall.CallType);
         }
 
-        public static ParameterProvider[] GetParameterProviders(ParseInfo parseInfo, Scope methodScope, List<VariableDeclaration> context, bool subroutineParameter)
+        public static ParameterProvider[] GetParameterProviders(ParseInfo parseInfo, Scope methodScope, List<VariableDeclaration> context, bool subroutineParameter, ParsedMetaComment metaComment = null)
         {
             if (context == null) return new ParameterProvider[0];
 
@@ -58,8 +60,9 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < parameters.Length; i++)
             {
                 Var newVar;
+                string name = context[i].Identifier.GetText();
 
-                ParameterProvider parameter = new ParameterProvider(context[i].Identifier.GetText());
+                ParameterProvider parameter = new ParameterProvider(name);
 
                 // Set up the context handler.
                 IVarContextHandler contextHandler = new DefineContextHandler(parseInfo.SetRestrictedCallHandler(parameter), context[i]);
@@ -74,6 +77,7 @@ namespace Deltin.Deltinteger.Parse
                 parameter.Var = newVar;
                 parameter.Type = newVar.CodeType;
                 parameter.Attributes = new ParameterAttributes(newVar.Ref, newVar.VariableType == VariableType.ElementReference);
+                parameter.Description = metaComment?.GetParameterDescription(name);
 
                 if (newVar.InitialValue != null) parameter.DefaultValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
 
@@ -86,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
         public string GetLabel(DeltinScript deltinScript, AnonymousLabelInfo labelInfo)
         {
             string result = string.Empty;
-            
+
             if (Attributes.Ref) result = "ref ";
             else if (Attributes.In) result = "in ";
 

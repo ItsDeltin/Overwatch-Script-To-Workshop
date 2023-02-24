@@ -49,7 +49,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             actionSet.AddAction(_waitAsyncQueue.ModifyVariable(Operation.AppendToArray, Element.CreateArray(Element.CreateArray(Element.TimeElapsed() + seconds, function))));
         }
 
-        public static FuncMethod Method(ITypeSupplier types) => new FuncMethodBuilder() {
+        public static FuncMethod Method(ITypeSupplier types) => new FuncMethodBuilder()
+        {
             Name = "WaitAsync",
             Documentation = new MarkupBuilder().Add("Waits without blocking the current rule, executing the provided action when the wait completes.").NewLine()
                 .Add("Using ").Code("Wait").Add(" inside a subroutine that interacts with variables may result in weird and unexpected behaviours when executed from multiples places at once due to race conditions. ")
@@ -61,13 +62,13 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 .Add("However, using ").Code("WaitAsync").Add(", the rule can be executed multiple times simultaneously.").NewLine()
                     .StartCodeLine().Add("rule: \"My Rule\"").NewLine().Add("if(IsButtonHeld(HostPlayer(), Button.Interact))").NewLine().Add("{").NewLine()
                     .Add("    x = RandomInteger(0, 10);").NewLine().NewLine().Add("    SmallMessage(AllPlayers(), x);").NewLine().Add("    WaitAsync(3, () => {").NewLine().Add("        SmallMessage(AllPlayers(), x);")
-                    .NewLine().Add("    });").NewLine().Add("}").EndCodeLine()
-                .ToString(),
+                    .NewLine().Add("    });").NewLine().Add("}").EndCodeLine(),
             Parameters = new[] {
                 new CodeParameter("duration", "The duration to wait in seconds before the action gets execute.", types.Number()),
                 new CodeParameter("action", "The action that is executed when the wait completes.", new PortableLambdaType(new(LambdaKind.Portable)))
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 actionSet.DeltinScript.GetComponent<WaitAsyncComponent>().AddToQueue(actionSet, methodCall.Get(0), methodCall.Get(1));
                 return null;
             }

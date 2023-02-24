@@ -357,7 +357,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                         // Get the label to show in the signature.
                         Label = overload.Parameters[p].GetLabel(_parseInfo.TranslateInfo, new AnonymousLabelInfo(match.TypeArgLinker)),
                         // Get the documentation.
-                        Documentation = overload.Parameters[p].Documentation
+                        Documentation = overload.Parameters[p].GetSignatureDocumentation()
                     };
 
                 // Create the signature information.

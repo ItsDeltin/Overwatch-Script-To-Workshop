@@ -39,6 +39,7 @@ namespace Deltin.Deltinteger.Parse
         public IExpression SingleReturnValue { get; private set; }
         public IExpression MacroValue { get; private set; }
         public ValueSolveSource ContentReady { get; } = new ValueSolveSource();
+        public ParsedMetaComment MetaComment { get; }
 
         ITypeArgTrackee IMethodExtensions.Tracker => this;
         int ITypeArgTrackee.GenericsCount => GenericTypes.Length;
@@ -88,8 +89,11 @@ namespace Deltin.Deltinteger.Parse
             if (!context.Type.IsVoid)
                 ReturnType = TypeFromContext.GetCodeTypeFromContext(parseInfo, _methodScope, context.Type);
 
+            // Get the function description.
+            MetaComment = ParsedMetaComment.FromMetaComment(context.MetaComment);
+
             // Setup the parameters.
-            ParameterProviders = ParameterProvider.GetParameterProviders(parseInfo, _methodScope, context.Parameters, IsSubroutine);
+            ParameterProviders = ParameterProvider.GetParameterProviders(parseInfo, _methodScope, context.Parameters, IsSubroutine, MetaComment);
             ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
 
             // Override
@@ -166,13 +170,13 @@ namespace Deltin.Deltinteger.Parse
         public static DefinedMethodProvider GetDefinedMethod(ParseInfo parseInfo, IScopeHandler scopeHandler, FunctionContext context, IDefinedTypeInitializer containingType)
             => new DefinedMethodProvider(parseInfo, scopeHandler, context, containingType);
 
-        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeFunctionLabel(deltinScript, ReturnType, Name, ParameterProviders, GenericTypes);
+        public MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeFunctionLabel(deltinScript, ReturnType, Name, ParameterProviders, GenericTypes, MetaComment);
     }
 
     public class DefinedMethodInstance : IMethod
     {
         public string Name => Provider.Name;
-        public MarkupBuilder Documentation => null;
+        public MarkupBuilder Documentation { get; }
         public ICodeTypeSolver CodeType { get; }
         public IVariableInstance[] ParameterVars { get; }
         public CodeParameter[] Parameters { get; }
@@ -205,6 +209,7 @@ namespace Deltin.Deltinteger.Parse
 
             Attributes.CallInfo = Provider.CallInfo;
             Attributes.GetRestrictedCallTypes = Provider.CallInfo;
+            Documentation = Provider.MetaComment?.Description;
         }
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)

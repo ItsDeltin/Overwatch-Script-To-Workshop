@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Not required: the return type of the function. Void by default.</summary>
         public CodeType ReturnType;
         /// <summary>Required: the documentation of the function.</summary>
-        public string Documentation;
+        public MarkupBuilder Documentation;
         /// <summary>Not required: the additional method options.</summary>
         public IMethodExtensions MethodInfo;
         /// <summary>Required: the action of the function.</summary>

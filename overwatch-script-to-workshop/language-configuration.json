@@ -26,5 +26,15 @@
         ["(", ")"],
         ["\"", "\""],
         ["'", "'"]
+    ],
+    "onEnterRules": [
+        {
+            // Continue doc comments
+            "beforeText": "^\\s*#.*$",
+            "action": {
+                "indent": "none",
+                "appendText": "# "
+            }
+        }
     ]
 }

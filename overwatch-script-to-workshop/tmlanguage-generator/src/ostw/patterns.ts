@@ -60,9 +60,33 @@ const comment: Pattern = {
         // Documentation comments.
         {
             begin: '#',
-            end: /(?=$)/,
-            name: 'comment.block.documentation',
+            end: /(?=^)\s*(?!#)/,
+            // name: 'comment.block.documentation',
             zeroBeginCapture: { name: Names.comment },
+            patterns: [
+                {
+                    begin: '```',
+                    end: /```|^\s*(?!#)/,
+                    zeroBeginCapture: { name: 'markup.fenced_code.block.markdown' },
+                    zeroEndCapture: { name: 'markup.fenced_code.block.markdown' },
+                    patterns: [
+                        {
+                            match: [
+                                tm.Group({ value: '#', tmName: 'comment.block.documentation' }),
+                                tm.Group({
+                                    value: /.*?($|(?=```))/,
+                                    patterns: [{ include: '$self' }]
+                                })
+                            ]
+                        }
+                    ]
+                },
+                // Match all other text.
+                {
+                    match: /(?!```).+?(?=```|$)/,
+                    name: 'comment.block.documentation',
+                }
+            ]
         },
     ],
 };
@@ -384,7 +408,7 @@ const statement: Pattern = {
         // foreach
         {
             begin: [
-                pair('for', 'keyword.control.loop.foreach'),
+                pair('foreach', 'keyword.control.loop.foreach'),
                 w,
                 pair('(', Names.parenthesis_open),
             ],

@@ -1221,6 +1221,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         bool IsDeclaration(bool functionDeclaration) => Lookahead(() =>
         {
+            ParseMetaComment();
             ParseAttributes();
             var typeParse = ParseType();
             return typeParse.LookaheadValid && (ParseExpected(TokenType.Identifier) && (
@@ -1399,6 +1400,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         IDeclaration ParseVariableOrFunctionDeclaration()
         {
             StartNode();
+            var metaComment = ParseMetaComment();
             var attributes = ParseAttributes();
             var type = ParseType();
 
@@ -1425,7 +1427,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Get the macro's value.
                     var value = GetContainExpression();
                     ParseSemicolon();
-                    return EndNode(new FunctionContext(attributes, type, identifier, typeArgs, parameters, value));
+                    return EndNode(new FunctionContext(attributes, type, identifier, typeArgs, parameters, value, metaComment));
                 }
                 // Normal function
                 else
@@ -1444,17 +1446,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
                     // Get the function's block.
                     Block block = ParseBlock();
-                    return EndNode(new FunctionContext(attributes, type, identifier, typeArgs, parameters, block, globalvar, playervar, subroutine));
+                    return EndNode(new FunctionContext(attributes, type, identifier, typeArgs, parameters, block, globalvar, playervar, subroutine, metaComment));
                 }
             }
-            // Variable macro
-            // else if (ParseOptional(TokenType.Colon))
-            // {
-            //     // Get the value.
-            //     var macroValue = GetContainExpression();
-            //     ParseSemicolon();
-            //     return EndNode(new MacroVarDeclaration(attributes, type, identifier, macroValue));
-            // }
             // Variable
             else
             {

@@ -2,12 +2,15 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Deltin.Deltinteger.Parse;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 using MarkedStringsOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkedStringsOrMarkupContent;
 using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
 using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
 using DocumentUri = OmniSharp.Extensions.LanguageServer.Protocol.DocumentUri;
+using MetaComment = Deltin.Deltinteger.Compiler.SyntaxTree.MetaComment;
 
 namespace Deltin.Deltinteger
 {
@@ -77,7 +80,7 @@ namespace Deltin.Deltinteger
 
         public static Uri Clean(this Uri uri)
         {
-			return new Uri(uri.FilePath());
+            return new Uri(uri.FilePath());
         }
 
         public static string GetNameOrVoid(this CodeType type) => type?.GetName() ?? "void";
@@ -110,7 +113,7 @@ namespace Deltin.Deltinteger
 
         public static string RemoveStructuralChars(this string str) => str.Replace(",", "").Replace("(", "").Replace(")", "");
 
-        public static V GetValueOrAddKey<T, V>(this Dictionary<T, V> dictionary, T key) where V: class, new()
+        public static V GetValueOrAddKey<T, V>(this Dictionary<T, V> dictionary, T key) where V : class, new()
         {
             if (!dictionary.TryGetValue(key, out V value))
             {
@@ -172,6 +175,12 @@ namespace Deltin.Deltinteger
             noMarkup.Append(text);
             return this;
         }
+        public MarkupBuilder Add(MarkupBuilder markupBuilder)
+        {
+            result.Append(markupBuilder.result);
+            noMarkup.Append(markupBuilder.noMarkup);
+            return this;
+        }
         public MarkupBuilder Italicize(string text)
         {
             result.Append("*" + text + "*");
@@ -186,16 +195,8 @@ namespace Deltin.Deltinteger
         }
         public MarkupBuilder NewLine()
         {
-            if (inCodeLine)
-            {
-                result.Append("\n");
-                noMarkup.Append("\n");
-            }
-            else
-            {
-                result.Append("\n\r");
-                noMarkup.Append("\n\r");
-            }
+            result.Append("\n");
+            noMarkup.Append("\n");
             return this;
         }
         public MarkupBuilder StartCodeLine()
@@ -207,13 +208,13 @@ namespace Deltin.Deltinteger
         public MarkupBuilder EndCodeLine()
         {
             inCodeLine = false;
-            result.Append("\n\r```");
+            result.Append("\n```");
             return this;
         }
         public MarkupBuilder NewSection()
         {
-            result.Append("\n\r ----- \n\r");
-            noMarkup.Append("\n\r");
+            result.Append("\n ----- \n");
+            noMarkup.Append("\n");
             return this;
         }
         public MarkupBuilder Indent() => Add("    ");
@@ -225,7 +226,7 @@ namespace Deltin.Deltinteger
             Kind = MarkupKind.Markdown,
             Value = ToString()
         };
-        
+
         public static implicit operator MarkupBuilder(string value) => value == null ? null : new MarkupBuilder(value);
         public static implicit operator string(MarkupBuilder builder) => builder?.ToString(false);
         public static implicit operator StringOrMarkupContent(MarkupBuilder builder) => builder == null ? null : new StringOrMarkupContent((MarkupContent)builder);

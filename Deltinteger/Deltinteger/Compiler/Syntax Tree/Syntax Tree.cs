@@ -261,6 +261,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Identifier { get; }
         public List<TypeArgContext> TypeArguments { get; }
         public List<VariableDeclaration> Parameters { get; }
+        public MetaComment MetaComment { get; }
 
         // Block
         public Block Block { get; }
@@ -271,7 +272,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         // Macro
         public IParseExpression MacroValue { get; }
 
-        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
+        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine, MetaComment metaComment)
         {
             Attributes = attributes;
             Type = type;
@@ -282,9 +283,10 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             GlobalVar = globalvar;
             PlayerVar = playervar;
             Subroutine = subroutine;
+            MetaComment = metaComment;
         }
 
-        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, IParseExpression macroValue)
+        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, IParseExpression macroValue, MetaComment metaComment)
         {
             Attributes = attributes;
             Type = type;
@@ -292,6 +294,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             TypeArguments = typeArgs;
             Parameters = parameters;
             MacroValue = macroValue;
+            MetaComment = metaComment;
         }
     }
 
@@ -1004,6 +1007,19 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
                 addNewline = true;
             }
             return result;
+        }
+
+        public IEnumerable<string> GetLines()
+        {
+            foreach (var comment in Comments)
+            {
+                string value = comment.Text.Substring(1).TrimEnd();
+
+                if (value.Length > 0 && char.IsWhiteSpace(value.First()))
+                    yield return value.Substring(1);
+                else
+                    yield return value;
+            }
         }
     }
 

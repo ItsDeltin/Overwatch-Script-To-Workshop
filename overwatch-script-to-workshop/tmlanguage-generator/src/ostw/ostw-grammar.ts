@@ -19,6 +19,7 @@ let grammar = tm.createTextmateGrammar({
         { include: Repository.rule },
         { include: Repository.function_declaration },
         { include: Repository.variable_declaration },
+        { include: Repository.expression }
     ],
 });
 
