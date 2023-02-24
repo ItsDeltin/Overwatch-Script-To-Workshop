@@ -425,7 +425,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
         public IWorkshopTree GetArbritraryValue() => _structValue;
-        public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues();
+        public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues().Select(v => _bridge(new BridgeArgs(v))).ToArray();
     }
 
     /// <summary>Arguments from bridging struct values.</summary>

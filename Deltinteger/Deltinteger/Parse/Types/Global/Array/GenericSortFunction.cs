@@ -6,60 +6,67 @@ namespace Deltin.Deltinteger.Parse
 {
     public class GenericSortFunction
     {
-        public string Name;
-        public string Documentation;
-        public string ParameterDocumentation;
-        public CodeType ReturnType;
-        public CodeType ArrayOfType;
-        public CodeType FuncType;
-        public string Function;
-        public ISortFunctionExecutor Executor = new GeneralSortFunctionExecutor();
-        public IMethodExtensions MethodInfo;
+        readonly string name; // The name of the created ostw function.
+        readonly string documentation; // The documentation of the ostw function.
+        readonly string parameterDocumentation; // The description of the lambda parameter.
+        readonly CodeType returnType; // The return type of the ostw function.
+        readonly ArrayType arrayType; // The array type that this belongs to.
+        readonly CodeType funcType; // The type that the lambda parameter returns.
+        readonly Func<ArrayFunctionHandler, ISortFunctionExecutor> pointToExecutor; // Gets the respective ISortFunctionExecutor from the ArrayFunctionHandler.
+        readonly IMethodExtensions methodInfo; // Additional function info.
+
+        public GenericSortFunction(
+            string name,
+            string documentation,
+            string parameterDocumentation,
+            CodeType returnType,
+            ArrayType arrayType,
+            CodeType funcType,
+            Func<ArrayFunctionHandler, ISortFunctionExecutor> pointToExecutor,
+            IMethodExtensions methodInfo = null)
+        {
+            this.name = name;
+            this.documentation = documentation;
+            this.parameterDocumentation = parameterDocumentation;
+            this.returnType = returnType;
+            this.arrayType = arrayType;
+            this.funcType = funcType;
+            this.pointToExecutor = pointToExecutor;
+            this.methodInfo = methodInfo;
+        }
 
         public void Add(Scope addToScope, ITypeSupplier supplier)
         {
             // value => ...
             var noIndex = GetFuncMethod();
             noIndex.Parameters = new CodeParameter[] {
-                new CodeParameter("conditionLambda", ParameterDocumentation, PortableLambdaType.CreateConstantType(FuncType, ArrayOfType))
+                new CodeParameter("conditionLambda", parameterDocumentation, PortableLambdaType.CreateConstantType(funcType, arrayType.ArrayOfType))
             };
             noIndex.Action = (actionSet, methodCall) =>
-                Executor.GetResult(Function, actionSet, inv => Lambda(methodCall).Invoke(actionSet, inv));
+                GetExecutor(actionSet).GetResult(actionSet, inv => Lambda(methodCall).Invoke(actionSet, inv));
 
             // (value, index) => ...
             var withIndex = GetFuncMethod();
             withIndex.Parameters = new CodeParameter[] {
-                new CodeParameter("conditionLambda", ParameterDocumentation, PortableLambdaType.CreateConstantType(FuncType, ArrayOfType, supplier.Number()))
+                new CodeParameter("conditionLambda", parameterDocumentation, PortableLambdaType.CreateConstantType(funcType, arrayType.ArrayOfType, supplier.Number()))
             };
             withIndex.Action = (actionSet, methodCall) =>
-                Executor.GetResult(Function, actionSet, inv => Lambda(methodCall).Invoke(actionSet, inv, Element.ArrayIndex()));
-            
+                GetExecutor(actionSet).GetResult(actionSet, inv => Lambda(methodCall).Invoke(actionSet, inv, Element.ArrayIndex()));
+
             addToScope.AddNativeMethod(new FuncMethod(noIndex));
             addToScope.AddNativeMethod(new FuncMethod(withIndex));
         }
+
+        ISortFunctionExecutor GetExecutor(ActionSet actionSet) => pointToExecutor(arrayType.GetRealType(actionSet.ThisTypeLinker).ArrayHandler.GetFunctionHandler());
 
         static ILambdaInvocable Lambda(MethodCall methodCall) => (ILambdaInvocable)methodCall.ParameterValues[0];
 
         private FuncMethodBuilder GetFuncMethod() => new FuncMethodBuilder()
         {
-            Name = Name,
-            Documentation = Documentation,
-            ReturnType = ReturnType,
-            MethodInfo = MethodInfo
+            Name = name,
+            Documentation = documentation,
+            ReturnType = returnType,
+            MethodInfo = methodInfo
         };
-    }
-
-    public interface ISortFunctionExecutor
-    {
-        IWorkshopTree GetResult(string function, ActionSet actionSet, Func<IWorkshopTree, IWorkshopTree> invoke);
-    }
-
-    class GeneralSortFunctionExecutor : ISortFunctionExecutor
-    {
-        public virtual IWorkshopTree GetResult(
-            string function,
-            ActionSet actionSet,
-            Func<IWorkshopTree, IWorkshopTree> invoke)
-            => Element.Part(function, actionSet.CurrentObject, invoke(Element.ArrayElement()));
     }
 }

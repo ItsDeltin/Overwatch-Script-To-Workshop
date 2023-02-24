@@ -66,69 +66,54 @@ namespace Deltin.Deltinteger.Parse
             var functionHandler = ArrayOfType.ArrayHandler.GetFunctionHandler();
 
             // Filtered Array
-            new GenericSortFunction()
-            {
-                Name = "FilteredArray",
-                Documentation = "A copy of the specified array with any values that do not match the specified condition removed.",
-                ReturnType = this,
-                ArrayOfType = ArrayOfType,
-                FuncType = _supplier.Boolean(),
-                ParameterDocumentation = "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array.",
-                Function = "Filtered Array",
-                Executor = functionHandler.FilteredArray()
-            }.Add(Scope, _supplier);
+            MakeGenericSortFunction(
+                name: "FilteredArray",
+                documentation: "A copy of the specified array with any values that do not match the specified condition removed.",
+                returnType: this,
+                funcType: _supplier.Boolean(),
+                parameterDocumentation: "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array.",
+                pointToExecutor: h => h.FilteredArray()
+            ).Add(Scope, _supplier);
             // Sorted Array
-            new GenericSortFunction()
-            {
-                Name = "SortedArray",
-                Documentation = "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.",
-                ReturnType = this,
-                ArrayOfType = ArrayOfType,
-                FuncType = _supplier.Boolean(),
-                ParameterDocumentation = "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order.",
-                Function = "Sorted Array",
-                Executor = functionHandler.SortedArray()
-            }.Add(Scope, _supplier);
+            MakeGenericSortFunction(
+                name: "SortedArray",
+                documentation: "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.",
+                returnType: this,
+                funcType: _supplier.Number(),
+                parameterDocumentation: "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order.",
+                pointToExecutor: h => h.SortedArray()
+            ).Add(Scope, _supplier);
             // Is True For Any
-            new GenericSortFunction()
-            {
-                Name = "IsTrueForAny",
-                Documentation = "Whether the specified condition evaluates to true for any value in the specified array.",
-                ReturnType = _supplier.Boolean(),
-                ArrayOfType = ArrayOfType,
-                FuncType = _supplier.Boolean(),
-                ParameterDocumentation = "The condition that is evaluated for each element of the specified array.",
-                Function = "Is True For Any",
-                Executor = functionHandler.Any()
-            }.Add(Scope, _supplier);
+            MakeGenericSortFunction(
+                name: "IsTrueForAny",
+                documentation: "Whether the specified condition evaluates to true for any value in the specified array.",
+                returnType: _supplier.Boolean(),
+                funcType: _supplier.Boolean(),
+                parameterDocumentation: "The condition that is evaluated for each element of the specified array.",
+                pointToExecutor: h => h.Any()
+            ).Add(Scope, _supplier);
             // Is True For All
-            new GenericSortFunction()
-            {
-                Name = "IsTrueForAll",
-                Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
-                ReturnType = _supplier.Boolean(),
-                ArrayOfType = ArrayOfType,
-                FuncType = _supplier.Boolean(),
-                ParameterDocumentation = "The condition that is evaluated for each element of the specified array.",
-                Function = "Is True For All",
-                Executor = functionHandler.All()
-            }.Add(Scope, _supplier);
+            MakeGenericSortFunction(
+                name: "IsTrueForAll",
+                documentation: "Whether the specified condition evaluates to true for every value in the specified array.",
+                returnType: _supplier.Boolean(),
+                funcType: _supplier.Boolean(),
+                parameterDocumentation: "The condition that is evaluated for each element of the specified array.",
+                pointToExecutor: h => h.All()
+            ).Add(Scope, _supplier);
             // Mapped
             var mapGenericParameter = new AnonymousType("U", new AnonymousTypeAttributes(false));
             var mapmethodInfo = new MethodInfo(new[] { mapGenericParameter });
             mapGenericParameter.Context = mapmethodInfo.Tracker;
-            new GenericSortFunction()
-            {
-                Name = "Map",
-                Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
-                ReturnType = new ArrayType(_supplier, mapGenericParameter),
-                ArrayOfType = ArrayOfType,
-                FuncType = mapGenericParameter,
-                ParameterDocumentation = "The condition that is evaluated for each element of the specified array.",
-                Function = "Mapped Array",
-                Executor = functionHandler.Map(),
-                MethodInfo = mapmethodInfo
-            }.Add(Scope, _supplier);
+            MakeGenericSortFunction(
+                name: "Map",
+                documentation: "Whether the specified condition evaluates to true for every value in the specified array.",
+                returnType: new ArrayType(_supplier, mapGenericParameter),
+                funcType: mapGenericParameter,
+                parameterDocumentation: "The condition that is evaluated for each element of the specified array.",
+                pointToExecutor: h => h.Map(),
+                methodInfo: mapmethodInfo
+            ).Add(Scope, _supplier);
             // Contains
             Func(new FuncMethodBuilder()
             {
@@ -258,7 +243,17 @@ namespace Deltin.Deltinteger.Parse
             ArrayOfType.ArrayHandler.OverrideArray(this);
         }
 
+        /// <summary>Creates a function and adds it to the scope.</summary>
         private void Func(FuncMethodBuilder builder) => Scope.AddNativeMethod(new FuncMethod(builder));
+
+        private GenericSortFunction MakeGenericSortFunction(
+            string name, string documentation,
+            CodeType returnType, CodeType funcType,
+            string parameterDocumentation, Func<ArrayFunctionHandler, ISortFunctionExecutor> pointToExecutor,
+            IMethodExtensions methodInfo = null)
+        {
+            return new GenericSortFunction(name, documentation, parameterDocumentation, returnType, this, funcType, pointToExecutor, methodInfo);
+        }
 
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
         {

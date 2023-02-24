@@ -279,10 +279,10 @@ namespace Deltin.Deltinteger.Parse
                 str(reference).Bridge(v => Element.Append(v.Value, IStructValue.GetValueWithPath(str(value), v.Path)));
             public override IWorkshopTree Slice(IWorkshopTree reference, IWorkshopTree start, IWorkshopTree count) =>
                 str(reference).Bridge(v => Element.Slice(v.Value, start, count));
-            public override ISortFunctionExecutor SortedArray() => new StructSortExecutorReturnsArray(false);
-            public override ISortFunctionExecutor FilteredArray() => new StructSortExecutorReturnsArray(true);
-            public override ISortFunctionExecutor All() => new StructSortExecutorReturnsBoolean();
-            public override ISortFunctionExecutor Any() => new StructSortExecutorReturnsBoolean();
+            public override ISortFunctionExecutor SortedArray() => new StructSortExecutorReturnsArray(Element.SORTED_ARRAY, false);
+            public override ISortFunctionExecutor FilteredArray() => new StructSortExecutorReturnsArray(Element.FILTERED_ARRAY, true);
+            public override ISortFunctionExecutor All() => new StructSortExecutorReturnsBoolean(Element.IS_TRUE_FOR_ALL);
+            public override ISortFunctionExecutor Any() => new StructSortExecutorReturnsBoolean(Element.IS_TRUE_FOR_ANY);
             public override ISortFunctionExecutor Map() => new StructMap();
 
             public StructArrayFunctionHandler()
@@ -300,16 +300,17 @@ namespace Deltin.Deltinteger.Parse
             // For struct array iterators that returns a struct array (Filtered Array, Sorted Array).
             private class StructSortExecutorReturnsArray : ISortFunctionExecutor
             {
+                readonly string _functionName;
                 // If the user does something like array.SortedArray(...).Length, we can just optimize the SortedArray away.
                 readonly bool _operationModifiesLength;
 
-                public StructSortExecutorReturnsArray(bool operationModifiesLength)
+                public StructSortExecutorReturnsArray(string functionName, bool operationModifiesLength)
                 {
+                    _functionName = functionName;
                     _operationModifiesLength = operationModifiesLength;
                 }
 
                 public IWorkshopTree GetResult(
-                    string function,
                     ActionSet actionSet,
                     Func<IWorkshopTree, IWorkshopTree> invoke)
                 {
@@ -319,7 +320,7 @@ namespace Deltin.Deltinteger.Parse
                     if (currentStructArray is IndexedStructArray appendToExistingNode)
                     {
                         appendToExistingNode.AppendModification(args => Element.Part(
-                            function,
+                            _functionName,
                             args.indexArray,
                             invoke(args.structArray)
                         ));
@@ -332,7 +333,7 @@ namespace Deltin.Deltinteger.Parse
                     var arrayed = new ValueInStructArray(currentStructArray, Element.ArrayElement());
 
                     var indexedArray = Element.Part(
-                        function,
+                        _functionName,
                         Element.Map(StructHelper.ExtractArbritraryValue(currentStructArray), Element.ArrayIndex()),
                         invoke(arrayed));
 
@@ -348,8 +349,11 @@ namespace Deltin.Deltinteger.Parse
             // For struct array iterators that returns a boolean (Is True For Any, Is True For All).
             private class StructSortExecutorReturnsBoolean : ISortFunctionExecutor
             {
+                readonly string _functionName;
+
+                public StructSortExecutorReturnsBoolean(string functionName) => _functionName = functionName;
+
                 public IWorkshopTree GetResult(
-                    string function,
                     ActionSet actionSet,
                     Func<IWorkshopTree, IWorkshopTree> invoke)
                 {
@@ -358,7 +362,7 @@ namespace Deltin.Deltinteger.Parse
 
                     if (currentStructArray is IndexedStructArray appendToExistingNode)
                         return Element.Part(
-                            function,
+                            _functionName,
                             appendToExistingNode.IndexedArray,
                             invoke(appendToExistingNode.StructArray)
                         );
@@ -368,7 +372,7 @@ namespace Deltin.Deltinteger.Parse
 
                     // Return the workshop function.
                     return Element.Part(
-                        function,
+                        _functionName,
                         StructHelper.ExtractArbritraryValue(currentStructArray),
                         invoke(arrayed));
                 }
@@ -377,7 +381,7 @@ namespace Deltin.Deltinteger.Parse
             // Struct mapping.
             private class StructMap : ISortFunctionExecutor
             {
-                public IWorkshopTree GetResult(string function, ActionSet actionSet, Func<IWorkshopTree, IWorkshopTree> invoke) => Map(actionSet, invoke);
+                public IWorkshopTree GetResult(ActionSet actionSet, Func<IWorkshopTree, IWorkshopTree> invoke) => Map(actionSet, invoke);
 
                 IWorkshopTree Map(ActionSet actionSet, Func<IWorkshopTree, IWorkshopTree> invoke)
                 {

@@ -211,10 +211,10 @@ namespace Deltin.Deltinteger.Elements
         public static Element CountOf(IWorkshopTree array) => Part("Count Of", array);
         public static Element Contains(IWorkshopTree array, IWorkshopTree value) => Part("Array Contains", array, value);
         public static Element ValueInArray(IWorkshopTree array, IWorkshopTree index) => Part("Value In Array", array, index);
-        public static Element Filter(IWorkshopTree array, IWorkshopTree condition) => Part("Filtered Array", array, condition);
-        public static Element Sort(IWorkshopTree array, IWorkshopTree rank) => Part("Sorted Array", array, rank);
-        public static Element All(IWorkshopTree array, IWorkshopTree condition) => Part("Is True For All", array, condition);
-        public static Element Any(IWorkshopTree array, IWorkshopTree condition) => Part("Is True For Any", array, condition);
+        public static Element Filter(IWorkshopTree array, IWorkshopTree condition) => Part(FILTERED_ARRAY, array, condition);
+        public static Element Sort(IWorkshopTree array, IWorkshopTree rank) => Part(SORTED_ARRAY, array, rank);
+        public static Element All(IWorkshopTree array, IWorkshopTree condition) => Part(IS_TRUE_FOR_ALL, array, condition);
+        public static Element Any(IWorkshopTree array, IWorkshopTree condition) => Part(IS_TRUE_FOR_ANY, array, condition);
         public static Element Map(IWorkshopTree array, IWorkshopTree select) => Part("Mapped Array", array, select);
         public static Element Slice(IWorkshopTree array, IWorkshopTree start, IWorkshopTree count) => Part("Array Slice", array, start, count);
         public static Element Pow(Element a, Element b) => Part("Raise To Power", a, b);
@@ -284,6 +284,11 @@ namespace Deltin.Deltinteger.Elements
                 ElementRoot.Instance.GetEnumValueFromWorkshop("HudTextRev", reevaluation ?? "Visible To And String"),
                 ElementRoot.Instance.GetEnumValueFromWorkshop("Spectators", spectators ?? "Default Visibility")
             );
+
+        public const string IS_TRUE_FOR_ALL = "Is True For All";
+        public const string IS_TRUE_FOR_ANY = "Is True For Any";
+        public const string FILTERED_ARRAY = "Filtered Array";
+        public const string SORTED_ARRAY = "Sorted Array";
 
         public static Element operator +(Element a, Element b) => Part("Add", a, b);
         public static Element operator -(Element a, Element b) => Part("Subtract", a, b);

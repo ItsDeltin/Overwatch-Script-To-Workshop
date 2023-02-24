@@ -201,16 +201,20 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         private IWorkshopTree OutputContant(VarIndexAssigner lambdaAssigner, ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
+            // Assign parameters.
+            actionSet = AssignContainedParameters(lambdaAssigner, actionSet, parameterValues);
+            // Create return handler.
             ReturnHandler returnHandler = new ReturnHandler(
                 actionSet,
-                ReturnType?.GetGettableAssigner(new AssigningAttributes("lambda", actionSet.IsGlobal, false))
-                           .GetValue(new GettableAssignerValueInfo(actionSet)
-                           {
-                               SetInitialValue = SetInitialValue.DoNotSet,
-                               Inline = !MultiplePaths
-                           }),
+                MultiplePaths ? ReturnType?.GetGettableAssigner(new AssigningAttributes("lambda", actionSet.IsGlobal, false))
+                    .GetValue(new GettableAssignerValueInfo(actionSet)
+                    {
+                        SetInitialValue = SetInitialValue.DoNotSet,
+                        Inline = false
+                    }) : null,
                 MultiplePaths);
-            actionSet = AssignContainedParameters(lambdaAssigner, actionSet, parameterValues).New(returnHandler);
+            // Assign return handler.
+            actionSet = actionSet.New(returnHandler);
 
             if (Expression != null)
                 returnHandler.ReturnValue(Expression.Parse(actionSet));
