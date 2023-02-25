@@ -12,13 +12,8 @@
     "Debuggers"
   ],
   "activationEvents": [
-    "onLanguage:ostw",
-    "onLanguage:ow_ostw",
     "workspaceContains:**/customGameSettings.json",
-    "workspaceContains:**/*.pathmap",
-    "onCommand:ostw.downloadLatestRelease",
-    "onCommand:ostw.locateServerInstallation",
-    "onCommand:ostw.decompile.clipboard"
+    "workspaceContains:**/*.pathmap"
   ],
   "repository": {
     "type": "git",
@@ -46,14 +41,16 @@
         "configuration": "./language-configuration.json"
       },
       {
-        "id": "ow_ostw",
+        "id": "workshop",
         "aliases": [
-          "Overwatch Output",
+          "Workshop",
           "ow"
         ],
         "extensions": [
           ".ow",
-          ".overwatch"
+          ".overwatch",
+          ".workshop",
+          ".ws"
         ],
         "configuration": "./language-configuration.json"
       },
@@ -71,7 +68,7 @@
         "path": "./syntaxes/ostw.tmLanguage.json"
       },
       {
-        "language": "ow",
+        "language": "workshop",
         "scopeName": "workshop.ow",
         "path": "./syntaxes/ow.tmLanguage.json"
       }

@@ -6,6 +6,7 @@ export const variable = /[a-zA-Z0-9_]+/;
 export function makeDictionaryLike(name: string, patterns: Pattern[]): Pattern {
     return {
         begin: [tm.WordBoundary(), name, tm.WordBoundary()],
+        zeroBeginCapture: { name: 'keyword.control' },
         end: '}',
         zeroEndCapture: { name: 'punctuation.definition.dictionary.end' },
         patterns: [

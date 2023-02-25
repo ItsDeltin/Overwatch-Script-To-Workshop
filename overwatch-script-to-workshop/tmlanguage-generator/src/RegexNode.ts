@@ -340,13 +340,13 @@ export class CharacterClassNode extends RegexNode {
 
 export class ExpressionGroup extends RegexNode {
     exp: RegExp;
-    captures: Capture[];
+    // captures: Capture[];
     numberOfGroups: number;
 
-    constructor(exp: RegExp, captures: Capture[]) {
+    constructor(exp: RegExp/*, captures: Capture[]*/) {
         super();
         this.exp = exp;
-        this.captures = captures;
+        // this.captures = captures;
 
         // Get the number of groups in the expression.
         this.numberOfGroups =
@@ -359,7 +359,7 @@ export class ExpressionGroup extends RegexNode {
         exporter.write(this.exp.source);
 
         // Add captures.
-        for (let i = 0; i < this.captures.length; i++) {
+        /*for (let i = 0; i < this.captures.length; i++) {
             const capture = this.captures[i];
             exporter.addCapture({
                 index: capture.index + exporter.groups.length,
@@ -367,6 +367,7 @@ export class ExpressionGroup extends RegexNode {
                 patterns: capture.patterns,
             });
         }
+        */
 
         // Add dummy groups.
         for (let i = 0; i < this.numberOfGroups; i++) {

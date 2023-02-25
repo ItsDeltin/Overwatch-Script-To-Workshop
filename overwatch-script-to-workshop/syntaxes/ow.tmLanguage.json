@@ -1,84 +1,746 @@
 {
-	"scopeName": "ow_source.del",
-	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "Overwatch Script To Workshop",
-	"patterns": [
-		{ "include": "#comments" },
-		{ "include": "#rule" },
-		{ "include": "#if" },
-		{ "include": "#methods" },
-		{ "include": "#strings" },
-		{ "include": "#numbers" },
-		{ "include": "#keywords" },
-		{ "include": "#variables" }
-	],
-	"repository": {
-		"rule": {
-			"match": "\\b((disabled\\s+)?rule)\\s*:",
-			"captures": {
-				"1": {"name":"keyword.control"}
-			}
-		},
-		"if": {
-			"begin": "((else\\s+)?if)\\s*\\(",
-			"beginCaptures": {
-				"1": {"name": "keyword.control"}
-			},
-			"end": "\\)"
-		},
-		"methods": {
-            "begin": "(While|If|For|rule|([a-zA-Z0-9 ]+))\\s*\\(",
-            "beginCaptures": {
-                "1": {"name": "keyword.control"},
-                "2": {"name": "entity.name.function"}
+  "name": "Workshop",
+  "scopeName": "workshop.ow",
+  "fileTypes": [
+    "ow",
+    "overwatch",
+    "workshop",
+    "ws"
+  ],
+  "patterns": [
+    {
+      "include": "#generated-code-timestamp"
+    },
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#settings"
+    },
+    {
+      "include": "#variables"
+    },
+    {
+      "include": "#subroutines"
+    },
+    {
+      "include": "#rule"
+    },
+    {
+      "include": "#action-list"
+    },
+    {
+      "include": "#condition-list"
+    },
+    {
+      "include": "#action"
+    },
+    {
+      "include": "#expression"
+    }
+  ],
+  "firstLineMatch": "\\b(settings|variables|subroutines|rule|\\[[0-9]{2}:[0-9]{2}:[0-9]{2}\\])\\b",
+  "repository": {
+    "comment": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash",
+          "begin": "\\/\\/",
+          "beginCaptures": {},
+          "end": "(?=$)",
+          "endCaptures": {}
+        },
+        {
+          "name": "comment.block.documentation",
+          "begin": "\\/\\*",
+          "beginCaptures": {},
+          "end": "\\*\\/",
+          "endCaptures": {}
+        }
+      ]
+    },
+    "action": {
+      "patterns": [
+        {
+          "begin": "(Abort If|Skip If|Skip|While|If|Else If|For Player Variable|For Global Variable)\\s*(\\()",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow"
             },
-			"end": "\\)",
-			"patterns": [{"include": "#methods"}, {"include": "#strings"}, {"include": "#numbers"}, {"include": "#keywords"}, {"include": "#variables"}]
-		},
-		"strings": {
-			"name": "string.quoted.double",
-			"begin": "@?\"",
-			"end": "\"",
-			"patterns": [
-				{
-					"name": "constant.character.escape",
-					"match": "\\\\."
-				},
-				{
-					"name": "string.regexp",
-					"match": "<[0-9]+>"
-				}
-			]
-		},
-		"comments": {
-			"patterns": [
-				{"begin": "//"    , "end": "$"      , "name": "comment.line.double-slash"},
-				{"begin": "\\/\\*", "end": "\\*\\/" , "name": "comment.block"},
-				{"begin": "#", "end": "$", "name": "comment.block.documentation" }
-			]
-		},
-		"numbers": {
-			"name": "constant.numeric",
-			"match": "\\b-?[0-9]+(\\.[0-9]+)?\\b"
-		},
-
-		"keywords": {
-			"patterns": [
-				{"include": "#keywords_control"},
-				{"include": "#keywords_other"}
-			]
-		},
-		"keywords_control": {
-			"name": "keyword.control",
-			"match": "\\b(If|Else|While|For|Rule|variables|actions|conditions|event|global|player|End|settings|modes|heroes)\\b"
-		},
-		"keywords_other": {
-			"name": "keyword.other",
-			"match": "\\b(True|False|Null)\\b"
-		},
-		"variables": {
-			"name": "variable",
-			"match": "[a-zA-Z_0-9]+"
-		}
-	}
+            "2": {
+              "name": "meta.brace.round"
+            }
+          },
+          "end": "(\\));",
+          "endCaptures": {
+            "1": {
+              "name": "meta.brace.round"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "match": "(\\bEnd|Loop If Condition Is True|Loop If Condition Is False|Loop|Else|Break|Continue|Abort);",
+          "captures": {
+            "1": {
+              "name": "keyword.control.flow"
+            }
+          }
+        },
+        {
+          "match": "(\\b(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.]+\\b)\\s*;",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(Call Subroutine)\\s*(\\()\\s*([a-zA-Z0-9_]+)(\\))\\s*;",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            },
+            "2": {
+              "name": "meta.brace.round"
+            },
+            "3": {
+              "name": "entity.name.function"
+            },
+            "4": {
+              "name": "meta.brace.round"
+            }
+          }
+        },
+        {
+          "begin": "(\\bModify Global Variable|Modify Player Variable|Modify Global Variable At Index|Modify Player Variable At Index)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.operator.assignment"
+            },
+            "2": {
+              "name": "meta.brace.round"
+            },
+            "3": {
+              "name": "variable"
+            }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.round"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "include": "#expression"
+        },
+        {
+          "name": "keyword.operator.assignment.compound",
+          "match": "\\+=|-=|\\/=|\\*=|%=",
+          "captures": {}
+        },
+        {
+          "name": "keyword.operator.assignment",
+          "match": "=",
+          "captures": {}
+        }
+      ]
+    },
+    "action-list": {
+      "begin": "\\bactions\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.control"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.dictionary.end"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.dictionary.begin"
+            }
+          },
+          "end": "(?=})",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "include": "#action"
+            }
+          ]
+        }
+      ]
+    },
+    "condition-list": {
+      "begin": "\\bconditions\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.control"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.dictionary.end"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.dictionary.begin"
+            }
+          },
+          "end": "(?=})",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        }
+      ]
+    },
+    "expression": {
+      "name": "meta.expr",
+      "patterns": [
+        {
+          "match": "(-?[0-9]+(\\.[0-9]+)?)",
+          "captures": {
+            "1": {
+              "name": "constant.numeric"
+            }
+          }
+        },
+        {
+          "begin": "(\\bString|Custom String\\b)\\s*(\\()",
+          "beginCaptures": {
+            "1": {
+              "name": "constant"
+            },
+            "2": {
+              "name": "meta.brace.round"
+            }
+          },
+          "end": "(\\))",
+          "endCaptures": {
+            "1": {
+              "name": "meta.brace.round"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#string-literal"
+            },
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "include": "#string-literal"
+        },
+        {
+          "name": "constant.language.boolean.true",
+          "match": "\\bTrue\\b",
+          "captures": {}
+        },
+        {
+          "name": "constant.language.boolean.false",
+          "match": "\\bFalse\\b",
+          "captures": {}
+        },
+        {
+          "name": "Null",
+          "match": "\\bNull\\b",
+          "captures": {}
+        },
+        {
+          "match": "(Global)((\\.)([a-zA-Z0-9_]+)?)?",
+          "captures": {
+            "1": {
+              "name": "variable.language.super"
+            },
+            "3": {
+              "name": "punctuation.accessor"
+            },
+            "4": {
+              "name": "variable"
+            }
+          }
+        },
+        {
+          "match": "(\\.)([a-zA-Z0-9_]+)",
+          "captures": {
+            "1": {
+              "name": "punctuation.accessor"
+            },
+            "2": {
+              "name": "variable"
+            }
+          }
+        },
+        {
+          "begin": "\\[",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.squarebracket.open"
+            }
+          },
+          "end": "\\]",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.squarebracket.close"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "name": "keyword.operator.arithmetic",
+          "match": "\\+|-|\\*|\\/|%",
+          "captures": {}
+        },
+        {
+          "name": "keyword.operator.logical",
+          "match": "\\|\\||&&|!",
+          "captures": {}
+        },
+        {
+          "name": "keyword.operator.relational",
+          "match": "<=|>=|<|>",
+          "captures": {}
+        },
+        {
+          "name": "keyword.operator.comparison",
+          "match": "==|!=",
+          "captures": {}
+        },
+        {
+          "name": "keyword.operator.ternary",
+          "match": "\\?|:",
+          "captures": {}
+        },
+        {
+          "contentName": "meta.expr.group",
+          "begin": "\\(",
+          "beginCaptures": {},
+          "end": "\\)",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "include": "#function"
+        },
+        {
+          "name": "support.constant",
+          "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.]+",
+          "captures": {}
+        }
+      ]
+    },
+    "function": {
+      "patterns": [
+        {
+          "contentName": "meta.parameter-list",
+          "begin": "((?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.]+)(\\()",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.function"
+            },
+            "2": {
+              "name": "meta.brace.round"
+            }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.round"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "name": "variable.other.constant",
+          "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.]+",
+          "captures": {}
+        }
+      ]
+    },
+    "string-literal": {
+      "patterns": [
+        {
+          "name": "string.quoted.double",
+          "match": "\\\"\\\"",
+          "captures": {}
+        },
+        {
+          "name": "string.quoted.double",
+          "begin": "\"",
+          "beginCaptures": {},
+          "end": "((?:^|[^\\\\])(?:\\\\{2})*)\"",
+          "endCaptures": {}
+        }
+      ]
+    },
+    "settings": {
+      "begin": "\\bsettings\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.control"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.dictionary.end"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.dictionary.begin"
+            }
+          },
+          "end": "(?=})",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "begin": "\\blobby\\b",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.control"
+                }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": {
+                  "name": "punctuation.definition.dictionary.end"
+                }
+              },
+              "patterns": [
+                {
+                  "begin": "\\{",
+                  "beginCaptures": {
+                    "0": {
+                      "name": "punctuation.definition.dictionary.begin"
+                    }
+                  },
+                  "end": "(?=})",
+                  "endCaptures": {},
+                  "patterns": []
+                }
+              ]
+            },
+            {
+              "begin": "\\bmodes\\b",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.control"
+                }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": {
+                  "name": "punctuation.definition.dictionary.end"
+                }
+              },
+              "patterns": [
+                {
+                  "begin": "\\{",
+                  "beginCaptures": {
+                    "0": {
+                      "name": "punctuation.definition.dictionary.begin"
+                    }
+                  },
+                  "end": "(?=})",
+                  "endCaptures": {},
+                  "patterns": []
+                }
+              ]
+            },
+            {
+              "begin": "\\bextensions\\b",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.control"
+                }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": {
+                  "name": "punctuation.definition.dictionary.end"
+                }
+              },
+              "patterns": [
+                {
+                  "begin": "\\{",
+                  "beginCaptures": {
+                    "0": {
+                      "name": "punctuation.definition.dictionary.begin"
+                    }
+                  },
+                  "end": "(?=})",
+                  "endCaptures": {},
+                  "patterns": [
+                    {
+                      "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.]+",
+                      "captures": {}
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "variables": {
+      "begin": "\\bvariables\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.control"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.dictionary.end"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.dictionary.begin"
+            }
+          },
+          "end": "(?=})",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "name": "keyword.control",
+              "begin": "\\bglobal\\s*:",
+              "beginCaptures": {},
+              "end": "(?=}|player\\s*:)",
+              "endCaptures": {},
+              "patterns": [
+                {
+                  "match": "([0-9]+)(:)([a-zA-Z0-9_]+)",
+                  "captures": {
+                    "1": {
+                      "name": "entity.name.tag"
+                    },
+                    "2": {
+                      "name": "punctuation.separator.dictionary.key-value"
+                    },
+                    "3": {
+                      "name": "variable"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "keyword.control",
+              "begin": "\\bplayer\\s*:",
+              "beginCaptures": {},
+              "end": "(?=}|global\\s*:)",
+              "endCaptures": {},
+              "patterns": [
+                {
+                  "match": "([0-9]+)(:)([a-zA-Z0-9_]+)",
+                  "captures": {
+                    "1": {
+                      "name": "entity.name.tag"
+                    },
+                    "2": {
+                      "name": "punctuation.separator.dictionary.key-value"
+                    },
+                    "3": {
+                      "name": "variable"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "subroutines": {
+      "begin": "\\bsubroutines\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.control"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.dictionary.end"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.dictionary.begin"
+            }
+          },
+          "end": "(?=})",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "match": "([0-9]+)(:)([a-zA-Z0-9_]+)",
+              "captures": {
+                "1": {
+                  "name": "entity.name.tag"
+                },
+                "2": {
+                  "name": "punctuation.separator.dictionary.key-value"
+                },
+                "3": {
+                  "name": "variable.function"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "rule": {
+      "begin": "rule",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.control"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.block"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "\\(",
+          "beginCaptures": {},
+          "end": "\\)",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "include": "#string-literal"
+            }
+          ]
+        },
+        {
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.block"
+            }
+          },
+          "end": "(?=})",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "begin": "\\bevent\\b",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.control"
+                }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": {
+                  "name": "punctuation.definition.dictionary.end"
+                }
+              },
+              "patterns": [
+                {
+                  "begin": "\\{",
+                  "beginCaptures": {
+                    "0": {
+                      "name": "punctuation.definition.dictionary.begin"
+                    }
+                  },
+                  "end": "(?=})",
+                  "endCaptures": {},
+                  "patterns": [
+                    {
+                      "begin": "(Subroutine)\\s*;",
+                      "beginCaptures": {
+                        "1": {
+                          "name": "storage.type.function"
+                        }
+                      },
+                      "end": "([a-zA-Z0-9_]+)\\s*;",
+                      "endCaptures": {
+                        "1": {
+                          "name": "entity.name.function"
+                        }
+                      }
+                    },
+                    {
+                      "name": "meta.trait",
+                      "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.]+",
+                      "captures": {}
+                    },
+                    {
+                      "match": ";",
+                      "captures": {}
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "include": "#action-list"
+            },
+            {
+              "include": "#condition-list"
+            }
+          ]
+        }
+      ]
+    },
+    "generated-code-timestamp": {
+      "name": "markup.error",
+      "match": "\\[[0-9]{2}:[0-9]{2}:[0-9]{2}\\]",
+      "captures": {}
+    }
+  }
 }

@@ -13,6 +13,7 @@ import {
     BetweenNode,
     ExactlyNode,
     CharacterClassNode,
+    ExpressionGroup
 } from './regexNode';
 import { TmName } from './tmName';
 import { Pattern } from './pattern';
@@ -32,7 +33,7 @@ export function GetRegexNode(regexable: Regexable): RegexNode {
         if (Array.isArray(current))
             for (const iterator of current) recursive(iterator);
         // Regex
-        else if (current instanceof RegExp) elements.push(Raw(current.source));
+        else if (current instanceof RegExp) elements.push(new ExpressionGroup(current));
         // Literal string
         else if (typeof current === 'string') elements.push(Literal(current));
         // Regex node
@@ -46,7 +47,7 @@ export function GetRegexNode(regexable: Regexable): RegexNode {
 }
 
 export const b = WordBoundary();
-export const w = Whitespace();
+export const w = Whitespace().ZeroOrMore();
 
 // Logic
 export function Group(options: GroupOptions) {

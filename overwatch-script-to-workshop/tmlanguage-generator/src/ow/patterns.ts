@@ -1,24 +1,24 @@
-import { endianness } from 'os';
 import * as tm from '../index';
 import { b, w } from '../index';
 import { Pattern } from '../pattern';
 import { Repository } from './repository';
 import * as util from './utils';
 
-const elementName = /.+/;
+const elementName = /(?![\s(),;0-9])[^/\\\+\*\"\';<>=(),\{\}\[\]\.]+/;
+const functionName = /(?![\s(),;0-9])[^/\\\+\*\"\';<>=(),\{\}\[\]\.]+/;
 
 const comment: Pattern = {
     patterns: [
         // Line
         {
             begin: /\/\//,
-            end: '(?=$)',
+            end: /(?=$)/,
             name: 'comment.line.double-slash'
         },
         // Block
         {
-            begin: '/*',
-            end: '*/',
+            begin: /\/\*/,
+            end: /\*\//,
             name: 'comment.block.documentation'
         }
     ]
@@ -69,15 +69,15 @@ const rule: Pattern = {
         // Rule content
         {
             begin: '{',
-            end: '}',
-            zeroCapture: { name: 'punctuation.definition.block' },
+            end: /(?=})/,
+            zeroBeginCapture: { name: 'punctuation.definition.block' },
             patterns: [
                 // Event
                 util.makeDictionaryLike('event', [
                     // Subroutine
                     {
                         begin: [tm.Match('Subroutine', 'storage.type.function'), w, ';'],
-                        end: [tm.Match(util.variable, 'variable.function'), w, ';']
+                        end: [tm.Match(util.variable, 'entity.name.function'), w, ';']
                     },
                     // Other
                     { match: elementName, name: 'meta.trait' },
@@ -99,7 +99,7 @@ const action: Pattern = {
         // Flow with parameters
         {
             begin: [
-                tm.Match(/\b(Skip|Skip If|While|Else If|For Player Variable |For Global Variable)\b/, 'keyword.control.flow'),
+                tm.Match(/Abort If|Skip If|Skip|While|If|Else If|For Player Variable|For Global Variable/, 'keyword.control.flow'),
                 w,
                 tm.Match('(', 'meta.brace.round')
             ],
@@ -110,19 +110,31 @@ const action: Pattern = {
         },
         // Flow without parameters
         {
-            match: /\b(End|Loop If Condition Is True|Loop If Condition Is False|Loop);/,
-            name: 'keyword.control.flow'
+            match: [tm.Match(/\bEnd|Loop If Condition Is True|Loop If Condition Is False|Loop|Else|Break|Continue|Abort/, 'keyword.control.flow'), ';'],
         },
         // Parameterless action.
-        { match: [tm.Match([b, elementName, b], 'entity.name.function'), w, ';'] },
+        { match: [tm.Match([b, functionName, b], 'entity.name.function'), w, ';'] },
         // Call Subroutine (todo: start rule)
         {
             match: [
                 tm.Match('Call Subroutine', 'entity.name.function'), w,
                 tm.Match('(', 'meta.brace.round'), w,
-                tm.Match(util.variable, 'variable.function'),
+                tm.Match(util.variable, 'entity.name.function'),
                 tm.Match(')', 'meta.brace.round'), w,
                 ';'
+            ]
+        },
+        // Modify variable
+        {
+            begin: [
+                tm.Match(/\bModify Global Variable|Modify Player Variable|Modify Global Variable At Index|Modify Player Variable At Index/, 'keyword.operator.assignment'),
+                w, tm.Match('(', 'meta.brace.round'), w,
+                tm.Match(util.variable, 'variable'),
+            ],
+            end: ')',
+            zeroEndCapture: {name: 'meta.brace.round'},
+            patterns: [
+                { include: Repository.expression }
             ]
         },
         // Expression
@@ -141,6 +153,7 @@ const action: Pattern = {
 };  
 
 const expression: Pattern = {
+    name: 'meta.expr',
     patterns: [
         // Number (todo: all possible variants)
         { match: tm.Match(/-?[0-9]+(\.[0-9]+)?/, 'constant.numeric') },
@@ -150,7 +163,6 @@ const expression: Pattern = {
             begin: [tm.Match([b, /String|Custom String/, b], 'constant'), w,
                 tm.Match('(', 'meta.brace.round')],
             end: tm.Match(')', 'meta.brace.round'),
-            while: ',',
             patterns: [
                 { include: Repository.string_literal },
                 { include: Repository.expression }
@@ -193,8 +205,6 @@ const expression: Pattern = {
                 { include: Repository.expression },
             ],
         },
-        // Constant parameter
-        { match: elementName, name: 'support.constant' },
         // Arthimetic
         { match: /\+|-|\*|\/|%/, name: 'keyword.operator.arithmetic' },
         // Logical
@@ -209,11 +219,14 @@ const expression: Pattern = {
         {
             begin: '(',
             end: ')',
+            contentName: 'meta.expr.group',
             zeroCapture: { name: 'meta.brace.round' },
             patterns: [{include: Repository.expression}]
         },
         // Function
-        { include: Repository.func }
+        { include: Repository.func },
+        // Constant parameter
+        { match: elementName, name: 'support.constant' },
     ]
 };
 
@@ -221,8 +234,9 @@ const func: Pattern = {
     patterns: [
         // Normal
         {
-            begin: [tm.Match(elementName, 'entity.name.function'), tm.Match('(', 'meta.brace.round')],
+            begin: [tm.Match(functionName, 'entity.name.function'), tm.Match('(', 'meta.brace.round')],
             end: ')',
+            contentName: 'meta.parameter-list',
             zeroEndCapture: {name: 'meta.brace.round'},
             patterns: [
                 {include:Repository.expression}
@@ -230,28 +244,36 @@ const func: Pattern = {
         },
         // Parameter-less constant
         {
-            match: elementName,
+            match: functionName,
             name: 'variable.other.constant'
         }
     ]
 };
 
 const string_literal: Pattern = {
-    begin: '\"',
-    end: /(?<!\\)(?>\\\\)*\"/,
-    name: 'string.quoted.double'
+    patterns: [
+        {
+            match: /\"\"/,
+            name: 'string.quoted.double'
+        },
+        {
+            begin: '\"',
+            end: /((?:^|[^\\])(?:\\{2})*)"/,
+            name: 'string.quoted.double'
+        }
+    ]
 };
 
 const generated_code_timestamp: Pattern = {
-    match: '^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\]',
+    match: /\[[0-9]{2}:[0-9]{2}:[0-9]{2}\]/,
     name: 'markup.error'
 };
 
 export function getRepository() {
     return tm.makeRepository(add => {
+        add(Repository.comment, comment);
         add(Repository.action, action);
         add(Repository.action_list, action_list);
-        add(Repository.comment, comment);
         add(Repository.condition_list, condition_list);
         add(Repository.expression, expression);
         add(Repository.func, func);
@@ -260,5 +282,6 @@ export function getRepository() {
         add(Repository.variables, variables);
         add(Repository.subroutines, subroutines);
         add(Repository.rule, rule);
+        add(Repository.generated_code_timestamp, generated_code_timestamp);
     });
 }
