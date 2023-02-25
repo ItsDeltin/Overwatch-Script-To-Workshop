@@ -23,8 +23,8 @@ export function makeDictionaryLike(name: string, patterns: Pattern[]): Pattern {
 export function numberedList(valueName: string): Pattern {
     return {
         match: [
-            tm.Group({ value: /[0-9]+/, tmName: 'entity.name.tag' }),
-            tm.Group({ value: /:/, tmName: 'punctuation.separator.dictionary.key-value' }),
+            tm.Group({ value: /[0-9]+/, tmName: 'constant.numeric' }), tm.w,
+            tm.Group({ value: /:/, tmName: 'punctuation.separator.dictionary.key-value' }), tm.w,
             tm.Group({ value: variable, tmName: valueName })
         ]
     };

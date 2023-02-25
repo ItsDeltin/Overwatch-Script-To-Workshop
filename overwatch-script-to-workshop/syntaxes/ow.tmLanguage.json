@@ -62,13 +62,63 @@
     "action": {
       "patterns": [
         {
-          "begin": "(Abort If|Skip If|Skip|While|If|Else If|For Player Variable|For Global Variable)\\s*(\\()",
+          "begin": "(Abort If|Skip If|Skip|While|If|Else If)\\s*(\\()",
           "beginCaptures": {
             "1": {
               "name": "keyword.control.flow"
             },
             "2": {
               "name": "meta.brace.round"
+            }
+          },
+          "end": "(\\));",
+          "endCaptures": {
+            "1": {
+              "name": "meta.brace.round"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "begin": "(\\bFor Global Variable)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow"
+            },
+            "2": {
+              "name": "meta.brace.round"
+            },
+            "3": {
+              "name": "variable"
+            }
+          },
+          "end": "(\\));",
+          "endCaptures": {
+            "1": {
+              "name": "meta.brace.round"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "begin": "(\\bFor Player Variable)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow"
+            },
+            "2": {
+              "name": "meta.brace.round"
+            },
+            "3": {
+              "name": "variable.parameter"
             }
           },
           "end": "(\\));",
@@ -117,7 +167,7 @@
           }
         },
         {
-          "begin": "(\\bModify Global Variable|Modify Player Variable|Modify Global Variable At Index|Modify Player Variable At Index)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
+          "begin": "(\\bModify Global Variable|Modify Global Variable At Index)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
           "beginCaptures": {
             "1": {
               "name": "keyword.operator.assignment"
@@ -136,6 +186,49 @@
             }
           },
           "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "begin": "(\\bModify Player Variable( At Index)?)\\s*(\\()",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.operator.assignment"
+            },
+            "3": {
+              "name": "meta.brace.round"
+            }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.round"
+            }
+          },
+          "patterns": [
+            {
+              "begin": "(,)\\s*([a-zA-Z0-9_]+)\\s*(,)",
+              "beginCaptures": {
+                "1": {
+                  "name": "punctuation.separator.comma.ewww"
+                },
+                "2": {
+                  "name": "variable.parameter"
+                },
+                "3": {
+                  "name": "punctuation.separator.comma.ewwwwww"
+                }
+              },
+              "end": "(?=\\))",
+              "endCaptures": {},
+              "patterns": [
+                {
+                  "include": "#expression"
+                }
+              ]
+            },
             {
               "include": "#expression"
             }
@@ -222,6 +315,14 @@
       "name": "meta.expr",
       "patterns": [
         {
+          "match": "(,)",
+          "captures": {
+            "1": {
+              "name": "punctuation.separator.comma"
+            }
+          }
+        },
+        {
           "match": "(-?[0-9]+(\\.[0-9]+)?)",
           "captures": {
             "1": {
@@ -293,7 +394,7 @@
               "name": "punctuation.accessor"
             },
             "2": {
-              "name": "variable"
+              "name": "variable.parameter"
             }
           }
         },
@@ -322,6 +423,11 @@
           "captures": {}
         },
         {
+          "name": "keyword.operator.comparison",
+          "match": "==|!=",
+          "captures": {}
+        },
+        {
           "name": "keyword.operator.logical",
           "match": "\\|\\||&&|!",
           "captures": {}
@@ -329,11 +435,6 @@
         {
           "name": "keyword.operator.relational",
           "match": "<=|>=|<|>",
-          "captures": {}
-        },
-        {
-          "name": "keyword.operator.comparison",
-          "match": "==|!=",
           "captures": {}
         },
         {
@@ -557,10 +658,10 @@
               "endCaptures": {},
               "patterns": [
                 {
-                  "match": "([0-9]+)(:)([a-zA-Z0-9_]+)",
+                  "match": "([0-9]+)\\s*(:)\\s*([a-zA-Z0-9_]+)",
                   "captures": {
                     "1": {
-                      "name": "entity.name.tag"
+                      "name": "constant.numeric"
                     },
                     "2": {
                       "name": "punctuation.separator.dictionary.key-value"
@@ -580,16 +681,16 @@
               "endCaptures": {},
               "patterns": [
                 {
-                  "match": "([0-9]+)(:)([a-zA-Z0-9_]+)",
+                  "match": "([0-9]+)\\s*(:)\\s*([a-zA-Z0-9_]+)",
                   "captures": {
                     "1": {
-                      "name": "entity.name.tag"
+                      "name": "constant.numeric"
                     },
                     "2": {
                       "name": "punctuation.separator.dictionary.key-value"
                     },
                     "3": {
-                      "name": "variable"
+                      "name": "variable.parameter"
                     }
                   }
                 }
@@ -624,16 +725,16 @@
           "endCaptures": {},
           "patterns": [
             {
-              "match": "([0-9]+)(:)([a-zA-Z0-9_]+)",
+              "match": "([0-9]+)\\s*(:)\\s*([a-zA-Z0-9_]+)",
               "captures": {
                 "1": {
-                  "name": "entity.name.tag"
+                  "name": "constant.numeric"
                 },
                 "2": {
                   "name": "punctuation.separator.dictionary.key-value"
                 },
                 "3": {
-                  "name": "variable.function"
+                  "name": "entity.name.function"
                 }
               }
             }

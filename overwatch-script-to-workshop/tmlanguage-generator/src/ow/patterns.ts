@@ -45,11 +45,11 @@ const variables: Pattern = util.makeDictionaryLike('variables', [
         begin: [b, 'player', w, ':'],
         name: 'keyword.control',
         end: /(?=}|global\s*:)/,
-        patterns: [util.numberedList('variable')]
+        patterns: [util.numberedList('variable.parameter')]
     }
 ]);
 
-const subroutines: Pattern = util.makeDictionaryLike("subroutines", [util.numberedList('variable.function')]);
+const subroutines: Pattern = util.makeDictionaryLike("subroutines", [util.numberedList('entity.name.function')]);
 
 const rule: Pattern = {
     begin: 'rule',
@@ -99,9 +99,29 @@ const action: Pattern = {
         // Flow with parameters
         {
             begin: [
-                tm.Match(/Abort If|Skip If|Skip|While|If|Else If|For Player Variable|For Global Variable/, 'keyword.control.flow'),
+                tm.Match(/Abort If|Skip If|Skip|While|If|Else If/, 'keyword.control.flow'),
                 w,
                 tm.Match('(', 'meta.brace.round')
+            ],
+            end: [tm.Match(')', 'meta.brace.round'), ';'],
+            patterns: [
+                { include: Repository.expression }
+            ]
+        },
+        // Flow (For Global Variable)
+        {
+            begin: [
+                tm.Match(/\bFor Global Variable/, 'keyword.control.flow'), w, tm.Match('(', 'meta.brace.round'), w, tm.Match(util.variable, 'variable')
+            ],
+            end: [tm.Match(')', 'meta.brace.round'), ';'],
+            patterns: [
+                { include: Repository.expression }
+            ]
+        },
+        // Flow (For Player Variable)
+        {
+            begin: [
+                tm.Match(/\bFor Player Variable/, 'keyword.control.flow'), w, tm.Match('(', 'meta.brace.round'), w, tm.Match(util.variable, 'variable.parameter')
             ],
             end: [tm.Match(')', 'meta.brace.round'), ';'],
             patterns: [
@@ -124,16 +144,36 @@ const action: Pattern = {
                 ';'
             ]
         },
-        // Modify variable
+        // Modify global variable
         {
             begin: [
-                tm.Match(/\bModify Global Variable|Modify Player Variable|Modify Global Variable At Index|Modify Player Variable At Index/, 'keyword.operator.assignment'),
+                tm.Match(/\bModify Global Variable|Modify Global Variable At Index/, 'keyword.operator.assignment'),
                 w, tm.Match('(', 'meta.brace.round'), w,
                 tm.Match(util.variable, 'variable'),
             ],
             end: ')',
             zeroEndCapture: {name: 'meta.brace.round'},
             patterns: [
+                { include: Repository.expression }
+            ]
+        },
+        // Modify player variable
+        {
+            begin: [tm.Match(/\bModify Player Variable( At Index)?/, 'keyword.operator.assignment'), w, tm.Match('(', 'meta.brace.round')],
+            end: ')',
+            zeroEndCapture: {name: 'meta.brace.round'},
+            patterns: [
+                // Second parameter
+                {
+                    begin: [
+                        tm.Match(',', 'punctuation.separator.comma.ewww'), w,
+                        tm.Match(util.variable, 'variable.parameter'), w,
+                        tm.Match(',', 'punctuation.separator.comma.ewwwwww'),
+                    ],
+                    end: /(?=\))/,
+                    patterns: [{include: Repository.expression}]
+                },
+                // First parameter
                 { include: Repository.expression }
             ]
         },
@@ -155,6 +195,8 @@ const action: Pattern = {
 const expression: Pattern = {
     name: 'meta.expr',
     patterns: [
+        // Comma in parameter list.
+        { match: tm.Match(/,/, 'punctuation.separator.comma') },
         // Number (todo: all possible variants)
         { match: tm.Match(/-?[0-9]+(\.[0-9]+)?/, 'constant.numeric') },
         // String
@@ -192,7 +234,7 @@ const expression: Pattern = {
         {
             match: [
                 tm.Match('.', 'punctuation.accessor'),
-                tm.Match(util.variable, 'variable')
+                tm.Match(util.variable, 'variable.parameter')
             ]
         },
         // Array
@@ -207,12 +249,12 @@ const expression: Pattern = {
         },
         // Arthimetic
         { match: /\+|-|\*|\/|%/, name: 'keyword.operator.arithmetic' },
+        // Comparison
+        { match: /==|!=/, name: 'keyword.operator.comparison' },
         // Logical
         { match: /\|\||&&|!/, name: 'keyword.operator.logical' },
         // Relational
         { match: /<=|>=|<|>/, name: 'keyword.operator.relational' },
-        // Comparison
-        { match: /==|!=/, name: 'keyword.operator.comparison' },
         // Ternary
         { match: /\?|:/, name: 'keyword.operator.ternary' },
         // Group
