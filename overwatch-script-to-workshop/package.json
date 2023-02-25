@@ -71,8 +71,8 @@
         "path": "./syntaxes/ostw.tmLanguage.json"
       },
       {
-        "language": "ow_ostw",
-        "scopeName": "ow_source.del",
+        "language": "ow",
+        "scopeName": "workshop.ow",
         "path": "./syntaxes/ow.tmLanguage.json"
       }
     ],
@@ -318,7 +318,7 @@
     "watch": "tsc -b -w",
     "webpack": "webpack --mode development",
     "webpack-dev": "webpack --mode development --watch",
-    "compile-grammar-builder": "tsc -b ./tmlanguage-generator && node ./tmlanguage-generator/dist/ostw/ostw-grammar.js"
+    "compile-grammar-builder": "tsc -b ./tmlanguage-generator && node ./tmlanguage-generator/dist/export.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.0",

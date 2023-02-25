@@ -1,7 +1,7 @@
 import { Regexable, GetRegexNode } from '.';
-import { Pattern, exportPattern } from './Pattern';
-import { TmLanguage } from './Template';
-import { RegexExport } from './RegexNode';
+import { Pattern, exportPattern } from './pattern';
+import { TmLanguage } from './template';
+import { RegexExport } from './regexNode';
 
 export class TextmateSettings {
     name?: string;

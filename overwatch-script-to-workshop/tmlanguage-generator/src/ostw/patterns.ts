@@ -1,5 +1,5 @@
 import * as tm from '../index';
-import { Pattern } from '../Pattern';
+import { Pattern } from '../pattern';
 import { Repository } from './repository';
 import * as common_nodes from './common-nodes';
 import { i, w, b, codeType } from './common-nodes';
@@ -771,38 +771,33 @@ const new_: Pattern = {
 };
 
 export function getRepository() {
-    let result: { [name: string]: Pattern } = {};
-    function add(name: string, pattern: Pattern) {
-        result[name.replace('#', '')] = pattern;
-    }
-
-    add(Repository.import_, import_);
-    add(Repository.comment, comment);
-    add(Repository.expression, expressionPattern);
-    add(Repository.string_literal, stringLiteral);
-    add(Repository.string, string_);
-    add(Repository.escaped_string_character, escapedCharacter);
-    add(Repository.interpolated_string_inner, interpolatedStringInner);
-    add(Repository.number, number);
-    add(Repository.block, block);
-    add(Repository.statement, statement);
-    add(Repository.statement_end, statementEnd);
-    add(Repository.assignment, assignment);
-    add(Repository.if_statement, ifStatement);
-    add(Repository.parameter_list, parameterList);
-    add(Repository.parameter_declaration, parameterDeclaration);
-    add(Repository.code_type, codeTypePattern);
-    add(Repository.code_type_matcher, codeTypeMatcher);
-    add(Repository.variable_declaration, variableDeclaration);
-    add(Repository.function_declaration, functionDeclaration);
-    add(Repository.constructor_declaration, constructorDeclaration);
-    add(Repository.class_struct_declaration, classOrStructDeclaration);
-    add(Repository.enum_declaration, enumDeclaration);
-    add(Repository.type_args, typeArgs);
-    add(Repository.rule, rule);
-    add(Repository.argument_list, argumentList);
-    add(Repository.function_call, functionCall);
-    add(Repository.new_, new_);
-
-    return result;
+    return tm.makeRepository(add => {
+        add(Repository.import_, import_);
+        add(Repository.comment, comment);
+        add(Repository.expression, expressionPattern);
+        add(Repository.string_literal, stringLiteral);
+        add(Repository.string, string_);
+        add(Repository.escaped_string_character, escapedCharacter);
+        add(Repository.interpolated_string_inner, interpolatedStringInner);
+        add(Repository.number, number);
+        add(Repository.block, block);
+        add(Repository.statement, statement);
+        add(Repository.statement_end, statementEnd);
+        add(Repository.assignment, assignment);
+        add(Repository.if_statement, ifStatement);
+        add(Repository.parameter_list, parameterList);
+        add(Repository.parameter_declaration, parameterDeclaration);
+        add(Repository.code_type, codeTypePattern);
+        add(Repository.code_type_matcher, codeTypeMatcher);
+        add(Repository.variable_declaration, variableDeclaration);
+        add(Repository.function_declaration, functionDeclaration);
+        add(Repository.constructor_declaration, constructorDeclaration);
+        add(Repository.class_struct_declaration, classOrStructDeclaration);
+        add(Repository.enum_declaration, enumDeclaration);
+        add(Repository.type_args, typeArgs);
+        add(Repository.rule, rule);
+        add(Repository.argument_list, argumentList);
+        add(Repository.function_call, functionCall);
+        add(Repository.new_, new_);
+    });
 }

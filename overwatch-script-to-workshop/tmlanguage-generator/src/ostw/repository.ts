@@ -1,6 +1,3 @@
-import { Pattern } from '../Pattern';
-import * as patterns from './patterns';
-
 export namespace Repository {
     export const comment = '#comment';
     export const expression = '#expression';

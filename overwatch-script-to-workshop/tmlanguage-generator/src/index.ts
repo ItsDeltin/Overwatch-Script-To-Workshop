@@ -13,12 +13,14 @@ import {
     BetweenNode,
     ExactlyNode,
     CharacterClassNode,
-} from './RegexNode';
+} from './regexNode';
+import { TmName } from './tmName';
+import { Pattern } from './pattern';
 
-export { Pattern, GlobalRegexCapture } from './Pattern';
-export { createTextmateGrammar, TextmateSettings } from './TextmateGenerator';
-export { TmLanguage, TmRule, CaptureList } from './Template';
-export { TmName } from './TmName';
+export { Pattern, GlobalRegexCapture } from './pattern';
+export { createTextmateGrammar, TextmateSettings } from './textmateGenerator';
+export { TmLanguage, TmRule, CaptureList } from './template';
+export { TmName } from './tmName';
 
 export type Regexable = string | RegExp | RegexNode | RegexNode[] | Regexable[];
 
@@ -43,9 +45,15 @@ export function GetRegexNode(regexable: Regexable): RegexNode {
     return new ChainNode(elements);
 }
 
+export const b = WordBoundary();
+export const w = Whitespace();
+
 // Logic
 export function Group(options: GroupOptions) {
     return new GroupNode(options);
+}
+export function Match(value: Regexable, tmName: TmName) {
+    return new GroupNode({ value, tmName });
 }
 export function NonCapturing(value: Regexable) {
     return new GroupNode({
@@ -196,4 +204,14 @@ export function Literal(value: string) {
     }
 
     return Raw(result);
+}
+
+// Repository maker
+export function makeRepository(addElements: (add: (name: string, pattern: Pattern) => void) => void)
+{
+    let result: { [name: string]: Pattern } = {};
+    addElements((name, pattern) => {
+        result[name.replace('#', '')] = pattern;
+    });
+    return result;
 }

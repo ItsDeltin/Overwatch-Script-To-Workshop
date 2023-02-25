@@ -1,10 +1,8 @@
 import * as tm from '../index';
 import { Repository } from './repository';
 import { getRepository } from './patterns';
-import * as fs from 'fs';
-import * as path from 'path';
 
-let grammar = tm.createTextmateGrammar({
+export const ostw_grammar = tm.createTextmateGrammar({
     name: 'Overwatch Script To Workshop',
     fileTypes: ['ostw', 'del', 'workshop'],
     firstLineMatch: tm.Or([tm.WordBoundary(), 'rule', tm.WordBoundary()]),
@@ -22,8 +20,3 @@ let grammar = tm.createTextmateGrammar({
         { include: Repository.expression }
     ],
 });
-
-let json = JSON.stringify(grammar, null, 2);
-let out = path.resolve(__dirname, '../../../syntaxes/ostw.tmLanguage.json');
-fs.writeFileSync(out, json);
-console.log('writing grammar to ' + out);

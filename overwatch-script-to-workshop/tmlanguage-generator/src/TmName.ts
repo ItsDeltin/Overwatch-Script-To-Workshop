@@ -68,6 +68,7 @@ export type TmName =
     'variable.parameter' |
     'variable.language' |
     'variable.other' |
+    'variable.function' |
 
     // Not in conventions but commonly used.
     'constant.language.boolean.false' | // false

@@ -1,7 +1,7 @@
 import { Raw, GetRegexNode, Regexable } from './index';
-import { TmName } from './TmName';
-import { Pattern, GlobalRegexCapture, exportPattern } from './Pattern';
-import { CaptureList } from './Template';
+import { TmName } from './tmName';
+import { Pattern, GlobalRegexCapture, exportPattern } from './pattern';
+import { CaptureList } from './template';
 
 /**
  * Converts a RegexNode to a string.
