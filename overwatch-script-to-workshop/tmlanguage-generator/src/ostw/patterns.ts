@@ -83,7 +83,19 @@ const comment: Pattern = {
                 },
                 // Match all other text.
                 {
-                    match: /(?!```).+?(?=```|$)/,
+                    match: tm.Group({
+                        value: /(?!```).+?(?=```|$)/,
+                        patterns: [
+                            {
+                                match: [
+                                    '-', w, '`',
+                                    tm.Group({ value: i, tmName: 'variable.parameter' }),
+                                    '`', w,
+                                    tm.Group({ value: ':', tmName: 'punctuation.separator.key-value' })
+                                ],
+                            }
+                        ]
+                    }),
                     name: 'comment.block.documentation',
                 }
             ]

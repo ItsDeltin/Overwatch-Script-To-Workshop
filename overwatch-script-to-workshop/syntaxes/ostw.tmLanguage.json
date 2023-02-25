@@ -119,8 +119,24 @@
             },
             {
               "name": "comment.block.documentation",
-              "match": "(?!```).+?(?=```|$)",
-              "captures": {}
+              "match": "((?!```).+?(?=```|$))",
+              "captures": {
+                "1": {
+                  "patterns": [
+                    {
+                      "match": "\\-\\s*`([a-zA-Z0-9_]+\\b)`\\s*(:)",
+                      "captures": {
+                        "1": {
+                          "name": "variable.parameter"
+                        },
+                        "2": {
+                          "name": "punctuation.separator.key-value"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
             }
           ]
         }
