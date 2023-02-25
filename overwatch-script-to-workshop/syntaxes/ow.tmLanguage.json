@@ -109,25 +109,43 @@
           ]
         },
         {
-          "begin": "(\\bFor Player Variable)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
+          "begin": "(\\bFor Player Variable)\\s*(\\()",
           "beginCaptures": {
             "1": {
               "name": "keyword.control.flow"
             },
             "2": {
               "name": "meta.brace.round"
-            },
-            "3": {
-              "name": "variable.parameter"
             }
           },
-          "end": "(\\));",
+          "end": "\\)",
           "endCaptures": {
-            "1": {
+            "0": {
               "name": "meta.brace.round"
             }
           },
           "patterns": [
+            {
+              "begin": "(,)\\s*([a-zA-Z0-9_]+)\\s*(,)",
+              "beginCaptures": {
+                "1": {
+                  "name": "punctuation.separator.comma"
+                },
+                "2": {
+                  "name": "variable.parameter"
+                },
+                "3": {
+                  "name": "punctuation.separator.comma"
+                }
+              },
+              "end": "(?=\\))",
+              "endCaptures": {},
+              "patterns": [
+                {
+                  "include": "#expression"
+                }
+              ]
+            },
             {
               "include": "#expression"
             }
@@ -212,13 +230,13 @@
               "begin": "(,)\\s*([a-zA-Z0-9_]+)\\s*(,)",
               "beginCaptures": {
                 "1": {
-                  "name": "punctuation.separator.comma.ewww"
+                  "name": "punctuation.separator.comma"
                 },
                 "2": {
                   "name": "variable.parameter"
                 },
                 "3": {
-                  "name": "punctuation.separator.comma.ewwwwww"
+                  "name": "punctuation.separator.comma"
                 }
               },
               "end": "(?=\\))",

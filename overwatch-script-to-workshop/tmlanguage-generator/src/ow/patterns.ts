@@ -119,15 +119,7 @@ const action: Pattern = {
             ]
         },
         // Flow (For Player Variable)
-        {
-            begin: [
-                tm.Match(/\bFor Player Variable/, 'keyword.control.flow'), w, tm.Match('(', 'meta.brace.round'), w, tm.Match(util.variable, 'variable.parameter')
-            ],
-            end: [tm.Match(')', 'meta.brace.round'), ';'],
-            patterns: [
-                { include: Repository.expression }
-            ]
-        },
+        util.setPlayerVariablePattern(/\bFor Player Variable/, 'keyword.control.flow'),
         // Flow without parameters
         {
             match: [tm.Match(/\bEnd|Loop If Condition Is True|Loop If Condition Is False|Loop|Else|Break|Continue|Abort/, 'keyword.control.flow'), ';'],
@@ -158,25 +150,7 @@ const action: Pattern = {
             ]
         },
         // Modify player variable
-        {
-            begin: [tm.Match(/\bModify Player Variable( At Index)?/, 'keyword.operator.assignment'), w, tm.Match('(', 'meta.brace.round')],
-            end: ')',
-            zeroEndCapture: {name: 'meta.brace.round'},
-            patterns: [
-                // Second parameter
-                {
-                    begin: [
-                        tm.Match(',', 'punctuation.separator.comma.ewww'), w,
-                        tm.Match(util.variable, 'variable.parameter'), w,
-                        tm.Match(',', 'punctuation.separator.comma.ewwwwww'),
-                    ],
-                    end: /(?=\))/,
-                    patterns: [{include: Repository.expression}]
-                },
-                // First parameter
-                { include: Repository.expression }
-            ]
-        },
+        util.setPlayerVariablePattern(/\bModify Player Variable( At Index)?/, 'keyword.operator.assignment'),
         // Expression
         { include: Repository.expression },
         // Assignment compound
