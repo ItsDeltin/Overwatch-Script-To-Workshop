@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Virtual { get; set; }
         public bool Override { get; set; }
         public IVariableInstance Overriding { get; set; }
+        public MarkupBuilder Documentation { get; set; }
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)
         {

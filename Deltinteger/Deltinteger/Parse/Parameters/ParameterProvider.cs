@@ -61,11 +61,12 @@ namespace Deltin.Deltinteger.Parse
             {
                 Var newVar;
                 string name = context[i].Identifier.GetText();
+                var documentation = metaComment?.GetParameterDescription(name);
 
                 ParameterProvider parameter = new ParameterProvider(name);
 
                 // Set up the context handler.
-                IVarContextHandler contextHandler = new DefineContextHandler(parseInfo.SetRestrictedCallHandler(parameter), context[i]);
+                IVarContextHandler contextHandler = new DefineContextHandler(parseInfo.SetRestrictedCallHandler(parameter), context[i], documentation);
 
                 // Normal parameter
                 if (!subroutineParameter)
@@ -77,7 +78,7 @@ namespace Deltin.Deltinteger.Parse
                 parameter.Var = newVar;
                 parameter.Type = newVar.CodeType;
                 parameter.Attributes = new ParameterAttributes(newVar.Ref, newVar.VariableType == VariableType.ElementReference);
-                parameter.Description = metaComment?.GetParameterDescription(name);
+                parameter.Description = documentation;
 
                 if (newVar.InitialValue != null) parameter.DefaultValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
 

@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly bool _handleRestrictedCalls;
         private readonly bool _inferType;
         private readonly VariableTypeHandler _variableTypeHandler;
+        private readonly MarkupBuilder _documentation;
 
         /// <summary>The scope the variable and initial value will use.</summary>
         private readonly Scope _operationalScope;
@@ -71,6 +72,7 @@ namespace Deltin.Deltinteger.Parse
             _tokenModifiers = varInfo.TokenModifiers.ToArray();
             _handleRestrictedCalls = varInfo.HandleRestrictedCalls;
             _inferType = varInfo.InferType;
+            _documentation = varInfo.Documentation;
             _initialValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.Scope;
@@ -174,15 +176,21 @@ namespace Deltin.Deltinteger.Parse
             if (DefinedAt != null)
             {
                 _parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
-                _parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
+                _parseInfo.Script.AddHover(DefinedAt.range, GetLabel());
             }
         }
 
-        public string GetLabel(bool markdown)
+        public MarkupBuilder GetLabel()
         {
             string typeName = "define";
             if (CodeType != null) typeName = CodeType.GetName();
-            return new MarkupBuilder().StartCodeLine().Add(typeName + " " + Name).EndCodeLine().ToString(markdown);
+
+            var builder = new MarkupBuilder().StartCodeLine().Add(typeName + " " + Name).EndCodeLine();
+
+            if (_documentation != null)
+                builder.NewSection().Add(_documentation);
+
+            return builder;
         }
 
         public override string ToString()

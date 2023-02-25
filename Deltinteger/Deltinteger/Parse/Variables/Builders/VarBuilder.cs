@@ -47,6 +47,7 @@ namespace Deltin.Deltinteger.Parse
             // Create the varinfo.
             _varInfo = new VarInfo(_name, _contextHandler.GetDefineLocation(), _parseInfo);
             _varInfo.Scope = _scope;
+            _varInfo.Documentation = _contextHandler.Documentation();
 
             // Get the variable type.
             _typeRange = _contextHandler.GetTypeRange();
