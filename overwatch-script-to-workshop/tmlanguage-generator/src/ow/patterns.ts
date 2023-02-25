@@ -109,15 +109,7 @@ const action: Pattern = {
             ]
         },
         // Flow (For Global Variable)
-        {
-            begin: [
-                tm.Match(/\bFor Global Variable/, 'keyword.control.flow'), w, tm.Match('(', 'meta.brace.round'), w, tm.Match(util.variable, 'variable')
-            ],
-            end: [tm.Match(')', 'meta.brace.round'), ';'],
-            patterns: [
-                { include: Repository.expression }
-            ]
-        },
+        util.setGlobalVariablePattern(/\bFor Global Variable/, 'keyword.control.flow'),
         // Flow (For Player Variable)
         util.setPlayerVariablePattern(/\bFor Player Variable/, 'keyword.control.flow'),
         // Flow without parameters
@@ -137,20 +129,13 @@ const action: Pattern = {
             ]
         },
         // Modify global variable
-        {
-            begin: [
-                tm.Match(/\bModify Global Variable|Modify Global Variable At Index/, 'keyword.operator.assignment'),
-                w, tm.Match('(', 'meta.brace.round'), w,
-                tm.Match(util.variable, 'variable'),
-            ],
-            end: ')',
-            zeroEndCapture: {name: 'meta.brace.round'},
-            patterns: [
-                { include: Repository.expression }
-            ]
-        },
+        util.setGlobalVariablePattern(/\bModify Global Variable( At Index)?/, 'keyword.operator.assignment'),
         // Modify player variable
         util.setPlayerVariablePattern(/\bModify Player Variable( At Index)?/, 'keyword.operator.assignment'),
+        // Chase Global Variable
+        util.setGlobalVariablePattern(/\bChase Global Variable (Over Time|At Rate)/, 'keyword.operator.assignment'),
+        // Chase player variable
+        util.setPlayerVariablePattern(/\bChase Player Variable (Over Time|At Rate)?/, 'keyword.operator.assignment'),
         // Expression
         { include: Repository.expression },
         // Assignment compound

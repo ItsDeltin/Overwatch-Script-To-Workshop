@@ -31,6 +31,20 @@ export function numberedList(valueName: string): Pattern {
     };
 }
 
+export function setGlobalVariablePattern(start: tm.Regexable, startTmName: tm.TmName): Pattern {
+    return {
+        begin: [
+            tm.Match(start, startTmName), tm.w, tm.Match('(', 'meta.brace.round'), tm.w,
+            tm.Match(variable, 'variable'),
+        ],
+        end: ')',
+        zeroEndCapture: {name: 'meta.brace.round'},
+        patterns: [
+            { include: Repository.expression }
+        ]
+    }
+}
+
 export function setPlayerVariablePattern(start: tm.Regexable, startTmName: tm.TmName): Pattern {
     return {
         begin: [tm.Match(start, startTmName), tm.w, tm.Match('(', 'meta.brace.round')],

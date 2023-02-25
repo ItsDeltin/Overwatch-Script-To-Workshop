@@ -96,9 +96,9 @@
               "name": "variable"
             }
           },
-          "end": "(\\));",
+          "end": "\\)",
           "endCaptures": {
-            "1": {
+            "0": {
               "name": "meta.brace.round"
             }
           },
@@ -185,15 +185,15 @@
           }
         },
         {
-          "begin": "(\\bModify Global Variable|Modify Global Variable At Index)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
+          "begin": "(\\bModify Global Variable( At Index)?)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
           "beginCaptures": {
             "1": {
               "name": "keyword.operator.assignment"
             },
-            "2": {
+            "3": {
               "name": "meta.brace.round"
             },
-            "3": {
+            "4": {
               "name": "variable"
             }
           },
@@ -211,6 +211,74 @@
         },
         {
           "begin": "(\\bModify Player Variable( At Index)?)\\s*(\\()",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.operator.assignment"
+            },
+            "3": {
+              "name": "meta.brace.round"
+            }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.round"
+            }
+          },
+          "patterns": [
+            {
+              "begin": "(,)\\s*([a-zA-Z0-9_]+)\\s*(,)",
+              "beginCaptures": {
+                "1": {
+                  "name": "punctuation.separator.comma"
+                },
+                "2": {
+                  "name": "variable.parameter"
+                },
+                "3": {
+                  "name": "punctuation.separator.comma"
+                }
+              },
+              "end": "(?=\\))",
+              "endCaptures": {},
+              "patterns": [
+                {
+                  "include": "#expression"
+                }
+              ]
+            },
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "begin": "(\\bChase Global Variable (Over Time|At Rate))\\s*(\\()\\s*([a-zA-Z0-9_]+)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.operator.assignment"
+            },
+            "3": {
+              "name": "meta.brace.round"
+            },
+            "4": {
+              "name": "variable"
+            }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.round"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "begin": "(\\bChase Player Variable (Over Time|At Rate)?)\\s*(\\()",
           "beginCaptures": {
             "1": {
               "name": "keyword.operator.assignment"
