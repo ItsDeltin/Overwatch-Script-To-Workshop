@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
             _definedInitializer = initializer;
             _typeLinker = new InstanceAnonymousTypeLinker(initializer.GenericTypes, generics);
 
-            Description = initializer.Doc.Description;
+            Description = initializer.Doc?.Description;
         }
 
         protected override void Setup()

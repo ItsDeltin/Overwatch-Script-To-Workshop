@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
                 new Constructor(this, Provider.DefinedAt, AccessLevel.Public)
             };
 
-            Description = provider.Doc.Description;
+            Description = provider.Doc?.Description;
         }
 
         public override IEnumerable<CodeType> GetAssigningTypes()

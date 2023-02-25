@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
             var builder = new MarkupBuilder().StartCodeLine().Add("new " + Type.GetName());
             builder.Add(CodeParameter.GetLabels(deltinScript, labelInfo.AnonymousLabelInfo, Parameters)).EndCodeLine();
 
-            if (labelInfo.IncludeDocumentation)
+            if (labelInfo.IncludeDocumentation && Documentation != null)
                 builder.NewSection().Add(Documentation);
 
             return builder;
