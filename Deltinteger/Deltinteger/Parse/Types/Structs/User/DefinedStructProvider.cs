@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType WorkingInstance { get; }
         public Location DefinedAt { get; }
         public bool[] GenericAssigns { get; }
+        public ParsedMetaComment Doc { get; }
         readonly ParseInfo _parseInfo;
         readonly ClassContext _context;
         readonly Scope _scope;
@@ -27,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             _context = typeContext;
             _scope = scope;
+            Doc = ParsedMetaComment.FromMetaComment(typeContext.Doc);
             DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
             parseInfo.TranslateInfo.StagedInitiation.Meta.Execute(this);
             parseInfo.TranslateInfo.StagedInitiation.Content.Execute(this);

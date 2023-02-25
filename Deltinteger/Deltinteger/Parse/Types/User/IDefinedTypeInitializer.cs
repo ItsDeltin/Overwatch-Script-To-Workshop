@@ -7,6 +7,7 @@ namespace Deltin.Deltinteger.Parse
     public interface IDefinedTypeInitializer : ICodeTypeInitializer, IScopeHandler
     {
         CodeType WorkingInstance { get; }
+        ParsedMetaComment Doc { get; }
 
         public static ICodeTypeInitializer GetInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext)
         {
@@ -26,7 +27,12 @@ namespace Deltin.Deltinteger.Parse
             if (provider.GenericsCount != 0)
                 builder.Add("<" + string.Join(", ", provider.GenericTypes.Select(g => g.GetDeclarationName())) + ">");
 
-            return builder.EndCodeLine();
+            builder.EndCodeLine();
+
+            if (provider.Doc != null)
+                builder.NewSection().Add(provider.Doc.Description);
+
+            return builder;
         }
 
         public IElementProvider ApplyDeclaration(IDeclaration declaration, ParseInfo parseInfo)
@@ -34,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
             // Function
             if (declaration is FunctionContext function)
                 return DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, this);
-            
+
             // Variable
             else if (declaration is VariableDeclaration variable)
                 return new ClassVariable(this, new DefineContextHandler(parseInfo.SetThisType(this), variable)).GetVar();

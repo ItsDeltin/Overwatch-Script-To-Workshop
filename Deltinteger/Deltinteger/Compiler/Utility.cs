@@ -415,6 +415,18 @@ namespace Deltin.Deltinteger.Compiler
             }
         }
 
+        public static bool IsDecorative(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.ActionComment:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
         public static bool IsAssignmentOperator(this TokenType tokenType) => Assignment_Tokens.Contains(tokenType);
 
         /// <summary>Gets the token's text. If the token is null, "?" is returned.</summary>

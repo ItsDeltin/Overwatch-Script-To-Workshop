@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType[] Generics { get; protected set; } = new CodeType[0];
         public virtual Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public virtual CodeType Extends { get; protected set; }
-        public string Description { get; protected set; }
+        public MarkupBuilder Description { get; protected set; }
         public IInvokeInfo InvokeInfo { get; protected set; }
         public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
         protected TypeKind Kind = TypeKind.Struct;
@@ -67,7 +67,7 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public virtual CodeType[] UnionTypes() => new[] {this};
+        public virtual CodeType[] UnionTypes() => new[] { this };
 
         public virtual bool Is(CodeType type) => this == type;
 
@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Deletes a variable from memory.</summary>
         /// <param name="actionSet">The action set to add the actions to.</param>
         /// <param name="reference">The object reference.</param>
-        public virtual void Delete(ActionSet actionSet, Element reference) {}
+        public virtual void Delete(ActionSet actionSet, Element reference) { }
 
         public virtual IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new DataTypeAssigner(attributes);
 
@@ -118,7 +118,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
-            
+
             var hover = new MarkupBuilder().StartCodeLine().Add(Kind.ToString().ToLower() + " " + Name);
             if (Generics.Length != 0)
                 hover.Add("<" + string.Join(", ", Generics.Select(g => g.GetName())) + ">");
@@ -144,7 +144,8 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public virtual CompletionItem GetCompletion() => throw new NotImplementedException();
 
-        public static CompletionItem GetTypeCompletion(CodeType type) => new CompletionItem() {
+        public static CompletionItem GetTypeCompletion(CodeType type) => new CompletionItem()
+        {
             Label = type.GetName(),
             Kind = type.Kind == TypeKind.Class ? CompletionItemKind.Class : type.Kind == TypeKind.Constant ? CompletionItemKind.Constant : type.Kind == TypeKind.Enum ? CompletionItemKind.Enum : CompletionItemKind.Struct
         };

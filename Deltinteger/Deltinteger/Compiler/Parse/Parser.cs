@@ -209,6 +209,18 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
+        TokenType NextNonDecorativeToken()
+        {
+            for (int i = 0; ; i++)
+            {
+                var current = Lexer.ScanTokenAt(Token + i);
+                if (current == null)
+                    return TokenType.EOF;
+                else if (!current.TokenType.IsDecorative())
+                    return current.TokenType;
+            }
+        }
+
         Token TokenAtOrEnd(int position) => Lexer.ScanTokenAt(position) ?? Lexer.Tokens.Last();
 
         /// <summary>If the current token's type is equal to the specified type in the 'type' parameter,
@@ -1756,6 +1768,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
         /// <returns>Determines whether an element was parsed.</returns>
         void ParseScriptRootElement(RootContext context)
         {
+            switch (NextNonDecorativeToken())
+            {
+                // Class
+                case TokenType.Class:
+                case TokenType.Struct:
+                    context.Classes.Add(ParseClassOrStruct());
+                    return;
+            }
+
             // Return false if the EOF was reached.
             switch (Kind)
             {
@@ -1763,12 +1784,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Rule:
                 case TokenType.Disabled:
                     context.Rules.Add(ParseRule());
-                    break;
-
-                // Class
-                case TokenType.Class:
-                case TokenType.Struct:
-                    context.Classes.Add(ParseClassOrStruct());
                     break;
 
                 // Enum
@@ -1892,6 +1907,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StartTokenCapture();
             if (GetIncrementalNode(out ClassContext @class)) return EndTokenCapture(@class);
 
+            var doc = ParseMetaComment();
+
             var declareToken = ParseExpected(TokenType.Class, TokenType.Struct);
 
             var identifier = ParseExpected(TokenType.Identifier);
@@ -1908,7 +1925,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Start the class group.
             ParseExpected(TokenType.CurlyBracket_Open);
 
-            ClassContext context = new ClassContext(declareToken, identifier, generics, inheritToken, inheriting);
+            ClassContext context = new ClassContext(declareToken, identifier, generics, inheritToken, inheriting, doc);
 
             // Get the class elements.
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)

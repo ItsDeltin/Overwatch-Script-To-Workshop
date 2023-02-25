@@ -13,6 +13,8 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public List<IElementProvider> DeclaredElements { get; } = new List<IElementProvider>();
         public IConstructorProvider<Constructor>[] Constructors { get; private set; }
+        public ParsedMetaComment Doc { get; }
+
         readonly ValueSolveSource _onReady = new ValueSolveSource();
 
         readonly ParseInfo _parseInfo;
@@ -33,6 +35,7 @@ namespace Deltin.Deltinteger.Parse
             MetaGetter = this;
             OnReady = _onReady;
             DefinedAt = parseInfo.Script.GetLocation(typeContext.Identifier.GetRange(typeContext.Range));
+            Doc = ParsedMetaComment.FromMetaComment(typeContext.Doc);
 
             parseInfo.TranslateInfo.StagedInitiation.On(this);
 
