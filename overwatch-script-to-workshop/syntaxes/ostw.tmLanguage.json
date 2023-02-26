@@ -26,13 +26,13 @@
       "include": "#rule"
     },
     {
+      "include": "#statement"
+    },
+    {
       "include": "#function-declaration"
     },
     {
       "include": "#variable-declaration"
-    },
-    {
-      "include": "#expression"
     }
   ],
   "firstLineMatch": "\\brule\\b",
@@ -87,6 +87,68 @@
           "endCaptures": {},
           "patterns": [
             {
+              "begin": "```workshop",
+              "beginCaptures": {
+                "0": {
+                  "name": "markup.fenced_code.block.markdown"
+                }
+              },
+              "end": "```|^\\s*(?!#)",
+              "endCaptures": {
+                "0": {
+                  "name": "markup.fenced_code.block.markdown"
+                }
+              },
+              "patterns": [
+                {
+                  "begin": "#",
+                  "beginCaptures": {
+                    "0": {
+                      "name": "comment.block.documentation"
+                    }
+                  },
+                  "end": "$|(?=```)",
+                  "endCaptures": {},
+                  "patterns": [
+                    {
+                      "include": "source.ow"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "begin": "```overpy",
+              "beginCaptures": {
+                "0": {
+                  "name": "markup.fenced_code.block.markdown"
+                }
+              },
+              "end": "```|^\\s*(?!#)",
+              "endCaptures": {
+                "0": {
+                  "name": "markup.fenced_code.block.markdown"
+                }
+              },
+              "patterns": [
+                {
+                  "begin": "#",
+                  "beginCaptures": {
+                    "0": {
+                      "name": "comment.block.documentation"
+                    }
+                  },
+                  "end": "$|(?=```)",
+                  "endCaptures": {},
+                  "patterns": [
+                    {
+                      "include": "source.opy"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
               "begin": "```",
               "beginCaptures": {
                 "0": {
@@ -101,19 +163,19 @@
               },
               "patterns": [
                 {
-                  "match": "(#)(.*?($|(?=```)))",
-                  "captures": {
-                    "1": {
+                  "begin": "#",
+                  "beginCaptures": {
+                    "0": {
                       "name": "comment.block.documentation"
-                    },
-                    "2": {
-                      "patterns": [
-                        {
-                          "include": "$self"
-                        }
-                      ]
                     }
-                  }
+                  },
+                  "end": "$|(?=```)",
+                  "endCaptures": {},
+                  "patterns": [
+                    {
+                      "include": "$self"
+                    }
+                  ]
                 }
               ]
             },
@@ -206,6 +268,44 @@
           "patterns": [
             {
               "include": "#expression"
+            }
+          ]
+        },
+        {
+          "begin": "((?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*[a-zA-Z0-9_]+\\b\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)\\s*\\.\\s*)+?([a-zA-Z0-9_]+\\b)\\s*((<)\\s*((,)?\\s*\\g<type>\\s*)*(>))?(\\()",
+          "beginCaptures": {
+            "2": {
+              "patterns": [
+                {
+                  "include": "#type-matcher"
+                }
+              ]
+            },
+            "12": {
+              "name": "entity.name.function"
+            },
+            "14": {
+              "name": "punctuation.definition.typeparameters.begin"
+            },
+            "16": {
+              "name": "punctuation.separator.comma"
+            },
+            "17": {
+              "name": "punctuation.definition.typeparameters.end"
+            },
+            "18": {
+              "name": "punctuation.parenthesis.open"
+            }
+          },
+          "end": "(\\))",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.parenthesis.close"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#parameter_list"
             }
           ]
         },

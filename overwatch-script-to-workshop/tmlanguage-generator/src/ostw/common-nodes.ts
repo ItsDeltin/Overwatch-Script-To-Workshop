@@ -73,12 +73,14 @@ codeType.options.value = [
     tm.Maybe(['=>', w, codeType.recursiveCall(), w]),
 ];
 
-export const typeArgs = tm.And(
-    pair('<', 'punctuation.definition.typeparameters.begin'),
-    w,
-    tm.ZeroOrMore([tm.Maybe(comma), w, codeType, w]),
-    pair('>', 'punctuation.definition.typeparameters.end')
-);
+export function typeArgs(recursive: boolean = false) {
+    return tm.And(
+        pair('<', 'punctuation.definition.typeparameters.begin'),
+        w,
+        tm.ZeroOrMore([tm.Maybe(comma), w, codeType.get(recursive), w]),
+        pair('>', 'punctuation.definition.typeparameters.end')
+    );
+}
 
 // Match preceeding dot if it exists.
 export const accessorMatch = tm.Maybe([accessor, w]);

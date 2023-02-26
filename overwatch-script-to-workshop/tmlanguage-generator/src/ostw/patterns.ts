@@ -64,23 +64,12 @@ const comment: Pattern = {
             // name: 'comment.block.documentation',
             zeroBeginCapture: { name: Names.comment },
             patterns: [
-                {
-                    begin: '```',
-                    end: /```|^\s*(?!#)/,
-                    zeroBeginCapture: { name: 'markup.fenced_code.block.markdown' },
-                    zeroEndCapture: { name: 'markup.fenced_code.block.markdown' },
-                    patterns: [
-                        {
-                            match: [
-                                tm.Group({ value: '#', tmName: 'comment.block.documentation' }),
-                                tm.Group({
-                                    value: /.*?($|(?=```))/,
-                                    patterns: [{ include: '$self' }]
-                                })
-                            ]
-                        }
-                    ]
-                },
+                // Workshop
+                utils.languageHighlight('workshop', 'source.ow'),
+                // Overpy
+                utils.languageHighlight('overpy', 'source.opy'),
+                // OSTW
+                utils.languageHighlight('', '$self'),
                 // Match all other text.
                 {
                     match: tm.Group({
@@ -511,7 +500,7 @@ const functionCall: Pattern = {
         pair(i, Names.entity_name_function),
         w,
         // Match provided type args.
-        common_nodes.typeArgs.Maybe(),
+        common_nodes.typeArgs().Maybe(),
         w,
         // Match (
         common_nodes.parenthesis_open,
@@ -582,6 +571,17 @@ const expressionPattern: Pattern = {
             },
             zeroEndCapture: { name: 'keyword.operator.conditional.colon' },
             patterns: [{ include: Repository.expression }],
+        },
+        // Accessor list to function
+        {
+            begin: [
+                tm.OneOrMore([codeType, w, '.', w], true),
+                common_nodes.i_function,
+                w,
+                common_nodes.typeArgs(true).Maybe(),
+                common_nodes.parenthesis_open],
+            end: common_nodes.parenthesis_close,
+            patterns: [{ include: Repository.parameter_list }]
         },
         // Lambda (one parameter)
         {
@@ -677,7 +677,7 @@ const expressionPattern: Pattern = {
             match: [
                 common_nodes.accessorMatch,
                 common_nodes.i_type,
-                common_nodes.typeArgs,
+                common_nodes.typeArgs(),
             ],
         },
         // Lambda block

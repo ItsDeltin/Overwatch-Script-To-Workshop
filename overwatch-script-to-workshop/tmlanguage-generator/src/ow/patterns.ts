@@ -4,8 +4,8 @@ import { Pattern } from '../pattern';
 import { Repository } from './repository';
 import * as util from './utils';
 
-const elementName = /(?![\s(),;0-9])[^/\\\+\*\"\';<>=(),\{\}\[\]\.]+/;
-const functionName = /(?![\s(),;0-9])[^/\\\+\*\"\';<>=(),\{\}\[\]\.]+/;
+const elementName = /(?![\s(),;0-9])[^/\\\+\*\"\';<>=(),\{\}\[\]\.#`]+/;
+const functionName = /(?![\s(),;0-9])[^/\\\+\*\"\';<>=(),\{\}\[\]\.#`]+/;
 
 const comment: Pattern = {
     patterns: [
@@ -136,13 +136,18 @@ const action: Pattern = {
         util.setGlobalVariablePattern(/\bChase Global Variable (Over Time|At Rate)/, 'keyword.operator.assignment'),
         // Chase player variable
         util.setPlayerVariablePattern(/\bChase Player Variable (Over Time|At Rate)?/, 'keyword.operator.assignment'),
-        // Expression
-        { include: Repository.expression },
+        // Action comment
+        util.string('comment.block.documentation'),
         // Assignment compound
         {
-            match: /\+=|-=|\/=|\*=|%=/,
-            name: 'keyword.operator.assignment.compound'
+            begin: /\+=|-=|\/=|\*=|%=/,
+            end: ';',
+            zeroBeginCapture: { name: 'keyword.operator.assignment.compound' },
+            zeroEndCapture: { name: 'punctuation.terminator.statement' },
+            patterns: [{ include: Repository.expression }]
         },
+        // Expression
+        { include: Repository.expression },
         // Assignment
         {
             match: /=/,
@@ -251,23 +256,11 @@ const func: Pattern = {
     ]
 };
 
-const string_literal: Pattern = {
-    patterns: [
-        {
-            match: /\"\"/,
-            name: 'string.quoted.double'
-        },
-        {
-            begin: '\"',
-            end: /((?:^|[^\\])(?:\\{2})*)"/,
-            name: 'string.quoted.double'
-        }
-    ]
-};
+const string_literal: Pattern = util.string();
 
 const generated_code_timestamp: Pattern = {
     match: /\[[0-9]{2}:[0-9]{2}:[0-9]{2}\]/,
-    name: 'markup.error'
+    name: 'comment.block.documentation markup.error'
 };
 
 export function getRepository() {

@@ -15,8 +15,8 @@ export const ostw_grammar = tm.createTextmateGrammar({
         { include: Repository.class_struct_declaration },
         { include: Repository.enum_declaration },
         { include: Repository.rule },
+        { include: Repository.statement },
         { include: Repository.function_declaration },
         { include: Repository.variable_declaration },
-        { include: Repository.expression }
     ],
 });

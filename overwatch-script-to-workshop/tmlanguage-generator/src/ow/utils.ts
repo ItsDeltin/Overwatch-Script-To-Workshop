@@ -66,3 +66,19 @@ export function setPlayerVariablePattern(start: tm.Regexable, startTmName: tm.Tm
         ]
     };
 }
+
+export function string(tmName: tm.TmName = 'string.quoted.double'): Pattern {
+    return {
+        patterns: [
+            {
+                match: /\"\"/,
+                name: tmName
+            },
+            {
+                begin: '\"',
+                end: /((?:^|[^\\])(?:\\{2})*)"/,
+                name: tmName
+            }
+        ]
+    };
+}

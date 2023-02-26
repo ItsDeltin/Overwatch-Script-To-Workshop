@@ -114,6 +114,13 @@ export class GroupNode extends RegexNode {
         return Raw('\\g<' + this.options.groupName + '>');
     }
 
+    public get(recursive: boolean): RegexNode {
+        if (recursive) {
+            return this.recursiveCall();
+        }
+        else return this;
+    }
+
     public doExportCaptures(): boolean {
         return !!this.options.tmName || !!this.options.patterns;
     }

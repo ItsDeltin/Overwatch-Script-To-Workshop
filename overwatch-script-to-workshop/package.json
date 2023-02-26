@@ -69,7 +69,7 @@
       },
       {
         "language": "workshop",
-        "scopeName": "workshop.ow",
+        "scopeName": "source.ow",
         "path": "./syntaxes/ow.tmLanguage.json"
       }
     ],
