@@ -17,13 +17,21 @@ export function createTypeDescriptor(tagName: 'struct' | 'class' | 'enum') {
     ];
 }
 
-export function languageHighlight(activationName: string, referenceName: string): Pattern {
+export function languageHighlight(activationName: string, referenceName: string, inline: boolean): Pattern {
     return {
         begin: '```' + activationName,
-        end: /```|^\s*(?!#)/,
-        zeroBeginCapture: { name: 'markup.fenced_code.block.markdown' },
-        zeroEndCapture: { name: 'markup.fenced_code.block.markdown' },
+        end: /```|^(?!\s*#)/,
+        zeroBeginCapture: { name: 'comment.block.documentation' },
+        zeroEndCapture: { name: 'comment.block.documentation' },
         patterns: [
+            inline ?
+            {
+                match: [
+                    tm.Match(/#/, 'comment.block.documentation'),
+                    tm.Group({ value: /.*?($|(?=```))/, patterns: [{include: referenceName}] })
+                ]
+            } :
+            // Referencing external languages doesn't seem to work in captured patterns?
             {
                 begin: /#/,
                 end: /$|(?=```)/,

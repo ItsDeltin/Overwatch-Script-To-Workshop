@@ -65,11 +65,11 @@ const comment: Pattern = {
             zeroBeginCapture: { name: Names.comment },
             patterns: [
                 // Workshop
-                utils.languageHighlight('workshop', 'source.ow'),
+                utils.languageHighlight('workshop', 'source.ow', false),
                 // Overpy
-                utils.languageHighlight('overpy', 'source.opy'),
+                utils.languageHighlight('overpy', 'source.opy', false),
                 // OSTW
-                utils.languageHighlight('', '$self'),
+                utils.languageHighlight('', '$self', true),
                 // Match all other text.
                 {
                     match: tm.Group({
@@ -581,7 +581,7 @@ const expressionPattern: Pattern = {
                 common_nodes.typeArgs(true).Maybe(),
                 common_nodes.parenthesis_open],
             end: common_nodes.parenthesis_close,
-            patterns: [{ include: Repository.parameter_list }]
+            patterns: [{ include: Repository.argument_list }]
         },
         // Lambda (one parameter)
         {

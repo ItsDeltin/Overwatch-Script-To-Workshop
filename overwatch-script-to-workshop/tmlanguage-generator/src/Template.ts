@@ -28,6 +28,9 @@ export interface TmLanguage {
     /** Rules which can be included from other places in the grammar. The key is the name of the rule and the value is the actual rule. Further explanation (and example)
      * follow with the description of the include rule key. */
     repository?: { [name: string]: TmRule };
+
+    /** Info for contributors */
+    comment?: string;
 }
 
 export interface TmRule {

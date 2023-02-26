@@ -1015,7 +1015,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             foreach (var comment in Comments)
             {
-                string value = comment.Text.Substring(1).TrimEnd();
+                string value = comment.Text.Substring(1);
 
                 if (value.Length > 0 && char.IsWhiteSpace(value.First()))
                     yield return value.Substring(1);

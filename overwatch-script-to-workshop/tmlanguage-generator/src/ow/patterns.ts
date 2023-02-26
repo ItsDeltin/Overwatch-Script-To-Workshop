@@ -20,6 +20,11 @@ const comment: Pattern = {
             begin: /\/\*/,
             end: /\*\//,
             name: 'comment.block.documentation'
+        },
+        // OSTW inline doc
+        {
+            match: /#/,
+            name: 'comment.block.documentation'
         }
     ]
 }
@@ -159,6 +164,8 @@ const action: Pattern = {
 const expression: Pattern = {
     name: 'meta.expr',
     patterns: [
+        // Comment
+        { include: Repository.comment },
         // Comma in parameter list.
         { match: tm.Match(/,/, 'punctuation.separator.comma') },
         // Number (todo: all possible variants)
