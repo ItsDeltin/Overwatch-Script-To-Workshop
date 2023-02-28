@@ -105,24 +105,22 @@ const import_: Pattern = {
 // * Patterns: Declarations
 const matchAttributes = tm.Group({
     value: tm.ZeroOrMore([
-        tm.Group({
-            value: tm.Or(
-                'public',
-                'private',
-                'protected',
-                'virtual',
-                'override',
-                'abstract',
-                'static',
-                'recursive',
-                'globalvar',
-                'playervar'
-            ),
-            tmName: 'storage.modifier',
-        }),
+        tm.Or(
+            'public',
+            'private',
+            'protected',
+            'virtual',
+            'override',
+            'abstract',
+            'static',
+            'recursive',
+            'globalvar',
+            'playervar'
+        ),
         b,
         w,
     ]),
+    tmName: 'storage.modifier'
 });
 
 // Variables
@@ -144,7 +142,7 @@ const variableDeclaration: Pattern = {
                     tm.Group({ value: '=', tmName: Names.assignment }),
                 ],
                 // Macro
-                tm.Group({ value: ':' })
+                tm.Group({ value: ':', tmName: 'punctuation.separator.key-value' })
             )
             .Maybe(),
     ],
@@ -566,9 +564,7 @@ const expressionPattern: Pattern = {
         {
             begin: '?',
             end: ':',
-            zeroBeginCapture: {
-                name: 'keyword.operator.conditional.question-mark',
-            },
+            zeroBeginCapture: { name: 'keyword.operator.conditional.question-mark', },
             zeroEndCapture: { name: 'keyword.operator.conditional.colon' },
             patterns: [{ include: Repository.expression }],
         },

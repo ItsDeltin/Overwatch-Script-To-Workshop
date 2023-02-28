@@ -42,6 +42,7 @@ export const i_parameter = pair(i, 'variable.parameter');
 // * Code type
 export const codeType = tm.Group({
     groupName: 'type',
+    tmName: 'meta.type',
     patterns: [{ include: Repository.code_type_matcher }],
 });
 // Regex
@@ -61,7 +62,7 @@ codeType.options.value = [
             i,
             w,
             // Type args
-            tm.Maybe(['<', w, tm.And(tm.Maybe(','), w, i, w).OneOrMore(), '>']),
+            tm.Maybe(['<', w, tm.And(tm.Maybe(','), w, codeType.recursiveCall(), w).OneOrMore(), '>']),
         ]
     ),
     w,
