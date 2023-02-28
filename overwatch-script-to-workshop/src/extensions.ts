@@ -10,7 +10,6 @@ import { client, makeLanguageServer, lastWorkshopOutput, restartLanguageServer }
 import { downloadLatest, chooseServerLocation } from './download';
 import { setupConfig, config } from './config';
 import { workshopPanelProvider } from './workshopPanelProvider';
-import * as semantics from './semantics';
 import { createVersionStatusBar } from './versionSelector';
 
 export let extensionContext: ExtensionContext;
@@ -28,7 +27,6 @@ export async function activate(context: ExtensionContext) {
 	createVersionStatusBar(context);
 	makeLanguageServer();
 	setupBuildWatcher();
-	semantics.setupSemantics();
 }
 
 export function addSubscribable(disposable) {
@@ -97,6 +95,8 @@ function subscribe(context: ExtensionContext) {
 					vscode.window.showErrorMessage(reason);
 				});
 			});
+		}).catch(reason => {
+			vscode.window.showErrorMessage('Internal pathmap generator error: ' + reason);
 		});
 	}, this));
 

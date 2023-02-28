@@ -81,6 +81,7 @@ namespace Deltin.Deltinteger.LanguageServer
             CodeLensHandler codeLensHandler = new CodeLensHandler(this);
             DoRenameHandler renameHandler = new DoRenameHandler(this);
             ColorHandler colorHandler = new ColorHandler(this);
+            SemanticTokenHandler semanticTokenHandler = new SemanticTokenHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => AddRequests(options
                 .WithInput(Console.OpenStandardInput())
@@ -99,6 +100,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 .AddHandler(codeLensHandler)
                 .AddHandler(renameHandler)
                 .AddHandler(colorHandler)
+                .AddHandler(semanticTokenHandler)
             ));
 
             Server.SendNotification(Version, Program.VERSION);
@@ -109,7 +111,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             // Pathmap creation is seperated into 2 requests, 'pathmapFromClipboard' and 'pathmapApply'.
             // Pathmap generation request.
-            options.OnRequest<object, string>("pathmapFromClipboard", _ => Task<string>.Run(() =>
+            options.OnRequest<string>("pathmapFromClipboard", () => Task.Run(() =>
             {
                 // Create the error handler for pathmap parser.
                 ServerPathmapHandler error = new ServerPathmapHandler();
@@ -119,7 +121,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 {
                     Pathmap map = Pathmap.ImportFromActionSet(Clipboard.GetText(), error);
 
-                    if (map == null) return error.Message;
+                    if (map == null)
+                        return error.Message;
                     else
                     {
                         lastMap = map;
