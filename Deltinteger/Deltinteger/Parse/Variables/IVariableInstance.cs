@@ -15,21 +15,22 @@ namespace Deltin.Deltinteger.Parse
         ICallVariable GetExpression(ParseInfo parseInfo, DocRange callRange, IExpression[] index, CodeType[] typeArgs) => new CallVariableAction(parseInfo, this, index);
         void Call(ParseInfo parseInfo, DocRange callRange) => Call(this, parseInfo, callRange);
 
-        MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo) => labelInfo.MakeVariableLabel(CodeType.GetCodeType(deltinScript), Name);
+        MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo, MarkupBuilder documentation) => labelInfo.MakeVariableLabel(CodeType.GetCodeType(deltinScript), Name, documentation);
 
         string GetLabel(DeltinScript deltinScript) => CodeType.GetCodeType(deltinScript) + " " + Name;
 
-        CompletionItem IScopeable.GetCompletion(DeltinScript deltinScript) => new CompletionItem() {
+        CompletionItem IScopeable.GetCompletion(DeltinScript deltinScript) => new CompletionItem()
+        {
             Label = Name,
             Documentation = Documentation,
             Kind = CompletionItemKind.Variable,
             Detail = CodeType.GetCodeType(deltinScript).GetName() + " " + Name
         };
-        
+
         static void Call(IVariableInstance variable, ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.Elements.AddDeclarationCall(variable.Provider, new DeclarationCall(callRange, false));
-            parseInfo.Script.AddHover(callRange, variable.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover));
+            parseInfo.Script.AddHover(callRange, variable.GetLabel(parseInfo.TranslateInfo, LabelInfo.Hover, variable.Documentation));
         }
     }
 

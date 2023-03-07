@@ -43,14 +43,21 @@ namespace Deltin.Deltinteger.Parse
             IncludeParameterNames = false
         };
 
-        public MarkupBuilder MakeVariableLabel(CodeType type, string name)
+        public MarkupBuilder MakeVariableLabel(CodeType type, string name, MarkupBuilder documentation)
         {
             var builder = new MarkupBuilder().StartCodeLine();
 
+            // Add return type
             if (IncludeReturnType)
                 builder.Add(type.GetName()).Add(" ");
 
-            return builder.Add(name).EndCodeLine();
+            // Add variable name
+            builder.Add(name).EndCodeLine();
+
+            if (IncludeDocumentation && documentation != null)
+                builder.NewSection().Add(documentation);
+
+            return builder;
         }
 
         public MarkupBuilder MakeFunctionLabel(DeltinScript deltinScript, CodeType type, string name, IParameterLike[] parameters, AnonymousType[] typeArgs, ParsedMetaComment metaComment)

@@ -1476,13 +1476,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     initialValue = GetContainExpression(); // Get the initial value.
 
                 ParseSemicolon();
-                return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro));
+                return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment));
             }
         }
 
         VariableDeclaration ParseDeclaration(bool parseSemicolon)
         {
             StartNode();
+            var metaComment = ParseMetaComment();
             var attributes = ParseAttributes();
             var type = ParseType();
             var identifier = ParseExpected(TokenType.Identifier);
@@ -1500,7 +1501,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 initialValue = GetContainExpression();
 
             ParseSemicolon(parseSemicolon);
-            return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro));
+            return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment));
         }
 
         ConstructorContext ParseConstructor()

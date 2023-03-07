@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public LanguageServer.Location DefinedAt => Var.DefinedAt;
         public AccessLevel AccessLevel => Var.AccessLevel;
         IVariable IVariableInstance.Provider => Var;
-        public MarkupBuilder Documentation { get; set; }
+        public MarkupBuilder Documentation => Var.Documentation;
         ICodeTypeSolver IScopeable.CodeType => CodeType;
         public IVariableInstanceAttributes Attributes { get; }
 
@@ -40,7 +40,8 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddDefinitionLink(callRange, Var.DefinedAt);
         }
 
-        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetRealType(getAssigner.TypeLinker).GetGettableAssigner(new AssigningAttributes() {
+        public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetRealType(getAssigner.TypeLinker).GetGettableAssigner(new AssigningAttributes()
+        {
             Name = (getAssigner.Tag ?? string.Empty) + Var.Name,
             Extended = Var.InExtendedCollection,
             ID = Var.ID,

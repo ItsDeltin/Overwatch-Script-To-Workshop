@@ -24,11 +24,11 @@ namespace Deltin.Deltinteger.Parse
         private readonly VariableDeclaration _defineContext;
         private readonly MarkupBuilder _documentation;
 
-        public DefineContextHandler(ParseInfo parseInfo, VariableDeclaration defineContext, MarkupBuilder documentation = null)
+        public DefineContextHandler(ParseInfo parseInfo, VariableDeclaration defineContext, MarkupBuilder externalDocumentation = null)
         {
             _defineContext = defineContext;
             ParseInfo = parseInfo;
-            _documentation = documentation;
+            _documentation = externalDocumentation ?? defineContext.Comment?.GetContents();
         }
 
         public Location GetDefineLocation() => ParseInfo.Script.GetLocation(GetNameRange());

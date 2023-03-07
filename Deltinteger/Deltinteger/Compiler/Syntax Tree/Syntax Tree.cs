@@ -934,7 +934,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token MacroSymbol { get; }
         public MetaComment Comment { get; set; }
 
-        public VariableDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id, Token macroSymbol)
+        public VariableDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id, Token macroSymbol, MetaComment metaComment)
         {
             Attributes = attributes;
             Type = type;
@@ -943,6 +943,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Extended = ext;
             ID = id;
             MacroSymbol = macroSymbol;
+            Comment = metaComment;
         }
     }
 
