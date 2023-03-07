@@ -10,9 +10,6 @@
   ],
   "patterns": [
     {
-      "include": "#generated-code-timestamp"
-    },
-    {
       "include": "#comment"
     },
     {
@@ -61,6 +58,11 @@
         {
           "name": "comment.block.documentation",
           "match": "#",
+          "captures": {}
+        },
+        {
+          "name": "comment.block.documentation markup.error",
+          "match": "\\[[0-9]{2}:[0-9]{2}:[0-9]{2}\\]",
           "captures": {}
         }
       ]
@@ -191,15 +193,15 @@
           }
         },
         {
-          "begin": "(\\bModify Global Variable( At Index)?)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
+          "begin": "(\\b(Modify|Set) Global Variable( At Index)?)\\s*(\\()\\s*([a-zA-Z0-9_]+)",
           "beginCaptures": {
             "1": {
               "name": "keyword.operator.assignment"
             },
-            "3": {
+            "4": {
               "name": "meta.brace.round"
             },
-            "4": {
+            "5": {
               "name": "variable"
             }
           },
@@ -216,12 +218,12 @@
           ]
         },
         {
-          "begin": "(\\bModify Player Variable( At Index)?)\\s*(\\()",
+          "begin": "(\\b(Modify|Set) Player Variable( At Index)?)\\s*(\\()",
           "beginCaptures": {
             "1": {
               "name": "keyword.operator.assignment"
             },
-            "3": {
+            "4": {
               "name": "meta.brace.round"
             }
           },
@@ -494,7 +496,7 @@
           "captures": {}
         },
         {
-          "name": "Null",
+          "name": "constant.language.null",
           "match": "\\bNull\\b",
           "captures": {}
         },
@@ -958,15 +960,13 @@
             },
             {
               "include": "#condition-list"
+            },
+            {
+              "include": "#comment"
             }
           ]
         }
       ]
-    },
-    "generated-code-timestamp": {
-      "name": "comment.block.documentation markup.error",
-      "match": "\\[[0-9]{2}:[0-9]{2}:[0-9]{2}\\]",
-      "captures": {}
     }
   }
 }

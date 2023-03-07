@@ -9,7 +9,6 @@ export const ow_grammar = tm.createTextmateGrammar({
     scopeName: 'source.ow',
     repository: getRepository(),
     patterns: [
-        { include: Repository.generated_code_timestamp },
         { include: Repository.comment },
         { include: Repository.settings },
         { include: Repository.variables },

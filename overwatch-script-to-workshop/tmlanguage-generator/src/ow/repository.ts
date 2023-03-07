@@ -12,6 +12,4 @@ export namespace Repository
     export const variables = "#variables";
     export const subroutines = "#subroutines";
     export const rule = "#rule";
-
-    export const generated_code_timestamp = "#generated-code-timestamp";
 }

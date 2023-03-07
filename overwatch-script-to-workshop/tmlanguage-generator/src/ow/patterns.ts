@@ -25,6 +25,11 @@ const comment: Pattern = {
         {
             match: /#/,
             name: 'comment.block.documentation'
+        },
+        // Generated code timestamp
+        {
+            match: /\[[0-9]{2}:[0-9]{2}:[0-9]{2}\]/,
+            name: 'comment.block.documentation markup.error'
         }
     ]
 }
@@ -90,7 +95,8 @@ const rule: Pattern = {
                 ]),
                 // Actions and conditions
                 { include: Repository.action_list },
-                { include: Repository.condition_list }
+                { include: Repository.condition_list },
+                { include: Repository.comment }
             ]
         }
     ]
@@ -133,10 +139,10 @@ const action: Pattern = {
                 ';'
             ]
         },
-        // Modify global variable
-        util.setGlobalVariablePattern(/\bModify Global Variable( At Index)?/, 'keyword.operator.assignment'),
-        // Modify player variable
-        util.setPlayerVariablePattern(/\bModify Player Variable( At Index)?/, 'keyword.operator.assignment'),
+        // Set/Modify global variable
+        util.setGlobalVariablePattern(/\b(Modify|Set) Global Variable( At Index)?/, 'keyword.operator.assignment'),
+        // Set/Modify player variable
+        util.setPlayerVariablePattern(/\b(Modify|Set) Player Variable( At Index)?/, 'keyword.operator.assignment'),
         // Chase Global Variable
         util.setGlobalVariablePattern(/\bChase Global Variable (Over Time|At Rate)/, 'keyword.operator.assignment'),
         // Chase player variable
@@ -188,7 +194,7 @@ const expression: Pattern = {
         // False
         { match: [b, 'False', b], name: 'constant.language.boolean.false' },
         // Null
-        { match: [b, 'Null', b], name: 'Null' },
+        { match: [b, 'Null', b], name: 'constant.language.null' },
         // Global variable
         {
             match: [
@@ -265,11 +271,6 @@ const func: Pattern = {
 
 const string_literal: Pattern = util.string();
 
-const generated_code_timestamp: Pattern = {
-    match: /\[[0-9]{2}:[0-9]{2}:[0-9]{2}\]/,
-    name: 'comment.block.documentation markup.error'
-};
-
 export function getRepository() {
     return tm.makeRepository(add => {
         add(Repository.comment, comment);
@@ -283,6 +284,5 @@ export function getRepository() {
         add(Repository.variables, variables);
         add(Repository.subroutines, subroutines);
         add(Repository.rule, rule);
-        add(Repository.generated_code_timestamp, generated_code_timestamp);
     });
 }
