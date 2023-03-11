@@ -370,6 +370,9 @@ namespace Deltin.Deltinteger.Parse
             }
             else
             {
+                // Init
+                indexReference.Set(actionSet, Element.Num(0), target);
+                // Loop
                 actionSet.AddAction(Element.While(Element.Compare(
                     indexReference.Get(target), Operator.LessThan, stop
                 )));
