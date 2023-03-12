@@ -6,7 +6,6 @@ import { isDotnetInstalled, getLatestRelease, downloadLatest, locateAndApplyServ
 import { workshopPanelProvider } from './workshopPanelProvider';
 import * as versionSelector from './versionSelector';
 import fs = require('fs');
-import * as semver from 'semver';
 
 export let client: LanguageClient;
 

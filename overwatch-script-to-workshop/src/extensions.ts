@@ -11,6 +11,7 @@ import { downloadLatest, chooseServerLocation } from './download';
 import { setupConfig, config } from './config';
 import { workshopPanelProvider } from './workshopPanelProvider';
 import { createVersionStatusBar } from './versionSelector';
+import { tryLogFolder } from './owLog';
 
 export let extensionContext: ExtensionContext;
 export let defaultServerFolder: string;
@@ -27,9 +28,10 @@ export async function activate(context: ExtensionContext) {
 	createVersionStatusBar(context);
 	makeLanguageServer();
 	setupBuildWatcher();
+	tryLogFolder();
 }
 
-export function addSubscribable(disposable) {
+export function addSubscribable(disposable: { dispose(): any }) {
 	extensionContext.subscriptions.push(disposable);
 }
 

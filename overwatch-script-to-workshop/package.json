@@ -2,7 +2,7 @@
   "name": "overwatch-script-to-workshop",
   "displayName": "Overwatch Script To Workshop",
   "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-  "version": "3.5.1",
+  "version": "3.6.0",
   "publisher": "Deltin",
   "engines": {
     "vscode": "^1.72.0"
@@ -131,6 +131,12 @@
           "type": "boolean",
           "default": true,
           "description": "Determines if OSTW will use semantic highlighting."
+        },
+        "ostw.workshopLog": {
+          "scope": "machine",
+          "type": "boolean",
+          "default": true,
+          "description": "Prints Overwatch's workshop log output (via Log To Inspector) into the 'Workshop Log' output window.\nThe 'Enable Workshop Inspector Log File' Overwatch setting in Gameplay > General > Custom Games - Workshop must be turned on."
         },
         "ostw.codelens.references": {
           "scope": "window",
