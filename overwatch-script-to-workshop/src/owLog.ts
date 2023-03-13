@@ -1,14 +1,13 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
-import { window } from 'vscode';
+import { OutputChannel, window } from 'vscode';
 import * as fs from 'fs';
 import * as fspath from 'path';
 import { addSubscribable } from './extensions';
 import { Disposable } from 'vscode'; 
 import { config } from './config';
-
-const workshopLogPath: string = path.join(os.homedir(), 'Documents', 'Overwatch', 'Workshop');
+import { exec } from 'child_process';
 
 /** The predicted file that the Overwatch Workshop is writing to. */
 let currentLogPath: string | undefined = undefined;
@@ -19,6 +18,8 @@ let dataStart: number;
 let disposeLog: Disposable | undefined = undefined;
 /** Is the log window active? */
 let active: Boolean = false;
+/** The output channel that the workshop will log to. */
+let logWindow: OutputChannel;
 
 /** Opens or closes the workshop log output window depending on the `ostw.workshopLog` setting. */
 export function tryLogFolder()
@@ -35,68 +36,77 @@ function watchLogFolder()
         return;
     active = true;
 
-    let logWindow = window.createOutputChannel('Workshop Log', 'log');
+    if (!logWindow) {
+        logWindow = window.createOutputChannel('Workshop Log', 'log');
+        addSubscribable(logWindow);
+    }
 
-    let watcher = chokidar.watch(workshopLogPath, {
-        persistent: true,
-        usePolling: true, // poll because of the way Overwatch writes its logs.
-        ignoreInitial: false, // do not ignore so we can predict the current log file.
-        alwaysStat: true
-    }).on('change', (path, stats) => {
-        // The 'add' event determines which log file is the most recent and by extension which file
-        // Overwatch will log to. If that chooses the wrong file for some reason, the 'if' block will
-        // switch the file currently being watched to the new log file. This will have the side effect
-        // of ignoring the first few new logs. This shouldn't usually happen, unless the user changes
-        // their system time.
-        if (currentLogPath != path) {
-            currentLogPath = path;
-            dataStart = stats?.size ?? 0;
-            logWindow.appendLine('switched to file ' + path);
+    getWorkshopFolder(directory => {
+        if (!directory) {
+            logWindow.appendLine(errorMessage('Failed to locate the workshop log folder, please set the `ostw.workshopLogFolder` setting in Visual Studio Code.'));
+            active = false;
+            return;
         }
-        else
-        {
-            fs.readFile(path, { encoding: 'utf-8', flag: 'r' }, (err, data) => {
-                if (err) {
-                    // Failed to read file content.
-                    // It might be a good idea to prepend [error] for the log format.
-                    logWindow.appendLine(err.message);
-                } else {
-                    // 1. Jump to the current log position (dataStart)
-                    // 2. Trim extra whitespace
-                    // 3. Switch from [xx:yy:zz] to xx:yy:zz timestamp format.
-                    logWindow.appendLine(
-                        data.substring(dataStart)
-                            .trim()
-                            .replace(/^\[([0-9]+:[0-9]+:[0-9]+)\]/gm, '$1'));
-                    dataStart = data.length;
-                }
-            });
-        }
-    }).on('add', (path, stats) => {
-        // Because 'ignoreInitial' is false, this will execute immediately for each existing log file.
-        // A new log file was found.
-        const timestamp = getTimestampFromLogPath(path);
-        const currentTimestamp = currentLogPath ? getTimestampFromLogPath(currentLogPath) : 0;
-
-        // If the new log file is newer than the log file currently being watched, watch it.
-        if (!currentLogPath || currentTimestamp < timestamp)
-        {
-            currentLogPath = path;
-            dataStart = stats?.size ?? 0;
-        }
+        logWindow.appendLine(infoMessage('Watching ' + directory));
+        
+        let watcher = chokidar.watch(directory, {
+            persistent: true,
+            usePolling: true, // poll because of the way Overwatch writes its logs.
+            ignoreInitial: false, // do not ignore so we can predict the current log file.
+            alwaysStat: true
+        }).on('change', (path, stats) => {
+            // The 'add' event determines which log file is the most recent and by extension which file
+            // Overwatch will log to. If that chooses the wrong file for some reason, the 'if' block will
+            // switch the file currently being watched to the new log file. This will have the side effect
+            // of ignoring the first few new logs. This shouldn't usually happen, unless the user changes
+            // their system time.
+            if (currentLogPath != path) {
+                currentLogPath = path;
+                dataStart = stats?.size ?? 0;
+                logWindow.appendLine('switched to file ' + path);
+            }
+            else
+            {
+                fs.readFile(path, { encoding: 'utf-8', flag: 'r' }, (err, data) => {
+                    if (err) {
+                        logWindow.appendLine(errorMessage(err.message));
+                    } else {
+                        // 1. Jump to the current log position (dataStart)
+                        // 2. Trim extra whitespace
+                        // 3. Switch from [xx:yy:zz] to xx:yy:zz timestamp format.
+                        logWindow.appendLine(
+                            data.substring(dataStart)
+                                .trim()
+                                .replace(/^\[([0-9]+:[0-9]+:[0-9]+)\]/gm, '$1'));
+                        dataStart = data.length;
+                    }
+                });
+            }
+        }).on('add', (path, stats) => {
+            // Because 'ignoreInitial' is false, this will execute immediately for each existing log file.
+            // A new log file was found.
+            const timestamp = getTimestampFromLogPath(path);
+            const currentTimestamp = currentLogPath ? getTimestampFromLogPath(currentLogPath) : 0;
+    
+            // If the new log file is newer than the log file currently being watched, watch it.
+            if (!currentLogPath || currentTimestamp < timestamp)
+            {
+                currentLogPath = path;
+                dataStart = stats?.size ?? 0;
+            }
+        }).on('error', err => {
+            logWindow.appendLine(errorMessage(err.message));
+        });
+    
+        disposeLog = new Disposable(() => {
+            active = false;
+            watcher.close();
+        })
+        addSubscribable(disposeLog);
     });
-
-    disposeLog = new Disposable(() => {
-        active = false;
-        watcher.close();
-        logWindow.dispose();
-    })
-
-    addSubscribable(logWindow);
-    addSubscribable(disposeLog);
 }
 
-function stopWatchingLogFolder()
+export function stopWatchingLogFolder()
 {
     if (active)
         disposeLog?.dispose();
@@ -124,4 +134,46 @@ function getTimestampFromLogPath(path: string): number
         return Date.UTC(year, month - 1, day, hour, minute, second);
     }
     return 0;
+}
+
+function infoMessage(text: string)
+{
+    return '[info] ' + text;
+}
+
+function errorMessage(text: string)
+{
+    return '[error] ' + text;
+}
+
+function getWorkshopFolder(callback: (directory: string | undefined) => void)
+{
+    // The config has priority.
+    let configDirectory = config.get<string>('workshopLogFolder');
+    if (configDirectory && configDirectory.trim().length > 0) {
+        callback(configDirectory);
+        return;
+    }
+
+    if (process.platform == 'win32') {
+        // Attempt to locate the documents folder.
+        exec('[environment]::getfolderpath("mydocuments")', { 'shell': 'powershell.exe' }, (error, stdout, stderr) => {
+            if (error || stderr) {
+                callback(undefined);
+            } else {
+                // 'stdout' will contain directory and newlines.
+                const path = fspath.join(stdout.trim(), 'Overwatch', 'Workshop');
+                
+                // Confirm directory existence.
+                fs.access(path, (err) => {
+                    if (!err)
+                        callback(path);
+                    else
+                        callback(undefined);
+                });
+            }
+        });
+    } else {
+        callback(undefined);
+    }
 }

@@ -2,7 +2,7 @@
   "name": "overwatch-script-to-workshop",
   "displayName": "Overwatch Script To Workshop",
   "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-  "version": "3.6.0",
+  "version": "3.7.0",
   "publisher": "Deltin",
   "engines": {
     "vscode": "^1.72.0"
@@ -126,17 +126,17 @@
           "type": "string",
           "description": "Ignores a release tag."
         },
-        "ostw.semanticHighlighting": {
-          "scope": "resource",
-          "type": "boolean",
-          "default": true,
-          "description": "Determines if OSTW will use semantic highlighting."
-        },
         "ostw.workshopLog": {
           "scope": "machine",
           "type": "boolean",
           "default": true,
-          "description": "Prints Overwatch's workshop log output (via Log To Inspector) into the 'Workshop Log' output window.\nThe 'Enable Workshop Inspector Log File' Overwatch setting in Gameplay > General > Custom Games - Workshop must be turned on."
+          "markdownDescription": "Prints Overwatch's workshop log output (via `Log To Inspector`) into the **Workshop Log** output window.\n\nThe **Enable Workshop Inspector Log File** Overwatch setting in `Gameplay > General > Custom Games - Workshop` must be turned on."
+        },
+        "ostw.workshopLogFolder": {
+          "scope": "machine",
+          "type": "string",
+          "default": "",
+          "markdownDescription": "The folder that Overwatch writes the workshop logs to when **Enable Workshop Inspector Log File** is enabled.\n\nYou shouldn't need to set this is most cases. When left empty, the path `Overwatch/Workshop` inside the user's `Documents` folder is used."
         },
         "ostw.codelens.references": {
           "scope": "window",

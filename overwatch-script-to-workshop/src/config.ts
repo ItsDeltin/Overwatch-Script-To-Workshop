@@ -2,7 +2,7 @@ import { workspace, ConfigurationChangeEvent, WorkspaceConfiguration } from 'vsc
 import { addSubscribable } from './extensions';
 import { setupBuildWatcher } from './dev';
 import { stopLanguageServer, startLanguageServer, resetLastWorkshopOutput } from './languageServer';
-import { tryLogFolder } from './owLog';
+import { stopWatchingLogFolder, tryLogFolder } from './owLog';
 
 export let config: WorkspaceConfiguration;
 
@@ -29,5 +29,12 @@ export function setupConfig()
 		// ostw.workshopLog changed
 		if (e.affectsConfiguration('ostw.workshopLog'))
 			tryLogFolder();
+		
+		// ostw.workshopLogFolder changed
+		if (e.affectsConfiguration('ostw.workshopLogFolder'))
+		{
+			stopWatchingLogFolder();
+			tryLogFolder();
+		}
 	}));
 }
