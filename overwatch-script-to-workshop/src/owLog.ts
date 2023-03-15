@@ -1,5 +1,3 @@
-import * as os from 'os';
-import * as path from 'path';
 import * as chokidar from 'chokidar';
 import { OutputChannel, window } from 'vscode';
 import * as fs from 'fs';
@@ -11,15 +9,17 @@ import { exec } from 'child_process';
 
 /** The predicted file that the Overwatch Workshop is writing to. */
 let currentLogPath: string | undefined = undefined;
-/** The end of the current log file. When the file updates, `dataStart` to the end of the file will
+/** The end of the current log file. When the file updates, `currentLogCharacter` to the end of the file will
  * need to be written to the output. */
-let dataStart: number;
+let currentLogCharacter: number | undefined;
 /** The `Disposable` used to close the workshop log window. */
 let disposeLog: Disposable | undefined = undefined;
 /** Is the log window active? */
 let active: Boolean = false;
 /** The output channel that the workshop will log to. */
 let logWindow: OutputChannel;
+/** Saves the byte count of all the log files. */
+let logFiles = new Map<string, {size:number}>();
 
 /** Opens or closes the workshop log output window depending on the `ostw.workshopLog` setting. */
 export function tryLogFolder()
@@ -47,7 +47,7 @@ function watchLogFolder()
             active = false;
             return;
         }
-        logWindow.appendLine(infoMessage('Watching ' + directory));
+        logWindow.appendLine(infoMessage('Workshop directory: \'' + directory + '\''));
         
         let watcher = chokidar.watch(directory, {
             persistent: true,
@@ -55,49 +55,58 @@ function watchLogFolder()
             ignoreInitial: false, // do not ignore so we can predict the current log file.
             alwaysStat: true
         }).on('change', (path, stats) => {
-            // The 'add' event determines which log file is the most recent and by extension which file
-            // Overwatch will log to. If that chooses the wrong file for some reason, the 'if' block will
-            // switch the file currently being watched to the new log file. This will have the side effect
-            // of ignoring the first few new logs. This shouldn't usually happen, unless the user changes
-            // their system time.
+            // When the workshop writes to the log, currentLogPath should equal path.
+            // In case it doesn't update the currentLogPath and set currentLogCharacter to undefined
+            // so that it can be recalculated.
             if (currentLogPath != path) {
                 currentLogPath = path;
-                dataStart = stats?.size ?? 0;
-                logWindow.appendLine('switched to file ' + path);
+                currentLogCharacter = undefined;
             }
-            else
-            {
-                fs.readFile(path, { encoding: 'utf-8', flag: 'r' }, (err, data) => {
-                    if (err) {
-                        logWindow.appendLine(errorMessage(err.message));
-                    } else {
-                        // 1. Jump to the current log position (dataStart)
-                        // 2. Trim extra whitespace
-                        // 3. Switch from [xx:yy:zz] to xx:yy:zz timestamp format.
-                        logWindow.appendLine(
-                            data.substring(dataStart)
-                                .trim()
-                                .replace(/^\[([0-9]+:[0-9]+:[0-9]+)\]/gm, '$1'));
-                        dataStart = data.length;
+
+            // 'lastSize' contains the size of the 'path' file before the update.
+            // Save lastSize to the current size then update the current size.
+            let lastSize = logFiles.get(path)?.size ?? 0;
+            logFiles.set(path, { size: stats?.size ?? 0 });
+
+            fs.readFile(path, { encoding: 'utf-8', flag: 'r' }, (err, data) => {
+                if (err) {
+                    logWindow.appendLine(errorMessage(err.message));
+                } else {
+                    if (currentLogCharacter === undefined) {
+                        currentLogCharacter = characterIndexFromByte(data, lastSize);
+                        logWindow.appendLine(infoMessage('Current log file: \'' + path + '\''));
                     }
-                });
-            }
-        }).on('add', (path, stats) => {
+                    // 1. Jump to the current log position (dataStart)
+                    // 2. Trim extra whitespace
+                    // 3. Switch from [xx:yy:zz] to xx:yy:zz timestamp format.
+                    let content = data.substring(currentLogCharacter)
+                        .trim()
+                        .replace(/^\[([0-9]+:[0-9]+:[0-9]+)\]/gm, '$1');
+                    // Only print if there is actually new content.
+                    if (content != '')
+                        logWindow.appendLine(content);
+                    // Update current position.
+                    currentLogCharacter = data.length;
+                }
+            });
+        }).on('add', (path, stat) => {
+            logFiles.set(path, { size: stat?.size ?? 0 });
+
             // Because 'ignoreInitial' is false, this will execute immediately for each existing log file.
             // A new log file was found.
             const timestamp = getTimestampFromLogPath(path);
             const currentTimestamp = currentLogPath ? getTimestampFromLogPath(currentLogPath) : 0;
-    
+
             // If the new log file is newer than the log file currently being watched, watch it.
             if (!currentLogPath || currentTimestamp < timestamp)
-            {
+            {    
                 currentLogPath = path;
-                dataStart = stats?.size ?? 0;
+                currentLogCharacter = undefined;
             }
         }).on('error', err => {
             logWindow.appendLine(errorMessage(err.message));
         });
-    
+        
         disposeLog = new Disposable(() => {
             active = false;
             watcher.close();
@@ -176,4 +185,25 @@ function getWorkshopFolder(callback: (directory: string | undefined) => void)
     } else {
         callback(undefined);
     }
+}
+
+/**
+ * Returns the index of a character in a string given a byte index.
+ * @param s The string to scan.
+ * @param byte The byte index.
+ * @returns Will return the character index that the byte is a part of.
+ */
+function characterIndexFromByte(s: string, byte: number)
+{
+    let length = 0;
+
+    for (let i = 0; i < s.length; i++) {
+        let currentChar = length + Buffer.byteLength(s[i]);
+        if (currentChar > byte)
+            break;
+        else
+            length = currentChar;
+    }
+
+    return length;
 }
