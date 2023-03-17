@@ -19,7 +19,7 @@ let elementCountStatus: StatusBarItem;
 export var lastWorkshopOutput: string | undefined = undefined;
 
 export async function makeLanguageServer() {
-	workshopOut = window.createOutputChannel("Workshop Code");
+	workshopOut = window.createOutputChannel("Workshop Code", "workshop");
 	addSubscribable(workshopOut);
 
 	// Shows element count.
