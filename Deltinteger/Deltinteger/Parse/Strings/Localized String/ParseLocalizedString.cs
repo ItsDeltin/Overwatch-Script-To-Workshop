@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Model;
 
 namespace Deltin.Deltinteger.Parse.Strings
 {
@@ -17,17 +17,16 @@ namespace Deltin.Deltinteger.Parse.Strings
             .ThenByDescending(str => str.Length)
             .ToArray();
 
-        public ParseLocalizedString(StringParseInfo stringParseinfo) : base(stringParseinfo) {}
+        public ParseLocalizedString(StringParseInfo stringParseinfo) : base(stringParseinfo) { }
 
-        protected override IStringParse DoParse() => RecursiveParse(0, Value);
+        public override Result<IStringParse, StringParseError> Parse() => RecursiveParse(0, Value).Map(
+            v => (IStringParse)v,
+            e => new StringParseError()
+        );
 
-        LocalizedString RecursiveParse(int charOffset, string value, int depth = 0)
+        Result<LocalizedString, Unit> RecursiveParse(int charOffset, string value, int depth = 0)
         {
             value = value.ToLower();
-            
-            //if (depth == 0)
-                //foreach(string multiword in multiwordStrings)
-                    //value = value.Replace(multiword.Replace('_', ' '), multiword);
 
             // Loop through every string to search for.
             for (int i = 0; i < searchOrder.Length; i++)
@@ -54,7 +53,7 @@ namespace Deltin.Deltinteger.Parse.Strings
                     List<LocalizedStringOrExpression> formatParameters = new List<LocalizedStringOrExpression>(); // The parameters that were successfully parsed.
 
                     // Iterate through the parameters.
-                    for (int g = 1; g < match.Groups.Count; g+=3)
+                    for (int g = 1; g < match.Groups.Count; g += 3)
                     {
                         Capture capture = match.Groups[g].Captures[0];
                         string currentParameterValue = capture.Value;
@@ -71,13 +70,15 @@ namespace Deltin.Deltinteger.Parse.Strings
                         else
                         {
                             // Parse the parameter. If it fails it will return null and the string being checked is probably false.
-                            var p = RecursiveParse(charOffset + capture.Index, currentParameterValue, depth + 1);
-                            if (p == null)
+                            if (RecursiveParse(charOffset + capture.Index, currentParameterValue, depth + 1).IsOk(out var p))
+                            {
+                                formatParameters.Add(new LocalizedStringOrExpression(p));
+                            }
+                            else
                             {
                                 valid = false;
                                 break;
                             }
-                            formatParameters.Add(new LocalizedStringOrExpression(p));
                         }
                     }
                     str.ArgCount = _argCount;
@@ -85,16 +86,12 @@ namespace Deltin.Deltinteger.Parse.Strings
 
                     if (!valid)
                         continue;
-                    
-                    return str;
+
+                    return Result<LocalizedString, Unit>.Ok(str);
                 }
             }
 
-            if (depth > 0)
-                return null;
-            else
-                // If the depth is 0, throw a syntax error.
-                throw new StringParseFailedException("Failed to parse the string.");
+            return Result<LocalizedString, Unit>.Error(Unit.Default);
         }
 
         static string Escape(string value)

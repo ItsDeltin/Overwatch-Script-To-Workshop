@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Model;
 
 namespace Deltin.Deltinteger.Parse.Strings
 {
     class ParseCustomString : StringParseBase
     {
-        public ParseCustomString(StringParseInfo stringParseInfo) : base(stringParseInfo) {}
+        public ParseCustomString(StringParseInfo stringParseInfo) : base(stringParseInfo) { }
 
-        protected override IStringParse DoParse()
+        public override Result<IStringParse, StringParseError> Parse()
         {
             // Look for <#>s
             var formats = Regex.Matches(Value, FormatMatch).ToArray();
@@ -24,9 +24,9 @@ namespace Deltin.Deltinteger.Parse.Strings
                 customStringGroup.Segments = new CustomStringSegment[] {
                     new CustomStringSegment(Value)
                 };
-                return customStringGroup;
+                return Result<IStringParse, StringParseError>.Ok(customStringGroup);
             }
-            
+
             // The Overwatch workshop only supports 3 formats in a string.
             // The following code will split the string into multiple sections so it can support more.
             // Split the string after every 3 unique formats, for example:
@@ -65,29 +65,29 @@ namespace Deltin.Deltinteger.Parse.Strings
             for (int i = 0; i < stringGroups.Count; i++)
             {
                 // start is either the start of the string or the end of the last section.
-                int start = i == 0                      ? 0            : stringGroups[i - 1].EndIndex;
+                int start = i == 0 ? 0 : stringGroups[i - 1].EndIndex;
                 // end is the index of last format in the section unless this is the last section, then it will be the end of the string.
-                int end   = i == stringGroups.Count - 1 ? Value.Length : stringGroups[i]    .EndIndex;
+                int end = i == stringGroups.Count - 1 ? Value.Length : stringGroups[i].EndIndex;
 
                 string groupString = Value.Substring(start, end - start);
-                
+
                 // Returns an array of all unique formats in the current section.
                 var formatGroups = stringGroups[i].Formats
                     .GroupBy(g => g.Parameter)
                     .Select(g => g.First())
                     .ToArray();
-                
+
                 // groupParameters is {0}, {1}, and {2}. Length should be between 1 and 3.
                 int[] groupParameters = new int[formatGroups.Length];
                 for (int g = 0; g < formatGroups.Length; g++)
                 {
                     int parameter = formatGroups[g].Parameter;
-                    groupString = groupString.Replace("<" + parameter + ">", "{" + g + "}");
+                    groupString = groupString.Replace(MatchParameter(parameter), "{" + g + "}");
                     groupParameters[g] = parameter;
                 }
                 customStringGroup.Segments[i] = new CustomStringSegment(groupString, groupParameters);
             }
-            return customStringGroup;
+            return Result<IStringParse, StringParseError>.Ok(customStringGroup);
         }
     }
 
@@ -101,13 +101,13 @@ namespace Deltin.Deltinteger.Parse.Strings
         {
             Original = original;
         }
-    
+
         public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters)
         {
             IWorkshopTree[] parsed = new IWorkshopTree[Segments.Length];
             for (int i = 0; i < parsed.Length; i++)
                 parsed[i] = Segments[i].Parse(actionSet, parameters);
-            
+
             return StringElement.Join(parsed);
         }
     }
@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Parse.Strings
             IWorkshopTree[] resultingParameters = new IWorkshopTree[ParameterIndexes.Length];
             for (int i = 0; i < resultingParameters.Length; i++)
                 resultingParameters[i] = parameters[ParameterIndexes[i]];
-            
+
             return new StringElement(Text, resultingParameters);
         }
     }
@@ -140,7 +140,7 @@ namespace Deltin.Deltinteger.Parse.Strings
     class FormatParameter
     {
         public Match Match { get; }
-        public int Parameter { get; } 
+        public int Parameter { get; }
 
         public FormatParameter(Match match, int group)
         {

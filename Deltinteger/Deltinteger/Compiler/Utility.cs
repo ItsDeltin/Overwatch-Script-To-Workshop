@@ -283,6 +283,8 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Root:
                 case TokenType.String:
                 case TokenType.InterpolatedStringTail:
+                case TokenType.InterpolatedStringMiddle:
+                case TokenType.InterpolatedStringHead:
                 case TokenType.Parentheses_Open:
                 case TokenType.SquareBracket_Open:
                 case TokenType.CurlyBracket_Open:

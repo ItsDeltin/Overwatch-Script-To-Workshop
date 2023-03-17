@@ -14,8 +14,8 @@ namespace Deltin.Deltinteger.Elements
             Value = value;
             Localized = localized;
         }
-        public StringElement(string value, params IWorkshopTree[] formats) : this(value, false, formats) {}
-        public StringElement() : this(null, false) {}
+        public StringElement(string value, params IWorkshopTree[] formats) : this(value, false, formats) { }
+        public StringElement() : this(null, false) { }
 
         public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Elements
                 b.Append(", ");
                 ParametersToWorkshop(b);
             }
-            
+
             b.Append(")");
         }
 
@@ -35,7 +35,8 @@ namespace Deltin.Deltinteger.Elements
 
         public static IWorkshopTree Join(params IWorkshopTree[] elements)
         {
-            if (elements.Length == 0) throw new Exception();
+            if (elements.Length == 0)
+                return new StringElement(String.Empty);
 
             const string join2 = "{0}{1}";
             const string join3 = "{0}{1}{2}";

@@ -44,14 +44,16 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override Scope GetObjectScope() => _scope;
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Struct
         };
         public override Scope ReturningScope() => null;
 
         // String Contains function
-        FuncMethod ContainsFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+        FuncMethod ContainsFunction(ITypeSupplier supplier) => new FuncMethodBuilder()
+        {
             Name = "Contains",
             Documentation = "Determines if the string contains the specified value.",
             ReturnType = supplier.Boolean(),
@@ -62,7 +64,8 @@ namespace Deltin.Deltinteger.Parse
         };
 
         // String Slice function
-        FuncMethod SliceFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+        FuncMethod SliceFunction(ITypeSupplier supplier) => new FuncMethodBuilder()
+        {
             Name = "Slice",
             Documentation = "Gets a substring from the string by a specified length.",
             ReturnType = supplier.String(),
@@ -74,7 +77,8 @@ namespace Deltin.Deltinteger.Parse
         };
 
         // String Slice function
-        FuncMethod CharInStringFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+        FuncMethod CharInStringFunction(ITypeSupplier supplier) => new FuncMethodBuilder()
+        {
             Name = "CharAt",
             Documentation = "The character found at a specified index of a String.",
             ReturnType = supplier.String(),
@@ -85,7 +89,8 @@ namespace Deltin.Deltinteger.Parse
         };
 
         // String Slice function
-        FuncMethod IndexOfFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+        FuncMethod IndexOfFunction(ITypeSupplier supplier) => new FuncMethodBuilder()
+        {
             Name = "IndexOf",
             Documentation = "The index of a character within a String or -1 of no such character can be found.",
             ReturnType = supplier.Number(),
@@ -96,7 +101,8 @@ namespace Deltin.Deltinteger.Parse
         };
 
         // String Split function
-        FuncMethod SplitFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+        FuncMethod SplitFunction(ITypeSupplier supplier) => new FuncMethodBuilder()
+        {
             Name = "Split",
             Documentation = "Results in an Array of String Values. These String Values will be built from the specified String Value, split around the seperator String.",
             ReturnType = supplier.Array(supplier.String()),
@@ -107,7 +113,8 @@ namespace Deltin.Deltinteger.Parse
         };
 
         // String Replace function
-        FuncMethod ReplaceFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+        FuncMethod ReplaceFunction(ITypeSupplier supplier) => new FuncMethodBuilder()
+        {
             Name = "Replace",
             Documentation = "Results in a String Value. This String Value will be built from the specified String Value, where all occurrences of the pattern String are replaced with the replacement String.",
             ReturnType = supplier.String(),
@@ -119,14 +126,16 @@ namespace Deltin.Deltinteger.Parse
         };
 
         // String Format function
-        FuncMethod FormatFunction(ITypeSupplier supplier) => new FuncMethodBuilder() {
+        FuncMethod FormatFunction(ITypeSupplier supplier) => new FuncMethodBuilder()
+        {
             Name = "Format",
             Documentation = "Inserts an array of objects into a string.",
             ReturnType = supplier.String(),
             Parameters = new CodeParameter[] {
                 new StringFormatArrayParameter(supplier)
             },
-            OnCall = (parseInfo, range) => {
+            OnCall = (parseInfo, range) =>
+            {
                 // Resolve the source usage with StringFormat.
                 // This will tell the source string to not add an error for incorrect formats.
                 parseInfo.SourceUsageResolver?.Resolve(UsageType.StringFormat);
@@ -134,7 +143,8 @@ namespace Deltin.Deltinteger.Parse
                 // The source string will be resolved after this function returns.
                 var sourceResolver = new StringFormatSourceResolver();
 
-                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr => {
+                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr =>
+                {
                     // Make sure the resolved source expression is a string.
                     if (expr is StringAction stringAction)
                         // Resolve the sourceResolver with the obtained string.
@@ -145,7 +155,8 @@ namespace Deltin.Deltinteger.Parse
 
                 return sourceResolver;
             },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 // This will get the source resolver instance that was initialized above.
                 var sourceResolver = (StringFormatSourceResolver)methodCall.AdditionalData;
 
@@ -157,13 +168,14 @@ namespace Deltin.Deltinteger.Parse
 
     class StringFormatArrayParameter : CodeParameter
     {
-        public StringFormatArrayParameter(ITypeSupplier types) : base("args", types.AnyArray()) {}
+        public StringFormatArrayParameter(ITypeSupplier types) : base("args", types.AnyArray()) { }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
             if (additionalData is StringFormatSourceResolver stringData)
                 // Resolve the parameter expression.
-                ConstantExpressionResolver.Resolve(value, value => {
+                ConstantExpressionResolver.Resolve(value, value =>
+                {
                     // Make sure the resolved expression is an array and the arg count matches.
                     if (value is CreateArrayAction array && array.Values.Length == stringData.ArgCount)
                         // Resolve the array values.
@@ -186,6 +198,9 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveString(StringAction stringAction)
         {
+            if (stringAction.StringParseInfo == null)
+                return;
+
             StringAction = stringAction;
             ArgCount = stringAction.StringParseInfo.ArgCount;
         }
@@ -231,7 +246,7 @@ namespace Deltin.Deltinteger.Parse
             var elements = new IWorkshopTree[expressions.Count];
             for (int i = 0; i < elements.Length; i++)
                 elements[i] = expressions[i].Parse(actionSet);
-            
+
             // Finally, join all the elements into a string.
             return Elements.StringElement.Join(elements);
         }

@@ -294,12 +294,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("async", TokenType.Async) ||
                     MatchKeyword("constructor", TokenType.Constructor) ||
                     MatchKeyword("as", TokenType.As) ||
-					MatchKeyword("type", TokenType.Type) ||
+                    MatchKeyword("type", TokenType.Type) ||
                     MatchKeyword("single", TokenType.Single) ||
                     MatchKeyword("const", TokenType.Const) ||
                     MatchIdentifier() ||
                     MatchString();
-                
+
                 if (matched)
                     Skip();
                 else
@@ -551,7 +551,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 while (!scanner.ReachedEnd && scanner.AtWhitespace())
                     scanner.Advance();
                 Accept(scanner);
-            } while(MatchLineComment() || MatchBlockComment());
+            } while (MatchLineComment() || MatchBlockComment());
         }
 
         /// <summary>Pushes a token to the token list.</summary>

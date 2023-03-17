@@ -12,7 +12,8 @@ namespace Deltin.Deltinteger.Parse
 {
     public class StringAction : IExpression
     {
-        private static readonly CompletionItem[] StringCompletion = Constants.Strings.Select(str => new CompletionItem() {
+        private static readonly CompletionItem[] StringCompletion = Constants.Strings.Select(str => new CompletionItem()
+        {
             Label = str,
             Kind = CompletionItemKind.Text
         }).ToArray();
@@ -49,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
                 for (int i = 0; i < FormatParameters.Length; i++)
                     FormatParameters[i] = parseInfo.GetExpression(scope, stringContext.Formats[i]);
             }
-            
+
             parseInfo.CurrentUsageResolver?.OnResolve(usage => _shouldParse = usage != UsageType.StringFormat);
 
             ParseString();
@@ -63,34 +64,36 @@ namespace Deltin.Deltinteger.Parse
             if (StringParseInfo == null)
             {
                 // Parse the string.
-                try
-                {
-                    // String parse info
-                    var stringParseInfo = new StringParseInfo(Value, _classicFormatSyntax);
+                // String parse info
+                var stringParseInfo = new StringParseInfo(Value, _classicFormatSyntax);
 
-                    // Create the parser.
-                    StringParseBase parser = Localized ? (StringParseBase)new ParseLocalizedString(stringParseInfo) : new ParseCustomString(stringParseInfo);
-                    StringParseInfo = parser.Parse();
+                // Create the parser.
+                var parser = Localized ? (StringParseBase)new ParseLocalizedString(stringParseInfo) : new ParseCustomString(stringParseInfo);
 
-                    // Cache the string.
-                    _parseInfo.TranslateInfo.GetComponent<StringSaverComponent>().Strings.Add(StringParseInfo);
-                }
-                catch (StringParseFailedException ex)
-                {
-                    // Convert the exception to an error.
-                    if (ex.StringIndex == -1)
+                parser.Parse().Match(
+                    ok =>
                     {
-                        _parseInfo.Script.Diagnostics.Error(ex.Message, _stringRange);
-                    }
-                    else
+                        StringParseInfo = ok;
+                        // Cache the string.
+                        _parseInfo.TranslateInfo.GetComponent<StringSaverComponent>().Strings.Add(StringParseInfo);
+                    },
+                    err =>
                     {
-                        int errorStart = _stringRange.Start.Character + 1 + ex.StringIndex;
-                        _parseInfo.Script.Diagnostics.Error(ex.Message, new DocRange(
-                            new DocPos(_stringRange.Start.Line, errorStart),
-                            new DocPos(_stringRange.Start.Line, errorStart + ex.Length)
-                        ));
+                        // Convert the exception to an error.
+                        if (err.StringIndex == -1)
+                        {
+                            _parseInfo.Script.Diagnostics.Error(err.Message, _stringRange);
+                        }
+                        else
+                        {
+                            int errorStart = _stringRange.Start.Character + 1 + err.StringIndex;
+                            _parseInfo.Script.Diagnostics.Error(err.Message, new DocRange(
+                                new DocPos(_stringRange.Start.Line, errorStart),
+                                new DocPos(_stringRange.Start.Line, errorStart + err.Length)
+                            ));
+                        }
                     }
-                }
+                );
             }
 
             if (StringParseInfo != null)
@@ -100,7 +103,8 @@ namespace Deltin.Deltinteger.Parse
                     AddStringFormatCountError();
                 else // Otherwise, wait for the usage to be resolved before deciding if the error should be added.
                 {
-                    _parseInfo.CurrentUsageResolver.OnResolve(usage => {
+                    _parseInfo.CurrentUsageResolver.OnResolve(usage =>
+                    {
                         // Add the error if the usage is not StringFormat.
                         if (usage != UsageType.StringFormat)
                             AddStringFormatCountError();

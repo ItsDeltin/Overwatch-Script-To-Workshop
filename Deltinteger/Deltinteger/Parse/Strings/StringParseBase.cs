@@ -1,4 +1,5 @@
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Model;
 
 namespace Deltin.Deltinteger.Parse.Strings
 {
@@ -19,12 +20,28 @@ namespace Deltin.Deltinteger.Parse.Strings
             FormatGroupNumber = ClassicFormatSyntax ? 1 : 2;
         }
 
-        public IStringParse Parse()
+        protected string MatchParameter(int parameter)
         {
-            Result = DoParse();
-            return Result;
+            if (ClassicFormatSyntax)
+                return "<" + parameter + ">";
+            else
+                return @"(?:(?<!{)({{)*)\{" + parameter + "}";
         }
 
-        protected abstract IStringParse DoParse();
+        public abstract Result<IStringParse, StringParseError> Parse();
+    }
+
+    public struct StringParseError
+    {
+        public string Message;
+        public int StringIndex;
+        public int Length;
+
+        public StringParseError()
+        {
+            Message = "Failed to parse the string.";
+            StringIndex = -1;
+            Length = 0;
+        }
     }
 }
