@@ -45,6 +45,8 @@ namespace Deltin.Deltinteger
             if (args.Contains("--waitfordebugger") && !WaitForDebugger())
                 return;
 
+            WaitForDebugger();
+
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
             Lobby.HeroSettingCollection.Init();

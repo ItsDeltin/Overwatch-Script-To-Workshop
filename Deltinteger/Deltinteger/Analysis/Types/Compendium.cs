@@ -14,7 +14,7 @@ namespace DS.Analysis.Types
             CodeType result;
 
             // Matching type exists.
-            if (types.TryGetValue(hash, out InternalCompendiumItem compendium))
+            if (types.TryGetValue(hash, out InternalCompendiumItem? compendium))
                 result = compendium.Value;
             // Matching type does not exist, create instance.
             else

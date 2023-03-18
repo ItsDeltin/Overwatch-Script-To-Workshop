@@ -51,7 +51,7 @@ namespace DS.Analysis.Structure.DataTypes
 
         public SetupDataType Setup(ContextInfo contextInfo)
         {
-            node = contextInfo.Analysis.SingleNode(() => externalsChanged.Set(0));
+            node = contextInfo.Analysis.SingleNode("type externals", () => externalsChanged.Set(0));
 
             // Get the type args.
             typeParams = TypeArgCollection.FromSyntax(syntax.Generics);

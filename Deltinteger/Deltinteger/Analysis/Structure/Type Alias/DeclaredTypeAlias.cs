@@ -25,7 +25,7 @@ namespace DS.Analysis.Structure.TypeAlias
 
             provider = CreateProviderAndDirector(Name, setup.TypeArgs, null /* todo: IGetIdentifier */, arguments =>
             {
-                var node = context.Analysis.SingleNode(() =>
+                var node = context.Analysis.SingleNode("type alias", () =>
                 {
                     // Substitute the type.
                     arguments.SetType(new CodeType(typeReference.Type)

@@ -41,23 +41,27 @@ namespace Deltin.Deltinteger.LanguageServer
         public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) => new TextDocumentAttributes(uri, "ostw");
 
         // Document change
-        public TextDocumentChangeRegistrationOptions GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentChangeRegistrationOptions() {
+        public TextDocumentChangeRegistrationOptions GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentChangeRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
             SyncKind = _syncKind
         };
 
         // Open
-        TextDocumentOpenRegistrationOptions IRegistration<TextDocumentOpenRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentOpenRegistrationOptions() {
+        TextDocumentOpenRegistrationOptions IRegistration<TextDocumentOpenRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentOpenRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
         // Close
-        TextDocumentCloseRegistrationOptions IRegistration<TextDocumentCloseRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentCloseRegistrationOptions() {
+        TextDocumentCloseRegistrationOptions IRegistration<TextDocumentCloseRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentCloseRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
         // Save
-        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentSaveRegistrationOptions() {
+        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentSaveRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
@@ -77,30 +81,30 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         // Handle open.
-        public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
+        public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token) => _languageServer.Execute(() =>
         {
             _languageServer.Analysis.FileManager.AddToWorkspace(openParams.TextDocument.Uri.Normalize(), openParams.TextDocument.Text);
 
             Documents.Add(new Document(openParams.TextDocument));
             return Unit.Task;
-        }
+        });
 
         // Handle change.
-        public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
+        public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token) => _languageServer.Execute(() =>
         {
             var file = _languageServer.Analysis.FileManager.GetFile(changeParams.TextDocument.Uri.Normalize());
             var updater = file.FileParser.GetFileUpdater();
 
             foreach (var change in changeParams.ContentChanges)
                 updater.Update(change);
-            
+
             updater.ApplyUpdates();
 
             foreach (var publish in _languageServer.Analysis.FileManager.GetPublishDiagnostics())
                 _languageServer.Server.TextDocument.PublishDiagnostics(publish);
 
             return Unit.Task;
-        }
+        });
 
         public Document TextDocumentFromUri(Uri uri)
         {

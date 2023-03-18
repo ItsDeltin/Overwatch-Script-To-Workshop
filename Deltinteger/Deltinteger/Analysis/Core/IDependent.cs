@@ -2,6 +2,6 @@ namespace DS.Analysis.Core
 {
     interface IDependent
     {
-        void MarkAsStale();
+        void MarkAsStale(string source);
     }
 }

@@ -80,7 +80,7 @@ namespace DS.Analysis
             this.parentElement = parentElement;
         }
 
-        readonly DependencyList dependencyList = new DependencyList();
+        readonly DependencyList dependencyList = new DependencyList("SerialTypePartInfo");
 
         public IDisposable AddDependent(IDependent dependent) => dependencyList.Add(dependent);
 

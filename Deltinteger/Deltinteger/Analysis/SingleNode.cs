@@ -15,10 +15,10 @@ namespace DS.Analysis
         readonly DependencyHandler dependencyHandler;
         readonly DependencyNode node;
 
-        public SingleNode(DependencyHandler dependencyHandler, Action action)
+        public SingleNode(DependencyHandler dependencyHandler, Action action, string name)
         {
             this.dependencyHandler = dependencyHandler;
-            node = dependencyHandler.CreateNode(action.Invoke);
+            node = dependencyHandler.CreateNode(action.Invoke, name);
         }
 
         public void MakeDependentsStale() => dependencyHandler.MakeDependentsStale();

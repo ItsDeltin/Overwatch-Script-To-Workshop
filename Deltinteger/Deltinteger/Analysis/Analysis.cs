@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace DS.Analysis
 {
@@ -8,7 +9,7 @@ namespace DS.Analysis
     using Scopes;
     using Core;
 
-    class DSAnalysis : IMaster
+    class DSAnalysis
     {
         public FileManager FileManager { get; }
         public ModuleManager ModuleManager { get; }
@@ -35,10 +36,15 @@ namespace DS.Analysis
             }
         }
 
-        public void AddStaleObject(IUpdatable analysisObject)
+        public void AddStaleObject(IUpdatable analysisObject, StaleObject debug)
         {
             if (!staleObjects.Contains(analysisObject))
+            {
                 staleObjects.Add(analysisObject);
+                Debug.WriteLine("[+] " + debug);
+            }
+            else
+                Debug.WriteLine("[ ] " + debug);
         }
 
         public void RemoveObject(IUpdatable updatable)
@@ -48,8 +54,34 @@ namespace DS.Analysis
 
 
         // Creates a DependencyHandler with a node.
-        public SingleNode SingleNode(Action updateAction) => new SingleNode(new DependencyHandler(this), updateAction);
+        public SingleNode SingleNode(string name, Action updateAction) => new SingleNode(new DependencyHandler(this, name), updateAction, name);
 
-        public DependencyNode OnlyNode(Action updateAction) => new DependencyNode(updateAction.Invoke, this);
+        public DependencyNode OnlyNode(string name, Action updateAction) => new DependencyNode(updateAction.Invoke, this, name);
+    }
+
+    readonly struct StaleObject
+    {
+        public readonly string Name;
+        public readonly string? Source;
+
+        public StaleObject(string name, string? source)
+        {
+            Name = name;
+            Source = source;
+        }
+
+        public StaleObject(string name)
+        {
+            Name = name;
+            Source = null;
+        }
+
+        public override string ToString()
+        {
+            if (Source == null)
+                return $"\"{Name}\" INIT";
+            else
+                return $"\"{Name}\" < \"{Source}\"";
+        }
     }
 }

@@ -18,6 +18,7 @@ using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using MediatR;
 using DS.Analysis;
 
 namespace Deltin.Deltinteger.LanguageServer
@@ -57,7 +58,7 @@ namespace Deltin.Deltinteger.LanguageServer
         private readonly ClipboardListener _debugger;
         private Pathmap lastMap;
 
-        public DeltinScriptAnalysis Analysis { get; } = new DeltinScriptAnalysis();
+        public DSAnalysis Analysis { get; } = new DSAnalysis();
 
         public DeltintegerLanguageServer()
         {
@@ -93,15 +94,15 @@ namespace Deltin.Deltinteger.LanguageServer
                     .AddLanguageProtocolLogging()
                     .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
                 .AddHandler(DocumentHandler)
-                // .AddHandler(completionHandler)
-                // .AddHandler(signatureHandler)
-                // .AddHandler(ConfigurationHandler)
-                // .AddHandler(definitionHandler)
-                // .AddHandler(hoverHandler)
-                // .AddHandler(referenceHandler)
-                // .AddHandler(codeLensHandler)
-                // .AddHandler(renameHandler)
-                // .AddHandler(colorHandler)
+            // .AddHandler(completionHandler)
+            // .AddHandler(signatureHandler)
+            // .AddHandler(ConfigurationHandler)
+            // .AddHandler(definitionHandler)
+            // .AddHandler(hoverHandler)
+            // .AddHandler(referenceHandler)
+            // .AddHandler(codeLensHandler)
+            // .AddHandler(renameHandler)
+            // .AddHandler(colorHandler)
             ));
 
             Server.SendNotification(Version, Program.VERSION);
@@ -327,6 +328,27 @@ namespace Deltin.Deltinteger.LanguageServer
                 Pattern = "**/*.workshop"
             }
         );
+
+        Exception currentException;
+
+        public Task<Unit> Execute(Func<Task<Unit>> op)
+        {
+            if (currentException != null)
+            {
+                System.Diagnostics.Debug.Fail(op.ToString());
+                return Unit.Task;
+            }
+
+            try
+            {
+                return op();
+            }
+            catch (Exception ex)
+            {
+                currentException = ex;
+                return Unit.Task;
+            }
+        }
     }
 
     class ServerPathmapHandler : IPathmapErrorHandler

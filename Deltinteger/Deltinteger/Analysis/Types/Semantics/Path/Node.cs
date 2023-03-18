@@ -41,7 +41,7 @@ namespace DS.Analysis.Types.Semantics.Path
             this.broadcastType = broadcastType;
 
             // Create the dependency handler.
-            dependencyHandler = new DependencyHandler(Context.Analysis);
+            dependencyHandler = new DependencyHandler(Context.Analysis, $"Type tree [{name}]");
 
             // Get the type arg directors.
             typeArgDirectors = namedType.TypeArgs.Select(typeArgSyntax => TypeFromContext.TypeReferenceFromSyntax(Context, typeArgSyntax)).ToArray();
@@ -52,14 +52,14 @@ namespace DS.Analysis.Types.Semantics.Path
             {
                 typeArgs = typeArgDirectors.Select(director => director.Type).ToArray();
                 Update();
-            }, typeArgDirectors);
+            }, $"Type tree [{name}] type arguments", typeArgDirectors);
 
             // Update when the scope updates.
             dependencyHandler.CreateNode(() =>
             {
                 GetPartHandler();
                 Update();
-            }, Context.Scope);
+            }, $"Type tree [{name}] scope", Context.Scope);
         }
 
         void GetPartHandler()
@@ -108,7 +108,7 @@ namespace DS.Analysis.Types.Semantics.Path
                     else
                         broadcastType(partInstance.Type);
                 }
-            }, out partInstanceSubscription);
+            }, "Type path part data", out partInstanceSubscription);
             partNode.DependOn(partInstance);
         }
 

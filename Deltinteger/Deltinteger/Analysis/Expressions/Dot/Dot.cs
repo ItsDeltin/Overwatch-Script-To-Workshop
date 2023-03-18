@@ -51,7 +51,7 @@ namespace DS.Analysis.Expressions.Dot
 
             public DotNode(ContextInfo context, IParseExpression syntax, DotNode parent, NodePosition position)
             {
-                node = context.Analysis.SingleNode(() =>
+                node = context.Analysis.SingleNode("dot node", () =>
                 {
                     // Update the serialScope.
                     if (position != NodePosition.First)

@@ -20,7 +20,7 @@ namespace DS.Analysis.Scopes
         {
             this.master = master;
             this.sources = sources;
-            node = master.SingleNode(() =>
+            node = master.SingleNode("scopewatcher", () =>
             {
                 // Concat all sources
                 var result = Enumerable.Empty<ScopedElement>();

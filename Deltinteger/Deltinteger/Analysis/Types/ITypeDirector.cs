@@ -30,7 +30,7 @@ namespace DS.Analysis.Types
 
         readonly IDisposable disposable;
 
-        readonly DependencyList dependents = new DependencyList();
+        readonly DependencyList dependents = new DependencyList("SerialDisposableTypeDirector");
 
         public IDisposable AddDependent(IDependent dependent) => dependents.Add(dependent);
 

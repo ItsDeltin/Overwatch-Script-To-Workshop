@@ -19,19 +19,16 @@ namespace DS.Analysis.Core
         readonly DependencyList dependents;
         readonly DisposableCollection disposables = new DisposableCollection();
 
-        readonly Action noMoreDependencies;
 
-
-        public DependencyHandler(DSAnalysis master, Action noMoreDependencies = null)
+        public DependencyHandler(DSAnalysis master, string name)
         {
-            dependents = new DependencyList(noMoreDependencies);
+            dependents = new DependencyList(name);
             this.Master = master;
-            this.noMoreDependencies = noMoreDependencies;
         }
 
-        public DependencyNode CreateNode(UpdateAction updateAction, params IDependable[] dependOn)
+        public DependencyNode CreateNode(UpdateAction updateAction, string name, params IDependable[] dependOn)
         {
-            var node = new DependencyNode(updateAction, Master);
+            var node = new DependencyNode(updateAction, Master, name);
 
             foreach (var d in dependOn)
                 node.DependOn(d);
@@ -40,9 +37,9 @@ namespace DS.Analysis.Core
             return node;
         }
 
-        public DependencyNode CreateNode(UpdateAction updateAction, out IDisposable removeNode)
+        public DependencyNode CreateNode(UpdateAction updateAction, string name, out IDisposable removeNode)
         {
-            var node = new DependencyNode(updateAction, Master);
+            var node = new DependencyNode(updateAction, Master, name);
             removeNode = AddDisposable(node);
             return node;
         }
@@ -68,16 +65,19 @@ namespace DS.Analysis.Core
     class DependencyNode : IDisposable, IDependent, IUpdatable
     {
         readonly UpdateAction updateAction;
-        readonly IMaster master;
+        readonly DSAnalysis master;
+        readonly string name;
+
         readonly DisposableCollection disposables = new DisposableCollection();
         readonly SerializedDisposableCollection disposeOnUpdate = new SerializedDisposableCollection();
 
+        bool stale;
         bool disposed;
 
-        public DependencyNode(UpdateAction updateAction, IMaster master)
+        public DependencyNode(UpdateAction updateAction, DSAnalysis master, string name)
         {
-            (this.updateAction, this.master) = (updateAction, master);
-            MarkAsStale();
+            (this.updateAction, this.master, this.name) = (updateAction, master, name);
+            MarkAsStale(null);
         }
 
         public IDisposable DependOn(IDependable dependable)
@@ -93,10 +93,11 @@ namespace DS.Analysis.Core
         }
 
         // IDependent
-        public void MarkAsStale()
+        public void MarkAsStale(string source)
         {
             ThrowIfDisposed();
-            master.AddStaleObject(this);
+            stale = true;
+            master.AddStaleObject(this, new StaleObject(name, source));
         }
 
         // IDisposable
@@ -120,6 +121,7 @@ namespace DS.Analysis.Core
         public void Update()
         {
             ThrowIfDisposed();
+            stale = false;
             disposeOnUpdate.Dispose();
             updateAction();
         }

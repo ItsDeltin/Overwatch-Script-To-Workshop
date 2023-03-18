@@ -23,7 +23,7 @@ namespace DS.Analysis.Scopes
 
         public FileRootScopeSource(DSAnalysis analysis, string path, IFileImportErrorHandler errorHandler)
         {
-            node = analysis.SingleNode(() =>
+            node = analysis.SingleNode($"File scope [{path}]", () =>
             {
                 Elements = file == null ? new ScopedElement[0] : file.RootScopeSource.Elements;
                 node.MakeDependentsStale();

@@ -22,14 +22,14 @@ namespace DS.Analysis.Scopes
         public Scope(DSAnalysis master, params IScopeSource[] sources)
         {
             this.sources = sources;
-            node = master.SingleNode(Update);
+            node = master.SingleNode("scope", Update);
             Subscribe();
         }
 
         private Scope(DSAnalysis master, Scope parent, IScopeSource source)
         {
             sources = parent.sources.Append(source);
-            node = master.SingleNode(Update);
+            node = master.SingleNode("scope", Update);
             Subscribe();
         }
 

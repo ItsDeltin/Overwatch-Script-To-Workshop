@@ -183,9 +183,9 @@ namespace DS.Analysis
         }
 
 
-        public BlockAction Block(Block block, ScopeSource scopeSource = null) => Block(block.Statements.ToArray(), scopeSource);
+        public BlockAction Block(Block block, ScopeSource? scopeSource = null) => Block(block.Statements.ToArray(), scopeSource);
 
-        public BlockAction Block(IParseStatement[] statementSyntaxes, ScopeSource scopeSource = null)
+        public BlockAction Block(IParseStatement[] statementSyntaxes, ScopeSource? scopeSource = null)
         {
             scopeSource = scopeSource ?? new ScopeSource();
             var current = AddAppendableSource(scopeSource);
@@ -215,9 +215,9 @@ namespace DS.Analysis
         public IGetIdentifier CreateStructuredIdentifier(string name, Func<ScopedElement, bool> predicate) =>
             CreateStructuredIdentifier(name, null, predicate);
 
-        public AutoExpressionHost CreateExpressionHost(Action updater)
+        public AutoExpressionHost CreateExpressionHost(string name, Action updater)
         {
-            return new AutoExpressionHost(Analysis.SingleNode(updater));
+            return new AutoExpressionHost(Analysis.SingleNode(name, updater));
         }
     }
 }

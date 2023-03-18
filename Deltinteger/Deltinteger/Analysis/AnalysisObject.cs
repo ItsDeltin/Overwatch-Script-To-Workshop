@@ -15,7 +15,7 @@ namespace DS.Analysis
         /// <summary>Determines if the object was disposed.</summary>
         public bool Disposed { get; private set; }
 
-        protected IMaster Master { get; }
+        protected DSAnalysis Master { get; }
 
         /// <summary>The objects that depend on this.</summary>
         private readonly DependencyList dependents;
@@ -25,9 +25,9 @@ namespace DS.Analysis
         private readonly SerializedDisposableCollection serializedDisposables = new SerializedDisposableCollection();
 
 
-        protected AnalysisObject(IMaster master)
+        protected AnalysisObject(DSAnalysis master)
         {
-            dependents = new DependencyList(NoMoreDependents);
+            dependents = new DependencyList(ToString(), NoMoreDependents);
             this.Master = master;
         }
 
@@ -38,10 +38,10 @@ namespace DS.Analysis
             MarkDependentsAsStale();
         }
 
-        public void MarkAsStale()
+        public void MarkAsStale(string? source)
         {
             Stale = true;
-            Master.AddStaleObject(this);
+            Master.AddStaleObject(this, new StaleObject(ToString(), source));
         }
 
         protected void MarkDependentsAsStale() => dependents.MarkAsStale();
@@ -61,7 +61,7 @@ namespace DS.Analysis
         protected IDisposable DependOn(IDependable dependable, DependencyMode mode = DependencyMode.RemoveOnFinalization)
         {
             var unlinker = dependable.AddDependent(this);
-            MarkAsStale();
+            MarkAsStale(null);
 
             if (mode != DependencyMode.DoNotManage)
             {

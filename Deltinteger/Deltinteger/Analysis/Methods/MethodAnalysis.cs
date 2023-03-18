@@ -14,7 +14,7 @@ namespace DS.Analysis.Methods
         public MethodAnalysis(ContextInfo context, FunctionExpression syntax)
         {
             target = context.GetExpression(syntax.Target);
-            dependencyHandler = context.Analysis.SingleNode(() =>
+            dependencyHandler = context.Analysis.SingleNode("method analysis", () =>
             {
                 // If the expression is a method group
                 if (target.MethodGroup != null)

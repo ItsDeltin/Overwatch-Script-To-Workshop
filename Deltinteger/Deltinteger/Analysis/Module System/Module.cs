@@ -36,7 +36,7 @@ namespace DS.Analysis.ModuleSystem
             Name = name;
             this.parent = parent;
 
-            node = master.SingleNode(Update);
+            node = master.SingleNode("module [" + name + "]", Update);
 
             GetIdentifier = new GetStructuredIdentifier(Name, null, parent?.GetIdentifier, GetStructuredIdentifier.PredicateSearch(element => element.TypePartHandler == this));
 

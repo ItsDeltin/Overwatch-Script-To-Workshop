@@ -20,7 +20,7 @@ namespace DS.Analysis.Expressions.Identifiers
         {
             this.context = context;
             this.token = context.Diagnostics.CreateNamedToken(identifier.Token);
-            expressionHost = context.CreateExpressionHost(Update);
+            expressionHost = context.CreateExpressionHost("identifier", Update);
             expressionHost.DependOn(context.Scope);
         }
 

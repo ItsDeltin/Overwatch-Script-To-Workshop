@@ -20,7 +20,7 @@ namespace DS.Analysis.Variables.Builder
         public VariableProvider GetVariable(ContextInfo contextInfo)
         {
             VariableContent content = ContextHandler.GetContent(contextInfo);
-            node = contextInfo.Analysis.OnlyNode(() =>
+            node = contextInfo.Analysis.OnlyNode("Variable type validation", () =>
             {
                 // Ensure that the expression type is assignable to the variable's type.
                 node.DisposeOnUpdate(TypeValidation.IsAssignableTo(
