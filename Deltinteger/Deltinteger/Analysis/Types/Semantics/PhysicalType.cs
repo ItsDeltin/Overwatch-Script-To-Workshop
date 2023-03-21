@@ -9,6 +9,8 @@ namespace DS.Analysis.Types.Semantics
             Type = type;
         }
 
+        public static PhysicalType Unlinked(CodeType type) => new PhysicalType(type);
+
         public static implicit operator PhysicalType(CodeType type) =>
             type == null ? null : new PhysicalType(type);
 

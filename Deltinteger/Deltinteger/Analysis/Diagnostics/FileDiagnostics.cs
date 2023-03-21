@@ -27,6 +27,13 @@ namespace DS.Analysis.Diagnostics
             return newDiagnostic;
         }
 
+        public Diagnostic Warning(string message, DocRange range)
+        {
+            var newDiagnostic = new Diagnostic(this, message, range, LSPDiagnosticSeverity.Warning);
+            diagnostics.Add(newDiagnostic);
+            return newDiagnostic;
+        }
+
         public DiagnosticToken CreateToken(DocRange range) => new DiagnosticToken(this, range);
 
         public NamedDiagnosticToken CreateNamedToken(Token token) => new NamedDiagnosticToken(this, token);

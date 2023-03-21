@@ -22,7 +22,7 @@ namespace DS.Analysis.Expressions
 
         public IScopeSource ScopeSource
         {
-            get => _scope ?? _type.Type.Content.ScopeSource;
+            get => _scope ?? _type?.Type.Content.ScopeSource ?? (IScopeSource)EmptyScopeSource.Instance;
             set
             {
                 _scope = value;

@@ -7,8 +7,6 @@ namespace DS.Analysis.Diagnostics
     /// <summary>Manages diagnostics for a written identifier that may or may not exist.</summary>
     struct NamedDiagnosticToken
     {
-        public string Name => token;
-
         readonly FileDiagnostics diagnostics;
         readonly Token token;
 
@@ -27,5 +25,19 @@ namespace DS.Analysis.Diagnostics
         /// <param name="message">The error's message.</param>
         /// <returns>An IDisposable used to delete the error. Will return Disposable.Empty if the identifier does not exist.</returns>
         public IDisposable Error(string message) => token ? diagnostics.Error(message, token) : Disposable.Empty;
+
+        /// <summary>Gets the name of the token.</summary>
+        /// <param name="name">The name is copied to this parameter. Will be `string.Empty` if the token is not valid.</param>
+        /// <returns>Whether the token is valid.</returns>
+        public bool GetName(out string name)
+        {
+            if (token)
+            {
+                name = token;
+                return true;
+            }
+            name = string.Empty;
+            return false;
+        }
     }
 }

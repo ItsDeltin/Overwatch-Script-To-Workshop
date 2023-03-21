@@ -39,7 +39,7 @@ namespace DS.Analysis.Statements
                 AddDisposable(TypeValidation.IsAssignableTo(
                     context: Context,
                     token: Context.Diagnostics.CreateToken(syntax.Value.Range),
-                    scopedElements: Context.Scope.Elements,
+                    scopedElements: Context.Scope.GetScopedElements(),
                     assignToType: variable.Type,
                     valueType: value.Type), true);
         }

@@ -15,7 +15,7 @@ namespace DS.Analysis.Structure.DataTypes
     class UserContentProvider : IDataTypeContentProvider, IParentElement
     {
         readonly ClassContext syntax;
-        readonly string name;
+        readonly string? name;
 
         // Searches the scope for this type
         readonly GetStructuredIdentifier.IScopeSearch scopeSearcher;
@@ -42,12 +42,12 @@ namespace DS.Analysis.Structure.DataTypes
         public UserContentProvider(ClassContext syntax)
         {
             this.syntax = syntax;
-            name = syntax.Identifier.Text;
+            name = Name.FromToken(syntax.Identifier);
 
             scopeSearcher = GetStructuredIdentifier.PredicateSearch(element => element.TypePartHandler == typeProvider);
         }
 
-        public string GetName() => name;
+        public string GetName() => name ?? "?";
 
         public SetupDataType Setup(ContextInfo contextInfo)
         {

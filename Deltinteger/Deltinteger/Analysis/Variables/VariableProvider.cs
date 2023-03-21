@@ -13,6 +13,6 @@ namespace DS.Analysis.Variables
             Type = type;
         }
 
-        public Variable CreateInstance() => new Variable(Type);
+        public Variable CreateInstance() => new Variable(Name, Type);
     }
 }

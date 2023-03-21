@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Reactive.Disposables;
 
 namespace DS.Analysis.Scopes
 {
@@ -9,30 +8,17 @@ namespace DS.Analysis.Scopes
 
     class Scope : IDependable, IDisposable
     {
-        public ScopedElement[] Elements { get; private set; }
+        private ScopedElement[] elements;
 
         readonly IEnumerable<IScopeSource> sources;
         readonly SingleNode node;
 
-        public Scope()
-        {
-            sources = Enumerable.Empty<IScopeSource>();
-        }
-
-        public Scope(DSAnalysis master, params IScopeSource[] sources)
+        private Scope(DSAnalysis master, IEnumerable<IScopeSource> sources)
         {
             this.sources = sources;
             node = master.SingleNode("scope", Update);
             Subscribe();
         }
-
-        private Scope(DSAnalysis master, Scope parent, IScopeSource source)
-        {
-            sources = parent.sources.Append(source);
-            node = master.SingleNode("scope", Update);
-            Subscribe();
-        }
-
 
         void Subscribe()
         {
@@ -47,17 +33,27 @@ namespace DS.Analysis.Scopes
             foreach (var source in sources)
                 elements = elements.Concat(source.Elements);
 
-            Elements = elements.ToArray();
+            this.elements = elements.ToArray();
             node.MakeDependentsStale();
         }
 
-        public Scope CreateChild(DSAnalysis master, IScopeSource scopeSource) => new Scope(master, this, scopeSource);
+        /// <summary>When selecting a scoped element with an identifier, choose the last matching element.</summary>
+        public ScopedElement[] GetScopedElements()
+        {
+            return elements;
+        }
+
+        public Scope CreateChild(DSAnalysis master, IScopeSource scopeSource)
+        {
+            var sources = this.sources.Append(scopeSource);
+            return new Scope(master, sources);
+        }
+
+        public static Scope New(DSAnalysis master, params IScopeSource[] sources) => new Scope(master, sources);
 
         // IDependable
         public IDisposable AddDependent(IDependent dependent) => node.AddDependent(dependent);
 
         public void Dispose() => node.Dispose();
-
-        public static readonly Scope Empty = new Scope();
     }
 }

@@ -10,13 +10,16 @@ namespace DS.Analysis.Variables
     class Variable : ICodeTypeElement
     {
         public ITypeDirector Type { get; }
+        readonly string name;
 
-        public Variable(ITypeDirector type)
+        public Variable(string name, ITypeDirector type)
         {
             Type = type;
+            ScopedElement = ScopedElement.CreateVariable(name, new IdentifierInfo(Type));
+            this.name = name;
         }
 
-        // ICodeTypeElement todo
-        ScopedElement ICodeTypeElement.ScopedElement => throw new NotImplementedException();
+        // IScopedElement
+        public ScopedElement ScopedElement { get; }
     }
 }

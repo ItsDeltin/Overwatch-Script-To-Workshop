@@ -18,6 +18,9 @@ namespace DS.Analysis.Types
         // Number
         public static readonly StandardType Number = Create("Number");
 
+        // String
+        public static readonly StandardType String = Create("String");
+
         // Scope source
         public static readonly IScopeSource StandardSource;
 
@@ -29,6 +32,7 @@ namespace DS.Analysis.Types
 
             // Add types to source.
             standardSource.AddScopedElement(Number.Provider.CreateScopedElement());
+            standardSource.AddScopedElement(String.Provider.CreateScopedElement());
         }
 
         static StandardType Create(string name) => new StandardType(name);

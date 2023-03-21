@@ -69,7 +69,7 @@ namespace DS.Analysis
 
         public ContextInfo SetScope(IScopeSource scope)
         {
-            var newScope = new Scope(Analysis, scope);
+            var newScope = Scope.New(Analysis, scope);
             disposables.Add(newScope);
             return new ContextInfo(this) { Scope = newScope };
         }
@@ -122,12 +122,15 @@ namespace DS.Analysis
                         break; // todo
                 // Method call
                 case FunctionExpression method: return new CallExpression(this, new MethodAnalysis(this, method));
+                // String
+                case StringExpression str: return StringAnalysis.NewExpression(this, str);
                 // Unknown
                 case MissingElement missingElement:
                     return new UnknownExpression(this);
             }
-
-            throw new NotImplementedException(expressionContext.GetType().ToString());
+            // Unimplemented
+            var warning = this.Warning("Unimplemented expression type '" + expressionContext.GetType().ToString() + "'", expressionContext.Range);
+            return new UnknownExpression(this, warning);
         }
 
 
@@ -179,7 +182,9 @@ namespace DS.Analysis
                 case FunctionExpression method:
                     return new CallStatement(this, new MethodAnalysis(this, method));
             }
-            throw new NotImplementedException(syntax.GetType().ToString());
+
+            var warning = this.Warning("Unimplemented expression type '" + syntax.GetType().ToString() + "'", syntax.Range);
+            return new UnknownStatement(this, warning);
         }
 
 
@@ -208,6 +213,8 @@ namespace DS.Analysis
 
         public IDisposable Error(string message, DocRange range) => File.Diagnostics.Error(message, range);
 
+        public IDisposable Warning(string message, DocRange range) => File.Diagnostics.Warning(message, range);
+
 
         public IGetIdentifier CreateStructuredIdentifier(string name, CodeType[] typeArgs, Func<ScopedElement, bool> predicate) =>
             new GetStructuredIdentifier(name, typeArgs, Parent?.GetIdentifier, GetStructuredIdentifier.PredicateSearch(predicate));
@@ -218,6 +225,14 @@ namespace DS.Analysis
         public AutoExpressionHost CreateExpressionHost(string name, Action updater)
         {
             return new AutoExpressionHost(Analysis.SingleNode(name, updater));
+        }
+
+        public IExpressionHost CreateExpressionHost(string name, Action<ExpressionHelper> updater)
+        {
+            var manager = new ExpressionHelperManager();
+            var exprHost = new AutoExpressionHost(Analysis.SingleNode(name, () => updater(manager.Helper)));
+            manager.Init(exprHost);
+            return exprHost;
         }
     }
 }

@@ -24,7 +24,7 @@ namespace DS.Analysis
         {
             FileManager = new FileManager(this);
             ModuleManager = new ModuleManager(this);
-            DefaultScope = new Scope(this, Types.StandardType.StandardSource, ModuleManager.Root);
+            DefaultScope = Scope.New(this, Types.StandardType.StandardSource, ModuleManager.Root);
         }
 
         public void Update()

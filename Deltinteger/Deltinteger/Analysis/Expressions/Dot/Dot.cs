@@ -54,7 +54,7 @@ namespace DS.Analysis.Expressions.Dot
                 node = context.Analysis.SingleNode("dot node", () =>
                 {
                     // Update the serialScope.
-                    if (position != NodePosition.First)
+                    if (position != NodePosition.Last)
                         serialScope.Elements = Expression.ScopeSource.Elements;
                 });
 
@@ -74,7 +74,7 @@ namespace DS.Analysis.Expressions.Dot
                 node.AddDisposable(Expression);
 
                 // Create the scope that the next DotNode will use.
-                node.DependOn(Expression.ScopeSource);
+                node.DependOn(Expression);
 
                 // Create the serialScope.
                 serialScope = new SerialScopeSource(Expression.ScopeSource.Elements);

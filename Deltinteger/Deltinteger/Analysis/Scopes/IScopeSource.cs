@@ -71,15 +71,4 @@ namespace DS.Analysis.Scopes
         public ScopedElement[] Elements { get; } = new ScopedElement[0];
         public IDisposable AddDependent(IDependent dependent) => System.Reactive.Disposables.Disposable.Empty;
     }
-
-    struct ScopeSourceChange
-    {
-        public static readonly ScopeSourceChange Empty = new ScopeSourceChange(new ScopedElement[0]);
-
-        public readonly ScopedElement[] Elements;
-
-        public ScopeSourceChange(ScopedElement[] elements) => Elements = elements;
-
-        public ScopeSourceChange(IEnumerable<ScopedElement> elements) => Elements = elements.ToArray();
-    }
 }

@@ -48,7 +48,7 @@ namespace DS.Analysis.Types.Semantics
                 {
                     return token.Error(Messages.GenericCountMismatch(
                         // Extract the type name.
-                        typeName: typeIdentifier.PathFromContext(new GetIdentifierContext(context.Scope.Elements)),
+                        typeName: typeIdentifier.PathFromContext(new GetIdentifierContext(context.Scope.GetScopedElements())),
                         provided: 0,
                         expected: expected));
                     // SerialDisposable error = new SerialDisposable();

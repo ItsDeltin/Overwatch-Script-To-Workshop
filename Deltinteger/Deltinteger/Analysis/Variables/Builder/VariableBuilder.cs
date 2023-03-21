@@ -23,14 +23,16 @@ namespace DS.Analysis.Variables.Builder
             node = contextInfo.Analysis.OnlyNode("Variable type validation", () =>
             {
                 // Ensure that the expression type is assignable to the variable's type.
-                node.DisposeOnUpdate(TypeValidation.IsAssignableTo(
-                    contextInfo,
-                    token: contextInfo.File.Diagnostics.CreateToken(content.ExpressionRange),
-                    scopedElements: contextInfo.Scope.Elements,
-                    assignToType: content.TypeDirector.Type,
-                    valueType: content.Expression.Type));
+                if (content.Expression != null)
+                    node.DisposeOnUpdate(TypeValidation.IsAssignableTo(
+                        contextInfo,
+                        token: contextInfo.File.Diagnostics.CreateToken(content.ExpressionRange),
+                        scopedElements: contextInfo.Scope.GetScopedElements(),
+                        assignToType: content.TypeDirector.Type,
+                        valueType: content.Expression.Type));
             });
-            node.DependOn(content.Expression);
+            if (content.Expression != null)
+                node.DependOn(content.Expression);
             node.DependOn(content.TypeDirector);
 
             return new VariableProvider(Name, content.TypeDirector);

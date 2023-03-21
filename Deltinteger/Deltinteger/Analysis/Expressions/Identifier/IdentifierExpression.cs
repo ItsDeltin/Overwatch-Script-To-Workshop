@@ -43,13 +43,16 @@ namespace DS.Analysis.Expressions.Identifiers
 
         IdentifiedElement ChooseScopedElement()
         {
-            var matchingName = context.Scope.Elements.Reverse().Where(e => e.Name == token.Name);
-            var match = matchingName.FirstOrDefault();
+            if (token.GetName(out string name))
+            {
+                var matchingName = context.Scope.GetScopedElements().Reverse().Where(e => e.Name == name);
+                var match = matchingName.FirstOrDefault();
 
-            if (match != null)
-                return match.ElementSelector.GetIdentifiedElement(new RelatedElements(matchingName));
+                if (match != null)
+                    return match.ElementSelector.GetIdentifiedElement(new RelatedElements(matchingName));
 
-            expressionHost.DisposeOnUpdate(token.Error(name => Messages.IdentifierDoesNotExist(name)));
+                expressionHost.DisposeOnUpdate(token.Error(Messages.IdentifierDoesNotExist(name)));
+            }
             return IdentifiedElement.Unknown;
         }
     }

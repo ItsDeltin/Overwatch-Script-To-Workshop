@@ -68,7 +68,7 @@ namespace DS.Analysis.Types.Semantics.Path
             errorHandler.Clear();
 
             // Find the scoped element.
-            foreach (var element in Context.Scope.Elements.Where(e => e.Name == name && e.TypePartHandler != null))
+            foreach (var element in Context.Scope.GetScopedElements().Where(e => e.Name == name && e.TypePartHandler != null))
                 if (element.TypePartHandler.Valid(errorHandler, typeArgs.Length))
                 {
                     // Found
