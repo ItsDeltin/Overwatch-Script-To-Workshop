@@ -92,6 +92,8 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle change.
         public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token) => _languageServer.Execute(() =>
         {
+            Thread.CurrentThread.Name = "doc exec uwu";
+
             var file = _languageServer.Analysis.FileManager.GetFile(changeParams.TextDocument.Uri.Normalize());
             var updater = file.FileParser.GetFileUpdater();
 

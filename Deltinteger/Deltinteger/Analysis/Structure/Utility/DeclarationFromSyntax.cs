@@ -4,6 +4,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 using DS.Analysis.Structure.Variables;
 using DS.Analysis.Structure.DataTypes;
 using DS.Analysis.Structure.Methods;
+using DS.Analysis.Structure.Modules;
 using DS.Analysis.Variables.Builder;
 
 namespace DS.Analysis.Structure.Utility
@@ -25,6 +26,10 @@ namespace DS.Analysis.Structure.Utility
                 // Method
                 case FunctionContext functionContext:
                     return new DeclaredMethod(contextInfo, new MethodContentProvider(functionContext));
+
+                // Module
+                case ModuleContext moduleContext:
+                    return new DeclaredModule(contextInfo, new ModuleContentProvider(moduleContext));
 
                 // Unknown type
                 default:

@@ -284,7 +284,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         void Unexpected(bool root)
         {
-            if ((root || Kind.IsSkippable()) && Kind != TokenType.EOF)
+            if (Kind != TokenType.EOF)
                 AddError(new UnexpectedToken(Consume()));
         }
 
@@ -1867,31 +1867,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 do inheriting.Add(ParseType());
                 while (ParseOptional(TokenType.Comma));
 
-            // Start the class group.
-            ParseExpected(TokenType.CurlyBracket_Open);
+            // Parse declarations
+            var declarations = ParseDeclarationList();
 
-            ClassContext context = new ClassContext(declareToken, identifier, generics, inheritToken, inheriting);
-
-            // Get the class elements.
-            // TODO: use ParseDeclarationList
-            while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
-                // Variable or method
-                if (IsDeclaration())
-                    context.Declarations.Add((IDeclaration)ParseVariableOrFunctionDeclaration());
-                // Constructor
-                else if (IsConstructor())
-                    context.Constructors.Add(ParseConstructor());
-                // Nested class
-                else if (Is(TokenType.Class) || Is(TokenType.Struct))
-                    context.Declarations.Add(ParseClassOrStruct());
-                else
-                {
-                    // TODO: error recovery
-                    break;
-                }
-
-            // End the class group.
-            ParseExpected(TokenType.CurlyBracket_Close);
+            ClassContext context = new ClassContext(declareToken, identifier, generics, inheritToken, inheriting, declarations);
 
             return EndTokenCapture(context);
         }
@@ -1909,11 +1888,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Class/struct
                 else if (Is(TokenType.Class) || Is(TokenType.Struct))
                     declarations.Add(ParseClassOrStruct());
+                // Module
+                else if (Is(TokenType.Module))
+                    declarations.Add(ParseModule());
+                // Unknown
                 else
-                {
-                    // TODO: better error recovery
-                    break;
-                }
+                    Unexpected(false);
 
             ParseExpected(TokenType.CurlyBracket_Close);
 

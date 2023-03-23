@@ -19,6 +19,7 @@ using DS.Analysis.Diagnostics;
 using DS.Analysis.Methods;
 using DS.Analysis.Core;
 using DS.Analysis.Utility;
+using DS.Analysis.Rule;
 
 namespace DS.Analysis
 {
@@ -181,9 +182,13 @@ namespace DS.Analysis
                 // Method call
                 case FunctionExpression method:
                     return new CallStatement(this, new MethodAnalysis(this, method));
+
+                // Rule declaration
+                case RuleContext rule:
+                    return new RuleStatement(this, rule);
             }
 
-            var warning = this.Warning("Unimplemented expression type '" + syntax.GetType().ToString() + "'", syntax.Range);
+            var warning = this.Warning("Unimplemented statement type '" + syntax.GetType().ToString() + "'", syntax.Range);
             return new UnknownStatement(this, warning);
         }
 
