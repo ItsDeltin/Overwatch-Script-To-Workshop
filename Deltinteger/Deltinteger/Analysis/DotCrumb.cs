@@ -34,7 +34,7 @@ namespace DS.Analysis
             public DotNode(DotCrumb crumb, CrumbNodeFactory crumbNodeFactory, bool isLast)
             {
                 var context = crumb.context;
-                var parent = crumb.nodes.FirstOrDefault();
+                var parent = crumb.nodes.LastOrDefault();
                 var isFirst = parent == null;
 
                 // If this is not the first expression, clear tail data and set the source expression.
