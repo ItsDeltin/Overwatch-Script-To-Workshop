@@ -46,12 +46,12 @@ namespace DS.Analysis
     class GetStructuredIdentifier : IGetIdentifier
     {
         readonly string defaultName; // The default name of the element when it can't be found in the current scope.
-        readonly CodeType[] typeArgs; // The type args of the element.
-        readonly IGetIdentifier parent; // The parent of the element.
+        readonly CodeType[]? typeArgs; // The type args of the element.
+        readonly IGetIdentifier? parent; // The parent of the element.
         readonly IScopeSearch scopeSearcher; // The element searcher.
 
 
-        public GetStructuredIdentifier(string defaultName, CodeType[] typeArgs, IGetIdentifier parent, IScopeSearch scopeSearcher)
+        public GetStructuredIdentifier(string defaultName, CodeType[]? typeArgs, IGetIdentifier? parent, IScopeSearch scopeSearcher)
         {
             this.defaultName = defaultName;
             this.typeArgs = typeArgs;
@@ -86,22 +86,22 @@ namespace DS.Analysis
         // Locates the name of the element in the current context.
         public interface IScopeSearch
         {
-            string Find(GetIdentifierContext context);
+            string? Find(GetIdentifierContext context);
         }
 
         // An anonymous implementation of IScopeSearch.
         struct AnonymousScopeSearch : IScopeSearch
         {
-            readonly Func<GetIdentifierContext, string> action;
-            public AnonymousScopeSearch(Func<GetIdentifierContext, string> action) => this.action = action;
-            public string Find(GetIdentifierContext context) => action(context);
+            readonly Func<GetIdentifierContext, string?> action;
+            public AnonymousScopeSearch(Func<GetIdentifierContext, string?> action) => this.action = action;
+            public string? Find(GetIdentifierContext context) => action(context);
         }
 
 
-        public static GetStructuredIdentifier Create(string defaultName, CodeType[] typeArgs, IGetIdentifier parent, Func<ScopedElement, bool> predicate) =>
+        public static GetStructuredIdentifier Create(string defaultName, CodeType[]? typeArgs, IGetIdentifier? parent, Func<ScopedElement, bool> predicate) =>
             new GetStructuredIdentifier(defaultName, typeArgs, parent, PredicateSearch(predicate));
 
-        public static GetStructuredIdentifier Create(string defaultName, CodeType[] typeArgs, IGetIdentifier parent, IScopeSearch scopeSearch) =>
+        public static GetStructuredIdentifier Create(string defaultName, CodeType[]? typeArgs, IGetIdentifier? parent, IScopeSearch scopeSearch) =>
             new GetStructuredIdentifier(defaultName, typeArgs, parent, scopeSearch);
 
         public static IScopeSearch PredicateSearch(Func<ScopedElement, bool> predicate) => new AnonymousScopeSearch(context =>
