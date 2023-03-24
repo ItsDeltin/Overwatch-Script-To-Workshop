@@ -23,7 +23,7 @@ namespace DS.Analysis.Structure.Modules
             DeclaredElements = moduleContent.GetDeclarations(contextInfo.SetModulePath(path).AddAppendableSource(scopeSource));
 
             // Add the source to the module manager.
-            moduleSourceReference = contextInfo.Analysis.ModuleManager.AddModuleSource(this, scopeSource, path.ToArray());
+            moduleSourceReference = contextInfo.Analysis.ModuleManager.AddModuleSource(scopeSource, path.ToArray());
 
             identifier = contextInfo.CreateStructuredIdentifier(Name, element => element.TypePartHandler == this);
         }

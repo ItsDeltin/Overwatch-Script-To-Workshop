@@ -1,11 +1,11 @@
-using System;
+using System.Collections.Generic;
 using DS.Analysis.Scopes;
 
 namespace DS.Analysis.Types.Components
 {
     class CodeTypeContent
     {
-        protected ICodeTypeElement[] Elements;
+        protected IEnumerable<ICodeTypeElement> Elements;
 
 
         public CodeTypeContent()
@@ -13,7 +13,7 @@ namespace DS.Analysis.Types.Components
             Elements = new ICodeTypeElement[0];
         }
 
-        public CodeTypeContent(ICodeTypeElement[] elements)
+        public CodeTypeContent(IEnumerable<ICodeTypeElement> elements)
         {
             Elements = elements;
         }
@@ -34,7 +34,7 @@ namespace DS.Analysis.Types.Components
                 return scopeSource;
             }
         }
-        ScopeSource scopeSource;
+        ScopeSource? scopeSource;
 
 
         public static readonly CodeTypeContent Empty = new CodeTypeContent();

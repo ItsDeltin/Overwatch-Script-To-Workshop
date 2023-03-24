@@ -6,10 +6,10 @@ namespace DS.Analysis
 {
     class BlockAction : IDisposable
     {
-        public Statement[] Statements { get; }
+        public IDisposableStatement[] Statements { get; }
         readonly ScopeSource scopeSource;
 
-        public BlockAction(Statement[] statements, ScopeSource scopeSource)
+        public BlockAction(IDisposableStatement[] statements, ScopeSource scopeSource)
         {
             Statements = statements;
             this.scopeSource = scopeSource;

@@ -33,7 +33,7 @@ namespace DS.Analysis
             var director = new SerialDisposableTypeDirector(disposable);
 
             // Create director from type arguments
-            disposable.Disposable = directorFactory(type => director.Type = type);
+            disposable.Disposable = directorFactory(type => director.Type = type, director);
 
             return director;
         }
@@ -54,12 +54,12 @@ namespace DS.Analysis
             IGetIdentifier getIdentifier,
             Action<CreateProviderAndDirectorHelper> instanceFactory
         ) => CreateProvider(name, typeParams, getIdentifier, arguments =>
-            CreateDirector(setType =>
+            CreateDirector((setType, director) =>
             {
                 var disposables = new DisposableCollection();
                 bool createdInstance = false;
 
-                instanceFactory(new(arguments, setType, d =>
+                instanceFactory(new(arguments, setType, director, d =>
                 {
                     if (createdInstance)
                         throw new Exception("Director has already been created, shouldn't link any more disposables");
@@ -79,6 +79,9 @@ namespace DS.Analysis
             // Public accessors to arguments' values
             public IParentElement Parent => arguments.Parent;
             public CodeType[] TypeArgs => arguments.TypeArgs;
+            /// <summary>A reference to the created type director.</summary>
+            public ITypeDirector Director => director;
+
             // setType delegate
             public void SetType(CodeType type) => setType(type);
 
@@ -88,12 +91,14 @@ namespace DS.Analysis
 
             readonly ProviderArguments arguments;
             readonly SetDirectorType setType;
+            readonly ITypeDirector director;
             readonly Action<IDisposable> addDisposable;
 
-            public CreateProviderAndDirectorHelper(ProviderArguments arguments, SetDirectorType setType, Action<IDisposable> addDisposable)
+            public CreateProviderAndDirectorHelper(ProviderArguments arguments, SetDirectorType setType, ITypeDirector director, Action<IDisposable> addDisposable)
             {
                 this.arguments = arguments;
                 this.setType = setType;
+                this.director = director;
                 this.addDisposable = addDisposable;
             }
         }
@@ -104,7 +109,7 @@ namespace DS.Analysis
 
 
         // Used to construct directors.
-        public delegate IDisposable DirectorFactory(SetDirectorType setDirectorType);
+        public delegate IDisposable DirectorFactory(SetDirectorType setDirectorType, ITypeDirector self);
         // Used inside the DirectorFactory to set the serial director's type.
         public delegate void SetDirectorType(CodeType type);
 

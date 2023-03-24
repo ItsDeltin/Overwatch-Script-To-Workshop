@@ -11,7 +11,7 @@ namespace DS.Analysis.Types.Semantics.Path
     class TypePath
     {
         public static IDisposableTypeDirector CreateTypeTree(ContextInfo context, INamedType[] partSyntaxes) =>
-            Utility2.CreateDirector(setType =>
+            Utility2.CreateDirector((setType, _) =>
             {
                 DotCrumb dotCrumb = new DotCrumb(context);
 

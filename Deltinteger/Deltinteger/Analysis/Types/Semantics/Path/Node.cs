@@ -113,7 +113,8 @@ namespace DS.Analysis.Types.Semantics.Path
         }
 
         // IParentElement
-        public IGetIdentifier GetIdentifier => partInstance.Type.GetIdentifier;
+        // todo: is an identifier always expected?
+        public IGetIdentifier GetIdentifier => partInstance.Type?.GetIdentifier;
 
         // IDotCrumbNode
         public IScopeSource ScopeSource => partInstance.ScopeSource;

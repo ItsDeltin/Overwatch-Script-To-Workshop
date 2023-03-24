@@ -50,7 +50,7 @@ namespace DS.Analysis.Types
             var identifier = new UniversalIdentifier(name);
 
             Instance = CodeType.Create(Components.CodeTypeContent.Empty, new StandardTypeComparison(this), identifier);
-            Director = Utility2.CreateDirector(setType =>
+            Director = Utility2.CreateDirector((setType, _) =>
             {
                 setType(Instance);
                 return Disposable.Empty;

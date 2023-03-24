@@ -6,8 +6,12 @@ namespace DS.Analysis.Methods
 
     class MethodClassElement : ICodeTypeElement
     {
-        public ScopedElement ScopedElement => throw new System.NotImplementedException();
+        public ScopedElement ScopedElement { get; }
         readonly MethodInstance instance;
-        public MethodClassElement(MethodInstance instance) => this.instance = instance;
+        public MethodClassElement(MethodInstance instance)
+        {
+            this.instance = instance;
+            ScopedElement = ScopedElement.CreateMethod(instance);
+        }
     }
 }

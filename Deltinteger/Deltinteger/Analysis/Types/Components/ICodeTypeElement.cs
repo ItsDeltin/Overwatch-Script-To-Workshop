@@ -6,6 +6,10 @@ namespace DS.Analysis.Types.Components
     interface ICodeTypeElement
     {
         ScopedElement ScopedElement { get; }
+
+        public static ICodeTypeElement New(ScopedElement scopedElement) => new CodeTypeElement(scopedElement);
+
+        record CodeTypeElement(ScopedElement ScopedElement) : ICodeTypeElement;
     }
 
     class ProviderTypeElement : ICodeTypeElement

@@ -1,7 +1,7 @@
 using System;
 using DS.Analysis.Types;
 using DS.Analysis.Types.Semantics;
-using DS.Analysis.Structure;
+using DS.Analysis.Methods;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace DS.Analysis.Structure.Methods

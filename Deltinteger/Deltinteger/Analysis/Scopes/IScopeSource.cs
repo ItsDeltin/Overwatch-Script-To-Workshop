@@ -1,6 +1,6 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 using DS.Analysis.Utility;
 
 namespace DS.Analysis.Scopes
@@ -70,5 +70,10 @@ namespace DS.Analysis.Scopes
 
         public ScopedElement[] Elements { get; } = new ScopedElement[0];
         public IDisposable AddDependent(IDependent dependent) => System.Reactive.Disposables.Disposable.Empty;
+    }
+
+    record StaticScopeSource(ScopedElement[] Elements) : IScopeSource
+    {
+        public IDisposable AddDependent(IDependent dependent) => Disposable.Empty;
     }
 }

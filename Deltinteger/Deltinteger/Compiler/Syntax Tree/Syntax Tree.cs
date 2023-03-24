@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public DocRange Range { get; set; }
     }
 
-    public class ModuleContext : Node, IParseStatement
+    public class ModuleContext : Node, IParseStatement, IDeclaration
     {
         public MetaComment Comment { get; set; }
         public Token Identifier { get; }
@@ -106,13 +106,14 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<ConstructorContext> Constructors { get; } = new List<ConstructorContext>();
         public MetaComment Comment { get; set; }
 
-        public ClassContext(Token declaringToken, Token identifier, List<TypeArgContext> generics, Token inheritToken, List<IParseType> inheriting)
+        public ClassContext(Token declaringToken, Token identifier, List<TypeArgContext> generics, Token inheritToken, List<IParseType> inheriting, List<IDeclaration> declarations)
         {
             DeclaringToken = declaringToken;
             Identifier = identifier;
             Generics = generics;
             InheritToken = inheritToken;
             Inheriting = inheriting;
+            Declarations = declarations;
         }
     }
 

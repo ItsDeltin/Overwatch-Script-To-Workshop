@@ -4,12 +4,12 @@ using System.Reactive.Disposables;
 
 namespace DS.Analysis.Types
 {
-    static class Compendium
+    class Compendium
     {
-        readonly static Dictionary<int, InternalCompendiumItem> types = new Dictionary<int, InternalCompendiumItem>();
+        readonly Dictionary<int, InternalCompendiumItem> types = new Dictionary<int, InternalCompendiumItem>();
 
 
-        public static CompendiumItem GetType(int hash, Func<CodeType> factory)
+        public CompendiumItem GetType(int hash, Func<CodeType> factory)
         {
             CodeType result;
 
@@ -20,7 +20,7 @@ namespace DS.Analysis.Types
             else
             {
                 result = factory();
-                types.Add(hash, compendium = new InternalCompendiumItem(hash, result));
+                types.Add(hash, compendium = new InternalCompendiumItem(this, hash, result));
             }
 
             return new CompendiumItem(compendium.CreateReference(), result);
@@ -30,14 +30,17 @@ namespace DS.Analysis.Types
         class InternalCompendiumItem
         {
             public CodeType Value { get; }
-            int referenceCount;
 
+            readonly Compendium compendium;
             readonly int hash;
 
+            int referenceCount;
 
-            public InternalCompendiumItem(int hash, CodeType value)
+            public InternalCompendiumItem(Compendium compendium, int hash, CodeType value)
             {
                 Value = value;
+                this.hash = hash;
+                this.compendium = compendium;
             }
 
 
@@ -47,7 +50,7 @@ namespace DS.Analysis.Types
                 return Disposable.Create(() =>
                 {
                     if (--referenceCount == 0)
-                        Compendium.types.Remove(hash);
+                        compendium.types.Remove(hash);
                 });
             }
         }
