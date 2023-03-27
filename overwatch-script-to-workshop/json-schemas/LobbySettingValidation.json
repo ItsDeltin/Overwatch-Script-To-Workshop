@@ -169,10 +169,25 @@
       "default": false,
       "type": "boolean"
     },
+    "Random Hero Role Limit Per Team": {
+      "default": 6.0,
+      "type": "integer",
+      "minimum": 1.0,
+      "maximum": 6.0
+    },
     "Respawn Time Scalar": {
       "default": 100.0,
       "type": "number",
       "maximum": 100.0
+    },
+    "Tank Role Passive Health Bonus": {
+      "default": "1 Tank, 2 Offense, 2 Support",
+      "type": "string",
+      "enum": [
+        "Always Enabled",
+        "1 Tank, 2 Offense, 2 Support",
+        "Disabled"
+      ]
     },
     "Competitive Rules": {
       "default": false,
@@ -6038,8 +6053,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
@@ -6134,8 +6155,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
@@ -6193,8 +6220,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
@@ -6261,8 +6294,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
@@ -6320,8 +6359,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
@@ -6382,8 +6427,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
@@ -6444,8 +6495,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Blitz Flag Locations": {
               "$ref": "#/definitions/Blitz Flag Locations"
@@ -6530,8 +6587,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Game Length In Minutes": {
               "$ref": "#/definitions/Game Length In Minutes"
@@ -6592,8 +6655,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Hero Selection Time": {
               "$ref": "#/definitions/Hero Selection Time"
@@ -6678,8 +6747,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Game Length In Minutes": {
               "$ref": "#/definitions/Game Length In Minutes"
@@ -6752,8 +6827,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Limit Valid Control Points": {
               "$ref": "#/definitions/Limit Valid Control Points"
@@ -6808,8 +6889,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Spawn Training Bots": {
               "$ref": "#/definitions/Spawn Training Bots"
@@ -6867,8 +6954,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Hero Selection Time": {
               "$ref": "#/definitions/Hero Selection Time"
@@ -6950,8 +7043,14 @@
             "Respawn As Random Hero": {
               "$ref": "#/definitions/Respawn As Random Hero"
             },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
             "Enabled": {
               "$ref": "#/definitions/Enabled Off"
