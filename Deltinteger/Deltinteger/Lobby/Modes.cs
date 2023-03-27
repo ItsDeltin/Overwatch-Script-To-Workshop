@@ -197,7 +197,9 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Hero Limit", "1 Per Team", "2 Per Team", "1 Per Game", "2 Per Game", "Off"),
             new SelectValue("Limit Roles", "2 Of Each Role Per Team", "Off"),
             new SwitchValue("Respawn As Random Hero", false),
-            new RangeValue(false, true, "Respawn Time Scalar", 0, 100)
+            new RangeValue(true, false, "Random Hero Role Limit Per Team", 1, 6, 6),
+            new RangeValue(false, true, "Respawn Time Scalar", 0, 100),
+            new SelectValue("Tank Role Passive Health Bonus", "1 Tank, 2 Offense, 2 Support", "Always Enabled", "Disabled")
         };
         private static readonly LobbySetting CaptureSpeed = new RangeValue(false, true, "Capture Speed Modifier", 10, 500);
         private static readonly LobbySetting PayloadSpeed = new RangeValue(false, true, "Payload Speed Modifier", 10, 500);
