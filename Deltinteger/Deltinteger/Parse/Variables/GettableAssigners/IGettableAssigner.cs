@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
         SetIfExists,
         SetAndFallbackTo0
     }
-    
+
     public interface IGettableAssigner
     {
         GettableAssignerResult GetResult(GettableAssignerValueInfo info);

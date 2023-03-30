@@ -192,13 +192,15 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             try
             {
+                var settings = _projectSettings.GetProjectSettings(item.Uri);
+
                 Diagnostics diagnostics = new Diagnostics();
                 ScriptFile root = new ScriptFile(diagnostics, item);
                 DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter)
                 {
                     OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
                     OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput,
-                    Settings = _projectSettings.GetProjectSettings(item.Uri)
+                    Settings = settings
                 });
                 _languageServer.LastParse = deltinScript;
 

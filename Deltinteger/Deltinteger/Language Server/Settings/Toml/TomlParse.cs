@@ -2,7 +2,7 @@ namespace Deltin.Deltinteger.LanguageServer.Settings.TomlSettings;
 using System.Linq;
 using System.Collections.Generic;
 using Tomlyn;
-using Deltin.Model;
+using Deltin.Deltinteger.Model;
 using PublishDiagnosticsParams = OmniSharp.Extensions.LanguageServer.Protocol.Models.PublishDiagnosticsParams;
 using LSDiagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic;
 using LSRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
