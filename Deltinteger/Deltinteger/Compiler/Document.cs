@@ -17,12 +17,13 @@ namespace Deltin.Deltinteger.Compiler
         public RootContext Syntax { get; private set; }
         public int? Version { get; private set; }
         public List<IParserError> Errors { get; private set; }
+        public ParserSettings ParserSettings { get; private set; }
         public CacheWatcher Cache { get; } = new CacheWatcher();
 
         public Document(Uri uri, string initialContent)
         {
             Uri = uri;
-            Lexer = new Lexer();
+            Lexer = new Lexer(new ParserSettings());
             Content = initialContent;
             Lexer.Init(new VersionInstance(Content));
             Parse();
@@ -35,26 +36,42 @@ namespace Deltin.Deltinteger.Compiler
 
         private void Parse()
         {
-            Parser parser = new Parser(Lexer, Syntax);
+            Parser parser = new Parser(Lexer, ParserSettings, Syntax);
             Syntax = parser.Parse();
             Errors = parser.Errors;
         }
 
-        public void Update(string newContent, UpdateRange updateRange, int? version)
+        public void Update(string newContent, UpdateRange updateRange, int? version, ParserSettings parserSettings)
         {
             Version = version;
             Content = newContent;
-            Lexer.Update(new VersionInstance(newContent), updateRange);
-            Parse();
+
+            if (!parserSettings.Equals(ParserSettings))
+            {
+                ParserSettings = parserSettings;
+                ParseFromScratch();
+            }
+            else
+            {
+                Lexer.Update(new VersionInstance(newContent), updateRange);
+                Parse();
+            }
         }
 
-        public void UpdateIfChanged(string newContent)
+        public void UpdateIfChanged(string newContent, ParserSettings parserSettings)
         {
-            if (newContent == Content) return;
-            Update(newContent);
+            if (newContent == null || (newContent == Content && parserSettings.Equals(ParserSettings))) return;
+            Update(newContent, parserSettings);
         }
 
-        public void Update(string newContent)
+        public void Update(string newContent, ParserSettings parserSettings)
+        {
+            Content = newContent;
+            ParserSettings = parserSettings;
+            ParseFromScratch();
+        }
+
+        private void ParseFromScratch()
         {
             Syntax = null;
             Lexer.Reset();

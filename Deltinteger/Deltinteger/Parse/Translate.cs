@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Parse.Settings;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
@@ -27,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
         public StagedInitiation StagedInitiation { get; } = new StagedInitiation();
+        public ProjectSettings Settings { get;  }
         private readonly OutputLanguage Language;
         public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>();
@@ -40,6 +42,7 @@ namespace Deltin.Deltinteger.Parse
         {
             FileGetter = translateSettings.FileGetter;
             Diagnostics = translateSettings.Diagnostics;
+            Settings = translateSettings.Settings;
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
