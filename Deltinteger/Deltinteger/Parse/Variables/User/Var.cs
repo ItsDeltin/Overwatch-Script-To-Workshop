@@ -29,6 +29,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsMacro { get; }
         public bool Virtual { get; }
         public bool Override { get; }
+        public bool Persist { get; }
         private readonly SemanticTokenType _tokenType;
         private readonly TokenModifier[] _tokenModifiers;
         private readonly bool _handleRestrictedCalls;
@@ -68,6 +69,7 @@ namespace Deltin.Deltinteger.Parse
             IsMacro = varInfo.IsMacro;
             Virtual = varInfo.Virtual;
             Override = varInfo.Override;
+            Persist = varInfo.Persist;
             _tokenType = varInfo.TokenType;
             _tokenModifiers = varInfo.TokenModifiers.ToArray();
             _handleRestrictedCalls = varInfo.HandleRestrictedCalls;

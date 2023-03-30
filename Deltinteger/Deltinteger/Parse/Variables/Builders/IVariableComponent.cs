@@ -24,14 +24,14 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
         /// <returns>True if the attribute exists, false otherwise.</returns>
         public bool IsAttribute(AttributeType type)
             => IsComponent(new AttributeComponentIdentifier(type));
-        
+
         /// <summary>Determines if the specified component exists.</summary>
         /// <typeparam name="T">The type of the component. Must be an IVariableComponent.</typeparam>
         /// <returns>True if the component exists, false otherwise.</returns>
-        public bool IsComponent<T>() where T: IVariableComponent
+        public bool IsComponent<T>() where T : IVariableComponent
             => IsComponent(new ComponentIdentifier<T>());
-        
-        public bool TryGetComponent<T>(out T result) where T: class, IVariableComponent
+
+        public bool TryGetComponent<T>(out T result) where T : class, IVariableComponent
         {
             T r = null;
             bool didMatch = MatchComponent(new ComponentIdentifier<T>(), component => r = (T)component, true);
@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
             MatchComponent(identifier, _ => result = true, true);
             return result;
         }
-        
+
         /// <summary>Adds a component to the list of variable components.</summary>
         public void AddComponent(IVariableComponent component)
         {
@@ -55,7 +55,8 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
         }
 
         /// <summary>Invalidates a component. This will add a diagnostic error and prevent the component from being applied to the variable.</summary>
-        public void RejectComponent(IComponentIdentifier rejectComponent) => MatchComponent(rejectComponent, component => {
+        public void RejectComponent(IComponentIdentifier rejectComponent) => MatchComponent(rejectComponent, component =>
+        {
             component.WasRejected = true;
             Diagnostics.Error(component.RejectMessage(), component.Range);
         }, false);
@@ -139,7 +140,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                 case AttributeType.Protected:
                 case AttributeType.Private:
                     return "Accessor not valid here.";
-                
+
                 // Use attribute name
                 default:
                     return $"'{Attribute.ToString().ToLower()}' attribute not valid here.";
@@ -159,12 +160,17 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                 case AttributeType.GlobalVar:
                     varInfo.VariableTypeHandler.SetAttribute(true);
                     break;
-                
+
                 // playervar
                 case AttributeType.PlayerVar:
                     varInfo.VariableTypeHandler.SetAttribute(false);
                     break;
-                
+
+                // Persist
+                case AttributeType.Persist:
+                    varInfo.Persist = true;
+                    break;
+
                 // ref
                 case AttributeType.Ref:
                     varInfo.Ref = true;
@@ -174,25 +180,25 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                 case AttributeType.In:
                     varInfo.VariableTypeHandler.SetWorkshopReference();
                     break;
-                
+
                 // Static
                 case AttributeType.Static:
                     varInfo.Static = true;
                     break;
-                
+
                 // Virtual
                 case AttributeType.Virtual:
                     varInfo.Virtual = true;
                     break;
-                
+
                 // Override
                 case AttributeType.Override:
                     varInfo.Override = true;
                     break;
-                
-                // Missing attribute function
-                // default:
-                //     throw new NotImplementedException();
+
+                    // Missing attribute function
+                    // default:
+                    //     throw new NotImplementedException();
             }
         }
 
@@ -217,10 +223,10 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
             {
                 // globalvar conflicting with playervar
                 case AttributeType.GlobalVar:
-                    return Conflict(collection, AttributeType.PlayerVar, "The 'globalvar' attribute cannot be used alongside the 'playervar' attribute");                
+                    return Conflict(collection, AttributeType.PlayerVar, "The 'globalvar' attribute cannot be used alongside the 'playervar' attribute");
                 // playervar conflicting with globalvar
                 case AttributeType.PlayerVar:
-                    return Conflict(collection, AttributeType.GlobalVar, "The 'playervar' attribute cannot be used alongside the 'globalvar' attribute");   
+                    return Conflict(collection, AttributeType.GlobalVar, "The 'playervar' attribute cannot be used alongside the 'globalvar' attribute");
                 // in conflicting with ref
                 case AttributeType.In:
                     return Conflict(collection, AttributeType.Ref, "The 'in' attribute cannot be used alongside the 'ref' attribute");
@@ -257,7 +263,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 
         public string RejectMessage() => "Variable cannot have an initial value.";
         public void Apply(VarInfo varInfo) => varInfo.InitialValueContext = Expression;
-        public void Validate(VariableComponentCollection componentCollection) {}
+        public void Validate(VariableComponentCollection componentCollection) { }
         public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
     }
 
@@ -276,7 +282,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 
         public string RejectMessage() => "Cannot override workshop variable ID here.";
         public void Apply(VarInfo varInfo) => varInfo.ID = Value;
-        public void Validate(VariableComponentCollection componentCollection) {}
+        public void Validate(VariableComponentCollection componentCollection) { }
         public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
     }
 
@@ -293,7 +299,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 
         public string RejectMessage() => "Cannot put variable in the extended collection.";
         public void Apply(VarInfo varInfo) => varInfo.InExtendedCollection = true;
-        public void Validate(VariableComponentCollection componentCollection) {}
+        public void Validate(VariableComponentCollection componentCollection) { }
         public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
     }
 
@@ -314,7 +320,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
             varInfo.IsMacro = true;
         }
         public string RejectMessage() => "Macros cannot be declared here.";
-        public void Validate(VariableComponentCollection componentCollection) {}
+        public void Validate(VariableComponentCollection componentCollection) { }
         public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
     }
 

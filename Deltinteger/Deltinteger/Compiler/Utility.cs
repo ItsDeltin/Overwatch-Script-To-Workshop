@@ -410,6 +410,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Type:
                 case TokenType.Single:
                 case TokenType.Const:
+                case TokenType.Persist:
                     return true;
 
                 default:
@@ -532,6 +533,7 @@ namespace Deltin.Deltinteger.Compiler
         Recursive,
         GlobalVar,
         PlayerVar,
+        Persist,
         Ref,
         // Comparison
         NotEqual,

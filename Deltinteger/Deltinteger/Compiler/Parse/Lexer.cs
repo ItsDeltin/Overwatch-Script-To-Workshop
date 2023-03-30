@@ -288,6 +288,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("recursive", TokenType.Recursive) ||
                     MatchKeyword("globalvar", TokenType.GlobalVar) ||
                     MatchKeyword("playervar", TokenType.PlayerVar) ||
+                    MatchKeyword("persist", TokenType.Persist) ||
                     MatchKeyword("ref", TokenType.Ref) ||
                     MatchKeyword("this", TokenType.This) ||
                     MatchKeyword("root", TokenType.Root) ||

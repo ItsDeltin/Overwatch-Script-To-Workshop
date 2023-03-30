@@ -27,13 +27,13 @@ namespace Deltin.Deltinteger.Parse
             // Otherwise, use the var's initial value.
             else if (_attributes.DefaultValue != null)
                 initialValue = _attributes.DefaultValue.Parse(info.ActionSet);
-            
+
             // No default value
             else hasDefaultValue = false;
-            
+
             // Inline
             if (inline) return new GettableAssignerResult(new WorkshopElementReference(initialValue), initialValue);
-            
+
             // Assign the index reference
             var value = info.IndexReferenceCreator.Create(_attributes);
 
@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
 
             return new GettableAssignerResult(value, initialValue);
         }
-    
+
         public IGettable AssignClassStacks(GetClassStacks info) =>
             info.ClassData.ObjectVariableFromIndex(info.StackOffset);
 

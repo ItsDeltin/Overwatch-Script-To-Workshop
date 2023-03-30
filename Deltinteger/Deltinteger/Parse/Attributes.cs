@@ -22,15 +22,16 @@ namespace Deltin.Deltinteger.Parse
         {
             ApplyAttributes = applyAttributes;
         }
-        
+
         public static void GetAttributes(FileDiagnostics diagnostics, AttributeTokens attributes, IApplyAttribute applyAttributes)
         {
             if (attributes == null) return;
 
             var getter = new AttributesGetter(applyAttributes);
             getter.CheckAttribute(diagnostics, attributes.GlobalVar, AttributeType.GlobalVar);
-            getter.CheckAttribute(diagnostics, attributes.Override, AttributeType.Override);
             getter.CheckAttribute(diagnostics, attributes.PlayerVar, AttributeType.PlayerVar);
+            getter.CheckAttribute(diagnostics, attributes.Persist, AttributeType.Persist);
+            getter.CheckAttribute(diagnostics, attributes.Override, AttributeType.Override);
             getter.CheckAttribute(diagnostics, attributes.Private, AttributeType.Private);
             getter.CheckAttribute(diagnostics, attributes.Protected, AttributeType.Protected);
             getter.CheckAttribute(diagnostics, attributes.Public, AttributeType.Public);
@@ -56,10 +57,10 @@ namespace Deltin.Deltinteger.Parse
                     wasCopy = true;
                     break;
                 }
-            
+
             // Add the attribute.
             ObtainedAttributes.Add(newAttribute);
-            
+
             // Additonal syntax errors. Only throw if the attribute is not a copy.
             if (!wasCopy && ApplyAttributes.Apply(diagnostics, newAttribute))
                 ValidateAttribute(diagnostics, newAttribute);
@@ -70,7 +71,7 @@ namespace Deltin.Deltinteger.Parse
             // Virtual attribute on a static method (static attribute was first.)
             if (IsAttribute(AttributeType.Static) && newAttribute.Type == AttributeType.Virtual)
                 diagnostics.Error("Static methods cannot be virtual.", newAttribute.Range);
-            
+
             // Static attribute on a virtual method (virtual attribute was first.)
             if (IsAttribute(AttributeType.Virtual) && newAttribute.Type == AttributeType.Static)
                 diagnostics.Error("Virtual methods cannot be static.", newAttribute.Range);
@@ -113,16 +114,16 @@ namespace Deltin.Deltinteger.Parse
                 case AttributeType.Public: Accessor = AccessLevel.Public; break;
                 case AttributeType.Protected: Accessor = AccessLevel.Protected; break;
                 case AttributeType.Private: Accessor = AccessLevel.Private; break;
-                
+
                 // Apply static
                 case AttributeType.Static: IsStatic = true; break;
-                
+
                 // Apply virtual
                 case AttributeType.Virtual: IsVirtual = true; break;
-                
+
                 // Apply override
                 case AttributeType.Override: IsOverride = true; break;
-                
+
                 // Apply Recursive
                 case AttributeType.Recursive: IsRecursive = true; break;
 
@@ -157,6 +158,7 @@ namespace Deltin.Deltinteger.Parse
     {
         GlobalVar,
         PlayerVar,
+        Persist,
         In,
         Ref,
         Public,
