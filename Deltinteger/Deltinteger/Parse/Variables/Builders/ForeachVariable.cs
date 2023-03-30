@@ -4,7 +4,7 @@ namespace Deltin.Deltinteger.Parse
 {
     class ForeachVariable : VarBuilder
     {
-        public ForeachVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler) {}
+        public ForeachVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler) { }
 
         protected override void CheckComponents()
         {
@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
                 new AttributeComponentIdentifier(
                     AttributeType.Public, AttributeType.Protected, AttributeType.Private,
                     AttributeType.Static,
-                    AttributeType.GlobalVar, AttributeType.PlayerVar,
+                    AttributeType.GlobalVar, AttributeType.PlayerVar, AttributeType.Persist,
                     AttributeType.Ref, AttributeType.In
                 ),
                 new ComponentIdentifier<WorkshopIndexComponent>(),

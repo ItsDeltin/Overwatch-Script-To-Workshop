@@ -2,13 +2,13 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 {
     class StructVariableBuilder : VarBuilder
     {
-        public StructVariableBuilder(IScopeHandler scopeHandler, IVarContextHandler contextHandler) : base(scopeHandler, contextHandler) {}
+        public StructVariableBuilder(IScopeHandler scopeHandler, IVarContextHandler contextHandler) : base(scopeHandler, contextHandler) { }
 
         protected override void CheckComponents()
         {
             RejectAttributes(
                 new AttributeComponentIdentifier(
-                    AttributeType.GlobalVar, AttributeType.PlayerVar,
+                    AttributeType.GlobalVar, AttributeType.PlayerVar, AttributeType.Persist,
                     AttributeType.Ref, AttributeType.In,
                     AttributeType.Virtual, AttributeType.Override
                 ),

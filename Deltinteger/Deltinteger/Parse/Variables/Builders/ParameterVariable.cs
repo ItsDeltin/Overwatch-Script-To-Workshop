@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
                 new AttributeComponentIdentifier(
                     AttributeType.Public, AttributeType.Protected, AttributeType.Private,
                     AttributeType.Static,
-                    AttributeType.GlobalVar, AttributeType.PlayerVar
+                    AttributeType.GlobalVar, AttributeType.PlayerVar, AttributeType.Persist
                 ),
                 new ComponentIdentifier<WorkshopIndexComponent>()
             );
