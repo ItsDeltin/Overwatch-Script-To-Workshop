@@ -42,12 +42,13 @@ namespace Deltin.Deltinteger.Parse
             if (info.IsRecursive) value = new RecursiveIndexReference(value);
 
             // If this is true, we can assume that the created value is not initialized to zero.
-            bool resetUnpersistent = info.ActionSet?.DeltinScript.Settings.ResetUnpersistent ?? false;
+            var persistantVariables = info.ActionSet?.ToWorkshop.PersistentVariables;
+            var resetNonpersistent = persistantVariables?.Enabled ?? false;
 
             // Set persistent.
-            if (_attributes.Persist)
+            if (_attributes.Persist && resetNonpersistent)
             {
-                InitIfUnset(info.ActionSet, value, (Element)initialValue);
+                persistantVariables.AddPersistent(value, (Element)initialValue);
             }
             // Set the initial value.
             else
@@ -62,9 +63,9 @@ namespace Deltin.Deltinteger.Parse
                     else
                         info.ActionSet.AddAction(value.SetVariable((Element)initialValue));
                 }
-                else if (resetUnpersistent && info.SetInitialValue != SetInitialValue.DoNotSet)
+                else if (resetNonpersistent && info.SetInitialValue != SetInitialValue.DoNotSet)
                 {
-                    Init(info.ActionSet, value, (Element)initialValue);
+                    persistantVariables.AddNonpersistent(value, (Element)initialValue);
                 }
             }
 
@@ -77,22 +78,6 @@ namespace Deltin.Deltinteger.Parse
         public int StackDelta() => 1;
 
         public IGettable Unfold(IUnfoldGettable unfolder) => new WorkshopElementReference(unfolder.NextValue());
-
-        /// <summary>Initializes an IndexReference to the specified value only if it wasn't set by an external source (eg. action copy)</summary>
-        static void InitIfUnset(ActionSet actionSet, IndexReference ir, Element initialValue)
-        {
-            var initialSet = actionSet.InitialSet();
-            initialSet.AddAction(If(Not(ir.Get())));
-            ir.Set(initialSet, initialValue);
-            initialSet.AddAction(End());
-        }
-
-        /// <summary>Initializes an IndexReference to the specified value.</summary>
-        static void Init(ActionSet actionSet, IndexReference ir, Element initialValue)
-        {
-            var initialSet = actionSet.InitialSet();
-            ir.Set(initialSet, initialValue);
-        }
     }
 
     public struct AssigningAttributes

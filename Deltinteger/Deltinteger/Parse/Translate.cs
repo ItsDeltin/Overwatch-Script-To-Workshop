@@ -265,6 +265,8 @@ namespace Deltin.Deltinteger.Parse
                 rule.ElementCountLens.RuleParsed(newRule);
             }
 
+            WorkshopConverter.PersistentVariables.ToWorkshop();
+
             // Add built-in rules.
             // Initial player
             if (InitialPlayer.Actions.Count > 0)

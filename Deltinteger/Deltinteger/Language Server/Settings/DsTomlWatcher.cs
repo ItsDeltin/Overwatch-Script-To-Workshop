@@ -20,11 +20,7 @@ namespace Deltin.Deltinteger.LanguageServer.Settings
 
         public ProjectSettings GetProjectSettings(Uri uri)
         {
-            var settingsFile = GetSettingsFromUri(uri);
-            if (settingsFile != null)
-                return settingsFile.Settings;
-
-            return ProjectSettings.Default;
+            return GetSettingsFromUri(uri)?.Settings ?? ProjectSettings.Default;
         }
     }
 }

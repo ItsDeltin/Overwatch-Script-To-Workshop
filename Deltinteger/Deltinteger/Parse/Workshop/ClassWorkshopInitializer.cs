@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
             // Init classes then assign stacks.
             InitClasses();
             AssignStacks();
-            InitStacksIfResetUnpersistent();
+            InitStacksIfResetNonpersistent();
         }
 
         // Assigns a unique class identifier.
@@ -86,9 +86,9 @@ namespace Deltin.Deltinteger.Parse
                 Stacks[i] = _toWorkshop.DeltinScript.VarCollection.Assign(ObjectVariableTag + i, true, false);
         }
 
-        void InitStacksIfResetUnpersistent()
+        void InitStacksIfResetNonpersistent()
         {
-            if (_toWorkshop.DeltinScript.Settings.ResetUnpersistent)
+            if (_toWorkshop.DeltinScript.Settings.ResetNonpersistent)
             {
                 var initSet = _toWorkshop.DeltinScript.InitialGlobal.ActionSet;
                 foreach (var stack in Stacks)

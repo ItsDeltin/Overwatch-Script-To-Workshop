@@ -39,19 +39,22 @@ namespace Deltin.Deltinteger.Parse
         public readonly InstanceAnonymousTypeLinker TypeLinker;
         public readonly bool IsGlobal;
         public readonly string Tag;
+        public readonly bool Persist;
 
         public GetVariablesAssigner(ActionSet actionSet)
         {
             TypeLinker = actionSet?.ThisTypeLinker;
             IsGlobal = actionSet?.IsGlobal ?? true;
             Tag = null;
+            Persist = false;
         }
 
-        public GetVariablesAssigner(ActionSet actionSet, string tag)
+        public GetVariablesAssigner(ActionSet actionSet, string tag, bool persist)
         {
             TypeLinker = actionSet?.ThisTypeLinker;
             IsGlobal = actionSet?.IsGlobal ?? true;
             Tag = tag;
+            Persist = persist;
         }
 
         public GetVariablesAssigner(InstanceAnonymousTypeLinker typeLinker)
@@ -59,6 +62,7 @@ namespace Deltin.Deltinteger.Parse
             TypeLinker = typeLinker;
             IsGlobal = true;
             Tag = null;
+            Persist = false;
         }
     }
 

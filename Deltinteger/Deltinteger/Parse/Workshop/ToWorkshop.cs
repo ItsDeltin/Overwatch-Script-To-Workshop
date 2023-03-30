@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
         public ClassWorkshopInitializerComponent ClassInitializer { get; }
         public SubroutineCatalog SubroutineCatalog { get; } = new SubroutineCatalog();
         public LambdaBuilder LambdaBuilder { get; }
+        public PersistentVariables PersistentVariables { get; }
 
         public ToWorkshop(DeltinScript deltinScript)
         {
@@ -20,6 +21,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
             TypeArgGlob = new GlobTypeArgCollector(deltinScript.Importer.ScriptFiles.ToArray());
             ClassInitializer = new ClassWorkshopInitializerComponent(this);
             LambdaBuilder = new LambdaBuilder(this);
+            PersistentVariables = new PersistentVariables(this);
         }
 
         public T GetComponent<T>() where T : IComponent, new() => DeltinScript.GetComponent<T>();
