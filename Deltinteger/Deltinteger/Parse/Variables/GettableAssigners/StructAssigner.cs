@@ -46,7 +46,8 @@ namespace Deltin.Deltinteger.Parse
                             inline: inline,
                             indexReferenceCreator: info.IndexReferenceCreator,
                             isGlobal: info.IsGlobal,
-                            isRecursive: info.IsRecursive)));
+                            isRecursive: info.IsRecursive,
+                            forceNonpersistentClear: info.ForceNonpersistentClear)));
 
             return new GettableAssignerResult(new StructAssignerValue(values), null);
         }

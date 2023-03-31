@@ -37,6 +37,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Assign the index reference
             var value = info.IndexReferenceCreator.Create(_attributes);
+            var nonrecursiveGettable = value;
 
             // Make recursive if requested.
             if (info.IsRecursive) value = new RecursiveIndexReference(value);
@@ -48,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
             // Set persistent.
             if (_attributes.Persist && resetNonpersistent)
             {
-                persistantVariables.AddPersistent(value, (Element)initialValue);
+                persistantVariables.AddPersistent(nonrecursiveGettable, (Element)initialValue);
             }
             // Set the initial value.
             else
@@ -63,9 +64,11 @@ namespace Deltin.Deltinteger.Parse
                     else
                         info.ActionSet.AddAction(value.SetVariable((Element)initialValue));
                 }
-                else if (resetNonpersistent && info.SetInitialValue != SetInitialValue.DoNotSet)
+                else if (resetNonpersistent && (info.SetInitialValue != SetInitialValue.DoNotSet || info.ForceNonpersistentClear))
                 {
-                    persistantVariables.AddNonpersistent(value, (Element)initialValue);
+                    persistantVariables.AddNonpersistent(
+                        nonrecursiveGettable,
+                        info.ForceNonpersistentClear ? Element.Num(0) : (Element)initialValue);
                 }
             }
 
