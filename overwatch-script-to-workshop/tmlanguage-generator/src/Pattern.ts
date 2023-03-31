@@ -1,7 +1,7 @@
-import { TmName } from './tmName';
+import { TmName } from './TmName';
 import { Regexable, GetRegexNode } from './index';
-import { TmRule } from './template';
-import { RegexExport } from './regexNode';
+import { TmRule } from './Template';
+import { RegexExport } from './RegexNode';
 
 export interface Pattern {
     /**

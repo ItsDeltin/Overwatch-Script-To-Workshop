@@ -1,6 +1,6 @@
 import * as tm from '../index';
 import { b, w } from '../index';
-import { Pattern } from '../pattern';
+import { Pattern } from '../Pattern';
 import { Repository } from './repository';
 import * as util from './utils';
 

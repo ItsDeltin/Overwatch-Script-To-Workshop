@@ -1,5 +1,5 @@
 import * as tm from '../index';
-import { Pattern } from '../pattern';
+import { Pattern } from '../Pattern';
 import { Repository } from './repository';
 import * as common_nodes from './common-nodes';
 import { i, w, b, codeType } from './common-nodes';
@@ -115,7 +115,8 @@ const matchAttributes = tm.Group({
             'static',
             'recursive',
             'globalvar',
-            'playervar'
+            'playervar',
+            'persist'
         ),
         b,
         w,
