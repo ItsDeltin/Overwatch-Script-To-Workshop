@@ -8,12 +8,14 @@ namespace Deltin.Deltinteger.Parse.Settings
         public string EntryPoint { get; set; }
         public CompileSettings Compile { get; set; }
         public bool ResetNonpersistent { get; set; }
+        public bool PasteCheckIsExtended { get; set; }
 
         public static readonly ProjectSettings Default = new ProjectSettings()
         {
             EntryPoint = null,
             Compile = default(CompileSettings),
-            ResetNonpersistent = false
+            ResetNonpersistent = false,
+            PasteCheckIsExtended = false
         };
     }
 

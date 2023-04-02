@@ -12,12 +12,13 @@ public class PersistentVariables
 
     public PersistentVariables(ToWorkshop toWorkshop)
     {
-        Enabled = toWorkshop.DeltinScript.Settings.ResetNonpersistent;
+        var settings = toWorkshop.DeltinScript.Settings;
+        Enabled = settings.ResetNonpersistent;
         this.toWorkshop = toWorkshop;
 
         if (Enabled)
         {
-            loadPersist = toWorkshop.DeltinScript.VarCollection.Assign("__loadPersist", true, false);
+            loadPersist = toWorkshop.DeltinScript.VarCollection.Assign("__loadPersist", true, settings.PasteCheckIsExtended);
             AddPersistent(loadPersist, True());
         }
     }
