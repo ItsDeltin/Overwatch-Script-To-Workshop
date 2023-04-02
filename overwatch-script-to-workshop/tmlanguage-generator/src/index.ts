@@ -14,14 +14,14 @@ import {
     ExactlyNode,
     CharacterClassNode,
     ExpressionGroup
-} from './regexNode';
-import { TmName } from './tmName';
-import { Pattern } from './pattern';
+} from './RegexNode';
+import { TmName } from './TmName';
+import { Pattern } from './Pattern';
 
-export { Pattern, GlobalRegexCapture } from './pattern';
-export { createTextmateGrammar, TextmateSettings } from './textmateGenerator';
-export { TmLanguage, TmRule, CaptureList } from './template';
-export { TmName } from './tmName';
+export { Pattern, GlobalRegexCapture } from './Pattern';
+export { createTextmateGrammar, TextmateSettings } from './TextmateGenerator';
+export { TmLanguage, TmRule, CaptureList } from './Template';
+export { TmName } from './TmName';
 
 export type Regexable = string | RegExp | RegexNode | RegexNode[] | Regexable[];
 

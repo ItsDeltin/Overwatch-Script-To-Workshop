@@ -180,6 +180,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                         .GetAssigner(new(actionSet))
                         .GetValue(new GettableAssignerValueInfo(actionSet)
                         {
+                            ForceNonpersistentClear = _recursiveParameters,
                             SetInitialValue = SetInitialValue.DoNotSet,
                             InitialValueOverride = providedParameters?[i].Value
                         });

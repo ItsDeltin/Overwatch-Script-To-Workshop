@@ -25,6 +25,7 @@ namespace Deltin.Deltinteger.Parse
             // Init classes then assign stacks.
             InitClasses();
             AssignStacks();
+            InitStacksIfResetNonpersistent();
         }
 
         // Assigns a unique class identifier.
@@ -36,11 +37,11 @@ namespace Deltin.Deltinteger.Parse
             foreach (var tracker in _typeTracker.Trackers)
                 if (tracker.Key is ClassInitializer classProvider)
                     _providerComboCollections.Add(new ClassProviderComboCollection(this, classProvider, tracker.Value.TypeArgCombos));
-            
+
             // Initialize combos.
             foreach (var comboCollection in _providerComboCollections)
                 comboCollection.Init();
-            
+
             // Link relations.
             foreach (var relations in _relations)
                 relations.Link(this);
@@ -65,7 +66,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var initializedCombo in providerCollection.InitializedCombos)
                 if (initializedCombo.Combo.CompatibleWith(type.Generics))
                     return initializedCombo;
-            
+
             // No combos are compatible.
             throw new Exception("No combos are acceptable");
         }
@@ -83,6 +84,16 @@ namespace Deltin.Deltinteger.Parse
 
             for (int i = 0; i < Stacks.Length; i++)
                 Stacks[i] = _toWorkshop.DeltinScript.VarCollection.Assign(ObjectVariableTag + i, true, false);
+        }
+
+        void InitStacksIfResetNonpersistent()
+        {
+            if (_toWorkshop.DeltinScript.Settings.ResetNonpersistent)
+            {
+                var initSet = _toWorkshop.DeltinScript.InitialGlobal.ActionSet;
+                foreach (var stack in Stacks)
+                    stack.Set(initSet, Elements.Element.Num(0));
+            }
         }
 
         public IndexReference ObjectVariableFromIndex(int i) => Stacks[i];
@@ -228,7 +239,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         /// <summary>Extracts overriden elements that match a pattern.</summary>
-        public IEnumerable<T> ExtractOverridenElements<T>(Func<T, bool> isMatch) where T: class, IScopeable
+        public IEnumerable<T> ExtractOverridenElements<T>(Func<T, bool> isMatch) where T : class, IScopeable
         {
             foreach (var extender in GetAllExtenders())
             {

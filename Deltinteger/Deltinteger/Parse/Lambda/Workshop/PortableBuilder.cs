@@ -71,6 +71,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
             _parameterRecycler.CreateWithTag(parameterStacks);
             _parameterRecycler.Reset();
             _parameterRecycler.Complete();
+            _parameterRecycler.InitializeNonpersistent(_toWorkshop.PersistentVariables);
 
             // Assign stacks for return value.
             _returnRecycler.CreateWithTag(returnStacks);

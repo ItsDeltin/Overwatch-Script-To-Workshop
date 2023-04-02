@@ -24,12 +24,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public List<TokenCapture> NodeCaptures { get; } = new List<TokenCapture>();
         public List<IParserError> Errors { get; } = new List<IParserError>();
         private readonly RootContext _last;
+        private readonly ParserSettings _parserSettings;
 
         private int LookaheadDepth = 0;
 
-        public Parser(Lexer lexer, RootContext last = null)
+        public Parser(Lexer lexer, ParserSettings parserSettings, RootContext last = null)
         {
             Lexer = lexer;
+            _parserSettings = parserSettings;
             _last = last;
             StringCheck.Push(false);
         }
@@ -2002,6 +2004,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 else if (ParseOptional(TokenType.PlayerVar, out token)) tokens.PlayerVar = token;
                 else if (ParseOptional(TokenType.Ref, out token)) tokens.Ref = token;
                 else if (ParseOptional(TokenType.In, out token)) tokens.In = token;
+                else if (ParseOptional(TokenType.Persist, out token)) tokens.Persist = token;
                 else break;
                 tokens.AllAttributes.Add(token);
             }

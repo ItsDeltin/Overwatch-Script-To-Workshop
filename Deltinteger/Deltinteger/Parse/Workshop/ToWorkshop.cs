@@ -13,11 +13,13 @@ namespace Deltin.Deltinteger.Parse.Workshop
         public ClassWorkshopInitializerComponent ClassInitializer { get; }
         public SubroutineCatalog SubroutineCatalog { get; } = new SubroutineCatalog();
         public LambdaBuilder LambdaBuilder { get; }
+        public PersistentVariables PersistentVariables { get; }
 
         public ToWorkshop(DeltinScript deltinScript)
         {
             DeltinScript = deltinScript;
             TypeArgGlob = new GlobTypeArgCollector(deltinScript.Importer.ScriptFiles.ToArray());
+            PersistentVariables = new PersistentVariables(this);
             ClassInitializer = new ClassWorkshopInitializerComponent(this);
             LambdaBuilder = new LambdaBuilder(this);
         }

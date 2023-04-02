@@ -1,14 +1,32 @@
 namespace Deltin.Deltinteger.Parse
 {
+    /// <summary>Parameters and restrictions given to an IGettableAssigner to generate an IGettable.</summary>
     public class GettableAssignerValueInfo
     {
+        /// <summary>The current rule's action set. May be null.</summary>
         public ActionSet ActionSet { get; }
+
+        /// <summary>Determines how the initial value is set.</summary>
         public SetInitialValue SetInitialValue { get; set; } = SetInitialValue.SetAndFallbackTo0;
+
+        /// <summary>Provides an alternative initial value if not null.</summary>
         public IWorkshopTree InitialValueOverride { get; set; }
+
+        /// <summary>Forces the generated gettable to be inlined if true.</summary>
         public bool Inline { get; set; }
+
+        /// <summary>The object that can generate an IndexReference.</summary>
         public WorkshopVariableAssigner IndexReferenceCreator { get; set; }
+
+        /// <summary>Should a global or player variable be generated?</summary>
         public bool IsGlobal { get; set; }
+
+        /// <summary>If true, the generated IGettable will be a RecursiveIndexReference.</summary>
         public bool IsRecursive { get; set; }
+
+        /// <summary>Will clear nonpersistent junk data even if SetInitialValue is DoNotSet.<br />
+        /// Only relevant if reset_nonpersistent is set to true in the project's ds.toml file.</summary>
+        public bool ForceNonpersistentClear { get; set; }
 
         public GettableAssignerValueInfo(
             ActionSet actionSet,
@@ -17,7 +35,8 @@ namespace Deltin.Deltinteger.Parse
             bool inline,
             WorkshopVariableAssigner indexReferenceCreator,
             bool isGlobal,
-            bool isRecursive)
+            bool isRecursive,
+            bool forceNonpersistentClear)
         {
             ActionSet = actionSet;
             SetInitialValue = setInitialValue;
@@ -26,6 +45,7 @@ namespace Deltin.Deltinteger.Parse
             IndexReferenceCreator = indexReferenceCreator;
             IsGlobal = isGlobal;
             IsRecursive = isRecursive;
+            ForceNonpersistentClear = forceNonpersistentClear;
         }
 
         public GettableAssignerValueInfo(ActionSet actionSet)
@@ -57,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
         SetIfExists,
         SetAndFallbackTo0
     }
-    
+
     public interface IGettableAssigner
     {
         GettableAssignerResult GetResult(GettableAssignerValueInfo info);

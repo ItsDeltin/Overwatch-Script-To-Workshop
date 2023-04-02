@@ -4,14 +4,14 @@ namespace Deltin.Deltinteger.Parse
 {
     class ClassVariable : VarBuilder
     {
-        public ClassVariable(IScopeHandler scopeHandler, IVarContextHandler contextHandler) : base(scopeHandler, contextHandler) {}
+        public ClassVariable(IScopeHandler scopeHandler, IVarContextHandler contextHandler) : base(scopeHandler, contextHandler) { }
 
         protected override void CheckComponents()
         {
             RejectAttributes(
                 new AttributeComponentIdentifier(
                     AttributeType.GlobalVar, AttributeType.PlayerVar,
-                    AttributeType.Ref, AttributeType.In
+                    AttributeType.Ref, AttributeType.In, AttributeType.Persist
                 ),
                 new ComponentIdentifier<WorkshopIndexComponent>(),
                 new ComponentIdentifier<ExtendedCollectionComponent>()

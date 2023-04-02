@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.Compiler.Parse;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.LanguageServer.Settings;
 using OmniSharp.Extensions.LanguageServer.Protocol;
-using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
@@ -28,46 +24,55 @@ namespace Deltin.Deltinteger.LanguageServer
 
         // Object
         public List<Document> Documents { get; } = new List<Document>();
-        private DeltintegerLanguageServer _languageServer { get; }
+        private readonly DeltintegerLanguageServer _languageServer;
+        private readonly ParserSettingsResolver _parserSettingsResolver;
+        private readonly DsTomlWatcher _projectSettings;
         private SynchronizationCapability _compatibility;
         private TaskCompletionSource<Unit> _scriptReady = new TaskCompletionSource<Unit>();
 
-        public DocumentHandler(DeltintegerLanguageServer languageServer)
+        public DocumentHandler(LanguageServerBuilder builder)
         {
-            _languageServer = languageServer;
+            _languageServer = builder.Server;
+            _parserSettingsResolver = builder.ParserSettingsResolver;
+            _projectSettings = builder.ProjectSettings;
             SetupUpdateListener();
         }
 
         public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) => new TextDocumentAttributes(uri, "ostw");
 
         // Document change
-        public TextDocumentChangeRegistrationOptions GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentChangeRegistrationOptions() {
+        public TextDocumentChangeRegistrationOptions GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentChangeRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
             SyncKind = _syncKind
         };
 
         // Open
-        TextDocumentOpenRegistrationOptions IRegistration<TextDocumentOpenRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentOpenRegistrationOptions() {
+        TextDocumentOpenRegistrationOptions IRegistration<TextDocumentOpenRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentOpenRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
         // Close
-        TextDocumentCloseRegistrationOptions IRegistration<TextDocumentCloseRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentCloseRegistrationOptions() {
+        TextDocumentCloseRegistrationOptions IRegistration<TextDocumentCloseRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentCloseRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
         // Save
-        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentSaveRegistrationOptions() {
+        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentSaveRegistrationOptions()
+        {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector
         };
 
         // Handle save.
         public Task<Unit> Handle(DidSaveTextDocumentParams saveParams, CancellationToken token)
         {
+            System.Diagnostics.Debug.WriteLine("documents", "Saving " + saveParams.TextDocument.Uri);
             if (_sendTextOnSave)
             {
                 var document = TextDocumentFromUri(saveParams.TextDocument.Uri.ToUri());
-                document.UpdateIfChanged(saveParams.Text);
+                document.UpdateIfChanged(saveParams.Text, _parserSettingsResolver.GetParserSettings(document.Uri));
                 return Parse(document);
             }
             else return Parse(saveParams.TextDocument.Uri.ToUri());
@@ -76,6 +81,7 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle close.
         public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
         {
+            System.Diagnostics.Debug.WriteLine("documents", "Closing " + closeParams.TextDocument.Uri);
             var removing = TextDocumentFromUri(closeParams.TextDocument.Uri.ToUri());
             removing.Remove();
             Documents.Remove(removing);
@@ -85,6 +91,7 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle open.
         public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
         {
+            System.Diagnostics.Debug.WriteLine("documents", "Opening " + openParams.TextDocument.Uri);
             Documents.Add(new Document(openParams.TextDocument));
             return Parse(openParams.TextDocument.Uri.ToUri());
         }
@@ -92,6 +99,7 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle change.
         public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
         {
+            System.Diagnostics.Debug.WriteLine("documents", "Changing " + changeParams.TextDocument.Uri);
             var document = TextDocumentFromUri(changeParams.TextDocument.Uri.ToUri());
             foreach (var change in changeParams.ContentChanges)
             {
@@ -102,10 +110,10 @@ namespace Deltin.Deltinteger.LanguageServer
                 rep.Remove(start, length);
                 rep.Insert(start, change.Text);
 
-                document.Update(rep.ToString(), change, changeParams.TextDocument.Version);
+                document.Update(rep.ToString(), change, changeParams.TextDocument.Version, _parserSettingsResolver.GetParserSettings(document.Uri));
             }
             return Parse(document.Uri);
-        }        
+        }
 
         public Document TextDocumentFromUri(Uri uri)
         {
@@ -184,12 +192,15 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             try
             {
+                var settings = _projectSettings.GetProjectSettings(item.Uri);
+
                 Diagnostics diagnostics = new Diagnostics();
                 ScriptFile root = new ScriptFile(diagnostics, item);
                 DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter)
                 {
                     OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
-                    OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput
+                    OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput,
+                    Settings = settings
                 });
                 _languageServer.LastParse = deltinScript;
 

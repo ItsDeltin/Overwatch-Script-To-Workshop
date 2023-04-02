@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Deltin.Deltinteger.Compiler;
+using IParserSettingsResolver = Deltin.Deltinteger.LanguageServer.Settings.IParserSettingsResolver;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -65,17 +66,18 @@ namespace Deltin.Deltinteger.Parse
     public class ImportedScript : ImportedFile
     {
         public Document Document { get; }
+        private readonly IParserSettingsResolver _settingsResolver;
 
-        public ImportedScript(Uri uri) : base(uri)
-        {
+        public ImportedScript(Uri uri, IParserSettingsResolver settingsResolver) : base(uri) {
             Document = new Document(uri, Content);
-            Document.Update(Content);
+            _settingsResolver = settingsResolver;
+            OnUpdate();
         }
 
         protected override void OnUpdate()
         {
             if (Document != null)
-                Document.Update(Content);
+                Document.Update(Content, _settingsResolver.GetParserSettings(Uri));
         }
     }
 }

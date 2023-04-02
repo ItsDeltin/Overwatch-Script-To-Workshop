@@ -1,6 +1,6 @@
 import { ostw_grammar } from "./ostw/ostw-grammar";
 import { ow_grammar } from "./ow/ow-grammar";
-import { TmLanguage } from "./template";
+import { TmLanguage } from "./Template";
 import * as fs from 'fs';
 import * as path from 'path';
 

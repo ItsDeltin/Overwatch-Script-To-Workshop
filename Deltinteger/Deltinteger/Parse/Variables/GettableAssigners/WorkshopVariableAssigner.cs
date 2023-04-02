@@ -1,4 +1,6 @@
+using System.Linq;
 using System.Collections.Generic;
+using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -23,9 +25,9 @@ namespace Deltin.Deltinteger.Parse
     // This allows workshop-assigned variables to be reused.
     public class RecycleWorkshopVariableAssigner : WorkshopVariableAssigner
     {
-        readonly List<IndexReference> _created = new List<IndexReference>();
+        readonly List<RecycledVariable> _created = new List<RecycledVariable>();
         readonly string _tagName;
-        bool _stackStyle;
+        readonly bool _stackStyle;
         int _current;
         bool _complete;
 
@@ -46,14 +48,15 @@ namespace Deltin.Deltinteger.Parse
                 var reference = base.Create(newAttributes);
 
                 // If _stackStyle is true, turn it into a RecursiveIndexReference.
+                var gettable = reference;
                 if (_stackStyle)
-                    reference = new RecursiveIndexReference(reference);
+                    gettable = new RecursiveIndexReference(reference);
 
                 // Add the IndexReference to the list.
-                _created.Add(reference);
+                _created.Add(new RecycledVariable(reference, gettable));
             }
 
-            return _created[_current++];
+            return _created[_current++].Gettable;
         }
 
         /// <summary>
@@ -81,7 +84,14 @@ namespace Deltin.Deltinteger.Parse
             _complete = true;
         }
 
-        public IndexReference[] Created => _created.ToArray();
+        public void InitializeNonpersistent(PersistentVariables persistentVariables)
+        {
+            if (persistentVariables.Enabled && _stackStyle)
+                foreach (var stack in _created)
+                    persistentVariables.AddNonpersistent(stack.IndexReference, Elements.Element.Num(0));
+        }
+
+        public IndexReference[] Created => _created.Select(s => s.Gettable).ToArray();
 
         private string GetTag()
         {
@@ -95,5 +105,7 @@ namespace Deltin.Deltinteger.Parse
             if (_complete)
                 throw new System.Exception("RecycleWorkshopVariableAssigner was completed");
         }
+
+        record struct RecycledVariable(IndexReference IndexReference, IndexReference Gettable);
     }
 }

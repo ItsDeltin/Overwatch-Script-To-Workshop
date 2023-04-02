@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsMacro { get; set; }
         public bool Virtual { get; set; }
         public bool Override { get; set; }
+        public bool Persist { get; set; }
         public IVariableInstance Overriding { get; set; }
         public MarkupBuilder Documentation { get; set; }
 

@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the child gettable.
                 values.Add(
                     var.Name,
-                    var.GetAssigner(new(info.ActionSet, _attributes.Name + "_"))
+                    var.GetAssigner(new(info.ActionSet, _attributes.Name + "_", _attributes.Persist))
                         .GetValue(new GettableAssignerValueInfo(
                             actionSet: info.ActionSet,
                             setInitialValue: info.SetInitialValue,
@@ -46,7 +46,8 @@ namespace Deltin.Deltinteger.Parse
                             inline: inline,
                             indexReferenceCreator: info.IndexReferenceCreator,
                             isGlobal: info.IsGlobal,
-                            isRecursive: info.IsRecursive)));
+                            isRecursive: info.IsRecursive,
+                            forceNonpersistentClear: info.ForceNonpersistentClear)));
 
             return new GettableAssignerResult(new StructAssignerValue(values), null);
         }
@@ -100,12 +101,14 @@ namespace Deltin.Deltinteger.Parse
         public string Name;
         public StoreType StoreType;
         public IExpression DefaultValue;
+        public bool Persist;
 
         public StructAssigningAttributes(AssigningAttributes attributes)
         {
             Name = attributes.Name;
             StoreType = attributes.StoreType;
             DefaultValue = attributes.DefaultValue;
+            Persist = attributes.Persist;
         }
     }
 

@@ -48,7 +48,8 @@ namespace Deltin.Deltinteger.Parse
             IsGlobal = getAssigner.IsGlobal,
             StoreType = Var.StoreType,
             VariableType = Var.VariableType,
-            DefaultValue = Var.InitialValue
+            DefaultValue = Var.InitialValue,
+            Persist = Var.Persist || getAssigner.Persist
         });
 
         public IWorkshopTree ToWorkshop(ActionSet actionSet)

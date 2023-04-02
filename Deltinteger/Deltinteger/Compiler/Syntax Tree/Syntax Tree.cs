@@ -331,6 +331,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token PlayerVar { get; set; }
         public Token Ref { get; set; }
         public Token In { get; set; }
+        public Token Persist { get; set; }
         public List<Token> AllAttributes { get; } = new List<Token>();
         public Deltin.Deltinteger.Parse.AccessLevel GetAccessLevel() =>
             Public != null ? Deltin.Deltinteger.Parse.AccessLevel.Public :

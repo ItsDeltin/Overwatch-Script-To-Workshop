@@ -1,4 +1,4 @@
-import { Pattern } from '../pattern';
+import { Pattern } from '../Pattern';
 import * as tm from '../index';
 import { Repository } from './repository';
 

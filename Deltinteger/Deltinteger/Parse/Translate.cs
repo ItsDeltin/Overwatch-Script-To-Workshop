@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Parse.Settings;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
@@ -27,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
         public StagedInitiation StagedInitiation { get; } = new StagedInitiation();
+        public ProjectSettings Settings { get; }
         private readonly OutputLanguage Language;
         public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>();
@@ -40,6 +42,7 @@ namespace Deltin.Deltinteger.Parse
         {
             FileGetter = translateSettings.FileGetter;
             Diagnostics = translateSettings.Diagnostics;
+            Settings = translateSettings.Settings;
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
@@ -223,13 +226,12 @@ namespace Deltin.Deltinteger.Parse
             // Set up the variable collection.
             VarCollection.Setup();
 
-            WorkshopConverter = new ToWorkshop(this);
-
             // Set up initial global and player rules.
             InitialGlobal = new TranslateRule(this, "Initial Global", RuleEvent.OngoingGlobal);
             InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
             WorkshopRules = new List<Rule>();
 
+            WorkshopConverter = new ToWorkshop(this);
             WorkshopConverter.InitStatic();
 
             // Init called types.
@@ -262,6 +264,8 @@ namespace Deltin.Deltinteger.Parse
                 WorkshopRules.Add(newRule);
                 rule.ElementCountLens.RuleParsed(newRule);
             }
+
+            WorkshopConverter.PersistentVariables.ToWorkshop();
 
             // Add built-in rules.
             // Initial player

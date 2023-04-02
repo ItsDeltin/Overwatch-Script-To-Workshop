@@ -4,19 +4,19 @@ namespace Deltin.Deltinteger.Parse
 {
     class SubroutineParameterVariable : ParameterVariable
     {
-        public SubroutineParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler, null) {}
+        public SubroutineParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler, null) { }
 
         protected override void CheckComponents()
         {
             base.CheckComponents();
-            RejectAttributes(new AttributeComponentIdentifier(AttributeType.Ref, AttributeType.In));
+            RejectAttributes(new AttributeComponentIdentifier(AttributeType.Ref, AttributeType.In, AttributeType.Persist));
         }
 
         protected override void ApplyCodeType(CodeType type)
-        {            
+        {
             if (type != null && type.IsConstant())
                 _diagnostics.Error($"Constant types cannot be used in subroutine parameters.", _typeRange);
-            
+
             _varInfo.Type = type;
         }
     }
