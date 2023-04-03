@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
             Scope.AddNativeVariable(_first);
 
             var pipeType = new PipeType(ArrayOfType, this);
-            var functionHandler = ArrayOfType.ArrayHandler.GetFunctionHandler();
+            var allowUnhandled = ArrayOfType.ArrayHandler.GetFunctionHandler().AllowUnhandled;
 
             // Filtered Array
             MakeGenericSortFunction(
@@ -123,10 +123,10 @@ namespace Deltin.Deltinteger.Parse
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value that is being looked for in the array.", ArrayOfType)
                 },
-                Action = (actionSet, methodCall) => functionHandler.Contains(actionSet.CurrentObject, methodCall.ParameterValues[0])
+                Action = (actionSet, methodCall) => GetFunctionHandler(actionSet).Contains(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Random
-            if (functionHandler.AllowUnhandled)
+            if (allowUnhandled)
                 Func(new FuncMethodBuilder()
                 {
                     Name = "Random",
@@ -135,7 +135,7 @@ namespace Deltin.Deltinteger.Parse
                     Action = (actionSet, methodCall) => Element.Part("Random Value In Array", actionSet.CurrentObject)
                 });
             // Randomize
-            if (functionHandler.AllowUnhandled)
+            if (allowUnhandled)
                 Func(new FuncMethodBuilder()
                 {
                     Name = "Randomize",
@@ -150,20 +150,20 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the array with the specified value appended to it.",
                 ReturnType = this,
                 Parameters = new CodeParameter[] {
-                new CodeParameter("value", "The value that is appended to the array. If the value is an array, it will be flattened.", pipeType)
-            },
-                Action = (actionSet, methodCall) => functionHandler.Append(actionSet.CurrentObject, methodCall.ParameterValues[0])
+                    new CodeParameter("value", "The value that is appended to the array. If the value is an array, it will be flattened.", pipeType)
+                },
+                Action = (actionSet, methodCall) => GetFunctionHandler(actionSet).Append(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Remove
-            if (functionHandler.AllowUnhandled)
+            if (allowUnhandled)
                 Func(new FuncMethodBuilder()
                 {
                     Name = "Remove",
                     Documentation = "A copy of the array with the specified value removed from it.",
                     ReturnType = this,
                     Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value that is removed from the array.", pipeType)
-                },
+                        new CodeParameter("value", "The value that is removed from the array.", pipeType)
+                    },
                     Action = (actionSet, methodCall) => Element.Part("Remove From Array", actionSet.CurrentObject, methodCall.ParameterValues[0])
                 });
             // Slice
@@ -173,10 +173,10 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "A copy of the array containing only values from a specified index range.",
                 ReturnType = this,
                 Parameters = new CodeParameter[] {
-                new CodeParameter("startIndex", "The first index of the range.", _supplier.Number()),
-                new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.", _supplier.Number())
-            },
-                Action = (actionSet, methodCall) => functionHandler.Slice(actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
+                    new CodeParameter("startIndex", "The first index of the range.", _supplier.Number()),
+                    new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.", _supplier.Number())
+                },
+                Action = (actionSet, methodCall) => GetFunctionHandler(actionSet).Slice(actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
             });
             // Index Of
             Func(new FuncMethodBuilder()
@@ -187,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value for which to search.", ArrayOfType)
                 },
-                Action = (actionSet, methodCall) => functionHandler.IndexOf(actionSet.CurrentObject, methodCall.ParameterValues[0])
+                Action = (actionSet, methodCall) => GetFunctionHandler(actionSet).IndexOf(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Modify Append
             Func(new FuncMethodBuilder()
@@ -241,6 +241,13 @@ namespace Deltin.Deltinteger.Parse
             });
 
             ArrayOfType.ArrayHandler.OverrideArray(this);
+        }
+
+        ArrayFunctionHandler GetFunctionHandler(ActionSet actionSet)
+        {
+            // In case the current object is an anonymous array, get the function handler of the real type.
+            // For non-anonymous arrays, this is the same thing as 'this.ArrayHandler.GetFunctionHandler()'
+            return ((ArrayType)this.GetRealType(actionSet.ThisTypeLinker)).ArrayHandler.GetFunctionHandler();
         }
 
         /// <summary>Creates a function and adds it to the scope.</summary>
