@@ -1,5 +1,5 @@
 $configuration = 'Release'
-$framework = 'netcoreapp3.0'
+$framework = 'net6.0'
 $ostw_version = 'v2.6'
 
 # Cross platform, no runtime included.
