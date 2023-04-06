@@ -6407,7 +6407,8 @@
         "Sojourn",
         "Junker Queen",
         "Kiriko",
-        "Ramattra"
+        "Ramattra",
+        "Lifeweaver"
       ]
     },
     "Hero": [
@@ -6427,6 +6428,7 @@
       "Junker Queen",
       "Junkrat",
       "Kiriko",
+      "Lifeweaver",
       {
         "name": "Lúcio",
         "alias": "Lucio"
