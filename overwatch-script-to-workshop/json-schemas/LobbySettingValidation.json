@@ -184,8 +184,8 @@
       "default": "1 Tank, 2 Offense, 2 Support",
       "type": "string",
       "enum": [
-        "Always Enabled",
         "1 Tank, 2 Offense, 2 Support",
+        "Always Enabled",
         "Disabled"
       ]
     },
