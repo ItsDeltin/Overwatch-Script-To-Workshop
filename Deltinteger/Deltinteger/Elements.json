@@ -3498,6 +3498,103 @@
       "return-value": "Last Created Entity"
     },
     {
+      "name": "Create Homing Projectile",
+      "documentation": "Create a projectile entity that either heals or damages players and player owned entities. The projectile follows the provided target with variable strength. This action will fail if too many entities have been created.",
+      "parameters": {
+        "Projectile Type": {
+          "documentation": "Type of projectile to be created. New options can be added to this list by enabling the Projectiles Workshop Extension.",
+          "type": "ProjectileType",
+          "defaultValue": "Orb Projectile"
+        },
+        "Player": {
+          "documentation": "The player who owns this projectile and will receive credit for kills. If null, the projectile will be owned by nobody. The projectile will not affect its owner.",
+          "type": "player",
+          "defaultValue": "Event Player"
+        },
+        "Start Position": {
+          "documentation": "The start position of the projectile. If null, the player's eye position will be used.",
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Direction": {
+          "documentation": "The direction for the projectile to travel. If null, the player's facing direction will be used.",
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Relative": {
+          "documentation": "Whether the projectile's start position and direction are relative to the player or to the world.",
+          "type": "Relative",
+          "defaultValue": "To World"
+        },
+        "Modify Health Type": {
+          "documentation": "Whether the projectile will heal or damage targets it collides with.",
+          "type": "ModifyHealthType",
+          "defaultValue": "Damage"
+        },
+        "Affected Team": {
+          "documentation": "Which team the projectile will collide with. The projectile will never affect its owner regardless of team.",
+          "type": "team",
+          "defaultValue": "Team"
+        },
+        "Amount": {
+          "documentation": "The amount of damage or healing the projectile will apply to targets it collides with. If explosion radius is set to an amount greater than 0, this is how much damage the explosion will do at its center.",
+          "type": "number",
+          "defaultValue": 50.0
+        },
+        "Amount Scalar": {
+          "documentation": "If explosion radius is set to 0 this is how much to scale the damage amount for critical hits. If the explosion radius is greater than 0 this is how much damage the projectile will do at the edge of the explosion.",
+          "type": "number",
+          "defaultValue": 1.0
+        },
+        "Explosion Radius": {
+          "documentation": "The radius of the explosion created by this projectile. If 0, this projectile doesn't create an explosion.",
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Explosion Effect": {
+          "documentation": "The effect to use when the projectile explodes. If explosion radius is 0 this effect will not be created.",
+          "type": "PlayEffect",
+          "defaultValue": "Bad Explosion"
+        },
+        "Explosion Sound Effect": {
+          "documentation": "The sound effect to use when the projectile explodes. If explosion radius is 0 this effect will not be created.",
+          "type": "PlayEffect",
+          "defaultValue": "Explosion Sound"
+        },
+        "Oversize": {
+          "documentation": "A 0 to 1 range for how oversized the projectile should be, 0 being the default size, 1 being the maximum allowed size. The maximum allowed size is different for each projectile type.",
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Speed": {
+          "documentation": "The speed in meters per second that the projectile will travel along its direction.",
+          "type": "number",
+          "defaultValue": 10.0
+        },
+        "Lifetime": {
+          "documentation": "How long in seconds before the projectile expires.",
+          "type": "number",
+          "defaultValue": 5.0
+        },
+        "Impulse": {
+          "documentation": "The impulse to apply to a target when hit by this projectile. If explosion radius greater than 0, this impulse will applied to all targets affected by the explosion.",
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Homing Target": {
+          "documentation": "The homing target for the projectile. If null, the projectile will travel in a straight line.",
+          "type": "player",
+          "defaultValue": null
+        },
+        "Homing Strength": {
+          "documentation": "A 0 to 1 value representing how strongly the projectile will follow its target and how easily it will lose its target. At 0, the projectile won't follow its target at all, at 1, it will follow its target aggressively and never lose it.",
+          "type": "number",
+          "defaultValue": 0.5
+        }
+      },
+      "alias": "CreateHomingProjectile"
+    },
+    {
       "name": "Create HUD Text",
       "alias": "CreateHudText",
       "documentation": "Creates HUD text visible to specific players at specific location on the screen. This text will persist until destroyed. To obtain a reference to this text, use the last text ID value. This action will fail if too many text elements have been created.",
@@ -3641,6 +3738,146 @@
       },
       "alias": "CreateInWorldText",
       "return-value": "Last Text ID"
+    },
+    {
+      "name": "Create Projectile",
+      "documentation": "Create a projectile that either heals or damages players and player owned entities. This action will fail if too many entities have been created.",
+      "parameters": {
+        "Projectile Type": {
+          "documentation": "Type of projectile to be created. New options can be added to this list by enabling the Projectiles Workshop Extension.",
+          "type": "ProjectileType",
+          "defaultValue": "Orb Projectile"
+        },
+        "Player": {
+          "documentation": "The player who owns this projectile and will receive credit for kills. If null, the projectile will be owned by nobody. The projectile will not affect its owner.",
+          "type": "player",
+          "defaultValue": "Event Player"
+        },
+        "Start Position": {
+          "documentation": "The start position of the projectile. If null, the player's eye position will be used.",
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Direction": {
+          "documentation": "The direction for the projectile to travel. If null, the player's facing direction will be used.",
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Relative": {
+          "documentation": "Whether the projectile's start position and direction are relative to the player or to the world.",
+          "type": "Relative",
+          "defaultValue": "To World"
+        },
+        "Modify Health Type": {
+          "documentation": "Whether the projectile will heal or damage targets it collides with.",
+          "type": "ModifyHealthType",
+          "defaultValue": "Damage"
+        },
+        "Affected Team": {
+          "documentation": "Which team the projectile will collide with. The projectile will never affect its owner regardless of team.",
+          "type": "team",
+          "defaultValue": "Team"
+        },
+        "Amount": {
+          "documentation": "The amount of damage or healing the projectile will apply to targets it collides with. If explosion radius is set to an amount greater than 0, this is how much damage the explosion will do at its center.",
+          "type": "number",
+          "defaultValue": 50.0
+        },
+        "Amount Scalar": {
+          "documentation": "If explosion radius is set to 0 this is how much to scale the damage amount for critical hits. If the explosion radius is greater than 0 this is how much damage the projectile will do at the edge of the explosion.",
+          "type": "number",
+          "defaultValue": 1.0
+        },
+        "Explosion Radius": {
+          "documentation": "The radius of the explosion created by this projectile. If 0, this projectile doesn't create an explosion.",
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Explosion Effect": {
+          "documentation": "The effect to use when the projectile explodes. If explosion radius is 0 this effect will not be created.",
+          "type": "PlayEffect",
+          "defaultValue": "Bad Explosion"
+        },
+        "Explosion Sound Effect": {
+          "documentation": "The sound effect to use when the projectile explodes. If explosion radius is 0 this effect will not be created.",
+          "type": "PlayEffect",
+          "defaultValue": "Explosion Sound"
+        },
+        "Oversize": {
+          "documentation": "A 0 to 1 range for how oversized the projectile should be, 0 being the default size, 1 being the maximum allowed size. The maximum allowed size is different for each projectile type.",
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Speed": {
+          "documentation": "The speed in meters per second that the projectile will travel along its direction.",
+          "type": "number",
+          "defaultValue": 10.0
+        },
+        "Lifetime": {
+          "documentation": "How long in seconds before the projectile expires.",
+          "type": "number",
+          "defaultValue": 5.0
+        },
+        "Impulse": {
+          "documentation": "The impulse to apply to a target when hit by this projectile. If explosion radius greater than 0, this impulse will applied to all targets affected by the explosion.",
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Ricochet Count": {
+          "documentation": "How many times the projectile will ricochet off the environment before expiring.",
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Gravity": {
+          "documentation": "The amount of gravity affecting the projectile, creating an arc. If negative, the projectile will arc upwards.",
+          "type": "number",
+          "defaultValue": 0.0
+        }
+      },
+      "alias": "CreateProjectile"
+    },
+    {
+      "name": "Create Projectile Effect",
+      "documentation": "Creates an in-world projectile effect entity. This effect entity will persist until destroyed. To obtain a reference to this entity, use the Last Created Entity value. This action will fail if too many entities have been created.",
+      "parameters": {
+        "Visible To": {
+          "documentation": "One or more players who will be able to see the effect.",
+          "type": "players",
+          "defaultValue": "All Players"
+        },
+        "Projectile Type": {
+          "documentation": "Type of projectile to be created. New options can be added to this list by enabling the Projectiles Workshop Extension.",
+          "type": "ProjectileType",
+          "defaultValue": "Orb Projectile"
+        },
+        "Friendly To": {
+          "documentation": "One or more players who the projectile will appear friendly to.",
+          "type": "players",
+          "defaultValue": null
+        },
+        "Position": {
+          "documentation": "The position of the effect.",
+          "type": "player | vector",
+          "defaultValue": "Event Player"
+        },
+        "Direction": {
+          "documentation": "The facing direction of the effect.",
+          "type": "vector",
+          "defaultValue": "Vector"
+        },
+        "Oversize": {
+          "documentation": "A 0 to 1 range for how oversized the projectile should be, 0 being the default size, 1 being the maximum allowed size. The maximum allowed size is different for each projectile type.",
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Reevaluation": {
+          "documentation": "Specifies which of this action's inputs will be continuously reevaluated. The effect will keep asking for and using new values from reevaluated inputs.",
+          "type": "ProjectileEffectReeval",
+          "defaultValue": "Visible To, Position, Direction and Size"
+        }
+      },
+      "alias": "CreateProjectileEffect",
+      "return-value": "Last Created Entity"
     },
     {
       "name": "Damage",
@@ -7033,6 +7270,39 @@
       "Winston Tesla Cannon Beam",
       "Zarya Particle Beam",
       "Omnic Slicer Beam"
+    ],
+    "ProjectileType": [
+      "Orb Projectile",
+      "Baptiste Biotic Launcher",
+      "Bastion A-36 Tactical Grenade",
+      "Echo Sticky Bomb",
+      "Genji Shuriken",
+      "Lucio Sonic Amplifier",
+      "Mei Icicle",
+      "Mercy Caduceus Blaster",
+      "Moira Damage Orb",
+      "Moira Heal Orb",
+      "Orisa Fusion Driver",
+      "Pharah Rocket",
+      "Reinhardt Fire Strike",
+      "Roadhog Scrap",
+      "Roadhog Scrap Ball",
+      "Sigma Hypersphere",
+      "Symmetra Photon Projector",
+      "Ramattra Ravenous Vortex Sphere",
+      "Zarya Graviton",
+      "Zarya Particle Cannon"
+    ],
+    "ModifyHealthType": ["Damage", "Heal"],
+    "ProjectileEffectReeval": [
+      "Visible To, Position, Direction and Size",
+      "Position, Direction And Size",
+      "Visible To",
+      "None",
+      "Visible To, Friendly To, Position, Direction And Size",
+      "Friendly To, Position, Direction And Size",
+      "Visible To, Friendly To",
+      "Friendly To"
     ],
     "Spectators": ["Default Visibility", "Visible Always", "Visible Never"],
     "ThrottleBehavior": [
