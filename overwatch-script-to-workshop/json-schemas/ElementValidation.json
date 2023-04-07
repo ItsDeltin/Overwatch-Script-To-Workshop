@@ -172,6 +172,7 @@
                 "player",
                 "player[]",
                 "player | player[]",
+                "players",
                 "player | vector",
                 "number",
                 "string",
