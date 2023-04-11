@@ -3643,6 +3643,193 @@
       "return-value": "Last Text ID"
     },
     {
+      "name": "Create Projectile",
+      "parameters": {
+        "Projectile Type": {
+          "type": "ProjectileType",
+          "defaultValue": "Orb Projectile"
+        },
+        "Player": {
+          "type": "player",
+          "defaultValue": "Event Player"
+        },
+        "Start Position": {
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Direction": {
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Relative": {
+          "type": "Relative",
+          "defaultValue": "To World"
+        },
+        "Modify Health Type": {
+          "type": "ModifyHealthType",
+          "defaultValue": "Damage"
+        },
+        "Affected Team": {
+          "type": "Team",
+          "defaultValue": "All"
+        },
+        "Amount": {
+          "type": "number",
+          "defaultValue": 50.0
+        },
+        "Amount Scalar": {
+          "type": "number",
+          "defaultValue": 1.0
+        },
+        "Explosion Radius": {
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Explosion Effect": {
+          "type": "PlayEffect",
+          "defaultValue": "Bad Explosion"
+        },
+        "Explosion Sound Effect": {
+          "type": "PlayEffect",
+          "defaultValue": "Explosion Sound"
+        },
+        "Oversize": {
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Speed": {
+          "type": "number",
+          "defaultValue": 10.0
+        },
+        "Lifetime": {
+          "type": "number",
+          "defaultValue": 5.0
+        },
+        "Impulse": {
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Ricochet Count": {
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Gravity": {
+          "type": "number",
+          "defaultValue": 0.0
+        }
+      }
+    },
+    {
+      "name": "Create Homing Projectile",
+      "parameters": {
+        "Projectile Type": {
+          "type": "ProjectileType",
+          "defaultValue": "Orb Projectile"
+        },
+        "Player": {
+          "type": "player",
+          "defaultValue": "Event Player"
+        },
+        "Start Position": {
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Direction": {
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Relative": {
+          "type": "Relative",
+          "defaultValue": "To World"
+        },
+        "Modify Health Type": {
+          "type": "ModifyHealthType",
+          "defaultValue": "Damage"
+        },
+        "Affected Team": {
+          "type": "Team",
+          "defaultValue": "All"
+        },
+        "Amount": {
+          "type": "number",
+          "defaultValue": 50.0
+        },
+        "Amount Scalar": {
+          "type": "number",
+          "defaultValue": 1.0
+        },
+        "Explosion Radius": {
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Explosion Effect": {
+          "type": "PlayEffect",
+          "defaultValue": "Bad Explosion"
+        },
+        "Explosion Sound Effect": {
+          "type": "PlayEffect",
+          "defaultValue": "Explosion Sound"
+        },
+        "Oversize": {
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Speed": {
+          "type": "number",
+          "defaultValue": 10.0
+        },
+        "Lifetime": {
+          "type": "number",
+          "defaultValue": 5.0
+        },
+        "Impulse": {
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Homing Target": {
+          "type": "player",
+          "defaultValue": null
+        },
+        "Homing Strength": {
+          "type": "number",
+          "defaultValue": 0.5
+        }
+      }
+    },
+    {
+      "name": "Create Projectile Effect",
+      "parameters": {
+        "Visible To": {
+          "type": "players",
+          "defaultValue": "All Players"
+        },
+        "Projectile Type": {
+          "type": "ProjectileType",
+          "defaultValue": "Orb Projectile"
+        },
+        "Friendly To": {
+          "type": "players",
+          "defaultValue": null
+        },
+        "Position": {
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Direction": {
+          "type": "vector",
+          "defaultValue": null
+        },
+        "Oversize": {
+          "type": "number",
+          "defaultValue": 0.0
+        },
+        "Reevaluation": {
+          "type": "ProjectileReevaluation",
+          "defaultValue": "Visible To, Position, Direction and Size"
+        }
+      }
+    },
+    {
       "name": "Damage",
       "documentation": "Applies instantaneous damage to one or more players, possibly killing the players.",
       "parameters": {
@@ -6819,6 +7006,42 @@
       "Visible To",
       "Visible To And Color",
       "None"
+    ],
+    "ProjectileType": [
+      "Orb Projectile",
+      "Baptiste Biotic Launcher",
+      "Bastion A-36 Tactical Grenade",
+      "Echo Sticky Bomb",
+      "Genji Shuriken",
+      "Lucio Sonic Amplifier",
+      "Mei Icicle",
+      "Mercy Caduceus Blaster",
+      "Moira Damage Orb",
+      "Moira Heal Orb",
+      "Orisa Fusion Driver",
+      "Pharah Rocket",
+      "Reinhardt Fire Strike",
+      "Roadhog Scrap",
+      "Roadhog Scrap Ball",
+      "Sigma Hypersphere",
+      "Symmetra Photon Projector",
+      "Ramattra Ravenous Vortex Sphere",
+      "Zarya Graviton",
+      "Zarya Particle Cannon"
+    ],
+    "ModifyHealthType": [
+      "Damage",
+      "Heal"
+    ],
+    "ProjectileReevaluation": [
+      "Visible To, Position, Direction and Size",
+      "Position, Direction And Size",
+      "Visible To",
+      "None",
+      "Visible To, Friendly To, Position, Direction And Size",
+      "Friendly To, Position, Direction And Size",
+      "Visible To, Friendly To",
+      "Friendly To"
     ],
     "PlayEffect": [
       "Good Explosion",
