@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Junker Queen", PlayerSelector.JunkerQueen),
             ("Junkrat", PlayerSelector.Junkrat),
             ("Kiriko", PlayerSelector.Kiriko),
+            ("Lifeweaver", PlayerSelector.Lifeweaver),
             ("Lúcio", PlayerSelector.Lucio),
             ("McCree", PlayerSelector.Cassidy),
             ("Mei", PlayerSelector.Mei),
