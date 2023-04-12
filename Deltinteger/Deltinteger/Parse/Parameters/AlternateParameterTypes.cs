@@ -309,4 +309,21 @@ namespace Deltin.Deltinteger.Parse
             return Cache.FileIdentifier<T>.FromFile(parseInfo.Script.Document.Cache, path, factory);
         }
     }
+
+    class TextFileParameter : FileParameter
+    {
+        public TextFileParameter(string parameterName, string description, ITypeSupplier typeSupplier, params string[] fileTypes) : base(parameterName, description, typeSupplier, fileTypes)
+        {
+        }
+
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
+        {
+            string filepath = base.Validate(parseInfo, value, valueRange, additionalData) as string;
+
+            if (filepath == null)
+                return null;
+
+            return GetFile(parseInfo, filepath, uri => new TextFile(uri)).Content;
+        }
+    }
 }

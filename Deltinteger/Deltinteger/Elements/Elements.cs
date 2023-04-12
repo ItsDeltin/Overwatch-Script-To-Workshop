@@ -56,14 +56,18 @@ namespace Deltin.Deltinteger.Elements
             }
         }
 
-        protected void ParametersToWorkshop(WorkshopBuilder b)
+        protected void ParametersToWorkshop(WorkshopBuilder b, bool omitNull = false)
         {
-            for (int i = 0; i < ParameterValues.Length; i++)
+            int end = !omitNull ? ParameterValues.Length : IndexOfLastNotNullParameter() + 1;
+            for (int i = 0; i < end; i++)
             {
                 ParameterValues[i].ToWorkshop(b, ToWorkshopContext.NestedValue);
-                if (i != ParameterValues.Length - 1) b.Append(", ");
+                if (i != end - 1) b.Append(", ");
             }
         }
+
+        /// <summary>Gets the index of the last parameter that is not Null. -1 is returned if every parameter is Null.</summary>
+        protected int IndexOfLastNotNullParameter() => Array.FindLastIndex(ParameterValues, p => p is Element element && element.Function.Name != "Null");
 
         /// <summary>Makes sure no parameter values are null.</summary>
         private void AddMissingParameters()
@@ -263,6 +267,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element SkipIf(Element condition, Element count) => Element.Part("Skip If", condition, count);
         public static Element ForGlobalVariable(WorkshopVariable variable, Element start, Element end, Element step) => Element.Part("For Global Variable", variable, start, end, step);
         public static Element ForPlayerVariable(Element player, WorkshopVariable variable, Element start, Element end, Element step) => Element.Part("For Player Variable", player, variable, start, end, step);
+        public static Element LogToInspector(IWorkshopTree value) => Element.Part("Log To Inspector", value);
 
         public static Element Hud(
             IWorkshopTree players = null,

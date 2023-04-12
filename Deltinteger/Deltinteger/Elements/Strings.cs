@@ -22,10 +22,10 @@ namespace Deltin.Deltinteger.Elements
             b.AppendKeyword(Localized ? "String" : "Custom String");
             b.Append("(\"" + (Localized ? b.Kw(Value) : Value) + "\"");
 
-            if (ParameterValues.Length > 0)
+            if (ParameterValues.Length > 0 && IndexOfLastNotNullParameter() != -1)
             {
                 b.Append(", ");
-                ParametersToWorkshop(b);
+                ParametersToWorkshop(b, true);
             }
 
             b.Append(")");

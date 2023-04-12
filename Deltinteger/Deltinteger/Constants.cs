@@ -15,6 +15,8 @@ namespace Deltin.Deltinteger
         public const double MINIMUM_WAIT = 0.016;
         public const int NUMBER_OF_VARIABLES = 128;
         public const int MAX_VARIABLE_NAME_LENGTH = 32;
+        public const int MAX_STRING_STUB_BYTE_LENGTH = 128;
+        public const int MAX_STRING_TOTAL_BYTE_LENGTH = 511;
 
         public const int RULE_NAME_MAX_LENGTH = 128;
 

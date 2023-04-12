@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Cache
             Update();
         }
 
-        public string GetContent()
+        protected string GetContent()
         {
             using (FileStream stream = GetStream())
             {
@@ -74,5 +74,19 @@ namespace Deltin.Deltinteger.Cache
         }
 
         protected abstract void Update();
+    }
+
+    class TextFile : LoadedFile
+    {
+        public string Content { get; private set; }
+
+        public TextFile(Uri uri) : base(uri)
+        {
+        }
+
+        protected override void Update()
+        {
+            Content = GetContent();
+        }
     }
 }
