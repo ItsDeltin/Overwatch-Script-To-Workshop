@@ -3873,7 +3873,7 @@
         "Reevaluation": {
           "documentation": "Specifies which of this action's inputs will be continuously reevaluated. The effect will keep asking for and using new values from reevaluated inputs.",
           "type": "ProjectileEffectReeval",
-          "defaultValue": "Visible To, Position, Direction and Size"
+          "defaultValue": "Visible To Position Direction and Size"
         }
       },
       "alias": "CreateProjectileEffect",
