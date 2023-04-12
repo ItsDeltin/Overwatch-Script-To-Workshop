@@ -77,7 +77,8 @@ namespace Deltin.Deltinteger.Elements
         Sojourn,
         JunkerQueen,
         Kiriko,
-        Ramattra
+        Ramattra,
+        Lifeweaver
     }
 
     public enum Team
