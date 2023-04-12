@@ -7357,6 +7357,11 @@
           "default": false,
           "type": "boolean"
         },
+        "Projectiles": {
+          "description": "The 'Projectiles' extension costs 4 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
         "Spawn More Dummy Bots": {
           "description": "The 'Spawn More Dummy Bots' extension costs 2 extension points.",
           "default": false,
