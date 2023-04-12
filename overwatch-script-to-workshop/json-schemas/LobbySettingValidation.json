@@ -1272,6 +1272,11 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Self Destruct Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 200.0
+    },
     "Micro Missiles": {
       "default": true,
       "type": "boolean"
@@ -3565,6 +3570,9 @@
             },
             "Infinite Ultimate Duration": {
               "$ref": "#/definitions/Infinite Ultimate Duration"
+            },
+            "Self Destruct Knockback Scalar": {
+              "$ref": "#/definitions/Self Destruct Knockback Scalar"
             },
             "Micro Missiles": {
               "$ref": "#/definitions/Micro Missiles"
