@@ -13,21 +13,25 @@ static class WorkshopStringUtility
     /// <param name="value">The input string that will be segmented and chunked.</param>
     /// <param name="splitHead">An optional value that is appended to the end of each 511 byte segments.</param>
     /// <param name="splitTail">An optional value that is prepended to the start of each 511 byte segments.</param>
+    /// <param name="stringCharacters">An optional value that contains the characters used to start/end strings.
+    /// Stubs will not be split mid string.</param>
     /// <returns>A 2d string where the first dimension is the 511 byte segments and the second dimension is the
     /// 128 byte chunks.</returns>
-    public static string[][] ChunkSplit(string value, string splitHead, string splitTail)
+    public static string[][] ChunkSplit(string value, string splitHead, string splitTail, char[] stringCharacters)
     {
         // Escape the input string. Reconsider this if the value may be provided with something already escaped.
         value = value.Replace("\"", "\\\"");
         // Ensure parameters are not null.
         splitHead = splitHead ?? string.Empty;
         splitTail = splitTail ?? string.Empty;
+        stringCharacters = stringCharacters ?? new char[0];
 
         var total = new List<List<string>>(); // 511 byte chunks
         var stubs = new List<string>(); // 128 byte stubs
         var currentStub = string.Empty;
         var validStub = string.Empty;
         string lastValidDecoratedStub = null;
+        char? currentStringCharacter = null;
 
         for (int i = 0; i < value.Length; i++)
         {
@@ -37,8 +41,20 @@ static class WorkshopStringUtility
 
             currentStub += value[i];
             validStub += value[i];
-            var currentStubWithDecorations = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub);
+
+            // Enter/exit string
+            if (stringCharacters.Contains(value[i]))
+            {
+                // Not in string
+                if (currentStringCharacter == null)
+                    currentStringCharacter = value[i];
+                // In string, if terminator matches the character that started the string then exit the string.
+                else if (value[i] == currentStringCharacter)
+                    currentStringCharacter = null;
+            }
+
             // The workshop uses UTF8 encoding.
+            var currentStubWithDecorations = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub);
             var currentStubLength = Encoding.UTF8.GetByteCount(currentStubWithDecorations);
 
             // In theory this should be MAX_STRING_STUB_BYTE_LENGTH or MAX_STRING_STUB_BYTE_LENGTH - 1 if isLastStub,
@@ -62,7 +78,9 @@ static class WorkshopStringUtility
                     stubs = new List<string>();
                 }
             }
-            else if (char.IsWhiteSpace(value[i]) || i == value.Length - 1)
+            // Only split stubs if the current character is whitespace and we are not currently in a string.
+            // Or if this is the last character run the block so that the remaining content gets added.
+            else if ((char.IsWhiteSpace(value[i]) && currentStringCharacter == null) || i == value.Length - 1)
             {
                 lastValidDecoratedStub = currentStubWithDecorations;
                 validStub = string.Empty;
