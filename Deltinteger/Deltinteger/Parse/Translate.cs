@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
         {
             FileGetter = translateSettings.FileGetter;
             Diagnostics = translateSettings.Diagnostics;
-            Settings = translateSettings.Settings;
+            Settings = translateSettings.Settings ?? ProjectSettings.Default;
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
