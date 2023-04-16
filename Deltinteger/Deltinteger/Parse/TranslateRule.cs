@@ -147,6 +147,8 @@ namespace Deltin.Deltinteger.Parse
         public ActionComment CommentNext { get; private set; }
         public InstanceAnonymousTypeLinker ThisTypeLinker { get; private set; }
         public RecursiveVariableTracker RecursiveVariableTracker { get; private set; }
+        public IContinueContainer ContinueHandler { get; private set; }
+        public IBreakContainer BreakHandler { get; private set; }
 
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
@@ -180,6 +182,8 @@ namespace Deltin.Deltinteger.Parse
             CommentNext = other.CommentNext;
             ThisTypeLinker = other.ThisTypeLinker;
             RecursiveVariableTracker = other.RecursiveVariableTracker;
+            ContinueHandler = other.ContinueHandler;
+            BreakHandler = other.BreakHandler;
         }
 
         public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this)
@@ -215,6 +219,13 @@ namespace Deltin.Deltinteger.Parse
             return clone;
         }
         public ActionSet AddRecursiveVariableTracker() => new ActionSet(this) { RecursiveVariableTracker = new RecursiveVariableTracker(this, RecursiveVariableTracker) };
+        public ActionSet SetContinueHandler(IContinueContainer continueHandler) => new ActionSet(this) { ContinueHandler = continueHandler };
+        public ActionSet SetBreakHandler(IBreakContainer breakHandler) => new ActionSet(this) { BreakHandler = breakHandler };
+        public ActionSet SetLoop<T>(T continueAndBreakHandler) where T : IContinueContainer, IBreakContainer => new ActionSet(this)
+        {
+            ContinueHandler = continueAndBreakHandler,
+            BreakHandler = continueAndBreakHandler
+        };
 
         public void AddAction(string comment, params IWorkshopTree[] actions)
         {

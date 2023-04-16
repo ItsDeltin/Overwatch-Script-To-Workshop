@@ -13,8 +13,8 @@ namespace Deltin.Deltinteger.Parse
         public DeltinScript TranslateInfo { get; }
 
         public CallInfo CurrentCallInfo { get; private set; }
-        public IBreakContainer BreakHandler { get; private set; }
-        public IContinueContainer ContinueHandler { get; private set; }
+        public bool BreaksAllowed { get; private set; }
+        public bool ContinuesAllowed { get; private set; }
         public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
         public ExpectingLambdaInfo ExpectingLambda { get; private set; }
         public ITreeContextPart SourceExpression { get; private set; }
@@ -48,8 +48,8 @@ namespace Deltin.Deltinteger.Parse
             Script = other.Script;
             TranslateInfo = other.TranslateInfo;
             CurrentCallInfo = other.CurrentCallInfo;
-            BreakHandler = other.BreakHandler;
-            ContinueHandler = other.ContinueHandler;
+            BreaksAllowed = other.BreaksAllowed;
+            ContinuesAllowed = other.ContinuesAllowed;
             RestrictedCallHandler = other.RestrictedCallHandler;
             ExpectingLambda = other.ExpectingLambda;
             SourceExpression = other.SourceExpression;
@@ -65,9 +65,9 @@ namespace Deltin.Deltinteger.Parse
             AsyncInfo = other.AsyncInfo;
         }
         public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo, RestrictedCallHandler = currentCallInfo };
-        public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { BreakHandler = loop, ContinueHandler = loop };
-        public ParseInfo SetBreakHandler(IBreakContainer handler) => new ParseInfo(this) { BreakHandler = handler };
-        public ParseInfo SetContinueHandler(IContinueContainer handler) => new ParseInfo(this) { ContinueHandler = handler };
+        public ParseInfo SetLoopAllowed(bool allowed) => new ParseInfo(this) { BreaksAllowed = allowed, ContinuesAllowed = allowed };
+        public ParseInfo SetBreaksAllowed(bool allowed) => new ParseInfo(this) { BreaksAllowed = allowed };
+        public ParseInfo SetContinuesAllowed(bool allowed) => new ParseInfo(this) { ContinuesAllowed = allowed };
         public ParseInfo SetSourceExpression(ITreeContextPart treePart) => new ParseInfo(this) { SourceExpression = treePart };
         public ParseInfo SetRestrictedCallHandler(IRestrictedCallHandler callHandler) => new ParseInfo(this) { RestrictedCallHandler = callHandler };
         public ParseInfo AddVariableTracker(IVariableTracker variableTracker)
