@@ -289,6 +289,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.SquareBracket_Open:
                 case TokenType.CurlyBracket_Open:
                 case TokenType.Async:
+                case TokenType.Import:
                 // Unary
                 case TokenType.Subtract:
                 case TokenType.Exclamation:
@@ -411,6 +412,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Single:
                 case TokenType.Const:
                 case TokenType.Persist:
+                case TokenType.Json:
                     return true;
 
                 default:
@@ -523,6 +525,7 @@ namespace Deltin.Deltinteger.Compiler
         Type,
         Single,
         Const,
+        Json,
         // Attributes
         Public,
         Private,

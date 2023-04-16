@@ -716,6 +716,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
+    public class ImportJsonSyntax : Node, IParseExpression
+    {
+        public Token File { get; }
+
+        public ImportJsonSyntax(Token file)
+        {
+            File = file;
+        }
+    }
+
     // Statements
     public class ExpressionStatement : Node, IParseStatement
     {
