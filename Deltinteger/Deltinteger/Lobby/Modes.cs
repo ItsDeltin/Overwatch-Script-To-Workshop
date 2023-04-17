@@ -302,7 +302,7 @@ namespace Deltin.Deltinteger.Lobby
             // Add the map schema to the list of definitions.
             generate.Definitions.Add(ModeName + " Maps", maps);
 
-            // Add the map schema reference to the current schema. 
+            // Add the map schema reference to the current schema.
             schema.Properties.Add("Enabled Maps", GetMapReference("An array of enabled maps for the '" + ModeName + "' mode."));
             schema.Properties.Add("Disabled Maps", GetMapReference("An array of disabled maps for the '" + ModeName + "' mode."));
 
@@ -347,7 +347,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (var modeCollection in AllModeSettings)
                 foreach (var setting in modeCollection)
                     // Make sure that the setting is not inside the 'ignored' array.
-                    // 'encountered' will return false if the key was already added to the HashSet. In this case, we can just 
+                    // 'encountered' will return false if the key was already added to the HashSet. In this case, we can just
                     if (!ignore.Contains(setting) && !encountered.Add(setting.ReferenceName))
                         reoccurring.Add(setting);
 
