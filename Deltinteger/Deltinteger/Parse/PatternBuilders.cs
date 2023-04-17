@@ -217,4 +217,30 @@ namespace Deltin.Deltinteger.Parse
         OnCase,
         Finished
     }
+
+    public struct IfBuilder
+    {
+        readonly ActionSet actionSet;
+
+        private IfBuilder(ActionSet actionSet) => this.actionSet = actionSet;
+
+        public static IfBuilder If(ActionSet actionSet, Element condition, Action addBlock)
+        {
+            actionSet.AddAction(Element.If(condition));
+            addBlock();
+            return new IfBuilder(actionSet);
+        }
+
+        public IfBuilder Else(Action addBlock)
+        {
+            actionSet.AddAction(Element.Else());
+            addBlock();
+            return this;
+        }
+
+        public void Ok()
+        {
+            actionSet.AddAction(Element.End());
+        }
+    }
 }

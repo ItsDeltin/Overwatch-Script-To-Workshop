@@ -5,18 +5,13 @@ namespace Deltin.Deltinteger.Parse.Settings
 {
     public class ProjectSettings
     {
-        public string EntryPoint { get; set; }
-        public CompileSettings Compile { get; set; }
-        public bool ResetNonpersistent { get; set; }
-        public bool PasteCheckIsExtended { get; set; }
+        public string EntryPoint { get; set; } = null;
+        public CompileSettings Compile { get; set; } = default(CompileSettings);
+        public bool ResetNonpersistent { get; set; } = false;
+        public bool PasteCheckIsExtended { get; set; } = false;
+        public bool LogDeleteReferenceZero { get; set; } = true;
 
-        public static readonly ProjectSettings Default = new ProjectSettings()
-        {
-            EntryPoint = null,
-            Compile = default(CompileSettings),
-            ResetNonpersistent = false,
-            PasteCheckIsExtended = false
-        };
+        public static readonly ProjectSettings Default = new ProjectSettings();
     }
 
     public struct CompileSettings

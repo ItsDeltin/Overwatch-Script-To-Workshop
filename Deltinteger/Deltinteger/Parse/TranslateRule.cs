@@ -263,6 +263,10 @@ namespace Deltin.Deltinteger.Parse
             if (IsGlobal) return Translate.DeltinScript.InitialGlobal.ActionSet;
             else return Translate.DeltinScript.InitialPlayer.ActionSet;
         }
+
+        public void Log(Element content) => AddAction(Element.Part("Log To Inspector", content));
+
+        public void Log(string text) => Log(new StringElement(text));
     }
 
     public interface IActionList

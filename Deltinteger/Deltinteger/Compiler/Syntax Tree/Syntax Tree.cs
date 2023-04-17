@@ -981,11 +981,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class Delete : Node, IParseStatement
     {
+        public Token DeleteToken { get; }
         public IParseExpression Deleting { get; }
         public MetaComment Comment { get; set; }
 
-        public Delete(IParseExpression deleting)
+        public Delete(Token deleteToken, IParseExpression deleting)
         {
+            DeleteToken = deleteToken;
             Deleting = deleting;
         }
     }

@@ -1116,13 +1116,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
         Delete ParseDelete()
         {
             StartNode();
-            ParseExpected(TokenType.Delete);
+            var delete = ParseExpected(TokenType.Delete);
 
             // Get the expression
             var expression = GetContainExpression();
 
             ParseExpected(TokenType.Semicolon);
-            return EndNode(new Delete(expression));
+            return EndNode(new Delete(delete, expression));
         }
 
         IParseType ParseType()

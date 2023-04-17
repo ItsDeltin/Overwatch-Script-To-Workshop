@@ -264,6 +264,12 @@ namespace Deltin.Deltinteger.Parse
         }.ClearTail().ClearHead().ClearTargetted();
 
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
+
+        public string WorkshopLogRange(DocRange range)
+        {
+            var fileName = System.IO.Path.GetFileName(this.Script.Document.Uri.LocalPath);
+            return " in '" + fileName + "' at line " + range.Start.Line;
+        }
     }
 
     public class VariableApply
