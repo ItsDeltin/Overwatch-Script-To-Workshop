@@ -158,10 +158,10 @@
       ]
     },
     "Limit Roles": {
-      "default": "1 Tank, 2 Offense, 2 Support",
+      "default": "1 Tank 2 Offense 2 Support",
       "type": "string",
       "enum": [
-        "1 Tank, 2 Offense, 2 Support",
+        "1 Tank 2 Offense 2 Support",
         "Off",
         "2 Of Each Role Per Team"
       ]
@@ -182,10 +182,10 @@
       "maximum": 100.0
     },
     "Tank Role Passive Health Bonus": {
-      "default": "1 Tank, 2 Offense, 2 Support",
+      "default": "1 Tank 2 Offense 2 Support",
       "type": "string",
       "enum": [
-        "1 Tank, 2 Offense, 2 Support",
+        "1 Tank 2 Offense 2 Support",
         "Always Enabled",
         "Disabled"
       ]
