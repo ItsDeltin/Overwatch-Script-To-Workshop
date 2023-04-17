@@ -195,7 +195,7 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Spawn Health Packs", "Determined By Mode", "Enabled", "Disabled"),
             new SwitchValue("Allow Hero Switching", true),
             new SelectValue("Hero Limit", "1 Per Team", "2 Per Team", "1 Per Game", "2 Per Game", "Off"),
-            new SelectValue("Limit Roles", "2 Of Each Role Per Team", "Off"),
+            new SelectValue("Limit Roles", "1 Tank, 2 Offense, 2 Support", "Off", "2 Of Each Role Per Team"),
             new SwitchValue("Respawn As Random Hero", false),
             new RangeValue(true, false, "Random Hero Role Limit Per Team", 1, 6, 6),
             new RangeValue(false, true, "Respawn Time Scalar", 0, 100),
