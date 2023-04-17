@@ -7167,7 +7167,7 @@
       "Widowmaker Venom Mine Explosion Sound",
       "Winston Jump Pack Landing Sound",
       "Wrecking Ball Piledriver Impact Sound",
-      "Wrecking Ball Piledriver Impact Sound",
+      "Wrecking Ball Minefield Explosion Sound",
       "Zarya Particle Cannon Explosion Sound"
     ],
     "InvisibleTo": ["All", "Enemies", "None"],
