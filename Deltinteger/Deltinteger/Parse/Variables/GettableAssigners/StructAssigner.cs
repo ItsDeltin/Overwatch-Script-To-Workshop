@@ -66,13 +66,20 @@ namespace Deltin.Deltinteger.Parse
 
         public IGettable AssignClassStacks(GetClassStacks info)
         {
+            if (_attributes.StoreType == StoreType.None)
+                return null;
+
             int offset = info.StackOffset;
             var values = new Dictionary<string, IGettable>();
             foreach (var var in _variables)
             {
                 var assigner = var.GetAssigner();
-                values.Add(var.Name, assigner.AssignClassStacks(new GetClassStacks(info.ClassData, offset)));
-                offset += assigner.StackDelta();
+                var stack = assigner.AssignClassStacks(new GetClassStacks(info.ClassData, offset));
+                if (stack != null)
+                {
+                    values.Add(var.Name, stack);
+                    offset += assigner.StackDelta();
+                }
             }
 
             return new StructAssignerValue(values);
@@ -80,6 +87,9 @@ namespace Deltin.Deltinteger.Parse
 
         public int StackDelta()
         {
+            if (_attributes.StoreType == StoreType.None)
+                return 0;
+
             int delta = 0;
             for (int i = 0; i < _variables.Length; i++)
                 delta += _variables[i].GetAssigner().StackDelta();

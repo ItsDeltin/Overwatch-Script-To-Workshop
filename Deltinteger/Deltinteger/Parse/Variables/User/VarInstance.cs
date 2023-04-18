@@ -57,7 +57,12 @@ namespace Deltin.Deltinteger.Parse
             if (!Var.IsMacro)
                 return actionSet.IndexAssigner.Get(Var).GetVariable();
             else
-                return ToMacro(actionSet);
+            {
+                if (actionSet.IndexAssigner.TryGet(Var, out IGettable gettable))
+                    return gettable.GetVariable();
+                else
+                    return ToMacro(actionSet);
+            }
         }
 
         IWorkshopTree ToMacro(ActionSet actionSet)
@@ -68,7 +73,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the class relation.
             if (_definedIn != null)
             {
-                var relation = actionSet.ToWorkshop.ClassInitializer.RelationFromClassType((ClassType)_definedIn);
+                var relation = actionSet.ToWorkshop.ClassInitializer.RelationFromClassType((ClassType)_definedIn.GetRealType(actionSet.ThisTypeLinker));
 
                 // Extract the virtual functions.
                 allMacros.AddRange(relation.ExtractOverridenElements<VariableInstance>(extender => extender.Name == Name)
