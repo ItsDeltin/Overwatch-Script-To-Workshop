@@ -4,7 +4,7 @@
 <img src="https://i.imgur.com/hFdmeew.png" alt="" height="350"/>
 </center>
 
-Create a scipt that will be converted to an Overwatch Workshop.
+Create a script that will be converted to an Overwatch Workshop.
 
 [Wiki](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki)
 

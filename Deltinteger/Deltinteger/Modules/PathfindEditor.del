@@ -37,7 +37,7 @@ rule: "Commands" -1
     CreateHudText(CurrentMode == Mode.Place ? AllPlayers() : null, Text: <"Connect selected nodes → <0>\nDisconnect all selected nodes → <1>+<0>", inpStr(Button.Ability2), inpStr(Button.Crouch)>, TextColor: Color.Green, Location: Location.Left, SortOrder: 9);
     CreateHudText(CurrentMode == Mode.Place ? AllPlayers() : null, Text: <"Cycle Connect Type → <0>", inpStr(Button.Reload)>, TextColor: Color.Orange, Location: Location.Left, SortOrder: 10);
     CreateHudText(CurrentMode == Mode.Attribute ? AllPlayers() : null, Text: <"Increase Attribute Value → <0>\nDecrease Attribute Value → <1>+<0>", inpStr(Button.Reload), inpStr(Button.Crouch)>, TextColor: Color.Orange, Location: Location.Left, SortOrder: 10);
-    CreateHudText(AllPlayers(), Text: "Compile Pathmap → Acknowledge", TextColor: Color.Turquoise, Location: Location.Left, SortOrder: 11);
+    CreateHudText(AllPlayers(), Text: <"Compile Pathmap → <0>", inpStr(Button.Ultimate)>, TextColor: Color.Turquoise, Location: Location.Left, SortOrder: 11);
 
     // Top huds
     CreateHudText(
@@ -124,7 +124,7 @@ Button b_placeNode: Button.PrimaryFire;
 Button b_selectNode: Button.SecondaryFire;
 Button b_connectNodes: Button.Ability2;
 Button b_placeModeAndAttribute: Button.Reload;
-Communication b_compile: Communication.Acknowledge;
+Button b_compile: Button.Ultimate;
 
 rule: "Create Scoper"
 {
@@ -518,7 +518,7 @@ if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlay
 
 rule: "Compile"
 Event.OngoingPlayer
-if (IsCommunicating(EventPlayer(), b_compile))
+if (IsButtonHeld(EventPlayer(), b_compile))
 {
     compiling = true;
     SmallMessage(AllPlayers(), "Compiling...");

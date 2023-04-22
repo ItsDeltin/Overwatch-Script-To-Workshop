@@ -165,7 +165,7 @@ const action: Pattern = {
             name: 'keyword.operator.assignment'
         }
     ]
-};  
+};
 
 const expression: Pattern = {
     name: 'meta.expr',

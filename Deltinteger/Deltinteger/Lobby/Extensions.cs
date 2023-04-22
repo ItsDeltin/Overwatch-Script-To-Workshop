@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Lobby
             new ExtensionInfo("Kinetic Explosion Effects", 4),
             new ExtensionInfo("Explosion Sounds", 2),
             new ExtensionInfo("Play More Effects", 1),
+            new ExtensionInfo("Projectiles", 4),
             new ExtensionInfo("Spawn More Dummy Bots", 2)
         };
 

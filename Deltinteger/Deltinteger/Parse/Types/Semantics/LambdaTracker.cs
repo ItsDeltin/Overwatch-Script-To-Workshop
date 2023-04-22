@@ -15,19 +15,23 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Does this lambda return a value?</summary>
         public bool LambdaReturnsValue { get; }
 
+        /// <summary>Is the lambda constant?</summary>
+        public bool IsConstant { get; }
+
         public int GenericsCount => GenericTypes.Length;
 
-        private LambdaTracker(AnonymousType[] genericTypes, bool returnsValue)
+        private LambdaTracker(AnonymousType[] genericTypes, bool returnsValue, bool isConstant)
         {
             GenericTypes = genericTypes;
             LambdaReturnsValue = returnsValue;
+            IsConstant = isConstant;
         }
 
         /// <summary>Creates a TypeArgCall for resolving generics for a lambda.</summary>
         /// <param name="returnType">The return type of the lambda. Null if the lambda does not return a value.</param>
         /// <param name="parameters">The parameter types of the lambda.</param>
         /// <returns>A TypeArgCall that can be added to the script.</returns>
-        public static TypeArgCall CreateTrackingCall(CodeType returnType, CodeType[] parameters)
+        public static TypeArgCall CreateTrackingCall(CodeType returnType, CodeType[] parameters, bool isConstant)
         {
             // Generate the AnonymousTypes for the lambda.
             // 'AnonymousType' is a CodeType and in this scenario isn't actually used as a type for any reason.
@@ -52,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
                 anonymousTypes.Add(new AnonymousType(i.ToString(), new AnonymousTypeAttributes(false)));
 
             // Create the TypeArgCall.
-            return new TypeArgCall(new LambdaTracker(anonymousTypes.ToArray(), returnType != null), callParams.ToArray());
+            return new TypeArgCall(new LambdaTracker(anonymousTypes.ToArray(), returnType != null, isConstant), callParams.ToArray());
         }
     }
 }

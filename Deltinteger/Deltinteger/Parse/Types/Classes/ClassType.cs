@@ -14,13 +14,24 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
         protected Scope ObjectScope { get; set; }
 
-        public IVariableInstance[] Variables {
-            get {
+        public IVariableInstance[] Variables
+        {
+            get
+            {
                 ThrowIfNotReady();
                 return _variables.ToArray();
             }
         }
         protected List<IVariableInstance> _variables = new List<IVariableInstance>();
+
+        public override CodeType Extends
+        {
+            get
+            {
+                ThrowIfNotReady();
+                return base.Extends;
+            }
+        }
 
         // The provider that created this ClassType.
         public IClassInitializer Provider { get; }
@@ -30,7 +41,8 @@ namespace Deltin.Deltinteger.Parse
 
         public override Constructor[] Constructors
         {
-            get {
+            get
+            {
                 ThrowIfNotReady();
                 return _constructors;
             }
@@ -124,7 +136,8 @@ namespace Deltin.Deltinteger.Parse
             return StaticScope;
         }
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Class
         };
@@ -150,7 +163,7 @@ namespace Deltin.Deltinteger.Parse
             Elements.Add(variable, false);
             StaticScope.CopyVariable(variable);
         }
-    
+
         public override AccessLevel LowestAccessLevel(CodeType other)
         {
             if (other == null) return AccessLevel.Public;
@@ -201,11 +214,11 @@ namespace Deltin.Deltinteger.Parse
                                 matches = false;
                                 break;
                             }
-                        
+
                         if (matches)
                             return virtualFunction;
                     }
-                
+
                 if (_classType.Extends != null) return ((ClassType)_classType.Extends).Elements.GetVirtualFunction(deltinScript, name, parameterTypes);
                 return null;
             }
@@ -245,7 +258,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         scope.AddNative(scopeable.Scopeable);
                     }
-                
+
                 // Add parent elements.
                 (_classType.Extends as ClassType)?.Elements.AddToScope(deltinScript, scope, instance);
             }

@@ -97,56 +97,65 @@ namespace Deltin.Deltinteger.Parse
         public void End() => _actionSet.AddAction(Element.End());
     }
 
-    public class SwitchBuilder
+    public class SwitchBuilder : IBreakContainer
     {
-        public bool AutoBreak = true;
-
-        readonly SkipStartMarker Skipper;
+        /// <summary>Determines if fall-through is enabled.</summary>
+        readonly bool autoBreak;
+        /// <summary>The initial skip action.</summary>
+        readonly SkipStartMarker skipper;
+        /// <summary>Contains the number of actions until each case.</summary>
         readonly List<IWorkshopTree> skipCounts = new List<IWorkshopTree>();
+        /// <summary>The value required to select a case.</summary>
         readonly List<IWorkshopTree> skipValues = new List<IWorkshopTree>();
-        public readonly List<SkipStartMarker> SkipToEnd = new List<SkipStartMarker>();
+        /// <summary>Breaks and end-of-cases used to jump to the end of the switch.</summary>
+        readonly List<SkipStartMarker> skipToEnd = new List<SkipStartMarker>();
+        /// <summary>The current rule's action set.</summary>
         readonly ActionSet actionSet;
-        int LastCaseStart = -1;
-        SwitchBuilderState State = SwitchBuilderState.Start;
+        /// <summary>Used to track action counts for auto-break.</summary>
+        int lastCaseStart = -1;
+        /// <summary>The switch builder's current state.</summary>
+        SwitchBuilderState state = SwitchBuilderState.Start;
+        /// <summary>Determines if the default case was added yet.</summary>
         bool defaultAdded;
 
-        public SwitchBuilder(ActionSet actionSet)
+        public SwitchBuilder(ActionSet actionSet, bool autoBreak = true)
         {
             this.actionSet = actionSet;
+            this.autoBreak = autoBreak;
 
             // Create the switch skipper.
-            Skipper = new SkipStartMarker(actionSet);
-            actionSet.AddAction(Skipper);
+            skipper = new SkipStartMarker(actionSet);
+            actionSet.AddAction(skipper);
         }
 
         public void NextCase(IWorkshopTree value)
         {
             // If the state is on a case and the action count was changed, create new skip that will skip to the end of the switch.
-            if (AutoBreak && State == SwitchBuilderState.OnCase && actionSet.ActionCount != LastCaseStart)
+            if (autoBreak && state == SwitchBuilderState.OnCase && actionSet.ActionCount != lastCaseStart)
             {
                 // Create the skip and add it to the actionset.
                 SkipStartMarker skipToEnd = new SkipStartMarker(actionSet);
                 actionSet.AddAction(skipToEnd);
 
                 // Add it to the list of skips that need to skip to the end.
-                SkipToEnd.Add(skipToEnd);
+                this.skipToEnd.Add(skipToEnd);
             }
 
             // Update the state.
-            State = SwitchBuilderState.OnCase;
+            state = SwitchBuilderState.OnCase;
 
             // Mark the start of the case.
             SkipEndMarker startCase = new SkipEndMarker();
             actionSet.AddAction(startCase);
 
             // Add the skip length to the start of the case to the skipCounts.
-            skipCounts.Add(Skipper.GetSkipCount(startCase));
+            skipCounts.Add(skipper.GetSkipCount(startCase));
 
             // Add the skip value.
             skipValues.Add(value);
 
             // Update the number of actions.
-            LastCaseStart = actionSet.ActionCount;
+            lastCaseStart = actionSet.ActionCount;
         }
 
         public void AddDefault()
@@ -157,30 +166,30 @@ namespace Deltin.Deltinteger.Parse
             // Mark the start of the case.
             SkipEndMarker startCase = new SkipEndMarker();
             actionSet.AddAction(startCase);
-            skipCounts.Insert(0, Skipper.GetSkipCount(startCase));
-            State = SwitchBuilderState.OnCase;
+            skipCounts.Insert(0, skipper.GetSkipCount(startCase));
+            state = SwitchBuilderState.OnCase;
         }
 
         public void Finish(Element switchValue)
         {
             // Set state to finished.
-            State = SwitchBuilderState.Finished;
+            state = SwitchBuilderState.Finished;
 
             // Mark the end of the switch.
             SkipEndMarker switchEnd = new SkipEndMarker();
             actionSet.AddAction(switchEnd);
 
             // Update switch skips to skip to the end of the switch.
-            foreach (SkipStartMarker skipToEnd in SkipToEnd)
+            foreach (SkipStartMarker skipToEnd in skipToEnd)
                 skipToEnd.SetEndMarker(switchEnd);
 
             // Default insert.
             // TODO: Default case
             if (!defaultAdded)
-                skipCounts.Insert(0, Skipper.GetSkipCount(switchEnd));
+                skipCounts.Insert(0, skipper.GetSkipCount(switchEnd));
 
             // Skip to the case.
-            Skipper.SetSkipCount(
+            skipper.SetSkipCount(
                 // Create an array of all skip counts.
                 Element.CreateArray(skipCounts.ToArray())[
                     // Get the case with the value that matches.
@@ -193,6 +202,13 @@ namespace Deltin.Deltinteger.Parse
                 ]
             );
         }
+
+        public void AddBreak(string comment)
+        {
+            SkipStartMarker breaker = new SkipStartMarker(actionSet, comment);
+            actionSet.AddAction(breaker);
+            skipToEnd.Add(breaker);
+        }
     }
 
     enum SwitchBuilderState
@@ -200,5 +216,31 @@ namespace Deltin.Deltinteger.Parse
         Start,
         OnCase,
         Finished
+    }
+
+    public struct IfBuilder
+    {
+        readonly ActionSet actionSet;
+
+        private IfBuilder(ActionSet actionSet) => this.actionSet = actionSet;
+
+        public static IfBuilder If(ActionSet actionSet, Element condition, Action addBlock)
+        {
+            actionSet.AddAction(Element.If(condition));
+            addBlock();
+            return new IfBuilder(actionSet);
+        }
+
+        public IfBuilder Else(Action addBlock)
+        {
+            actionSet.AddAction(Element.Else());
+            addBlock();
+            return this;
+        }
+
+        public void Ok()
+        {
+            actionSet.AddAction(Element.End());
+        }
     }
 }

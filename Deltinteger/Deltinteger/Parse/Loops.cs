@@ -8,23 +8,12 @@ using Deltin.Deltinteger.Parse.Variables.Build;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class LoopAction : IStatement, IContinueContainer, IBreakContainer
+    public abstract class LoopAction : IStatement
     {
         /// <summary>The path info of the loop block.</summary>
         protected PathInfo Path;
-
-        /// <summary>Determines if the continue action is used directly.</summary>
-        protected bool RawContinue = true;
-        /// <summary>Determines if the break action is used directly.</summary>
-        protected readonly bool RawBreak = true; // Remove the readonly if this needs to be changed.
         /// <summary>The meta comment preceeding the loop.</summary>
         protected string Comment { get; private set; }
-
-        /// <summary>Stores skips that continue the loop.</summary>
-        private readonly List<SkipStartMarker> Continue = new List<SkipStartMarker>();
-
-        /// <summary>Stores skips that break the loop.</summary>
-        private readonly List<SkipStartMarker> Break = new List<SkipStartMarker>();
 
         // If statements nested in while loops will cause the workshop's Continue action
         // to restart right before the if statement instead of at the end of the loop.
@@ -33,59 +22,6 @@ namespace Deltin.Deltinteger.Parse
         public abstract void Translate(ActionSet actionSet);
 
         public PathInfo[] GetPaths() => new PathInfo[] { Path };
-
-        public void AddContinue(ActionSet actionSet, string comment)
-        {
-            if (RawContinue && !ContinueWorkaround)
-            {
-                Element con = Element.Part("Continue");
-                con.Comment = comment;
-                actionSet.AddAction(con);
-            }
-            else
-            {
-                SkipStartMarker continuer = new SkipStartMarker(actionSet, comment);
-                actionSet.AddAction(continuer);
-                Continue.Add(continuer);
-            }
-        }
-
-        public void AddBreak(ActionSet actionSet, string comment)
-        {
-            if (RawBreak)
-            {
-                Element brk = Element.Part("Break");
-                brk.Comment = comment;
-                actionSet.AddAction(brk);
-            }
-            else
-            {
-                SkipStartMarker breaker = new SkipStartMarker(actionSet, comment);
-                actionSet.AddAction(breaker);
-                Break.Add(breaker);
-            }
-        }
-
-        protected void ResolveContinues(ActionSet actionSet)
-        {
-            Resolve(actionSet, Continue);
-        }
-        protected void ResolveBreaks(ActionSet actionSet)
-        {
-            Resolve(actionSet, Break);
-        }
-        private void Resolve(ActionSet actionSet, List<SkipStartMarker> skips)
-        {
-            // Create the end marker that marks the spot right before the End action (if continuing) or right after the End action (if breaking).
-            SkipEndMarker endMarker = new SkipEndMarker();
-
-            // Add the end marker to the action set.
-            actionSet.AddAction(endMarker);
-
-            // Assign the end marker to the continue/break skips.
-            foreach (SkipStartMarker startMarker in skips)
-                startMarker.SetEndMarker(endMarker);
-        }
 
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => Comment = comment;
     }
@@ -97,12 +33,11 @@ namespace Deltin.Deltinteger.Parse
 
         public WhileAction(ParseInfo parseInfo, Scope scope, While whileContext)
         {
-            RawContinue = true;
             Condition = parseInfo.GetExpression(scope, whileContext.Condition);
 
             TypeComparison.ExpectNonConstant(parseInfo, whileContext.Condition.Range, Condition.Type());
 
-            Block = parseInfo.SetLoop(this).GetStatement(scope, whileContext.Statement);
+            Block = parseInfo.SetLoopAllowed(true).GetStatement(scope, whileContext.Statement);
             Path = new PathInfo(Block, whileContext.Range, false);
         }
 
@@ -119,16 +54,17 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(Element.While(condition).AddComment(Comment));
 
                 // Translate the block.
-                Block.Translate(actionSet);
+                var loopHelper = new LoopFlowHelper(actionSet);
+                Block.Translate(actionSet.SetLoop(loopHelper));
 
                 // Resolve continues.
-                ResolveContinues(actionSet);
+                loopHelper.ContinueToHere();
 
                 // Cap the block.
                 actionSet.AddAction(Element.End());
 
                 // Resolve breaks.
-                ResolveBreaks(actionSet);
+                loopHelper.BreakToHere();
             }
             else
             {
@@ -139,10 +75,11 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(whileEndSkip);
 
                 // Translate the block.
-                Block.Translate(actionSet);
+                var loopHelper = new LoopFlowHelper(actionSet);
+                Block.Translate(actionSet.SetLoop(loopHelper));
 
                 // Resolve continues.
-                ResolveContinues(actionSet);
+                loopHelper.ContinueToHere();
 
                 // Cap the block.
                 actionSet.AddAction(Element.End());
@@ -153,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(whileEnd);
 
                 // Resolve breaks.
-                ResolveBreaks(actionSet);
+                loopHelper.BreakToHere();
             }
         }
     }
@@ -257,19 +194,16 @@ namespace Deltin.Deltinteger.Parse
                 if (IsAutoFor)
                 {
                     Step = parseInfo.GetExpression(varScope, ((ExpressionStatement)forContext.Iterator).Expression);
-                    RawContinue = true;
                 }
                 // Get the for assignment.
                 else
                 {
                     Iterator = parseInfo.GetStatement(varScope, forContext.Iterator);
-                    RawContinue = false;
                 }
             }
-            else RawContinue = true;
 
             // Get the block.
-            Block = parseInfo.SetLoop(this).GetStatement(varScope, forContext.Block);
+            Block = parseInfo.SetLoopAllowed(true).GetStatement(varScope, forContext.Block);
             // Get the path info.
             Path = new PathInfo(Block, forContext.Range, false);
         }
@@ -301,10 +235,12 @@ namespace Deltin.Deltinteger.Parse
             else condition = Element.True(); // No condition, just use true.
             actionSet.AddAction(Element.While(condition));
 
-            Block.Translate(actionSet);
+            // Only use workshop continues if there is no iterator statement.
+            var loopHelper = new LoopFlowHelper(actionSet, Iterator == null);
+            Block.Translate(actionSet.SetLoop(loopHelper));
 
             // Resolve continues.
-            ResolveContinues(actionSet);
+            loopHelper.ContinueToHere();
 
             if (Iterator != null)
                 Iterator.Translate(actionSet);
@@ -312,7 +248,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet.AddAction(Element.End());
 
             // Resolve breaks.
-            ResolveBreaks(actionSet);
+            loopHelper.BreakToHere();
         }
 
         void TranslateAutoFor(ActionSet actionSet)
@@ -379,10 +315,11 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Translate the block.
-            Block.Translate(actionSet);
+            var loopHelper = new LoopFlowHelper(actionSet, canAutoFor);
+            Block.Translate(actionSet.SetLoop(loopHelper));
 
             // Resolve continues.
-            ResolveContinues(actionSet);
+            loopHelper.ContinueToHere();
 
             if (!canAutoFor)
                 indexReference.Modify(actionSet, Operation.Add, Element.Num(1), target, new Element[0]);
@@ -391,7 +328,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet.AddAction(Element.End());
 
             // Resolve breaks.
-            ResolveBreaks(actionSet);
+            loopHelper.BreakToHere();
         }
     }
 
@@ -404,8 +341,6 @@ namespace Deltin.Deltinteger.Parse
 
         public ForeachAction(ParseInfo parseInfo, Scope scope, Foreach foreachContext)
         {
-            RawContinue = false;
-
             Scope varScope = scope.Child();
 
             foreachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext)).GetVar();
@@ -429,7 +364,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Get the foreach block.
-            block = parseInfo.SetLoop(this).GetStatement(varScope, foreachContext.Statement);
+            block = parseInfo.SetLoopAllowed(true).GetStatement(varScope, foreachContext.Statement);
             // Get the path info.
             Path = new PathInfo(block, foreachContext.Range, false);
 
@@ -446,16 +381,17 @@ namespace Deltin.Deltinteger.Parse
             actionSet.IndexAssigner.Add(foreachVar, foreachBuilder.IndexValue);
 
             // Translate the block.
-            block.Translate(actionSet);
+            var loopHelper = new LoopFlowHelper(actionSet, false);
+            block.Translate(actionSet.SetLoop(loopHelper));
 
             // Resolve continues.
-            ResolveContinues(actionSet);
+            loopHelper.ContinueToHere();
 
             // Finish the foreach.
             foreachBuilder.Finish();
 
             // Resolve breaks.
-            ResolveBreaks(actionSet);
+            loopHelper.BreakToHere();
         }
 
         class ForeachContextHandler : IVarContextHandler
