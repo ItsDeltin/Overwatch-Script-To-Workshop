@@ -7274,7 +7274,10 @@
     "ProjectileType": [
       "Orb Projectile",
       "Baptiste Biotic Launcher",
-      "Bastion A-36 Tactical Grenade",
+      {
+        "name": "Bastion A-36 Tactical Grenade",
+        "alias": "BastionA36TacticalGrenade"
+      },
       "Echo Sticky Bomb",
       "Genji Shuriken",
       "Lucio Sonic Amplifier",
