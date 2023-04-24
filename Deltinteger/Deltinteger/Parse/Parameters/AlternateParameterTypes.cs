@@ -244,6 +244,32 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+
+    class ConstExpressionArrayParameter : ConstArrayParameter<IExpression>
+    {
+        public ConstExpressionArrayParameter(string name, MarkupBuilder documentation, ICodeTypeSolver type, bool optional = false) : base(type, null, name, documentation, optional)
+        {
+        }
+
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData)
+        {
+            var expressions = (IEnumerable<IExpression>)additionalParameterData;
+            return new ConstWorkshopArray(expressions.Select(e => e.Parse(actionSet)).ToArray());
+        }
+
+        protected override bool TryGetValue(IExpression expression, out IExpression value)
+        {
+            value = expression;
+            return true;
+        }
+
+        public record ConstWorkshopArray(IWorkshopTree[] Elements) : IWorkshopTree
+        {
+            public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
+            public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => throw new NotImplementedException();
+        }
+    }
+
     class FileParameter : CodeParameter
     {
         public string[] FileTypes { get; }
