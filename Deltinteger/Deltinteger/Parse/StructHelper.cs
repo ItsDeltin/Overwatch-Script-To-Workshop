@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
@@ -20,6 +21,22 @@ namespace Deltin.Deltinteger.Parse
                 return new ValueInStructArray(structArray, index);
 
             return Element.ValueInArray(array, index);
+        }
+
+        public static IWorkshopTree CreateArray(IWorkshopTree[] elements)
+        {
+            // Struct array
+            if (elements.Any(value => value is IStructValue))
+            {
+                // Ensure that all the values are structs.
+                if (!elements.All(value => value is IStructValue))
+                    throw new Exception("Cannot mix normal and struct values in an array");
+
+                return new StructArray(Array.ConvertAll(elements, item => (IStructValue)item));
+            }
+
+            // Normal array
+            return Element.CreateArray(elements);
         }
 
         public static IWorkshopTree BridgeIfRequired(IWorkshopTree value, Func<IWorkshopTree, IWorkshopTree> converter)

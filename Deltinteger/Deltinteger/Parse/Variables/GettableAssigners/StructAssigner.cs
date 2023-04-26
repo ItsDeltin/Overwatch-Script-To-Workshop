@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
                 initialValue = StructHelper.ExtractStructValue(info.InitialValueOverride);
             // Otherwise, use the default initial value if it exists.
             else if (_attributes.DefaultValue != null)
-                initialValue = StructHelper.ExtractStructValue(_attributes.DefaultValue.Parse(info.ActionSet));
+                initialValue = StructHelper.ExtractStructValue(_attributes.DefaultValue.GetDefaultValue(info.ActionSet));
             // 'initialValue' may still be null.
 
             bool inline = info.Inline || _attributes.StoreType == StoreType.None;
@@ -100,7 +100,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name;
         public StoreType StoreType;
-        public IExpression DefaultValue;
+        public IVariableDefault DefaultValue;
         public bool Persist;
 
         public StructAssigningAttributes(AssigningAttributes attributes)

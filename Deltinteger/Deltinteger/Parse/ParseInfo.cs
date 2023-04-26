@@ -195,7 +195,7 @@ namespace Deltin.Deltinteger.Parse
                 case LambdaExpression lambda: return new Lambda.LambdaAction(this, scope, lambda);
                 case AsyncContext asyncContext: return AsyncInfo.ParseAsync(this, scope, asyncContext, usedAsValue);
                 case StructDeclarationContext structDeclaration: return new StructDeclarationExpression(this, scope, structDeclaration);
-                case ImportJsonSyntax importJson: return new ImportJson(importJson);
+                case ImportJsonSyntax importJson: return new ImportJson(this, importJson);
                 // Missing
                 case MissingElement missing: return new MissingElementAction(TranslateInfo);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");

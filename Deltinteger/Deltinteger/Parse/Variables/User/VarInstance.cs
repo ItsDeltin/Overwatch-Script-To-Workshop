@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
             IsGlobal = getAssigner.IsGlobal,
             StoreType = Var.StoreType,
             VariableType = Var.VariableType,
-            DefaultValue = Var.InitialValue,
+            DefaultValue = IVariableDefault.FromExpression(Var.InitialValue),
             Persist = Var.Persist || getAssigner.Persist
         });
 

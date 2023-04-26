@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Otherwise, use the var's initial value.
             else if (_attributes.DefaultValue != null)
-                initialValue = _attributes.DefaultValue.Parse(info.ActionSet);
+                initialValue = _attributes.DefaultValue.GetDefaultValue(info.ActionSet);
 
             // No default value
             else hasDefaultValue = false;
@@ -94,7 +94,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Extended;
         public bool Persist;
         public int ID;
-        public IExpression DefaultValue;
+        public IVariableDefault DefaultValue;
 
         public AssigningAttributes()
         {
