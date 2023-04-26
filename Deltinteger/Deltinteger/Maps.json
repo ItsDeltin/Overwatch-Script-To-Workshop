@@ -685,5 +685,12 @@
       "Control",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "Talantis",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
   }
 ]
