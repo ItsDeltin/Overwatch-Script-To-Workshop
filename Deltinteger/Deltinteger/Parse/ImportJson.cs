@@ -25,16 +25,12 @@ class ImportJson : IExpression
         if (!syntax.File)
             return;
 
-        GetFileContent(parseInfo.Script.Uri, syntax.File.Text.RemoveQuotes()).Match(
-            ok =>
-            {
-                root = ProcessJobject(parseInfo, ok);
-            },
-            err =>
-            {
-                parseInfo.Script.Diagnostics.Error(err, syntax.File.Range);
-            }
-        );
+        GetFileContent(parseInfo.Script.Uri, syntax.File.Text.RemoveQuotes())
+            .AndThen(rootJobject => ProcessJobject(parseInfo, rootJobject))
+            .Match(
+                ok => root = ok,
+                err => parseInfo.Script.Diagnostics.Error(err, syntax.File.Range)
+            );
     }
 
     Result<JObject, string> GetFileContent(Uri uri, string fileName)
@@ -61,7 +57,7 @@ class ImportJson : IExpression
         }
     }
 
-    JsonItem ProcessJtoken(ParseInfo parseInfo, JToken jtoken)
+    static Result<JsonItem, string> ProcessJtoken(ParseInfo parseInfo, JToken jtoken)
     {
         switch (jtoken)
         {
@@ -77,38 +73,54 @@ class ImportJson : IExpression
             // Number
             case JTokenType.Float:
             case JTokenType.Integer:
-                return new JsonItem(parseInfo.Types.Number(), JsonItemKind.Number, actionSet => Num(jtoken.ToObject<double>()));
+                return Ok(new JsonItem(parseInfo.Types.Number(), JsonItemKind.Number, actionSet => Num(jtoken.ToObject<double>())));
             // Everything else is a string.
             default:
-                return new JsonItem(parseInfo.Types.String(), JsonItemKind.String, actionSet => new StringElement(jtoken.ToObject<string>()));
+                return Ok(new JsonItem(parseInfo.Types.String(), JsonItemKind.String, actionSet => new StringElement(jtoken.ToObject<string>())));
         }
     }
 
-    JsonItem ProcessJobject(ParseInfo parseInfo, JObject jobject)
+    static Result<JsonItem, string> ProcessJobject(ParseInfo parseInfo, JObject jobject)
     {
         // Object is vector?
         if (jobject.Count == 3 && jobject.ContainsKey(X) && jobject.ContainsKey(Y) && jobject.ContainsKey(Z))
         {
-            var x = ProcessJtoken(parseInfo, jobject[X]);
-            var y = ProcessJtoken(parseInfo, jobject[Y]);
-            var z = ProcessJtoken(parseInfo, jobject[Z]);
+            // Get all children.
+            var xr = ProcessJtoken(parseInfo, jobject[X]);
+            var yr = ProcessJtoken(parseInfo, jobject[Y]);
+            var zr = ProcessJtoken(parseInfo, jobject[Z]);
 
+            // Make sure x, y, and z did not return an error.
+            var xyz = xr.And(yr).And(zr);
+            if (!xyz.IsOk)
+                return Error(xyz.Err);
+
+            var ((x, y), z) = xyz.Value;
+
+            // Make sure the x, y, and z values are numbers.
             if (x.kind == JsonItemKind.Number && y.kind == JsonItemKind.Number && z.kind == JsonItemKind.Number)
-                return new JsonItem(parseInfo.Types.Vector(), JsonItemKind.Vector, actionSet =>
+                return Ok(new JsonItem(parseInfo.Types.Vector(), JsonItemKind.Vector, actionSet =>
                 {
                     return Vector(x.getValue(actionSet), y.getValue(actionSet), z.getValue(actionSet));
-                });
+                }));
         }
 
+        // Create struct from object.
         var structMaker = new StructMaker(parseInfo.TranslateInfo);
         foreach (var property in jobject.Properties())
         {
             var item = ProcessJtoken(parseInfo, property.Value);
-            structMaker.AddVariable(property.Name, item.type, IVariableDefault.Create(actionSet => item.getValue(actionSet)));
+
+            // Add a new variable to the struct.
+            if (item.IsOk)
+                structMaker.AddVariable(property.Name, item.Value.type, IVariableDefault.Create(actionSet => item.Value.getValue(actionSet)));
+            else // Not ok, return the error.
+                return item;
         }
+        // Create the struct type.
         var structType = structMaker.GetProvider().GetInstance(InstanceAnonymousTypeLinker.Empty);
 
-        return new JsonItem(structType, JsonItemKind.Struct, actionSet =>
+        return Ok(new JsonItem(structType, JsonItemKind.Struct, actionSet =>
         {
             var structAssigner = new StructAssigner(
                 structType,
@@ -116,38 +128,55 @@ class ImportJson : IExpression
                 false);
 
             return structAssigner.GetValues(actionSet);
-        });
+        }));
     }
 
-    JsonItem ProcessJarray(ParseInfo parseInfo, JArray jarray)
+    static Result<JsonItem, string> ProcessJarray(ParseInfo parseInfo, JArray jarray)
     {
         CodeType arrayOfType = null;
         var arrayItems = new JsonItem[jarray.Count];
         for (int i = 0; i < jarray.Count; i++)
         {
-            arrayItems[i] = ProcessJtoken(parseInfo, jarray[i]);
+            var result = ProcessJtoken(parseInfo, jarray[i]);
+
+            if (!result.IsOk)
+                return result;
+
+            arrayItems[i] = result.Value;
 
             if (arrayOfType == null)
                 arrayOfType = arrayItems[i].type;
-
+            // Array is a mix of values, switch to the Any type.
+            // Using union types could be a better solution.
             else if (!arrayOfType.Is(arrayItems[i].type))
                 arrayOfType = parseInfo.Types.Any();
+
+            // A struct was mixed in with normal objects.
+            // This can be changed once unparalleled structs are ready.
+            if (i != 0 && (arrayItems[0].kind == JsonItemKind.Struct) != (arrayItems[i].kind == JsonItemKind.Struct))
+            {
+                return Error("Arrays mixing both objects and values is currently not allowed.");
+            }
         }
 
+        // No elements, array is any type.
         if (arrayOfType == null)
             arrayOfType = parseInfo.Types.Any();
 
-        return new JsonItem(new ArrayType(parseInfo.Types, arrayOfType), JsonItemKind.Array, actionSet =>
+        return Ok(new JsonItem(new ArrayType(parseInfo.Types, arrayOfType), JsonItemKind.Array, actionSet =>
         {
             return StructHelper.CreateArray(arrayItems.Select(a => a.getValue(actionSet)).ToArray());
-        });
+        }));
     }
+
+    static Result<JsonItem, string> Ok(JsonItem item) => Result<JsonItem, string>.Ok(item);
+    static Result<JsonItem, string> Error(string error) => Result<JsonItem, string>.Error(error);
+
+    record struct JsonItem(CodeType type, JsonItemKind kind, Func<ActionSet, IWorkshopTree> getValue);
 
     public IWorkshopTree Parse(ActionSet actionSet) => root.getValue(actionSet);
 
     public CodeType Type() => root.type;
-
-    record struct JsonItem(CodeType type, JsonItemKind kind, Func<ActionSet, IWorkshopTree> getValue);
 
     enum JsonItemKind
     {

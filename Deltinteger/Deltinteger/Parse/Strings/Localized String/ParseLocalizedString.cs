@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Parse.Strings
                         else
                         {
                             // Parse the parameter. If it fails it will return null and the string being checked is probably false.
-                            if (RecursiveParse(charOffset + capture.Index, currentParameterValue, depth + 1).IsOk(out var p))
+                            if (RecursiveParse(charOffset + capture.Index, currentParameterValue, depth + 1).TryGetValue(out var p))
                             {
                                 formatParameters.Add(new LocalizedStringOrExpression(p));
                             }
