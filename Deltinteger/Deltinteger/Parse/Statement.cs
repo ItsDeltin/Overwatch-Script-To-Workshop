@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
             if (returnContext.Expression != null)
             {
                 ReturningValue = parseInfo.SetExpectType(parseInfo.ReturnType).GetExpression(scope, returnContext.Expression);
-                
+
                 if (parseInfo.ReturnType != null &&
                     // Make sure that the return type matches.
                     SemanticsHelper.ExpectValueType(parseInfo, ReturningValue, parseInfo.ReturnType, returnContext.Expression.Range) &&
@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo.ReturnType.IsConstant())
                     // Multiple returns not allowed.
                     parseInfo.Script.Diagnostics.Error("Cannot have more than one return statement if the function's return type is constant", ErrorRange);
-                
+
                 // returning value in void method
                 else if (parseInfo.ReturnType == null)
                     parseInfo.Script.Diagnostics.Error("Return type is void, no value can be returned", ErrorRange);
@@ -80,10 +80,12 @@ namespace Deltin.Deltinteger.Parse
     {
         readonly IExpression _deleteValue;
         string _comment;
+        readonly string _errorMessage;
 
         public DeleteAction(ParseInfo parseInfo, Scope scope, Delete deleteContext)
         {
             _deleteValue = parseInfo.GetExpression(scope, deleteContext.Deleting);
+            _errorMessage = parseInfo.WorkshopLogRange(deleteContext.DeleteToken.Range);
 
             if (!_deleteValue.Type().CanBeDeleted)
                 parseInfo.Script.Diagnostics.Error($"Type '{_deleteValue.Type().Name}' cannot be deleted", deleteContext.Deleting.Range);
@@ -99,11 +101,23 @@ namespace Deltin.Deltinteger.Parse
             // Class data.
             var classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
-            // Remove the variable from the list of classes.
-            classData.ClassIndexes.Set(actionSet, value: 0, index: delete);
+            // Ensure the value is not zero.
+            var builder = IfBuilder.If(actionSet, delete, () =>
+            {
+                // Remove the variable from the list of classes.
+                classData.ClassIndexes.Set(actionSet, value: 0, index: delete);
 
-            // Delete the object.
-            _deleteValue.Type().Delete(actionSet, delete);
+                // Delete the object.
+                _deleteValue.Type().Delete(actionSet, delete);
+            });
+            if (actionSet.DeltinScript.Settings.LogDeleteReferenceZero)
+            {
+                builder.Else(() =>
+                {
+                    actionSet.Log("[Error] Attempted to delete reference of zero" + _errorMessage);
+                });
+            }
+            builder.Ok();
         }
 
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => _comment = comment;

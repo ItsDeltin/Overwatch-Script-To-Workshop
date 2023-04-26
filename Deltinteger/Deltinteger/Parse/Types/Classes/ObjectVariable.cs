@@ -47,9 +47,8 @@ namespace Deltin.Deltinteger.Parse
             var gettables = toWorkshop.ClassInitializer
                 .ComboFromClassType(_classType)
                 .GetVariableGettables(_classType.Variables, reference);
-            
-            int index = Array.IndexOf(_classType.Variables, Variable);
-            return gettables[index];
+
+            return gettables[Variable];
         }
     }
 }

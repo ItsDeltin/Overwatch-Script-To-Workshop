@@ -103,7 +103,7 @@ namespace Deltin.Deltinteger.Parse
 
 
             // Track the type args being used.
-            parseInfo.Script.Elements.AddTypeArgCall(LambdaTracker.CreateTrackingCall(returnType, parameters));
+            parseInfo.Script.Elements.AddTypeArgCall(LambdaTracker.CreateTrackingCall(returnType, parameters, type.Const));
 
 
             return new PortableLambdaType(new(

@@ -158,11 +158,12 @@
       ]
     },
     "Limit Roles": {
-      "default": "2 Of Each Role Per Team",
+      "default": "1 Tank 2 Offense 2 Support",
       "type": "string",
       "enum": [
-        "2 Of Each Role Per Team",
-        "Off"
+        "1 Tank 2 Offense 2 Support",
+        "Off",
+        "2 Of Each Role Per Team"
       ]
     },
     "Respawn As Random Hero": {
@@ -181,11 +182,11 @@
       "maximum": 100.0
     },
     "Tank Role Passive Health Bonus": {
-      "default": "1 Tank, 2 Offense, 2 Support",
+      "default": "1 Tank 2 Offense 2 Support",
       "type": "string",
       "enum": [
+        "1 Tank 2 Offense 2 Support",
         "Always Enabled",
-        "1 Tank, 2 Offense, 2 Support",
         "Disabled"
       ]
     },
@@ -1272,6 +1273,11 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Self Destruct Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 200.0
+    },
     "Micro Missiles": {
       "default": true,
       "type": "boolean"
@@ -1684,6 +1690,89 @@
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
+    },
+    "Ultimate Ability (Tree of Life)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Tree of Life)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Tree of Life)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Tree of Life)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Tree of Life Health": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 50.0,
+      "maximum": 300.0
+    },
+    "Rejuvenating Dash": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Rejuvenating Dash Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Rejuvenating Dash Healing": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Petal Platform": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Petal Platform Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Petal Platform Health": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 25.0,
+      "maximum": 500.0
+    },
+    "Life Grip": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Life Grip Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Life Grip and Healing Blossom Range": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 20.0,
+      "maximum": 200.0
+    },
+    "Parting Gift": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Weapons Enabled Lifeweaver": {
+      "default": "All",
+      "type": "string",
+      "enum": [
+        "All",
+        "Healing Blossom Only",
+        "Thorn Volley Only"
+      ]
     },
     "Ultimate Ability (Sound Barrier)": {
       "default": true,
@@ -2810,6 +2899,7 @@
           "Junker Queen",
           "Junkrat",
           "Kiriko",
+          "Lifeweaver",
           "Lúcio",
           "Mei",
           "Mercy",
@@ -3482,6 +3572,9 @@
             "Infinite Ultimate Duration": {
               "$ref": "#/definitions/Infinite Ultimate Duration"
             },
+            "Self Destruct Knockback Scalar": {
+              "$ref": "#/definitions/Self Destruct Knockback Scalar"
+            },
             "Micro Missiles": {
               "$ref": "#/definitions/Micro Missiles"
             },
@@ -4111,6 +4204,108 @@
             },
             "Protection Suzu Knockback Scalar": {
               "$ref": "#/definitions/Protection Suzu Knockback Scalar"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Lifeweaver": {
+          "description": "'Lifeweaver' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (Tree of Life)": {
+              "$ref": "#/definitions/Ultimate Ability (Tree of Life)"
+            },
+            "Ultimate Generation (Tree of Life)": {
+              "$ref": "#/definitions/Ultimate Generation (Tree of Life)"
+            },
+            "Ultimate Generation - Passive (Tree of Life)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Tree of Life)"
+            },
+            "Ultimate Generation - Combat (Tree of Life)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Tree of Life)"
+            },
+            "Tree of Life Health": {
+              "$ref": "#/definitions/Tree of Life Health"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Projectile Gravity": {
+              "$ref": "#/definitions/Projectile Gravity"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "Rejuvenating Dash": {
+              "$ref": "#/definitions/Rejuvenating Dash"
+            },
+            "Rejuvenating Dash Cooldown Time": {
+              "$ref": "#/definitions/Rejuvenating Dash Cooldown Time"
+            },
+            "Rejuvenating Dash Healing": {
+              "$ref": "#/definitions/Rejuvenating Dash Healing"
+            },
+            "Petal Platform": {
+              "$ref": "#/definitions/Petal Platform"
+            },
+            "Petal Platform Cooldown Time": {
+              "$ref": "#/definitions/Petal Platform Cooldown Time"
+            },
+            "Petal Platform Health": {
+              "$ref": "#/definitions/Petal Platform Health"
+            },
+            "Life Grip": {
+              "$ref": "#/definitions/Life Grip"
+            },
+            "Life Grip Cooldown Time": {
+              "$ref": "#/definitions/Life Grip Cooldown Time"
+            },
+            "Life Grip and Healing Blossom Range": {
+              "$ref": "#/definitions/Life Grip and Healing Blossom Range"
+            },
+            "Parting Gift": {
+              "$ref": "#/definitions/Parting Gift"
+            },
+            "Weapons Enabled": {
+              "$ref": "#/definitions/Weapons Enabled Lifeweaver"
             }
           },
           "additionalProperties": false
@@ -7168,6 +7363,11 @@
         },
         "Play More Effects": {
           "description": "The 'Play More Effects' extension costs 1 extension points.",
+          "default": false,
+          "type": "boolean"
+        },
+        "Projectiles": {
+          "description": "The 'Projectiles' extension costs 4 extension points.",
           "default": false,
           "type": "boolean"
         },

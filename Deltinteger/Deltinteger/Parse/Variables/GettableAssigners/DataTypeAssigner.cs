@@ -75,10 +75,19 @@ namespace Deltin.Deltinteger.Parse
             return new GettableAssignerResult(value, initialValue);
         }
 
-        public IGettable AssignClassStacks(GetClassStacks info) =>
-            info.ClassData.ObjectVariableFromIndex(info.StackOffset);
+        public IGettable AssignClassStacks(GetClassStacks info)
+        {
+            if (_attributes.StoreType == StoreType.None)
+                return null;
+            return info.ClassData.ObjectVariableFromIndex(info.StackOffset);
+        }
 
-        public int StackDelta() => 1;
+        public int StackDelta()
+        {
+            if (_attributes.StoreType == StoreType.None)
+                return 0;
+            return 1;
+        }
 
         public IGettable Unfold(IUnfoldGettable unfolder) => new WorkshopElementReference(unfolder.NextValue());
     }

@@ -80,10 +80,15 @@ namespace Deltin.Deltinteger.Parse
 
     public interface IGettableAssigner
     {
+        /// <summary>Generates the IGettable from the specified parameters.</summary>
         GettableAssignerResult GetResult(GettableAssignerValueInfo info);
+        /// <summary>Shorthand for GetResult(info).Value.</summary>
         IGettable GetValue(GettableAssignerValueInfo info) => GetResult(info).Gettable;
+        /// <summary>Assigns the variable to a class stack. May return null if the variable will not 
+        /// be stored in a class stack.</summary>
         IGettable AssignClassStacks(GetClassStacks info);
         IGettable Unfold(IUnfoldGettable unfolder);
+        /// <summary>Gets the number of variables required to store this value type.</summary>
         int StackDelta();
     }
 

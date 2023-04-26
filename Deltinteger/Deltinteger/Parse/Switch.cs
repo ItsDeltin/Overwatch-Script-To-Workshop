@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class SwitchAction : IStatement, IBreakContainer
+    public class SwitchAction : IStatement
     {
         private readonly IExpression Expression;
         private readonly SwitchSection[] paths;
@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the expression.
             Expression = parseInfo.GetExpression(scope, switchContext.Expression);
 
-            paths = GetSections(ResolveElements(parseInfo.SetBreakHandler(this), scope, switchContext));
+            paths = GetSections(ResolveElements(parseInfo.SetBreaksAllowed(true), scope, switchContext));
             pathInfo = new PathInfo[paths.Length];
 
             for (int i = 0; i < pathInfo.Length; i++)
@@ -130,8 +130,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IWorkshopTree expression = Expression.Parse(actionSet);
 
-            switchBuilder = new SwitchBuilder(actionSet);
-            switchBuilder.AutoBreak = false;
+            switchBuilder = new SwitchBuilder(actionSet, false);
 
             foreach (SwitchSection section in paths)
             {
@@ -139,17 +138,10 @@ namespace Deltin.Deltinteger.Parse
                     switchBuilder.NextCase((Element)caseExpression.Parse(actionSet));
 
                 if (section.IsDefault) switchBuilder.AddDefault();
-                section.Block.Translate(actionSet);
+                section.Block.Translate(actionSet.SetBreakHandler(switchBuilder));
             }
 
             switchBuilder.Finish((Element)expression);
-        }
-
-        public void AddBreak(ActionSet actionSet, string comment)
-        {
-            SkipStartMarker breaker = new SkipStartMarker(actionSet, comment);
-            actionSet.AddAction(breaker);
-            switchBuilder.SkipToEnd.Add(breaker);
         }
 
         public PathInfo[] GetPaths() => pathInfo;

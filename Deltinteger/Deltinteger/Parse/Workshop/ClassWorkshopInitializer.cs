@@ -71,7 +71,15 @@ namespace Deltin.Deltinteger.Parse
             throw new Exception("No combos are acceptable");
         }
 
-        public ClassWorkshopRelation RelationFromClassType(ClassType type) => _relations.First(relation => relation.Instance.Is(type));
+        public ClassWorkshopRelation RelationFromClassType(ClassType type)
+        {
+            var relation = _relations.FirstOrDefault(relation => relation.Instance.Is(type));
+
+            if (relation == null)
+                throw new Exception("ClassWorkshopRelation is not created for type " + type.GetName());
+
+            return relation;
+        }
 
         public void AddRelation(ClassWorkshopRelation relation) => _relations.Add(relation);
 
@@ -178,29 +186,34 @@ namespace Deltin.Deltinteger.Parse
         public void AddVariableInstancesToAssigner(IVariableInstance[] variables, IWorkshopTree reference, VarIndexAssigner assigner)
         {
             var gettables = GetVariableGettables(variables, reference);
-            for (int i = 0; i < variables.Length; i++)
-                assigner.Add(variables[i].Provider, gettables[i]);
+            foreach (var gettable in gettables)
+                assigner.Add(gettable.Key.Provider, gettable.Value);
         }
 
-        public IGettable[] GetVariableGettables(IVariableInstance[] variables, IWorkshopTree reference)
+        public IReadOnlyDictionary<IVariableInstance, IGettable> GetVariableGettables(IVariableInstance[] variables, IWorkshopTree reference)
         {
-            IGettable[] gettables = new IGettable[variables.Length];
+            var variablesToGettables = new Dictionary<IVariableInstance, IGettable>();
 
             // 'stack' represents an index in the list of class variables.
             int stack = StackOffset;
-            for (int i = 0; i < variables.Length; i++)
+            foreach (var variable in variables)
             {
                 // Get the gettable assigner.
-                var gettableAssigner = variables[i].GetAssigner();
+                var gettableAssigner = variable.GetAssigner();
 
                 // Create the gettable.
-                gettables[i] = gettableAssigner.AssignClassStacks(new GetClassStacks(_initializer, stack)).ChildFromClassReference(reference);
+                var gettable = gettableAssigner.AssignClassStacks(new GetClassStacks(_initializer, stack))?.ChildFromClassReference(reference);
 
-                // Increase stack by the length of the gettable.
-                stack += gettableAssigner.StackDelta();
+                if (gettable != null)
+                {
+                    variablesToGettables.Add(variable, gettable);
+                    // Increase stack by the length of the gettable.
+                    stack += gettableAssigner.StackDelta();
+                }
+
             }
 
-            return gettables;
+            return variablesToGettables;
         }
     }
 
