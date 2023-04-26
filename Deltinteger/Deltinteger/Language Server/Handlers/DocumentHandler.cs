@@ -200,7 +200,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 {
                     OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
                     OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput,
-                    Settings = settings
+                    SourcedSettings = settings
                 });
                 _languageServer.LastParse = deltinScript;
 

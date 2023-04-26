@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Settings;
+using Deltin.Deltinteger.LanguageServer.Settings;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -12,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public FileGetter FileGetter { get; } = new FileGetter(null, new LanguageServer.Settings.DefaultSettingsResolver());
         public Func<VarCollection, Rule[]> AdditionalRules { get; set; }
 
-        public ProjectSettings Settings { get; set; }
+        public SourcedSettings<DsTomlSettings> SourcedSettings { get; set; }
 
         public bool OptimizeOutput { get; set; } = true;
         public OutputLanguage OutputLanguage { get; set; } = OutputLanguage.enUS;

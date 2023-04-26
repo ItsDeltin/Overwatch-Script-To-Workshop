@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using Deltin.Deltinteger.Parse.Settings;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
@@ -21,14 +22,15 @@ namespace Deltin.Deltinteger.Parse
         public Scope PlayerVariableScope { get; set; }
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
-        public VarCollection VarCollection { get; } = new VarCollection();
+        public VarCollection VarCollection { get; }
         public SubroutineCollection SubroutineCollection { get; } = new SubroutineCollection();
         private List<Var> rulesetVariables { get; } = new List<Var>();
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
         public StagedInitiation StagedInitiation { get; } = new StagedInitiation();
-        public ProjectSettings Settings { get; }
+        public Uri SettingsSource { get; }
+        public DsTomlSettings Settings { get; }
         private readonly OutputLanguage Language;
         public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>();
@@ -42,9 +44,12 @@ namespace Deltin.Deltinteger.Parse
         {
             FileGetter = translateSettings.FileGetter;
             Diagnostics = translateSettings.Diagnostics;
-            Settings = translateSettings.Settings ?? ProjectSettings.Default;
+            SettingsSource = translateSettings.SourcedSettings.Uri;
+            Settings = translateSettings.SourcedSettings.Settings ?? DsTomlSettings.Default;
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
+
+            VarCollection = new VarCollection(Settings.VariableTemplate);
 
             Types = new ScriptTypes(this);
             Types.GetDefaults();
@@ -314,6 +319,16 @@ namespace Deltin.Deltinteger.Parse
             }
 
             WorkshopCode = result.GetResult();
+
+            // Out file
+            if (!string.IsNullOrEmpty(Settings.OutFile) && SettingsSource != null)
+            {
+                // Path to out file.
+                var outFile = Extras.CombinePathWithDotNotation(SettingsSource.LocalPath, Settings.OutFile);
+                var fi = new FileInfo(outFile);
+                fi.Directory.Create();
+                File.WriteAllText(fi.FullName, WorkshopCode);
+            }
         }
 
         Rule GetRule(Rule rule)

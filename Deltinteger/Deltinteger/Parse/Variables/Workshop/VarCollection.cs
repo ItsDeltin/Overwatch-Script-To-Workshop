@@ -37,7 +37,12 @@ namespace Deltin.Deltinteger.Parse
         private bool extGlobalLimitReached = false;
         private bool extPlayerLimitReached = false;
 
-        public VarCollection() { }
+        private readonly bool useTemplate;
+
+        public VarCollection(bool useTemplate = false)
+        {
+            this.useTemplate = useTemplate;
+        }
 
         public void Setup()
         {
@@ -192,11 +197,13 @@ namespace Deltin.Deltinteger.Parse
                 builder.AppendLine("{");
                 builder.Indent();
 
+                int templatePosition = 0;
+
                 if (hasGlobalVariables)
                 {
                     builder.AppendKeyword("global"); builder.Append(":"); builder.AppendLine();
                     builder.Indent();
-                    WriteCollection(builder, variableList(true));
+                    WriteCollection(builder, variableList(true), useTemplate, ref templatePosition);
                     builder.Outdent();
                 }
 
@@ -204,7 +211,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     builder.AppendKeyword("player"); builder.Append(":"); builder.AppendLine();
                     builder.Indent();
-                    WriteCollection(builder, variableList(false));
+                    WriteCollection(builder, variableList(false), useTemplate, ref templatePosition);
                     builder.Outdent();
                 }
 
@@ -225,9 +232,18 @@ namespace Deltin.Deltinteger.Parse
                     builder.AppendLine($"// player [{ex.Index}]: {ex.DebugName}");
             }
         }
-        private void WriteCollection(WorkshopBuilder builder, List<WorkshopVariable> collection)
+        private void WriteCollection(WorkshopBuilder builder, List<WorkshopVariable> collection, bool useTemplate, ref int templatePosition)
         {
-            foreach (var var in collection) builder.AppendLine(var.ID + ": " + var.Name);
+            foreach (var var in collection)
+            {
+                if (useTemplate)
+                {
+                    builder.AppendLine("{" + templatePosition + "}: " + var.Name);
+                    templatePosition++;
+                }
+                else
+                    builder.AppendLine(var.ID + ": " + var.Name);
+            }
         }
     }
 
