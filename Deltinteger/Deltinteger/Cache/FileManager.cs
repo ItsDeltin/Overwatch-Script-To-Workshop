@@ -23,13 +23,13 @@ namespace Deltin.Deltinteger.Cache
         public static T FromFile(ICacheWatcher watcher, string file, Func<Uri, T> makeFile) => FromUri(watcher, new Uri(file), makeFile);
     }
 
-    abstract class LoadedFile
+    class LoadedFile
     {
         public Uri Uri { get; }
         private string _content;
         private byte[] _hash;
 
-        protected LoadedFile(Uri uri)
+        public LoadedFile(Uri uri)
         {
             Uri = uri;
 
@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Cache
             Update();
         }
 
-        protected string GetContent()
+        public string GetContent()
         {
             using (FileStream stream = GetStream())
             {
@@ -73,20 +73,6 @@ namespace Deltin.Deltinteger.Cache
             return _content;
         }
 
-        protected abstract void Update();
-    }
-
-    class TextFile : LoadedFile
-    {
-        public string Content { get; private set; }
-
-        public TextFile(Uri uri) : base(uri)
-        {
-        }
-
-        protected override void Update()
-        {
-            Content = GetContent();
-        }
+        protected virtual void Update() { }
     }
 }

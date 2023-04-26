@@ -349,7 +349,7 @@ namespace Deltin.Deltinteger.Parse
             if (filepath == null)
                 return null;
 
-            return GetFile(parseInfo, filepath, uri => new TextFile(uri)).Content;
+            return GetFile(parseInfo, filepath, uri => new LoadedFile(uri)).GetContent();
         }
     }
 }
