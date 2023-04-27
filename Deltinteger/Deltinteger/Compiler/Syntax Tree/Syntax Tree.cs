@@ -470,7 +470,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public Token Localized { get; }
         public Token Token { get; }
-        public string Value { get; }
         public List<IParseExpression> Formats { get; }
         public bool ClassicFormatSyntax { get; }
 
@@ -478,7 +477,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             Localized = localized;
             Token = token;
-            Value = Extras.RemoveQuotes(token.Text).Replace("\\'", "'");
         }
 
         public StringExpression(Token localized, Token token, List<IParseExpression> formats) : this(localized, token)
@@ -487,7 +485,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             ClassicFormatSyntax = true;
         }
 
-        public override string ToString() => '"' + Value + '"';
+        public override string ToString() => Token.Text;
     }
 
     public class InterpolatedStringExpression : Node, IParseExpression

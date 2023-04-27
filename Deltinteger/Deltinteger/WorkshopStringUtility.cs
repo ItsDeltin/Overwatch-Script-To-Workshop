@@ -205,6 +205,43 @@ static class WorkshopStringUtility
     }
 
     readonly record struct TextProgress(string Text, int NewPosition);
+
+    /// <summary>Makes an OSTW string more compatible with the workshop.
+    /// Escaped single quotes are unescaped, unescaped double quotes are escaped.</summary>
+    /// <param name="raw">The OSTW string. First and last character should be ' or ".</param>
+    public static string WorkshopStringFromRawText(string raw)
+    {
+        // Single or double quoted string?
+        bool isSingle = raw.StartsWith('\'');
+        // Trim starting and ending quotations.
+        string withoutQuotes = raw.Substring(1, raw.Length - 2);
+
+        // No special processing needs to happen with double quotes.
+        if (!isSingle)
+            return withoutQuotes;
+
+        // Single quoted strings will be escaped, they do not need to be.
+        withoutQuotes = withoutQuotes.Replace("\\'", "'");
+        // Conversely, double quotes may not be escaped though they should be.
+        return EscapedDoubleQuotes(withoutQuotes);
+    }
+
+    static string EscapedDoubleQuotes(string input)
+    {
+        string result = string.Empty;
+        bool escaping = false;
+        for (int i = 0; i < input.Length; i++)
+        {
+            if (escaping)
+                escaping = false;
+            else if (input[i] == '\\')
+                escaping = true;
+            else if (input[i] == '"')
+                result += '\\';
+            result += input[i];
+        }
+        return result;
+    }
 }
 
 readonly record struct StringChunk(string Value, int[] Parameters);

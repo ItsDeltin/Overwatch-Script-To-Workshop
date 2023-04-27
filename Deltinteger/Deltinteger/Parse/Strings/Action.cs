@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             _stringRange = stringContext.Token.Range;
             _classicFormatSyntax = stringContext.ClassicFormatSyntax;
-            Value = stringContext.Value;
+            Value = WorkshopStringUtility.WorkshopStringFromRawText(stringContext.Token.Text);
             Localized = stringContext.Localized;
 
             // Add completion if the string is localized.
