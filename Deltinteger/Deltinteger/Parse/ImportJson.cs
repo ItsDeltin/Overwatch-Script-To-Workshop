@@ -40,7 +40,9 @@ class ImportJson : IExpression
         try
         {
             // Read the file.
-            string jsonText = File.ReadAllText(path);
+            // '/**/' is added as a way to prevent unclosed comments from causing an error,
+            // since generated json from the workshop may have an extraneous /*.
+            string jsonText = File.ReadAllText(path) + "/**/";
             // Get JSON
             try
             {
