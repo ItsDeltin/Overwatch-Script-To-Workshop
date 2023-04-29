@@ -123,6 +123,11 @@ static class WorkshopStringUtility
         if (stringChunk.HasValue)
             return stringChunk.Value;
 
+        // Check for line comment.
+        var commentChunk = GetCommentChunk(str, position);
+        if (commentChunk.HasValue)
+            return commentChunk.Value;
+
         // Capture all text until next whitespace.
         string captured = string.Empty;
         do
@@ -133,8 +138,10 @@ static class WorkshopStringUtility
         while (
             // Ensure the position does not go out of range.
             position < str.Length &&
-            // Do not consume any opening curly brackets in case it its the start of a format.
+            // Do not consume any opening curly brackets in case it is the start of a format.
             str[position] != '{' &&
+            // Do not consume any slashes in case it is the start of a line comment.
+            str[position] != '/' &&
             // This is only possible on the first 'do' iteration. If we get a whitespace, only return that whitespace.
             !char.IsWhiteSpace(captured.Last()) &&
             // The next character is a whitespace, we can stop here.
@@ -200,6 +207,25 @@ static class WorkshopStringUtility
                     break;
             }
             escaping = false;
+        }
+        return new(chunk, position + 1);
+    }
+
+    /// <summary>Checks for a line comment at the provided text position.</summary>
+    static Nullable<TextProgress> GetCommentChunk(string str, int position)
+    {
+        // Do nothing if the next 2 characters are not '//'.
+        if (position >= str.Length - 2 || str[position] != '/' || str[position + 1] != '/')
+            return null;
+
+        string chunk = "//";
+        position += 2;
+        for (; position < str.Length; position++)
+        {
+            chunk += str[position];
+            // End at newline
+            if (str[position] == '\n')
+                break;
         }
         return new(chunk, position + 1);
     }
