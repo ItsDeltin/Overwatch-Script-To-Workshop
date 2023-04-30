@@ -287,7 +287,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopRules = WorkshopRules.OrderBy(wr => wr.Priority).ToList();
 
             // Get the final workshop string.
-            WorkshopBuilder result = new WorkshopBuilder(Language);
+            WorkshopBuilder result = new WorkshopBuilder(Language, Settings.CStyleWorkshopOutput, Settings.CompileMiscellaneousComments);
             LanguageInfo.I18nWarningMessage(result, Language);
 
             // Get the custom game settings.

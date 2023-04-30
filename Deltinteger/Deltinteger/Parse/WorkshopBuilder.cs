@@ -7,25 +7,21 @@ namespace Deltin.Deltinteger
 {
     public class WorkshopBuilder
     {
-        public bool Tab { get; set; } = false;
+        public bool Tab { get; } = false;
         public OutputLanguage OutputLanguage { get; }
-        public bool CStyle { get; } = false;
-        public bool IncludeComments { get; } = false;
+        public bool CStyle { get; }
+        public bool IncludeComments { get; }
 
         private readonly StringBuilder _builder;
         private int _indentCount;
         private bool _space = false;
 
-        public WorkshopBuilder(OutputLanguage outputLanguage)
+        public WorkshopBuilder(OutputLanguage outputLanguage, bool cStyle, bool includeComments)
         {
             OutputLanguage = outputLanguage;
+            CStyle = cStyle;
+            IncludeComments = includeComments;
             _builder = new StringBuilder();
-        }
-
-        public WorkshopBuilder(OutputLanguage outputLanguage, StringBuilder builder)
-        {
-            OutputLanguage = outputLanguage;
-            _builder = builder;
         }
 
         public WorkshopBuilder Append(string text)

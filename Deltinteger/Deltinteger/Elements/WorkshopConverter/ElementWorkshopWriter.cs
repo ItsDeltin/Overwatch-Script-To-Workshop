@@ -223,79 +223,11 @@ static class ElementWorkshopWriter
         return null;
     }
 
-    const int ARRAY_SUBSCRIPT = 0;
-    const int UNARY = 1;
-    const int POWER = 2;
-    const int MULTIPLICATION_DIVISION_REMAINDER = 3;
-    const int ADDITION_SUBTRACTION = 4;
-    const int COMPARISON = 5;
-    const int RELATIONAL = 6;
-    const int LOGICAL = 7;
-    const int TERNARY = 8;
-
-    record struct WorkshopOperator(Op Op, int Precedence)
+    /// <summary>Gets the math binary operator from an element.
+    /// Returns null if the element is not a math value.</summary>
+    static Op? GetBinaryFromElement(Element element)
     {
-        public string WorkshopSymbol()
-        {
-            switch (Op)
-            {
-                case Op.Power: return "^";
-                case Op.Multiply: return "*";
-                case Op.Divide: return "/";
-                case Op.Modulo: return "%";
-                case Op.Add: return "+";
-                case Op.Subtract: return "-";
-                case Op.GreaterThan: return ">";
-                case Op.LessThan: return "<";
-                case Op.GreaterThanOrEqual: return ">=";
-                case Op.LessThanOrEqual: return "<=";
-                case Op.Equal: return "==";
-                case Op.NotEqual: return "!=";
-                case Op.Or: return "||";
-                case Op.And: return "&&";
-            }
-            throw new NotImplementedException(Op.ToString());
-        }
-    }
-
-    enum Op
-    {
-        Power,
-        Multiply,
-        Divide,
-        Modulo,
-        Add,
-        Subtract,
-        GreaterThan,
-        LessThan,
-        GreaterThanOrEqual,
-        LessThanOrEqual,
-        Equal,
-        NotEqual,
-        Or,
-        And
-    }
-
-    static readonly WorkshopOperator[] Operators = new WorkshopOperator[] {
-        new(Op.Power, POWER),
-        new(Op.Multiply, MULTIPLICATION_DIVISION_REMAINDER),
-        new(Op.Divide, MULTIPLICATION_DIVISION_REMAINDER),
-        new(Op.Modulo, MULTIPLICATION_DIVISION_REMAINDER),
-        new(Op.Add, ADDITION_SUBTRACTION),
-        new(Op.Subtract, ADDITION_SUBTRACTION),
-        new(Op.GreaterThan, COMPARISON),
-        new(Op.LessThan, COMPARISON),
-        new(Op.GreaterThanOrEqual, COMPARISON),
-        new(Op.LessThanOrEqual, COMPARISON),
-        new(Op.Equal, RELATIONAL),
-        new(Op.NotEqual, RELATIONAL),
-        new(Op.Or, LOGICAL),
-        new(Op.And, LOGICAL),
-    };
-
-    static Op? OpFromWorkshopValue(string valueName)
-    {
-        switch (valueName)
+        switch (element.Function.Name)
         {
             case "Power": return Op.Power;
             case "Multiply": return Op.Multiply;
@@ -309,17 +241,9 @@ static class ElementWorkshopWriter
         }
     }
 
-    static WorkshopOperator WorkshopOperatorFromOp(Op op) => Operators.First(o => o.Op == op);
-
-    /// <summary>Gets the math binary operator from an element.</summary>
-    static WorkshopOperator? GetBinaryFromElement(Element element)
-    {
-        var workshopOp = OpFromWorkshopValue(element.Function.Name);
-        return Operators.Cast<WorkshopOperator?>().FirstOrDefault(op => workshopOp == op.Value.Op);
-    }
-
-    /// <summary>Finds the operator a Compare workshop value is using.</summary>
-    static WorkshopOperator? GetComparisonFromElement(Element element)
+    /// <summary>Finds the operator a Compare workshop value is using.
+    /// Returns null if the element is not a Compare value.</summary>
+    static Op? GetComparisonFromElement(Element element)
     {
         if (element.Function.Name != "Compare")
             return null;
@@ -327,12 +251,12 @@ static class ElementWorkshopWriter
         var elementOp = ((OperatorElement)element.ParameterValues[1]).Operator;
         switch (elementOp)
         {
-            case Operator.Equal: return WorkshopOperatorFromOp(Op.Equal);
-            case Operator.GreaterThan: return WorkshopOperatorFromOp(Op.GreaterThan);
-            case Operator.GreaterThanOrEqual: return WorkshopOperatorFromOp(Op.GreaterThanOrEqual);
-            case Operator.LessThan: return WorkshopOperatorFromOp(Op.LessThan);
-            case Operator.LessThanOrEqual: return WorkshopOperatorFromOp(Op.LessThanOrEqual);
-            case Operator.NotEqual: return WorkshopOperatorFromOp(Op.NotEqual);
+            case Operator.Equal: return Op.Equal;
+            case Operator.GreaterThan: return Op.GreaterThan;
+            case Operator.GreaterThanOrEqual: return Op.GreaterThanOrEqual;
+            case Operator.LessThan: return Op.LessThan;
+            case Operator.LessThanOrEqual: return Op.LessThanOrEqual;
+            case Operator.NotEqual: return Op.NotEqual;
             default: throw new NotImplementedException(elementOp.ToString());
         }
     }
@@ -349,10 +273,17 @@ static class ElementWorkshopWriter
             builder.Append(")");
     }
 
+    /// <summary>ISimplifyExpression takes a graph of Elements to export in c-style syntax.</summary>
     interface ISimplifyExpression
     {
+        /// <summary>Writes the simplification graph to the workshop.</summary>
+        /// <param name="builder">The builder generating the workshop output.</param>
+        /// <param name="operated">Contains details about how this value in the graph is being
+        /// operated on. Implementations will determine using this data if their output will
+        /// need to be parenthesized.</param>
         void ToWorkshop(WorkshopBuilder builder, Operated operated);
 
+        /// <summary>Generates the simplification graph from an element.</summary>
         static ISimplifyExpression FromElement(Element element)
         {
             // Unary
@@ -400,13 +331,14 @@ static class ElementWorkshopWriter
             return new SimplifyElement(element);
         }
     }
+    /// <summary>A unary operation in the workshop. This only deals with the Not expression.</summary>
     record UnaryOperation(ISimplifyExpression value) : ISimplifyExpression
     {
         public void ToWorkshop(WorkshopBuilder builder, Operated operated)
         {
             bool parentheses = operated.Match(
                 (left, right) => false,
-                precedence => precedence < UNARY,
+                precedence => precedence < WorkshopOperators.UNARY,
                 () => false
             );
             Group(parentheses, builder, () =>
@@ -416,12 +348,14 @@ static class ElementWorkshopWriter
             });
         }
     }
-    record BinaryOperation(ISimplifyExpression a, ISimplifyExpression b, WorkshopOperator op) : ISimplifyExpression
+    /// <summary>A mathematical or comparing expression.</summary>
+    record BinaryOperation(ISimplifyExpression a, ISimplifyExpression b, Op op) : ISimplifyExpression
     {
-        bool NeedsParentheses(WorkshopOperator? left, WorkshopOperator? right)
+        bool NeedsParentheses(Op? left, Op? right)
         {
-            return left.HasValue && left.Value.Precedence < op.Precedence
-                || right.HasValue && right.Value.Precedence < op.Precedence;
+            int precedence = WorkshopOperators.GetPrecedence(op);
+            return left.HasValue && WorkshopOperators.GetPrecedence(left.Value) < precedence
+                || right.HasValue && WorkshopOperators.GetPrecedence(right.Value) < precedence;
         }
 
         public void ToWorkshop(WorkshopBuilder builder, Operated operated)
@@ -442,11 +376,12 @@ static class ElementWorkshopWriter
             Group(parentheses, builder, () =>
             {
                 a.ToWorkshop(builder, aOp);
-                builder.Append(" " + op.WorkshopSymbol() + " ");
+                builder.Append(" " + WorkshopOperators.WorkshopSymbolFromOp(op) + " ");
                 b.ToWorkshop(builder, bOp);
             });
         }
     }
+    /// <summary>If-Then-Else</summary>
     record TernaryOperation(ISimplifyExpression a, ISimplifyExpression b, ISimplifyExpression c) : ISimplifyExpression
     {
         public void ToWorkshop(WorkshopBuilder builder, Operated operated)
@@ -472,6 +407,7 @@ static class ElementWorkshopWriter
             });
         }
     }
+    /// <summary>Value In Array</summary>
     record SimplifyValueInArray(ISimplifyExpression value, Element index) : ISimplifyExpression
     {
         public void ToWorkshop(WorkshopBuilder builder, Operated operated)
@@ -483,22 +419,38 @@ static class ElementWorkshopWriter
             );
             Group(parentheses, builder, () =>
             {
-                value.ToWorkshop(builder, Operated.All(ARRAY_SUBSCRIPT));
+                value.ToWorkshop(builder, Operated.All(WorkshopOperators.ARRAY_SUBSCRIPT));
                 builder.Append("[");
                 index.ToWorkshop(builder, ToWorkshopContext.NestedValue);
                 builder.Append("]");
             });
         }
     }
+    /// <summary>A normal workshop value. The end of a branch in the simplification graph.</summary>
     record struct SimplifyElement(Element element) : ISimplifyExpression
     {
         public void ToWorkshop(WorkshopBuilder builder, Operated operated) => FunctionToWorkshop(builder, element);
     }
 
+    /// <summary>This is passed to an ISimplifyExpression to describe how that expression is being used.</summary>
     struct Operated
     {
+        /// <summary>The titular method which exhaustively matches each way an expression may be operated on.</summary>
+        /// <typeparam name="T">An arbritrary type that is returned from each of the matches.</typeparam>
+        /// <param name="binary">The expression is being added or compared to. The first parameter is the operator
+        /// on the left, the second parameter is the operator on the right. One or both of the parameters will not be null.</param>
+        /// <param name="all">Similiar to binary, but denotes that the entire expression is being operated on rather than
+        /// modifications from either direction. Ie: Value In Array.</param>
+        /// <param name="root">This is the root value in the Operated tree, which means it is not being operated on.
+        /// Nothing special should happen.</param>
+        /// <param name="ternaryValue">A special condition that an expression is being used in an If-Then-Else.
+        /// If not provided with a value, the `root` func parameter is called instead. This exists so that nested
+        /// If-Then-Else values can wrap themselves in parentheses. The workshop can actually read these just fine
+        /// without the parentheses, but it's consistent with the workshop code copied back from the game. This also allows
+        /// allows nested If-Then-Elses in the c-syntax to be decompiled by overpy.</param>
+        /// <returns>The value returned by the chosen match.</returns>
         public T Match<T>(
-            Func<WorkshopOperator?, WorkshopOperator?, T> binary,
+            Func<Op?, Op?, T> binary,
             Func<int, T> all,
             Func<T> root,
             Func<T> ternaryValue = null
@@ -508,18 +460,40 @@ static class ElementWorkshopWriter
             {
                 case OperatedType.Binary: return binary(left, right);
                 case OperatedType.All: return all(precedence);
-                case OperatedType.TernaryRhs: return (ternaryValue ?? root).Invoke();
+                case OperatedType.Ternary: return (ternaryValue ?? root).Invoke();
                 case OperatedType.Root: default: return root();
             }
         }
 
+        /// <summary>Denotes that an expression is not being operated on and is actually the root
+        /// expression in the simplification tree.</summary>
+        public static Operated Root() => new(OperatedType.Root);
+        /// <summary>An operation is occuring on the entirety of the subgraph.</summary>
+        /// <param name="precedence">The precedence of the operation.</param>
+        public static Operated All(int precedence) => new(OperatedType.All, default, default, precedence);
+        /// <summary>An binary operation from the left and/or right is occuring to a value in the graph.</summary>
+        /// <param name="left">The operation from the left-hand side.</param>
+        /// <param name="right">The operation from the right-hand size.</param>
+        /// <exception cref="ArgumentException">An exception is thrown if both left and right parameters are null.</exception>
+        public static Operated Binary(Op? left, Op? right)
+        {
+            // Either left or right should have a value.
+            if (!left.HasValue && !right.HasValue)
+                throw new ArgumentException("Binary give no operation");
+            return new(OperatedType.Binary, left, right, default);
+        }
+        /// <summary>A expression is being used as the result or alternative of an If-Then-Else.</summary>
+        public static Operated TernaryValue() => new Operated(OperatedType.Ternary);
+
         OperatedType opType;
-        WorkshopOperator? left;
-        WorkshopOperator? right;
+        // 'left' and 'right' are only used if OperatedType is Binary.
+        Op? left;
+        Op? right;
+        // 'precedence' is only used if OperatedType is All.
         int precedence;
 
         private Operated(OperatedType opType) => (this.opType, left, right, precedence) = (opType, default, default, default);
-        private Operated(OperatedType opType, WorkshopOperator? left, WorkshopOperator? right, int precedence)
+        private Operated(OperatedType opType, Op? left, Op? right, int precedence)
         {
             this.opType = opType;
             this.left = left;
@@ -527,23 +501,12 @@ static class ElementWorkshopWriter
             this.precedence = 0;
         }
 
-        public static Operated Root() => new(OperatedType.Root);
-        public static Operated All(int precedence) => new(OperatedType.All, default, default, precedence);
-        public static Operated Binary(WorkshopOperator? left, WorkshopOperator? right)
-        {
-            // Either left or right should have a value.
-            if (!left.HasValue && !right.HasValue)
-                throw new Exception("Binary give no operation");
-            return new(OperatedType.Binary, left, right, default);
-        }
-        public static Operated TernaryValue() => new Operated(OperatedType.TernaryRhs);
-
         enum OperatedType
         {
             Root,
             All,
             Binary,
-            TernaryRhs
+            Ternary
         }
     }
 }
