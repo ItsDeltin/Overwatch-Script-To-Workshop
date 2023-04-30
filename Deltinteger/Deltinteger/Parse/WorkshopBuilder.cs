@@ -9,6 +9,9 @@ namespace Deltin.Deltinteger
     {
         public bool Tab { get; set; } = false;
         public OutputLanguage OutputLanguage { get; }
+        public bool CStyle { get; } = false;
+        public bool IncludeComments { get; } = false;
+
         private readonly StringBuilder _builder;
         private int _indentCount;
         private bool _space = false;
