@@ -46,7 +46,7 @@ static class WorkshopStringUtility
 
             // The workshop uses UTF8 encoding.
             var currentStubWithDecorations = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub);
-            var currentStubLength = Encoding.UTF8.GetByteCount(currentStubWithDecorations);
+            var currentStubLength = LengthOfStringInWorkshop(currentStubWithDecorations);
 
             // In theory this should be MAX_STRING_STUB_BYTE_LENGTH or MAX_STRING_STUB_BYTE_LENGTH - 1 if isLastStub,
             // but this seems to work fine.
@@ -231,6 +231,12 @@ static class WorkshopStringUtility
     }
 
     readonly record struct TextProgress(string Text, int NewPosition);
+
+    /// <summary>Gets the byte count of a string once it is imported into the workshop.</summary>
+    static int LengthOfStringInWorkshop(string str)
+    {
+        return Encoding.UTF8.GetByteCount(str.Replace("\r", "\\r").Replace("\n", "\\n"));
+    }
 
     /// <summary>Makes an OSTW string more compatible with the workshop.
     /// Escaped single quotes are unescaped, unescaped double quotes are escaped.</summary>
