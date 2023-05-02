@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Elements
 
         public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
-            ElementWorkshopWriter.ElementToWorkshop(b, this);
+            ElementWorkshopWriter.ElementToWorkshop(b, this, context == ToWorkshopContext.ConditionValue);
         }
 
         public void ParametersToWorkshop(WorkshopBuilder b, bool omitNull = false)

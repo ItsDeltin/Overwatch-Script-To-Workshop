@@ -8,7 +8,8 @@ static class ElementWorkshopWriter
     /// <summary>Writes an element to the workshop output.</summary>
     /// <param name="b">The workshop output builder.</param>
     /// <param name="element">The element that is written to the output.</param>
-    public static void ElementToWorkshop(WorkshopBuilder b, Element element)
+    /// <param name="isCondition">Is the element a condition in a rule?</param>
+    public static void ElementToWorkshop(WorkshopBuilder b, Element element, bool isCondition)
     {
         if (b.CStyle)
         {
@@ -19,10 +20,10 @@ static class ElementWorkshopWriter
         else
             // c-style workshop output is disabled,
             // write to workshop normally.
-            FunctionToWorkshop(b, element);
+            FunctionToWorkshop(b, element, isCondition);
     }
 
-    static void FunctionToWorkshop(WorkshopBuilder b, Element element)
+    static void FunctionToWorkshop(WorkshopBuilder b, Element element, bool isCondition)
     {
         // Number
         if (element is NumberElement numberElement)
@@ -49,6 +50,16 @@ static class ElementWorkshopWriter
             // All teams
             else
                 b.AppendKeyword("All Teams");
+            return;
+        }
+        // Special compare output for conditions.
+        else if (element.Function.Name == "Compare" && isCondition)
+        {
+            element.ParameterValues[0].ToWorkshop(b, ToWorkshopContext.NestedValue);
+            b.Append(" ");
+            element.ParameterValues[1].ToWorkshop(b, ToWorkshopContext.NestedValue);
+            b.Append(" ");
+            element.ParameterValues[2].ToWorkshop(b, ToWorkshopContext.NestedValue);
             return;
         }
 
@@ -429,7 +440,7 @@ static class ElementWorkshopWriter
     /// <summary>A normal workshop value. The end of a branch in the simplification graph.</summary>
     record struct SimplifyElement(Element element) : ISimplifyExpression
     {
-        public void ToWorkshop(WorkshopBuilder builder, Operated operated) => FunctionToWorkshop(builder, element);
+        public void ToWorkshop(WorkshopBuilder builder, Operated operated) => FunctionToWorkshop(builder, element, false);
     }
 
     /// <summary>This is passed to an ISimplifyExpression to describe how that expression is being used.</summary>
