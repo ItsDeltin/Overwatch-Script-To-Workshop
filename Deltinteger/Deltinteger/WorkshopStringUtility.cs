@@ -71,12 +71,22 @@ static class WorkshopStringUtility
                     stubs = new();
                 }
             }
-            lastValidDecoratedStub = currentStubWithDecorations;
+            else
+            {
+                lastValidDecoratedStub = currentStubWithDecorations;
+            }
         }
 
         // Add remnant stub
-        AddStub(stubs, lastValidDecoratedStub, currentFormats);
-        total.Add(stubs);
+        if (currentStub.Length != 0)
+        {
+            AddStub(stubs, DecorateStub(currentStub, splitHead, splitTail, stubs.Count == 0, true), currentFormats);
+        }
+        // Add remnant group
+        if (stubs.Count != 0)
+        {
+            total.Add(stubs);
+        }
 
         // List<List<StringChunk>> to StringChunk[][]
         return total.Select(t => t.ToArray()).ToArray();
@@ -84,7 +94,11 @@ static class WorkshopStringUtility
 
     static string DecorateStub(string stub, string splitHead, string splitTail, bool isFirstStub, bool isLastStub)
     {
-        return isFirstStub ? splitTail + stub : stub + (isLastStub ? splitHead : "");
+        if (isFirstStub)
+            stub = splitTail + stub;
+        if (isLastStub)
+            stub += splitHead;
+        return stub;
     }
 
     /// <summary>Adds a stub to a list of stubs.</summary>
@@ -142,6 +156,8 @@ static class WorkshopStringUtility
             str[position] != '{' &&
             // Do not consume any slashes in case it is the start of a line comment.
             str[position] != '/' &&
+            // Do not consume any pounds in case it is the start of a line comment.
+            str[position] != '#' &&
             // This is only possible on the first 'do' iteration. If we get a whitespace, only return that whitespace.
             !char.IsWhiteSpace(captured.Last()) &&
             // The next character is a whitespace, we can stop here.
@@ -214,20 +230,39 @@ static class WorkshopStringUtility
     /// <summary>Checks for a line comment at the provided text position.</summary>
     static Nullable<TextProgress> GetCommentChunk(string str, int position)
     {
-        // Do nothing if the next 2 characters are not '//'.
-        if (position >= str.Length - 2 || str[position] != '/' || str[position + 1] != '/')
-            return null;
+        string chunk;
 
-        string chunk = "//";
-        position += 2;
+        // # string
+        if (position < str.Length && str[position] == '#')
+        {
+            chunk = "#";
+            position += 1;
+        }
+        // Double slash string
+        else if (position < str.Length - 1 && str[position] == '/' && str[position + 1] == '/')
+        {
+            chunk = "//";
+            position += 2;
+        }
+        // Not a string
+        else return null;
+
+        // Consume until end of line.
+        bool stopAppendingChunk = false;
         for (; position < str.Length; position++)
         {
-            chunk += str[position];
             // End at newline
             if (str[position] == '\n')
                 break;
+
+            // Stop adding to chunk once the maximum length has been reached.
+            if (!stopAppendingChunk && LengthOfStringInWorkshop(chunk + str[position] + '\n') >= Constants.MAX_STRING_STUB_BYTE_LENGTH)
+                stopAppendingChunk = true;
+
+            if (!stopAppendingChunk)
+                chunk += str[position];
         }
-        return new(chunk, position + 1);
+        return new(chunk + '\n', position + 1);
     }
 
     readonly record struct TextProgress(string Text, int NewPosition);
