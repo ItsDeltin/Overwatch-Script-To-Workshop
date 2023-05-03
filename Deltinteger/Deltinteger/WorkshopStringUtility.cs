@@ -19,8 +19,6 @@ static class WorkshopStringUtility
     /// 128 byte chunks.</returns>
     public static StringChunk[][] ChunkSplit(string value, string splitHead, string splitTail, char[] stringCharacters)
     {
-        // Escape the input string. Reconsider this if the value may be provided with something already escaped.
-        value = value.Replace("\"", "\\\"");
         // Ensure parameters are not null.
         splitHead = splitHead ?? string.Empty;
         splitTail = splitTail ?? string.Empty;
@@ -158,6 +156,8 @@ static class WorkshopStringUtility
             str[position] != '/' &&
             // Do not consume any pounds in case it is the start of a line comment.
             str[position] != '#' &&
+            // Do not consume string characters
+            !stringCharacters.Contains(str[position]) &&
             // This is only possible on the first 'do' iteration. If we get a whitespace, only return that whitespace.
             !char.IsWhiteSpace(captured.Last()) &&
             // The next character is a whitespace, we can stop here.
@@ -206,7 +206,7 @@ static class WorkshopStringUtility
         if (!stringCharacters.Contains(str[position]))
             return null;
         // Start chunk using string terminator.
-        string chunk = str[position].ToString();
+        string chunk = "\\" + str[position].ToString();
         // Save the character used to start the string.
         char terminateCharacter = str[position];
         bool escaping = false;
@@ -214,15 +214,26 @@ static class WorkshopStringUtility
         position++;
         for (; position < str.Length; position++)
         {
-            chunk += str[position];
-            if (!escaping)
+            if (escaping)
             {
-                if (str[position] == '\\')
-                    escaping = true;
-                else if (str[position] == terminateCharacter)
-                    break;
+                escaping = false;
+                // Add 2 extra backslashes if there is a " in a double quoted string.
+                if (terminateCharacter == '"' && str[position] == '"')
+                    chunk += @"\\";
+                chunk += "\\" + str[position];
             }
-            escaping = false;
+            else if (str[position] == '\\')
+                escaping = true;
+            else if (str[position] == terminateCharacter)
+            {
+                // End of string found.
+                if (terminateCharacter == '"')
+                    chunk += '\\';
+                chunk += str[position];
+                break;
+            }
+            else
+                chunk += str[position];
         }
         return new(chunk, position + 1);
     }
