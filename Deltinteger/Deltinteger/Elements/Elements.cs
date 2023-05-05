@@ -256,7 +256,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element FacingDirectionOf(IWorkshopTree player) => Part("Facing Direction Of", player);
         public static Element Abs(IWorkshopTree value) => Part("Absolute Value", value);
         public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValueFromWorkshop("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest"));
-        public static Element CustomString(string value, params Element[] formats) => new StringElement(value, formats);
+        public static Element CustomString(string value, params IWorkshopTree[] formats) => new StringElement(value, formats);
         public static Element StringLength(IWorkshopTree value) => Part("String Length", value);
         public static Element StringSlice(IWorkshopTree value, IWorkshopTree start, IWorkshopTree count) => Part("String Slice", value, start, count);
         public static Element LastEntity() => Part("Last Entity");
