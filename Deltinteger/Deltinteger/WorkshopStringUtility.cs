@@ -7,6 +7,8 @@ using Constants = Deltin.Deltinteger.Constants;
 
 static class WorkshopStringUtility
 {
+    public const char PREVENT_FORMAT_CHARACTER = '⨁';
+
     /// <summary>Splits a string into 511 bytes long segments, with each of those segments split into 128 byte chunks.
     /// A string literal in the workshop can only be 128 bytes long, but by appending strings you can reach a
     /// maximum of 511 bytes.</summary>
@@ -28,7 +30,8 @@ static class WorkshopStringUtility
         var stubs = new List<StringChunk>(); // 128 byte stubs
         var currentStub = string.Empty;
         string lastValidDecoratedStub = null;
-        var currentFormats = new List<int>();
+        var formatHelper = new ChunkedFormatHelper();
+        bool stubHasFormatPrevention = false;
 
         int position = 0;
         while (position < value.Length)
@@ -38,7 +41,7 @@ static class WorkshopStringUtility
             var isLastStub = stubs.Count == 3;
 
             // Get the next minimum chunk.
-            var (addText, newPosition) = GetMinimumChunk(value, stringCharacters, currentFormats, position);
+            var (addText, newPosition, addedTextNeedsFormatPrevention) = GetMinimumChunk(value, stringCharacters, formatHelper, position);
             currentStub += addText;
             position = newPosition;
 
@@ -50,16 +53,17 @@ static class WorkshopStringUtility
             // but this seems to work fine.
             var max = Constants.MAX_STRING_STUB_BYTE_LENGTH + 1;
 
-            if (currentStubLength >= max || currentFormats.Count > 3)
+            if (currentStubLength >= max || formatHelper.OverCapacity())
             {
                 // If 'previousDecoratedStub' is null, splitHead + splitTail exceeds the workshop's string byte size.
                 if (lastValidDecoratedStub == null)
                     throw new System.Exception("The lengths of the splitHead and splitTail parameters combined exceed " + Constants.MAX_STRING_STUB_BYTE_LENGTH + " bytes");
 
                 // Add last valid stub.
-                AddStub(stubs, lastValidDecoratedStub, currentFormats);
+                AddStub(stubs, lastValidDecoratedStub, formatHelper, stubHasFormatPrevention);
 
                 // Update the current stub.
+                stubHasFormatPrevention = addedTextNeedsFormatPrevention;
                 currentStub = addText;
                 lastValidDecoratedStub = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub);
 
@@ -72,13 +76,14 @@ static class WorkshopStringUtility
             else
             {
                 lastValidDecoratedStub = currentStubWithDecorations;
+                stubHasFormatPrevention |= addedTextNeedsFormatPrevention;
             }
         }
 
         // Add remnant stub
         if (currentStub.Length != 0)
         {
-            AddStub(stubs, DecorateStub(currentStub, splitHead, splitTail, stubs.Count == 0, true), currentFormats);
+            AddStub(stubs, DecorateStub(currentStub, splitHead, splitTail, stubs.Count == 0, true), formatHelper, stubHasFormatPrevention);
         }
         // Add remnant group
         if (stubs.Count != 0)
@@ -102,11 +107,10 @@ static class WorkshopStringUtility
     /// <summary>Adds a stub to a list of stubs.</summary>
     /// <param name="stubs">The list containing the stubs.</param>
     /// <param name="lastValidDecoratedStub">The stub text.</param>
-    /// <param name="currentFormats">The stub's text formats.</param>
-    static void AddStub(List<StringChunk> stubs, string lastValidDecoratedStub, List<int> currentFormats)
+    /// <param name="formatHelper">The stub's text formats.</param>
+    static void AddStub(List<StringChunk> stubs, string lastValidDecoratedStub, ChunkedFormatHelper formatHelper, bool hasFormatPrevention)
     {
-        stubs.Add(new(lastValidDecoratedStub, currentFormats.Take(3).ToArray()));
-        currentFormats.RemoveRange(0, Math.Min(3, currentFormats.Count));
+        stubs.Add(new(lastValidDecoratedStub, formatHelper.ExtractStub(), hasFormatPrevention));
     }
 
     /// <summary>
@@ -116,22 +120,22 @@ static class WorkshopStringUtility
     /// </summary>
     /// <param name="str">The input text.</param>
     /// <param name="stringCharacters">The characters which start and end strings such as ' and ".</param>
-    /// <param name="currentFormats">The formats in the current stub. GetMinimumChunk may modify this.</param>
+    /// <param name="formatHelper">The formats in the current stub.</param>
     /// <param name="position">The current text position.</param>
     static TextProgress GetMinimumChunk(
         string str,
         char[] stringCharacters,
-        List<int> currentFormats,
+        ChunkedFormatHelper formatHelper,
         int position)
     {
 
         // Check for format.
-        var formatChunk = GetFormatChunk(str, currentFormats, position);
+        var formatChunk = GetFormatChunk(str, formatHelper, position);
         if (formatChunk.HasValue)
             return formatChunk.Value;
 
         // Check for string.
-        var stringChunk = GetStringChunk(str, stringCharacters, position);
+        var stringChunk = GetStringChunk(str, stringCharacters, formatHelper, position);
         if (stringChunk.HasValue)
             return stringChunk.Value;
 
@@ -156,7 +160,7 @@ static class WorkshopStringUtility
             str[position] != '/' &&
             // Do not consume any pounds in case it is the start of a line comment.
             str[position] != '#' &&
-            // Do not consume string characters
+            // Do not consume quotes
             !stringCharacters.Contains(str[position]) &&
             // This is only possible on the first 'do' iteration. If we get a whitespace, only return that whitespace.
             !char.IsWhiteSpace(captured.Last()) &&
@@ -167,49 +171,34 @@ static class WorkshopStringUtility
     }
 
     /// <summary>Checks for a format at the provided text position.</summary>
-    static Nullable<TextProgress> GetFormatChunk(string str, List<int> currentFormats, int position)
+    static Nullable<TextProgress> GetFormatChunk(string str, ChunkedFormatHelper formatHelper, int position)
     {
-        // Format start
-        // 'str.Length - 1' would also technically work, this would catch {} at eof though.
-        if (str[position] == '{' && position < str.Length - 2)
-        {
-            position++;
-            string number = string.Empty;
-            // Get format number
-            while (position < str.Length && char.IsNumber(str[position]))
-            {
-                number += str[position];
-                position++;
-            }
-            // If number.Length == 0, then the text at position is just "{}" and is not a format.
-            // The text at the end of the number must be '}'.
-            if (number.Length > 0 && position < str.Length && str[position] == '}')
-            {
-                // The number in the format.
-                int formatInput = int.Parse(number);
-                int formatValue = currentFormats.IndexOf(formatInput);
-                if (formatValue == -1)
-                {
-                    currentFormats.Add(formatInput);
-                    formatValue = currentFormats.Count == 4 ? 0 : currentFormats.Count - 1;
-                }
-                return new("{" + formatValue + "}", position + 1);
-            }
-        }
-        return null;
+        var formatPattern = FindFormatPattern(str, position);
+        if (!formatPattern.HasValue)
+            return null;
+
+        var (formatInput, newPosition) = formatPattern.Value;
+        int formatWorkshop = formatHelper.GetFormat(formatInput);
+        return new("{" + formatWorkshop + "}", newPosition);
     }
 
     /// <summary>Checks for a string at the provided text position.</summary>
-    static Nullable<TextProgress> GetStringChunk(string str, char[] stringCharacters, int position)
+    static Nullable<TextProgress> GetStringChunk(string str, char[] stringCharacters, ChunkedFormatHelper formatHelper, int position)
     {
         // Do nothing if not start of string.
         if (!stringCharacters.Contains(str[position]))
             return null;
         // Start chunk using string terminator.
-        string chunk = "\\" + str[position].ToString();
+        string chunk = string.Empty;
+        // Escape if it is a double quote.
+        if (str[position] == '"')
+            chunk = "\\";
+        // Add opening string character.
+        chunk += str[position].ToString();
         // Save the character used to start the string.
         char terminateCharacter = str[position];
         bool escaping = false;
+        bool hasFormatPrevention = false;
         // Progress past starting string character.
         position++;
         for (; position < str.Length; position++)
@@ -233,9 +222,19 @@ static class WorkshopStringUtility
                 break;
             }
             else
-                chunk += str[position];
+            {
+                var format = FindFormatPattern(str, position);
+                if (format.HasValue && format.Value.FormatValue <= 2)
+                {
+                    hasFormatPrevention = true;
+                    chunk += PREVENT_FORMAT_CHARACTER.ToString() + format.Value.FormatValue + "}";
+                    position = format.Value.EndOfFormatPosition - 1;
+                }
+                else
+                    chunk += str[position];
+            }
         }
-        return new(chunk, position + 1);
+        return new(chunk, position + 1, hasFormatPrevention);
     }
 
     /// <summary>Checks for a line comment at the provided text position.</summary>
@@ -276,7 +275,63 @@ static class WorkshopStringUtility
         return new(chunk + '\n', position + 1);
     }
 
-    readonly record struct TextProgress(string Text, int NewPosition);
+    static Nullable<(int FormatValue, int EndOfFormatPosition)> FindFormatPattern(string str, int position)
+    {
+        // Format start
+        // 'str.Length - 1' would also technically work, this would catch {} at eof though.
+        if (str[position] == '{' && position < str.Length - 2)
+        {
+            position++;
+            string number = string.Empty;
+            // Get format number
+            while (position < str.Length && char.IsNumber(str[position]))
+            {
+                number += str[position];
+                position++;
+            }
+            // If number.Length == 0, then the text at position is just "{}" and is not a format.
+            // The text at the end of the number must be '}'.
+            if (number.Length > 0 && position < str.Length && str[position] == '}')
+            {
+                // The number in the format.
+                int formatInput = int.Parse(number);
+                return new(formatInput, position + 1);
+            }
+        }
+        return null;
+    }
+
+    readonly record struct TextProgress(string Text, int NewPosition, bool HasFormatPrevention = false);
+
+    struct ChunkedFormatHelper
+    {
+        List<int> currentFormats;
+
+        public ChunkedFormatHelper()
+        {
+            currentFormats = new List<int>();
+        }
+
+        public int GetFormat(int userInput)
+        {
+            int workshopValue = currentFormats.IndexOf(userInput);
+            if (workshopValue == -1)
+            {
+                currentFormats.Add(userInput);
+                workshopValue = currentFormats.Count - 1;
+            }
+            return workshopValue % 3;
+        }
+
+        public bool OverCapacity() => currentFormats.Count > 3;
+
+        public int[] ExtractStub()
+        {
+            var stubFormats = currentFormats.Take(3).ToArray();
+            currentFormats.RemoveRange(0, Math.Min(3, currentFormats.Count));
+            return stubFormats;
+        }
+    }
 
     /// <summary>Gets the byte count of a string once it is imported into the workshop.</summary>
     static int LengthOfStringInWorkshop(string str)
@@ -322,4 +377,4 @@ static class WorkshopStringUtility
     }
 }
 
-readonly record struct StringChunk(string Value, int[] Parameters);
+readonly record struct StringChunk(string Value, int[] Parameters, bool HasFormatPrevention);

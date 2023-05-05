@@ -22,12 +22,20 @@ partial class GlobalFunctions
             var split = WorkshopStringUtility.ChunkSplit(content, "/*", "*/", new[] { '\'', '"' });
 
             foreach (var log in split)
-                actionSet.AddAction(Elements.Element.LogToInspector(
-                    StringElement.Join(log.Select(l => new StringElement(l.Value, false, l.Parameters.Select(p =>
-                    {
-                        return p < formats.Elements.Length ? formats.Elements[p] : Element.Null();
-                    }).ToArray())).ToArray())
-                ));
+            {
+                var hasFormatPrevention = log.Any(l => l.HasFormatPrevention);
+                var workshopString = StringElement.Join(log.Select(stub => Element.CustomString(stub.Value, stub.Parameters.Select(p =>
+                    p < formats.Elements.Length ? formats.Elements[p] : Element.Null()).ToArray())).ToArray());
+
+                // Text has a literal format, do a replace trick so that the workshop doesn't mess it up.
+                if (hasFormatPrevention)
+                    workshopString = Element.Part("String Replace",
+                        workshopString,
+                        new StringElement(WorkshopStringUtility.PREVENT_FORMAT_CHARACTER.ToString()),
+                        new StringElement("{"));
+
+                actionSet.AddAction(Elements.Element.LogToInspector(workshopString));
+            }
 
             return null;
         }
