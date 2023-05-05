@@ -166,7 +166,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void ToWorkshop(WorkshopBuilder builder)
         {
-            if (globalLimitReached || playerLimitReached || extGlobalLimitReached || extPlayerLimitReached)
+            if (builder.IncludeComments && (globalLimitReached || playerLimitReached || extGlobalLimitReached || extPlayerLimitReached))
             {
                 List<string> collectionLimitsReached = new List<string>();
 
@@ -214,7 +214,7 @@ namespace Deltin.Deltinteger.Parse
 
             bool anyExtendedGlobal = ExtendedVariableList(true).Any(v => v != null);
             bool anyExtendedPlayer = ExtendedVariableList(false).Any(v => v != null);
-            if (anyExtendedGlobal || anyExtendedPlayer)
+            if (builder.IncludeComments && (anyExtendedGlobal || anyExtendedPlayer))
             {
                 builder.AppendLine();
                 builder.AppendLine($"// Extended collection variables:");

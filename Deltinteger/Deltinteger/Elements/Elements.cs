@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Assets;
+using Deltin.Deltinteger.Elements.WorkshopConverter;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -26,37 +27,12 @@ namespace Deltin.Deltinteger.Elements
 
         public override string ToString() => Function.Name.ToString() + (ParameterValues.Length == 0 ? "" : "(" + string.Join(", ", ParameterValues.Select(v => v.ToString())) + ")");
 
-        public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
+        public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
         {
-            var action = Function as ElementJsonAction;
-            if (action != null && (action.Indentation == "outdent" || action.Indentation == "drop")) b.Outdent();
-
-            // Add a comment and newline
-            if (Comment != null) b.AppendLine($"\"{Comment}\"");
-
-            // Add the disabled tag if the element is disabled.
-            if (Function is ElementJsonAction && Disabled) b.AppendKeyword("disabled").Append(" ");
-
-            // Add the name of the element.
-            b.AppendKeyword(Function.Name);
-
-            // Add the parameters.
-            AddMissingParameters();
-            if (ParameterValues.Length > 0)
-            {
-                b.Append("(");
-                ParametersToWorkshop(b);
-                b.Append(")");
-            }
-
-            if (action != null)
-            {
-                b.AppendLine(";");
-                if (action.Indentation == "indent" || action.Indentation == "drop") b.Indent();
-            }
+            ElementWorkshopWriter.ElementToWorkshop(b, this, context == ToWorkshopContext.ConditionValue);
         }
 
-        protected void ParametersToWorkshop(WorkshopBuilder b, bool omitNull = false)
+        public void ParametersToWorkshop(WorkshopBuilder b, bool omitNull = false)
         {
             int end = !omitNull ? ParameterValues.Length : IndexOfLastNotNullParameter() + 1;
             for (int i = 0; i < end; i++)
@@ -67,10 +43,10 @@ namespace Deltin.Deltinteger.Elements
         }
 
         /// <summary>Gets the index of the last parameter that is not Null. -1 is returned if every parameter is Null.</summary>
-        protected int IndexOfLastNotNullParameter() => Array.FindLastIndex(ParameterValues, p => p is Element element && element.Function.Name != "Null");
+        public int IndexOfLastNotNullParameter() => Array.FindLastIndex(ParameterValues, p => p is Element element && element.Function.Name != "Null");
 
         /// <summary>Makes sure no parameter values are null.</summary>
-        private void AddMissingParameters()
+        public void AddMissingParameters()
         {
             List<IWorkshopTree> parameters = new List<IWorkshopTree>();
 
@@ -397,7 +373,6 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(((decimal)Value).ToString());
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
 
         public override string ToString() => Value.ToString();

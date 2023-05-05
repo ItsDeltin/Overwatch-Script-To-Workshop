@@ -17,20 +17,6 @@ namespace Deltin.Deltinteger.Elements
         public StringElement(string value, params IWorkshopTree[] formats) : this(value, false, formats) { }
         public StringElement() : this(null, false) { }
 
-        public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
-        {
-            b.AppendKeyword(Localized ? "String" : "Custom String");
-            b.Append("(\"" + (Localized ? b.Kw(Value) : Value) + "\"");
-
-            if (ParameterValues.Length > 0 && IndexOfLastNotNullParameter() != -1)
-            {
-                b.Append(", ");
-                ParametersToWorkshop(b, true);
-            }
-
-            b.Append(")");
-        }
-
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((StringElement)other).Value == Value && ((StringElement)other).Localized == Localized;
 
         public static IWorkshopTree Join(params IWorkshopTree[] elements)

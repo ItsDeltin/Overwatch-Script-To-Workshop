@@ -58,10 +58,10 @@ namespace Deltin.Deltinteger.Elements
                 .AppendKeywordLine("event")
                 .AppendLine("{")
                 .Indent();
-            
+
             ElementRoot.Instance.GetEnumValue("Event", RuleEvent.ToString()).ToWorkshop(builder, ToWorkshopContext.Other);
             builder.Append(";").AppendLine();
-            
+
             // Add attributes.
             switch (RuleType)
             {
@@ -90,22 +90,24 @@ namespace Deltin.Deltinteger.Elements
 
                 foreach (var condition in Conditions)
                     condition.ToWorkshop(builder);
-                
+
                 builder.Outdent().AppendLine("}");
             }
 
             // Add actions.
             if (Actions?.Length > 0)
             {
-                builder.AppendLine()
-                    .AppendLine("// Action count: " + Actions.Length) // Action count comment.
-                    .AppendKeywordLine("actions")
-                    .AppendLine("{")
-                    .Indent();
+                builder.AppendLine();
+
+                // Action count comment.
+                if (builder.IncludeComments)
+                    builder.AppendLine("// Action count: " + Actions.Length);
+
+                builder.AppendKeywordLine("actions").AppendLine("{").Indent();
 
                 foreach (var action in Actions)
                     action.ToWorkshop(builder, ToWorkshopContext.Action);
-                
+
                 builder.Outdent().AppendLine("}");
             }
             builder.Outdent().AppendLine("}");
