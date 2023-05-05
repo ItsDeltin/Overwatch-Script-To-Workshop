@@ -1,10 +1,9 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
-using Deltin.Deltinteger.LanguageServer.Settings.TomlSettings;
 
 namespace Deltin.Deltinteger.Parse.Settings
 {
-    public class ProjectSettings
+    public class DsTomlSettings
     {
         [JsonPropertyName("entry_point")]
         public string EntryPoint { get; set; } = null;
@@ -18,15 +17,11 @@ namespace Deltin.Deltinteger.Parse.Settings
         public bool CStyleWorkshopOutput { get; set; } = false;
         [JsonPropertyName("compile_miscellaneous_comments")]
         public bool CompileMiscellaneousComments { get; set; } = true;
+        [JsonPropertyName("out_file")]
+        public string OutFile { get; set; }
+        [JsonPropertyName("variable_template")]
+        public bool VariableTemplate { get; set; }
 
-        public static readonly ProjectSettings Default = new ProjectSettings();
-    }
-
-    public enum DeleteClassStyle
-    {
-        [EnumMember(Value = "inline")]
-        Inline,
-        [EnumMember(Value = "subroutine")]
-        Subroutine
+        public static readonly DsTomlSettings Default = new DsTomlSettings();
     }
 }
