@@ -29,7 +29,7 @@ const comment: Pattern = {
         // Generated code timestamp
         {
             match: /\[[0-9]{2}:[0-9]{2}:[0-9]{2}\]/,
-            name: 'comment.block.documentation markup.error'
+            name: 'comment.block.documentation markup.error invalid.illegal'
         }
     ]
 }

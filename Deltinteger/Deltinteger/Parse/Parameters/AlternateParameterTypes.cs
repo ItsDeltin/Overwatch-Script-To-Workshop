@@ -244,6 +244,32 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+
+    class ConstExpressionArrayParameter : ConstArrayParameter<IExpression>
+    {
+        public ConstExpressionArrayParameter(string name, MarkupBuilder documentation, ICodeTypeSolver type, bool optional = false) : base(type, null, name, documentation, optional)
+        {
+        }
+
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData)
+        {
+            var expressions = (IEnumerable<IExpression>)additionalParameterData;
+            return new ConstWorkshopArray(expressions.Select(e => e.Parse(actionSet)).ToArray());
+        }
+
+        protected override bool TryGetValue(IExpression expression, out IExpression value)
+        {
+            value = expression;
+            return true;
+        }
+
+        public record ConstWorkshopArray(IWorkshopTree[] Elements) : IWorkshopTree
+        {
+            public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
+            public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => throw new NotImplementedException();
+        }
+    }
+
     class FileParameter : CodeParameter
     {
         public string[] FileTypes { get; }
@@ -307,6 +333,23 @@ namespace Deltin.Deltinteger.Parse
         protected T GetFile<T>(ParseInfo parseInfo, string path, Func<Uri, T> factory) where T : LoadedFile
         {
             return Cache.FileIdentifier<T>.FromFile(parseInfo.Script.Document.Cache, path, factory);
+        }
+    }
+
+    class TextFileParameter : FileParameter
+    {
+        public TextFileParameter(string parameterName, string description, ITypeSupplier typeSupplier, params string[] fileTypes) : base(parameterName, description, typeSupplier, fileTypes)
+        {
+        }
+
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
+        {
+            string filepath = base.Validate(parseInfo, value, valueRange, additionalData) as string;
+
+            if (filepath == null)
+                return null;
+
+            return GetFile(parseInfo, filepath, uri => new LoadedFile(uri)).GetContent();
         }
     }
 }

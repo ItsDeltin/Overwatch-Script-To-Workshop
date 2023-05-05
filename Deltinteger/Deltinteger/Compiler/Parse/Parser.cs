@@ -573,6 +573,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Make sure that the following token is a string.
                     if (Is(TokenType.String, 1) || Is(TokenType.At, 1)) return ParseFormattedString();
                     goto default;
+                // Json
+                case TokenType.Import: return ParseJsonImport();
                 // Other
                 default:
                     // Check if this is a lambda before expression group or identifier.
@@ -1756,6 +1758,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             return EndNode(new InterpolatedStringExpression(tail, parts));
+        }
+
+        ImportJsonSyntax ParseJsonImport()
+        {
+            StartNode();
+            ParseExpected(TokenType.Import);
+            ParseExpected(TokenType.Parentheses_Open);
+            var file = ParseExpected(TokenType.String);
+            ParseExpected(TokenType.Parentheses_Close);
+
+            return EndNode(new ImportJsonSyntax(file));
         }
 
         /// <summary>Parses the root of a file.</summary>

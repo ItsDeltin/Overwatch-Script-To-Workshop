@@ -5,8 +5,11 @@ namespace Deltin.Deltinteger.Parse
 {
     static class VariableMaker
     {
-        public static IVariable New(string name, CodeType type) =>
-            new GenericVariableProvider(name, type, VariableType.Dynamic, false);
+        public static IVariable New(string name, CodeType type, IVariableDefault defaultValue = null) =>
+            new GenericVariableProvider(name, type, VariableType.Dynamic, false)
+            {
+                DefaultValue = defaultValue
+            };
 
         public static IVariable NewStatic(string name, CodeType type) =>
             new GenericVariableProvider(name, type, VariableType.Dynamic, true);
@@ -14,20 +17,22 @@ namespace Deltin.Deltinteger.Parse
         public static IVariable NewPropertyLike(string name, CodeType type) =>
             new GenericVariableProvider(name, type, VariableType.ElementReference, false);
 
-        public static IVariable NewUnambiguousPropertyLike(string name, CodeType type) =>
+        public static IVariable NewUnambiguousPropertyLike(string name, CodeType type, IVariableDefault defaultValue = null) =>
             new GenericVariableProvider(name, type, VariableType.ElementReference, false)
             {
-                CanBeAmbiguous = false
+                CanBeAmbiguous = false,
+                DefaultValue = defaultValue
             };
 
         class GenericVariableProvider : IVariable
         {
             public string Name { get; }
             public VariableType VariableType { get; }
+            public bool CanBeAmbiguous { get; init; }
+            public IVariableDefault DefaultValue { get; init; }
             readonly CodeType type;
             readonly bool isStatic;
             readonly MarkupBuilder documentation = new MarkupBuilder();
-            public bool CanBeAmbiguous { get; init; }
 
             public GenericVariableProvider(string name, CodeType type, VariableType variableType, bool isStatic)
             {
@@ -75,7 +80,14 @@ namespace Deltin.Deltinteger.Parse
                     Attributes = attributes;
                 }
 
-                public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner = default) => type.GetGettableAssigner(new AssigningAttributes());
+                public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner = default) => type.GetGettableAssigner(new AssigningAttributes()
+                {
+                    DefaultValue = provider.DefaultValue,
+                    VariableType = provider.VariableType,
+                    StoreType = StoreType.FullVariable,
+                    Name = (getAssigner.Tag ?? string.Empty) + Name,
+                    IsGlobal = getAssigner.IsGlobal
+                });
 
                 public bool CanBeAmbiguous() => provider.CanBeAmbiguous;
             }
