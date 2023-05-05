@@ -5,14 +5,16 @@ using System.Linq;
 
 partial class GlobalFunctions
 {
-    static FuncMethod PrintStub(DeltinScript deltinScript) => new FuncMethodBuilder()
+    static FuncMethod PrintFileToWorkshopLog(DeltinScript deltinScript) => new FuncMethodBuilder()
     {
-        Name = "PrintStub",
+        Name = "PrintFileToWorkshopLog",
         Parameters = new CodeParameter[] {
-            new TextFileParameter("file", "", deltinScript.Types),
-            new ConstExpressionArrayParameter("format", "", deltinScript.Types.Any())
+            new TextFileParameter("file", "The file that will be printed via Log To Inspector.", deltinScript.Types),
+            new ConstExpressionArrayParameter("format", "Any formats in the file will be replaced with the values in this array.", deltinScript.Types.AnyArray())
         },
-        Documentation = new MarkupBuilder().Add("Takes the input text file and prints it into a series of ").Code("Log To Inspector").Add(" actions."),
+        Documentation = new MarkupBuilder().Add("Takes the input text file and prints it into a series of ").Code("Log To Inspector").Add(" actions.")
+            .NewLine().Add("This is used by the [Pathmap Editor](https://github.com/ItsDeltin/Pathmap-editor) to export the core pathfinding code via ").Code("Log To Inspector").Add(".")
+            .NewLine().Add("Any format literals such as ").Code("{0}").Add(", ").Code("{1}").Add(", ect. not in strings will be replaced with the values provided in the format parameter."),
         Action = (actionSet, methodCall) =>
         {
             // Get content and formats from parameters.

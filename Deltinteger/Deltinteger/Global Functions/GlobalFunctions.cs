@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
             GetLines(deltinScript),
             GetPoints(deltinScript),
             DoNotOptimize(deltinScript),
-            PrintStub(deltinScript)
+            PrintFileToWorkshopLog(deltinScript)
         };
     }
 }
