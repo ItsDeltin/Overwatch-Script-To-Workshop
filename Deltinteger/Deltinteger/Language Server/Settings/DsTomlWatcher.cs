@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.LanguageServer.Settings
         public override bool IsMatch(Uri uri) => GetFileName(uri) == projectFileName;
         protected override TomlFile<ProjectSettings> Create(Uri uri, ITomlDiagnosticReporter reporter) => new TomlFile<ProjectSettings>(uri, reporter);
         protected override IEnumerable<string> GetFilesInWorkspaceFolder(string workspaceFolder) =>
-            Directory.EnumerateFiles(workspaceFolder, projectFileName, SearchOption.TopDirectoryOnly);
+            Directory.EnumerateFiles(workspaceFolder, projectFileName, SearchOption.AllDirectories);
 
         public ProjectSettings GetProjectSettings(Uri uri)
         {

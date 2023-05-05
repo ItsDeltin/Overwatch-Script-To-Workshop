@@ -53,7 +53,11 @@ namespace Deltin.Deltinteger.LanguageServer.Settings
                             moduleFile.Update();
                             break;
                         }
-                    Debug.Assert(fileFound, "Tried to update non-existent module settings file: '" + uri.ToString() + "'");
+                    if (!fileFound)
+                    {
+                        Debug.Print("Tried to update non-existent module settings file: '" + uri.ToString() + "'");
+                        Add(Create(uri, _diagnosticReporter));
+                    }
                     break;
             }
         }
@@ -85,13 +89,18 @@ namespace Deltin.Deltinteger.LanguageServer.Settings
 
         public T GetSettingsFromUri(Uri uri)
         {
+            (int length, T file) chosen = default;
+
             foreach (var file in _settingFiles)
             {
                 var directory = new Uri(file.Uri, ".");
-                if (directory.IsBaseOf(uri))
-                    return file;
+                var length = directory.LocalPath.Length;
+                if (directory.IsBaseOf(uri) && chosen.length < length)
+                {
+                    chosen = (length, file);
+                }
             }
-            return null;
+            return chosen.file;
         }
 
         protected static string GetFileName(Uri uri) => Path.GetFileName(uri.LocalPath)?.ToLower();
