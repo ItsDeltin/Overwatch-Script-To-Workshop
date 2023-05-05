@@ -240,7 +240,7 @@ static class ElementWorkshopWriter
     {
         switch (element.Function.Name)
         {
-            case "Power": return Op.Power;
+            case "Raise To Power": return Op.Power;
             case "Multiply": return Op.Multiply;
             case "Divide": return Op.Divide;
             case "Modulo": return Op.Modulo;
