@@ -25,6 +25,9 @@ static class ElementWorkshopWriter
 
     static void FunctionToWorkshop(WorkshopBuilder b, Element element, bool isCondition)
     {
+        // Add the parameters.
+        element.AddMissingParameters();
+
         // Number
         if (element is NumberElement numberElement)
         {
@@ -71,9 +74,6 @@ static class ElementWorkshopWriter
 
         // Add the disabled tag if the element is disabled.
         if (element.Function is ElementJsonAction && element.Disabled) b.AppendKeyword("disabled").Append(" ");
-
-        // Add the parameters.
-        element.AddMissingParameters();
 
         if (!b.CStyle || !CStyleOutput(b, element))
             WriteDefault(b, element);
