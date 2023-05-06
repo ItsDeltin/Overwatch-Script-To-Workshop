@@ -14,9 +14,7 @@ class ImportJson : IExpression
 {
     JsonItem root;
 
-    const string X = "x";
-    const string Y = "y";
-    const string Z = "z";
+    const string X = "x", Y = "y", Z = "z", A = "a", R = "r", G = "g", B = "b";
 
     public ImportJson(ParseInfo parseInfo, JsonSyntax syntax)
     {
@@ -85,27 +83,26 @@ class ImportJson : IExpression
     static Result<JsonItem, string> ProcessJobject(ParseInfo parseInfo, JObject jobject)
     {
         // Object is vector?
-        if (jobject.Count == 3 && jobject.ContainsKey(X) && jobject.ContainsKey(Y) && jobject.ContainsKey(Z))
+        if (ComponentObject(parseInfo, jobject, out var vector, X, Y, Z))
         {
-            // Get all children.
-            var xr = ProcessJtoken(parseInfo, jobject[X]);
-            var yr = ProcessJtoken(parseInfo, jobject[Y]);
-            var zr = ProcessJtoken(parseInfo, jobject[Z]);
-
-            // Make sure x, y, and z did not return an error.
-            var xyz = xr.And(yr).And(zr);
-            if (!xyz.IsOk)
-                return Error(xyz.Err);
-
-            var ((x, y), z) = xyz.Value;
-
-            // Make sure the x, y, and z values are numbers.
-            if (x.kind == JsonItemKind.Number && y.kind == JsonItemKind.Number && z.kind == JsonItemKind.Number)
-                return Ok(new JsonItem(parseInfo.Types.Vector(), JsonItemKind.Vector, actionSet =>
-                {
-                    return Vector(x.getValue(actionSet), y.getValue(actionSet), z.getValue(actionSet));
-                }));
+            return Ok(new(parseInfo.Types.Vector(), JsonItemKind.Vector, actionSet => Vector(
+                vector[0].getValue(actionSet), vector[1].getValue(actionSet), vector[2].getValue(actionSet)
+            )));
         }
+        // Object is rgba color?
+        if (ComponentObject(parseInfo, jobject, out var color, R, G, B, A))
+        {
+            return Ok(new(parseInfo.Types.Color(), JsonItemKind.Color, actionSet => Element.CustomColor(
+                color[0].getValue(actionSet),
+                color[1].getValue(actionSet),
+                color[2].getValue(actionSet),
+                color[3].getValue(actionSet)
+            )));
+        }
+        // Object is workshop constant? (Map, Color, Gamemode, ect.)
+        var tryGetWorkshopConstant = CheckAllWorkshopConstantObjects(parseInfo, jobject);
+        if (tryGetWorkshopConstant.HasValue)
+            return tryGetWorkshopConstant.Value;
 
         // Create struct from object.
         var structMaker = new StructMaker(parseInfo.TranslateInfo);
@@ -131,6 +128,55 @@ class ImportJson : IExpression
 
             return structAssigner.GetValues(actionSet);
         }));
+    }
+
+    static bool ComponentObject(ParseInfo parseInfo, JObject jobject, out JsonItem[] items, params string[] properties)
+    {
+        if (jobject.Count == properties.Length && jobject.Properties().All(p => properties.Contains(p.Name)))
+        {
+            var processed = properties.Select(p => ProcessJtoken(parseInfo, jobject[p]));
+
+            // Any process tokens have an error?
+            // Make sure all values are numbers.
+            if (processed.All(p => p.IsOk && p.Value.kind == JsonItemKind.Number))
+            {
+                items = processed.Select(p => p.Value).ToArray();
+                return true;
+            }
+        }
+        items = null;
+        return false;
+    }
+
+    static Result<JsonItem, string>? CheckAllWorkshopConstantObjects(ParseInfo parseInfo, JObject jobject)
+    {
+        // Check every storable workshop constant
+        foreach (var storableEnum in ElementEnum.Storable)
+        {
+            var result = WorkshopConstantObject(parseInfo, jobject, storableEnum);
+            if (result.HasValue)
+                return result.Value;
+        }
+        return null;
+    }
+
+    static Result<JsonItem, string>? WorkshopConstantObject(ParseInfo parseInfo, JObject jobject, string enumIdentifier)
+    {
+        // Only try to return a workshop constant if there is only one property with the correct name with a string value.
+        string keyName = enumIdentifier.ToLower();
+        if (jobject.Count != 1 || !jobject.ContainsKey(keyName) || jobject[keyName].Type != JTokenType.String)
+            return null;
+
+        var value = jobject[keyName].Value<string>();
+        var workshopEnum = ElementRoot.Instance.GetEnum(enumIdentifier);
+        var workshopValue = workshopEnum.Members.FirstOrDefault(m => m.Name == value)?.ToElement();
+
+        if (workshopValue == null)
+            return Error($"\"{value}\" is not a {enumIdentifier} value.\nValid values are:\n{string.Join("\n", workshopEnum.Members.Select(m => $"\"{m.Name}\""))}");
+
+        var type = parseInfo.Types.EnumType(enumIdentifier);
+
+        return Ok(new(type, JsonItemKind.Constant, actionSet => workshopValue));
     }
 
     static Result<JsonItem, string> ProcessJarray(ParseInfo parseInfo, JArray jarray)
@@ -187,6 +233,8 @@ class ImportJson : IExpression
         Array,
         Number,
         Vector,
+        Color,
+        Constant,
         String,
     }
 

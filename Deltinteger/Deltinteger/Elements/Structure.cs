@@ -30,15 +30,15 @@ namespace Deltin.Deltinteger.Elements
         public bool TryGetFunction(string name, out ElementBaseJson function)
         {
             foreach (var value in Values) if (value.Name == name)
-            {
-                function = value;
-                return true;
-            }
+                {
+                    function = value;
+                    return true;
+                }
             foreach (var action in Actions) if (action.Name == name)
-            {
-                function = action;
-                return true;
-            }
+                {
+                    function = action;
+                    return true;
+                }
             function = null;
             return false;
         }
@@ -54,9 +54,10 @@ namespace Deltin.Deltinteger.Elements
 
         public static ElementRoot Get(string json)
             => JsonConvert.DeserializeObject<ElementRoot>(json, new EnumeratorConverter(), new ParameterConverter());
-        
+
         public string ToJson()
-            => JsonConvert.SerializeObject(this, Formatting.Indented, new JsonSerializerSettings() {
+            => JsonConvert.SerializeObject(this, Formatting.Indented, new JsonSerializerSettings()
+            {
                 // Set converters
                 Converters = new JsonConverter[] {
                     new EnumeratorConverter(),
@@ -167,6 +168,8 @@ namespace Deltin.Deltinteger.Elements
 
     public class ElementEnum
     {
+        public static readonly string[] Storable = new string[] { "Map", "GameMode", "Team", "Hero", "Button", "Color" };
+
         public string Name;
         public ElementEnumMember[] Members;
         public bool Hidden;
@@ -177,7 +180,7 @@ namespace Deltin.Deltinteger.Elements
         public ElementEnumMember GetMemberFromAlias(string name) => Members.FirstOrDefault(m => m.CodeName() == name) ?? throw new KeyNotFoundException("The enum member '" + name + "' was not found.");
         public ElementEnumMember GetMemberFromWorkshop(string name) => Members.FirstOrDefault(m => m.Name == name) ?? throw new KeyNotFoundException("The enum member '" + name + "' was not found.");
 
-        public bool ConvertableToElement() => new string[] { "Map", "GameMode", "Team", "Hero", "Button", "Color" }.Contains(Name);
+        public bool ConvertableToElement() => Storable.Contains(Name);
     }
 
     public class ElementEnumMember : IWorkshopTree
@@ -220,7 +223,7 @@ namespace Deltin.Deltinteger.Elements
         public static ElementEnumMember Team(Team team) => ElementRoot.Instance.GetEnumValue("Team", team.ToString());
         public static ElementEnumMember Player(PlayerSelector player) => ElementRoot.Instance.GetEnumValue("Player", player.ToString());
 
-        public T ToEnum<T>() where T: Enum
+        public T ToEnum<T>() where T : Enum
         {
             var values = System.Enum.GetValues(typeof(T));
             foreach (var value in values)

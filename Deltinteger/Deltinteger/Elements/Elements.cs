@@ -244,6 +244,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element ForGlobalVariable(WorkshopVariable variable, Element start, Element end, Element step) => Element.Part("For Global Variable", variable, start, end, step);
         public static Element ForPlayerVariable(Element player, WorkshopVariable variable, Element start, Element end, Element step) => Element.Part("For Player Variable", player, variable, start, end, step);
         public static Element LogToInspector(IWorkshopTree value) => Element.Part("Log To Inspector", value);
+        public static Element CustomColor(IWorkshopTree r, IWorkshopTree g, IWorkshopTree b, IWorkshopTree a) => Element.Part("Custom Color", r, g, b, a);
 
         public static Element Hud(
             IWorkshopTree players = null,

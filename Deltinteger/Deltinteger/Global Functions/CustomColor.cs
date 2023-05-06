@@ -9,7 +9,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
 {
     partial class GlobalFunctions
     {
-        public static FuncMethod CustomColor(DeltinScript deltinScript) => new FuncMethodBuilder() {
+        public static FuncMethod CustomColor(DeltinScript deltinScript) => new FuncMethodBuilder()
+        {
             Name = "CustomColor",
             Documentation = "Custom color with specified rgb and alpha values.",
             ReturnType = deltinScript.Types.EnumType("Color"),
@@ -20,7 +21,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
                 new CustomColorParameter(3, "alpha", "The alpha component of a color.", deltinScript.Types.Number()),
             },
             OnCall = (parseInfo, callRange) => new CustomColorApplier(parseInfo.Script, callRange),
-            Action = (actionSet, methodCall) => Element.Part("Custom Color", methodCall.Get(0), methodCall.Get(1), methodCall.Get(2), methodCall.Get(3))
+            Action = (actionSet, methodCall) => Element.CustomColor(methodCall.Get(0), methodCall.Get(1), methodCall.Get(2), methodCall.Get(3))
         };
     }
 
@@ -51,9 +52,11 @@ namespace Deltin.Deltinteger.GlobalFunctions
             if (!_discard && _set[0] && _set[1] && _set[2] && _set[3])
             {
                 // Add the document color.
-                _script.AddColorRange(new ColorInformation() {
+                _script.AddColorRange(new ColorInformation()
+                {
                     Range = _range,
-                    Color = new DocumentColor() {
+                    Color = new DocumentColor()
+                    {
                         Red = _value[0] / 255,
                         Green = _value[1] / 255,
                         Blue = _value[2] / 255,
@@ -90,7 +93,8 @@ namespace Deltin.Deltinteger.GlobalFunctions
                 applier.Set(_component);
             else
                 // Resolve the expression.
-                ConstantExpressionResolver.Resolve(value, value => {
+                ConstantExpressionResolver.Resolve(value, value =>
+                {
                     // If the expression is a number, set the component.
                     if (value is NumberAction numberAction)
                         applier.Set(_component, numberAction.Value);
@@ -102,7 +106,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
                     else
                         applier.Discard();
                 });
-            
+
             return null;
         }
     }
