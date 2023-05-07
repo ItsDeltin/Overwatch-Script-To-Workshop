@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Pathfinder
             connectedSegments.Set(actionSet, GetConnectedSegments());
 
             // Loop through neighboring indexes
-            ForeachBuilder forBuilder = new ForeachBuilder(actionSet, connectedSegments.GetVariable());
+            ForeachBuilder forBuilder = new ForeachBuilder("neighborIndex", actionSet, connectedSegments.GetVariable());
 
             // Invoke OnConnectLoop
             Info.OnConnectLoop();

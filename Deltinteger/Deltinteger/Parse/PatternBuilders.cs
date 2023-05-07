@@ -15,12 +15,12 @@ namespace Deltin.Deltinteger.Parse
         readonly bool recursive;
         readonly bool extended;
 
-        public ForeachBuilder(ActionSet actionSet, IWorkshopTree array, bool recursive = false, bool extended = true)
+        public ForeachBuilder(string varName, ActionSet actionSet, IWorkshopTree array, bool recursive = false, bool extended = true)
         {
             this.actionSet = actionSet;
             this.recursive = recursive;
             this.extended = extended;
-            forIndex = actionSet.VarCollection.Assign("foreachIndex", actionSet.IsGlobal, extended);
+            forIndex = actionSet.VarCollection.Assign(varName, actionSet.IsGlobal, extended);
 
             // Initialize recursive variable.
             if (recursive)

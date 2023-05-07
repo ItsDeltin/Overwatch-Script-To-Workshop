@@ -375,7 +375,7 @@ namespace Deltin.Deltinteger.Parse
         {
             actionSet = actionSet.SetNextComment(Comment);
 
-            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, array.Parse(actionSet), actionSet.IsRecursive, isExtended);
+            ForeachBuilder foreachBuilder = new ForeachBuilder(foreachVar.Name, actionSet, array.Parse(actionSet), actionSet.IsRecursive, isExtended);
 
             // Add the foreach value to the assigner.
             actionSet.IndexAssigner.Add(foreachVar, foreachBuilder.IndexValue);

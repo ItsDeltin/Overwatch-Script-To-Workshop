@@ -437,7 +437,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     )
                 ));
 
-                ForeachBuilder loop = new ForeachBuilder(actionSet, connectedSegments);
+                ForeachBuilder loop = new ForeachBuilder("deleteNodeIndex", actionSet, connectedSegments);
                 Segments.Modify(actionSet, Operation.RemoveFromArrayByValue, loop.IndexValue);
                 loop.Finish();
 

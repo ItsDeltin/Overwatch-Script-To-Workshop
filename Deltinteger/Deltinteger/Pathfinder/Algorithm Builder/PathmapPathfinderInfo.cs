@@ -137,7 +137,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ActionSet.AddAction(_closestNodesToPlayers.SetVariable(EmptyArray()));
 
             // Loop through each player and get the closest node.
-            ForeachBuilder getClosestNodes = new ForeachBuilder(ActionSet, _players);
+            ForeachBuilder getClosestNodes = new ForeachBuilder("playerIndex", ActionSet, _players);
             ActionSet.AddAction(_closestNodesToPlayers.ModifyVariable(Operation.AppendToArray, NodeFromPosition((Element)getClosestNodes.IndexValue)));
             getClosestNodes.Finish();
         }
@@ -256,7 +256,7 @@ namespace Deltin.Deltinteger.Pathfinder
             _potentialDestinationNodes = ActionSet.VarCollection.Assign("Dijkstra: Potential Destinations", ActionSet.IsGlobal, false);
             ActionSet.AddAction(_potentialDestinationNodes.SetVariable(EmptyArray()));
 
-            ForeachBuilder getClosestNodes = new ForeachBuilder(ActionSet, _destinations);
+            ForeachBuilder getClosestNodes = new ForeachBuilder("pfEitherIndex", ActionSet, _destinations);
             ActionSet.AddAction(_potentialDestinationNodes.ModifyVariable(Operation.AppendToArray, NodeFromPosition((Element)getClosestNodes.IndexValue)));
             getClosestNodes.Finish();
         }
