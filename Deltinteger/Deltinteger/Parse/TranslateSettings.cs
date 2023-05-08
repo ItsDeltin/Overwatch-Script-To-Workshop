@@ -15,7 +15,6 @@ namespace Deltin.Deltinteger.Parse
 
         public SourcedSettings<DsTomlSettings> SourcedSettings { get; set; }
 
-        public bool OptimizeOutput { get; set; } = true;
         public OutputLanguage OutputLanguage { get; set; } = OutputLanguage.enUS;
 
         public TranslateSettings(Diagnostics diagnostics, ScriptFile root)

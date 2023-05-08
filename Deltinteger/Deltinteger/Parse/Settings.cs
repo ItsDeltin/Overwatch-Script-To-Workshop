@@ -18,9 +18,11 @@ namespace Deltin.Deltinteger.Parse.Settings
         [JsonPropertyName("compile_miscellaneous_comments")]
         public bool CompileMiscellaneousComments { get; set; } = true;
         [JsonPropertyName("out_file")]
-        public string OutFile { get; set; }
+        public string OutFile { get; set; } = null;
         [JsonPropertyName("variable_template")]
-        public bool VariableTemplate { get; set; }
+        public bool VariableTemplate { get; set; } = false;
+        [JsonPropertyName("optimize_output")]
+        public bool OptimizeOutput { get; set; } = true;
 
         public static readonly DsTomlSettings Default = new DsTomlSettings();
     }

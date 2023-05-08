@@ -32,7 +32,6 @@ namespace Deltin.Deltinteger.Parse
         public Uri SettingsSource { get; }
         public DsTomlSettings Settings { get; }
         private readonly OutputLanguage Language;
-        public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>();
         private List<InitComponent> InitComponent { get; } = new List<InitComponent>();
         public DebugVariableLinkCollection DebugVariables { get; } = new DebugVariableLinkCollection();
@@ -47,7 +46,6 @@ namespace Deltin.Deltinteger.Parse
             SettingsSource = translateSettings.SourcedSettings.Uri;
             Settings = translateSettings.SourcedSettings.Settings ?? DsTomlSettings.Default;
             Language = translateSettings.OutputLanguage;
-            OptimizeOutput = translateSettings.OptimizeOutput;
 
             VarCollection = new VarCollection(Settings.VariableTemplate);
 
@@ -333,7 +331,7 @@ namespace Deltin.Deltinteger.Parse
 
         Rule GetRule(Rule rule)
         {
-            if (OptimizeOutput)
+            if (Settings.OptimizeOutput)
                 rule = rule.Optimized();
             return rule;
         }

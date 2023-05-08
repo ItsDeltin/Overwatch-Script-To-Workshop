@@ -160,15 +160,15 @@ namespace Deltin.Deltinteger.Elements
 
                 return element;
             }},
-            {"Direction From Angles", element => {
+            {"Direction From Angles todo pls fix", element => {
                 if (element.ParameterValues[0] is NumberElement a && element.ParameterValues[1] is NumberElement b)
                 {
                     double h = a.Value * (Math.PI / 180);
                     double v = b.Value * (Math.PI / 180);
 
-                    double x = Math.Sin(h) * Math.Cos(v);
-                    double y = Math.Sin(h) * Math.Sin(v);
-                    double z = Math.Cos(h);
+                    double x = Math.Sin(v) * Math.Cos(h);
+                    double y = -Math.Sin(v) * Math.Sin(h);
+                    double z = Math.Cos(v);
 
                     if (y == -0)
                         y = 0;

@@ -31,7 +31,7 @@ static class ElementWorkshopWriter
         // Number
         if (element is NumberElement numberElement)
         {
-            b.Append(((decimal)numberElement.Value).ToString());
+            b.Append(DoubleToWorkshop.ToWorkshop(numberElement.Value));
             return;
         }
         // String

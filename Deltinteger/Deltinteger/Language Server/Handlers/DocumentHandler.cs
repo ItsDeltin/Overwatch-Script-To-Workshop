@@ -199,7 +199,6 @@ namespace Deltin.Deltinteger.LanguageServer
                 DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter)
                 {
                     OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
-                    OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput,
                     SourcedSettings = settings
                 });
                 _languageServer.LastParse = deltinScript;

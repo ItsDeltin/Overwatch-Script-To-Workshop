@@ -53,7 +53,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
                     return new Rule[] { initialNodes };
                 },
-                OptimizeOutput = false,
                 OutputLanguage = language
             });
         }
