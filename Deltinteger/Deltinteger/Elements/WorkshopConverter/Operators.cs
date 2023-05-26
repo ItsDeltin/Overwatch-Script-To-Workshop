@@ -15,8 +15,8 @@ enum Op
     LessThanOrEqual,
     Equal,
     NotEqual,
-    Or,
-    And
+    And,
+    Or
 }
 
 static class WorkshopOperators
@@ -28,8 +28,9 @@ static class WorkshopOperators
     public const int ADDITION_SUBTRACTION = 4;
     public const int COMPARISON = 5;
     public const int RELATIONAL = 6;
-    public const int LOGICAL = 7;
-    public const int TERNARY = 8;
+    public const int AND = 7;
+    public const int OR = 8;
+    public const int TERNARY = 9;
 
     public static string WorkshopSymbolFromOp(Op op)
     {
@@ -47,8 +48,8 @@ static class WorkshopOperators
             case Op.LessThanOrEqual: return "<=";
             case Op.Equal: return "==";
             case Op.NotEqual: return "!=";
-            case Op.Or: return "||";
             case Op.And: return "&&";
+            case Op.Or: return "||";
             default: throw new NotImplementedException(op.ToString());
         }
     }
@@ -69,8 +70,8 @@ static class WorkshopOperators
             case (Op.LessThanOrEqual): return COMPARISON;
             case (Op.Equal): return RELATIONAL;
             case (Op.NotEqual): return RELATIONAL;
-            case (Op.Or): return LOGICAL;
-            case (Op.And): return LOGICAL;
+            case (Op.And): return AND;
+            case (Op.Or): return OR;
             default: throw new NotImplementedException(op.ToString());
         }
     }
