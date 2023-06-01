@@ -1,4 +1,4 @@
-namespace Deltin;
+namespace Deltin.WorkshopString;
 using System;
 using System.Text;
 using System.Linq;
@@ -19,19 +19,19 @@ static class WorkshopStringUtility
     /// Stubs will not be split mid string.</param>
     /// <returns>A 2d string where the first dimension is the 511 byte segments and the second dimension is the
     /// 128 byte chunks.</returns>
-    public static StringChunk[][] ChunkSplit(string value, string splitHead, string splitTail, char[] stringCharacters)
+    public static List<LogList> ChunkSplit(string value, string splitHead, string splitTail, char[] stringCharacters)
     {
         // Ensure parameters are not null.
         splitHead = splitHead ?? string.Empty;
         splitTail = splitTail ?? string.Empty;
         stringCharacters = stringCharacters ?? new char[0];
 
-        var total = new List<List<StringChunk>>(); // 511 byte chunks
+        var total = new List<LogList>(); // 511 byte chunks
         var stubs = new List<StringChunk>(); // 128 byte stubs
         var currentStub = string.Empty;
-        string lastValidDecoratedStub = null;
+        DecoratedStub? lastValidDecoratedStub = null;
         var formatHelper = new ChunkedFormatHelper();
-        bool stubHasFormatPrevention = false;
+        bool formatPrevention = false;
 
         int position = 0;
         while (position < value.Length)
@@ -42,12 +42,17 @@ static class WorkshopStringUtility
 
             // Get the next minimum chunk.
             var (addText, newPosition, addedTextNeedsFormatPrevention) = GetMinimumChunk(value, stringCharacters, formatHelper, position);
+            // Add new text to the current stub.
             currentStub += addText;
+            // Advance the position.
             position = newPosition;
+            formatPrevention |= addedTextNeedsFormatPrevention;
+
+            bool anyMoreContent = !isLastStub && position < value.Length;
 
             // The workshop uses UTF8 encoding.
-            var currentStubWithDecorations = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub);
-            var currentStubLength = LengthOfStringInWorkshop(currentStubWithDecorations);
+            var currentStubWithDecorations = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub, anyMoreContent, formatHelper);
+            var currentStubLength = LengthOfStringInWorkshop(currentStubWithDecorations.Text);
 
             // In theory this should be MAX_STRING_STUB_BYTE_LENGTH or MAX_STRING_STUB_BYTE_LENGTH - 1 if isLastStub,
             // but this seems to work fine.
@@ -60,57 +65,67 @@ static class WorkshopStringUtility
                     throw new System.Exception("The lengths of the splitHead and splitTail parameters combined exceed " + Constants.MAX_STRING_STUB_BYTE_LENGTH + " bytes");
 
                 // Add last valid stub.
-                AddStub(stubs, lastValidDecoratedStub, formatHelper, stubHasFormatPrevention);
+                // Assume that lastValidDecoratedStub was set at this point.
+                AddStub(stubs, lastValidDecoratedStub.Value, formatHelper);
 
                 // Update the current stub.
-                stubHasFormatPrevention = addedTextNeedsFormatPrevention;
                 currentStub = addText;
-                lastValidDecoratedStub = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub);
+                lastValidDecoratedStub = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub, anyMoreContent, formatHelper);
 
                 if (isLastStub)
                 {
-                    total.Add(stubs);
+                    total.Add(new(stubs.ToArray(), formatPrevention));
                     stubs = new();
+                    formatPrevention = false;
                 }
             }
             else
             {
                 lastValidDecoratedStub = currentStubWithDecorations;
-                stubHasFormatPrevention |= addedTextNeedsFormatPrevention;
+                formatPrevention |= addedTextNeedsFormatPrevention;
             }
         }
 
         // Add remnant stub
         if (currentStub.Length != 0)
         {
-            AddStub(stubs, DecorateStub(currentStub, splitHead, splitTail, stubs.Count == 0, true), formatHelper, stubHasFormatPrevention);
+            AddStub(stubs, DecorateStub(currentStub, splitHead, splitTail, stubs.Count == 0, true, false, formatHelper), formatHelper);
         }
         // Add remnant group
         if (stubs.Count != 0)
         {
-            total.Add(stubs);
+            total.Add(new(stubs.ToArray(), formatPrevention));
         }
 
         // List<List<StringChunk>> to StringChunk[][]
-        return total.Select(t => t.ToArray()).ToArray();
+        return total;
     }
 
-    static string DecorateStub(string stub, string splitHead, string splitTail, bool isFirstStub, bool isLastStub)
+    static DecoratedStub DecorateStub(string stub, string splitHead, string splitTail, bool isFirstStub, bool isLastStub, bool anyMoreContent, ChunkedFormatHelper formatHelper)
     {
         if (isFirstStub)
             stub = splitTail + stub;
         if (isLastStub)
             stub += splitHead;
-        return stub;
+        else if (anyMoreContent)
+        {
+            stub += formatHelper.GetAppendText();
+            return new(stub, true);
+        }
+        return new(stub, false);
     }
 
     /// <summary>Adds a stub to a list of stubs.</summary>
     /// <param name="stubs">The list containing the stubs.</param>
     /// <param name="lastValidDecoratedStub">The stub text.</param>
     /// <param name="formatHelper">The stub's text formats.</param>
-    static void AddStub(List<StringChunk> stubs, string lastValidDecoratedStub, ChunkedFormatHelper formatHelper, bool hasFormatPrevention)
+    static void AddStub(List<StringChunk> stubs, DecoratedStub lastValidDecoratedStub, ChunkedFormatHelper formatHelper)
     {
-        stubs.Add(new(lastValidDecoratedStub, formatHelper.ExtractStub(), hasFormatPrevention));
+        var formats = formatHelper.ExtractStub();
+        if (lastValidDecoratedStub.AddNextStub)
+            formats = formats.Append(new StringChunkParameter.ChildChunk());
+
+        stubs.Add(new(lastValidDecoratedStub.Text, formats.ToArray()));
     }
 
     /// <summary>
@@ -302,36 +317,7 @@ static class WorkshopStringUtility
     }
 
     readonly record struct TextProgress(string Text, int NewPosition, bool HasFormatPrevention = false);
-
-    struct ChunkedFormatHelper
-    {
-        List<int> currentFormats;
-
-        public ChunkedFormatHelper()
-        {
-            currentFormats = new List<int>();
-        }
-
-        public int GetFormat(int userInput)
-        {
-            int workshopValue = currentFormats.IndexOf(userInput);
-            if (workshopValue == -1)
-            {
-                currentFormats.Add(userInput);
-                workshopValue = currentFormats.Count - 1;
-            }
-            return workshopValue % 3;
-        }
-
-        public bool OverCapacity() => currentFormats.Count > 3;
-
-        public int[] ExtractStub()
-        {
-            var stubFormats = currentFormats.Take(3).ToArray();
-            currentFormats.RemoveRange(0, Math.Min(3, currentFormats.Count));
-            return stubFormats;
-        }
-    }
+    readonly record struct DecoratedStub(string Text, bool AddNextStub);
 
     /// <summary>Gets the byte count of a string once it is imported into the workshop.</summary>
     static int LengthOfStringInWorkshop(string str)
@@ -376,5 +362,3 @@ static class WorkshopStringUtility
         return result;
     }
 }
-
-readonly record struct StringChunk(string Value, int[] Parameters, bool HasFormatPrevention);

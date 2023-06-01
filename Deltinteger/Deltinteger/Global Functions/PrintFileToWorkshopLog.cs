@@ -1,7 +1,9 @@
 namespace Deltin.Deltinteger.GlobalFunctions;
+using Deltin.WorkshopString;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
 using System.Linq;
+using System.Collections.Generic;
 
 partial class GlobalFunctions
 {
@@ -25,12 +27,10 @@ partial class GlobalFunctions
 
             foreach (var log in split)
             {
-                var hasFormatPrevention = log.Any(l => l.HasFormatPrevention);
-                var workshopString = StringElement.Join(log.Select(stub => Element.CustomString(stub.Value, stub.Parameters.Select(p =>
-                    p < formats.Elements.Length ? formats.Elements[p] : Element.Null()).ToArray())).ToArray());
+                var workshopString = ChunkToWorkshop(log.Chunks, formats.Elements);
 
                 // Text has a literal format, do a replace trick so that the workshop doesn't mess it up.
-                if (hasFormatPrevention)
+                if (log.NeedsFormatPrevention)
                     workshopString = Element.Part("String Replace",
                         workshopString,
                         new StringElement(WorkshopStringUtility.PREVENT_FORMAT_CHARACTER.ToString()),
@@ -42,4 +42,15 @@ partial class GlobalFunctions
             return null;
         }
     };
+
+    static IWorkshopTree ChunkToWorkshop(IEnumerable<StringChunk> chunks, IWorkshopTree[] formats)
+    {
+        var chunk = chunks.First();
+        var stringFormats = chunk.Parameters.Select(p => p.Match(
+            parameterIndex: index => index < formats.Length ? formats[index] : Element.Null(),
+            addNextStub: () => ChunkToWorkshop(chunks.Skip(1), formats)
+        )).ToArray();
+
+        return Element.CustomString(chunk.Value, stringFormats);
+    }
 }
