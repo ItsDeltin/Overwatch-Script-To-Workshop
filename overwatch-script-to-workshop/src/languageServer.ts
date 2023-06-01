@@ -77,9 +77,9 @@ export async function startLanguageServer() {
 	// If the server is running, or the server cannot be started, or the command server option is invalid, return.
 	if (serverStatus != 'stopped' || !await checkServerModule()) return;
 
-	let waitForDebugger = config.get<string>('ostw.dev.waitForDebugger');
+	let waitForDebugger = config.get<string>('dev.waitForDebugger');
 	if (waitForDebugger)
-		window.showWarningMessage('The setting \'ostw.dev.waitForDebugger\' is turned on.');
+		window.showWarningMessage('The setting \'ostw.dev.waitForDebugger\' is turned on, the OSTW language server is waiting.');
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
