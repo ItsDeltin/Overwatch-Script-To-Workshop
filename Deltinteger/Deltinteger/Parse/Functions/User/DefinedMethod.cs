@@ -156,9 +156,14 @@ namespace Deltin.Deltinteger.Parse
             }
 
             ContentReady.Set();
+
+            if (IsSubroutine && GenericTypes.Length == 0 && (ContainingType == null || ContainingType.WorkingInstance.Generics.Length == 0))
+            {
+                parseInfo.TranslateInfo.GetComponent<AutoCompileSubroutine>().AddSubroutine(this);
+            }
         }
 
-        public IMethod GetDefaultInstance(CodeType definedIn) => new DefinedMethodInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes), definedIn);
+        public IMethod GetDefaultInstance(CodeType definedIn) => new DefinedMethodInstance(this, new InstanceAnonymousTypeLinker(GenericTypes, GenericTypes), definedIn ?? ContainingType?.WorkingInstance);
         public IScopeable AddInstance(IScopeAppender scopeHandler, InstanceAnonymousTypeLinker genericsLinker)
         {
             // Get the instance.

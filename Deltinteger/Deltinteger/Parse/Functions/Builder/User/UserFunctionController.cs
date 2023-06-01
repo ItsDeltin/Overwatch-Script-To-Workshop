@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 // The combo of the contained class.
                 _classRelation?.Combo,
                 // The combo of the type args.
-                _typeArgLinker == null ? null : _toWorkshop.TypeArgGlob.Trackers[_function.Provider].GetCompatibleCombo(providedTypeArgs)
+                _typeArgLinker == null ? null : _toWorkshop.TypeArgGlob.ComboFromKeyAndArgs(_function.Provider, providedTypeArgs)
             );
 
             // Get or create the subroutine.

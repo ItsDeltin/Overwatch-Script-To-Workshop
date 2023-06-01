@@ -67,6 +67,11 @@ namespace Deltin.Deltinteger.Parse.Workshop
             return null;
         }
 
+        public TypeArgCombo ComboFromKeyAndArgs(ITypeArgTrackee typeArgTrackee, CodeType[] typeArgs)
+        {
+            return Trackers.TryGetValue(typeArgTrackee, out var trackerInfo) ? trackerInfo.GetCompatibleCombo(typeArgs) : null;
+        }
+
         private Dictionary<ITypeArgTrackee, TrackeeInfo> CollectTypeArgCalls(ScriptFile[] scripts)
         {
             var collected = new Dictionary<ITypeArgTrackee, TrackeeInfo>();

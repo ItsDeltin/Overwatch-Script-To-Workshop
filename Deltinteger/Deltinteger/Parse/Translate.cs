@@ -268,6 +268,8 @@ namespace Deltin.Deltinteger.Parse
                 rule.ElementCountLens.RuleParsed(newRule);
             }
 
+            GetComponent<AutoCompileSubroutine>().ToWorkshop(WorkshopConverter);
+
             WorkshopConverter.PersistentVariables.ToWorkshop();
 
             // Complete portable functions

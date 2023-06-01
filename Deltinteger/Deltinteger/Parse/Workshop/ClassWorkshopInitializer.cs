@@ -71,6 +71,9 @@ namespace Deltin.Deltinteger.Parse
             throw new Exception("No combos are acceptable");
         }
 
+        /// <summary>
+        /// Gets the class workshop relation link for a class type that does not have anonymous types.
+        /// </summary>
         public ClassWorkshopRelation RelationFromClassType(ClassType type)
         {
             var relation = _relations.FirstOrDefault(relation => relation.Instance.Is(type));
@@ -80,6 +83,8 @@ namespace Deltin.Deltinteger.Parse
 
             return relation;
         }
+
+        public bool IsRegistered(ClassType type) => _relations.Any(r => r.Instance.Is(type));
 
         public void AddRelation(ClassWorkshopRelation relation) => _relations.Add(relation);
 
