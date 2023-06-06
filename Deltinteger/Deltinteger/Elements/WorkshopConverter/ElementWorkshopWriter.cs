@@ -366,7 +366,8 @@ static class ElementWorkshopWriter
         {
             int precedence = WorkshopOperators.GetPrecedence(op);
             return left.HasValue && WorkshopOperators.GetPrecedence(left.Value) < precedence
-                || right.HasValue && WorkshopOperators.GetPrecedence(right.Value) < precedence;
+                || right.HasValue && WorkshopOperators.GetPrecedence(right.Value) < precedence
+                || left.HasValue && left == op && WorkshopOperators.IsNonAssociative(op);
         }
 
         public void ToWorkshop(WorkshopBuilder builder, Operated operated)

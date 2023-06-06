@@ -75,4 +75,17 @@ static class WorkshopOperators
             default: throw new NotImplementedException(op.ToString());
         }
     }
+
+    public static bool IsNonAssociative(Op op)
+    {
+        switch (op)
+        {
+            case Op.Subtract:
+            case Op.Divide:
+            case Op.Power:
+                return true;
+            default:
+                return false;
+        }
+    }
 }
