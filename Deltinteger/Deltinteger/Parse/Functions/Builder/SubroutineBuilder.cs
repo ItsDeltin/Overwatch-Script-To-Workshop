@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
             // Create the parameter handlers.
             _parameterHandler = controller.CreateParameterHandler(_actionSet, null);
-            
+
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             if (controller.Attributes.IsInstance)
             {
@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
         public void Complete()
         {
-            _functionBuilder.Controller.Build(_functionBuilder.ActionSet); 
+            _functionBuilder.Controller.Build(_functionBuilder.ActionSet);
             _functionBuilder.ReturnHandler?.ApplyReturnSkips();
 
             if (_context.Controller.Attributes.IsRecursive)
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
             // Add the subroutine.
             Rule translatedRule = _subroutineRule.GetRule();
-            _deltinScript.WorkshopRules.Add(translatedRule);
+            _deltinScript.WorkshopRules.Add(_deltinScript.GetRule(translatedRule));
         }
     }
 

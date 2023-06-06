@@ -331,7 +331,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        Rule GetRule(Rule rule)
+        public Rule GetRule(Rule rule)
         {
             if (Settings.OptimizeOutput)
                 rule = rule.Optimized();
