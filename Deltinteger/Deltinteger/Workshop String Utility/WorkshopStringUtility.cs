@@ -46,12 +46,9 @@ static class WorkshopStringUtility
             currentStub += addText;
             // Advance the position.
             position = newPosition;
-            formatPrevention |= addedTextNeedsFormatPrevention;
-
-            bool anyMoreContent = !isLastStub && position < value.Length;
 
             // The workshop uses UTF8 encoding.
-            var currentStubWithDecorations = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub, anyMoreContent, formatHelper);
+            var currentStubWithDecorations = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub, !isLastStub && position < value.Length, formatHelper);
             var currentStubLength = LengthOfStringInWorkshop(currentStubWithDecorations.Text);
 
             // In theory this should be MAX_STRING_STUB_BYTE_LENGTH or MAX_STRING_STUB_BYTE_LENGTH - 1 if isLastStub,
@@ -70,20 +67,20 @@ static class WorkshopStringUtility
 
                 // Update the current stub.
                 currentStub = addText;
-                lastValidDecoratedStub = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub, anyMoreContent, formatHelper);
+                lastValidDecoratedStub = DecorateStub(currentStub, splitHead, splitTail, isFirstStub, isLastStub, stubs.Count < 3 && position < value.Length, formatHelper);
 
                 if (isLastStub)
                 {
                     total.Add(new(stubs.ToArray(), formatPrevention));
                     stubs = new();
-                    formatPrevention = false;
+                    formatPrevention = addedTextNeedsFormatPrevention;
                 }
             }
             else
             {
                 lastValidDecoratedStub = currentStubWithDecorations;
-                formatPrevention |= addedTextNeedsFormatPrevention;
             }
+            formatPrevention |= addedTextNeedsFormatPrevention;
         }
 
         // Add remnant stub
