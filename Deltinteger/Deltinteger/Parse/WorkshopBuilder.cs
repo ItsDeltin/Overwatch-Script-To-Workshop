@@ -7,7 +7,6 @@ namespace Deltin.Deltinteger
 {
     public class WorkshopBuilder
     {
-        public bool Tab { get; } = false;
         public OutputLanguage OutputLanguage { get; }
         public bool CStyle { get; }
         public bool IncludeComments { get; }
@@ -15,12 +14,14 @@ namespace Deltin.Deltinteger
         private readonly StringBuilder _builder;
         private int _indentCount;
         private bool _space = false;
+        readonly bool _useTabs = false;
 
-        public WorkshopBuilder(OutputLanguage outputLanguage, bool cStyle, bool includeComments)
+        public WorkshopBuilder(OutputLanguage outputLanguage, bool cStyle, bool includeComments, bool useTabs)
         {
             OutputLanguage = outputLanguage;
             CStyle = cStyle;
             IncludeComments = includeComments;
+            _useTabs = useTabs;
             _builder = new StringBuilder();
         }
 
@@ -29,7 +30,7 @@ namespace Deltin.Deltinteger
             if (_space)
             {
                 if (_indentCount != 0)
-                    _builder.Append(new string(Tab ? '\t' : ' ', _indentCount * (Tab ? 1 : 4)));
+                    _builder.Append(new string(_useTabs ? '\t' : ' ', _indentCount * (_useTabs ? 1 : 4)));
                 _space = false;
             }
             _builder.Append(text);

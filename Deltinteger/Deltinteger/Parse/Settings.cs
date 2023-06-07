@@ -23,6 +23,8 @@ namespace Deltin.Deltinteger.Parse.Settings
         public bool VariableTemplate { get; set; } = false;
         [JsonPropertyName("optimize_output")]
         public bool OptimizeOutput { get; set; } = true;
+        [JsonPropertyName("use_tabs_in_workshop_output")]
+        public bool UseTabsInWorkshopOutput { get; set; } = false;
 
         public static readonly DsTomlSettings Default = new DsTomlSettings();
     }
