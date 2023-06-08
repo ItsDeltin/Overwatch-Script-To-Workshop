@@ -126,6 +126,7 @@ const matchAttributes = tm.Group({
 
 // Variables
 const variableDeclaration: Pattern = {
+    name: 'meta.declaration.variable',
     begin: [
         matchAttributes,
         codeType,
@@ -169,6 +170,7 @@ const constructorDeclaration: Pattern = {
 
 // Functions
 const functionDeclaration: Pattern = {
+    name: 'meta.function',
     begin: [
         matchAttributes, // Attributes.
         codeType, // Return type.
@@ -243,6 +245,7 @@ const parameterDeclaration: Pattern = {
 
 // Class or struct declaration
 const classOrStructDeclaration: Pattern = {
+    name: 'meta.declaration.type',
     begin: [
         tm.Or(
             utils.createTypeDescriptor('class'),
@@ -253,8 +256,8 @@ const classOrStructDeclaration: Pattern = {
     patterns: [
         // Inheritance
         {
-            begin: pair(':', Names.colon),
-            while: pair(',', Names.comma),
+            begin: common_nodes.colon,
+            while: common_nodes.comma,
             patterns: [{ include: Repository.code_type }],
         },
         // Type arguments
@@ -329,6 +332,7 @@ const enumDeclaration: Pattern = {
 
 // Rules
 const rule: Pattern = {
+    name: 'meta.rule',
     begin: [
         // 'disabled' keyword.
         tm.Maybe([pair('disabled', Names.storage_modifier), w]),
@@ -336,7 +340,7 @@ const rule: Pattern = {
         pair('rule', Names.keyword_control),
         w,
         // :
-        pair(':', Names.colon),
+        common_nodes.colon,
     ],
     end: tm.PositiveLookbehind(tm.Or(';', '}')),
     patterns: [
@@ -363,6 +367,7 @@ const rule: Pattern = {
 
 // Blocks
 const block: Pattern = {
+    name: 'meta.block',
     begin: common_nodes.bracket_open,
     end: common_nodes.bracket_close,
     patterns: [{ include: Repository.statement }],
@@ -370,6 +375,7 @@ const block: Pattern = {
 
 // Statements
 const statement: Pattern = {
+    name: 'meta.statement',
     patterns: [
         includeComment,
         // return
@@ -457,7 +463,7 @@ const statement: Pattern = {
             begin: [b, 'case', b],
             zeroBeginCapture: { name: 'keyword.control.case' },
             end: ':',
-            zeroEndCapture: { name: 'punctuation.separator.colon' },
+            zeroEndCapture: { name: Names.colon },
             patterns: [{ include: Repository.expression }],
         },
         // Variable declaration.
@@ -493,6 +499,7 @@ const ifStatement: Pattern = {
 };
 
 const functionCall: Pattern = {
+    name: 'meta.functioncall',
     begin: [
         common_nodes.accessorMatch,
         // Match the function's name,
@@ -511,6 +518,7 @@ const functionCall: Pattern = {
 
 // An argument list in a method call.
 const argumentList: Pattern = {
+    name: 'meta.arguments',
     patterns: [
         includeComment,
         // Named argument
@@ -537,6 +545,7 @@ const assignment: Pattern = {
 };
 
 const expressionPattern: Pattern = {
+    name: 'meta.expression',
     patterns: [
         // number
         { include: Repository.number },
@@ -557,6 +566,7 @@ const expressionPattern: Pattern = {
             end: ']',
             zeroEndCapture: { name: Names.squarebracket_close },
             patterns: [
+                { include: Repository.comment },
                 { include: Repository.expression },
                 { match: ',', name: Names.comma },
             ],
@@ -569,53 +579,27 @@ const expressionPattern: Pattern = {
             zeroEndCapture: { name: 'keyword.operator.conditional.colon' },
             patterns: [{ include: Repository.expression }],
         },
-        // Accessor list to function
-        {
-            begin: [
-                tm.OneOrMore([codeType, w, '.', w], true),
-                common_nodes.i_function,
-                w,
-                common_nodes.typeArgs(true).Maybe(),
-                common_nodes.parenthesis_open],
-            end: common_nodes.parenthesis_close,
-            patterns: [{ include: Repository.argument_list }]
-        },
         // Lambda (one parameter)
         {
+            name: 'meta.lambda.single',
             match: [
-                tm.Maybe([codeType, w]),
                 common_nodes.i_parameter,
                 w,
                 pair('=>', Names.arrow),
             ],
         },
-        // Lambda (Zero or 2+ parameters) OR expression group
+        // Lambda (zero or more parameters without type)
         {
-            begin: '(',
-            zeroBeginCapture: { name: Names.parameters_begin },
-            end: [
-                pair(')', Names.parameters_end),
-                w,
-                pair('=>', Names.arrow).Maybe(),
-            ],
-            patterns: [
-                includeComment,
-                // Match lambda parameter.
-                {
-                    match: [
-                        tm.Maybe([codeType, w]),
-                        common_nodes.i_parameter,
-                        b,
-                    ],
-                },
-                // Match parameter seperator
-                { match: ',', name: Names.comma },
-                // Expression group
-                { include: Repository.expression },
-            ],
+            name: 'meta.lambda.parenthesized',
+            match: [
+                common_nodes.parameters_begin,
+                tm.ZeroOrMore([w, tm.Maybe([common_nodes.comma, w]), common_nodes.i_parameter]), w,
+                common_nodes.parameters_end, w,
+                pair('=>', Names.arrow)]
         },
         // Struct declaration
         {
+            name: 'meta.structorblock',
             begin: '{',
             end: '}',
             // Takes advantage of zeroCaptures applying to both 'begin' and 'end'
@@ -624,7 +608,6 @@ const expressionPattern: Pattern = {
                 {
                     // Start of struct variable
                     begin: [
-                        tm.Maybe([codeType, w]),
                         common_nodes.i_parameter,
                         w,
                         common_nodes.colon,

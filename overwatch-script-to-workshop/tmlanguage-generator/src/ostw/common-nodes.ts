@@ -19,6 +19,8 @@ export const comma = pair(',', Names.comma);
 export const encapsulated_block = tm.PositiveLookahead('}');
 export const accessor = pair('.', Names.dot);
 export const colon = pair(':', Names.colon);
+export const parameters_begin = pair('(', Names.parameters_begin);
+export const parameters_end = pair(')', Names.parameters_end);
 
 // Inline string
 export const string = tm.Or(

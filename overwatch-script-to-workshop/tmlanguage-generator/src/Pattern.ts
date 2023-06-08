@@ -130,7 +130,7 @@ export function exportPattern(pattern: Pattern) {
         GetRegexNode(pattern.match).export(matchExporter);
         matchExporter.validate();
         rule.match = matchExporter.regex;
-        rule.captures = matchExporter.getCaptureList(pattern.zeroBeginCapture);
+        rule.captures = matchExporter.getCaptureList(pattern.zeroCapture);
     }
 
     // Export 'begin'.

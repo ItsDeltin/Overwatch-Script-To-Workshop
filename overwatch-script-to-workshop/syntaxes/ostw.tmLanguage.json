@@ -206,6 +206,7 @@
       ]
     },
     "expression": {
+      "name": "meta.expression",
       "patterns": [
         {
           "include": "#number"
@@ -244,6 +245,9 @@
           },
           "patterns": [
             {
+              "include": "#comment"
+            },
+            {
               "include": "#expression"
             },
             {
@@ -273,130 +277,52 @@
           ]
         },
         {
-          "begin": "((?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)\\s*\\.\\s*)+?([a-zA-Z0-9_]+\\b)\\s*((<)\\s*((,)?\\s*\\g<type>\\s*)*(>))?(\\()",
-          "beginCaptures": {
-            "2": {
-              "name": "meta.type",
-              "patterns": [
-                {
-                  "include": "#type-matcher"
-                }
-              ]
-            },
-            "12": {
-              "name": "entity.name.function"
-            },
-            "14": {
-              "name": "punctuation.definition.typeparameters.begin"
-            },
-            "16": {
-              "name": "punctuation.separator.comma"
-            },
-            "17": {
-              "name": "punctuation.definition.typeparameters.end"
-            },
-            "18": {
-              "name": "punctuation.parenthesis.open"
-            }
-          },
-          "end": "(\\))",
-          "endCaptures": {
-            "1": {
-              "name": "punctuation.parenthesis.close"
-            }
-          },
-          "patterns": [
-            {
-              "include": "#argument-list"
-            }
-          ]
-        },
-        {
-          "match": "((?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)\\s*)?([a-zA-Z0-9_]+\\b)\\s*(=>)",
+          "name": "meta.lambda.single",
+          "match": "([a-zA-Z0-9_]+\\b)\\s*(=>)",
           "captures": {
-            "2": {
-              "name": "meta.type",
-              "patterns": [
-                {
-                  "include": "#type-matcher"
-                }
-              ]
-            },
-            "12": {
+            "1": {
               "name": "variable.parameter"
             },
-            "13": {
+            "2": {
               "name": "storage.type.function.arrow"
             }
           }
         },
         {
-          "begin": "\\(",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.parameters.begin"
-            }
-          },
-          "end": "(\\))\\s*(=>)?",
-          "endCaptures": {
+          "name": "meta.lambda.parenthesized",
+          "match": "(\\()(\\s*((,)\\s*)?([a-zA-Z0-9_]+\\b))*\\s*(\\))\\s*(=>)",
+          "captures": {
             "1": {
+              "name": "punctuation.definition.parameters.begin"
+            },
+            "4": {
+              "name": "punctuation.separator.comma"
+            },
+            "5": {
+              "name": "variable.parameter"
+            },
+            "6": {
               "name": "punctuation.definition.parameters.end"
             },
-            "2": {
+            "7": {
               "name": "storage.type.function.arrow"
             }
-          },
-          "patterns": [
-            {
-              "include": "#comment"
-            },
-            {
-              "match": "((?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)\\s*)?([a-zA-Z0-9_]+\\b)\\b",
-              "captures": {
-                "2": {
-                  "name": "meta.type",
-                  "patterns": [
-                    {
-                      "include": "#type-matcher"
-                    }
-                  ]
-                },
-                "12": {
-                  "name": "variable.parameter"
-                }
-              }
-            },
-            {
-              "name": "punctuation.separator.comma",
-              "match": ",",
-              "captures": {}
-            },
-            {
-              "include": "#expression"
-            }
-          ]
+          }
         },
         {
+          "name": "meta.structorblock",
           "begin": "\\{",
           "beginCaptures": {},
           "end": "\\}",
           "endCaptures": {},
           "patterns": [
             {
-              "begin": "((?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)\\s*)?([a-zA-Z0-9_]+\\b)\\s*(:)",
+              "begin": "([a-zA-Z0-9_]+\\b)\\s*(:)",
               "beginCaptures": {
-                "2": {
-                  "name": "meta.type",
-                  "patterns": [
-                    {
-                      "include": "#type-matcher"
-                    }
-                  ]
-                },
-                "12": {
+                "1": {
                   "name": "variable.parameter"
                 },
-                "13": {
+                "2": {
                   "name": "punctuation.separator.colon"
                 }
               },
@@ -619,6 +545,7 @@
       "captures": {}
     },
     "block": {
+      "name": "meta.block",
       "begin": "(\\{)",
       "beginCaptures": {
         "1": {
@@ -638,6 +565,7 @@
       ]
     },
     "statement": {
+      "name": "meta.statement",
       "patterns": [
         {
           "include": "#comment"
@@ -851,11 +779,19 @@
     },
     "statement-end": {
       "match": ";",
-      "captures": {}
+      "captures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      }
     },
     "assignment": {
       "match": "=|\\+=|\\-=|\\*=|\\/=|%=|\\^=|\\+\\+|\\-\\-",
-      "captures": {}
+      "captures": {
+        "0": {
+          "name": "keyword.operator.assignment.compound"
+        }
+      }
     },
     "if-statement": {
       "begin": "\\b((else)\\s*)?(if)\\s*(\\()",
@@ -1017,6 +953,7 @@
       ]
     },
     "variable-declaration": {
+      "name": "meta.declaration.variable",
       "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist)\\b\\s*)*)(?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)([a-zA-Z0-9_]+\\b)\\s*(((!)\\s*)?(=)|(:))?",
       "beginCaptures": {
         "1": {
@@ -1056,6 +993,7 @@
       ]
     },
     "function-declaration": {
+      "name": "meta.function",
       "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist)\\b\\s*)*)(?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)([a-zA-Z0-9_]+\\b)\\s*(?=\\(|<)",
       "beginCaptures": {
         "1": {
@@ -1090,7 +1028,11 @@
         },
         {
           "match": "\\b(globalvar, playervar)\\b",
-          "captures": {}
+          "captures": {
+            "0": {
+              "name": "storage.modifier"
+            }
+          }
         },
         {
           "begin": ":",
@@ -1135,6 +1077,7 @@
       ]
     },
     "class-struct-declaration": {
+      "name": "meta.declaration.type",
       "begin": "(class)\\s*([a-zA-Z0-9_]+\\b)|(struct)\\s*([a-zA-Z0-9_]+\\b)",
       "beginCaptures": {
         "1": {
@@ -1303,6 +1246,7 @@
       ]
     },
     "rule": {
+      "name": "meta.rule",
       "begin": "((disabled)\\s*)?(rule)\\s*(:)",
       "beginCaptures": {
         "2": {
@@ -1350,6 +1294,7 @@
       ]
     },
     "argument-list": {
+      "name": "meta.arguments",
       "patterns": [
         {
           "include": "#comment"
@@ -1383,6 +1328,7 @@
       ]
     },
     "function-call": {
+      "name": "meta.functioncall",
       "begin": "((\\.)\\s*)?([a-zA-Z0-9_]+\\b)\\s*((<)\\s*((,)?\\s*(?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)\\s*)*(>))?\\s*(\\()",
       "beginCaptures": {
         "2": {

@@ -37,7 +37,7 @@
       "include": "#expression"
     }
   ],
-  "firstLineMatch": "\\b(settings|variables|subroutines|rule|\\[[0-9]{2}:[0-9]{2}:[0-9]{2}\\])\\b",
+  "firstLineMatch": "settings|variables|subroutines|rule|\\[[0-9]{2}:[0-9]{2}:[0-9]{2}\\]",
   "repository": {
     "comment": {
       "patterns": [
@@ -61,7 +61,7 @@
           "captures": {}
         },
         {
-          "name": "comment.block.documentation markup.error",
+          "name": "comment.block.documentation markup.error invalid.illegal",
           "match": "\\[[0-9]{2}:[0-9]{2}:[0-9]{2}\\]",
           "captures": {}
         }

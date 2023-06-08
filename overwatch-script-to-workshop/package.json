@@ -2,7 +2,7 @@
   "name": "overwatch-script-to-workshop",
   "displayName": "Overwatch Script To Workshop",
   "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-  "version": "3.7.4",
+  "version": "3.7.6",
   "publisher": "Deltin",
   "engines": {
     "vscode": "^1.72.0"
@@ -252,8 +252,8 @@
         "url": "./json-schemas/ElementValidation.json"
       },
       {
-          "fileMatch": "module.json",
-          "url": "./json-schemas/ConfigValidation.json"
+        "fileMatch": "module.json",
+        "url": "./json-schemas/ConfigValidation.json"
       }
     ],
     "debuggers": [

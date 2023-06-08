@@ -5,7 +5,7 @@ import { Repository } from './repository';
 export const ow_grammar = tm.createTextmateGrammar({
     name: 'Workshop',
     fileTypes: ['ow', 'overwatch', 'workshop', 'ws'], // todo
-    firstLineMatch: /\b(settings|variables|subroutines|rule|\[[0-9]{2}:[0-9]{2}:[0-9]{2}\])\b/,
+    firstLineMatch: /settings|variables|subroutines|rule|\[[0-9]{2}:[0-9]{2}:[0-9]{2}\]/,
     scopeName: 'source.ow',
     repository: getRepository(),
     patterns: [
