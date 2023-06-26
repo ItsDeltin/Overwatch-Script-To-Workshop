@@ -198,6 +198,8 @@ namespace Deltin.Deltinteger.Parse
         private IGettable GetArbritraryGettable() => _children.First().Value;
         private IWorkshopTree[] GetAllValuesWithTarget(Element target) => IStructValue.ExtractAllValues(_children.Select(child => child.Value.GetVariable(target)));
 
+        public WorkshopVariablePosition? GetWorkshopVariablePosition() => null;
+
         /// <summary>Targets a player struct variable with a known player.</summary>
         class TargetPlayerStruct : IStructValue
         {

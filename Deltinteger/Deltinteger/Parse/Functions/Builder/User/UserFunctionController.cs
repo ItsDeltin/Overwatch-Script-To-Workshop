@@ -239,20 +239,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 if (Gettable.CanBeSet())
                     Gettable.Set(actionSet, value);
             }
-            public void Push(ActionSet actionSet, IWorkshopTree value)
-            {
-                if (Gettable is RecursiveIndexReference recursive)
-                    actionSet.AddAction(recursive.Push((Element)value));
-                else
-                    throw new Exception("Cannot push non-recursive parameter");
-            }
-            public void Pop(ActionSet actionSet)
-            {
-                if (Gettable is RecursiveIndexReference recursive)
-                    actionSet.AddAction(recursive.Pop());
-                else
-                    throw new Exception("Cannot pop non-recursive parameter");
-            }
+            public void Push(ActionSet actionSet, IWorkshopTree value) => Gettable.Push(actionSet, value);
+            public void Pop(ActionSet actionSet) => Gettable.Pop(actionSet);
         }
     }
 }

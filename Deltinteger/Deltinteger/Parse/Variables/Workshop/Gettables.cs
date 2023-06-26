@@ -51,6 +51,8 @@ namespace Deltin.Deltinteger.Parse
         IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => CreateChild((Element)reference);
 
         public bool CanBeSet() => true;
+
+        public WorkshopVariablePosition? GetWorkshopVariablePosition() => new WorkshopVariablePosition(WorkshopVariable, Index, null);
     }
 
     public class RecursiveIndexReference : IndexReference
@@ -130,6 +132,7 @@ namespace Deltin.Deltinteger.Parse
         public void Push(ActionSet actionSet, IWorkshopTree value) => Throw();
         IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => new WorkshopElementReference(StructHelper.ValueInArray(WorkshopElement, reference));
         public bool CanBeSet() => false;
+        public WorkshopVariablePosition? GetWorkshopVariablePosition() => null;
     }
 
     // Wraps an IGettable with a known target.
@@ -143,6 +146,12 @@ namespace Deltin.Deltinteger.Parse
         public bool CanBeSet() => _parent.CanBeSet();
         public IGettable ChildFromClassReference(IWorkshopTree reference) => new TargetGettable(_parent.ChildFromClassReference(reference), _target);
         public IWorkshopTree GetVariable(Element eventPlayer = null) => _parent.GetVariable(_target);
+        public WorkshopVariablePosition? GetWorkshopVariablePosition()
+        {
+            var parent = _parent.GetWorkshopVariablePosition();
+            return new WorkshopVariablePosition(parent.Value.WorkshopVariable, parent.Value.Index, _target);
+        }
+
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, params Element[] index) =>
             _parent.Modify(actionSet, operation, value, _target, index);
         public void Pop(ActionSet actionSet) => _parent.Pop(actionSet);

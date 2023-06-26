@@ -55,6 +55,7 @@ namespace Deltin.Deltinteger
         void Pop(ActionSet actionSet);
         void Push(ActionSet actionSet, IWorkshopTree value);
         IGettable ChildFromClassReference(IWorkshopTree reference);
+        WorkshopVariablePosition? GetWorkshopVariablePosition();
     }
 
     public interface ILabeled

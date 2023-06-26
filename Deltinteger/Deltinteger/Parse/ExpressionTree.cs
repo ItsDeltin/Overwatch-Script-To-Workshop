@@ -195,7 +195,13 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Get the reference.
                     var reference = currentAssigner.Get(callVariableAction.Calling.Provider);
-                    current = reference.GetVariable(target as Element);
+
+                    // If the reference was obtained with a player target, wrap the reference with the target.
+                    if (target is Element targetElement)
+                    {
+                        reference = new TargetGettable(reference, targetElement);
+                    }
+                    current = reference.GetVariable();
 
                     // Get the index.
                     resultIndex = new Element[callVariableAction.Index.Length];

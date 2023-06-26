@@ -256,15 +256,15 @@ namespace Deltin.Deltinteger.Parse
             Element target;
             Element start;
 
-            IndexReference indexReference;
+            IGettable gettable;
 
             // Existing variable being used in for.
             if (VariableResolve != null)
             {
                 VariableElements elements = VariableResolve.ParseElements(actionSet);
-                indexReference = (IndexReference)elements.IndexReference;
+                gettable = elements.IndexReference;
 
-                target = elements.Target;
+                target = gettable.GetWorkshopVariablePosition()?.Target ?? elements.Target;
                 start = (Element)InitialResolveValue?.Parse(actionSet) ?? Element.Num(0);
             }
             // New variable being use in for.
@@ -280,7 +280,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.IndexAssigner.Add(DefinedVariable, assignerResult.Gettable);
 
                 // Set variable, target, and stop.
-                indexReference = (IndexReference)actionSet.IndexAssigner.Get(DefinedVariable); // Extract the workshop variable.
+                gettable = actionSet.IndexAssigner.Get(DefinedVariable); // Extract the workshop variable.
                 target = Element.EventPlayer(); // Set target to Event Player since declaring variables has no target.
                 start = (Element)assignerResult.InitialValue ?? Element.Num(0); // Set start to InitialValue or 0 if null.
             }
@@ -289,11 +289,12 @@ namespace Deltin.Deltinteger.Parse
             Element step = (Element)Step.Parse(actionSet);
 
             // We can only auto for if there are no indices.
-            bool canAutoFor = indexReference.Index.Length == 0;
+            var workshopSpot = gettable.GetWorkshopVariablePosition();
+            bool canAutoFor = workshopSpot.HasValue && workshopSpot.Value.Index.Length == 0;
 
             if (canAutoFor)
             {
-                var variable = indexReference.WorkshopVariable;
+                var variable = workshopSpot.Value.WorkshopVariable;
 
                 // Global
                 if (variable.IsGlobal)
@@ -307,10 +308,10 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 // Init
-                indexReference.Set(actionSet, Element.Num(0), target);
+                gettable.Set(actionSet, Element.Num(0), target);
                 // Loop
                 actionSet.AddAction(Element.While(Element.Compare(
-                    indexReference.Get(target), Operator.LessThan, stop
+                    gettable.GetVariable(target), Operator.LessThan, stop
                 )));
             }
 
@@ -322,7 +323,7 @@ namespace Deltin.Deltinteger.Parse
             loopHelper.ContinueToHere();
 
             if (!canAutoFor)
-                indexReference.Modify(actionSet, Operation.Add, Element.Num(1), target, new Element[0]);
+                gettable.Modify(actionSet, Operation.Add, Element.Num(1), target, new Element[0]);
 
             // Cap the for.
             actionSet.AddAction(Element.End());
