@@ -44,7 +44,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             if (controller.Attributes.IsInstance)
             {
-                _objectStore = _actionSet.VarCollection.Assign(_context.ObjectStackName, true, !controller.Attributes.IsRecursive);
+                _objectStore = _actionSet.VarCollection.Assign(
+                    name: _context.ObjectStackName,
+                    isGlobal: _context.VariableGlobalDefault,
+                    extended: !controller.Attributes.IsRecursive && _deltinScript.Settings.SubroutineStacksAreExtended);
 
                 // Set the objectStore as an empty array if the subroutine is recursive.
                 if (controller.Attributes.IsRecursive)
