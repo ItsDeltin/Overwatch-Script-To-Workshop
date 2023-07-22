@@ -1140,6 +1140,11 @@
       "type": "number",
       "maximum": 500.0
     },
+    "A-36 Tactical Grenade Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Ultimate Ability (Rally)": {
       "default": true,
       "type": "boolean"
@@ -1763,10 +1768,6 @@
       "minimum": 20.0,
       "maximum": 200.0
     },
-    "Parting Gift": {
-      "default": true,
-      "type": "boolean"
-    },
     "Weapons Enabled Lifeweaver": {
       "default": "All",
       "type": "string",
@@ -1920,7 +1921,7 @@
       "type": "number",
       "maximum": 500.0
     },
-    "Regeneration": {
+    "Sympathetic Recovery": {
       "default": true,
       "type": "boolean"
     },
@@ -3342,6 +3343,9 @@
             },
             "A-36 Tactical Grenade Cooldown Time": {
               "$ref": "#/definitions/A-36 Tactical Grenade Cooldown Time"
+            },
+            "A-36 Tactical Grenade Knockback Scalar": {
+              "$ref": "#/definitions/A-36 Tactical Grenade Knockback Scalar"
             }
           },
           "additionalProperties": false
@@ -4303,9 +4307,6 @@
             "Life Grip and Healing Blossom Range": {
               "$ref": "#/definitions/Life Grip and Healing Blossom Range"
             },
-            "Parting Gift": {
-              "$ref": "#/definitions/Parting Gift"
-            },
             "Weapons Enabled": {
               "$ref": "#/definitions/Weapons Enabled Lifeweaver"
             }
@@ -4561,8 +4562,8 @@
             "Guardian Angel Cooldown Time": {
               "$ref": "#/definitions/Guardian Angel Cooldown Time"
             },
-            "Regeneration": {
-              "$ref": "#/definitions/Regeneration"
+            "Sympathetic Recovery": {
+              "$ref": "#/definitions/Sympathetic Recovery"
             },
             "Resurrect": {
               "$ref": "#/definitions/Resurrect"
