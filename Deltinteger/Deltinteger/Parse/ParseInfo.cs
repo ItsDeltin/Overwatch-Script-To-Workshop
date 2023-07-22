@@ -296,7 +296,13 @@ namespace Deltin.Deltinteger.Parse
             {
                 _index = new IExpression[variableContext.Index.Count];
                 for (int i = 0; i < _index.Length; i++)
+                {
                     _index[i] = parseInfo.GetExpression(scope, variableContext.Index[i].Expression, getter: getter);
+                    if (_index[i].Type().Attributes.IsStruct)
+                    {
+                        parseInfo.Script.Diagnostics.Error("Structs cannot be used as an indexer", variableContext.Index[i].Expression.Range);
+                    }
+                }
             }
 
             // Get the generics.

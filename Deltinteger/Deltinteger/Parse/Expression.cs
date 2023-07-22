@@ -66,7 +66,14 @@ namespace Deltin.Deltinteger.Parse
         public ValueInArrayAction(ParseInfo parseInfo, Scope scope, ValueInArray context)
         {
             Expression = parseInfo.GetExpression(scope, context.Array);
-            Index = new IExpression[] { parseInfo.ClearContextual().GetExpression(scope, context.Index) };
+            var indexExpression = parseInfo.ClearContextual().GetExpression(scope, context.Index);
+
+            if (indexExpression.Type().Attributes.IsStruct)
+            {
+                parseInfo.Script.Diagnostics.Error("Structs cannot be used as an indexer", context.Index.Range);
+            }
+
+            Index = new IExpression[] { indexExpression };
             this.parseInfo = parseInfo;
         }
 

@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             Right = parseInfo.GetExpression(scope, context.Right);
             _defaultType = parseInfo.Types.Any();
 
-			string op = context.Operator.Operator.Operator;
+            string op = context.Operator.Operator.Operator;
             Operation = Left.Type()?.Operations.GetOperation(TypeOperation.TypeOperatorFromString(op), Right.Type()) ?? GetDefaultOperation(op, parseInfo.TranslateInfo.Types);
 
             if (Operation == null)
@@ -28,9 +28,10 @@ namespace Deltin.Deltinteger.Parse
 
         private TypeOperation GetDefaultOperation(string op, ITypeSupplier supplier)
         {
-            if (Left.Type() == null || Right.Type() == null || Left.Type().IsConstant() || Right.Type().IsConstant())
+            if (Left.Type() == null || Right.Type() == null || Left.Type().IsConstant() || Right.Type().IsConstant() ||
+                !Left.Type().Implements(supplier.Any()) || !Right.Type().Implements(supplier.Any()))
                 return null;
-            
+
             return new TypeOperation(supplier, TypeOperation.TypeOperatorFromString(op), supplier.Any());
         }
 
