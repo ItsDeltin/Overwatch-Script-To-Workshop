@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse
         private TypeOperation GetDefaultOperation(string op, ITypeSupplier supplier)
         {
             if (Left.Type() == null || Right.Type() == null || Left.Type().IsConstant() || Right.Type().IsConstant() ||
-                !Left.Type().Attributes.IsStruct || !Right.Type().Attributes.IsStruct)
+                !Left.Type().Implements(supplier.Any()) || !Right.Type().Implements(supplier.Any()))
                 return null;
 
             return new TypeOperation(supplier, TypeOperation.TypeOperatorFromString(op), supplier.Any());
