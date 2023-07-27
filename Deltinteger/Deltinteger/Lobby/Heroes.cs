@@ -204,8 +204,8 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Swift Strike"),
                 new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrows").AddIntRange("Storm Arrows Quantity", false, 3, 12, 5),
                 new HeroSettingCollection("Illari")
+                    .AddHealer().AddProjectile(true)
                     .AddUlt("Captive Sun")
-                    .AddProjectile(true)
                     .AddSecondaryFire().AddRange("Solar Energy Maximum", 0, 500).AddRange("Solar Energy Recharge Rate", 0, 500)
                     .AddAbility("Outburst")
                     .AddAbility("Healing Pylon"),
