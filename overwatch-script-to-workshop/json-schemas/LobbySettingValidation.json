@@ -206,6 +206,12 @@
       "minimum": 10.0,
       "maximum": 500.0
     },
+    "Scoring Speed Modifier": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
     "Score To Win 1-9": {
       "default": 3.0,
       "type": "number",
@@ -323,12 +329,6 @@
       "minimum": 1.0,
       "maximum": 3.0
     },
-    "Scoring Speed Modifier": {
-      "default": 100.0,
-      "type": "number",
-      "minimum": 10.0,
-      "maximum": 500.0
-    },
     "Control Maps": {
       "type": "array",
       "uniqueItems": true,
@@ -405,6 +405,44 @@
           "Esperança"
         ]
       }
+    },
+    "Control Point A": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Control Point B": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Control Point C": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Control Point D": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Control Point E": {
+      "default": true,
+      "type": "boolean"
+    },
+    "First Active Control Point": {
+      "default": "A",
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "Random"
+      ]
+    },
+    "Score To Win": {
+      "default": 3.0,
+      "type": "integer",
+      "minimum": 1.0,
+      "maximum": 10.0
     },
     "Enabled Off": {
       "default": false,
@@ -1542,6 +1580,54 @@
       "type": "integer",
       "minimum": 3.0,
       "maximum": 12.0
+    },
+    "Ultimate Ability (Captive Sun)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Captive Sun)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Captive Sun)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Captive Sun)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Solar Energy Maximum": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Solar Energy Recharge Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Outburst": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Outburst Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Healing Pylon": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Healing Pylon Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
     },
     "Ultimate Ability (Rampage)": {
       "default": true,
@@ -2899,6 +2985,7 @@
           "Echo",
           "Genji",
           "Hanzo",
+          "Illari",
           "Junker Queen",
           "Junkrat",
           "Kiriko",
@@ -3946,6 +4033,90 @@
             },
             "Storm Arrows Quantity": {
               "$ref": "#/definitions/Storm Arrows Quantity"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Illari": {
+          "description": "'Illari' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (Captive Sun)": {
+              "$ref": "#/definitions/Ultimate Ability (Captive Sun)"
+            },
+            "Ultimate Generation (Captive Sun)": {
+              "$ref": "#/definitions/Ultimate Generation (Captive Sun)"
+            },
+            "Ultimate Generation - Passive (Captive Sun)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Captive Sun)"
+            },
+            "Ultimate Generation - Combat (Captive Sun)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Captive Sun)"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Projectile Gravity": {
+              "$ref": "#/definitions/Projectile Gravity"
+            },
+            "Secondary Fire": {
+              "$ref": "#/definitions/Secondary Fire"
+            },
+            "Solar Energy Maximum": {
+              "$ref": "#/definitions/Solar Energy Maximum"
+            },
+            "Solar Energy Recharge Rate": {
+              "$ref": "#/definitions/Solar Energy Recharge Rate"
+            },
+            "Outburst": {
+              "$ref": "#/definitions/Outburst"
+            },
+            "Outburst Cooldown Time": {
+              "$ref": "#/definitions/Outburst Cooldown Time"
+            },
+            "Healing Pylon": {
+              "$ref": "#/definitions/Healing Pylon"
+            },
+            "Healing Pylon Cooldown Time": {
+              "$ref": "#/definitions/Healing Pylon Cooldown Time"
             }
           },
           "additionalProperties": false
@@ -6269,6 +6440,9 @@
             "Payload Speed Modifier": {
               "$ref": "#/definitions/Payload Speed Modifier"
             },
+            "Scoring Speed Modifier": {
+              "$ref": "#/definitions/Scoring Speed Modifier"
+            },
             "Score To Win": {
               "$ref": "#/definitions/Score To Win 1-9"
             },
@@ -6650,6 +6824,87 @@
             "Disabled Maps": {
               "$ref": "#/definitions/Push Maps",
               "description": "An array of disabled maps for the 'Push' mode."
+            }
+          },
+          "additionalProperties": false
+        },
+        "Flashpoint": {
+          "description": "Flashpoint settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled On"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Capture Speed Modifier": {
+              "$ref": "#/definitions/Capture Speed Modifier"
+            },
+            "Control Point A": {
+              "$ref": "#/definitions/Control Point A"
+            },
+            "Control Point B": {
+              "$ref": "#/definitions/Control Point B"
+            },
+            "Control Point C": {
+              "$ref": "#/definitions/Control Point C"
+            },
+            "Control Point D": {
+              "$ref": "#/definitions/Control Point D"
+            },
+            "Control Point E": {
+              "$ref": "#/definitions/Control Point E"
+            },
+            "First Active Control Point": {
+              "$ref": "#/definitions/First Active Control Point"
+            },
+            "Score To Win": {
+              "$ref": "#/definitions/Score To Win"
+            },
+            "Scoring Speed Modifier": {
+              "$ref": "#/definitions/Scoring Speed Modifier"
             }
           },
           "additionalProperties": false

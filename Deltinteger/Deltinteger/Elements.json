@@ -6645,7 +6645,8 @@
         "Junker Queen",
         "Kiriko",
         "Ramattra",
-        "Lifeweaver"
+        "Lifeweaver",
+        "Illari"
       ]
     },
     "Hero": [
@@ -6662,6 +6663,7 @@
       "Echo",
       "Genji",
       "Hanzo",
+      "Illari",
       "Junker Queen",
       "Junkrat",
       "Kiriko",
@@ -7488,6 +7490,10 @@
         "alias": "Nepal_Village"
       },
       {
+        "name": "New Junk City",
+        "alias": "New_Junk_City"
+      },
+      {
         "name": "New Queen Street",
         "alias": "New_Queen_Street"
       },
@@ -7520,6 +7526,7 @@
         "name": "Shambali Monastery",
         "alias": "Shambali_Monastery"
       },
+      "Suravasa",
       {
         "name": "Sydney Harbour Arena",
         "alias": "Sydney_Harbour_Arena"
@@ -7571,6 +7578,7 @@
       "Deathmatch",
       "Elimination",
       "Escort",
+      "Flashpoint",
       "Hybrid",
       {
         "name": "Junkenstein's Revenge",

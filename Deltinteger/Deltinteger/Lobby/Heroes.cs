@@ -203,6 +203,12 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Echo").AddUlt("Duplicate").AddProjectile(false).AddAbility("Flight").AddAbility("Focusing Beam").AddAbility("Glide", hasCooldown: false).AddAbility("Sticky Bombs"),
                 new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Swift Strike"),
                 new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrows").AddIntRange("Storm Arrows Quantity", false, 3, 12, 5),
+                new HeroSettingCollection("Illari")
+                    .AddUlt("Captive Sun")
+                    .AddProjectile(true)
+                    .AddSecondaryFire().AddRange("Solar Energy Maximum", 0, 500).AddRange("Solar Energy Recharge Rate", 0, 500)
+                    .AddAbility("Outburst")
+                    .AddAbility("Healing Pylon"),
                 new HeroSettingCollection("Junker Queen").AddUlt("Rampage", false).AddAbility("Commanding Shout").AddAbility("Carnage").AddAbility("Jagged Blade", hasKnockback: true).AddRange("Jagged Blade Delay Before Automatic Recall", 40, 400).AddProjectile(true),
                 new HeroSettingCollection("Junkrat").AddUlt("Rip-Tire", hasDuration: true).AddProjectile(true).AddAbility("Concussion Mine", hasKnockback: true).AddAbility("Steel Trap").AddRange("Frag Launcher Knockback Scalar", 0, 400),
                 new HeroSettingCollection("Kiriko").AddUlt("Kitsune Rush", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddHealer().AddAbility("Swift Step").AddRange("Swift Step Distance Scalar", 20, 300).AddAbility("Protection Suzu", hasKnockback: true),

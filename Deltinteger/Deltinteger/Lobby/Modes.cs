@@ -24,6 +24,8 @@ namespace Deltin.Deltinteger.Lobby
 
         public ModeSettings Push { get; set; }
 
+        public ModeSettings Flashpoint { get; set; }
+
         [JsonProperty("Capture The Flag")]
         public ModeSettings CaptureTheFlag { get; set; }
 
@@ -69,6 +71,7 @@ namespace Deltin.Deltinteger.Lobby
             Escort?.ToWorkshop(builder, allSettings, "Escort");
             Hybrid?.ToWorkshop(builder, allSettings, "Hybrid");
             Push?.ToWorkshop(builder, allSettings, "Push");
+            Flashpoint?.ToWorkshop(builder, allSettings, "Flashpoint");
             PracticeRange?.ToWorkshop(builder, allSettings, "PracticeRange");
             Skirmish?.ToWorkshop(builder, allSettings, "Skirmish");
             TeamDeathmatch?.ToWorkshop(builder, allSettings, "TeamDeathmatch");
@@ -101,6 +104,9 @@ namespace Deltin.Deltinteger.Lobby
                 case "Escort":
                     if (Escort == null) Escort = new ModeSettings();
                     return Escort;
+                case "Flashpoint":
+                    if (Flashpoint == null) Flashpoint = new ModeSettings();
+                    return Flashpoint;
                 case "Hybrid":
                     if (Hybrid == null) Hybrid = new ModeSettings();
                     return Hybrid;
@@ -210,6 +216,7 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting Enabled_DefaultOff = new SwitchValue("Enabled", false) { ReferenceName = "Enabled Off" };
         private static readonly LobbySetting GameLengthInMinutes = new RangeValue(true, false, "Game Length In Minutes", 5, 15, 10);
         private static readonly LobbySetting SelfInitiatedRespawn = new SwitchValue("Self Initiated Respawn", true);
+        private static readonly LobbySetting ScoringSpeedModifier = new RangeValue(false, true, "Scoring Speed Modifier", 10, 500);
         private static readonly LobbySetting ScoreToWin_1to9 = new RangeValue(false, false, "Score To Win", 1, 9, 3) { ReferenceName = "Score To Win 1-9" };
         private static readonly LobbySetting ScoreToWin_1to5000 = new RangeValue(false, false, "Score To Win", 1, 5000, 20) { ReferenceName = "Score To Win 1-5000" };
         private static readonly LobbySetting LimitValidControlPoints = new SelectValue("Limit Valid Control Points", "All", "First", "Second", "Third");
@@ -320,10 +327,14 @@ namespace Deltin.Deltinteger.Lobby
             AllModeSettings = new ModeSettingCollection[] {
                 all,
                 new ModeSettingCollection("Assault", true).Competitive().AddCaptureSpeed(),
-                new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", false, 1, 3, 2, "Score To Win 1-3").AddRange("Scoring Speed Modifier", 10, 500),
+                new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", false, 1, 3, 2, "Score To Win 1-3").Add(ScoringSpeedModifier),
                 new ModeSettingCollection("Escort", true).Competitive().AddPayloadSpeed(),
                 new ModeSettingCollection("Hybrid", true).Competitive().AddCaptureSpeed().AddPayloadSpeed(),
                 new ModeSettingCollection("Push", true).Competitive().AddTS1WalkSpeed().AddTS1PushSpeed(),
+                new ModeSettingCollection("Flashpoint", true).Competitive().AddCaptureSpeed()
+                    .AddSwitch("Control Point A", true).AddSwitch("Control Point B", true).AddSwitch("Control Point C", true).AddSwitch("Control Point D", true).AddSwitch("Control Point E", true)
+                    .AddSelect("First Active Control Point", "A", "B", "C", "D", "E", "Random")
+                    .AddIntRange("Score To Win", false, 1, 10, 3).Add(ScoringSpeedModifier),
                 new ModeSettingCollection("Capture The Flag", false).AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
                     .AddSelect("Flag Carrier Abilities", "Restricted", "All", "None").AddRange("Flag Dropped Lock Time", 0, 10, 5).AddRange("Flag Pickup Time", 0, 5, 0).AddRange("Flag Return Time", 0, 5, 4)
                     .AddRange("Flag Score Respawn Time", 0, 20, 15).AddIntRange("Game Length (Minutes)", false, 5, 15, 8).AddRange("Respawn Speed Buff Duration", 0, 60, 0).Add(ScoreToWin_1to9)
