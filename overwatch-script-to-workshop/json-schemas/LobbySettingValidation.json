@@ -444,6 +444,17 @@
       "minimum": 1.0,
       "maximum": 10.0
     },
+    "Flashpoint Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "New Junk City",
+          "Suravasa"
+        ]
+      }
+    },
     "Enabled Off": {
       "default": false,
       "type": "boolean"
@@ -757,7 +768,9 @@
           "Esperança",
           "Shambali Monastery",
           "Antarctic Peninsula",
-          "Talantis"
+          "Talantis",
+          "New Junk City",
+          "Suravasa"
         ]
       }
     },
@@ -6905,6 +6918,14 @@
             },
             "Scoring Speed Modifier": {
               "$ref": "#/definitions/Scoring Speed Modifier"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Flashpoint Maps",
+              "description": "An array of enabled maps for the 'Flashpoint' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Flashpoint Maps",
+              "description": "An array of disabled maps for the 'Flashpoint' mode."
             }
           },
           "additionalProperties": false
