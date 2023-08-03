@@ -34,7 +34,18 @@ namespace Deltin.Deltinteger.Parse
             => actionSet.AddAction(ModifyVariable(operation, (Element)value, target, index));
 
         public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
-            => actionSet.AddAction(SetVariable((Element)value, target, index));
+        {
+            var test = Get(target);
+            if (index != null)
+                foreach (var i in index)
+                    test = Element.ValueInArray(test, i);
+
+            // Do not do anything if the value is assigning to itself.
+            if (!test.EqualTo(value))
+            {
+                actionSet.AddAction(SetVariable((Element)value, target, index));
+            }
+        }
 
         public void Set(ActionSet actionSet, Element value, Element target = null, params Element[] index) => Set(actionSet, null, value, target, index);
         public void Set(ActionSet actionSet, string comment, Element value, Element target = null, params Element[] index) => actionSet.AddAction(comment, SetVariable(value, target, index));

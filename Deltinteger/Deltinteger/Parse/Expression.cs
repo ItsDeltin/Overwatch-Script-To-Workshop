@@ -282,6 +282,7 @@ namespace Deltin.Deltinteger.Parse
             public IWorkshopTree[] GetAllValues() => _consequent.GetAllValues();
             public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
             public IWorkshopTree GetArbritraryValue() => _consequent;
+            public string[] GetNames() => _consequent.GetNames();
         }
     }
 

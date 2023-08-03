@@ -455,6 +455,7 @@ namespace Deltin.Deltinteger.Compiler
         // Symbols
         Colon,
         Semicolon,
+        Spread,
         Dot,
         Squiggle,
         Exclamation,

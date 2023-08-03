@@ -1676,9 +1676,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Both of these are accepted:
             // {XYZ: Vector.Up, W: 0}
             // {Vector XYZ: Vector.Up, Number W: 0}
-            var values = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Lookahead(() => ParseType().LookaheadValid), () =>
+            var values = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Lookahead(() => Kind == TokenType.Spread || ParseType().LookaheadValid), () =>
             {
                 StartNode();
+                var spread = ParseOptional(TokenType.Spread);
+                if (spread)
+                {
+                    var spreadValue = GetContainExpression();
+                    return EndNode(new StructDeclarationVariableContext(spread, spreadValue));
+                }
+
                 var typeOrIdentifier = ParseType(); // Parse the variable type.
                 var identifier = ParseOptional(TokenType.Identifier); // Parse the identifier.
                 ParseExpected(TokenType.Colon); // Parse the struct value seperator.
@@ -1704,6 +1711,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Start of struct '{'
             if (!ParseExpected(TokenType.CurlyBracket_Open))
                 return false;
+
+            if (ParseOptional(TokenType.Spread))
+                return true;
 
             var typeOrIdentifier = ParseType();
             var identifier = ParseOptional(TokenType.Identifier);

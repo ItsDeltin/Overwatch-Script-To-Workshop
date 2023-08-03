@@ -57,6 +57,7 @@ namespace Deltin.Deltinteger.Parse
 
             _scopeInstance = new Scope();
             _operationsInstance = new TypeOperatorInfo(this);
+            _operationsInstance.DefaultAssignment = ArrayOfType.Operations.DefaultAssignment;
 
             Scope.AddNativeVariable(_length);
             Scope.AddNativeVariable(_last);
@@ -234,6 +235,8 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.Subtract, pipeType, this, (l, r) => Element.Remove(l, r))
             });
             Operations.AddTypeOperation(new[] {
+                // = assignment
+                new AssignmentOperation(AssignmentOperator.Equal, pipeType, info => info.Set()),
                 // += mod append
                 new AssignmentOperation(AssignmentOperator.AddEqual, pipeType, info => info.Modify(Operation.AppendToArray)),
                 // -= mod remove

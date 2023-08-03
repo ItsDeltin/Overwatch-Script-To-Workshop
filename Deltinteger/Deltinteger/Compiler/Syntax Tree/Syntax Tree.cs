@@ -706,11 +706,20 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Identifier { get; }
         public IParseExpression Value { get; }
 
+        public Token SpreadToken { get; }
+        public IParseExpression SpreadValue { get; }
+
         public StructDeclarationVariableContext(IParseType type, Token identifier, IParseExpression value)
         {
             Type = type;
             Identifier = identifier;
             Value = value;
+        }
+
+        public StructDeclarationVariableContext(Token spreadToken, IParseExpression spreadValue)
+        {
+            SpreadToken = spreadToken;
+            SpreadValue = spreadValue;
         }
     }
 

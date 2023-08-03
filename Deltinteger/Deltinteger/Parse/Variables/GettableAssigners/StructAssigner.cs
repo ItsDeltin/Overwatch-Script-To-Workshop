@@ -200,6 +200,8 @@ namespace Deltin.Deltinteger.Parse
 
         public WorkshopVariablePosition? GetWorkshopVariablePosition() => null;
 
+        public string[] GetNames() => _children.Keys.ToArray();
+
         /// <summary>Targets a player struct variable with a known player.</summary>
         class TargetPlayerStruct : IStructValue
         {
@@ -213,6 +215,7 @@ namespace Deltin.Deltinteger.Parse
             public IWorkshopTree GetArbritraryValue() => _parent.GetArbritraryGettable().GetVariable(_target);
             public IGettable GetGettable(string variableName) => new TargetGettable(_parent._children[variableName], _target);
             public IWorkshopTree GetValue(string variableName) => _parent._children[variableName].GetVariable(_target);
+            public string[] GetNames() => _parent.GetNames();
         }
     }
 
@@ -235,6 +238,7 @@ namespace Deltin.Deltinteger.Parse
         IGettable GetGettable(string variableName);
         IWorkshopTree GetArbritraryValue();
         IWorkshopTree[] GetAllValues();
+        string[] GetNames();
         BridgeGetStructValue Bridge(Func<BridgeArgs, IWorkshopTree> bridge) => new BridgeGetStructValue(this, bridge);
         BridgeGetStructValue BridgeArbritrary(Func<IWorkshopTree, IWorkshopTree> bridge) => Bridge(b => bridge(b.Value));
         bool IWorkshopTree.EqualTo(IWorkshopTree other) => throw new NotImplementedException();
@@ -281,6 +285,8 @@ namespace Deltin.Deltinteger.Parse
         {
             Values = values;
         }
+
+        public string[] GetNames() => Values.Keys.ToArray();
     }
 
     /// <summary>Represents an array of struct values.</summary>
@@ -369,6 +375,8 @@ namespace Deltin.Deltinteger.Parse
 
             return arrays;
         }
+
+        public string[] GetNames() => Children.Length == 0 ? null : Children[0].GetNames();
     }
 
     /// <summary>Gets a value in a struct array by an index.</summary>
@@ -387,18 +395,13 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the struct value.
             var value = _structValue.GetValue(variableName);
-
-            // Check if we need to do a value-in-array subsection.
-            if (value is IStructValue subvalue)
-                return new ValueInStructArray(subvalue, _index);
-
-            // Otherwise, get the value in the array normally.
-            return Element.ValueInArray(value, _index);
+            return StructHelper.ValueInArray(value, _index);
         }
 
         public IGettable GetGettable(string variableName) => _structValue.GetGettable(variableName).ChildFromClassReference(_index);
         public IWorkshopTree GetArbritraryValue() => _structValue;
         public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues().Select(value => Element.ValueInArray(value, _index)).ToArray();
+        public string[] GetNames() => _structValue.GetNames();
     }
 
     /// <summary>Applies a modification to a struct value.</summary>
@@ -441,6 +444,7 @@ namespace Deltin.Deltinteger.Parse
         public IGettable GetGettable(string variableName) => new WorkshopElementReference(GetValue(variableName));
         public IWorkshopTree GetArbritraryValue() => _structValue;
         public IWorkshopTree[] GetAllValues() => _structValue.GetAllValues().Select(v => _bridge(new BridgeArgs(v))).ToArray();
+        public string[] GetNames() => _structValue.GetNames();
     }
 
     /// <summary>Arguments from bridging struct values.</summary>
@@ -509,5 +513,7 @@ namespace Deltin.Deltinteger.Parse
             // the length won't change, we can optimize and just use the original array.
             return new BridgeGetStructValue(this, b => bridge(b.Value));
         }
+
+        public string[] GetNames() => StructArray.GetNames();
     }
 }

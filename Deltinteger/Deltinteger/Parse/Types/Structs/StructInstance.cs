@@ -40,6 +40,7 @@ namespace Deltin.Deltinteger.Parse
             ArrayHandler = this;
 
             Operations.AddAssignmentOperator();
+            Operations.DefaultAssignment = false;
         }
 
         protected virtual void Setup()
@@ -398,14 +399,40 @@ namespace Deltin.Deltinteger.Parse
                     // Map the value.
                     var value = invoke(structInset);
 
+                    // Optimize by locating the most commonly used inset and replacing it with
+                    // the 'Current Array Element' value.
+                    var variablePaths = StructHelper.ExtractAllPaths(structInset);
+                    var templates = StructHelper.SpreadTemplates(value, innerValue =>
+                    {
+                        foreach (var path in variablePaths)
+                            if (innerValue.EqualTo(IStructValue.GetValueWithPath(structInset, path.Steps)))
+                                return path;
+                        return null;
+                    });
+
+                    // Path to the most commonly used inset.
+                    StructPath? mostCommonInset = null;
+
+                    // Apply templates
+                    foreach (var template in templates)
+                    {
+                        if (template.PatternTemplate.Patterns.Count != 0)
+                        {
+                            // Find name of most common pattern.
+                            var mostCommon = template.PatternTemplate.Patterns.OrderByDescending(o => o.Value.Count()).First();
+                            mostCommon.Value.ReplaceWith(Element.ArrayElement());
+                            mostCommonInset = mostCommon.Key;
+                        }
+                    }
+
                     // Value is a struct, bridge it.
                     if (value is IStructValue structValue)
-                        return structValue.Bridge(v => CompleteAndOptimize(structArray, structInset, v.Value));
+                        return structValue.Bridge(v => CompleteAndOptimize(structArray, structInset, v.Value, mostCommonInset));
 
-                    return CompleteAndOptimize(structArray, structInset, value);
+                    return CompleteAndOptimize(structArray, structInset, value, mostCommonInset);
                 }
 
-                IWorkshopTree CompleteAndOptimize(IStructValue originalArray, ValueInStructArray structInset, IWorkshopTree workshopValue)
+                IWorkshopTree CompleteAndOptimize(IStructValue originalArray, ValueInStructArray structInset, IWorkshopTree workshopValue, StructPath? mostCommonInset)
                 {
                     /*
                     Optimize situations such as 'values.Map(value => value.b)'. 'b' is stored as an array 'global.values_b'.
@@ -420,8 +447,13 @@ namespace Deltin.Deltinteger.Parse
                             // If it does, return the respective original array.
                             return originalArray.GetAllValues()[i];
 
+                    // Map using the most common inset if applicable, otherwise use an arbritrary value.
+                    var innerArray = mostCommonInset is null ?
+                        StructHelper.ExtractArbritraryValue(originalArray) :
+                        IStructValue.GetValueWithPath(originalArray, mostCommonInset.Value.Steps);
+
                     // Do actual map if it cannot be truncated.
-                    return Element.Map(StructHelper.ExtractArbritraryValue(originalArray), workshopValue);
+                    return Element.Map(innerArray, workshopValue);
                 }
 
                 IWorkshopTree MapIndexed(ActionSet actionSet, IndexedStructArray indexedStructArray, Func<IWorkshopTree, IWorkshopTree> invoke)

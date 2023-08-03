@@ -105,6 +105,22 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // We use a seperate if rather than an && because the proceeding else-ifs cannot run if the token overlaps the update range.
                     if (!startSet)
                     {
+                        // Set the starting token to the current token's index.
+                        startingTokenIndex = i;
+
+                        // If the previous token touches the current starting token index, then shift the starting token back.
+                        // This is only required due to the ... spread token.
+                        // When the user writes '..', that is seen as [dot, dot]. Once the final dot is added, the change range is set to
+                        // the middle dot, so the first dot isn't lexed and we get [dot, dot, dot] instead of [spread].
+                        // If a token such as '..' is added (range operator), then this can be removed.
+                        while (startingTokenIndex > 0 &&
+                            Tokens[startingTokenIndex].Range.Start.EqualTo(
+                                Tokens[startingTokenIndex - 1].Range.End
+                            ))
+                        {
+                            startingTokenIndex--;
+                        }
+
                         // 'startIndex' cannot be higher than 'updateStartIndex'.
                         // Simply setting 'startIndex' to 'IndexOf...' may cause an issue in the common scenario:
 
@@ -114,9 +130,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
                         // startIndex will be 3, causing the characters between the first x and + to be skipped.
                         // So pick the lower of the 2 values.
-                        startIndex = Math.Min(updateStartIndex, Content.IndexOf(Tokens[i].Range.Start));
-                        // Set the starting token to the current token's index.
-                        startingTokenIndex = i;
+                        startIndex = Math.Min(updateStartIndex, Content.IndexOf(Tokens[startingTokenIndex].Range.Start));
                         // Once an overlapping token is found, do not set 'startIndex' or 'startingTokenIndex' again.
                         startSet = true;
                     }
@@ -230,6 +244,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchSymbol(':', TokenType.Colon) ||
                     MatchSymbol('?', TokenType.QuestionMark) ||
                     MatchSymbol(';', TokenType.Semicolon) ||
+                    MatchSymbol("..", TokenType.Spread) ||
                     MatchSymbol('.', TokenType.Dot) ||
                     MatchSymbol('~', TokenType.Squiggle) ||
                     MatchSymbol("=>", TokenType.Arrow) ||

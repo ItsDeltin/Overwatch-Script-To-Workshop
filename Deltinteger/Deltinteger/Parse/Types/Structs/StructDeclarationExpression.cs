@@ -28,6 +28,8 @@ namespace Deltin.Deltinteger.Parse
         private readonly StructDeclarationContext _context;
         private readonly bool _isExplicit;
 
+        private IExpression _spreadValue;
+
         public StructDeclarationExpression(ParseInfo parseInfo, Scope scope, StructDeclarationContext context)
         {
             _parseInfo = parseInfo;
@@ -39,9 +41,7 @@ namespace Deltin.Deltinteger.Parse
 
         void GetValue()
         {
-            Name = "{";
-
-            string[] variableNames = new string[_context.Values.Count];
+            var variables = new List<IVariable>();
 
             // Empty struct error.
             if (_context.Values.Count == 0)
@@ -52,39 +52,74 @@ namespace Deltin.Deltinteger.Parse
             var expectingStruct = _parseInfo.ExpectingType as StructInstance;
 
             // Create the struct type from the values.
-            Variables = new IVariable[_context.Values.Count];
             for (int i = 0; i < _context.Values.Count; i++)
             {
-                variableNames[i] = _context.Values[i].Identifier?.Text;
-
-                // Separate variable names with a comma.
-                if (i > 0) Name += ", ";
-
-                // No type in an explicit struct declaration.
-                if (_isExplicit && _context.Values[i].Type == null)
-                    _parseInfo.Script.Diagnostics.Error("Inconsistent struct value usage; value types must be all explicit or all implicit", _context.Values[i].Identifier.Range);
-
-                ParseInfo variableParseInfo = _parseInfo.ClearExpectations();
-
-                // Is there an expected struct type in the current context?
-                if (expectingStruct != null)
+                // Is the current value a spread?
+                if (_context.Values[i].SpreadToken)
                 {
-                    // Find a variable in the expected struct with the matching name.
-                    var expectingVariable = expectingStruct.Variables.FirstOrDefault(var => var.Name == variableNames[i]);
+                    // Error if this is not the last element in the struct.
+                    if (i != _context.Values.Count - 1)
+                    {
+                        _parseInfo.Script.Diagnostics.Error("Spread operator must be final element in struct", _context.Values[i].SpreadToken);
+                    }
+                    else
+                    {
+                        // Get the spread value.
+                        _spreadValue = _parseInfo.ClearExpectations().GetExpression(_scope, _context.Values[i].SpreadValue);
 
-                    // If the variable in the expected type exists, set expected type for the variable being declared.
-                    if (expectingVariable != null)
-                        variableParseInfo = variableParseInfo.SetExpectType(expectingVariable.CodeType.GetCodeType(variableParseInfo.TranslateInfo));
+                        // Make sure the spread value is a struct.
+                        if (_spreadValue.Type() is not StructInstance structInstance)
+                        {
+                            _parseInfo.Script.Diagnostics.Error("Spread value must be a struct", _context.Values[i].SpreadValue.Range);
+                        }
+                        else
+                        {
+                            // Add remaining elements to struct.
+                            foreach (var structVariable in structInstance.Variables)
+                            {
+                                if (variables.All(v => v.Name != structVariable.Name))
+                                {
+                                    variables.Add(VariableMaker.New(
+                                        structVariable.Name,
+                                        structVariable.CodeType.GetCodeType(_parseInfo.TranslateInfo),
+                                        IVariableDefault.Create(actionSet => actionSet.SpreadHelper.GetValue(structVariable.Name))
+                                    ));
+                                }
+                            }
+                        }
+                    }
                 }
+                else
+                {
+                    string newVariableName = _context.Values[i].Identifier?.Text;
 
-                // Create the struct variable.
-                Variables[i] = new StructValueVariable(scopeHandler, new StructValueContextHandler(variableParseInfo, _context.Values[i])).GetVar();
+                    // No type in an explicit struct declaration.
+                    if (_isExplicit && _context.Values[i].Type == null)
+                        _parseInfo.Script.Diagnostics.Error("Inconsistent struct value usage; value types must be all explicit or all implicit", _context.Values[i].Identifier.Range);
 
-                // Add the variable label.
-                Name += Variables[i].GetDefaultInstance(null).GetLabel(_parseInfo.TranslateInfo);
+                    ParseInfo variableParseInfo = _parseInfo.ClearExpectations();
+
+                    // Is there an expected struct type in the current context?
+                    if (expectingStruct != null)
+                    {
+                        // Find a variable in the expected struct with the matching name.
+                        var expectingVariable = expectingStruct.Variables.FirstOrDefault(var => var.Name == newVariableName);
+
+                        // If the variable in the expected type exists, set expected type for the variable being declared.
+                        if (expectingVariable != null)
+                            variableParseInfo = variableParseInfo.SetExpectType(expectingVariable.CodeType.GetCodeType(variableParseInfo.TranslateInfo));
+                    }
+
+                    // Create the struct variable.
+                    var newVariable = new StructValueVariable(scopeHandler, new StructValueContextHandler(variableParseInfo, _context.Values[i])).GetVar();
+
+                    variables.Add(newVariable);
+                }
             }
 
-            Name += "}";
+            Variables = variables.ToArray();
+
+            Name = $"{{{string.Join(", ", Variables.Select(v => v.GetDefaultInstance(null).GetLabel(_parseInfo.TranslateInfo)))}}}";
 
             // Add completion.
             if (expectingStruct != null)
@@ -92,7 +127,7 @@ namespace Deltin.Deltinteger.Parse
                 // Create completions from the expected struct's variables.
                 var completions = expectingStruct.Variables
                     // Do not add the completion if the variable already exists in the struct.
-                    .Where(expectingVariable => !variableNames.Contains(expectingVariable.Name))
+                    .Where(expectingVariable => Variables.All(v => v.Name != expectingVariable.Name))
                     // Convert to CompletionItem.
                     .Select(expectingVariable => expectingVariable.GetCompletion(_parseInfo.TranslateInfo));
 
@@ -109,7 +144,10 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Struct as workshop value. 
-        public IWorkshopTree Parse(ActionSet actionSet) => new StructAssigner(Type, new StructAssigningAttributes(), false).GetValues(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            return new StructAssigner(Type, new StructAssigningAttributes(), false).GetValues(actionSet.SetSpreadHelper(_spreadValue?.Parse(actionSet) as IStructValue));
+        }
 
         CodeType IExpression.Type() => Type;
 

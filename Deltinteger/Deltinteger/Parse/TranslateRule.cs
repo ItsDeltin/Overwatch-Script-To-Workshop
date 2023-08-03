@@ -149,6 +149,7 @@ namespace Deltin.Deltinteger.Parse
         public RecursiveVariableTracker RecursiveVariableTracker { get; private set; }
         public IContinueContainer ContinueHandler { get; private set; }
         public IBreakContainer BreakHandler { get; private set; }
+        public IStructValue SpreadHelper { get; private set; }
 
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
@@ -184,6 +185,7 @@ namespace Deltin.Deltinteger.Parse
             RecursiveVariableTracker = other.RecursiveVariableTracker;
             ContinueHandler = other.ContinueHandler;
             BreakHandler = other.BreakHandler;
+            SpreadHelper = other.SpreadHelper;
         }
 
         public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this)
@@ -226,6 +228,7 @@ namespace Deltin.Deltinteger.Parse
             ContinueHandler = continueAndBreakHandler,
             BreakHandler = continueAndBreakHandler
         };
+        public ActionSet SetSpreadHelper(IStructValue spreadHelper) => new(this) { SpreadHelper = spreadHelper };
 
         public void AddAction(string comment, params IWorkshopTree[] actions)
         {
