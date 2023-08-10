@@ -692,5 +692,19 @@
       "Control",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "New Junk City",
+    "GameModes": [
+      "Flashpoint",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Suravasa",
+    "GameModes": [
+      "Flashpoint",
+      "Skirmish"
+    ]
   }
 ]
