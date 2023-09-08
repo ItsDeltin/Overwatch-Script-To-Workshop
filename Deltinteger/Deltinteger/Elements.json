@@ -3046,7 +3046,7 @@
           "type": "player"
         },
         "Hero": {
-          "type": "hero"
+          "type": "hero | hero[]"
         },
         "Stat": {
           "type": "PlayerHeroStat"
