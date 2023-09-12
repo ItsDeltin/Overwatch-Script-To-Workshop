@@ -148,8 +148,8 @@ namespace Deltin.Deltinteger.Lobby
                     Add(RangeValue.NewPercentage(name + " Knockback Scalar", min: 0, max: 500));
                 else
                 {
-                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Enemy)", min: 0, max: 300));
-                    Add(RangeValue.NewPercentage(name + " Knockback Scalar (Self)", min: 0, max: 300));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar Enemy", min: 0, max: 300));
+                    Add(RangeValue.NewPercentage(name + " Knockback Scalar Self", min: 0, max: 300));
                 }
             }
 

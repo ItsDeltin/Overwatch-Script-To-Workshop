@@ -1086,12 +1086,12 @@
       "type": "number",
       "maximum": 500.0
     },
-    "Coach Gun Knockback Scalar (Enemy)": {
+    "Coach Gun Knockback Scalar Enemy": {
       "default": 100.0,
       "type": "number",
       "maximum": 300.0
     },
-    "Coach Gun Knockback Scalar (Self)": {
+    "Coach Gun Knockback Scalar Self": {
       "default": 100.0,
       "type": "number",
       "maximum": 300.0
@@ -3264,11 +3264,11 @@
             "Coach Gun Cooldown Time": {
               "$ref": "#/definitions/Coach Gun Cooldown Time"
             },
-            "Coach Gun Knockback Scalar (Enemy)": {
-              "$ref": "#/definitions/Coach Gun Knockback Scalar (Enemy)"
+            "Coach Gun Knockback Scalar Enemy": {
+              "$ref": "#/definitions/Coach Gun Knockback Scalar Enemy"
             },
-            "Coach Gun Knockback Scalar (Self)": {
-              "$ref": "#/definitions/Coach Gun Knockback Scalar (Self)"
+            "Coach Gun Knockback Scalar Self": {
+              "$ref": "#/definitions/Coach Gun Knockback Scalar Self"
             },
             "Dynamite": {
               "$ref": "#/definitions/Dynamite"
