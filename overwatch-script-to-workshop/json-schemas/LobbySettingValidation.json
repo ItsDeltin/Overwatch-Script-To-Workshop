@@ -4101,6 +4101,15 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Projectile Gravity": {
+              "$ref": "#/definitions/Projectile Gravity"
+            },
             "Ultimate Ability (Captive Sun)": {
               "$ref": "#/definitions/Ultimate Ability (Captive Sun)"
             },
@@ -4112,12 +4121,6 @@
             },
             "Ultimate Generation - Combat (Captive Sun)": {
               "$ref": "#/definitions/Ultimate Generation - Combat (Captive Sun)"
-            },
-            "Projectile Speed": {
-              "$ref": "#/definitions/Projectile Speed"
-            },
-            "Projectile Gravity": {
-              "$ref": "#/definitions/Projectile Gravity"
             },
             "Secondary Fire": {
               "$ref": "#/definitions/Secondary Fire"
