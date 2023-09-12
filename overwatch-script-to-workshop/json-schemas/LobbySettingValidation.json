@@ -1408,6 +1408,12 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Ammunition Regeneration Time Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 33.0,
+      "maximum": 500.0
+    },
     "Power Block": {
       "default": true,
       "type": "boolean"
@@ -1415,6 +1421,12 @@
     "Power Block Cooldown Time": {
       "default": 100.0,
       "type": "number",
+      "maximum": 500.0
+    },
+    "Power Block Charge Rate": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
       "maximum": 500.0
     },
     "Rocket Punch": {
@@ -1438,12 +1450,6 @@
     "Seismic Slam Cooldown Time": {
       "default": 100.0,
       "type": "number",
-      "maximum": 500.0
-    },
-    "Ammunition Regeneration Time Scalar": {
-      "default": 100.0,
-      "type": "number",
-      "minimum": 33.0,
       "maximum": 500.0
     },
     "Ultimate Ability (Duplicate)": {
@@ -3780,11 +3786,17 @@
             "Projectile Speed": {
               "$ref": "#/definitions/Projectile Speed"
             },
+            "Ammunition Regeneration Time Scalar": {
+              "$ref": "#/definitions/Ammunition Regeneration Time Scalar"
+            },
             "Power Block": {
               "$ref": "#/definitions/Power Block"
             },
             "Power Block Cooldown Time": {
               "$ref": "#/definitions/Power Block Cooldown Time"
+            },
+            "Power Block Charge Rate": {
+              "$ref": "#/definitions/Power Block Charge Rate"
             },
             "Rocket Punch": {
               "$ref": "#/definitions/Rocket Punch"
@@ -3800,9 +3812,6 @@
             },
             "Seismic Slam Cooldown Time": {
               "$ref": "#/definitions/Seismic Slam Cooldown Time"
-            },
-            "Ammunition Regeneration Time Scalar": {
-              "$ref": "#/definitions/Ammunition Regeneration Time Scalar"
             }
           },
           "additionalProperties": false
