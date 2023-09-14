@@ -92,6 +92,7 @@ namespace Deltin.Deltinteger.Parse
         int StackDelta();
     }
 
+    /// <summary>Returned by IGettableAssigner.GetResult.</summary>
     public class GettableAssignerResult
     {
         public IGettable Gettable { get; }
@@ -104,15 +105,31 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class GetClassStacks
+    /// <summary>Used by IGettableAssigner.AssignClassStacks. Tracks the current struct's stack
+    /// delta when assigning gettables to a struct.</summary>
+    public struct GetClassStacks
     {
-        public ClassWorkshopInitializerComponent ClassData { get; }
+        public IStackFromIndex StackData { get; }
         public int StackOffset { get; }
 
-        public GetClassStacks(ClassWorkshopInitializerComponent classData, int stackOffset)
+        public GetClassStacks(IStackFromIndex stackData, int stackOffset)
         {
-            ClassData = classData;
+            StackData = stackData;
             StackOffset = stackOffset;
+        }
+    }
+
+    /// <summary>Gets a gettable stack via an index. This is used to store structs in class variables
+    /// and flattening paralleled structs into unparalleled structs.</summary>
+    public interface IStackFromIndex
+    {
+        IGettable StackFromIndex(int stackIndex);
+
+        public static IStackFromIndex FromArray(IGettable[] stacks) => new StackList(stacks);
+
+        record StackList(IGettable[] stacks) : IStackFromIndex
+        {
+            public IGettable StackFromIndex(int stackIndex) => stacks[stackIndex];
         }
     }
 

@@ -5,6 +5,7 @@ using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse.Variables.Build;
+using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -17,6 +18,9 @@ namespace Deltin.Deltinteger.Parse
 
         // The struct type created from the declaration.
         public StructInstance Type { get; private set; }
+
+        // Is the struct single or parallel?
+        public bool Parallel { get; private set; }
 
         // We do not need to worry about these values.
         public AnonymousType[] GenericTypes { get; } = new AnonymousType[0];
@@ -50,6 +54,9 @@ namespace Deltin.Deltinteger.Parse
             var scopeHandler = new StructValueScopeHandler(_scope);
 
             var expectingStruct = _parseInfo.ExpectingType as StructInstance;
+
+            // Parallel will be true by default if a struct is not expected.
+            Parallel = expectingStruct?.Attributes.IsStruct ?? true;
 
             // Create the struct type from the values.
             for (int i = 0; i < _context.Values.Count; i++)
@@ -117,7 +124,17 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            Variables = variables.ToArray();
+            if (expectingStruct != null)
+            {
+                Variables = variables.OrderBy(var =>
+                    Array.FindIndex(expectingStruct.Variables, expectingVar => var.Name == expectingVar.Name)
+                ).ToArray();
+            }
+            else
+            {
+                Variables = variables.ToArray();
+            }
+            // 'variables' should not be used at this point.
 
             Name = $"{{{string.Join(", ", Variables.Select(v => v.GetDefaultInstance(null).GetLabel(_parseInfo.TranslateInfo)))}}}";
 
@@ -146,7 +163,10 @@ namespace Deltin.Deltinteger.Parse
         // Struct as workshop value. 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            return new StructAssigner(Type, new StructAssigningAttributes(), false).GetValues(actionSet.SetSpreadHelper(_spreadValue?.Parse(actionSet) as IStructValue));
+            if (Parallel)
+                return new StructAssigner(Type, new StructAssigningAttributes(), false).GetValues(actionSet.SetSpreadHelper(_spreadValue?.Parse(actionSet) as IStructValue));
+            else
+                return Element.CreateArray(Type.Variables.SelectMany(var => StructHelper.Flatten(var.GetAssigner().GetValue(new(actionSet) { Inline = true }).GetVariable())).ToArray());
         }
 
         CodeType IExpression.Type() => Type;

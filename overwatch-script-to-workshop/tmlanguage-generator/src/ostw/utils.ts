@@ -8,6 +8,7 @@ export function pair(regexable: tm.Regexable, name: tm.TmName) {
 
 export function createTypeDescriptor(tagName: 'struct' | 'class' | 'enum') {
     return [
+        tm.Maybe([pair('single', 'storage.modifier'), w]),
         // ['class' A]
         tm.Group({ value: tagName, tmName: 'keyword.other.' + tagName }),
         // [class' 'A]

@@ -232,7 +232,6 @@ namespace Deltin.Deltinteger.Parse
             // If the types are the same, the ternary type is that type.
             if (consequentType.Is(alternativeType))
                 return consequentType;
-
             // Otherwise, if the types are compatible, create a union with those types.
             if (consequentType.CompatibleWith(alternativeType))
                 return new PipeType(consequentType, alternativeType);

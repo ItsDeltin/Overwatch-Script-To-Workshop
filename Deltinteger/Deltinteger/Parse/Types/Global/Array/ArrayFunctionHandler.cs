@@ -5,7 +5,12 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ArrayFunctionHandler
     {
-        public bool AllowUnhandled { get; protected set; } = true;
+        public bool AllowUnhandled { get; protected set; }
+
+        public ArrayFunctionHandler(bool allowUnhandled = true)
+        {
+            AllowUnhandled = allowUnhandled;
+        }
 
         public virtual IWorkshopTree Length(IWorkshopTree reference) => Element.CountOf(reference);
         public virtual IWorkshopTree FirstOf(IWorkshopTree reference) => Element.FirstOf(reference);

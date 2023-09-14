@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
         private Scope _staticScope;
         private Scope _objectScope;
 
-        public DefinedStructInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText())
+        public DefinedStructInitializer(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.GetText(), parallel: !typeContext.Single)
         {
             _parseInfo = parseInfo;
             _context = typeContext;

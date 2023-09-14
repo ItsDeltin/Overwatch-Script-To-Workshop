@@ -111,12 +111,12 @@ namespace Deltin.Deltinteger.Parse
             _objectScope.AddNativeVariable(OnOffense);
         }
 
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference reference, VarIndexAssigner assigner)
         {
-            assigner.Add(Opposite, Element.Part("Opposite Team Of", reference));
-            assigner.Add(Score, Element.Part("Team Score", reference));
-            assigner.Add(OnDefense, Element.Part("Is Team On Defense", reference));
-            assigner.Add(OnOffense, Element.Part("Is Team On Offense", reference));
+            assigner.Add(Opposite, Element.Part("Opposite Team Of", reference.Value));
+            assigner.Add(Score, Element.Part("Team Score", reference.Value));
+            assigner.Add(OnDefense, Element.Part("Is Team On Defense", reference.Value));
+            assigner.Add(OnOffense, Element.Part("Is Team On Offense", reference.Value));
         }
     }
 

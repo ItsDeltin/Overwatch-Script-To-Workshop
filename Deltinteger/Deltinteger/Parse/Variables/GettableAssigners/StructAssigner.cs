@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var var in _variables)
             {
                 var assigner = var.GetAssigner();
-                var stack = assigner.AssignClassStacks(new GetClassStacks(info.ClassData, offset));
+                var stack = assigner.AssignClassStacks(new GetClassStacks(info.StackData, offset));
                 if (stack != null)
                 {
                     values.Add(var.Name, stack);

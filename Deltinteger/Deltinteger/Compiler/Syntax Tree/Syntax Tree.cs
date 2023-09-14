@@ -217,17 +217,19 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<TypeArgContext> Generics { get; }
         public Token InheritToken { get; }
         public List<IParseType> Inheriting { get; }
+        public Token Single { get; }
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
         public List<ConstructorContext> Constructors { get; } = new List<ConstructorContext>();
         public MetaComment Doc { get; }
 
-        public ClassContext(Token declaringToken, Token identifier, List<TypeArgContext> generics, Token inheritToken, List<IParseType> inheriting, MetaComment doc)
+        public ClassContext(Token declaringToken, Token identifier, List<TypeArgContext> generics, Token inheritToken, List<IParseType> inheriting, Token single, MetaComment doc)
         {
             DeclaringToken = declaringToken;
             Identifier = identifier;
             Generics = generics;
             InheritToken = inheritToken;
             Inheriting = inheriting;
+            Single = single;
             Doc = doc;
         }
     }

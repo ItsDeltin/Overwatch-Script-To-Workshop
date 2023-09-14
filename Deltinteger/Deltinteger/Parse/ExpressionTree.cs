@@ -175,7 +175,6 @@ namespace Deltin.Deltinteger.Parse
 
         public ExpressionTreeParseResult ParseTree(ActionSet actionSet, bool expectingValue)
         {
-            IGettable resultingVariable = null; // The resulting variable.
             IGettable currentObjectReference = null;
             IWorkshopTree target = null; // The resulting player.
             IWorkshopTree previousTarget = null;
@@ -194,7 +193,7 @@ namespace Deltin.Deltinteger.Parse
                 if (Tree[i] is CallVariableAction callVariableAction && callVariableAction.Calling.Attributes.UseDefaultVariableAssigner)
                 {
                     // Get the reference.
-                    var reference = currentAssigner.Get(callVariableAction.Calling.Provider);
+                    var reference = currentObjectReference = currentAssigner.Get(callVariableAction.Calling.Provider);
 
                     // If the reference was obtained with a player target, wrap the reference with the target.
                     if (target is Element targetElement)
@@ -210,15 +209,12 @@ namespace Deltin.Deltinteger.Parse
                         var workshopIndex = callVariableAction.Index[ai].Parse(actionSet);
                         resultIndex[ai] = (Element)workshopIndex;
                         current = StructHelper.ValueInArray(current, workshopIndex);
+                        currentObjectReference = currentObjectReference.ChildFromClassReference(workshopIndex);
                     }
-
-                    // Set the resulting variable.
-                    resultingVariable = reference;
-                    currentObjectReference = reference;
                 }
                 else
                 {
-                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject).New(currentObjectReference, previousTarget as Element));
+                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject).New(new SourceIndexReference(currentObjectReference, previousTarget as Element, currentObject)));
                     if (newCurrent != null)
                     {
                         current = newCurrent;
@@ -231,11 +227,13 @@ namespace Deltin.Deltinteger.Parse
                 {
                     var type = Tree[i].Type().GetRealType(actionSet.ThisTypeLinker);
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
-                    type.AddObjectVariablesToAssigner(actionSet.ToWorkshop, currentObject, currentAssigner);
+
+                    SourceIndexReference source = new SourceIndexReference(currentObjectReference, currentObject);
+                    type.AddObjectVariablesToAssigner(actionSet.ToWorkshop, source, currentAssigner);
                 }
 
                 // If this isn't the last in the tree, set it as the target.
-                if (!isLast)
+                if (!isLast && (Tree[i].Type() == null || Tree[i].Type().Attributes.UpdateTarget))
                 {
                     previousTarget = target;
                     target = current;
@@ -246,7 +244,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (result == null && expectingValue) throw new Exception("Expression tree result is null");
-            return new ExpressionTreeParseResult(result, resultIndex, target, resultingVariable);
+            return new ExpressionTreeParseResult(result, resultIndex, target, currentObjectReference);
         }
 
         public bool IsStatement() => _trailingSeperator || (Result?.IsStatement() ?? true);

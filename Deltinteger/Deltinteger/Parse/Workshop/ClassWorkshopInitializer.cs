@@ -5,7 +5,7 @@ using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class ClassWorkshopInitializerComponent
+    public class ClassWorkshopInitializerComponent : IStackFromIndex
     {
         public const string ObjectVariableTag = "_objectVariable_";
 
@@ -110,6 +110,9 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public IndexReference ObjectVariableFromIndex(int i) => Stacks[i];
+
+        // ~ IStackFromIndex ~
+        IGettable IStackFromIndex.StackFromIndex(int stackIndex) => ObjectVariableFromIndex(stackIndex);
     }
 
     public class ClassProviderComboCollection

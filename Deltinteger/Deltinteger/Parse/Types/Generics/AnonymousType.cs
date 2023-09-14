@@ -10,26 +10,32 @@ namespace Deltin.Deltinteger.Parse
     public class AnonymousType : CodeType, IDeclarationKey
     {
         ITypeArgTrackee _context;
-        public ITypeArgTrackee Context { get => _context; set {
-            if (_context == null)
-                _context = value;
-            else
-                throw new Exception("AnonymousType context already set");
-        }}
+        public ITypeArgTrackee Context
+        {
+            get => _context; set
+            {
+                if (_context == null)
+                    _context = value;
+                else
+                    throw new Exception("AnonymousType context already set");
+            }
+        }
         public AnonymousTypeAttributes AnonymousTypeAttributes { get; }
 
         public AnonymousType(string name, AnonymousTypeAttributes attributes) : base(name)
         {
             AnonymousTypeAttributes = attributes;
             Attributes.ContainsGenerics = true;
+            ArrayHandler = new AnonymousArrayHandler(attributes.Single);
             Operations.AddAssignmentOperator();
         }
 
         public override IGenericUsage GetGenericUsage() => new BridgeAnonymousUsage(this);
-        
+
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo) => instanceInfo != null && instanceInfo.Links.TryGetValue(this, out CodeType result) ? result : this;
 
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.TypeParameter
         };
@@ -44,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var union in type.UnionTypes())
                 if (Object.ReferenceEquals(union, this))
                     return true;
-            
+
             return false;
         }
 
@@ -68,7 +74,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (AnonymousTypeAttributes.Single)
                 result = "single " + Name;
-            
+
             return result;
         }
 
@@ -86,6 +92,20 @@ namespace Deltin.Deltinteger.Parse
                 generics[i] = anonymousType;
             }
             return generics;
+        }
+
+        class AnonymousArrayHandler : ITypeArrayHandler
+        {
+            readonly ArrayFunctionHandler _functionHandler;
+
+            public AnonymousArrayHandler(bool isSingle)
+            {
+                _functionHandler = new ArrayFunctionHandler(isSingle);
+            }
+
+            public IGettableAssigner GetArrayAssigner(AssigningAttributes attributes) => new DataTypeAssigner(attributes);
+            public ArrayFunctionHandler GetFunctionHandler() => _functionHandler;
+            public void OverrideArray(ArrayType array) { }
         }
     }
 

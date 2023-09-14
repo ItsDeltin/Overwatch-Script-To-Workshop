@@ -1935,6 +1935,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             var doc = ParseMetaComment();
 
+            var single = ParseOptional(TokenType.Single);
+
             var declareToken = ParseExpected(TokenType.Class, TokenType.Struct);
 
             var identifier = ParseExpected(TokenType.Identifier);
@@ -1951,7 +1953,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Start the class group.
             ParseExpected(TokenType.CurlyBracket_Open);
 
-            ClassContext context = new ClassContext(declareToken, identifier, generics, inheritToken, inheriting, doc);
+            ClassContext context = new ClassContext(declareToken, identifier, generics, inheritToken, inheriting, single, doc);
 
             // Get the class elements.
             while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)

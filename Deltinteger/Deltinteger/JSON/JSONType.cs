@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Json
             return false;
         }
 
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference reference, VarIndexAssigner assigner)
         {
             foreach (var p in Properties)
             {

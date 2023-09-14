@@ -122,7 +122,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => Type().GetObjectScope();
         public CodeType Type() => _parseInfo.TranslateInfo.Types.String();
-        public IWorkshopTree Parse(ActionSet actionSet) => _shouldParse ? StringParseInfo.Parse(actionSet, FormatParameters.Select(fp => fp.Parse(actionSet)).ToArray()) : null;
+        public IWorkshopTree Parse(ActionSet actionSet) => _shouldParse ? StringParseInfo.Parse(actionSet, FormatParameters.Select(fp => fp.Parse(actionSet)).ToArray()) : Element.Num(0);
 
         public static DocRange RangeFromMatch(DocRange stringRange, int index, int length)
         {

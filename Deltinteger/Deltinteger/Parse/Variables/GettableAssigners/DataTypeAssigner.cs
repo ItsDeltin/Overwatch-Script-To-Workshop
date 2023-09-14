@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (_attributes.StoreType == StoreType.None)
                 return null;
-            return info.ClassData.ObjectVariableFromIndex(info.StackOffset);
+            return info.StackData.StackFromIndex(info.StackOffset);
         }
 
         public int StackDelta()

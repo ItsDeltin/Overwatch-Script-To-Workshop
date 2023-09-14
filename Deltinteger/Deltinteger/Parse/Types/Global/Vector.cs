@@ -91,15 +91,15 @@ namespace Deltin.Deltinteger.Parse
             return newInternalVar;
         }
 
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference reference, VarIndexAssigner assigner)
         {
-            assigner.Add(X, Element.XOf(reference));
-            assigner.Add(Y, Element.YOf(reference));
-            assigner.Add(Z, Element.ZOf(reference));
-            assigner.Add(Magnitude, Element.MagnitudeOf(reference));
+            assigner.Add(X, Element.XOf(reference.Value));
+            assigner.Add(Y, Element.YOf(reference.Value));
+            assigner.Add(Z, Element.ZOf(reference.Value));
+            assigner.Add(Magnitude, Element.MagnitudeOf(reference.Value));
 
-            assigner.Add(HorizontalAngle, Element.Part("Horizontal Angle From Direction", reference));
-            assigner.Add(VerticalAngle, Element.Part("Vertical Angle From Direction", reference));
+            assigner.Add(HorizontalAngle, Element.Part("Horizontal Angle From Direction", reference.Value));
+            assigner.Add(VerticalAngle, Element.Part("Vertical Angle From Direction", reference.Value));
         }
 
         public override Scope GetObjectScope() => objectScope;

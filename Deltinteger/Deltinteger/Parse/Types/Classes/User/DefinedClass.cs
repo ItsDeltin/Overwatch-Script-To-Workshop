@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
             // Run the constructor.
-            AddObjectVariablesToAssigner(actionSet.ToWorkshop, (Element)newClassInfo.ObjectReference.GetVariable(), actionSet.IndexAssigner);
+            AddObjectVariablesToAssigner(actionSet.ToWorkshop, new(newClassInfo.ObjectReference), actionSet.IndexAssigner);
             newClassInfo.Constructor.Parse(actionSet.New((Element)newClassInfo.ObjectReference.GetVariable()), newClassInfo.Parameters);
         }
 

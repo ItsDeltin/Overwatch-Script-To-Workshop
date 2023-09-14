@@ -1078,18 +1078,24 @@
     },
     "class-struct-declaration": {
       "name": "meta.declaration.type",
-      "begin": "(class)\\s*([a-zA-Z0-9_]+\\b)|(struct)\\s*([a-zA-Z0-9_]+\\b)",
+      "begin": "((single)\\s*)?(class)\\s*([a-zA-Z0-9_]+\\b)|((single)\\s*)?(struct)\\s*([a-zA-Z0-9_]+\\b)",
       "beginCaptures": {
-        "1": {
-          "name": "keyword.other.class"
-        },
         "2": {
-          "name": "entity.name.type.class"
+          "name": "storage.modifier"
         },
         "3": {
-          "name": "keyword.other.struct"
+          "name": "keyword.other.class"
         },
         "4": {
+          "name": "entity.name.type.class"
+        },
+        "6": {
+          "name": "storage.modifier"
+        },
+        "7": {
+          "name": "keyword.other.struct"
+        },
+        "8": {
           "name": "entity.name.type.struct"
         }
       },
@@ -1149,12 +1155,15 @@
       ]
     },
     "enum-declaration": {
-      "begin": "(enum)\\s*([a-zA-Z0-9_]+\\b)",
+      "begin": "((single)\\s*)?(enum)\\s*([a-zA-Z0-9_]+\\b)",
       "beginCaptures": {
-        "1": {
+        "2": {
+          "name": "storage.modifier"
+        },
+        "3": {
           "name": "keyword.other.enum"
         },
-        "2": {
+        "4": {
           "name": "entity.name.type.enum"
         }
       },

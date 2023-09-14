@@ -61,6 +61,7 @@ namespace Deltin.Deltinteger.Parse
             throw new Exception(value.ToString() + " is not a valid struct value.");
         }
 
+        /// <summary>Generates a StructArray from a workshop value.</summary>
         static StructArray MakeEmptyArray(IWorkshopTree value)
         {
             if (value is Element element)
@@ -81,6 +82,15 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
             return null;
+        }
+
+        /// <summary>Flattens a struct value into an array of workshop values.</summary>
+        public static IWorkshopTree[] Flatten(IWorkshopTree value)
+        {
+            if (value is IStructValue structValue)
+                return structValue.GetAllValues();
+            else
+                return new[] { value };
         }
 
         /// <summary>Extracts all final variable paths in a struct. Useful for knowing the workshop variables
@@ -130,8 +140,11 @@ namespace Deltin.Deltinteger.Parse
                 {
                     for (int i = 0; i < element.ParameterValues.Length; i++)
                     {
-                        int x = i;
-                        RecursiveTemplate(element.ParameterValues[i], newValue => element.ParameterValues[x] = newValue);
+                        if (element.ParameterValues[i] != null)
+                        {
+                            int x = i;
+                            RecursiveTemplate(element.ParameterValues[i], newValue => element.ParameterValues[x] = newValue);
+                        }
                     }
                 }
             }

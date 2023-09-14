@@ -56,18 +56,18 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                     _actionSet.InitialSet().AddAction(_objectStore.SetVariable(Element.EmptyArray()));
 
                     // Add to assigner with the last of the objectStore stack being the object instance.
-                    _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, Element.LastOf(_objectStore.GetVariable()), _actionSet.IndexAssigner);
+                    _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, new(Element.LastOf(_objectStore.GetVariable())), _actionSet.IndexAssigner);
 
                     // Set the actionSet.
-                    _actionSet = _actionSet.New(Element.LastOf(_objectStore.Get())).PackThis().New(_objectStore.CreateChild(Element.CountOf(_objectStore.Get()) - 1));
+                    _actionSet = _actionSet.New(Element.LastOf(_objectStore.Get())).PackThis().New(new SourceIndexReference(_objectStore.CreateChild(Element.CountOf(_objectStore.Get()) - 1)));
                 }
                 else
                 {
                     // Add to assigner with the objectStore being the object instance.
-                    _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, _objectStore.GetVariable(), _actionSet.IndexAssigner);
+                    _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, new(_objectStore), _actionSet.IndexAssigner);
 
                     // Set the actionSet.
-                    _actionSet = _actionSet.New(_objectStore.Get()).PackThis().New(_objectStore);
+                    _actionSet = _actionSet.New(_objectStore.Get()).PackThis().New(new SourceIndexReference(_objectStore));
                 }
             }
 

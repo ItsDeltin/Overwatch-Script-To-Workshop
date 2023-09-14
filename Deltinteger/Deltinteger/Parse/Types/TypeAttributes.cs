@@ -8,13 +8,16 @@ namespace Deltin.Deltinteger.Parse
         public virtual bool ContainsGenerics { get; set; }
         /// <summary>The number of variables required to assign to this data type.</summary>
         public virtual int StackLength { get; set; } = 1;
+        /// <summary>Will the ExpressionTree update the target player when reading this type?</summary>
+        public virtual bool UpdateTarget { get; set; } = true;
 
-        public TypeAttributes() {}
+        public TypeAttributes() { }
 
-        public TypeAttributes(bool isStruct, bool containsGenerics)
+        public TypeAttributes(bool isStruct, bool containsGenerics, bool updateTarget)
         {
             IsStruct = isStruct;
             ContainsGenerics = containsGenerics;
+            UpdateTarget = updateTarget;
         }
     }
 }

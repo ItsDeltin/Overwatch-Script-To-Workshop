@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
                 var containingType = option.ContainingType();
 
                 // Add the object variables of the selected method.
-                containingType.AddObjectVariablesToAssigner(optionSet.ToWorkshop, optionSet.CurrentObject, optionSet.IndexAssigner);
+                containingType.AddObjectVariablesToAssigner(optionSet.ToWorkshop, new(optionSet.CurrentObject), optionSet.IndexAssigner);
 
                 // Go to next case then parse the block.
                 var relation = ActionSet.ToWorkshop.ClassInitializer.RelationFromClassType(containingType);

@@ -272,6 +272,8 @@ class ImportJson : IExpression
             IMethodProvider[] Methods,
             AnonymousType[] GenericTypes) : IStructProvider
         {
+            public bool Parallel => true;
+
             public void DependContent() { }
             public void DependMeta() { }
             public StructInstance GetInstance(InstanceAnonymousTypeLinker typeLinker) => new StructInstance(this, typeLinker);

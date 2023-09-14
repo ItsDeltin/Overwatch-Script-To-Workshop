@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
             StaticScope = new Scope("struct " + Name);
 
             Generics = typeLinker.SafeTypeArgsFromAnonymousTypes(provider.GenericTypes);
-            Attributes = new StructAttributes(this);
+            Attributes = new StructAttributes(this, provider.Parallel);
             TypeSemantics = new StructSemantics(this);
             _provider = provider;
             _typeLinker = typeLinker;
@@ -162,12 +162,45 @@ namespace Deltin.Deltinteger.Parse
                 return AccessLevel.Public;
         }
 
-        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference source, VarIndexAssigner assigner)
         {
-            var structValue = (IStructValue)reference;
+            // Add the struct variables to the assigner.
+            // Parallel
+            if (Attributes.IsStruct)
+            {
+                var structValue = (IStructValue)source.Value;
 
-            foreach (var variable in Variables)
-                assigner.Add(variable.Provider, structValue.GetGettable(variable.Name));
+                foreach (var variable in Variables)
+                    assigner.Add(variable.Provider, structValue.GetGettable(variable.Name));
+            }
+            // Unparalleled
+            else
+            {
+                // delta is the current index in the source array.
+                int delta = 0;
+                for (int i = 0; i < Variables.Length; i++)
+                {
+                    var variableAssigner = Variables[i].GetAssigner();
+                    int stackDelta = variableAssigner.StackDelta();
+
+                    // This is a bit strange since it uses the 'AssignClassStacks' function
+                    // that classes use to assign variables to structs. If the current variable
+                    // is a value like '{ x: 1, y: 2 }', 'stackDelta' will be 2 and 'stacks' will
+                    // look like '[source[0], source[1]]' with 0 and 1 shifted according to the current
+                    // delta value.
+                    var stacks = new IGettable[stackDelta];
+                    for (int s = 0; s < stacks.Length; s++)
+                        stacks[s] = source.Reference.ChildFromClassReference(Element.Num(delta + s));
+
+                    var getStacks = new GetClassStacks(IStackFromIndex.FromArray(stacks), 0);
+                    // When 'AssignClassStacks' queries a new stack, getStacks will return 'source[requestedIndex + delta]'
+                    var gettable = variableAssigner.AssignClassStacks(getStacks);
+
+                    assigner.Add(Variables[i].Provider, gettable);
+
+                    delta += stackDelta;
+                }
+            }
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, WorkshopParameter[] parameters)
@@ -186,11 +219,29 @@ namespace Deltin.Deltinteger.Parse
             if (!_contentReady) Content();
         }
 
-        public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), false);
+        public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
+        {
+            if (Attributes.IsStruct)
+                return new StructAssigner(this, new StructAssigningAttributes(attributes), false);
+            else
+                return base.GetGettableAssigner(attributes);
+        }
 
-        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes) => new StructAssigner(this, new StructAssigningAttributes(attributes), true);
+        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes)
+        {
+            if (Attributes.IsStruct)
+                return new StructAssigner(this, new StructAssigningAttributes(attributes), true);
+            else
+                return new DataTypeAssigner(attributes);
+        }
+        ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler()
+        {
+            if (Attributes.IsStruct)
+                return new StructArrayFunctionHandler();
+            else
+                return new ArrayFunctionHandler();
+        }
         void ITypeArrayHandler.OverrideArray(ArrayType array) { }
-        ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler() => new StructArrayFunctionHandler();
 
         void IScopeAppender.AddObjectBasedScope(IMethod function) => ObjectScope.AddNativeMethod(function);
         void IScopeAppender.AddStaticBasedScope(IMethod function) => StaticScope.AddNativeMethod(function);
@@ -489,7 +540,7 @@ namespace Deltin.Deltinteger.Parse
             readonly StructInstance _structInstance;
             int _stackLength = -1;
 
-            public StructAttributes(StructInstance structInstance) : base(true, structInstance.Generics.Any(g => g.Attributes.ContainsGenerics)) =>
+            public StructAttributes(StructInstance structInstance, bool parallel) : base(parallel, structInstance.Generics.Any(g => g.Attributes.ContainsGenerics), false) =>
                 _structInstance = structInstance;
 
             public override int StackLength

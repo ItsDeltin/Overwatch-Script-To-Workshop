@@ -201,7 +201,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                 var callerObject = ((Element)optionSet.CurrentObject)[1];
 
                 // Add the class objects.
-                compatibleLambda.Runner.This?.AddObjectVariablesToAssigner(optionSet.ToWorkshop, callerObject, optionSet.IndexAssigner);
+                compatibleLambda.Runner.This?.AddObjectVariablesToAssigner(optionSet.ToWorkshop, new(callerObject), optionSet.IndexAssigner);
 
                 // Add parameters.
                 compatibleLambda.Runner.AddToAssigner(optionSet.IndexAssigner);

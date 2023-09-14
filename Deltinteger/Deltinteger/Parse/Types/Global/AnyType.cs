@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
         readonly DeltinScript _deltinScript;
         readonly bool _unknown;
 
-        public AnyType(DeltinScript deltinScript) : this("Any", false, deltinScript) {}
+        public AnyType(DeltinScript deltinScript) : this("Any", false, deltinScript) { }
 
         public AnyType(string name, bool unknown, DeltinScript deltinScript) : base(name)
         {
@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(_deltinScript.Types, TypeOperator.LessThanOrEqual, this),
                 new TypeOperation(_deltinScript.Types, TypeOperator.And, this),
                 new TypeOperation(_deltinScript.Types, TypeOperator.Or, this),
-                
+
                 new TypeOperation(TypeOperator.Add, this, this),
                 new TypeOperation(TypeOperator.Divide, this, this),
                 new TypeOperation(TypeOperator.Modulo, this, this),
@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
                 stacks[i].Set(actionSet, value: 0, index: reference);
         }
 
-        public override bool Implements(CodeType type) => !type.IsConstant() && (type is StructInstance == false || _unknown);
+        public override bool Implements(CodeType type) => !type.IsConstant() && (!type.Attributes.IsStruct || _unknown);
         public override bool Is(CodeType type) => !type.IsConstant();
         public override CompletionItem GetCompletion() => GetTypeCompletion(this);
         public override Scope GetObjectScope() => _deltinScript.PlayerVariableScope;

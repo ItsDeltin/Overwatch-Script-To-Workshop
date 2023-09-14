@@ -425,6 +425,7 @@ namespace Deltin.Deltinteger.Compiler
             switch (tokenType)
             {
                 case TokenType.ActionComment:
+                case TokenType.Single:
                     return true;
 
                 default:

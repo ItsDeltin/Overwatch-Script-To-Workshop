@@ -8,6 +8,7 @@ namespace Deltin.Deltinteger.Parse
     public interface IStructProvider
     {
         string Name { get; }
+        bool Parallel { get; }
         IVariable[] Variables { get; }
         IVariable[] StaticVariables { get; }
         IMethodProvider[] Methods { get; }
@@ -20,6 +21,7 @@ namespace Deltin.Deltinteger.Parse
     public abstract class StructInitializer : ICodeTypeInitializer, IStructProvider
     {
         public string Name { get; }
+        public bool Parallel { get; }
         public int GenericsCount => GenericTypes.Length;
         public AnonymousType[] GenericTypes { get; protected set; }
         protected IList<IVariable> Variables { get; } = new List<IVariable>();
@@ -30,9 +32,10 @@ namespace Deltin.Deltinteger.Parse
         IVariable[] IStructProvider.StaticVariables => StaticVariables.ToArray();
         IMethodProvider[] IStructProvider.Methods => Methods.ToArray();
 
-        public StructInitializer(string name)
+        public StructInitializer(string name, bool parallel)
         {
             Name = name;
+            Parallel = parallel;
         }
 
         public abstract bool BuiltInTypeMatches(Type type);
