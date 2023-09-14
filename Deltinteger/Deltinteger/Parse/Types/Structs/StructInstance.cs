@@ -97,6 +97,9 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (var utype in type.UnionTypes())
             {
+                if (utype is AnyType && !Attributes.IsStruct)
+                    return true;
+
                 if (!(utype is StructInstance other && other.Variables.Length == Variables.Length))
                     continue;
 
