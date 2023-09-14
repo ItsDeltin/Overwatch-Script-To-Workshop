@@ -548,6 +548,18 @@ namespace Deltin.Deltinteger.Parse.Overload
             if (!InferSuccessful)
                 diagnostics.Error($"The type arguments for method '{Option.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)}' cannot be inferred from the usage. Try specifying the type arguments explicitly.", _inferenceErrorRange);
 
+            // Check incompatible inferrence
+            foreach (var typeArg in Option.GenericTypes)
+            {
+                if (TypeArgLinker.Links.TryGetValue(typeArg, out CodeType inferred)
+                    && typeArg.AnonymousTypeAttributes.Single
+                    && inferred.Attributes.IsStruct)
+                {
+                    diagnostics.Error($"Struct type '{inferred.GetName()}' cannot be used with the single anonymous type '{typeArg.GetName()}'", _inferenceErrorRange);
+                    break;
+                }
+            }
+
             // Parameter errors
             foreach (var parameterError in _parameterErrors)
                 if (parameterError != null)

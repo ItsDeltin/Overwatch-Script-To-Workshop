@@ -100,7 +100,7 @@ namespace Deltin.Deltinteger.Parse
     public class CreateArrayAction : IExpression
     {
         public IExpression[] Values { get; }
-        private readonly CodeType _type;
+        private readonly ArrayType _type;
         private readonly bool _isStructArray; // Determines if this is definitely a struct array. Will be false for empty struct arrays.
 
         public CreateArrayAction(ParseInfo parseInfo, Scope scope, CreateArray createArrayContext)
@@ -141,8 +141,10 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < asWorkshop.Length; i++)
                 asWorkshop[i] = Values[i].Parse(actionSet);
 
+            bool isStruct = _type.ArrayOfType.GetRealType(actionSet.ThisTypeLinker).Attributes.IsStruct;
+
             // Struct array
-            if (_isStructArray || asWorkshop.Any(value => value is IStructValue))
+            if (isStruct || asWorkshop.Any(value => value is IStructValue))
                 return new StructArray(Array.ConvertAll(asWorkshop, item => (IStructValue)item));
 
             // Normal array

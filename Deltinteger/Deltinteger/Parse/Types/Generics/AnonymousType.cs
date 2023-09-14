@@ -26,6 +26,7 @@ namespace Deltin.Deltinteger.Parse
         {
             AnonymousTypeAttributes = attributes;
             Attributes.ContainsGenerics = true;
+            Attributes.IsStruct = !attributes.Single;
             ArrayHandler = new AnonymousArrayHandler(attributes.Single);
             Operations.AddAssignmentOperator();
         }
