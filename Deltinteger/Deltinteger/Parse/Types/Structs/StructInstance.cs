@@ -176,30 +176,9 @@ namespace Deltin.Deltinteger.Parse
             // Unparalleled
             else
             {
-                // delta is the current index in the source array.
-                int delta = 0;
-                for (int i = 0; i < Variables.Length; i++)
-                {
-                    var variableAssigner = Variables[i].GetAssigner();
-                    int stackDelta = variableAssigner.StackDelta();
-
-                    // This is a bit strange since it uses the 'AssignClassStacks' function
-                    // that classes use to assign variables to structs. If the current variable
-                    // is a value like '{ x: 1, y: 2 }', 'stackDelta' will be 2 and 'stacks' will
-                    // look like '[source[0], source[1]]' with 0 and 1 shifted according to the current
-                    // delta value.
-                    var stacks = new IGettable[stackDelta];
-                    for (int s = 0; s < stacks.Length; s++)
-                        stacks[s] = source.Reference.ChildFromClassReference(Element.Num(delta + s));
-
-                    var getStacks = new GetClassStacks(IStackFromIndex.FromArray(stacks), 0);
-                    // When 'AssignClassStacks' queries a new stack, getStacks will return 'source[requestedIndex + delta]'
-                    var gettable = variableAssigner.AssignClassStacks(getStacks);
-
-                    assigner.Add(Variables[i].Provider, gettable);
-
-                    delta += stackDelta;
-                }
+                var stacks = UnparalleledStructStack.StacksFromType(source.Reference, this);
+                foreach (var stack in stacks)
+                    assigner.Add(stack.Variable.Provider, stack.SteppedValue);
             }
         }
 

@@ -1701,9 +1701,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
             });
 
             // End the struct declaration.
-            ParseExpected(TokenType.CurlyBracket_Close);
+            var closingBracket = ParseExpected(TokenType.CurlyBracket_Close);
 
-            return EndTokenCapture(new StructDeclarationContext(values));
+            return EndTokenCapture(new StructDeclarationContext(values, closingBracket));
         }
 
         bool IsStructDeclaration() => Lookahead(() =>

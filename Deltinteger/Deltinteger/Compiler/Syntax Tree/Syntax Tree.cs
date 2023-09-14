@@ -695,10 +695,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class StructDeclarationContext : Node, IParseExpression
     {
         public List<StructDeclarationVariableContext> Values { get; }
+        public Token ClosingBracket { get; }
 
-        public StructDeclarationContext(List<StructDeclarationVariableContext> values)
+        public StructDeclarationContext(List<StructDeclarationVariableContext> values, Token closingBracket)
         {
             Values = values;
+            ClosingBracket = closingBracket;
         }
     }
 
