@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         bool RestrictedValuesAreFatal { get; }
         CodeType ContainingType { get; }
         public AccessLevel AccessLevel { get; }
+        CodeType ReturnType { get; }
         InstanceAnonymousTypeLinker GetTypeLinker(CodeType[] typeArgs);
         int TypeArgIndexFromAnonymousType(AnonymousType anonymousType);
         MarkupBuilder GetLabel(DeltinScript deltinScript, LabelInfo labelInfo);
@@ -30,11 +31,14 @@ namespace Deltin.Deltinteger.Parse.Overload
         public bool RestrictedValuesAreFatal => _function.RestrictedValuesAreFatal;
         public CodeType ContainingType => _function.Attributes.ContainingType;
         public AccessLevel AccessLevel => _function.AccessLevel;
+        public CodeType ReturnType => _function.CodeType.GetCodeType(_deltinScript);
         private readonly IMethod _function;
+        private readonly DeltinScript _deltinScript;
 
-        public MethodOverload(IMethod function)
+        public MethodOverload(IMethod function, DeltinScript deltinScript)
         {
             _function = function;
+            _deltinScript = deltinScript;
         }
 
         public InstanceAnonymousTypeLinker GetTypeLinker(CodeType[] typeArgs) => _function.MethodInfo.GetInstanceInfo(typeArgs);
@@ -52,7 +56,8 @@ namespace Deltin.Deltinteger.Parse.Overload
         public AnonymousType[] GenericTypes => new AnonymousType[0];
         public ITypeArgTrackee Trackee => null;
         public CodeType ContainingType => _constructor.Type;
-        public AccessLevel AccessLevel  => _constructor.AccessLevel;
+        public AccessLevel AccessLevel => _constructor.AccessLevel;
+        public CodeType ReturnType => null;
         private readonly Constructor _constructor;
 
         public ConstructorOverload(Constructor constructor)

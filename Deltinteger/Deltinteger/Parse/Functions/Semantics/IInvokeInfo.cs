@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Make an OverloadChooser to choose an Overload.
             var overloadChooser = new OverloadChooser(
-                group.Functions.Select(f => new MethodOverload(f)).ToArray(),
+                group.Functions.Select(f => new MethodOverload(f, parseInfo.TranslateInfo)).ToArray(),
                 parseInfo,
                 invokeInfo.Scope,
                 invokeInfo.Getter,
@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             );
             // Apply the parameters.
             overloadChooser.Apply(invokeInfo.Context.Parameters, groupCall.TypeArgs.Length > 0, groupCall.TypeArgs);
-        
+
             // Get the best function.
             var callingMethod = (IMethod)overloadChooser.Overload;
             var result = new FunctionInvokeResult(parseInfo, invokeInfo.TargetRange, invokeInfo.UsedAsExpression, callingMethod, overloadChooser.AdditionalData, overloadChooser.ParameterResults, overloadChooser.Match);
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Restricted calls.
                     RestrictedCall.BridgeMethodCall(parseInfo, callingMethod.Attributes.CallInfo, invokeInfo.TargetRange, callingMethod.Name, overloadChooser.Match.Option.RestrictedValuesAreFatal);
-                    
+
                     // Apply
                     callingMethod.Attributes.CallInfo.OnCompleted.OnReady(result.Apply);
                 }
@@ -77,7 +77,8 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Add the function hover.
-                parseInfo.Script.AddHover(invokeInfo.Context.Range, callingMethod.GetLabel(parseInfo.TranslateInfo, new LabelInfo() {
+                parseInfo.Script.AddHover(invokeInfo.Context.Range, callingMethod.GetLabel(parseInfo.TranslateInfo, new LabelInfo()
+                {
                     IncludeDocumentation = true,
                     IncludeParameterNames = true,
                     IncludeParameterTypes = true,
@@ -105,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Create the overload chooser for the invoke function.
             var overloadChooser = new OverloadChooser(
-                new MethodOverload[] { new MethodOverload(_lambdaType.InvokeFunction) },
+                new MethodOverload[] { new MethodOverload(_lambdaType.InvokeFunction, parseInfo.TranslateInfo) },
                 parseInfo,
                 invokeInfo.Scope,
                 invokeInfo.Getter,
@@ -177,7 +178,7 @@ namespace Deltin.Deltinteger.Parse
                         additionalParameterData: invokeResult.Parameters[i].AdditionalData),
                     additionalData: invokeResult.Parameters[i].AdditionalData,
                     refVariableElements: invokeResult.Parameters[i].RefResolvedVariable?.ParseElements(actionSet));
-            
+
             return workshopParameters;
         }
     }
@@ -270,7 +271,8 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetComment(string comment) => _comment = comment;
 
-        public void GetConstantTarget(Action<IExpression> callback) => ConstantExpressionResolver.Resolve(_target, target => {
+        public void GetConstantTarget(Action<IExpression> callback) => ConstantExpressionResolver.Resolve(_target, target =>
+        {
             if (target is LambdaAction lambdaAction)
                 callback(lambdaAction.Expression);
             else

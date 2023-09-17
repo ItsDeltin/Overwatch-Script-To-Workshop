@@ -130,6 +130,10 @@ namespace Deltin.Deltinteger.Parse.Overload
             if (_genericsProvided && _generics.Length != option.TypeArgCount)
                 match.IncorrectTypeArgCount(_parseInfo.TranslateInfo, _targetRange);
 
+            // If a type is expected, try to infer the return type.
+            if (_parseInfo.ExpectingType != null && !_genericsProvided && option.ReturnType != null)
+                ExtractInferredGenerics(match, option.ReturnType, _parseInfo.ExpectingType);
+
             // Iterate through the option's parameters.
             for (int i = 0; i < inputParameters.Length; i++)
             {
@@ -230,7 +234,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                         match.TypeArgs[match.Option.TypeArgIndexFromAnonymousType(pat)] = expressionType;
                 }
                 // Otherwise, the link exists. If the expression type is not equal to the link type, add an error.
-                else if (!expressionType.Is(typeLinker.Links[pat]))
+                else if (!expressionType.Implements(typeLinker.Links[pat]))
                     match.InferSuccessful = result = false;
             }
 
