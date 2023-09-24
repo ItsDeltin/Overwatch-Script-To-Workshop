@@ -11,15 +11,12 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedEnum : CodeType, IDeclarationKey
     {
         public LanguageServer.Location DefinedAt { get; }
-        private Scope Scope { get; }
-        private DeltinScript _translateInfo { get; }
+        private readonly Scope scope;
 
         public DefinedEnum(ParseInfo parseInfo, EnumContext enumContext) : base(enumContext.Identifier.GetText())
         {
             Kind = TypeKind.Enum;
-            
-            _translateInfo = parseInfo.TranslateInfo;
-            Scope = new Scope("enum " + Name);
+            scope = new Scope("enum " + Name);
 
             if (enumContext.Identifier)
             {
@@ -34,15 +31,15 @@ namespace Deltin.Deltinteger.Parse
                 if (enumContext.Values[i].Identifier)
                 {
                     var expression = enumContext.Values[i].Value != null
-                        ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.Values[i].Value))
+                        ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(scope, enumContext.Values[i].Value))
                         : new ExpressionOrWorkshopValue(Element.Num(i));
-                    
+
                     var newMember = new DefinedEnumMember(parseInfo, this, enumContext.Values[i].Identifier.Text, new Location(parseInfo.Script.Uri, enumContext.Values[i].Identifier.Range), expression);
-                    Scope.AddVariable(newMember, parseInfo.Script.Diagnostics, newMember.DefinedAt.range);
+                    scope.AddVariable(newMember, parseInfo.Script.Diagnostics, newMember.DefinedAt.range);
                 }
         }
 
-        public override Scope ReturningScope() => Scope;
+        public override Scope ReturningScope() => scope;
 
         public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
@@ -64,7 +61,8 @@ namespace Deltin.Deltinteger.Parse
         public MarkupBuilder Documentation { get; }
         public LanguageServer.Location DefinedAt { get; }
         public DefinedEnum Enum { get; }
-        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes() {
+        public IVariableInstanceAttributes Attributes { get; } = new VariableInstanceAttributes()
+        {
             CanBeSet = false,
             StoreType = StoreType.None,
             CanBeIndexed = false,

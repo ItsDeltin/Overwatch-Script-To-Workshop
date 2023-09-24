@@ -110,13 +110,33 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class AnonymousTypeAttributes
+    public struct AnonymousTypeAttributes
     {
         public bool Single { get; }
+        public ICustomTypeArgValidator CustomTypeValidator { get; }
 
         public AnonymousTypeAttributes(bool single)
         {
             Single = single;
+            CustomTypeValidator = null;
+        }
+
+        public AnonymousTypeAttributes(ICustomTypeArgValidator validator)
+        {
+            Single = false;
+            CustomTypeValidator = validator;
+        }
+    }
+
+    public interface ICustomTypeArgValidator
+    {
+        void IsTypeValidForArgument(CodeType type, DiagnosticsToken token);
+
+        public static ICustomTypeArgValidator New(Action<CodeType, DiagnosticsToken> isTypeValidForArgumentAction) => new CustomTypeArgValidator(isTypeValidForArgumentAction);
+
+        record CustomTypeArgValidator(Action<CodeType, DiagnosticsToken> Validator) : ICustomTypeArgValidator
+        {
+            public void IsTypeValidForArgument(CodeType type, DiagnosticsToken token) => Validator(type, token);
         }
     }
 }

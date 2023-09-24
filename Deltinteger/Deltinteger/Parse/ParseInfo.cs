@@ -271,6 +271,8 @@ namespace Deltin.Deltinteger.Parse
             var fileName = System.IO.Path.GetFileName(this.Script.Document.Uri.LocalPath);
             return " in '" + fileName + "' at line " + range.Start.Line;
         }
+
+        public DiagnosticsToken CreateDiagnosticsToken(DocRange range) => new DiagnosticsToken(Script.Diagnostics, range);
     }
 
     public class VariableApply
@@ -348,5 +350,19 @@ namespace Deltin.Deltinteger.Parse
         void DefaultEventPlayerRestrictedCall() => _parseInfo.RestrictedCallHandler.AddRestrictedCall(
             new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(CallRange), RestrictedCall.Message_EventPlayerDefault(_name))
         );
+    }
+
+    public readonly struct DiagnosticsToken
+    {
+        readonly FileDiagnostics diagnostics;
+        readonly DocRange range;
+
+        public DiagnosticsToken(FileDiagnostics diagnostics, DocRange range)
+        {
+            this.diagnostics = diagnostics;
+            this.range = range;
+        }
+
+        public void Error(string message) => diagnostics.Error(message, range);
     }
 }

@@ -555,12 +555,16 @@ namespace Deltin.Deltinteger.Parse.Overload
             // Check incompatible inferrence
             foreach (var typeArg in Option.GenericTypes)
             {
-                if (TypeArgLinker.Links.TryGetValue(typeArg, out CodeType inferred)
-                    && typeArg.AnonymousTypeAttributes.Single
-                    && inferred.Attributes.IsStruct)
+                if (TypeArgLinker.Links.TryGetValue(typeArg, out CodeType inferred))
                 {
-                    diagnostics.Error($"Struct type '{inferred.GetName()}' cannot be used with the single anonymous type '{typeArg.GetName()}'", _inferenceErrorRange);
-                    break;
+                    // Check 'single' attribute.
+                    if (typeArg.AnonymousTypeAttributes.Single && inferred.Attributes.IsStruct)
+                    {
+                        diagnostics.Error($"Struct type '{inferred.GetName()}' cannot be used with the single anonymous type '{typeArg.GetName()}'", _inferenceErrorRange);
+                        break;
+                    }
+                    // Custom validator
+                    typeArg.AnonymousTypeAttributes.CustomTypeValidator?.IsTypeValidForArgument(inferred, _parseInfo.CreateDiagnosticsToken(_inferenceErrorRange));
                 }
             }
 
