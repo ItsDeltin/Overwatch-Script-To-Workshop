@@ -181,7 +181,6 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree result = null; // The resulting value.
             VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
             IWorkshopTree currentObject = null;
-            Element[] resultIndex = new Element[0];
             List<IWorkshopTree> resultingSources = new List<IWorkshopTree>();
 
             for (int i = 0; i < Tree.Length; i++)
@@ -203,11 +202,9 @@ namespace Deltin.Deltinteger.Parse
                     current = reference.GetVariable();
 
                     // Get the index.
-                    resultIndex = new Element[callVariableAction.Index.Length];
                     for (int ai = 0; ai < callVariableAction.Index.Length; ai++)
                     {
                         var workshopIndex = callVariableAction.Index[ai].Parse(actionSet);
-                        resultIndex[ai] = (Element)workshopIndex;
                         current = StructHelper.ValueInArray(current, workshopIndex);
                         currentObjectReference = currentObjectReference.ChildFromClassReference(workshopIndex);
                     }
@@ -218,7 +215,6 @@ namespace Deltin.Deltinteger.Parse
                     if (newCurrent != null)
                     {
                         current = newCurrent;
-                        resultIndex = new Element[0];
                     }
                 }
 
@@ -244,7 +240,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (result == null && expectingValue) throw new Exception("Expression tree result is null");
-            return new ExpressionTreeParseResult(result, resultIndex, target, currentObjectReference);
+            return new ExpressionTreeParseResult(result, target, currentObjectReference);
         }
 
         public bool IsStatement() => _trailingSeperator || (Result?.IsStatement() ?? true);
@@ -596,14 +592,12 @@ namespace Deltin.Deltinteger.Parse
     public class ExpressionTreeParseResult
     {
         public IWorkshopTree Result { get; }
-        public Element[] ResultingIndex { get; }
         public IWorkshopTree Target { get; }
         public IGettable ResultingVariable { get; }
 
-        public ExpressionTreeParseResult(IWorkshopTree result, Element[] index, IWorkshopTree target, IGettable resultingVariable)
+        public ExpressionTreeParseResult(IWorkshopTree result, IWorkshopTree target, IGettable resultingVariable)
         {
             Result = result;
-            ResultingIndex = index;
             Target = target;
             ResultingVariable = resultingVariable;
         }

@@ -33,7 +33,8 @@ namespace Deltin.Deltinteger.Parse
 
         public void Resolve(AssignmentOperationInfo assignmentOperationInfo) => _action(assignmentOperationInfo);
 
-        private static Action<AssignmentOperationInfo> DefaultActionFromOperator(AssignmentOperator op) => op switch {
+        private static Action<AssignmentOperationInfo> DefaultActionFromOperator(AssignmentOperator op) => op switch
+        {
             // op =
             AssignmentOperator.Equal => info => info.Set(),
             // op ^=
@@ -51,7 +52,8 @@ namespace Deltin.Deltinteger.Parse
             _ => throw new NotImplementedException()
         };
 
-        public static AssignmentOperator OperatorFromTokenType(TokenType tokenType) => tokenType switch {
+        public static AssignmentOperator OperatorFromTokenType(TokenType tokenType) => tokenType switch
+        {
             TokenType.Equal => AssignmentOperator.Equal,
             TokenType.HatEqual => AssignmentOperator.PowEqual,
             TokenType.MultiplyEqual => AssignmentOperator.MultiplyEqual,
@@ -81,7 +83,6 @@ namespace Deltin.Deltinteger.Parse
         private readonly string _comment;
 
         public IGettable Variable => _elements.IndexReference;
-        public Element[] Index => _elements.Index;
         public Element Target => _elements.Target;
 
         public AssignmentOperationInfo(string comment, ActionSet actionSet, VariableElements variableInfo, IWorkshopTree value)
@@ -92,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
             _elements = variableInfo;
         }
 
-        public void Set() => Variable.Set(ActionSet.SetNextComment(_comment), Value, Target, Index);
-        public void Modify(Operation operation) => Variable.Modify(ActionSet.SetNextComment(_comment), operation, Value, Target, Index);
+        public void Set() => Variable.Set(ActionSet.SetNextComment(_comment), Value, Target);
+        public void Modify(Operation operation) => Variable.Modify(ActionSet.SetNextComment(_comment), operation, Value, Target);
     }
 }

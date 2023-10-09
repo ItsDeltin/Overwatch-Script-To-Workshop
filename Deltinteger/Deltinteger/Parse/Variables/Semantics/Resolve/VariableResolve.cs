@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
 
         public VariableResolve(ParseInfo parseInfo, VariableResolveOptions options, IExpression expression, DocRange expressionRange)
             : this(parseInfo, options, expression, expressionRange, new VariableResolveErrorHandler(parseInfo.Script.Diagnostics))
-        {}
+        { }
 
         public VariableResolve(ParseInfo parseInfo, VariableResolveOptions options, IExpression expression, DocRange expressionRange, IVariableResolveErrorHandler errorHandler)
         {
@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
                     else if (!treeSettable || (parseInfo.ContextualVariableModifiers != null && !parseInfo.ContextualVariableModifiers.IsSettable(SetVariable.Calling)))
                         errorHandler.Error($"The variable '{SetVariable.Calling.Name}' cannot be set in the current context", VariableRange);
                 }
-                
+
                 // Check if the variable is a whole workshop variable.
                 else if ((options.FullVariable && SetVariable.Calling.Attributes.StoreType != StoreType.FullVariable) || (!options.CanBeIndexed && SetVariable.Index.Length != 0))
                     errorHandler.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed", VariableRange);
@@ -83,7 +83,6 @@ namespace Deltin.Deltinteger.Parse
         {
             IGettable var;
             Element target = null;
-            Element[] index;
 
             if (Tree != null)
             {
@@ -93,18 +92,19 @@ namespace Deltin.Deltinteger.Parse
                 var = treeParseResult.ResultingVariable;
                 // Get the target.
                 target = treeParseResult.Target as Element;
-                // Get the index.
-                index = treeParseResult.ResultingIndex;
             }
             else
             {
                 // Get the variable.
                 var = actionSet.IndexAssigner[SetVariable.Calling.Provider];
                 // Get the index.
-                index = Array.ConvertAll(SetVariable.Index, index => (Element)index.Parse(actionSet));
+                var index = Array.ConvertAll(SetVariable.Index, index => (Element)index.Parse(actionSet));
+
+                for (int i = 0; i < index.Length; i++)
+                    var = var.ChildFromClassReference(index[i]);
             }
 
-            return new VariableElements(var, target, index);
+            return new VariableElements(var, target);
         }
     }
 }

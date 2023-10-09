@@ -84,10 +84,10 @@ namespace Deltin.Deltinteger.Parse
 
             // Increment
             if (!_decrement)
-                elements.IndexReference.Modify(actionSet, Operation.Add, (Element)1, elements.Target, elements.Index);
+                elements.IndexReference.Modify(actionSet, Operation.Add, (Element)1, elements.Target);
             // Decrement
             else
-                elements.IndexReference.Modify(actionSet, Operation.Subtract, (Element)1, elements.Target, elements.Index);
+                elements.IndexReference.Modify(actionSet, Operation.Subtract, (Element)1, elements.Target);
         }
 
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)

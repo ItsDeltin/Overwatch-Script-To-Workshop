@@ -6,22 +6,16 @@ namespace Deltin.Deltinteger.Parse
     {
         public IGettable IndexReference { get; }
         public Element Target { get; }
-        public Element[] Index { get; }
 
-        public VariableElements(IGettable indexReference, Element target, Element[] index)
+        public VariableElements(IGettable indexReference, Element target)
         {
             IndexReference = indexReference;
             Target = target;
-            Index = index;
         }
 
         public IGettable Childify()
         {
-            var current = IndexReference;
-            for (int i = 0; i < Index.Length; i++)
-                current = current.ChildFromClassReference(Index[i]);
-
-            return Target == null ? current : new TargetGettable(current, Target);
+            return Target == null ? IndexReference : new TargetGettable(IndexReference, Target);
         }
     }
 }
