@@ -706,5 +706,12 @@
       "Flashpoint",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "Samoa",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
   }
 ]
