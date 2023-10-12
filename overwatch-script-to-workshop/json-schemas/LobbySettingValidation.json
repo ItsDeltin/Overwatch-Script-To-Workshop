@@ -2613,11 +2613,11 @@
       "type": "number",
       "maximum": 500.0
     },
-    "Stealth": {
+    "Virus": {
       "default": true,
       "type": "boolean"
     },
-    "Stealth Cooldown Time": {
+    "Virus Cooldown Time": {
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
@@ -5678,11 +5678,11 @@
             "Hack Cooldown Time": {
               "$ref": "#/definitions/Hack Cooldown Time"
             },
-            "Stealth": {
-              "$ref": "#/definitions/Stealth"
+            "Virus": {
+              "$ref": "#/definitions/Virus"
             },
-            "Stealth Cooldown Time": {
-              "$ref": "#/definitions/Stealth Cooldown Time"
+            "Virus Cooldown Time": {
+              "$ref": "#/definitions/Virus Cooldown Time"
             },
             "Translocator": {
               "$ref": "#/definitions/Translocator"
