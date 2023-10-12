@@ -345,7 +345,7 @@
     "axios": "^1.1.2",
     "chokidar": "^3.5.3",
     "glob": "^8.0.3",
-    "semver": "^7.3.8",
+    "semver": "^7.5.2",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "vscode-debugadapter": "^1.41.1",
