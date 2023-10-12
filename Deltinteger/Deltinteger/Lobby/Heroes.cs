@@ -231,7 +231,7 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Sigma").AddUlt("Gravitic Flux").RemoveAmmunition().AddProjectile(true).AddAbility("Accretion", hasKnockback: true).AddAbility("Experimental Barrier", rechargeable: true).AddAbility("Kinetic Grasp"),
                 new HeroSettingCollection("Soldier: 76").AddUlt("Tactical Visor", hasDuration: true).AddHealer().AddProjectile(false).AddAbility("Biotic Field").AddAbility("Helix Rockets", hasKnockback: true).AddAbility("Sprint", hasCooldown: false),
                 new HeroSettingCollection("Sojourn").AddUlt("Overclock", hasDuration: true).AddAbility("Disruptor Shot").AddProjectile(false).AddAbility("Power Slide").AddSecondaryFire().AddRange("Railgun Alt Fire Energy Charge Rate", 0, 500),
-                new HeroSettingCollection("Sombra").AddUlt("EMP").AddProjectile(true).AddAbility("Hack").AddAbility("Stealth").AddAbility("Translocator"),
+                new HeroSettingCollection("Sombra").AddUlt("EMP").AddProjectile(true).AddAbility("Hack").AddAbility("Virus").AddAbility("Translocator"),
                 new HeroSettingCollection("Symmetra").AddUlt("Photon Barrier").AddProjectile(false).AddSecondaryFire().AddAbility("Sentry Turret").AddAbility("Teleporter"),
                 new HeroSettingCollection("Torbjörn").AddUlt("Molten Core", hasDuration: true).AddProjectile(true).AddSecondaryFire().AddAbility("Deploy Turret").AddAbility("Overload").AddRange("Overload Duration Scalar").AddSelectRef("Weapons Enabled Torbjörn", "Weapons Enabled", "All", "Rivet Gun Only", "Forge Hammer Only"),
                 new HeroSettingCollection("Tracer").AddUlt("Pulse Bomb").AddProjectile(true).AddAbility("Blink").AddAbility("Recall"),
