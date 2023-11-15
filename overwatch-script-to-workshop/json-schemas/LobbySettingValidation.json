@@ -2413,6 +2413,21 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Take A Breather": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Take A Breather Recharge Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Take A Breather Maximum Time": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 20.0,
+      "maximum": 500.0
+    },
     "Chain Hook": {
       "default": true,
       "type": "boolean"
@@ -2422,11 +2437,11 @@
       "type": "number",
       "maximum": 500.0
     },
-    "Take A Breather": {
+    "Pig Pen": {
       "default": true,
       "type": "boolean"
     },
-    "Take A Breather Cooldown Time": {
+    "Pig Pen Cooldown Time": {
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
@@ -5342,17 +5357,26 @@
             "Secondary Fire": {
               "$ref": "#/definitions/Secondary Fire"
             },
+            "Take A Breather": {
+              "$ref": "#/definitions/Take A Breather"
+            },
+            "Take A Breather Recharge Rate": {
+              "$ref": "#/definitions/Take A Breather Recharge Rate"
+            },
+            "Take A Breather Maximum Time": {
+              "$ref": "#/definitions/Take A Breather Maximum Time"
+            },
             "Chain Hook": {
               "$ref": "#/definitions/Chain Hook"
             },
             "Chain Hook Cooldown Time": {
               "$ref": "#/definitions/Chain Hook Cooldown Time"
             },
-            "Take A Breather": {
-              "$ref": "#/definitions/Take A Breather"
+            "Pig Pen": {
+              "$ref": "#/definitions/Pig Pen"
             },
-            "Take A Breather Cooldown Time": {
-              "$ref": "#/definitions/Take A Breather Cooldown Time"
+            "Pig Pen Cooldown Time": {
+              "$ref": "#/definitions/Pig Pen Cooldown Time"
             }
           },
           "additionalProperties": false

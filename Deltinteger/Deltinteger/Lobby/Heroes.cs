@@ -227,7 +227,14 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Ramattra").AddUlt("Annihilation").AddProjectile(false).AddAbility("Void Barrier Omnic Form").AddAbility("Nemisis Form").AddAbility("Block Nemesis Form", hasCooldown: false).AddAbility("Ravenous Vortex"),
                 new HeroSettingCollection("Reaper").AddUlt("Death Blossom").AddHealer().AddAbility("Shadow Step").AddAbility("Wraith Form"),
                 new HeroSettingCollection("Reinhardt").AddUlt("Earthshatter").AddProjectile(false).RemoveAmmunition().AddAbility("Barrier Field", rechargeable: true, noMaximumTime: true).AddAbility("Charge", hasKnockback: true).AddAbility("Fire Strike").AddRange("Rocket Hammer Knockback Scalar", 0, 400),
-                new HeroSettingCollection("Roadhog").AddUlt("Whole Hog", hasKnockback: true).AddHealer().AddProjectile(false).AddSecondaryFire().AddAbility("Chain Hook").AddAbility("Take A Breather"),
+                new HeroSettingCollection("Roadhog")
+                    .AddUlt("Whole Hog", hasKnockback: true)
+                    .AddHealer()
+                    .AddProjectile(false)
+                    .AddSecondaryFire()
+                    .AddAbility("Take A Breather", hasCooldown: false, rechargeable: true)
+                    .AddAbility("Chain Hook")
+                    .AddAbility("Pig Pen"),
                 new HeroSettingCollection("Sigma").AddUlt("Gravitic Flux").RemoveAmmunition().AddProjectile(true).AddAbility("Accretion", hasKnockback: true).AddAbility("Experimental Barrier", rechargeable: true).AddAbility("Kinetic Grasp"),
                 new HeroSettingCollection("Soldier: 76").AddUlt("Tactical Visor", hasDuration: true).AddHealer().AddProjectile(false).AddAbility("Biotic Field").AddAbility("Helix Rockets", hasKnockback: true).AddAbility("Sprint", hasCooldown: false),
                 new HeroSettingCollection("Sojourn").AddUlt("Overclock", hasDuration: true).AddAbility("Disruptor Shot").AddProjectile(false).AddAbility("Power Slide").AddSecondaryFire().AddRange("Railgun Alt Fire Energy Charge Rate", 0, 500),
