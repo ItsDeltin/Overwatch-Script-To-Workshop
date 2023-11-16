@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class CompletionHandler : ICompletionHandler
     {
-        private OstwLangServer _languageServer { get; }
+        readonly OstwLangServer _languageServer;
 
         public CompletionHandler(OstwLangServer languageServer)
         {
@@ -26,17 +26,17 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
         {
-            await _languageServer.DocumentHandler.OnScriptAvailabilityAsync();
+            var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
 
             // If the script has not been parsed yet, return the default completion.
-            if (_languageServer.Compilation == null) return new CompletionList();
+            if (compilation == null) return new CompletionList();
             List<CompletionItem> items = new List<CompletionItem>();
 
             // Add snippets.
             Snippet.AddSnippets(items);
 
             // Get the script from the uri. If it isn't parsed, return the default completion.
-            var script = _languageServer.Compilation.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
+            var script = compilation.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
             if (script == null) return items;
 
             // Get valid completion ranges.

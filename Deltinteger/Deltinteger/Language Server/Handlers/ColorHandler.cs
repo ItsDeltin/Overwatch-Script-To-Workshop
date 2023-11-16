@@ -29,8 +29,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<Container<ColorInformation>> Handle(DocumentColorParams request, CancellationToken cancellationToken)
         {
-            await _server.DocumentHandler.WaitForCompilationAsync();
-            var ranges = _server.Compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetColorRanges();
+            var compilation = await _server.ProjectUpdater.GetProjectCompilationAsync();
+            var ranges = compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetColorRanges();
             return new Container<ColorInformation>(ranges ?? Array.Empty<ColorInformation>());
         }
 

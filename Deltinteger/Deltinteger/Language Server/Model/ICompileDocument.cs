@@ -1,23 +1,89 @@
 namespace Deltin.Deltinteger.LanguageServer;
 
-using System;
+using System.Threading.Tasks;
+using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Compiler;
 
-interface ICompileDocument
+public interface IProjectUpdater
 {
-    void OnKeypress(Uri activeModel);
+    void UpdateProject(Document activeModel);
 
-    void OnSave(Uri activeModel);
+    Task<DeltinScript> GetProjectCompilationAsync();
 }
 
-class TimedScriptCompiler : ICompileDocument
+class TimedProjectUpdater : IProjectUpdater
 {
-    public void OnKeypress(Uri activeModel)
+    const int TYPE_DELAY_MILLISECONDS = 50;
+    readonly Task compileProjectTask;
+    TaskCompletionSource<object> resetTimer = new();
+    TaskCompletionSource<object> requestScriptNow = new();
+    TaskCompletionSource<DeltinScript> currentCompilation = new();
+    bool doExit;
+    Document activeDocument;
+
+    public TimedProjectUpdater(IScriptCompiler compiler)
     {
-        throw new NotImplementedException();
+        compileProjectTask = Task.Run(async () =>
+        {
+            while (!doExit)
+            {
+                // Wait for initial trigger.
+                await resetTimer.Task;
+                resetTimer = new();
+
+                // Check if exit was requested while waiting.
+                if (doExit)
+                {
+                    return;
+                }
+
+                // Reset current compilation if it is already set.
+                if (currentCompilation.Task.IsCompleted)
+                {
+                    currentCompilation = new TaskCompletionSource<DeltinScript>();
+                }
+
+                Task timeOut = Task.Delay(TYPE_DELAY_MILLISECONDS);
+                Task completedTask;
+                while ((completedTask = await Task.WhenAny(timeOut, resetTimer.Task, requestScriptNow.Task)) == resetTimer.Task)
+                {
+                    resetTimer = new();
+                }
+
+                // If the delay was stopped early via requestScriptNow, reset its TaskCompletionSource.
+                if (requestScriptNow.Task.IsCompleted)
+                {
+                    requestScriptNow = new();
+                }
+
+                compiler.Compile(activeDocument);
+                currentCompilation.SetResult(compiler.Current());
+            }
+        });
     }
 
-    public void OnSave(Uri activeModel)
+    public async Task<DeltinScript> GetProjectCompilationAsync()
     {
-        throw new NotImplementedException();
+        requestScriptNow.TrySetResult(null);
+        return await currentCompilation.Task;
     }
+
+    public void UpdateProject(Document activeModel)
+    {
+        activeDocument = activeModel;
+        resetTimer.TrySetResult(null);
+    }
+}
+
+class ProjectUpdater : IProjectUpdater
+{
+    readonly IScriptCompiler compiler;
+
+    public ProjectUpdater(IScriptCompiler compiler)
+    {
+        this.compiler = compiler;
+    }
+
+    public Task<DeltinScript> GetProjectCompilationAsync() => Task.FromResult(compiler.Current());
+    public void UpdateProject(Document activeModel) => compiler.Compile(activeModel);
 }

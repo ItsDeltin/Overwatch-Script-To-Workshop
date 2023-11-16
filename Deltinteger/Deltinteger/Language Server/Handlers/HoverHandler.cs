@@ -31,24 +31,22 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<Hover> Handle(HoverParams request, CancellationToken cancellationToken)
         {
-            return await Task.Run(() =>
+            var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
+            var hoverRanges = compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
+            if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
+
+            HoverRange chosen = hoverRanges
+                .Where(hoverRange => hoverRange.Range.IsInside(request.Position))
+                .OrderBy(hoverRange => hoverRange.Range)
+                .FirstOrDefault();
+
+            if (chosen == null) return new Hover();
+
+            return new Hover()
             {
-                var hoverRanges = _languageServer.Compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
-                if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
-
-                HoverRange chosen = hoverRanges
-                    .Where(hoverRange => hoverRange.Range.IsInside(request.Position))
-                    .OrderBy(hoverRange => hoverRange.Range)
-                    .FirstOrDefault();
-
-                if (chosen == null) return new Hover();
-
-                return new Hover()
-                {
-                    Range = chosen.Range,
-                    Contents = chosen.Content
-                };
-            });
+                Range = chosen.Range,
+                Contents = chosen.Content
+            };
         }
 
         // Definition capability

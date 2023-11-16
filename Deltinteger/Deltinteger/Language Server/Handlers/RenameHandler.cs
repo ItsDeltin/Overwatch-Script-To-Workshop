@@ -15,19 +15,21 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class DoRenameHandler : IRenameHandler, IPrepareRenameHandler
     {
-        public static RenameLink GetLink(OstwLangServer languageServer, Uri uri, Position position)
+        async Task<RenameLink> GetLinkAsync(Uri uri, Position position)
         {
+            var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
+
             // Get the script from the uri, and get the 
-            var keyRange = languageServer.Compilation?.ScriptFromUri(uri)?.Elements.KeyFromPosition(position);
+            var keyRange = compilation?.ScriptFromUri(uri)?.Elements.KeyFromPosition(position);
 
             // Script was not found, script not yet read, or no key was found.
             if (keyRange?.key == null) return null;
 
-            var locations = languageServer.Compilation.GetComponent<SymbolLinkComponent>().CallsFromDeclaration(keyRange.Value.key).Select(link => link.Location);
+            var locations = compilation.GetComponent<SymbolLinkComponent>().CallsFromDeclaration(keyRange.Value.key).Select(link => link.Location);
             return new RenameLink(keyRange?.key.Name, keyRange?.range, locations);
         }
 
-        private OstwLangServer _languageServer;
+        readonly OstwLangServer _languageServer;
 
         public DoRenameHandler(OstwLangServer languageServer)
         {
@@ -43,64 +45,61 @@ namespace Deltin.Deltinteger.LanguageServer
             };
         }
 
-        public Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
+        public async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
         {
-            return Task.Run(() =>
+            var link = await GetLinkAsync(request.TextDocument.Uri.ToUri(), request.Position);
+            if (link == null) return new WorkspaceEdit();
+
+            var grouped = link.Group();
+            var documentChanges = new List<WorkspaceEditDocumentChange>();
+            foreach (var group in grouped)
             {
-                var link = GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
-                if (link == null) return new WorkspaceEdit();
+                List<TextEdit> edits = new List<TextEdit>();
 
-                var grouped = link.Group();
-                var documentChanges = new List<WorkspaceEditDocumentChange>();
-                foreach (var group in grouped)
+                foreach (var renameRange in group.Links)
                 {
-                    List<TextEdit> edits = new List<TextEdit>();
-
-                    foreach (var renameRange in group.Links)
+                    edits.Add(new TextEdit()
                     {
-                        edits.Add(new TextEdit()
-                        {
-                            NewText = request.NewName,
-                            Range = renameRange
-                        });
-                    }
-
-                    var document = _languageServer.DocumentHandler.TextDocumentFromUri(group.Uri)?.AsItem();
-
-                    // document will be null if the editor doesn't have the document of the group opened.
-                    if (document == null)
-                    {
-                        ImportedScript importedScript = _languageServer.FileGetter.GetImportedFile(group.Uri);
-                        document = new TextDocumentItem()
-                        {
-                            Uri = group.Uri,
-                            Text = importedScript.Content,
-                            LanguageId = "ostw"
-                        };
-                    }
-
-                    WorkspaceEditDocumentChange edit = new WorkspaceEditDocumentChange(new TextDocumentEdit()
-                    {
-                        Edits = edits.ToArray(),
-                        TextDocument = new OptionalVersionedTextDocumentIdentifier()
-                        {
-                            Version = document.Version,
-                            Uri = document.Uri
-                        }
+                        NewText = request.NewName,
+                        Range = renameRange
                     });
-                    documentChanges.Add(edit);
                 }
 
-                return new WorkspaceEdit()
+                var document = _languageServer.DocumentHandler.TextDocumentFromUri(group.Uri)?.AsItem();
+
+                // document will be null if the editor doesn't have the document of the group opened.
+                if (document == null)
                 {
-                    DocumentChanges = documentChanges
-                };
-            });
+                    ImportedScript importedScript = _languageServer.FileGetter.GetImportedFile(group.Uri);
+                    document = new TextDocumentItem()
+                    {
+                        Uri = group.Uri,
+                        Text = importedScript.Content,
+                        LanguageId = "ostw"
+                    };
+                }
+
+                WorkspaceEditDocumentChange edit = new WorkspaceEditDocumentChange(new TextDocumentEdit()
+                {
+                    Edits = edits.ToArray(),
+                    TextDocument = new OptionalVersionedTextDocumentIdentifier()
+                    {
+                        Version = document.Version,
+                        Uri = document.Uri
+                    }
+                });
+                documentChanges.Add(edit);
+            }
+
+            return new WorkspaceEdit()
+            {
+                DocumentChanges = documentChanges
+            };
         }
 
-        public Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken) => Task.Run(() =>
+        public Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken) => Task.Run(async () =>
         {
-            var link = GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
+            var link = await GetLinkAsync(request.TextDocument.Uri.ToUri(), request.Position);
             if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
 
             return new RangeOrPlaceholderRange(new PlaceholderRange()

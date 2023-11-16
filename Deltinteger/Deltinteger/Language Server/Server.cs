@@ -18,8 +18,6 @@ using Deltin.Deltinteger.LanguageServer.Model;
 
 public class OstwLangServer
 {
-    public DeltinScript Compilation { get; set; }
-
     // ~ Protocol Handlers
     public DocumentHandler DocumentHandler { get; private set; }
     public CompletionHandler CompletionHandler { get; private set; }
@@ -34,6 +32,7 @@ public class OstwLangServer
     // ~ End Protocol Handlers
 
     public LanguageServerBuilder Builder { get; }
+    public IProjectUpdater ProjectUpdater { get; }
     public ServerWorkspace Workspace { get; } = new ServerWorkspace();
     public FileGetter FileGetter { get; private set; }
     public ConfigurationHandler ConfigurationHandler { get; private set; }
@@ -50,7 +49,10 @@ public class OstwLangServer
 
         Builder = new LanguageServerBuilder(this, tomlDiagnosticsReporter);
 
-        DocumentHandler = new DocumentHandler(Builder, documentEventHandler);
+        var scriptCompiler = new ScriptCompiler(Builder, documentEventHandler);
+        ProjectUpdater = new TimedProjectUpdater(scriptCompiler);
+
+        DocumentHandler = new DocumentHandler(Builder);
         FileGetter = new FileGetter(DocumentHandler, Builder.ParserSettingsResolver);
         CompletionHandler = new CompletionHandler(this);
         SignatureHandler = new SignatureHandler(this);
@@ -136,8 +138,8 @@ public class OstwLangServer
         // semantic tokens
         options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(async () =>
         {
-            await DocumentHandler.WaitForCompilationAsync();
-            SemanticToken[] tokens = Compilation?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
+            var compilation = await ProjectUpdater.GetProjectCompilationAsync();
+            SemanticToken[] tokens = compilation?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
             return tokens ?? new SemanticToken[0];
         }));
 

@@ -37,8 +37,8 @@ namespace Deltin.Deltinteger.LanguageServer
         protected override async Task Tokenize(SemanticTokensBuilder builder, ITextDocumentIdentifierParams identifier, CancellationToken cancellationToken)
         {
             // Get the tokens in the document.
-            await _server.DocumentHandler.WaitForCompilationAsync();
-            var tokens = _server.Compilation?.ScriptFromUri(identifier.TextDocument.Uri.ToUri())?.GetSemanticTokens();
+            var compilation = await _server.ProjectUpdater.GetProjectCompilationAsync();
+            var tokens = compilation?.ScriptFromUri(identifier.TextDocument.Uri.ToUri())?.GetSemanticTokens();
 
             if (tokens != null)
                 foreach (var token in tokens)
