@@ -14,9 +14,9 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class HoverHandler : IHoverHandler
     {
-        private readonly DeltintegerLanguageServer _languageServer;
+        private readonly OstwLangServer _languageServer;
 
-        public HoverHandler(DeltintegerLanguageServer languageServer)
+        public HoverHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new HoverRegistrationOptions()
             {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector
+                DocumentSelector = OstwLangServer.DocumentSelector
             };
         }
 
@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return await Task.Run(() =>
             {
-                var hoverRanges = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
+                var hoverRanges = _languageServer.Compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
                 if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
 
                 HoverRange chosen = hoverRanges

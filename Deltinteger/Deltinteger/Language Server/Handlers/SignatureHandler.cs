@@ -12,9 +12,9 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class SignatureHandler : ISignatureHelpHandler
     {
-        private DeltintegerLanguageServer _languageServer { get; }
+        private OstwLangServer _languageServer { get; }
 
-        public SignatureHandler(DeltintegerLanguageServer languageServer)
+        public SignatureHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
@@ -24,9 +24,9 @@ namespace Deltin.Deltinteger.LanguageServer
             return await Task.Run(() =>
             {
                 var def = new SignatureHelp();
-                if (_languageServer.LastParse == null) return def;
+                if (_languageServer.Compilation == null) return def;
 
-                var script = _languageServer.LastParse.ScriptFromUri(signatureHelpParams.TextDocument.Uri.ToUri());
+                var script = _languageServer.Compilation.ScriptFromUri(signatureHelpParams.TextDocument.Uri.ToUri());
                 if (script == null) return def;
 
                 // Get all signatures in the file.
@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new SignatureHelpRegistrationOptions()
             {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
+                DocumentSelector = OstwLangServer.DocumentSelector,
                 TriggerCharacters = new Container<string>("(", ",")
             };
         }

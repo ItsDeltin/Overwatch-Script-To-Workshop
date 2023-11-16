@@ -11,17 +11,17 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class CodeLensHandler : ICodeLensHandler
     {
-        private DeltintegerLanguageServer _languageServer { get; }
+        private OstwLangServer _languageServer { get; }
 
-        public CodeLensHandler(DeltintegerLanguageServer languageServer)
+        public CodeLensHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
 
         public async Task<CodeLensContainer> Handle(CodeLensParams request, CancellationToken cancellationToken)
         {
-            await _languageServer.DocumentHandler.WaitForParse();
-            var codeLenses = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetCodeLensRanges();
+            await _languageServer.DocumentHandler.WaitForCompilationAsync();
+            var codeLenses = _languageServer.Compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetCodeLensRanges();
             if (codeLenses == null) return new CodeLensContainer();
 
             List<CodeLens> finalLenses = new List<CodeLens>();
@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new CodeLensRegistrationOptions()
             {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
+                DocumentSelector = OstwLangServer.DocumentSelector,
                 ResolveProvider = false
             };
         }

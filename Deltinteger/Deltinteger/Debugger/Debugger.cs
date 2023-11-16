@@ -15,11 +15,11 @@ namespace Deltin.Deltinteger.Debugger
     class ClipboardListener
     {
         public DebugVariableLinkCollection VariableCollection;
-        private readonly DeltintegerLanguageServer _languageServer;
+        private readonly OstwLangServer _languageServer;
         private readonly object _currentLock = new object();
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-        public ClipboardListener(DeltintegerLanguageServer languageServer)
+        public ClipboardListener(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
@@ -59,7 +59,8 @@ namespace Deltin.Deltinteger.Debugger
 
                         // Action list successfully parsed.
                         // Get the DeltinScript.
-                        VariableCollection = (await _languageServer.DocumentHandler.OnScriptAvailability())?.DebugVariables;
+                        // todo
+                        // VariableCollection = (await _languageServer.DocumentHandler.OnScriptAvailability())?.DebugVariables;
 
                         // Error obtaining debug variables.
                         if (VariableCollection == null) return;
@@ -68,7 +69,8 @@ namespace Deltin.Deltinteger.Debugger
                         VariableCollection.Apply(actionStream);
 
                         // Notify the adapter of the new state.
-                        _languageServer.Server.SendNotification("debugger.activated");
+                        // todo
+                        // _languageServer.ProtocolServer.SendNotification("debugger.activated");
                     }
                 }
                 catch (Exception ex)

@@ -15,9 +15,9 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class DefinitionHandler : IDefinitionHandler
     {
-        private DeltintegerLanguageServer _languageServer { get; }
+        private OstwLangServer _languageServer { get; }
 
-        public DefinitionHandler(DeltintegerLanguageServer languageServer)
+        public DefinitionHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return await Task.Run(() =>
             {
-                var links = _languageServer.LastParse?.ScriptFromUri(definitionParams.TextDocument.Uri.ToUri())?.GetDefinitionLinks();
+                var links = _languageServer.Compilation?.ScriptFromUri(definitionParams.TextDocument.Uri.ToUri())?.GetDefinitionLinks();
                 if (links == null) return new LocationOrLocationLinks();
 
                 links = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();
@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new DefinitionRegistrationOptions()
             {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector
+                DocumentSelector = OstwLangServer.DocumentSelector
             };
         }
     }

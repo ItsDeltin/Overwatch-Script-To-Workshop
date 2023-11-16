@@ -9,7 +9,12 @@ namespace Deltin.Deltinteger.Elements
 {
     public class ElementRoot
     {
-        public static ElementRoot Instance { get; } = Get(File.ReadAllText(Path.Combine(Program.ExeFolder, "Elements.json")));
+        public static ElementRoot Instance { get; private set; }
+
+        public static void LoadFromJson(string json)
+        {
+            Instance = Get(json);
+        }
 
         [JsonProperty("values")]
         public ElementJsonValue[] Values;

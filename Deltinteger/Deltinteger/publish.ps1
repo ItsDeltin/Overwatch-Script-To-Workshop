@@ -1,5 +1,5 @@
 $configuration = 'Release'
-$framework = 'net6.0'
+$framework = 'net7.0'
 $ostw_version = 'v2.8.1'
 
 # Cross platform, no runtime included.

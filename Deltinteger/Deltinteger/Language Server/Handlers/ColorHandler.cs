@@ -9,30 +9,33 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using MediatR;
 namespace Deltin.Deltinteger.LanguageServer
 {
-    class ColorHandler : IDocumentColorHandler, IColorPresentationHandler
+    public class ColorHandler : IDocumentColorHandler, IColorPresentationHandler
     {
-        private readonly DeltintegerLanguageServer _server;
+        private readonly OstwLangServer _server;
         private ColorProviderCapability _capability;
 
-        public ColorHandler(DeltintegerLanguageServer server)
+        public ColorHandler(OstwLangServer server)
         {
             _server = server;
         }
 
         public DocumentColorRegistrationOptions GetRegistrationOptions(ColorProviderCapability capability, ClientCapabilities clientCapabilities)
         {
-            return new DocumentColorRegistrationOptions() {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector
+            return new DocumentColorRegistrationOptions()
+            {
+                DocumentSelector = OstwLangServer.DocumentSelector
             };
         }
 
-        public async Task<Container<ColorInformation>> Handle(DocumentColorParams request, CancellationToken cancellationToken) {
-            await _server.DocumentHandler.WaitForParse();
-            var ranges = _server.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetColorRanges();
-            return new Container<ColorInformation>(ranges ?? new ColorInformation[0]);
+        public async Task<Container<ColorInformation>> Handle(DocumentColorParams request, CancellationToken cancellationToken)
+        {
+            await _server.DocumentHandler.WaitForCompilationAsync();
+            var ranges = _server.Compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetColorRanges();
+            return new Container<ColorInformation>(ranges ?? Array.Empty<ColorInformation>());
         }
 
-        public Task<Container<ColorPresentation>> Handle(ColorPresentationParams request, CancellationToken cancellationToken) {
+        public Task<Container<ColorPresentation>> Handle(ColorPresentationParams request, CancellationToken cancellationToken)
+        {
 
             string label = request.Color.Red * 255 + ", " + request.Color.Green * 255 + ", " + request.Color.Blue * 255 + ", " + request.Color.Alpha * 255;
 

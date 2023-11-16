@@ -13,31 +13,32 @@ using IPrepareRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Docum
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    class DoRenameHandler : IRenameHandler, IPrepareRenameHandler
+    public class DoRenameHandler : IRenameHandler, IPrepareRenameHandler
     {
-        public static RenameLink GetLink(DeltintegerLanguageServer languageServer, Uri uri, Position position)
+        public static RenameLink GetLink(OstwLangServer languageServer, Uri uri, Position position)
         {
             // Get the script from the uri, and get the 
-            var keyRange = languageServer.LastParse?.ScriptFromUri(uri)?.Elements.KeyFromPosition(position);
+            var keyRange = languageServer.Compilation?.ScriptFromUri(uri)?.Elements.KeyFromPosition(position);
 
             // Script was not found, script not yet read, or no key was found.
             if (keyRange?.key == null) return null;
 
-            var locations = languageServer.LastParse.GetComponent<SymbolLinkComponent>().CallsFromDeclaration(keyRange.Value.key).Select(link => link.Location);
+            var locations = languageServer.Compilation.GetComponent<SymbolLinkComponent>().CallsFromDeclaration(keyRange.Value.key).Select(link => link.Location);
             return new RenameLink(keyRange?.key.Name, keyRange?.range, locations);
         }
 
-        private DeltintegerLanguageServer _languageServer;
+        private OstwLangServer _languageServer;
 
-        public DoRenameHandler(DeltintegerLanguageServer languageServer)
+        public DoRenameHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
 
         public RenameRegistrationOptions GetRegistrationOptions(RenameCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
-            return new RenameRegistrationOptions() {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
+            return new RenameRegistrationOptions()
+            {
+                DocumentSelector = OstwLangServer.DocumentSelector,
                 PrepareProvider = true
             };
         }
@@ -81,7 +82,8 @@ namespace Deltin.Deltinteger.LanguageServer
                     WorkspaceEditDocumentChange edit = new WorkspaceEditDocumentChange(new TextDocumentEdit()
                     {
                         Edits = edits.ToArray(),
-                        TextDocument = new OptionalVersionedTextDocumentIdentifier() {
+                        TextDocument = new OptionalVersionedTextDocumentIdentifier()
+                        {
                             Version = document.Version,
                             Uri = document.Uri
                         }
@@ -96,7 +98,8 @@ namespace Deltin.Deltinteger.LanguageServer
             });
         }
 
-        public Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken) => Task.Run(() => {
+        public Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken) => Task.Run(() =>
+        {
             var link = GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
             if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
 
@@ -108,7 +111,7 @@ namespace Deltin.Deltinteger.LanguageServer
         });
     }
 
-    class RenameLink
+    public class RenameLink
     {
         public string Name { get; }
         public DocRange SourceRange { get; }
@@ -137,7 +140,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
     }
 
-    class SymbolLinkUriGroup
+    public class SymbolLinkUriGroup
     {
         public Uri Uri { get; }
         public DocRange[] Links { get; }

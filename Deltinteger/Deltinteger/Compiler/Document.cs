@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Compiler
             Text = Content,
             LanguageId = "ostw"
         };
-    
+
         public void Remove()
         {
             Cache.Unregister();

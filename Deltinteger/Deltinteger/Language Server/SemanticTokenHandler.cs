@@ -9,7 +9,7 @@ using SemanticTokensBuilder = OmniSharp.Extensions.LanguageServer.Protocol.Docum
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    class SemanticTokenHandler : SemanticTokensHandlerBase
+    public class SemanticTokenHandler : SemanticTokensHandlerBase
     {
         static readonly SemanticTokensLegend Legend = new SemanticTokensLegend()
         {
@@ -17,14 +17,14 @@ namespace Deltin.Deltinteger.LanguageServer
             TokenModifiers = SemanticTokenModifier.Defaults.ToArray()
         };
 
-        readonly DeltintegerLanguageServer _server;
-        public SemanticTokenHandler(DeltintegerLanguageServer languageServer) => this._server = languageServer;
+        readonly OstwLangServer _server;
+        public SemanticTokenHandler(OstwLangServer languageServer) => this._server = languageServer;
 
         protected override SemanticTokensRegistrationOptions CreateRegistrationOptions(SemanticTokensCapability capability, ClientCapabilities clientCapabilities)
         {
             return new SemanticTokensRegistrationOptions()
             {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
+                DocumentSelector = OstwLangServer.DocumentSelector,
                 Legend = Legend,
                 Full = true,
                 Range = false
@@ -37,8 +37,8 @@ namespace Deltin.Deltinteger.LanguageServer
         protected override async Task Tokenize(SemanticTokensBuilder builder, ITextDocumentIdentifierParams identifier, CancellationToken cancellationToken)
         {
             // Get the tokens in the document.
-            await _server.DocumentHandler.WaitForParse();
-            var tokens = _server.LastParse?.ScriptFromUri(identifier.TextDocument.Uri.ToUri())?.GetSemanticTokens();
+            await _server.DocumentHandler.WaitForCompilationAsync();
+            var tokens = _server.Compilation?.ScriptFromUri(identifier.TextDocument.Uri.ToUri())?.GetSemanticTokens();
 
             if (tokens != null)
                 foreach (var token in tokens)

@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
         public Document GetScript(Uri uri)
         {
             // Get the content of the script being obtained.
-            Document doc = DocumentHandler?.Documents.FirstOrDefault(td => td.Uri.Compare(uri));
+            Document doc = DocumentHandler?.GetDocuments().FirstOrDefault(td => td.Uri.Compare(uri));
             if (doc != null) return doc;
 
             ImportedScript importedFile = GetImportedFile(uri);
