@@ -31,6 +31,9 @@ public static partial class OstwJavascript
 
     [JSImport("ostwWeb.setDiagnostics", "main.js")]
     public static partial void SetDiagnostics(string publish);
+
+    [JSImport("ostwWeb.setCompiledWorkshopCode", "main.js")]
+    public static partial void SetCompiledWorkshopCode(string code, int elementCount);
     // ~ End Imported Javascript functions ~
 
     // ~ Exported functions ~
@@ -59,6 +62,23 @@ public static partial class OstwJavascript
             Context = new() { },
         }, CancellationToken.None)).Select(completionItem => InterpCompletionItem.FromLsp(completionItem)));
     }
+
+    [JSExport]
+    public static async Task<string> GetSignatureHelpAsync(string uriStr, int line, int character, string context)
+    {
+        await EnsureServer();
+        return ToJson(await langServer.SignatureHandler.Handle(new()
+        {
+            Context = JsonConvert.DeserializeObject<InterpSignatureContext>(context).ToLsp(),
+            Position = new()
+            {
+                Character = character,
+                Line = line
+            },
+            TextDocument = GetDoc(uriStr),
+            WorkDoneToken = null
+        }, CancellationToken.None));
+    }
     // ~ End Exported functions ~
 
     // ~ Helper functions ~
@@ -68,7 +88,6 @@ public static partial class OstwJavascript
         {
             return;
         }
-        ConsoleLog("Setting up the OSTW compiler");
         LoadData.LoadWith(await GetWorkshopElements());
         eventHandler = new StaticDocumentEventHandler();
         langServer = new OstwLangServer(new ITomlDiagnosticReporter.None(), eventHandler);
@@ -88,15 +107,15 @@ public static partial class OstwJavascript
     {
         public void Publish(string workshopCode, int elementCount, PublishDiagnosticsParams[] diagnostics)
         {
-            ConsoleLog("Workshop code: " + workshopCode);
-
             var publish = diagnostics.Select(modelDiagnostics => InterpScriptDiagnostics.FromLsp(modelDiagnostics)).ToArray();
             SetDiagnostics(JsonConvert.SerializeObject(publish));
+
+            SetCompiledWorkshopCode(workshopCode, elementCount);
         }
 
         public void CompilationException(Exception exception)
         {
-            ConsoleLog("Internal compilation error: " + exception.ToString());
+            SetCompiledWorkshopCode("An error occured while compiling: " + exception.ToString(), -1);
         }
     }
 }

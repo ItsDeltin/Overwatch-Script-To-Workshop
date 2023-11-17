@@ -338,12 +338,7 @@ namespace Deltin.Deltinteger.Parse
             return rule;
         }
 
-        public ScriptFile ScriptFromUri(Uri uri)
-        {
-            string log = $"Getting script from uri: {uri}\nScript uris: {string.Join(", ", Importer.ScriptFiles.Select(sf => sf.Uri.ToString()))}\nAny comparisons: {Importer.ScriptFiles.Any(script => script.Uri.Compare(uri))}";
-            OstwJavascript.ConsoleLog(log);
-            return Importer.ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
-        }
+        public ScriptFile ScriptFromUri(Uri uri) => Importer.ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
 
         private TranslateRule GetInitialRule(bool isGlobal)
         {
