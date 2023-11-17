@@ -52,12 +52,12 @@ public static partial class OstwJavascript
     public static async Task<string> GetCompletionAsync(string uriStr, int line, int character)
     {
         await EnsureServer();
-        return ToJson(await langServer.CompletionHandler.Handle(new()
+        return ToJson((await langServer.CompletionHandler.Handle(new()
         {
             TextDocument = GetDoc(uriStr),
             Position = GetPosition(line, character),
             Context = new() { },
-        }, CancellationToken.None));
+        }, CancellationToken.None)).Select(completionItem => InterpCompletionItem.FromLsp(completionItem)));
     }
     // ~ End Exported functions ~
 

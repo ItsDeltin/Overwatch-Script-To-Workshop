@@ -3,6 +3,7 @@ using LspRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using LspPositition = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
 using LspDiagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic;
 using LspPublishDiagnosticsParams = OmniSharp.Extensions.LanguageServer.Protocol.Models.PublishDiagnosticsParams;
+using LspCompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using System;
 using System.Linq;
 
@@ -45,5 +46,16 @@ public record struct InterpDiagnostic(string message, InterpRange range, string 
         lspDiagnostic.Message,
         lspDiagnostic.Range,
         lspDiagnostic.Severity.ToString()
+    );
+}
+
+public record struct InterpCompletionItem(string label, string kind, string detail, string documentationMarkdown, string insertText)
+{
+    public static InterpCompletionItem FromLsp(LspCompletionItem lspCompletionItem) => new(
+        lspCompletionItem.Label,
+        lspCompletionItem.Kind.ToString(),
+        lspCompletionItem.Detail,
+        lspCompletionItem.Documentation?.ToString(),
+        lspCompletionItem.InsertText
     );
 }
