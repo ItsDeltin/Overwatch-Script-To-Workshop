@@ -11,7 +11,10 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class SemanticTokenHandler : SemanticTokensHandlerBase
     {
-        static readonly SemanticTokensLegend Legend = new SemanticTokensLegend()
+        public static string[] SemanticTokenTypes { get; } = SemanticTokenType.Defaults.Select(d => d.ToString()).ToArray();
+        public static string[] SemanticTokenModifiers { get; } = SemanticTokenModifier.Defaults.Select(d => d.ToString()).ToArray();
+
+        public static readonly SemanticTokensLegend Legend = new SemanticTokensLegend()
         {
             TokenTypes = SemanticTokenType.Defaults.ToArray(),
             TokenModifiers = SemanticTokenModifier.Defaults.ToArray()

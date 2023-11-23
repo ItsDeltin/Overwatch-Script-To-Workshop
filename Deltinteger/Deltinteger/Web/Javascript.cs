@@ -13,14 +13,20 @@ using LspSerializer = OmniSharp.Extensions.LanguageServer.Protocol.Serialization
 using System.Linq;
 
 // no namespace
-
+#pragma warning disable CA1050
 // disable 'Async' function name warning
 #pragma warning disable VSTHRD200
+// disable JSExport call site warning
+#pragma warning disable CA1416
+#nullable enable
 
+/// <summary>
+/// When OSTW is compiled for WASM to be run in the browser, this is how Javascript directly interacts with OSTW.
+/// </summary>
 public static partial class OstwJavascript
 {
-    static OstwLangServer langServer;
-    static StaticDocumentEventHandler eventHandler;
+    static OstwLangServer? langServer;
+    static StaticDocumentEventHandler? eventHandler;
 
     // ~ Imported Javascript functions ~
     [JSImport("console.log", "main.js")]
@@ -41,21 +47,21 @@ public static partial class OstwJavascript
     public static async Task AddModelAsync(string uriStr, string content)
     {
         await EnsureServer();
-        await langServer.DocumentHandler.AddDocumentAsync(GetSystemUri(uriStr), content);
+        await langServer!.DocumentHandler.AddDocumentAsync(GetSystemUri(uriStr), content);
     }
 
     [JSExport]
     public static async Task UpdateModelAsync(string uriStr, string changes)
     {
         await EnsureServer();
-        await langServer.DocumentHandler.ChangeDocumentAsync(GetSystemUri(uriStr), FromJson<InterpChangeEvent[]>(changes));
+        await langServer!.DocumentHandler.ChangeDocumentAsync(GetSystemUri(uriStr), FromJson<InterpChangeEvent[]>(changes));
     }
 
     [JSExport]
     public static async Task<string> GetCompletionAsync(string uriStr, int line, int character)
     {
         await EnsureServer();
-        return ToJson((await langServer.CompletionHandler.Handle(new()
+        return ToJson((await langServer!.CompletionHandler.Handle(new()
         {
             TextDocument = GetDoc(uriStr),
             Position = GetPosition(line, character),
@@ -67,7 +73,7 @@ public static partial class OstwJavascript
     public static async Task<string> GetSignatureHelpAsync(string uriStr, int line, int character, string context)
     {
         await EnsureServer();
-        return ToJson(await langServer.SignatureHandler.Handle(new()
+        return ToJson(InterpSignatureHelp.FromLsp(await langServer!.SignatureHandler.Handle(new()
         {
             Context = JsonConvert.DeserializeObject<InterpSignatureContext>(context).ToLsp(),
             Position = new()
@@ -77,8 +83,42 @@ public static partial class OstwJavascript
             },
             TextDocument = GetDoc(uriStr),
             WorkDoneToken = null
-        }, CancellationToken.None));
+        }, CancellationToken.None)));
     }
+
+    [JSExport]
+    public static async Task<string> GetHoverAsync(string uriStr, int line, int character)
+    {
+        await EnsureServer();
+        return ToJson(InterpHover.FromLsp(await langServer!.HoverHandler.Handle(new()
+        {
+            TextDocument = GetDoc(uriStr),
+            Position = new()
+            {
+                Line = line,
+                Character = character
+            }
+        }, CancellationToken.None)));
+    }
+
+    [JSExport]
+    public static async Task<string> GetSemanticTokens(string uriStr, string? lastResultId)
+    {
+        await EnsureServer();
+        var tokens = await langServer!.SemanticTokenHandler.Handle(new SemanticTokensParams()
+        {
+            TextDocument = GetDoc(uriStr),
+            WorkDoneToken = null,
+            PartialResultToken = null,
+        }, CancellationToken.None);
+        return ToJson(InterpSemantics.FromLsp(tokens));
+    }
+
+    [JSExport]
+    public static string[] GetSemanticTokenTypes() => SemanticTokenHandler.SemanticTokenTypes;
+
+    [JSExport]
+    public static string[] GetSemanticTokenModifiers() => SemanticTokenHandler.SemanticTokenModifiers;
     // ~ End Exported functions ~
 
     // ~ Helper functions ~
@@ -100,7 +140,7 @@ public static partial class OstwJavascript
     static Uri GetSystemUri(string uriStr) => new(uriStr);
 
     static string ToJson(object input) => LspSerializer.Instance.SerializeObject(input);
-    static T FromJson<T>(string json) => JsonConvert.DeserializeObject<T>(json);
+    static T FromJson<T>(string json) => JsonConvert.DeserializeObject<T>(json)!;
     // ~ End Helper Functions ~
 
     class StaticDocumentEventHandler : IDocumentEvent

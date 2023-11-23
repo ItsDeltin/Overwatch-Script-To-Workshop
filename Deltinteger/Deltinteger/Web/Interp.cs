@@ -1,4 +1,5 @@
 namespace Deltin.Deltinteger.LanguageServer.Model;
+
 using LspRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using LspPositition = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
 using LspDiagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic;
@@ -10,13 +11,17 @@ using LspSignatureParameter = OmniSharp.Extensions.LanguageServer.Protocol.Model
 using LspSignatureContext = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelpContext;
 using LspSignatureHelpTriggerKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelpTriggerKind;
 using LspDiagnosticSeverity = OmniSharp.Extensions.LanguageServer.Protocol.Models.DiagnosticSeverity;
+using LspSemanticTokens = OmniSharp.Extensions.LanguageServer.Protocol.Models.SemanticTokens;
+using LspHover = OmniSharp.Extensions.LanguageServer.Protocol.Models.Hover;
 using System;
 using System.Linq;
+using Web;
 
 // This file recreates some of the LSP protocol as structs so
 // that they can be used with JsExport
 
 #nullable enable
+#pragma warning disable IDE1006
 
 public record struct InterpChangeEvent(InterpRange range, int rangeLength, string text);
 
@@ -63,7 +68,7 @@ public record struct InterpCompletionItem(string label, string kind, string deta
         lspCompletionItem.Label,
         lspCompletionItem.Kind.ToString(),
         lspCompletionItem.Detail ?? "",
-        lspCompletionItem.Documentation?.ToString() ?? "",
+        LspUtility.GetMarkdownContent(lspCompletionItem.Documentation),
         lspCompletionItem.InsertText ?? lspCompletionItem.Label
     );
 }
@@ -72,7 +77,7 @@ public record struct InterpSignatureHelp(int? activeParameter, int? activeSignat
 {
     public static InterpSignatureHelp FromLsp(LspSignatureHelp lspSignatureHelp) => new(lspSignatureHelp.ActiveParameter, lspSignatureHelp.ActiveSignature, lspSignatureHelp.Signatures.Select(s => InterpSignature.FromLsp(s)).ToArray());
 
-    public LspSignatureHelp ToLsp() => new()
+    public readonly LspSignatureHelp ToLsp() => new()
     {
         ActiveParameter = activeParameter,
         ActiveSignature = activeSignature,
@@ -82,9 +87,9 @@ public record struct InterpSignatureHelp(int? activeParameter, int? activeSignat
 
 public record struct InterpSignature(string label, InterpSignatureParameter[] parameters, int? activeParameter, string documentation)
 {
-    public static InterpSignature FromLsp(LspSignature lspSignature) => new(lspSignature.Label, lspSignature.Parameters?.Select(p => InterpSignatureParameter.FromLsp(p)).ToArray() ?? Array.Empty<InterpSignatureParameter>(), lspSignature.ActiveParameter, lspSignature.Documentation.ToString());
+    public static InterpSignature FromLsp(LspSignature lspSignature) => new(lspSignature.Label, lspSignature.Parameters?.Select(p => InterpSignatureParameter.FromLsp(p)).ToArray() ?? Array.Empty<InterpSignatureParameter>(), lspSignature.ActiveParameter, LspUtility.GetMarkdownContent(lspSignature.Documentation));
 
-    public LspSignature ToLsp() => new()
+    public readonly LspSignature ToLsp() => new()
     {
         ActiveParameter = activeParameter,
         Documentation = documentation,
@@ -97,9 +102,9 @@ public record struct InterpSignatureParameter(string label, string documentation
 {
     public static InterpSignatureParameter FromLsp(LspSignatureParameter lspSignatureParameter) => new(
         lspSignatureParameter.Label.ToString(),
-        lspSignatureParameter.Documentation?.ToString() ?? "");
+        LspUtility.GetMarkdownContent(lspSignatureParameter.Documentation));
 
-    public LspSignatureParameter ToLsp() => new()
+    public readonly LspSignatureParameter ToLsp() => new()
     {
         Documentation = documentation,
         Label = label
@@ -108,7 +113,7 @@ public record struct InterpSignatureParameter(string label, string documentation
 
 public record struct InterpSignatureContext(string signatureHelpTriggerKind, string? triggerCharacter, bool isRetrigger, InterpSignatureHelp? activeSignatureHelp)
 {
-    public LspSignatureContext ToLsp() => new()
+    public readonly LspSignatureContext ToLsp() => new()
     {
         ActiveSignatureHelp = activeSignatureHelp?.ToLsp(),
         IsRetrigger = isRetrigger,
@@ -120,4 +125,23 @@ public record struct InterpSignatureContext(string signatureHelpTriggerKind, str
             "Invoke" or _ => LspSignatureHelpTriggerKind.Invoked,
         }
     };
+}
+
+public record struct InterpSemantics(uint[] data, InterpSemanticsEdit[] edits, string? resultId)
+{
+    public static InterpSemantics FromLsp(LspSemanticTokens? semanticTokens) => new(
+        semanticTokens?.Data.Select(d => (uint)d).ToArray() ?? Array.Empty<uint>(),
+        Array.Empty<InterpSemanticsEdit>(),
+        null
+    );
+}
+
+public record struct InterpSemanticsEdit(int deleteCount, int start, uint[]? data);
+
+public record struct InterpHover(string[] contents, InterpRange range)
+{
+    public static InterpHover FromLsp(LspHover hover) => new(
+        LspUtility.GetMarkdownContent(hover.Contents),
+        hover.Range ?? new InterpRange()
+    );
 }
