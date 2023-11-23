@@ -21,12 +21,14 @@ using System.Linq;
 #nullable enable
 
 /// <summary>
-/// When OSTW is compiled for WASM to be run in the browser, this is how Javascript directly interacts with OSTW.
+/// When OSTW is compiled for WASM to be run in the browser, Javascript can call the functions in this class to interact with OSTW.
+/// See main.js
 /// </summary>
 public static partial class OstwJavascript
 {
     static OstwLangServer? langServer;
-    static StaticDocumentEventHandler? eventHandler;
+    static TaskCompletionSource<bool> langServerStatus = new();
+    static bool isStartingLanguageServer;
 
     // ~ Imported Javascript functions ~
     [JSImport("console.log", "main.js")]
@@ -124,13 +126,17 @@ public static partial class OstwJavascript
     // ~ Helper functions ~
     static async Task EnsureServer()
     {
-        if (langServer != null)
+        if (isStartingLanguageServer)
         {
-            return;
+            await langServerStatus.Task;
         }
-        LoadData.LoadWith(await GetWorkshopElements());
-        eventHandler = new StaticDocumentEventHandler();
-        langServer = new OstwLangServer(new ITomlDiagnosticReporter.None(), eventHandler);
+        else
+        {
+            isStartingLanguageServer = true;
+            LoadData.LoadWith(await GetWorkshopElements());
+            langServer = new OstwLangServer(new ITomlDiagnosticReporter.None(), StaticDocumentEventHandler.Instance, ILangLogger.New(ConsoleLog));
+            langServerStatus.SetResult(true);
+        }
     }
 
     static Position GetPosition(int line, int character) => new(line, character);
