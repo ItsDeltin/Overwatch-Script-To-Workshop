@@ -11,6 +11,8 @@ using Deltin.Deltinteger.LanguageServer.Model;
 using Deltin.Deltinteger;
 using LspSerializer = OmniSharp.Extensions.LanguageServer.Protocol.Serialization.LspSerializer;
 using System.Linq;
+using Deltin.Deltinteger.Decompiler;
+using Deltin.Deltinteger.Parse;
 
 // no namespace
 #pragma warning disable CA1050
@@ -121,6 +123,9 @@ public static partial class OstwJavascript
 
     [JSExport]
     public static string[] GetSemanticTokenModifiers() => SemanticTokenHandler.SemanticTokenModifiers;
+
+    [JSExport]
+    public static string Decompile(string inputText) => ToJson(Decompiler.DecompileWorkshop(inputText));
     // ~ End Exported functions ~
 
     // ~ Helper functions ~
@@ -134,7 +139,11 @@ public static partial class OstwJavascript
         {
             isStartingLanguageServer = true;
             LoadData.LoadWith(await GetWorkshopElements());
-            langServer = new OstwLangServer(new ITomlDiagnosticReporter.None(), StaticDocumentEventHandler.Instance, ILangLogger.New(ConsoleLog));
+            langServer = new OstwLangServer(
+                tomlDiagnosticsReporter: new ITomlDiagnosticReporter.None(),
+                documentEventHandler: StaticDocumentEventHandler.Instance,
+                langLogger: ILangLogger.New(ConsoleLog),
+                createFileGetter: (doc, settings) => new WebFileGetter(doc));
             langServerStatus.SetResult(true);
         }
     }
@@ -145,12 +154,16 @@ public static partial class OstwJavascript
 
     static Uri GetSystemUri(string uriStr) => new(uriStr);
 
-    static string ToJson(object input) => LspSerializer.Instance.SerializeObject(input);
+    static string ToJson(object input) => JsonConvert.SerializeObject(input);
     static T FromJson<T>(string json) => JsonConvert.DeserializeObject<T>(json)!;
     // ~ End Helper Functions ~
 
     class StaticDocumentEventHandler : IDocumentEvent
     {
+        public static readonly StaticDocumentEventHandler Instance = new();
+
+        private StaticDocumentEventHandler() { }
+
         public void Publish(string workshopCode, int elementCount, PublishDiagnosticsParams[] diagnostics)
         {
             var publish = diagnostics.Select(modelDiagnostics => InterpScriptDiagnostics.FromLsp(modelDiagnostics)).ToArray();

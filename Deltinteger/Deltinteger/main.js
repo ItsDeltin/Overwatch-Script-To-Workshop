@@ -24,7 +24,7 @@ setModuleImports("main.js", {
 const config = getConfig();
 const exports = await getAssemblyExports(config.mainAssemblyName);
 window.ostw = exports.OstwJavascript;
-window.onOstwReady();
+window.onOstwReady?.();
 
 // Runs Program.Main
 // await dotnet.run();

@@ -70,11 +70,11 @@ namespace Deltin.Deltinteger.LanguageServer
                 // document will be null if the editor doesn't have the document of the group opened.
                 if (document == null)
                 {
-                    ImportedScript importedScript = _languageServer.FileGetter.GetImportedFile(group.Uri);
+                    string content = _languageServer.FileGetter.GetContent(group.Uri);
                     document = new TextDocumentItem()
                     {
                         Uri = group.Uri,
-                        Text = importedScript.Content,
+                        Text = content,
                         LanguageId = "ostw"
                     };
                 }

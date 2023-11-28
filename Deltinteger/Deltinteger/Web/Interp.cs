@@ -35,12 +35,12 @@ public record struct InterpRange(InterpPosition start, InterpPosition end)
     public static implicit operator InterpRange(LspRange lspRange) => new(lspRange.Start, lspRange.End);
 }
 
-public record struct InterpPosition(int line, int column)
+public record struct InterpPosition(int line, int character)
 {
     public static implicit operator LspPositition(InterpPosition interpPosition) => new()
     {
         Line = interpPosition.line,
-        Character = interpPosition.column
+        Character = interpPosition.character
     };
     public static implicit operator InterpPosition(LspPositition lspPosition) => new(lspPosition.Line, lspPosition.Character);
 }

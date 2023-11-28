@@ -15,6 +15,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Newtonsoft.Json;
 using Settings.TomlSettings;
 using Deltin.Deltinteger.LanguageServer.Model;
+using Deltin.Deltinteger.LanguageServer.Settings;
 
 public class OstwLangServer
 {
@@ -34,7 +35,7 @@ public class OstwLangServer
     public LanguageServerBuilder Builder { get; }
     public IProjectUpdater ProjectUpdater { get; }
     public ServerWorkspace Workspace { get; } = new ServerWorkspace();
-    public FileGetter FileGetter { get; private set; }
+    public IFileGetter FileGetter { get; private set; }
     public ConfigurationHandler ConfigurationHandler { get; private set; }
 
     // Legacy
@@ -43,17 +44,20 @@ public class OstwLangServer
 
     public OstwLangServer(
         ITomlDiagnosticReporter tomlDiagnosticsReporter,
-        IDocumentEvent documentEventHandler)
+        IDocumentEvent documentEventHandler,
+        ILangLogger langLogger = null,
+        Func<DocumentHandler, IParserSettingsResolver, IFileGetter> createFileGetter = null)
     {
         // _debugger = new ClipboardListener(this);
+        createFileGetter ??= (doc, settings) => new LsFileGetter(doc, settings);
 
-        Builder = new LanguageServerBuilder(this, tomlDiagnosticsReporter);
+        Builder = new LanguageServerBuilder(this, tomlDiagnosticsReporter, langLogger ?? ILangLogger.Default);
 
         var scriptCompiler = new ScriptCompiler(Builder, documentEventHandler);
         ProjectUpdater = new TimedProjectUpdater(scriptCompiler);
 
         DocumentHandler = new DocumentHandler(Builder);
-        FileGetter = new FileGetter(DocumentHandler, Builder.ParserSettingsResolver);
+        FileGetter = createFileGetter(DocumentHandler, Builder.ParserSettingsResolver);
         CompletionHandler = new CompletionHandler(this);
         SignatureHandler = new SignatureHandler(this);
         ConfigurationHandler = new ConfigurationHandler(this);

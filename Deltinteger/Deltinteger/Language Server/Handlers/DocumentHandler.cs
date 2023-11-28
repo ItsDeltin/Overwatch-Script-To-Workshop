@@ -27,13 +27,15 @@ public class DocumentHandler : ITextDocumentSyncHandler
 
     // Object
     readonly List<Document> _documents = new();
-    private readonly OstwLangServer _languageServer;
-    private readonly ParserSettingsResolver _parserSettingsResolver;
+    readonly OstwLangServer _languageServer;
+    readonly ParserSettingsResolver _parserSettingsResolver;
+    readonly ILangLogger _logger;
 
     public DocumentHandler(LanguageServerBuilder builder)
     {
         _languageServer = builder.Server;
         _parserSettingsResolver = builder.ParserSettingsResolver;
+        _logger = builder.LangLogger;
     }
 
     public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) => new TextDocumentAttributes(uri, "ostw");
@@ -66,8 +68,16 @@ public class DocumentHandler : ITextDocumentSyncHandler
     // Handle save.
     public Task<Unit> Handle(DidSaveTextDocumentParams saveParams, CancellationToken token)
     {
-        System.Diagnostics.Debug.WriteLine("documents", "Saving " + saveParams.TextDocument.Uri);
-        var document = TextDocumentFromUri(saveParams.TextDocument.Uri.ToUri());
+        var uri = saveParams.TextDocument.Uri.ToUri();
+        _logger.LogMessage("Saving " + uri);
+
+        var document = TextDocumentFromUri(uri);
+        if (document is null)
+        {
+            _logger.LogMessage($"Attempted to save nonexistant document '{uri}'");
+            return Unit.Task;
+        }
+
         if (_sendTextOnSave)
         {
             document.UpdateIfChanged(saveParams.Text, _parserSettingsResolver.GetParserSettings(document.Uri));
@@ -79,8 +89,16 @@ public class DocumentHandler : ITextDocumentSyncHandler
     // Handle close.
     public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
     {
-        System.Diagnostics.Debug.WriteLine("documents", "Closing " + closeParams.TextDocument.Uri);
-        var removing = TextDocumentFromUri(closeParams.TextDocument.Uri.ToUri());
+        var uri = closeParams.TextDocument.Uri.ToUri();
+        _logger.LogMessage($"Closing '{uri}'");
+
+        var removing = TextDocumentFromUri(uri);
+        if (removing is null)
+        {
+            _logger.LogMessage($"Attempted to close nonexistant document '{uri}'");
+            return Unit.Task;
+        }
+
         removing.Remove();
         _documents.Remove(removing);
         return Unit.Task;
@@ -89,7 +107,8 @@ public class DocumentHandler : ITextDocumentSyncHandler
     // Handle open.
     public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
     {
-        System.Diagnostics.Debug.WriteLine("documents", "Opening " + openParams.TextDocument.Uri);
+        _logger.LogMessage($"Opening '{openParams.TextDocument.Uri}'");
+
         var newDocument = new Document(openParams.TextDocument);
         _documents.Add(newDocument);
         _languageServer.ProjectUpdater.UpdateProject(newDocument);
@@ -99,8 +118,15 @@ public class DocumentHandler : ITextDocumentSyncHandler
     // Handle change.
     public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
     {
-        System.Diagnostics.Debug.WriteLine("documents", "Changing " + changeParams.TextDocument.Uri);
-        var document = TextDocumentFromUri(changeParams.TextDocument.Uri.ToUri());
+        var uri = changeParams.TextDocument.Uri.ToUri();
+        var document = TextDocumentFromUri(uri);
+
+        if (document is null)
+        {
+            _logger.LogMessage($"Attempted to update nonexistant document '{uri}' (open documents: {string.Join(", ", _documents.Select(d => $"'{d.Uri}'"))})");
+            return Unit.Task;
+        }
+
         foreach (var change in changeParams.ContentChanges)
         {
             int start = Extras.TextIndexFromPosition(document.Content, change.Range.Start);
@@ -131,6 +157,8 @@ public class DocumentHandler : ITextDocumentSyncHandler
 
     public Task AddDocumentAsync(Uri uri, string initialContent)
     {
+        _logger.LogMessage($"Opening '{uri}'");
+
         var doc = new Document(uri, initialContent);
         _documents.Add(doc);
         _languageServer.ProjectUpdater.UpdateProject(doc);

@@ -1,4 +1,6 @@
 namespace Deltin.Deltinteger.LanguageServer;
+
+using Deltin.Deltinteger.LanguageServer.Model;
 using Settings;
 using Settings.TomlSettings;
 
@@ -9,11 +11,13 @@ public class LanguageServerBuilder
     public ParserSettingsResolver ParserSettingsResolver { get; }
     public DsTomlWatcher ProjectSettings { get; }
     public ITomlDiagnosticReporter TomlDiagnosticsReporter { get; }
+    public ILangLogger LangLogger { get; }
 
-    public LanguageServerBuilder(OstwLangServer server, ITomlDiagnosticReporter tomlDiagnosticsReporter)
+    public LanguageServerBuilder(OstwLangServer server, ITomlDiagnosticReporter tomlDiagnosticsReporter, ILangLogger langLogger)
     {
         Server = server;
         TomlDiagnosticsReporter = tomlDiagnosticsReporter;
+        LangLogger = langLogger;
         FileHandlerBuilder = new DidChangeWatchedFilesHandlerBuilder();
         ParserSettingsResolver = new ParserSettingsResolver(this);
         ProjectSettings = new DsTomlWatcher(this);

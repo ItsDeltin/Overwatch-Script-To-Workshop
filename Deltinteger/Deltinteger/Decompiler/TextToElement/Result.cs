@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         [JsonProperty("original")]
         public string Original { get; }
-        
+
         public bool Success => Result == "success";
 
         public DecompileResult(ConvertTextToElement tte, string code)
@@ -45,11 +45,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Exception = exception.ToString();
         }
 
-        public DocRange GetErrorRange(ConvertTextToElement tte)
+        public static DocRange GetErrorRange(ConvertTextToElement tte)
         {
             string localStream = tte.LocalStream;
             int endLine = tte.Line, endCharacter = tte.Character;
-            
+
             for (int i = 0; i < localStream.Length; i++)
                 // Get the range up until the next whitespace.
                 if (char.IsWhiteSpace(localStream[i]) || char.IsSymbol(localStream[i]))

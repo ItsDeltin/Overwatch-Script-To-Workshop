@@ -16,19 +16,19 @@ namespace Deltin.Deltinteger.Parse
         public static MarkupBuilder DefaultLabel(DeltinScript deltinScript, LabelInfo labelInfo, IMethod function)
         {
             MarkupBuilder markup = new MarkupBuilder().StartCodeLine();
-            
+
             // Add return type.
             if (labelInfo.IncludeReturnType)
                 markup.Add(labelInfo.AnonymousLabelInfo.NameFromSolver(deltinScript, function.CodeType)).Add(" ");
-            
+
             // Add function name and parameters.
             markup.Add(function.Name + CodeParameter.GetLabels(deltinScript, labelInfo.AnonymousLabelInfo, function.Parameters))
                 .EndCodeLine();
-            
+
             // Add documentation.
             if (labelInfo.IncludeDocumentation && function.Documentation != null)
                 markup.NewSection().Add(function.Documentation);
-            
+
             return markup;
         }
 
