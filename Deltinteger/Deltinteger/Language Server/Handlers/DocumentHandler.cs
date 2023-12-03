@@ -1,239 +1,196 @@
+namespace Deltin.Deltinteger.LanguageServer;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Compiler;
-using Deltin.Deltinteger.LanguageServer.Settings;
+using Settings;
+using Model;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using MediatR;
+using System.Linq;
+using LspRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+using LspPositition = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
 
-namespace Deltin.Deltinteger.LanguageServer
+#nullable enable
+
+public class DocumentHandler : ITextDocumentSyncHandler
 {
-    public class DocumentHandler : ITextDocumentSyncHandler
+    // Static
+    private static readonly TextDocumentSyncKind _syncKind = TextDocumentSyncKind.Incremental;
+    private static readonly bool _sendTextOnSave = true;
+
+    // Object
+    readonly List<Document> _documents = new();
+    readonly OstwLangServer _languageServer;
+    readonly ParserSettingsResolver _parserSettingsResolver;
+    readonly ILangLogger _logger;
+
+    public DocumentHandler(LanguageServerBuilder builder)
     {
-        // Static
-        private static readonly TextDocumentSyncKind _syncKind = TextDocumentSyncKind.Incremental;
-        private static readonly bool _sendTextOnSave = true;
+        _languageServer = builder.Server;
+        _parserSettingsResolver = builder.ParserSettingsResolver;
+        _logger = builder.LangLogger;
+    }
 
-        // Object
-        public List<Document> Documents { get; } = new List<Document>();
-        private readonly DeltintegerLanguageServer _languageServer;
-        private readonly ParserSettingsResolver _parserSettingsResolver;
-        private readonly DsTomlWatcher _projectSettings;
-        private SynchronizationCapability _compatibility;
-        private TaskCompletionSource<Unit> _scriptReady = new TaskCompletionSource<Unit>();
+    public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) => new TextDocumentAttributes(uri, "ostw");
 
-        public DocumentHandler(LanguageServerBuilder builder)
+    // Document change
+    public TextDocumentChangeRegistrationOptions GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentChangeRegistrationOptions()
+    {
+        DocumentSelector = OstwLangServer.DocumentSelector,
+        SyncKind = _syncKind
+    };
+
+    // Open
+    TextDocumentOpenRegistrationOptions IRegistration<TextDocumentOpenRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentOpenRegistrationOptions()
+    {
+        DocumentSelector = OstwLangServer.DocumentSelector
+    };
+
+    // Close
+    TextDocumentCloseRegistrationOptions IRegistration<TextDocumentCloseRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentCloseRegistrationOptions()
+    {
+        DocumentSelector = OstwLangServer.DocumentSelector
+    };
+
+    // Save
+    TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentSaveRegistrationOptions()
+    {
+        DocumentSelector = OstwLangServer.DocumentSelector
+    };
+
+    // Handle save.
+    public Task<Unit> Handle(DidSaveTextDocumentParams saveParams, CancellationToken token)
+    {
+        var uri = saveParams.TextDocument.Uri.ToUri();
+        _logger.LogMessage("Saving " + uri);
+
+        var document = TextDocumentFromUri(uri);
+        if (document is null)
         {
-            _languageServer = builder.Server;
-            _parserSettingsResolver = builder.ParserSettingsResolver;
-            _projectSettings = builder.ProjectSettings;
-            SetupUpdateListener();
-        }
-
-        public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) => new TextDocumentAttributes(uri, "ostw");
-
-        // Document change
-        public TextDocumentChangeRegistrationOptions GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentChangeRegistrationOptions()
-        {
-            DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
-            SyncKind = _syncKind
-        };
-
-        // Open
-        TextDocumentOpenRegistrationOptions IRegistration<TextDocumentOpenRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentOpenRegistrationOptions()
-        {
-            DocumentSelector = DeltintegerLanguageServer.DocumentSelector
-        };
-
-        // Close
-        TextDocumentCloseRegistrationOptions IRegistration<TextDocumentCloseRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentCloseRegistrationOptions()
-        {
-            DocumentSelector = DeltintegerLanguageServer.DocumentSelector
-        };
-
-        // Save
-        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions, SynchronizationCapability>.GetRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new TextDocumentSaveRegistrationOptions()
-        {
-            DocumentSelector = DeltintegerLanguageServer.DocumentSelector
-        };
-
-        // Handle save.
-        public Task<Unit> Handle(DidSaveTextDocumentParams saveParams, CancellationToken token)
-        {
-            System.Diagnostics.Debug.WriteLine("documents", "Saving " + saveParams.TextDocument.Uri);
-            if (_sendTextOnSave)
-            {
-                var document = TextDocumentFromUri(saveParams.TextDocument.Uri.ToUri());
-                document.UpdateIfChanged(saveParams.Text, _parserSettingsResolver.GetParserSettings(document.Uri));
-                return Parse(document);
-            }
-            else return Parse(saveParams.TextDocument.Uri.ToUri());
-        }
-
-        // Handle close.
-        public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
-        {
-            System.Diagnostics.Debug.WriteLine("documents", "Closing " + closeParams.TextDocument.Uri);
-            var removing = TextDocumentFromUri(closeParams.TextDocument.Uri.ToUri());
-            removing.Remove();
-            Documents.Remove(removing);
+            _logger.LogMessage($"Attempted to save nonexistant document '{uri}'");
             return Unit.Task;
         }
 
-        // Handle open.
-        public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
+        if (_sendTextOnSave)
         {
-            System.Diagnostics.Debug.WriteLine("documents", "Opening " + openParams.TextDocument.Uri);
-            Documents.Add(new Document(openParams.TextDocument));
-            return Parse(openParams.TextDocument.Uri.ToUri());
+            document.UpdateIfChanged(saveParams.Text, _parserSettingsResolver.GetParserSettings(document.Uri));
+        }
+        _languageServer.ProjectUpdater.UpdateProject(document);
+        return Unit.Task;
+    }
+
+    // Handle close.
+    public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
+    {
+        RemoveDocument(closeParams.TextDocument.Uri.ToUri());
+        return Unit.Task;
+    }
+
+    // Handle open.
+    public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
+    {
+        _logger.LogMessage($"Opening '{openParams.TextDocument.Uri}'");
+
+        var newDocument = new Document(openParams.TextDocument);
+        _documents.Add(newDocument);
+        _languageServer.ProjectUpdater.UpdateProject(newDocument);
+        return Unit.Task;
+    }
+
+    // Handle change.
+    public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
+    {
+        var uri = changeParams.TextDocument.Uri.ToUri();
+        var document = TextDocumentFromUri(uri);
+
+        if (document is null)
+        {
+            _logger.LogMessage($"Attempted to update nonexistant document '{uri}' (open documents: {string.Join(", ", _documents.Select(d => $"'{d.Uri}'"))})");
+            return Unit.Task;
         }
 
-        // Handle change.
-        public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
+        foreach (var change in changeParams.ContentChanges)
         {
-            System.Diagnostics.Debug.WriteLine("documents", "Changing " + changeParams.TextDocument.Uri);
-            var document = TextDocumentFromUri(changeParams.TextDocument.Uri.ToUri());
-            foreach (var change in changeParams.ContentChanges)
+            if (change.Range is null)
+                continue;
+
+            int start = Extras.TextIndexFromPosition(document.Content, change.Range.Start);
+            int length = Extras.TextIndexFromPosition(document.Content, change.Range.End) - start;
+
+            StringBuilder rep = new StringBuilder(document.Content);
+            rep.Remove(start, length);
+            rep.Insert(start, change.Text);
+
+            document.Update(rep.ToString(), change, changeParams.TextDocument.Version, _parserSettingsResolver.GetParserSettings(document.Uri));
+        }
+
+        _languageServer.ProjectUpdater.UpdateProject(document);
+        return Unit.Task;
+    }
+
+    // ~ Public methods
+    public IReadOnlyList<Document> GetDocuments() => _documents;
+
+    public Document? TextDocumentFromUri(Uri uri)
+    {
+        for (int i = 0; i < _documents.Count; i++)
+            // TODO-URI: Should use Uri.Compare? 
+            if (_documents[i].Uri == uri)
+                return _documents[i];
+        return null;
+    }
+
+    public Task AddDocumentAsync(Uri uri, string initialContent)
+    {
+        _logger.LogMessage($"Opening '{uri}'");
+
+        var doc = new Document(uri, initialContent);
+        _documents.Add(doc);
+        _languageServer.ProjectUpdater.UpdateProject(doc);
+        return Unit.Task;
+    }
+
+    public async Task ChangeDocumentAsync(Uri uri, InterpChangeEvent[] changes)
+    {
+        await Handle(new DidChangeTextDocumentParams()
+        {
+            TextDocument = new OptionalVersionedTextDocumentIdentifier()
             {
-                int start = PosIndex(document.Content, change.Range.Start);
-                int length = PosIndex(document.Content, change.Range.End) - start;
-
-                StringBuilder rep = new StringBuilder(document.Content);
-                rep.Remove(start, length);
-                rep.Insert(start, change.Text);
-
-                document.Update(rep.ToString(), change, changeParams.TextDocument.Version, _parserSettingsResolver.GetParserSettings(document.Uri));
-            }
-            return Parse(document.Uri);
-        }
-
-        public Document TextDocumentFromUri(Uri uri)
-        {
-            for (int i = 0; i < Documents.Count; i++)
-                // TODO-URI: Should use Uri.Compare? 
-                if (Documents[i].Uri == uri)
-                    return Documents[i];
-            return null;
-        }
-
-        private static int PosIndex(string text, Position pos)
-        {
-            if (pos.Line == 0 && pos.Character == 0) return 0;
-
-            int line = 0;
-            int character = 0;
-            for (int i = 0; i < text.Length; i++)
+                Uri = uri,
+                Version = null
+            },
+            ContentChanges = new Container<TextDocumentContentChangeEvent>(changes.Select(c => new TextDocumentContentChangeEvent()
             {
-                if (text[i] == '\n')
-                {
-                    line++;
-                    character = 0;
-                }
-                else
-                {
-                    character++;
-                }
+                Range = c.range,
+                RangeLength = c.rangeLength,
+                Text = c.text
+            }))
+        }, CancellationToken.None);
+    }
 
-                if (pos.Line == line && pos.Character == character)
-                    return i + 1;
+    public void RemoveDocument(Uri uri)
+    {
+        _logger.LogMessage($"Closing '{uri}'");
 
-                if (line > pos.Line)
-                    throw new Exception();
-            }
-            throw new Exception();
-        }
-
-        Task<Unit> Parse(Uri uri) => Parse(TextDocumentFromUri(uri));
-        Task<Unit> Parse(Document document)
+        var removing = TextDocumentFromUri(uri);
+        if (removing is null)
         {
-            _currentDocument = document;
-            _wait.Set();
-            return Task.FromResult(Unit.Value);
+            _logger.LogMessage($"Attempted to close nonexistant document '{uri}'");
         }
-
-        private Document _currentDocument;
-        private ManualResetEventSlim _wait = new ManualResetEventSlim(false);
-        private ManualResetEventSlim _parseDone = new ManualResetEventSlim(false);
-        private readonly CancellationTokenSource _stopUpdateListener = new CancellationTokenSource();
-
-        public async Task WaitForParse() => await Task.Run(() => _parseDone.Wait());
-
-        void SetupUpdateListener()
+        else
         {
-            var stopToken = _stopUpdateListener.Token;
-            Task.Run(() =>
-            {
-                while (!stopToken.IsCancellationRequested)
-                {
-                    // If _wait is not signaled, signal _parseDone.
-                    if (!_wait.IsSet) _parseDone.Set();
-                    _wait.Wait();
-
-                    // Reset _wait so when _wait.Wait() is called, the task will pause.
-                    // If Parse() is called before the while loops, _wait.Wait() will be skipped and the document will be parsed again.
-                    _wait.Reset();
-
-                    // Make _parseDone wait.
-                    _parseDone.Reset();
-                    Update(_currentDocument);
-                }
-            }, stopToken);
-        }
-
-        void Update(Document item)
-        {
-            try
-            {
-                var settings = _projectSettings.GetProjectSettings(item.Uri);
-
-                Diagnostics diagnostics = new Diagnostics();
-                ScriptFile root = new ScriptFile(diagnostics, item);
-                DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter)
-                {
-                    OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
-                    SourcedSettings = settings
-                });
-                _languageServer.LastParse = deltinScript;
-
-                if (!_scriptReady.Task.IsCompleted)
-                    _scriptReady.SetResult(Unit.Value);
-
-                // Publish the diagnostics.
-                var publishDiagnostics = diagnostics.GetPublishDiagnostics();
-                foreach (var publish in publishDiagnostics)
-                    _languageServer.Server.TextDocument.PublishDiagnostics(publish);
-
-                if (deltinScript.WorkshopCode != null)
-                {
-                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
-                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, deltinScript.ElementCount.ToString());
-                }
-                else
-                {
-                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, diagnostics.OutputDiagnostics());
-                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
-                }
-            }
-            catch (Exception ex)
-            {
-                Serilog.Log.Error(ex, "An exception was thrown while parsing.");
-                _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
-                _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
-            }
-        }
-
-        public async Task<DeltinScript> OnScriptAvailability()
-        {
-            await Task.WhenAny(_scriptReady.Task, Task.Delay(10000));
-            return _languageServer.LastParse;
+            removing.Remove();
+            _documents.Remove(removing);
         }
     }
+    // ~ End Public methods
 }

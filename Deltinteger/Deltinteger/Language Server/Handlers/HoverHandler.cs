@@ -14,9 +14,9 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class HoverHandler : IHoverHandler
     {
-        private readonly DeltintegerLanguageServer _languageServer;
+        private readonly OstwLangServer _languageServer;
 
-        public HoverHandler(DeltintegerLanguageServer languageServer)
+        public HoverHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
@@ -25,30 +25,28 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new HoverRegistrationOptions()
             {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector
+                DocumentSelector = OstwLangServer.DocumentSelector
             };
         }
 
         public async Task<Hover> Handle(HoverParams request, CancellationToken cancellationToken)
         {
-            return await Task.Run(() =>
+            var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
+            var hoverRanges = compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
+            if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
+
+            HoverRange chosen = hoverRanges
+                .Where(hoverRange => hoverRange.Range.IsInside(request.Position))
+                .OrderBy(hoverRange => hoverRange.Range)
+                .FirstOrDefault();
+
+            if (chosen == null) return new Hover();
+
+            return new Hover()
             {
-                var hoverRanges = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
-                if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
-
-                HoverRange chosen = hoverRanges
-                    .Where(hoverRange => hoverRange.Range.IsInside(request.Position))
-                    .OrderBy(hoverRange => hoverRange.Range)
-                    .FirstOrDefault();
-
-                if (chosen == null) return new Hover();
-
-                return new Hover()
-                {
-                    Range = chosen.Range,
-                    Contents = chosen.Content
-                };
-            });
+                Range = chosen.Range,
+                Contents = chosen.Content
+            };
         }
 
         // Definition capability

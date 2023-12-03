@@ -1,20 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Deltin.Deltinteger
 {
     public class Log
     {
         public static LogLevel LogLevel = LogLevel.Normal;
-
-        public static object Passer(object obj)
-        {
-            Console.WriteLine(obj);
-            return obj;
-        }
 
         public Log(string name)
         {

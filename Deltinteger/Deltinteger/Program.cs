@@ -47,6 +47,8 @@ namespace Deltin.Deltinteger
 
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+
+            LoadData.LoadFromFileSystem();
             Lobby.HeroSettingCollection.Init();
             Lobby.ModeSettingCollection.Init();
 
@@ -136,7 +138,7 @@ namespace Deltin.Deltinteger
         {
             if (IsArg("--langserver"))
             {
-                DeltintegerLanguageServer.Run();
+                StdServer.Run();
                 return true;
             }
             return false;

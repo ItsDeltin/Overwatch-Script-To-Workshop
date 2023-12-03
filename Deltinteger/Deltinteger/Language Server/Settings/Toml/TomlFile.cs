@@ -52,4 +52,11 @@ public class TomlFile<T> : ISettingFile where T : class, new()
 public interface ITomlDiagnosticReporter
 {
     void ReportDiagnostics(Uri uri, IEnumerable<LSDiagnostic> diagnostics);
+
+    public record None() : ITomlDiagnosticReporter
+    {
+        public void ReportDiagnostics(Uri uri, IEnumerable<LSDiagnostic> diagnostics)
+        {
+        }
+    }
 }

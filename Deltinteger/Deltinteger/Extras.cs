@@ -2,15 +2,14 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using Deltin.Deltinteger.Parse;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 using MarkedStringsOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkedStringsOrMarkupContent;
 using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
 using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
 using DocumentUri = OmniSharp.Extensions.LanguageServer.Protocol.DocumentUri;
-using MetaComment = Deltin.Deltinteger.Compiler.SyntaxTree.MetaComment;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+
 
 namespace Deltin.Deltinteger
 {
@@ -121,6 +120,33 @@ namespace Deltin.Deltinteger
                 dictionary.Add(key, value);
             }
             return value;
+        }
+
+        public static int TextIndexFromPosition(string text, Position pos)
+        {
+            if (pos.Line == 0 && pos.Character == 0) return 0;
+
+            int line = 0;
+            int character = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    line++;
+                    character = 0;
+                }
+                else
+                {
+                    character++;
+                }
+
+                if (pos.Line == line && pos.Character == character)
+                    return i + 1;
+
+                if (line > pos.Line)
+                    throw new Exception($"Surpassed position {pos} in text: {text}");
+            }
+            throw new Exception($"Failed to locate position {pos} in text: {text}");
         }
     }
 

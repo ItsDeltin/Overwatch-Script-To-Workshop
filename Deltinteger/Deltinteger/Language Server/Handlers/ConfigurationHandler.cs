@@ -17,13 +17,13 @@ namespace Deltin.Deltinteger.LanguageServer
     public class ConfigurationHandler : IDidChangeConfigurationHandler
     {
         public bool OptimizeOutput { get; private set; } = true;
-        private DeltintegerLanguageServer _languageServer { get; }
+        private OstwLangServer _languageServer { get; }
         public bool ReferencesCodeLens { get; private set; }
         public bool ImplementsCodeLens { get; private set; }
         public bool ElementCountCodeLens { get; private set; }
         public OutputLanguage OutputLanguage { get; private set; }
 
-        public ConfigurationHandler(DeltintegerLanguageServer languageServer)
+        public ConfigurationHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }

@@ -1,42 +1,25 @@
-namespace Deltin.Deltinteger.LanguageServer
+namespace Deltin.Deltinteger.LanguageServer;
+
+using Deltin.Deltinteger.LanguageServer.Model;
+using Settings;
+using Settings.TomlSettings;
+
+public class LanguageServerBuilder
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Settings;
-    using Settings.TomlSettings;
-    using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-    using OmniSharp.Extensions.LanguageServer.Protocol.Document;
+    public OstwLangServer Server { get; }
+    public DidChangeWatchedFilesHandlerBuilder FileHandlerBuilder { get; }
+    public ParserSettingsResolver ParserSettingsResolver { get; }
+    public DsTomlWatcher ProjectSettings { get; }
+    public ITomlDiagnosticReporter TomlDiagnosticsReporter { get; }
+    public ILangLogger LangLogger { get; }
 
-    public class LanguageServerBuilder
+    public LanguageServerBuilder(OstwLangServer server, ITomlDiagnosticReporter tomlDiagnosticsReporter, ILangLogger langLogger)
     {
-        public DeltintegerLanguageServer Server { get; }
-        public DidChangeWatchedFilesHandlerBuilder FileHandlerBuilder { get; }
-        public ParserSettingsResolver ParserSettingsResolver { get; }
-        public DsTomlWatcher ProjectSettings { get; }
-        public ITomlDiagnosticReporter TomlDiagnosticsReporter { get; }
-
-        public LanguageServerBuilder(DeltintegerLanguageServer server)
-        {
-            Server = server;
-            TomlDiagnosticsReporter = new TomlReporter(server);
-            FileHandlerBuilder = new DidChangeWatchedFilesHandlerBuilder();
-            ParserSettingsResolver = new ParserSettingsResolver(this);
-            ProjectSettings = new DsTomlWatcher(this);
-        }
-
-        class TomlReporter : ITomlDiagnosticReporter
-        {
-            readonly DeltintegerLanguageServer server;
-            public TomlReporter(DeltintegerLanguageServer server) => this.server = server;
-            public void ReportDiagnostics(Uri uri, IEnumerable<OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic> diagnostics)
-            {
-                server.Server.TextDocument.PublishDiagnostics(new PublishDiagnosticsParams()
-                {
-                    Uri = uri,
-                    Diagnostics = diagnostics.ToArray()
-                });
-            }
-        }
+        Server = server;
+        TomlDiagnosticsReporter = tomlDiagnosticsReporter;
+        LangLogger = langLogger;
+        FileHandlerBuilder = new DidChangeWatchedFilesHandlerBuilder();
+        ParserSettingsResolver = new ParserSettingsResolver(this);
+        ProjectSettings = new DsTomlWatcher(this);
     }
 }

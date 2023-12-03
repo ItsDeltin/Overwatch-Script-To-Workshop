@@ -13,91 +13,93 @@ using IPrepareRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Docum
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    class DoRenameHandler : IRenameHandler, IPrepareRenameHandler
+    public class DoRenameHandler : IRenameHandler, IPrepareRenameHandler
     {
-        public static RenameLink GetLink(DeltintegerLanguageServer languageServer, Uri uri, Position position)
+        async Task<RenameLink> GetLinkAsync(Uri uri, Position position)
         {
+            var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
+
             // Get the script from the uri, and get the 
-            var keyRange = languageServer.LastParse?.ScriptFromUri(uri)?.Elements.KeyFromPosition(position);
+            var keyRange = compilation?.ScriptFromUri(uri)?.Elements.KeyFromPosition(position);
 
             // Script was not found, script not yet read, or no key was found.
             if (keyRange?.key == null) return null;
 
-            var locations = languageServer.LastParse.GetComponent<SymbolLinkComponent>().CallsFromDeclaration(keyRange.Value.key).Select(link => link.Location);
+            var locations = compilation.GetComponent<SymbolLinkComponent>().CallsFromDeclaration(keyRange.Value.key).Select(link => link.Location);
             return new RenameLink(keyRange?.key.Name, keyRange?.range, locations);
         }
 
-        private DeltintegerLanguageServer _languageServer;
+        readonly OstwLangServer _languageServer;
 
-        public DoRenameHandler(DeltintegerLanguageServer languageServer)
+        public DoRenameHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
 
         public RenameRegistrationOptions GetRegistrationOptions(RenameCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
         {
-            return new RenameRegistrationOptions() {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
+            return new RenameRegistrationOptions()
+            {
+                DocumentSelector = OstwLangServer.DocumentSelector,
                 PrepareProvider = true
             };
         }
 
-        public Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
+        public async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
         {
-            return Task.Run(() =>
+            var link = await GetLinkAsync(request.TextDocument.Uri.ToUri(), request.Position);
+            if (link == null) return new WorkspaceEdit();
+
+            var grouped = link.Group();
+            var documentChanges = new List<WorkspaceEditDocumentChange>();
+            foreach (var group in grouped)
             {
-                var link = GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
-                if (link == null) return new WorkspaceEdit();
+                List<TextEdit> edits = new List<TextEdit>();
 
-                var grouped = link.Group();
-                var documentChanges = new List<WorkspaceEditDocumentChange>();
-                foreach (var group in grouped)
+                foreach (var renameRange in group.Links)
                 {
-                    List<TextEdit> edits = new List<TextEdit>();
-
-                    foreach (var renameRange in group.Links)
+                    edits.Add(new TextEdit()
                     {
-                        edits.Add(new TextEdit()
-                        {
-                            NewText = request.NewName,
-                            Range = renameRange
-                        });
-                    }
-
-                    var document = _languageServer.DocumentHandler.TextDocumentFromUri(group.Uri)?.AsItem();
-
-                    // document will be null if the editor doesn't have the document of the group opened.
-                    if (document == null)
-                    {
-                        ImportedScript importedScript = _languageServer.FileGetter.GetImportedFile(group.Uri);
-                        document = new TextDocumentItem()
-                        {
-                            Uri = group.Uri,
-                            Text = importedScript.Content,
-                            LanguageId = "ostw"
-                        };
-                    }
-
-                    WorkspaceEditDocumentChange edit = new WorkspaceEditDocumentChange(new TextDocumentEdit()
-                    {
-                        Edits = edits.ToArray(),
-                        TextDocument = new OptionalVersionedTextDocumentIdentifier() {
-                            Version = document.Version,
-                            Uri = document.Uri
-                        }
+                        NewText = request.NewName,
+                        Range = renameRange
                     });
-                    documentChanges.Add(edit);
                 }
 
-                return new WorkspaceEdit()
+                var document = _languageServer.DocumentHandler.TextDocumentFromUri(group.Uri)?.AsItem();
+
+                // document will be null if the editor doesn't have the document of the group opened.
+                if (document == null)
                 {
-                    DocumentChanges = documentChanges
-                };
-            });
+                    string content = _languageServer.FileGetter.GetContent(group.Uri);
+                    document = new TextDocumentItem()
+                    {
+                        Uri = group.Uri,
+                        Text = content,
+                        LanguageId = "ostw"
+                    };
+                }
+
+                WorkspaceEditDocumentChange edit = new WorkspaceEditDocumentChange(new TextDocumentEdit()
+                {
+                    Edits = edits.ToArray(),
+                    TextDocument = new OptionalVersionedTextDocumentIdentifier()
+                    {
+                        Version = document.Version,
+                        Uri = document.Uri
+                    }
+                });
+                documentChanges.Add(edit);
+            }
+
+            return new WorkspaceEdit()
+            {
+                DocumentChanges = documentChanges
+            };
         }
 
-        public Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken) => Task.Run(() => {
-            var link = GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
+        public Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken) => Task.Run(async () =>
+        {
+            var link = await GetLinkAsync(request.TextDocument.Uri.ToUri(), request.Position);
             if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
 
             return new RangeOrPlaceholderRange(new PlaceholderRange()
@@ -108,7 +110,7 @@ namespace Deltin.Deltinteger.LanguageServer
         });
     }
 
-    class RenameLink
+    public class RenameLink
     {
         public string Name { get; }
         public DocRange SourceRange { get; }
@@ -137,7 +139,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
     }
 
-    class SymbolLinkUriGroup
+    public class SymbolLinkUriGroup
     {
         public Uri Uri { get; }
         public DocRange[] Links { get; }

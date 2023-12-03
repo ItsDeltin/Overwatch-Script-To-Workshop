@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public Diagnostics Diagnostics { get; }
         public ScriptFile Root { get; }
-        public FileGetter FileGetter { get; } = new FileGetter(null, new LanguageServer.Settings.DefaultSettingsResolver());
+        public IFileGetter FileGetter { get; } = new LsFileGetter(null, new DefaultSettingsResolver());
         public Func<VarCollection, Rule[]> AdditionalRules { get; set; }
 
         public SourcedSettings<DsTomlSettings> SourcedSettings { get; set; }
@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
             Root = root;
         }
 
-        public TranslateSettings(Diagnostics diagnostics, ScriptFile root, FileGetter fileGetter) : this(diagnostics, root)
+        public TranslateSettings(Diagnostics diagnostics, ScriptFile root, IFileGetter fileGetter) : this(diagnostics, root)
         {
             FileGetter = fileGetter;
         }

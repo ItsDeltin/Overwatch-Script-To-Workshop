@@ -15,34 +15,29 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class DefinitionHandler : IDefinitionHandler
     {
-        private DeltintegerLanguageServer _languageServer { get; }
+        readonly OstwLangServer _languageServer;
 
-        public DefinitionHandler(DeltintegerLanguageServer languageServer)
+        public DefinitionHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
 
         public async Task<LocationOrLocationLinks> Handle(DefinitionParams definitionParams, CancellationToken token)
         {
-            return await Task.Run(() =>
-            {
-                var links = _languageServer.LastParse?.ScriptFromUri(definitionParams.TextDocument.Uri.ToUri())?.GetDefinitionLinks();
-                if (links == null) return new LocationOrLocationLinks();
+            var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
+            var links = compilation?.ScriptFromUri(definitionParams.TextDocument.Uri.ToUri())?.GetDefinitionLinks();
+            if (links == null) return new LocationOrLocationLinks();
 
-                links = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();
-                LocationOrLocationLink[] items = new LocationOrLocationLink[links.Length];
-                for (int i = 0; i < items.Length; i++) items[i] = new LocationOrLocationLink(links[i]);
+            links = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();
+            LocationOrLocationLink[] items = new LocationOrLocationLink[links.Length];
+            for (int i = 0; i < items.Length; i++) items[i] = new LocationOrLocationLink(links[i]);
 
-                return new LocationOrLocationLinks(items);
-            });
+            return new LocationOrLocationLinks(items);
         }
 
-        public DefinitionRegistrationOptions GetRegistrationOptions(DefinitionCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)
+        public DefinitionRegistrationOptions GetRegistrationOptions(DefinitionCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities) => new()
         {
-            return new DefinitionRegistrationOptions()
-            {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector
-            };
-        }
+            DocumentSelector = OstwLangServer.DocumentSelector
+        };
     }
 }

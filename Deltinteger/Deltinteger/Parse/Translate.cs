@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DeltinScript : IScopeHandler
     {
-        private FileGetter FileGetter { get; }
+        private IFileGetter FileGetter { get; }
         public Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public ScriptTypes Types { get; }

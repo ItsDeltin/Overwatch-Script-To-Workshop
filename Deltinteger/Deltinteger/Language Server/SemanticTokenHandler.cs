@@ -9,22 +9,25 @@ using SemanticTokensBuilder = OmniSharp.Extensions.LanguageServer.Protocol.Docum
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    class SemanticTokenHandler : SemanticTokensHandlerBase
+    public class SemanticTokenHandler : SemanticTokensHandlerBase
     {
-        static readonly SemanticTokensLegend Legend = new SemanticTokensLegend()
+        public static string[] SemanticTokenTypes { get; } = SemanticTokenType.Defaults.Select(d => d.ToString()).ToArray();
+        public static string[] SemanticTokenModifiers { get; } = SemanticTokenModifier.Defaults.Select(d => d.ToString()).ToArray();
+
+        public static readonly SemanticTokensLegend Legend = new SemanticTokensLegend()
         {
             TokenTypes = SemanticTokenType.Defaults.ToArray(),
             TokenModifiers = SemanticTokenModifier.Defaults.ToArray()
         };
 
-        readonly DeltintegerLanguageServer _server;
-        public SemanticTokenHandler(DeltintegerLanguageServer languageServer) => this._server = languageServer;
+        readonly OstwLangServer _server;
+        public SemanticTokenHandler(OstwLangServer languageServer) => this._server = languageServer;
 
         protected override SemanticTokensRegistrationOptions CreateRegistrationOptions(SemanticTokensCapability capability, ClientCapabilities clientCapabilities)
         {
             return new SemanticTokensRegistrationOptions()
             {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
+                DocumentSelector = OstwLangServer.DocumentSelector,
                 Legend = Legend,
                 Full = true,
                 Range = false
@@ -37,8 +40,8 @@ namespace Deltin.Deltinteger.LanguageServer
         protected override async Task Tokenize(SemanticTokensBuilder builder, ITextDocumentIdentifierParams identifier, CancellationToken cancellationToken)
         {
             // Get the tokens in the document.
-            await _server.DocumentHandler.WaitForParse();
-            var tokens = _server.LastParse?.ScriptFromUri(identifier.TextDocument.Uri.ToUri())?.GetSemanticTokens();
+            var compilation = await _server.ProjectUpdater.GetProjectCompilationAsync();
+            var tokens = compilation?.ScriptFromUri(identifier.TextDocument.Uri.ToUri())?.GetSemanticTokens();
 
             if (tokens != null)
                 foreach (var token in tokens)

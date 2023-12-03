@@ -15,28 +15,28 @@ using CompletionCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    class CompletionHandler : ICompletionHandler
+    public class CompletionHandler : ICompletionHandler
     {
-        private DeltintegerLanguageServer _languageServer { get; }
+        readonly OstwLangServer _languageServer;
 
-        public CompletionHandler(DeltintegerLanguageServer languageServer)
+        public CompletionHandler(OstwLangServer languageServer)
         {
             _languageServer = languageServer;
         }
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
         {
-            await _languageServer.DocumentHandler.WaitForParse();
+            var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
 
             // If the script has not been parsed yet, return the default completion.
-            if (_languageServer.LastParse == null) return new CompletionList();
+            if (compilation == null) return new CompletionList();
             List<CompletionItem> items = new List<CompletionItem>();
 
             // Add snippets.
             Snippet.AddSnippets(items);
 
             // Get the script from the uri. If it isn't parsed, return the default completion.
-            var script = _languageServer.LastParse.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
+            var script = compilation.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
             if (script == null) return items;
 
             // Get valid completion ranges.
@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new CompletionRegistrationOptions()
             {
-                DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
+                DocumentSelector = OstwLangServer.DocumentSelector,
                 // Most tools trigger completion request automatically without explicitly requesting
                 // it using a keyboard shortcut (e.g. Ctrl+Space). Typically they do so when the user
                 // starts to type an identifier. For example if the user types `c` in a JavaScript file
