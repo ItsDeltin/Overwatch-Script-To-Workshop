@@ -91,18 +91,7 @@ public class DocumentHandler : ITextDocumentSyncHandler
     // Handle close.
     public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
     {
-        var uri = closeParams.TextDocument.Uri.ToUri();
-        _logger.LogMessage($"Closing '{uri}'");
-
-        var removing = TextDocumentFromUri(uri);
-        if (removing is null)
-        {
-            _logger.LogMessage($"Attempted to close nonexistant document '{uri}'");
-            return Unit.Task;
-        }
-
-        removing.Remove();
-        _documents.Remove(removing);
+        RemoveDocument(closeParams.TextDocument.Uri.ToUri());
         return Unit.Task;
     }
 
@@ -186,6 +175,22 @@ public class DocumentHandler : ITextDocumentSyncHandler
                 Text = c.text
             }))
         }, CancellationToken.None);
+    }
+
+    public void RemoveDocument(Uri uri)
+    {
+        _logger.LogMessage($"Closing '{uri}'");
+
+        var removing = TextDocumentFromUri(uri);
+        if (removing is null)
+        {
+            _logger.LogMessage($"Attempted to close nonexistant document '{uri}'");
+        }
+        else
+        {
+            removing.Remove();
+            _documents.Remove(removing);
+        }
     }
     // ~ End Public methods
 }

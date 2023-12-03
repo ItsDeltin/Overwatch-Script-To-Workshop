@@ -56,6 +56,13 @@ public static partial class OstwJavascript
     }
 
     [JSExport]
+    public static async Task RemoveModelAsync(string uriStr)
+    {
+        await EnsureServer();
+        langServer!.DocumentHandler.RemoveDocument(GetSystemUri(uriStr));
+    }
+
+    [JSExport]
     public static async Task UpdateModelAsync(string uriStr, string changes)
     {
         await EnsureServer();
