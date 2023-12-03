@@ -19,6 +19,8 @@ using System.Linq;
 using LspRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using LspPositition = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
 
+#nullable enable
+
 public class DocumentHandler : ITextDocumentSyncHandler
 {
     // Static
@@ -129,6 +131,9 @@ public class DocumentHandler : ITextDocumentSyncHandler
 
         foreach (var change in changeParams.ContentChanges)
         {
+            if (change.Range is null)
+                continue;
+
             int start = Extras.TextIndexFromPosition(document.Content, change.Range.Start);
             int length = Extras.TextIndexFromPosition(document.Content, change.Range.End) - start;
 
@@ -146,7 +151,7 @@ public class DocumentHandler : ITextDocumentSyncHandler
     // ~ Public methods
     public IReadOnlyList<Document> GetDocuments() => _documents;
 
-    public Document TextDocumentFromUri(Uri uri)
+    public Document? TextDocumentFromUri(Uri uri)
     {
         for (int i = 0; i < _documents.Count; i++)
             // TODO-URI: Should use Uri.Compare? 

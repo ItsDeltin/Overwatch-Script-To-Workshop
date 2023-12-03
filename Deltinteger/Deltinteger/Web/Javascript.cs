@@ -13,6 +13,7 @@ using LspSerializer = OmniSharp.Extensions.LanguageServer.Protocol.Serialization
 using System.Linq;
 using Deltin.Deltinteger.Decompiler;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Lobby;
 
 // no namespace
 #pragma warning disable CA1050
@@ -126,6 +127,19 @@ public static partial class OstwJavascript
 
     [JSExport]
     public static string Decompile(string inputText) => ToJson(Decompiler.DecompileWorkshop(inputText));
+
+    [JSExport]
+    public static async Task Open(string uriStr)
+    {
+        await EnsureServer();
+        var document = langServer!.DocumentHandler.TextDocumentFromUri(GetSystemUri(uriStr));
+        if (document is null)
+        {
+            ConsoleLog($"Opened unregistered document '{uriStr}'");
+            return;
+        }
+        langServer.ProjectUpdater.UpdateProject(document);
+    }
     // ~ End Exported functions ~
 
     // ~ Helper functions ~
@@ -139,6 +153,8 @@ public static partial class OstwJavascript
         {
             isStartingLanguageServer = true;
             LoadData.LoadWith(await GetWorkshopElements());
+            HeroSettingCollection.Init();
+            ModeSettingCollection.Init();
             langServer = new OstwLangServer(
                 tomlDiagnosticsReporter: new ITomlDiagnosticReporter.None(),
                 documentEventHandler: StaticDocumentEventHandler.Instance,
