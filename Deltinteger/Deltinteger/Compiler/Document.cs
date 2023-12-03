@@ -53,8 +53,11 @@ namespace Deltin.Deltinteger.Compiler
             }
             else
             {
-                Lexer.Update(new VersionInstance(newContent), updateRange);
-                Parse();
+                ParseFromScratch();
+                // incremental lexer is having some issues
+                // todo: make toggleable in ParserSettings!
+                // Lexer.Update(new VersionInstance(newContent), updateRange);
+                // Parse();
             }
         }
 
