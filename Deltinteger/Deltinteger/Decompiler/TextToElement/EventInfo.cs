@@ -37,6 +37,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Lifeweaver", PlayerSelector.Lifeweaver),
             ("Illari", PlayerSelector.Illari),
             ("Lúcio", PlayerSelector.Lucio),
+            ("Mauga", PlayerSelector.Mauga),
             ("McCree", PlayerSelector.Cassidy),
             ("Mei", PlayerSelector.Mei),
             ("Mercy", PlayerSelector.Mercy),

@@ -6646,7 +6646,8 @@
         "Kiriko",
         "Ramattra",
         "Lifeweaver",
-        "Illari"
+        "Illari",
+        "Mauga",
       ]
     },
     "Hero": [
@@ -6673,6 +6674,7 @@
         "name": "Lúcio",
         "alias": "Lucio"
       },
+      "Mauga",
       "Mei",
       "Mercy",
       "Moira",

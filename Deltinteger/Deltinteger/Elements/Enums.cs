@@ -79,7 +79,8 @@ namespace Deltin.Deltinteger.Elements
         Kiriko,
         Ramattra,
         Lifeweaver,
-        Illari
+        Illari,
+        Mauga,
     }
 
     public enum Team
