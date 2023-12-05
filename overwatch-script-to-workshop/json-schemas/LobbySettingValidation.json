@@ -1931,6 +1931,77 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Ultimate Ability (Cage Fight)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Cage Fight)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Cage Fight)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Cage Fight)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Incendiary Chaingun": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Incendiary Chaingun Ignite Damage": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Incendiary Chaingun Ignite Duration": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Incendiary Chaingun Ignite Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Volatile Chaingun": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Cardiac Overdrive": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Cardiac Overdrive Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Cardiac Overdrive Healing": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 400.0
+    },
+    "Overrun": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Overrun Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Overrun Knockback": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 300.0
+    },
     "Ultimate Ability (Blizzard)": {
       "default": true,
       "type": "boolean"
@@ -3027,6 +3098,7 @@
           "Kiriko",
           "Lifeweaver",
           "Lúcio",
+          "Mauga",
           "Mei",
           "Mercy",
           "Moira",
@@ -4603,6 +4675,99 @@
             },
             "Soundwave Knockback Scalar": {
               "$ref": "#/definitions/Soundwave Knockback Scalar"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Mauga": {
+          "description": "'Mauga' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Ultimate Ability (Cage Fight)": {
+              "$ref": "#/definitions/Ultimate Ability (Cage Fight)"
+            },
+            "Ultimate Generation (Cage Fight)": {
+              "$ref": "#/definitions/Ultimate Generation (Cage Fight)"
+            },
+            "Ultimate Generation - Passive (Cage Fight)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Cage Fight)"
+            },
+            "Ultimate Generation - Combat (Cage Fight)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Cage Fight)"
+            },
+            "Incendiary Chaingun": {
+              "$ref": "#/definitions/Incendiary Chaingun"
+            },
+            "Incendiary Chaingun Ignite Damage": {
+              "$ref": "#/definitions/Incendiary Chaingun Ignite Damage"
+            },
+            "Incendiary Chaingun Ignite Duration": {
+              "$ref": "#/definitions/Incendiary Chaingun Ignite Duration"
+            },
+            "Incendiary Chaingun Ignite Rate": {
+              "$ref": "#/definitions/Incendiary Chaingun Ignite Rate"
+            },
+            "Volatile Chaingun": {
+              "$ref": "#/definitions/Volatile Chaingun"
+            },
+            "Cardiac Overdrive": {
+              "$ref": "#/definitions/Cardiac Overdrive"
+            },
+            "Cardiac Overdrive Cooldown Time": {
+              "$ref": "#/definitions/Cardiac Overdrive Cooldown Time"
+            },
+            "Cardiac Overdrive Healing": {
+              "$ref": "#/definitions/Cardiac Overdrive Healing"
+            },
+            "Overrun": {
+              "$ref": "#/definitions/Overrun"
+            },
+            "Overrun Cooldown Time": {
+              "$ref": "#/definitions/Overrun Cooldown Time"
+            },
+            "Overrun Knockback": {
+              "$ref": "#/definitions/Overrun Knockback"
             }
           },
           "additionalProperties": false
