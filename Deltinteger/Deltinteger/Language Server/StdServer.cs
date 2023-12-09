@@ -11,8 +11,12 @@ using LspDiagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagno
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Server;
+using Newtonsoft.Json;
 using Deltin.Deltinteger.LanguageServer.Model;
+using Deltin.Deltinteger.Decompiler.TextToElement;
+using Deltin.Deltinteger.Decompiler.ElementToCode;
 using PublishDiagnosticsParams = OmniSharp.Extensions.LanguageServer.Protocol.Models.PublishDiagnosticsParams;
+using TextCopy;
 
 class StdServer : ITomlDiagnosticReporter, IDocumentEvent
 {
@@ -37,7 +41,7 @@ class StdServer : ITomlDiagnosticReporter, IDocumentEvent
             .WriteTo.File(LogFile(), rollingInterval: RollingInterval.Day, flushToDiskInterval: new TimeSpan(0, 0, 10))
             .CreateLogger();
 
-        ProtocolServer = await LanguageServer.From(options => options
+        ProtocolServer = await LanguageServer.From(options => AddRequests(options
             .WithInput(Console.OpenStandardInput())
             .WithOutput(Console.OpenStandardOutput())
             .ConfigureLogging(x => x
@@ -55,7 +59,7 @@ class StdServer : ITomlDiagnosticReporter, IDocumentEvent
             .AddHandler(LangServer.RenameHandler)
             .AddHandler(LangServer.ColorHandler)
             .AddHandler(LangServer.SemanticTokenHandler)
-            .AddHandler(LangServer.Builder.FileHandlerBuilder.GetHandler())
+            .AddHandler(LangServer.Builder.FileHandlerBuilder.GetHandler()))
         );
 
         LangServer.Workspace.SetWorkspaceFolders(ProtocolServer.ClientSettings.WorkspaceFolders);
@@ -68,6 +72,61 @@ class StdServer : ITomlDiagnosticReporter, IDocumentEvent
     }
 
     private static string LogFile() => Path.Combine(Program.ExeFolder, "Log", "log.txt");
+
+    class DecompileFileArgs
+    {
+        [JsonProperty("file")]
+        public string File { get; set; }
+    }
+    private LanguageServerOptions AddRequests(LanguageServerOptions options) {
+        // Decompile insert
+        options.OnRequest<DecompileResult>("decompile.insert", () => Task<DecompileResult>.Run(() =>
+        {
+            try
+            {
+                var tte = new ConvertTextToElement(Clipboard.GetText());
+                var workshop = tte.Get();
+                var code = new WorkshopDecompiler(workshop, new OmitLobbySettingsResolver(), new CodeFormattingOptions()).Decompile();
+                return new DecompileResult(tte, code);
+            }
+            catch (Exception ex)
+            {
+                return new DecompileResult(ex);
+            }
+        }));
+
+        // Decompile file
+        options.OnRequest<DecompileFileArgs, DecompileResult>("decompile.file", args => Task.Run<DecompileResult>(() =>
+        {
+            try
+            {
+                // Parse the workshop code.
+                var tte = new ConvertTextToElement(Clipboard.GetText());
+                var workshop = tte.Get();
+
+                // Decompile the parsed workshop code.
+                var workshopToCode = new WorkshopDecompiler(workshop, new FileLobbySettingsResolver(args.File, workshop.LobbySettings), new CodeFormattingOptions());
+                var code = workshopToCode.Decompile();
+
+                var result = new DecompileResult(tte, code);
+
+                // Only create the decompile was successful.
+                if (result.Success)
+                    // Create the file.
+                    using (var writer = File.CreateText(args.File))
+                        // Write the code to the file.
+                        writer.Write(code);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return new DecompileResult(ex);
+            }
+        }));
+
+        return options;
+    }
 
     // ~ ITomlDiagnosticReporter ~
     void ITomlDiagnosticReporter.ReportDiagnostics(Uri uri, IEnumerable<LspDiagnostic> diagnostics)
