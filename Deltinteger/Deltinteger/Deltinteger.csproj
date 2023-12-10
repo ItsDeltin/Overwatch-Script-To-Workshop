@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Deltin</RootNamespace>
     <LangVersion>10.0</LangVersion>
-    <RuntimeIdentifiers>win-x64;win-x86;linux-x64;browser-wasm</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;win-x86;linux-x64</RuntimeIdentifiers>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <WasmMainJSPath>main.js</WasmMainJSPath>
   </PropertyGroup>
