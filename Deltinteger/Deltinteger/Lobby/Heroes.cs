@@ -239,7 +239,7 @@ namespace Deltin.Deltinteger.Lobby
                     .AddHealer()
                     .AddProjectile(false)
                     .AddSecondaryFire()
-                    .AddAbility("Take A Breather", hasCooldown: false, rechargeable: true)
+                    .AddAbility("Take A Breather", hasCooldown: true, rechargeable: true)
                     .AddAbility("Chain Hook")
                     .AddAbility("Pig Pen"),
                 new HeroSettingCollection("Sigma").AddUlt("Gravitic Flux").RemoveAmmunition().AddProjectile(true).AddAbility("Accretion", hasKnockback: true).AddAbility("Experimental Barrier", rechargeable: true).AddAbility("Kinetic Grasp"),
