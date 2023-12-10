@@ -2488,6 +2488,11 @@
       "default": true,
       "type": "boolean"
     },
+    "Take A Breather Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Take A Breather Recharge Rate": {
       "default": 100.0,
       "type": "number",
@@ -5524,6 +5529,9 @@
             },
             "Take A Breather": {
               "$ref": "#/definitions/Take A Breather"
+            },
+            "Take A Breather Cooldown Time": {
+              "$ref": "#/definitions/Take A Breather Cooldown Time"
             },
             "Take A Breather Recharge Rate": {
               "$ref": "#/definitions/Take A Breather Recharge Rate"
