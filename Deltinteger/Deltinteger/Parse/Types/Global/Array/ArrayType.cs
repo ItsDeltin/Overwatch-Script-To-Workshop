@@ -323,10 +323,8 @@ namespace Deltin.Deltinteger.Parse
                 var valueType = value.Type();
 
                 if (arrayType.ArrayOfType.NeedsArrayProtection &&
-                    !arrayType.Is(valueType) &&
-                    !arrayType.ArrayOfType.Is(valueType) &&
-                    valueType is not ArrayType &&
-                    value is not MissingElementAction)
+                    value is not MissingElementAction &&
+                    !CodeTypeHelpers.IsTypeConfident(valueType))
                 {
                     parseInfo.Script.Diagnostics.Warning($"The type '{arrayType.ArrayOfType.GetName()}' is compiled as a workshop array. It is unknown if the righthand being {operated} needs to be wrapped, so this will result in undefined behaviour if the righthand value is a single value rather than an array. Please narrow down the type of the value you are {operating}, or wrap the righthand value in brackets if you know it is supposed to be a single value.", range);
                 }
@@ -376,15 +374,6 @@ namespace Deltin.Deltinteger.Parse
 
         // public override bool Implements(CodeType type) => (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType)) || (ArrayOfType is IAdditionalArray additon && additon.AlternateImplements(type));
         public override Scope GetObjectScope() => Scope;
-        protected override bool DoesImplement(CodeType type)
-        {
-            if (!Attributes.IsStruct && (type is AnyType || ArrayOfType is AnyType))
-            {
-                return true;
-            }
-            return type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType);
-        }
-        public override bool Is(CodeType type) => type is ArrayType other && ArrayOfType.Is(other.ArrayOfType);
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
 

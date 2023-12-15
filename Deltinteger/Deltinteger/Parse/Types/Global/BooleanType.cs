@@ -18,9 +18,8 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        protected override bool DoesImplement(CodeType type) => base.DoesImplement(type) || type.Implements(_supplier.Number());
-
-        public override CompletionItem GetCompletion() => new CompletionItem() {
+        public override CompletionItem GetCompletion() => new CompletionItem()
+        {
             Label = Name,
             Kind = CompletionItemKind.Struct
         };

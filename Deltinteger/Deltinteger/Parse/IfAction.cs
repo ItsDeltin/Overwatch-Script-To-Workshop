@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the if condition.
             Expression = parseInfo.GetExpression(scope, ifContext.Expression);
 
-            TypeComparison.ExpectNonConstant(parseInfo, ifContext.Expression.Range, Expression.Type());
+            SemanticsHelper.ExpectNonConstant(parseInfo, ifContext.Expression.Range, Expression.Type());
 
             // Contains the path info of all blocks in the if/else-if/else list.
             var paths = new List<PathInfo>();
@@ -177,7 +177,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the else-if's expression.
             Expression = parseInfo.GetExpression(scope, elseIfContext.Expression);
 
-            TypeComparison.ExpectNonConstant(parseInfo, elseIfContext.Expression.Range, Expression.Type());
+            SemanticsHelper.ExpectNonConstant(parseInfo, elseIfContext.Expression.Range, Expression.Type());
 
             // Get the else-if's block.
             Block = parseInfo.GetStatement(scope, elseIfContext.Statement);

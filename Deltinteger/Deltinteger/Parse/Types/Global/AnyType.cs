@@ -6,14 +6,14 @@ namespace Deltin.Deltinteger.Parse
     public class AnyType : CodeType
     {
         readonly DeltinScript _deltinScript;
-        readonly bool _unknown;
+        public bool Unknown { get; }
 
         public AnyType(DeltinScript deltinScript) : this("Any", false, deltinScript) { }
 
         public AnyType(string name, bool unknown, DeltinScript deltinScript) : base(name)
         {
             CanBeDeleted = true;
-            _unknown = unknown;
+            Unknown = unknown;
             _deltinScript = deltinScript;
 
             deltinScript.StagedInitiation.On(InitiationStage.Meta, ResolveElements);
@@ -48,8 +48,6 @@ namespace Deltin.Deltinteger.Parse
                 stacks[i].Set(actionSet, value: 0, index: reference);
         }
 
-        public override bool Implements(CodeType type) => !type.IsConstant() && (!type.Attributes.IsStruct || _unknown);
-        public override bool Is(CodeType type) => !type.IsConstant();
         public override CompletionItem GetCompletion() => GetTypeCompletion(this);
         public override Scope GetObjectScope() => _deltinScript.PlayerVariableScope;
         public override Scope ReturningScope() => null;

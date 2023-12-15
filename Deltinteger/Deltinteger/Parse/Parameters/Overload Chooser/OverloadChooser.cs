@@ -481,12 +481,10 @@ namespace Deltin.Deltinteger.Parse.Overload
                 unknownLambdaType.ArgumentCount != portableParameterType.Parameters.Length) // The value lambda's parameter length does not match.
                 // Add the error.
                 _parameterErrors[parameter] = new($"Lambda does not take {unknownLambdaType.ArgumentCount} arguments", errorRange);
-
-            // Do not add other errors if the value's type is an UnknownLambdaType.
-            else if (valueType is UnknownLambdaType == false)
+            else
             {
                 // The parameter type does not match.
-                if (parameterType.CodeTypeParameterInvalid(valueType))
+                if (!CodeTypeHelpers.IsParameterInputValid(parameterType, valueType))
                     _parameterErrors[parameter] = new(string.Format("Cannot convert type '{0}' to '{1}'", valueType.GetName(), parameterType.GetName()), errorRange);
 
                 // fixme Constant used in bad place.

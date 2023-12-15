@@ -35,7 +35,9 @@ namespace Deltin.Deltinteger.Parse
             if (_operation == null)
             {
                 // If the variable type is any, use default operation.
-                if (assignmentToken.TokenType == TokenType.Equal && variableType.Operations.DefaultAssignment && TypeComparison.IsAny(parseInfo.Types, variableType))
+                if (assignmentToken.TokenType == TokenType.Equal && variableType.Operations.DefaultAssignment
+                    && CodeTypeHelpers.IsCompatibleWithAny(variableType)
+                    && CodeTypeHelpers.IsCompatibleWithAny(valueType))
                     _operation = new AssignmentOperation(op, parseInfo.Types.Any());
                 // Otherwise, add an error.
                 else

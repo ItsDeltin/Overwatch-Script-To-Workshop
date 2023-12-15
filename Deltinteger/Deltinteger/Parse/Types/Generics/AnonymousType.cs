@@ -43,18 +43,6 @@ namespace Deltin.Deltinteger.Parse
 
         public override AnonymousType[] ExtractAnonymousTypes() => new[] { this };
 
-        public override bool Implements(CodeType type)
-        {
-            if (AnonymousTypeAttributes.Single && type.Attributes.StackLength == 1)
-                return true;
-
-            foreach (var union in type.UnionTypes())
-                if (Object.ReferenceEquals(union, this))
-                    return true;
-
-            return false;
-        }
-
         public override string GetName(GetTypeName settings = default(GetTypeName))
         {
             if (settings.MakeAnonymousTypesUnknown && !settings.TypeLinker.Links.ContainsKey(this)) return "unknown";

@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public static bool ExpectValueType(ParseInfo parseInfo, IExpression expression, CodeType expectType, DocRange range)
         {
-            if (!expression.Type().Implements(expectType))
+            if (!CodeTypeHelpers.DoesTypeImplement(expectType, expression.Type()))
             {
                 parseInfo.Script.Diagnostics.Error("Expected a value of type '" + expectType.GetName() + "'", range);
                 return false;
@@ -16,14 +16,21 @@ namespace Deltin.Deltinteger.Parse
             return true;
         }
 
+        public static void ExpectNonConstant(ParseInfo parseInfo, DocRange range, CodeType type)
+        {
+            if (!CodeTypeHelpers.IsCompatibleWithAny(type))
+                parseInfo.Script.Diagnostics.Error("Expected a non-constant type", range);
+        }
+
         public static void CouldNotOverride(ParseInfo parseInfo, DocRange range, string elementTypeName) =>
             parseInfo.Script.Diagnostics.Error("No overridable " + elementTypeName + " found in parent classes", range);
-        
+
 
         public static bool AccessLevelMatches(AccessLevel targetAccessLevel, CodeType targetContainer, CodeType thisContainer) =>
             targetContainer == null || AccessLevelMatches(targetAccessLevel, targetContainer.LowestAccessLevel(thisContainer));
-        
-        public static bool AccessLevelMatches(AccessLevel target, AccessLevel lowest) => target switch {
+
+        public static bool AccessLevelMatches(AccessLevel target, AccessLevel lowest) => target switch
+        {
             AccessLevel.Public => true, // Target is public
             AccessLevel.Protected => lowest == AccessLevel.Private || lowest == AccessLevel.Protected,
             AccessLevel.Private => lowest == AccessLevel.Private,
@@ -52,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
                     case ScopeConflict.NameConflict:
                         parseInfo.Script.Diagnostics.Error(nameConflictMessage, range);
                         return;
-                    
+
                     // Overload conflict
                     case ScopeConflict.OverloadConflict:
                         parseInfo.Script.Diagnostics.Error(overloadConflictMessage, range);
@@ -79,7 +86,7 @@ namespace Deltin.Deltinteger.Parse
                         // Not a method identifier.
                         if (identifier.ParameterTypes == null)
                             return ScopeConflict.NameConflict;
-                        
+
                         // Make sure parameter lengths match.
                         if (identifier.ParameterTypes.Length == method.Parameters.Length)
                         {
@@ -87,12 +94,12 @@ namespace Deltin.Deltinteger.Parse
 
                             for (int i = 0; i < identifier.ParameterTypes.Length; i++)
                                 // If the parameter types do not match, there is no conflict.
-                                if (!identifier.ParameterTypes[i].Is(method.Parameters[i].GetCodeType(deltinScript)))
+                                if (!CodeTypeHelpers.AreEqual(identifier.ParameterTypes[i], method.Parameters[i].GetCodeType(deltinScript)))
                                 {
                                     conflicts = false;
                                     break;
                                 }
-                            
+
                             if (conflicts)
                                 return ScopeConflict.OverloadConflict;
                         }
@@ -103,7 +110,7 @@ namespace Deltin.Deltinteger.Parse
             }
             return ScopeConflict.NoConflict;
         }
-    
+
         public static IEnumerable<CodeType> RecursivelyGetGenerics(CodeType type)
         {
             yield return type;

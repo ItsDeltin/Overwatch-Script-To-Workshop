@@ -71,56 +71,6 @@ namespace Deltin.Deltinteger.Parse
             Attributes.StackLength = _variables.Select(v => v.GetAssigner(new GetVariablesAssigner(_typeLinker)).StackDelta()).Sum();
         }
 
-        public override bool Is(CodeType other)
-        {
-            SetupMeta();
-
-            if (other is not StructInstance otherStruct)
-                return false;
-
-            if (Generics.Length != other.Generics.Length || Variables.Length != otherStruct.Variables.Length)
-                return false;
-
-            for (int i = 0; i < Generics.Length; i++)
-                if (!Generics[i].Is(other.Generics[i]))
-                    return false;
-
-            return Variables.All(var =>
-            {
-                var matchingVariable = otherStruct.Variables.FirstOrDefault(otherVar => var.Name == otherVar.Name);
-                return matchingVariable != null && ((CodeType)var.CodeType).Is((CodeType)matchingVariable.CodeType);
-            });
-        }
-
-        public override bool Implements(CodeType type)
-        {
-            SetupMeta();
-
-            foreach (var utype in type.UnionTypes())
-            {
-                if (utype is AnyType && !Attributes.IsStruct)
-                    return true;
-
-                if (!(utype is StructInstance other && other.Variables.Length == Variables.Length))
-                    continue;
-
-                bool structVariablesMatch = true;
-
-                for (int i = 0; i < Variables.Length; i++)
-                {
-                    var matchingVariable = other.Variables.FirstOrDefault(v => Variables[i].Name == v.Name);
-                    if (matchingVariable == null || !((CodeType)Variables[i].CodeType).Implements((CodeType)matchingVariable.CodeType))
-                    {
-                        structVariablesMatch = false;
-                        break;
-                    }
-                }
-
-                return structVariablesMatch;
-            }
-            return false;
-        }
-
         public override bool CompatibleWith(CodeType type)
         {
             int stackDelta = GetGettableAssigner(AssigningAttributes.Empty).StackDelta();

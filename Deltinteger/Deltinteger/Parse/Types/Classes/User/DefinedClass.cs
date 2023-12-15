@@ -59,20 +59,6 @@ namespace Deltin.Deltinteger.Parse
                 Constructors[i] = _definedInitializer.Constructors[i].GetInstance(this, _typeLinker);
         }
 
-        public override bool Is(CodeType other)
-        {
-            // Make sure the other is a DefinedClass with the same provider.
-            if (!(other is DefinedClass definedClass && definedClass._definedInitializer == _definedInitializer))
-                return false;
-
-            // Check if the generics match.
-            for (int i = 0; i < Generics.Length; i++)
-                if (!Generics[i].Is(other.Generics[i]))
-                    return false;
-
-            return true;
-        }
-
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
             // Run the constructor.

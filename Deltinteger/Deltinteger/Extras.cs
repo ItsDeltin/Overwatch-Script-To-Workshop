@@ -85,9 +85,6 @@ namespace Deltin.Deltinteger
         public static string GetNameOrVoid(this CodeType type) => type?.GetName() ?? "void";
         public static string GetNameOrAny(this CodeType type) => type?.GetName() ?? "Any";
 
-        public static bool CodeTypeParameterInvalid(this CodeType parameterType, CodeType valueType) =>
-            parameterType != null && ((parameterType.IsConstant() && valueType == null) || (valueType != null && !valueType.Implements(parameterType)));
-
         public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent()
         {
             Kind = MarkupKind.Markdown,

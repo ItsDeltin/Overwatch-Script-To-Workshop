@@ -51,28 +51,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public override bool IsConstant() => LambdaKind == LambdaKind.Constant;
         public override Scope GetObjectScope() => _scope;
 
-        protected override bool DoesImplement(CodeType type)
-        {
-            var other = type as PortableLambdaType;
-            if (other == null || Parameters.Length != other.Parameters.Length) return false;
-
-            if (ParameterTypesKnown)
-                // Make sure the parameters match.
-                for (int i = 0; i < Parameters.Length; i++)
-                {
-                    if (Parameters[i] == null)
-                    {
-                        if (other.Parameters[i] != null && other.Parameters[i].IsConstant())
-                            return false;
-                    }
-                    else if (!Parameters[i].Implements(other.Parameters[i]))
-                        return false;
-                }
-
-            // Make sure the return type matches.
-            return other.ReturnsValue == ReturnsValue && (!ReturnsValue || ReturnType.Implements(other.ReturnType));
-        }
-
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
         {
             if (!Attributes.ContainsGenerics)

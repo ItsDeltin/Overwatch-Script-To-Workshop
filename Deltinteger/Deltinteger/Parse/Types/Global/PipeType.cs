@@ -16,7 +16,8 @@ namespace Deltin.Deltinteger.Parse
             IncludedTypes = types;
             Operations = new PipeTypeOperatorInfo(this);
 
-            _scope = new Lazy<Scope>(() => {
+            _scope = new Lazy<Scope>(() =>
+            {
                 Scope scope = new Scope() { TagPlayerVariables = true };
 
                 // Get all the scopes of the included types and generate the scope name.
@@ -45,21 +46,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override Scope GetObjectScope() => _scope.Value;
-        public override bool Implements(CodeType type)
-        {
-            foreach (CodeType included in IncludedTypes)
-                if (included.Implements(type))
-                    return true;
-            return false;
-        }
-        public override bool Is(CodeType type)
-        {
-            foreach (CodeType included in IncludedTypes)
-                if (included.Is(type))
-                    return true;
-            return false;
-        }
-        public override CodeType[] UnionTypes() => IncludedTypes;
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference reference, VarIndexAssigner assigner)
         {
             foreach (CodeType included in IncludedTypes)

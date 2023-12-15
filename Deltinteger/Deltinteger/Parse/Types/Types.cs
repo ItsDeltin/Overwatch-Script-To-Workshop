@@ -49,31 +49,8 @@ namespace Deltin.Deltinteger.Parse
             Operations = new TypeOperatorInfo(this);
         }
 
-        public virtual bool Implements(CodeType type)
-        {
-            if (type is PipeType union)
-                foreach (var unionType in union.IncludedTypes)
-                    if (DoesImplement(unionType))
-                        return true;
-            return DoesImplement(type);
-        }
-
-        protected virtual bool DoesImplement(CodeType type)
-        {
-            // Iterate through all extended classes.
-            CodeType checkType = this;
-            while (checkType != null)
-            {
-                if (type.Is(checkType) || (!checkType.IsConstant() && type is AnyType)) return true;
-                checkType = checkType.Extends;
-            }
-
-            return false;
-        }
-
-        public virtual CodeType[] UnionTypes() => new[] { this };
-
-        public virtual bool Is(CodeType type) => this == type;
+        public bool Is(CodeType other) => CodeTypeHelpers.AreEqual(this, other);
+        public bool Implements(CodeType baseType) => CodeTypeHelpers.DoesTypeImplement(baseType, this);
 
         public virtual bool CompatibleWith(CodeType type)
         {
