@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
             CurrentUsageResolver = currentUsageResolver,
             SourceUsageResolver = sourceUsageResolver
         };
-        public ParseInfo SetExpectType(CodeType type) => new ParseInfo(this) { ExpectingType = type }.SetExpectingLambda(type);
+        public ParseInfo SetExpectType(CodeType type) => new ParseInfo(this) { ExpectingType = type, IsUsedAsValue = true }.SetExpectingLambda(type);
         public ParseInfo SetReturnType(CodeType type) => new ParseInfo(this) { ReturnType = type };
         public ParseInfo SetThisType(IDefinedTypeInitializer typeInitializer) => new ParseInfo(this) { TypeInitializer = typeInitializer };
         public ParseInfo SetContextualModifierGroup(VariableModifierGroup modifierGroup) => new ParseInfo(this) { ContextualVariableModifiers = modifierGroup };
