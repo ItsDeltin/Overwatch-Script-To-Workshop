@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
                 // If this is not the first expression, clear tail data and set the source expression.
                 if (i != 0) partInfo = partInfo.ClearTail().SetSourceExpression(ExprContextTree[i - 1]);
                 // If this is not the last expression, clear head data.
-                if (i != ExprContextTree.Length - 1) partInfo = partInfo.ClearHead();
+                if (i != ExprContextTree.Length - 1) partInfo = partInfo.ClearHead().SetIsUsedAsValue(true);
 
                 ExprContextTree[i].Setup(new TreeContextParseInfo()
                 {

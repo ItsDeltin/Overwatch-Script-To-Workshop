@@ -28,6 +28,10 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if contextual variable settability resets when this type is used as a type.</summary>
         public bool AsReferenceResetSettability { get; protected set; } = false;
 
+        /// <summary>Types whose data is formatted as a workshop array need to set this to true so that
+        /// array append/remove operations work correctly.</summary>
+        public bool NeedsArrayProtection { get; protected set; } = false;
+
         /// <summary>The attributes of the type. Determines if the type is a struct or struct array and more.</summary>
         public TypeAttributes Attributes { get; protected set; } = new TypeAttributes();
 

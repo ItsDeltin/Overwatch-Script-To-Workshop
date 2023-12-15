@@ -2,12 +2,15 @@ using System;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 
+#nullable enable
+
 namespace Deltin.Deltinteger.Parse
 {
     public interface IAssignmentOperation
     {
         AssignmentOperator Operator { get; }
         CodeType ValueType { get; }
+        void Validate(ParseInfo parseInfo, DocRange range, IExpression value);
         void Resolve(AssignmentOperationInfo assignmentOperationInfo);
     }
 
@@ -15,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public AssignmentOperator Operator { get; }
         public CodeType ValueType { get; }
+        private readonly Action<ValidateOperationParams>? _validate;
         private readonly Action<AssignmentOperationInfo> _action;
 
         public AssignmentOperation(AssignmentOperator op, CodeType valueType)
@@ -30,6 +34,16 @@ namespace Deltin.Deltinteger.Parse
             ValueType = valueType;
             _action = action;
         }
+
+        public AssignmentOperation(AssignmentOperator op, CodeType valueType, Action<ValidateOperationParams> validate, Action<AssignmentOperationInfo> action)
+        {
+            Operator = op;
+            ValueType = valueType;
+            _validate = validate;
+            _action = action;
+        }
+
+        public void Validate(ParseInfo parseInfo, DocRange range, IExpression value) => _validate?.Invoke(new(parseInfo, range, value));
 
         public void Resolve(AssignmentOperationInfo assignmentOperationInfo) => _action(assignmentOperationInfo);
 
@@ -75,6 +89,8 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
+    public record struct ValidateOperationParams(ParseInfo ParseInfo, DocRange Range, IExpression Value);
+
     public class AssignmentOperationInfo
     {
         public ActionSet ActionSet { get; }
@@ -95,5 +111,6 @@ namespace Deltin.Deltinteger.Parse
 
         public void Set() => Variable.Set(ActionSet.SetNextComment(_comment), Value, Target);
         public void Modify(Operation operation) => Variable.Modify(ActionSet.SetNextComment(_comment), operation, Value, Target);
+        public void ModifyWithValueCast(Operation operation, Func<IWorkshopTree, IWorkshopTree> caster) => Variable.Modify(ActionSet.SetNextComment(_comment), operation, caster(Value), Target);
     }
 }

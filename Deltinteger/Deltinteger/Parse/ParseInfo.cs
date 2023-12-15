@@ -28,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
 
         // Target
         public CodeType ExpectingType { get; private set; }
+        public bool IsUsedAsValue { get; private set; } = true;
 
         // Tail
         public IVariableTracker[] LocalVariableTracker { get; private set; }
@@ -60,6 +61,7 @@ namespace Deltin.Deltinteger.Parse
             ContextualVariableModifiers = other.ContextualVariableModifiers;
             ReturnTracker = other.ReturnTracker;
             ExpectingType = other.ExpectingType;
+            IsUsedAsValue = other.IsUsedAsValue;
             LocalVariableTracker = other.LocalVariableTracker;
             ResolveInvokeInfo = other.ResolveInvokeInfo;
             AsyncInfo = other.AsyncInfo;
@@ -100,15 +102,17 @@ namespace Deltin.Deltinteger.Parse
         {
             ExpectingType = null,
             ExpectingLambda = null,
-            ReturnType = null
+            ReturnType = null,
+            IsUsedAsValue = true
         };
+        public ParseInfo SetIsUsedAsValue(bool isUsedAsValue) => new ParseInfo(this) { IsUsedAsValue = isUsedAsValue };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
         /// <param name="statementContext">The context of the statement.</param>
         public IStatement GetStatement(Scope scope, IParseStatement statementContext)
         {
-            IStatement statement = StatementFromContext(scope, statementContext);
+            IStatement statement = SetIsUsedAsValue(false).StatementFromContext(scope, statementContext);
 
             // Apply related output comment.
             if (statementContext.Comment != null)
@@ -251,12 +255,14 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo ClearHead() => new ParseInfo(this)
         {
             ResolveInvokeInfo = null,
-            AsyncInfo = null
+            AsyncInfo = null,
+            IsUsedAsValue = true,
         };
 
         public ParseInfo ClearTargetted() => new ParseInfo(this)
         {
-            ExpectingType = null
+            ExpectingType = null,
+            IsUsedAsValue = true
         };
 
         public ParseInfo ClearContextual() => new ParseInfo(this)

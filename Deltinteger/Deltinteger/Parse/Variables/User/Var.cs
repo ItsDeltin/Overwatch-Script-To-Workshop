@@ -120,7 +120,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // The parseInfo used to get the variable's value.
-                ParseInfo initialValueParseInfo = parseInfo;
+                ParseInfo initialValueParseInfo = parseInfo.SetIsUsedAsValue(true);
 
                 // If the variable type is known, set the expected type.
                 if (CodeType != null)

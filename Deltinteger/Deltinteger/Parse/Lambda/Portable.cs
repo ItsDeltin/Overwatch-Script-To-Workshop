@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnType = builder.ReturnType;
             ReturnsValue = builder.ReturnsValue;
             ParameterTypesKnown = builder.ParameterTypesKnown;
+            NeedsArrayProtection = true;
 
             Attributes.ContainsGenerics = (Parameters?.Any(p => p.Attributes.ContainsGenerics) ?? false) || (ReturnsValue && ReturnType.Attributes.ContainsGenerics);
 
@@ -76,7 +77,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             if (!Attributes.ContainsGenerics)
                 return this;
-            
+
             return new PortableLambdaType(new PortableLambdaTypeBuilder(
                 kind: LambdaKind,
                 name: Name,
@@ -116,9 +117,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             return result;
         }
-    
+
         public override IEnumerable<CodeType> GetAssigningTypes() => Enumerable.Empty<CodeType>();
-    
+
         public static PortableLambdaType CreateConstantType(CodeType returnType = null, params CodeType[] parameterTypes) =>
             new PortableLambdaType(new(
                 kind: LambdaKind.Constant,

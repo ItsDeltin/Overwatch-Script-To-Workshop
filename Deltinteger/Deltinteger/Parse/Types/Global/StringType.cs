@@ -262,5 +262,7 @@ namespace Deltin.Deltinteger.Parse
             else // Otherwise, add it to the list.
                 list.Add(expression);
         }
+
+        public void Validate(ParseInfo parseInfo, DocRange range, IExpression left, IExpression right) { }
     }
 }

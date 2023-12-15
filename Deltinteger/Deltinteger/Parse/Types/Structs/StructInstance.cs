@@ -38,6 +38,7 @@ namespace Deltin.Deltinteger.Parse
             _provider = provider;
             _typeLinker = typeLinker;
             ArrayHandler = this;
+            NeedsArrayProtection = !provider.Parallel;
 
             Operations.AddAssignmentOperator();
             Operations.DefaultAssignment = false;

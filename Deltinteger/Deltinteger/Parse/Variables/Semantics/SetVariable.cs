@@ -41,6 +41,11 @@ namespace Deltin.Deltinteger.Parse
                 else
                     parseInfo.Script.Diagnostics.Error("Operator '" + assignmentToken.Text + "' cannot be applied to the types '" + variableType.GetNameOrAny() + "' and '" + valueType.GetNameOrAny() + "'.", assignmentToken.Range);
             }
+
+            if (_operation != null)
+            {
+                _operation.Validate(parseInfo, assignmentContext.AssignmentToken.Range, _value);
+            }
         }
 
         public void Translate(ActionSet actionSet) => _operation.Resolve(new AssignmentOperationInfo(_comment, actionSet, _variableResolve.ParseElements(actionSet), _value.Parse(actionSet)));

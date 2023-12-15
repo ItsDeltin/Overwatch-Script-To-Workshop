@@ -24,6 +24,8 @@ namespace Deltin.Deltinteger.Parse
 
             if (Operation == null)
                 parseInfo.Script.Diagnostics.Error("Operator '" + op + "' cannot be applied to the types '" + Left.Type().GetNameOrAny() + "' and '" + Right.Type().GetNameOrAny() + "'.", context.Operator.Token.Range);
+            else
+                Operation.Validate(parseInfo, context.Operator.Token, Left, Right);
         }
 
         private TypeOperation GetDefaultOperation(string op, ITypeSupplier supplier)

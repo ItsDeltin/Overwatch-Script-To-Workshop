@@ -53,8 +53,8 @@ namespace Deltin.Deltinteger.Parse
             withIndex.Action = (actionSet, methodCall) =>
                 GetExecutor(actionSet).GetResult(actionSet, inv => Lambda(methodCall).Invoke(actionSet, inv, Element.ArrayIndex()));
 
-            addToScope.AddNativeMethod(new FuncMethod(noIndex));
-            addToScope.AddNativeMethod(new FuncMethod(withIndex));
+            addToScope.AddNativeMethod(new FuncMethod(noIndex.AddArrayCopyNotUsedWarning()));
+            addToScope.AddNativeMethod(new FuncMethod(withIndex.AddArrayCopyNotUsedWarning()));
         }
 
         ISortFunctionExecutor GetExecutor(ActionSet actionSet) => pointToExecutor(arrayType.GetRealType(actionSet.ThisTypeLinker).ArrayHandler.GetFunctionHandler());

@@ -1,5 +1,8 @@
 using System;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Elements;
+
+#nullable enable
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -8,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         TypeOperator Operator { get; }
         CodeType Right { get; }
         CodeType ReturnType { get; }
+        void Validate(ParseInfo parseInfo, DocRange range, IExpression left, IExpression right);
         IWorkshopTree Resolve(ActionSet actionSet, IExpression left, IExpression right);
     }
 
@@ -19,6 +23,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>The return type of the operation.</summary>
         public CodeType ReturnType { get; }
         private readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Resolver;
+        private readonly Action<ExpressionOperationValidationParams>? Validator;
 
         public TypeOperation(ITypeSupplier supplier, TypeOperator op, CodeType right)
         {
@@ -52,6 +57,16 @@ namespace Deltin.Deltinteger.Parse
             Resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
         }
 
+        public TypeOperation(TypeOperator op, CodeType right, CodeType returnType, Action<ExpressionOperationValidationParams> validator, Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> resolver)
+        {
+            Operator = op;
+            Right = right ?? throw new ArgumentNullException(nameof(right));
+            ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
+            Validator = validator ?? throw new ArgumentNullException(nameof(validator));
+            Resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+        }
+
+        public void Validate(ParseInfo parseInfo, DocRange range, IExpression left, IExpression right) => Validator?.Invoke(new(parseInfo, range, left, right));
 
         public IWorkshopTree Resolve(ActionSet actionSet, IExpression left, IExpression right) => Resolver.Invoke(left.Parse(actionSet), right.Parse(actionSet));
 
@@ -107,22 +122,24 @@ namespace Deltin.Deltinteger.Parse
         {
             switch (op)
             {
-                case TypeOperator.Add               : return (l, r) => Element.Add     (l, r);
-                case TypeOperator.And               : return (l, r) => Element.And     (l, r);
-                case TypeOperator.Divide            : return (l, r) => Element.Divide  (l, r);
-                case TypeOperator.Modulo            : return (l, r) => Element.Modulo  (l, r);
-                case TypeOperator.Multiply          : return (l, r) => Element.Multiply(l, r);
-                case TypeOperator.Or                : return (l, r) => Element.Or      (l, r);
-                case TypeOperator.Pow               : return (l, r) => Element.Pow     (l, r);
-                case TypeOperator.Subtract          : return (l, r) => Element.Subtract(l, r);
-                case TypeOperator.Equal             : return (l, r) => Element.Compare(l, Elements.Operator.Equal             , r);
-                case TypeOperator.GreaterThan       : return (l, r) => Element.Compare(l, Elements.Operator.GreaterThan       , r);
+                case TypeOperator.Add: return (l, r) => Element.Add(l, r);
+                case TypeOperator.And: return (l, r) => Element.And(l, r);
+                case TypeOperator.Divide: return (l, r) => Element.Divide(l, r);
+                case TypeOperator.Modulo: return (l, r) => Element.Modulo(l, r);
+                case TypeOperator.Multiply: return (l, r) => Element.Multiply(l, r);
+                case TypeOperator.Or: return (l, r) => Element.Or(l, r);
+                case TypeOperator.Pow: return (l, r) => Element.Pow(l, r);
+                case TypeOperator.Subtract: return (l, r) => Element.Subtract(l, r);
+                case TypeOperator.Equal: return (l, r) => Element.Compare(l, Elements.Operator.Equal, r);
+                case TypeOperator.GreaterThan: return (l, r) => Element.Compare(l, Elements.Operator.GreaterThan, r);
                 case TypeOperator.GreaterThanOrEqual: return (l, r) => Element.Compare(l, Elements.Operator.GreaterThanOrEqual, r);
-                case TypeOperator.LessThan          : return (l, r) => Element.Compare(l, Elements.Operator.LessThan          , r);
-                case TypeOperator.LessThanOrEqual   : return (l, r) => Element.Compare(l, Elements.Operator.LessThanOrEqual   , r);
-                case TypeOperator.NotEqual          : return (l, r) => Element.Compare(l, Elements.Operator.NotEqual          , r);
+                case TypeOperator.LessThan: return (l, r) => Element.Compare(l, Elements.Operator.LessThan, r);
+                case TypeOperator.LessThanOrEqual: return (l, r) => Element.Compare(l, Elements.Operator.LessThanOrEqual, r);
+                case TypeOperator.NotEqual: return (l, r) => Element.Compare(l, Elements.Operator.NotEqual, r);
                 default: throw new NotImplementedException(op.ToString());
             }
         }
     }
+
+    public record struct ExpressionOperationValidationParams(ParseInfo ParseInfo, DocRange Range, IExpression Left, IExpression Right);
 }

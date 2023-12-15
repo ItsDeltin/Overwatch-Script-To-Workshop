@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Lambda;
@@ -143,30 +145,7 @@ namespace Deltin.Deltinteger.Parse
                     Documentation = "Returns a copy of the array that is randomized.",
                     ReturnType = this,
                     Action = (actionSet, methodCall) => Element.Part("Randomized Array", actionSet.CurrentObject)
-                });
-            // Append
-            Func(new FuncMethodBuilder()
-            {
-                Name = "Append",
-                Documentation = "A copy of the array with the specified value appended to it.",
-                ReturnType = this,
-                Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value that is appended to the array. If the value is an array, it will be flattened.", pipeType)
-                },
-                Action = (actionSet, methodCall) => GetFunctionHandler(actionSet).Append(actionSet.CurrentObject, methodCall.ParameterValues[0])
-            });
-            // Remove
-            if (allowUnhandled)
-                Func(new FuncMethodBuilder()
-                {
-                    Name = "Remove",
-                    Documentation = "A copy of the array with the specified value removed from it.",
-                    ReturnType = this,
-                    Parameters = new CodeParameter[] {
-                        new CodeParameter("value", "The value that is removed from the array.", pipeType)
-                    },
-                    Action = (actionSet, methodCall) => Element.Part("Remove From Array", actionSet.CurrentObject, methodCall.ParameterValues[0])
-                });
+                }.AddArrayCopyNotUsedWarning());
             // Slice
             Func(new FuncMethodBuilder()
             {
@@ -178,7 +157,7 @@ namespace Deltin.Deltinteger.Parse
                     new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.", _supplier.Number())
                 },
                 Action = (actionSet, methodCall) => GetFunctionHandler(actionSet).Slice(actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
-            });
+            }.AddArrayCopyNotUsedWarning());
             // Index Of
             Func(new FuncMethodBuilder()
             {
@@ -190,30 +169,92 @@ namespace Deltin.Deltinteger.Parse
                 },
                 Action = (actionSet, methodCall) => GetFunctionHandler(actionSet).IndexOf(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
+
+            // Assignment operators
+            IEnumerable<AssignmentOperation> assignmentOperations = new AssignmentOperation[] {
+                // = assignment
+                new(AssignmentOperator.Equal, pipeType, info => info.Set()),
+            };
+            // Binary operators
+            var expressionOperations = Enumerable.Empty<TypeOperation>();
+
             // Modify Append
-            Func(new FuncMethodBuilder()
+            MakeFunctionsForCases(maker =>
             {
-                Name = "ModAppend",
-                Documentation = "Appends a value to the array. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
-                Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value that is pushed to the array.", pipeType)
-                },
-                OnCall = SourceVariableResolver.GetSourceVariable,
-                ReturnType = _supplier.Number(),
-                Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.AppendToArray)
+                const string APPENDED = "appended";
+                const string APPENDING = "appending";
+                const string REMOVED = "removed";
+                const string REMOVING = "removing";
+
+                // ModAppend
+                Func(new FuncMethodBuilder()
+                {
+                    Name = "ModAppend",
+                    Documentation = "Appends a value to the array. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
+                    Parameters = new[] {
+                        maker.CreateValidationParameter("The value that is pushed to the array.", APPENDED, APPENDING),
+                    },
+                    OnCall = SourceVariableResolver.GetSourceVariable,
+                    ReturnType = _supplier.Number(),
+                    Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, Operation.AppendToArray, maker.Cast(methodCall.ParameterValues[0]))
+                });
+                // Append
+                Func(new FuncMethodBuilder()
+                {
+                    Name = "Append",
+                    Documentation = "A copy of the array with the specified value appended to it.",
+                    ReturnType = this,
+                    Parameters = new CodeParameter[] {
+                        maker.CreateValidationParameter("The value added to the copied array.", APPENDED, APPENDING)
+                    },
+                    Action = (actionSet, methodCall) => GetFunctionHandler(actionSet).Append(actionSet.CurrentObject, maker.Cast(methodCall.ParameterValues[0]))
+                }.AddArrayCopyNotUsedWarning("ModAppend"));
+                // ModRemoveByValue
+                Func(new FuncMethodBuilder()
+                {
+                    Name = "ModRemoveByValue",
+                    Documentation = "Removes an element from the array by a value. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
+                    Parameters = new CodeParameter[] {
+                        maker.CreateValidationParameter("The value that is removed from the array.", REMOVED, REMOVING),
+                    },
+                    OnCall = SourceVariableResolver.GetSourceVariable,
+                    ReturnType = _supplier.Number(),
+                    Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, Operation.RemoveFromArrayByValue, maker.Cast(methodCall.ParameterValues[0]))
+                });
+                // Remove
+                Func(new FuncMethodBuilder()
+                {
+                    Name = "Remove",
+                    Documentation = "A copy of the array with the specified value removed from it.",
+                    ReturnType = this,
+                    Parameters = new CodeParameter[] {
+                        maker.CreateValidationParameter("The value that is removed from the array.", REMOVED, REMOVING)
+                    },
+                    Action = (actionSet, methodCall) => GetFunctionHandler(actionSet).Remove(actionSet.CurrentObject, maker.Cast(methodCall.ParameterValues[0]))
+                }.AddArrayCopyNotUsedWarning("ModRemove"));
+                // a += b
+                assignmentOperations = assignmentOperations.Append(new AssignmentOperation(
+                    AssignmentOperator.AddEqual,
+                    maker.T,
+                    validateParams => maker.ValidateOperation(validateParams, APPENDED, APPENDING),
+                    info => info.ModifyWithValueCast(Operation.AppendToArray, maker.Cast)));
+                // a -= b
+                assignmentOperations = assignmentOperations.Append(new AssignmentOperation(
+                    AssignmentOperator.SubtractEqual,
+                    maker.T,
+                    validateParams => maker.ValidateOperation(validateParams, REMOVED, REMOVING),
+                    info => info.ModifyWithValueCast(Operation.RemoveFromArrayByValue, maker.Cast)));
+                // 
+                // a + b
+                // expressionOperations = expressionOperations.Append(new TypeOperation(TypeOperator.Add, maker.T, this,
+                //     validateParams => maker.ValidateOperation(validateParams, APPENDED, APPENDING),
+                //     (l, r) => Element.Append(l, maker.Cast(r))));
+                // a - b
+                // expressionOperations = expressionOperations.Append(new TypeOperation(TypeOperator.Subtract, maker.T, this,
+                //     validateParams => maker.ValidateOperation(validateParams, REMOVED, REMOVING),
+                //     (l, r) => Element.Remove(l, maker.Cast(r))));
             });
-            // Modify Remove By Value
-            Func(new FuncMethodBuilder()
-            {
-                Name = "ModRemoveByValue",
-                Documentation = "Removes an element from the array by a value. This will modify the array directly rather than returning a copy of the array. The source expression must be a variable.",
-                Parameters = new CodeParameter[] {
-                    new CodeParameter("value", "The value that is removed from the array.", ArrayOfType)
-                },
-                OnCall = SourceVariableResolver.GetSourceVariable,
-                ReturnType = _supplier.Number(),
-                Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.RemoveFromArrayByValue)
-            });
+
             // Modify Remove By Index
             Func(new FuncMethodBuilder()
             {
@@ -224,24 +265,12 @@ namespace Deltin.Deltinteger.Parse
                 },
                 OnCall = SourceVariableResolver.GetSourceVariable,
                 ReturnType = _supplier.Number(),
-                Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, methodCall, Operation.RemoveFromArrayByIndex)
+                Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, Operation.RemoveFromArrayByIndex, methodCall.ParameterValues[0])
             });
 
             // Add type operations.
-            Operations.AddTypeOperation(new[] {
-                // + append
-                new TypeOperation(TypeOperator.Add, pipeType, this, (l, r) => Element.Append(l, r)),
-                // - remove
-                new TypeOperation(TypeOperator.Subtract, pipeType, this, (l, r) => Element.Remove(l, r))
-            });
-            Operations.AddTypeOperation(new[] {
-                // = assignment
-                new AssignmentOperation(AssignmentOperator.Equal, pipeType, info => info.Set()),
-                // += mod append
-                new AssignmentOperation(AssignmentOperator.AddEqual, pipeType, info => info.Modify(Operation.AppendToArray)),
-                // -= mod remove
-                new AssignmentOperation(AssignmentOperator.SubtractEqual, pipeType, info => info.Modify(Operation.RemoveFromArrayByValue))
-            });
+            Operations.AddTypeOperation(assignmentOperations.ToArray());
+            Operations.AddTypeOperation(expressionOperations.ToArray());
 
             ArrayOfType.ArrayHandler.OverrideArray(this);
         }
@@ -251,6 +280,67 @@ namespace Deltin.Deltinteger.Parse
             // In case the current object is an anonymous array, get the function handler of the real type.
             // For non-anonymous arrays, this is the same thing as 'this.ArrayHandler.GetFunctionHandler()'
             return ((ArrayType)this.GetRealType(actionSet.ThisTypeLinker)).ArrayHandler.GetFunctionHandler();
+        }
+
+        readonly struct FunctionCase
+        {
+            public readonly CodeType T;
+            private readonly ArrayType arrayType;
+            private readonly Func<IWorkshopTree, IWorkshopTree> cast;
+
+            public FunctionCase(ArrayType arrayType, CodeType t, Func<IWorkshopTree, IWorkshopTree> cast)
+            {
+                this.arrayType = arrayType;
+                this.T = t;
+                this.cast = cast;
+            }
+
+            public readonly CodeParameter CreateValidationParameter(string valueTask, string operated, string operating)
+            {
+                var _this = this;
+                return new CustomParameterValidation("value", valueTask, T, validate =>
+                {
+                    _this.CheckExpressionProtection(validate.ParseInfo, validate.ValueRange, validate.Value, operated, operating);
+                    return null;
+                });
+            }
+
+            public readonly void ValidateOperation(ValidateOperationParams validateParams, string operated, string operating)
+            {
+                CheckExpressionProtection(validateParams.ParseInfo, validateParams.Range, validateParams.Value, operated, operating);
+            }
+
+            public readonly void ValidateOperation(ExpressionOperationValidationParams validateParams, string operated, string operating)
+            {
+                CheckExpressionProtection(validateParams.ParseInfo, validateParams.Range, validateParams.Right, operated, operating);
+            }
+
+            private readonly void CheckExpressionProtection(ParseInfo parseInfo, DocRange range, IExpression value, string operated, string operating)
+            {
+                if (value == null)
+                    return;
+
+                var valueType = value.Type();
+
+                if (arrayType.ArrayOfType.NeedsArrayProtection &&
+                    !arrayType.Is(valueType) &&
+                    !arrayType.ArrayOfType.Is(valueType) &&
+                    valueType is not ArrayType &&
+                    value is not MissingElementAction)
+                {
+                    parseInfo.Script.Diagnostics.Warning($"The type '{arrayType.ArrayOfType.GetName()}' is compiled as a workshop array. It is unknown if the righthand being {operated} needs to be wrapped, so this will result in undefined behaviour if the righthand value is a single value rather than an array. Please narrow down the type of the value you are {operating}, or wrap the righthand value in brackets if you know it is supposed to be a single value.", range);
+                }
+            }
+
+            public readonly IWorkshopTree Cast(IWorkshopTree value) => cast(value);
+        }
+
+        private void MakeFunctionsForCases(Action<FunctionCase> factory)
+        {
+            // T[]
+            factory(new(this, this, a => a));
+            // T
+            factory(new(this, ArrayOfType, a => ToWorkshopHelper.GuardArrayModifiedValue(a, ArrayOfType)));
         }
 
         /// <summary>Creates a function and adds it to the scope.</summary>
@@ -337,13 +427,13 @@ namespace Deltin.Deltinteger.Parse
 
         public static IGettable GetIndexReference(ActionSet actionSet, MethodCall methodCall) => actionSet.IndexAssigner[((SourceVariableResolver)methodCall.AdditionalData).Calling.Provider];
 
-        public static IWorkshopTree Modify(ActionSet actionSet, MethodCall methodCall, Operation operation)
+        public static IWorkshopTree Modify(ActionSet actionSet, Operation operation, IWorkshopTree value)
         {
             // var calling = SourceVariableResolver.GetIndexReference(actionSet, methodCall);
             // calling.Modify(actionSet, operation, value: methodCall.ParameterValues[0], target: actionSet.CurrentObjectRelatedIndex.Target);
             // return Element.CountOf(calling.GetVariable());
 
-            actionSet.CurrentObjectRelatedIndex.Reference.Modify(actionSet, operation, value: methodCall.ParameterValues[0], target: actionSet.CurrentObjectRelatedIndex.Target);
+            actionSet.CurrentObjectRelatedIndex.Reference.Modify(actionSet, operation, value, target: actionSet.CurrentObjectRelatedIndex.Target);
             return (Element)0;
         }
     }
