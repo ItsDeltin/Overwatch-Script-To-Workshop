@@ -27,11 +27,11 @@ namespace Deltin.Deltinteger.Parse
         public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
             => WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer, WorkshopVariable, false, ArrayBuilder<Element>.Build(Index, index));
 
-        public virtual Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] index)
+        public virtual Element[] ModifyVariable(Operation operation, IWorkshopTree value, Element targetPlayer = null, params Element[] index)
             => WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
 
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
-            => actionSet.AddAction(ModifyVariable(operation, (Element)value, target, index));
+            => actionSet.AddAction(ModifyVariable(operation, value, target, index));
 
         public void Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
         {
@@ -88,7 +88,7 @@ namespace Deltin.Deltinteger.Parse
             return base.SetVariable(value, targetPlayer, CurrentIndex(targetPlayer, index));
         }
 
-        public override Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] index)
+        public override Element[] ModifyVariable(Operation operation, IWorkshopTree value, Element targetPlayer = null, params Element[] index)
         {
             return base.ModifyVariable(operation, value, targetPlayer, CurrentIndex(targetPlayer, index));
         }

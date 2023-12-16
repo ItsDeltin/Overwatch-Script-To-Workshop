@@ -58,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Not using auto-for, manually increment variable.
             if (recursive || extended)
-                actionSet.AddAction(forIndex.ModifyVariable(Operation.Add, 1));
+                actionSet.AddAction(forIndex.ModifyVariable(Operation.Add, Element.Num(1)));
             // End block.
             actionSet.AddAction(Element.End());
 

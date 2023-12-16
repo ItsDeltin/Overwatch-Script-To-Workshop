@@ -238,6 +238,7 @@ namespace Deltin.Deltinteger.Parse
         IGettable GetGettable(string variableName);
         IWorkshopTree GetArbritraryValue();
         IWorkshopTree[] GetAllValues();
+        IWorkshopTree[] GetValues() => GetNames().Select(n => GetValue(n)).ToArray();
         string[] GetNames();
         BridgeGetStructValue Bridge(Func<BridgeArgs, IWorkshopTree> bridge) => new BridgeGetStructValue(this, bridge);
         BridgeGetStructValue BridgeArbritrary(Func<IWorkshopTree, IWorkshopTree> bridge) => Bridge(b => bridge(b.Value));
@@ -251,7 +252,8 @@ namespace Deltin.Deltinteger.Parse
 
             return values.Length == otherValues.Length && values.Zip(otherValues).All(compare => compare.First.EqualTo(compare.Second));
         }
-        void IWorkshopTree.ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => Element.CreateArray(GetAllValues()).ToWorkshop(b, context);
+        void IWorkshopTree.ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => AsUnparalleled().ToWorkshop(b, context);
+        IWorkshopTree AsUnparalleled() => Element.CreateArray(GetValues());
 
         /// <summary>Flattens structs within an array of workshop values.</summary>
         public static IWorkshopTree[] ExtractAllValues(IEnumerable<IWorkshopTree> children)
@@ -386,6 +388,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public string[] GetNames() => Children.Length == 0 ? null : Children[0].GetNames();
+
+        IWorkshopTree IStructValue.AsUnparalleled() => Element.CreateArray(Children.Select(c => c.AsUnparalleled()).ToArray());
     }
 
     /// <summary>Gets a value in a struct array by an index.</summary>

@@ -65,12 +65,12 @@ namespace Deltin.Deltinteger.Pathfinder
         void IPathfinderInfo.Finished() => _bakemap.Set(ActionSet, _builder.ParentArray.Get(), index: _nodeLoop.Value);
 
         // Wait on loop.
-        void IPathfinderInfo.OnConnectLoop() {}
+        void IPathfinderInfo.OnConnectLoop() { }
         void IPathfinderInfo.OnLoop()
         {
             if (_onLoop == null)
             {
-                ActionSet.AddAction(_bakeWait.ModifyVariable(Operation.Add, 1));
+                ActionSet.AddAction(_bakeWait.ModifyVariable(Operation.Add, Num(1)));
                 ActionSet.AddAction(SkipIf(_bakeWait.Get() % 6, Num(1)));
                 ActionSet.AddAction(Wait());
             }
@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 _onLoop.Invoke(ActionSet);
         }
 
-        void IPathfinderInfo.OnLoopEnd() {}
+        void IPathfinderInfo.OnLoopEnd() { }
 
         Element IPathfinderInfo.InitialNode => _nodeLoop.Value;
         public Element NodeArray => _pathmapClass.Nodes.Get(ActionSet.ToWorkshop, _pathmapObject);

@@ -12,16 +12,20 @@ namespace Deltin.Deltinteger.Parse
         IndexReference _constructor;
         IndexReference _constructorTemp;
 
-        WorkshopVariable Constructor {
-            get {
+        WorkshopVariable Constructor
+        {
+            get
+            {
                 if (_constructor == null)
                     _constructor = _varCollection.Assign("_arrayConstructor", true, false);
                 return _constructor.WorkshopVariable;
             }
         }
 
-        IndexReference ConstructorTemp {
-            get {
+        IndexReference ConstructorTemp
+        {
+            get
+            {
                 if (_constructorTemp == null)
                     _constructorTemp = _varCollection.Assign("_arrayConstructorTemp", true, false);
                 return _constructorTemp;
@@ -35,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
             if (index == null || index.Length == 0)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part("Set Global Variable",               variable, value) };
+                    return new Element[] { Element.Part("Set Global Variable", variable, value) };
                 else
                     return new Element[] { Element.Part("Set Player Variable", targetPlayer, variable, value) };
             }
@@ -134,7 +138,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (index.Length == 1)
                 return array[index[0]];
-            
+
             return ValueInArrayPath(array, index.Take(index.Length - 1).ToArray())[index.Last()];
         }
 
@@ -146,7 +150,7 @@ namespace Deltin.Deltinteger.Parse
                 return Element.Part("Player Variable", targetPlayer, variable);
         }
 
-        public static Element[] ModifyVariable(WorkshopArrayBuilder builder, Operation operation, Element value, Element targetPlayer, WorkshopVariable variable, params Element[] index)
+        public static Element[] ModifyVariable(WorkshopArrayBuilder builder, Operation operation, IWorkshopTree value, Element targetPlayer, WorkshopVariable variable, params Element[] index)
         {
             if (index == null || index.Length == 0)
             {
