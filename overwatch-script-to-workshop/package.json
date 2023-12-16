@@ -226,6 +226,11 @@
         "command": "ostw.restartLanguageServer",
         "title": "Restart OSTW Language Server",
         "category": "Overwatch Script To Workshop"
+      },
+      {
+        "command": "ostw.stopLanguageServer",
+        "title": "Stops the OSTW Language Server",
+        "category": "Overwatch Script To Workshop"
       }
     ],
     "keybindings": [

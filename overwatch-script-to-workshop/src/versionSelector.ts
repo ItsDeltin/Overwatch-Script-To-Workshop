@@ -1,6 +1,6 @@
 import { window, commands, workspace, env, Uri, StatusBarAlignment, StatusBarItem, ExtensionContext, TextDocument, QuickPickItem, ThemeColor } from 'vscode';
 import * as download from './download';
-import { serverVersion, restartLanguageServer } from './languageServer'
+import { serverVersion, restartLanguageServer, stopLanguageServer } from './languageServer'
 import { openIssues, openDefaultServerDirectory } from './extensions'
 import { Release } from "./githubApi"
 
@@ -8,7 +8,7 @@ let versionStatus: StatusBarItem;
 
 export function createVersionStatusBar(context: ExtensionContext) {
     versionStatus = window.createStatusBarItem(StatusBarAlignment.Left, 0);
-    versionStatus.text = 'OSTW';
+    versionStatus.text = 'OSTW $(chrome-close~spin)';
     versionStatus.tooltip = 'Select version';
     versionStatus.command = 'ostw.versionInfo';
     versionStatus.show();
@@ -21,6 +21,8 @@ export function createVersionStatusBar(context: ExtensionContext) {
             { label: 'Report an issue', action: openIssues },
             // Restart language server
             { label: 'Restart language server', action: restartLanguageServer },
+            // Stop language server
+            { label: 'Stop language server', action: stopLanguageServer },
             // Download new version option
             { label: 'Download new server version' + (serverVersion != null ? ' (current: ' + serverVersion + ')' : ''), action: selectVersion },
             // Choose server location
@@ -34,8 +36,20 @@ export function createVersionStatusBar(context: ExtensionContext) {
     }, this));
 }
 
-export function setCurrentVersion(version) {
-    versionStatus.text = version;
+export function ostwNotEnabled() {
+    versionStatus.text = 'OSTW $(x)';
+}
+
+export function setOstwVersion(version: string | undefined) {
+    if (version) {
+        versionStatus.text = `OSTW ${version} $(check)`;
+    } else {
+        versionStatus.text = `OSTW $(check)`;
+    }
+}
+
+export function ostwLoading() {
+    versionStatus.text = 'OSTW $(loading~spin)';
 }
 
 async function selectVersion() {

@@ -9,9 +9,8 @@ import fs = require('fs');
 
 export let client: LanguageClient;
 
-export let serverStatus: 'stopped' | 'starting' | 'started' | 'ready' = 'stopped';
-export let onServerReady = new EventEmitter();
-export let serverVersion: string;
+let serverStatus: 'stopped' | 'starting' | 'ready' = 'stopped';
+export let serverVersion: string | undefined;
 let gotVersionThisInstance = false;
 
 export let workshopOut: OutputChannel;
@@ -43,7 +42,6 @@ async function checkServerModule() {
 
 		// If serverModule is not set, locate the dll at its default location.
 		if (!serverModule) {
-			versionSelector.setCurrentVersion('OSTW server not installed');
 			// Ask the user if they want to install the OSTW server.
 			window.showWarningMessage('The Overwatch Script To Workshop server was not found.', 'Automatically Install Latest', 'View Releases')
 				.then(option => {
@@ -75,7 +73,12 @@ async function checkServerModule() {
 
 export async function startLanguageServer() {
 	// If the server is running, or the server cannot be started, or the command server option is invalid, return.
-	if (serverStatus != 'stopped' || !await checkServerModule()) return;
+	if (serverStatus != 'stopped') return;
+
+	versionSelector.ostwLoading();
+	if (!await checkServerModule()) {
+		versionSelector.ostwNotEnabled();
+	}
 
 	let waitForDebugger = config.get<string>('dev.waitForDebugger');
 	if (waitForDebugger)
@@ -113,13 +116,15 @@ export async function startLanguageServer() {
 			clientReady();
 		}
 	}, this);
-	client.start();
-	serverStatus = 'started';
+	await client.start();
 }
 
 function clientReady() {
+	if (serverStatus === 'stopped') {
+		return;
+	}
+
 	serverStatus = 'ready';
-	onServerReady.fire(null);
 
 	// When the client is ready, setup the workshopCode notification.
 	client.onNotification("workshopCode", (code: string) => {
@@ -141,28 +146,43 @@ function clientReady() {
 
 	// Check version.
 	// client.onNotification("version", gotVersion);
+
+	versionSelector.setOstwVersion(serverVersion);
 }
 
-export async function stopLanguageServer() {
-	if (serverStatus == 'stopped') return;
+/** Stops the OSTW language server. Returns false if it is already stopped. */
+export async function stopLanguageServer(temporary: boolean = false) {
+	if (temporary) {
+		versionSelector.ostwLoading();
+	} else {
+		versionSelector.ostwNotEnabled();
+	}
+
+	if (serverStatus == 'stopped') {
+		return false;
+	}
+
 	serverStatus = 'stopped';
 	if (client.needsStop()) await client.stop();
+	return true;
 }
 
 export async function restartLanguageServer(timeout: number = 5000) {
-	await stopLanguageServer();
-	await new Promise<void>(resolve => setTimeout(() => resolve(), timeout));
+	if (await stopLanguageServer(true)) {
+		if (timeout) {
+			await new Promise<void>(resolve => setTimeout(() => resolve(), timeout));
+		}
+	}
 	await startLanguageServer();
 }
 
-async function gotVersion(currentVersion: string | undefined) {
+function gotVersion(currentVersion: string | undefined) {
 	if (gotVersionThisInstance)
 		return;
 	gotVersionThisInstance = true;
 
 	if (currentVersion) {
 		serverVersion = currentVersion;
-		versionSelector.setCurrentVersion('OSTW ' + currentVersion);
 	}
 }
 

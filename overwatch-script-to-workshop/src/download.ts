@@ -8,7 +8,7 @@ const glob = util.promisify(require('glob'));
 import path = require('path');
 import { defaultServerFolder, extensionContext, KEY_DOWNLOADED_SERVER_DATE } from './extensions';
 import { config } from './config';
-import { startLanguageServer, stopLanguageServer } from './languageServer';
+import { restartLanguageServer, startLanguageServer, stopLanguageServer } from './languageServer';
 import { Asset, Release } from "./githubApi";
 import process = require('process');
 
@@ -431,8 +431,7 @@ export async function chooseServerLocation() {
 	}
 	else {
 		await config.update('deltintegerPath', module, ConfigurationTarget.Global);
-		await stopLanguageServer();
-		await startLanguageServer();
+		await restartLanguageServer(0);
 	}
 }
 

@@ -6,7 +6,7 @@ import { decompileClipboard, insertActions } from './decompile';
 import { setupBuildWatcher } from './dev';
 import path = require('path');
 import exec = require('child_process');
-import { client, makeLanguageServer, lastWorkshopOutput, restartLanguageServer } from './languageServer';
+import { client, makeLanguageServer, lastWorkshopOutput, restartLanguageServer, stopLanguageServer } from './languageServer';
 import { downloadLatest, chooseServerLocation } from './download';
 import { setupConfig, config } from './config';
 import { workshopPanelProvider } from './workshopPanelProvider';
@@ -154,6 +154,11 @@ function subscribe(context: ExtensionContext) {
 	// Restart language server.
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.restartLanguageServer', async () => {
 		await restartLanguageServer(500);
+	}));
+	
+	// Stop language server.
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.stopLanguageServer', async () => {
+		await stopLanguageServer();
 	}));
 }
 
