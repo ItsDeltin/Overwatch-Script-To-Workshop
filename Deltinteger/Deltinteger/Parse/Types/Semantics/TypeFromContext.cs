@@ -129,8 +129,14 @@ namespace Deltin.Deltinteger.Parse
             var left = GetCodeTypeFromContext(parseInfo, scope, type.Left);
             var right = GetCodeTypeFromContext(parseInfo, scope, type.Right);
 
-            if (left.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Left.Range);
-            if (right.IsConstant()) parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", type.Right.Range);
+            foreach (var (part, ctx) in new[] { (left, type.Left), (right, type.Right) })
+            {
+                if (part.IsConstant())
+                    parseInfo.Script.Diagnostics.Error("Types used in unions cannot be constant", ctx.Range);
+
+                else if (part.Attributes.IsStruct)
+                    parseInfo.Script.Diagnostics.Error("Structs used in unions cannot be parallel", ctx.Range);
+            }
 
             return new PipeType(left, right);
         }
