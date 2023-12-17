@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Parse
             var expectingStruct = _parseInfo.ExpectingType as StructInstance;
 
             // Parallel will be true by default if a struct is not expected.
-            Parallel = expectingStruct?.Attributes.IsStruct ?? true;
+            Parallel = expectingStruct?.Attributes.IsStruct ?? !_context.Single;
 
             bool printMissingVariables = true;
 

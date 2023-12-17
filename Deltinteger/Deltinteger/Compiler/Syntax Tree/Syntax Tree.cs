@@ -696,11 +696,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public List<StructDeclarationVariableContext> Values { get; }
         public Token ClosingBracket { get; }
+        public Token Single { get; }
 
-        public StructDeclarationContext(List<StructDeclarationVariableContext> values, Token closingBracket)
+        public StructDeclarationContext(List<StructDeclarationVariableContext> values, Token closingBracket, Token single)
         {
             Values = values;
             ClosingBracket = closingBracket;
+            Single = single;
         }
     }
 

@@ -581,6 +581,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     if (IsLambda())
                         return ParseLambda();
 
+                    // 'single' struct
+                    else if (Is(TokenType.Single) && Is(TokenType.CurlyBracket_Open, 1))
+                        return ParseStructDeclaration();
+
                     // Functions and identifiers
                     else if (Is(TokenType.Identifier))
                         return Identifier();
@@ -1669,6 +1673,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StartTokenCapture();
             if (GetIncrementalNode(out StructDeclarationContext rule)) return EndTokenCapture(rule);
 
+            // Inline single struct
+            var single = ParseOptional(TokenType.Single);
+
             // Start the struct declaration.
             ParseExpected(TokenType.CurlyBracket_Open);
 
@@ -1703,11 +1710,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // End the struct declaration.
             var closingBracket = ParseExpected(TokenType.CurlyBracket_Close);
 
-            return EndTokenCapture(new StructDeclarationContext(values, closingBracket));
+            return EndTokenCapture(new StructDeclarationContext(values, closingBracket, single));
         }
 
         bool IsStructDeclaration() => Lookahead(() =>
         {
+            // 'single' token followed by opening curly bracket (to ensure this isn't a variable named 'single'.)
+            if (ParseOptional(TokenType.Single) && ParseOptional(TokenType.CurlyBracket_Open))
+                return true;
+
             // Start of struct '{'
             if (!ParseExpected(TokenType.CurlyBracket_Open))
                 return false;
