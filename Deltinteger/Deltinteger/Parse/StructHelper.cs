@@ -3,6 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 
+#nullable enable
+
 namespace Deltin.Deltinteger.Parse
 {
     static class StructHelper
@@ -62,7 +64,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         /// <summary>Generates a StructArray from a workshop value.</summary>
-        static StructArray MakeEmptyArray(IWorkshopTree value)
+        static StructArray? MakeEmptyArray(IWorkshopTree value)
         {
             if (value is Element element)
             {
@@ -71,7 +73,7 @@ namespace Deltin.Deltinteger.Parse
 
                 else if (element.Function.Name == "Array")
                 {
-                    var arr = new IStructValue[element.ParameterValues.Length];
+                    var arr = new IStructValue?[element.ParameterValues.Length];
                     for (int i = 0; i < element.ParameterValues.Length; i++)
                     {
                         arr[i] = MakeEmptyArray(element.ParameterValues[i]);
@@ -113,6 +115,28 @@ namespace Deltin.Deltinteger.Parse
             }
             RecursiveUnfold(value, Enumerable.Empty<string>());
             return paths.ToArray();
+        }
+
+        /// <summary>Travels through a nested struct type with the given path.</summary>
+        public static CodeType? GetVariableTypeFromPath(IEnumerable<string> path, CodeType topType)
+        {
+            while (path.Any())
+            {
+                // Can't path further; type is not a struct.
+                if (topType is not StructInstance structInstance)
+                    return null;
+
+                var top = path.FirstOrDefault();
+
+                // Find variable matching name.
+                var matchingVariable = structInstance.Variables.FirstOrDefault(v => v.Name == top);
+                if (matchingVariable == null)
+                    return null;
+
+                topType = (CodeType)matchingVariable.CodeType;
+                path = path.Skip(1);
+            }
+            return topType;
         }
 
         /// <summary>
