@@ -245,15 +245,14 @@ namespace Deltin.Deltinteger.Parse
                     maker.T,
                     validateParams => maker.ValidateOperation(validateParams, REMOVED, REMOVING),
                     info => info.ModifyWithValueCast(Operation.RemoveFromArrayByValue, maker.Cast)));
-                // 
                 // a + b
-                // expressionOperations = expressionOperations.Append(new TypeOperation(TypeOperator.Add, maker.T, this,
-                //     validateParams => maker.ValidateOperation(validateParams, APPENDED, APPENDING),
-                //     (l, r) => Element.Append(l, maker.Cast(r))));
+                expressionOperations = expressionOperations.Append(new TypeOperation(TypeOperator.Add, maker.T, this,
+                    validateParams => maker.ValidateOperation(validateParams, APPENDED, APPENDING),
+                    compileParams => GetFunctionHandler(compileParams.ActionSet).Append(compileParams.Left, maker.Cast(compileParams.Right))));
                 // a - b
-                // expressionOperations = expressionOperations.Append(new TypeOperation(TypeOperator.Subtract, maker.T, this,
-                //     validateParams => maker.ValidateOperation(validateParams, REMOVED, REMOVING),
-                //     (l, r) => Element.Remove(l, maker.Cast(r))));
+                expressionOperations = expressionOperations.Append(new TypeOperation(TypeOperator.Subtract, maker.T, this,
+                    validateParams => maker.ValidateOperation(validateParams, REMOVED, REMOVING),
+                    compileParams => GetFunctionHandler(compileParams.ActionSet).Remove(compileParams.Left, maker.Cast(compileParams.Right))));
             });
 
             // Modify Remove By Index
@@ -283,10 +282,18 @@ namespace Deltin.Deltinteger.Parse
             return ((ArrayType)this.GetRealType(actionSet.ThisTypeLinker)).ArrayHandler.GetFunctionHandler();
         }
 
+        /// <summary>
+        /// Easily construct T and T[] variants of the same function. The T variant of the function will wrap
+        /// the appended value in a workshop array so that the workshop's for loop behaviour is not executed on
+        /// types which when compiled are formatted as a workshop array.
+        /// </summary>
         readonly struct FunctionCase
         {
+            /// <summary>This will either be T or T[].</summary>
             public readonly CodeType T;
+            /// <summary>The parent array type.</summary>
             private readonly ArrayType arrayType;
+            /// <summary>If protection is required, this is called to wrap the value.</summary>
             private readonly Func<IWorkshopTree, IWorkshopTree> cast;
 
             public FunctionCase(ArrayType arrayType, CodeType t, Func<IWorkshopTree, IWorkshopTree> cast)
@@ -296,6 +303,12 @@ namespace Deltin.Deltinteger.Parse
                 this.cast = cast;
             }
 
+            /// <summary>When creating an array-operating function that takes T as a parameter,
+            /// use this to create a special parameter that adds a compiler warning if OSTW can't
+            /// decide if the incoming value needs to be wrapped.</summary>
+            /// <param name="valueTask">The parameter description detailing how this value affects the array.</param>
+            /// <param name="operated">The verb describing the operation as a past participle. Used in the compiler warning message.</param>
+            /// <param name="operating">The verb describing the operation as a present participle. Used in the compiler warning message.</param>
             public readonly CodeParameter CreateValidationParameter(string valueTask, string operated, string operating)
             {
                 var _this = this;
@@ -306,16 +319,19 @@ namespace Deltin.Deltinteger.Parse
                 });
             }
 
+            /// <summary>Validates an assignment operator, similiar to CreateValidationParameter.</summary>
             public readonly void ValidateOperation(ValidateOperationParams validateParams, string operated, string operating)
             {
                 CheckExpressionProtection(validateParams.ParseInfo, validateParams.Range, validateParams.Value, operated, operating);
             }
 
+            /// <summary>Validates a binary operator, similiar to CreateValidationParameter.</summary>
             public readonly void ValidateOperation(ExpressionOperationValidationParams validateParams, string operated, string operating)
             {
                 CheckExpressionProtection(validateParams.ParseInfo, validateParams.Range, validateParams.Right, operated, operating);
             }
 
+            /// <summary>Adds a compiler warning if OSTW is unsure if the incoming value needs to be wrapped.</summary>
             private readonly void CheckExpressionProtection(ParseInfo parseInfo, DocRange range, IExpression value, string operated, string operating)
             {
                 if (value == null)
@@ -331,6 +347,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
+            /// <summary>Protects the right-hand value of an array operation.</summary>
             public readonly IWorkshopTree Cast(IWorkshopTree value) => cast(value);
         }
 

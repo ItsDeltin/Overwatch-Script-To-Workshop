@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Elements;
 
@@ -22,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Right { get; }
         /// <summary>The return type of the operation.</summary>
         public CodeType ReturnType { get; }
-        private readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Resolver;
+        private readonly Func<CompileParams, IWorkshopTree> Resolver;
         private readonly Action<ExpressionOperationValidationParams>? Validator;
 
         public TypeOperation(ITypeSupplier supplier, TypeOperator op, CodeType right)
@@ -30,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
             Operator = op;
             Right = right ?? throw new ArgumentNullException(nameof(right));
             ReturnType = DefaultTypeFromOperator(op, supplier);
-            Resolver = DefaultFromOperator(op);
+            Resolver = ConvertSimpleFunctionType(DefaultFromOperator(op));
         }
 
         public TypeOperation(TypeOperator op, CodeType right, CodeType returnType)
@@ -38,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
             Operator = op;
             Right = right ?? throw new ArgumentNullException(nameof(right));
             ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
-            Resolver = DefaultFromOperator(op);
+            Resolver = ConvertSimpleFunctionType(DefaultFromOperator(op));
         }
 
         public TypeOperation(ITypeSupplier supplier, TypeOperator op, CodeType right, Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> resolver)
@@ -46,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
             Operator = op;
             Right = right ?? throw new ArgumentNullException(nameof(right));
             ReturnType = DefaultTypeFromOperator(op, supplier);
-            Resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+            Resolver = ConvertSimpleFunctionType(resolver) ?? throw new ArgumentNullException(nameof(resolver));
         }
 
         public TypeOperation(TypeOperator op, CodeType right, CodeType returnType, Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> resolver)
@@ -54,10 +55,15 @@ namespace Deltin.Deltinteger.Parse
             Operator = op;
             Right = right ?? throw new ArgumentNullException(nameof(right));
             ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
-            Resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+            Resolver = ConvertSimpleFunctionType(resolver) ?? throw new ArgumentNullException(nameof(resolver));
         }
 
-        public TypeOperation(TypeOperator op, CodeType right, CodeType returnType, Action<ExpressionOperationValidationParams> validator, Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> resolver)
+        public TypeOperation(
+            TypeOperator op,
+            CodeType right,
+            CodeType returnType,
+            Action<ExpressionOperationValidationParams> validator,
+            Func<CompileParams, IWorkshopTree> resolver)
         {
             Operator = op;
             Right = right ?? throw new ArgumentNullException(nameof(right));
@@ -68,7 +74,8 @@ namespace Deltin.Deltinteger.Parse
 
         public void Validate(ParseInfo parseInfo, DocRange range, IExpression left, IExpression right) => Validator?.Invoke(new(parseInfo, range, left, right));
 
-        public IWorkshopTree Resolve(ActionSet actionSet, IExpression left, IExpression right) => Resolver.Invoke(left.Parse(actionSet), right.Parse(actionSet));
+        public IWorkshopTree Resolve(ActionSet actionSet, IExpression left, IExpression right) => Resolver.Invoke(new(
+            actionSet, left.Parse(actionSet), right.Parse(actionSet)));
 
         public static TypeOperator TypeOperatorFromString(string str)
         {
@@ -139,6 +146,15 @@ namespace Deltin.Deltinteger.Parse
                 default: throw new NotImplementedException(op.ToString());
             }
         }
+
+        /// <summary>Converts '(l, r) => value' func to '(params) => value' func.
+        /// The latter is nicer to type but the former has access to the action set.</summary>
+        [return: NotNullIfNotNull("simple")]
+        private static Func<CompileParams, IWorkshopTree>? ConvertSimpleFunctionType(
+            Func<IWorkshopTree, IWorkshopTree, IWorkshopTree>? simple
+        ) => simple == null ? null : (param) => simple(param.Left, param.Right);
+
+        public record struct CompileParams(ActionSet ActionSet, IWorkshopTree Left, IWorkshopTree Right);
     }
 
     public record struct ExpressionOperationValidationParams(ParseInfo ParseInfo, DocRange Range, IExpression Left, IExpression Right);
