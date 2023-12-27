@@ -81,7 +81,7 @@ public record struct InterpSignatureHelp(int? activeParameter, int? activeSignat
     {
         ActiveParameter = activeParameter,
         ActiveSignature = activeSignature,
-        Signatures = signatures.Select(p => p.ToLsp()).ToArray()
+        Signatures = signatures?.Select(p => p.ToLsp()).ToArray() ?? Array.Empty<LspSignature>()
     };
 }
 

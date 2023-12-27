@@ -12,6 +12,8 @@ using Deltin.Deltinteger.Pathfinder;
 using Deltin.Deltinteger.Decompiler.TextToElement;
 using Deltin.Deltinteger.Decompiler.ElementToCode;
 using TextCopy;
+using System.Diagnostics.CodeAnalysis;
+using Deltin.Deltinteger.LanguageServer.Model;
 
 namespace Deltin.Deltinteger
 {
@@ -34,6 +36,29 @@ namespace Deltin.Deltinteger
             new RunDefault()
         };
 
+        // These types have a default parameterless constructor that is called with reflection.
+        // When building for 'browser-wasm', The constructors will be trimmed because the metadata and IL thinks that
+        // they are never called. These attributes will prevent this behaviour.
+        // Any type that is intended to be generated from json should be added as an attribute below.
+        // Element.js types:
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ElementRoot))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ElementJsonValue))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ElementJsonAction))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ElementEnum))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ElementEnumMember))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ElementParameter))]
+        // Wasm interp types:
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpChangeEvent))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpRange))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpPosition))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpScriptDiagnostics))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpDiagnostic))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpCompletionItem))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpSignature))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpSignatureParameter))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpSignatureContext))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpSemantics))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpHover))]
         static void Main(string[] args)
         {
             if (args.ElementAtOrDefault(0) == "--ping")
