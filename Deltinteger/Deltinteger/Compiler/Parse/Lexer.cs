@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
@@ -17,6 +18,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         private ITokenPush _currentTokenPush;
         private int _lastTokenCount;
         private readonly ParserSettings _parseSettings;
+        private readonly Stack<bool> _isInVanillaWorkshopContext = new(new[] { false });
 
         public Lexer(ParserSettings parseSettings)
         {
@@ -177,10 +179,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public Token ScanTokenAt(int tokenIndex) => ScanTokenAt(tokenIndex, CurrentController.MatchOne);
 
-        public Token ScanTokenAt(int tokenIndex, Action match)
+        public Token ScanTokenAt(int tokenIndex, Action<bool> match)
         {
             while (!IsPushCompleted && !_currentTokenPush.IncrementalStop() && _currentTokenPush.Current <= tokenIndex)
-                match();
+                match(_isInVanillaWorkshopContext.Peek());
             return Tokens.ElementAtOrDefault(tokenIndex);
         }
 
@@ -197,6 +199,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (!IsPushCompleted)
                 throw new Exception("Cannot get token delta until the current token push is completed.");
             return Tokens.Count - _lastTokenCount;
+        }
+
+        public T InVanillaWorkshopContext<T>(Func<T> task)
+        {
+            _isInVanillaWorkshopContext.Push(true);
+            var result = task();
+            _isInVanillaWorkshopContext.Pop();
+            return result;
         }
 
         private static int NumberOfNewLines(string text)
@@ -218,118 +228,139 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public int Column;
         public string Content { get; }
         private readonly ITokenPush _push;
+        private readonly VanillaSymbols _vanillaSymbols;
         private readonly ParserSettings _settings;
 
-        public LexController(ParserSettings settings, string content, ITokenPush push)
+        public LexController(ParserSettings settings, string content, ITokenPush push, VanillaSymbols vanillaSymbols)
         {
             Content = content;
             _push = push;
+            _vanillaSymbols = vanillaSymbols;
             _settings = settings;
         }
 
-        public void MatchOne()
+        public void MatchOne(bool isWorkshopContext)
         {
             Skip();
-            if (Index < Content.Length && !_push.IncrementalStop())
+            if (HasMoreContent())
             {
-                bool matched =
-                    MatchActionComment() ||
-                    MatchNumber() ||
-                    MatchSymbol('{', TokenType.CurlyBracket_Open) ||
-                    MatchSymbol('}', TokenType.CurlyBracket_Close) ||
-                    MatchSymbol('(', TokenType.Parentheses_Open) ||
-                    MatchSymbol(')', TokenType.Parentheses_Close) ||
-                    MatchSymbol('[', TokenType.SquareBracket_Open) ||
-                    MatchSymbol(']', TokenType.SquareBracket_Close) ||
-                    MatchSymbol(':', TokenType.Colon) ||
-                    MatchSymbol('?', TokenType.QuestionMark) ||
-                    MatchSymbol(';', TokenType.Semicolon) ||
-                    MatchSymbol("..", TokenType.Spread) ||
-                    MatchSymbol('.', TokenType.Dot) ||
-                    MatchSymbol('~', TokenType.Squiggle) ||
-                    MatchSymbol("=>", TokenType.Arrow) ||
-                    MatchSymbol("!=", TokenType.NotEqual) ||
-                    MatchSymbol("==", TokenType.EqualEqual) ||
-                    MatchSymbol("<=", TokenType.LessThanOrEqual) ||
-                    MatchSymbol(">=", TokenType.GreaterThanOrEqual) ||
-                    MatchSymbol('!', TokenType.Exclamation) ||
-                    MatchSymbol("^=", TokenType.HatEqual) ||
-                    MatchSymbol("*=", TokenType.MultiplyEqual) ||
-                    MatchSymbol("/=", TokenType.DivideEqual) ||
-                    MatchSymbol("%=", TokenType.ModuloEqual) ||
-                    MatchSymbol("+=", TokenType.AddEqual) ||
-                    MatchSymbol("-=", TokenType.SubtractEqual) ||
-                    MatchSymbol('=', TokenType.Equal) ||
-                    MatchSymbol('<', TokenType.LessThan) ||
-                    MatchSymbol('>', TokenType.GreaterThan) ||
-                    MatchSymbol(',', TokenType.Comma) ||
-                    MatchSymbol('^', TokenType.Hat) ||
-                    MatchSymbol('*', TokenType.Multiply) ||
-                    MatchSymbol('/', TokenType.Divide) ||
-                    MatchSymbol('%', TokenType.Modulo) ||
-                    MatchSymbol("++", TokenType.PlusPlus) ||
-                    MatchSymbol('+', TokenType.Add) ||
-                    MatchSymbol("--", TokenType.MinusMinus) ||
-                    MatchSymbol('-', TokenType.Subtract) ||
-                    MatchSymbol("&&", TokenType.And) ||
-                    MatchSymbol("||", TokenType.Or) ||
-                    MatchSymbol("|", TokenType.Pipe) ||
-                    MatchSymbol('@', TokenType.At) ||
-                    MatchKeyword("import", TokenType.Import) ||
-                    MatchKeyword("for", TokenType.For) ||
-                    MatchKeyword("while", TokenType.While) ||
-                    MatchKeyword("foreach", TokenType.Foreach) ||
-                    MatchKeyword("in", TokenType.In) ||
-                    MatchKeyword("rule", TokenType.Rule) ||
-                    MatchKeyword("disabled", TokenType.Disabled) ||
-                    MatchKeyword("true", TokenType.True) ||
-                    MatchKeyword("false", TokenType.False) ||
-                    MatchKeyword("null", TokenType.Null) ||
-                    MatchKeyword("if", TokenType.If) ||
-                    MatchKeyword("else", TokenType.Else) ||
-                    MatchKeyword("break", TokenType.Break) ||
-                    MatchKeyword("continue", TokenType.Continue) ||
-                    MatchKeyword("return", TokenType.Return) ||
-                    MatchKeyword("switch", TokenType.Switch) ||
-                    MatchKeyword("case", TokenType.Case) ||
-                    MatchKeyword("default", TokenType.Default) ||
-                    MatchKeyword("class", TokenType.Class) ||
-                    MatchKeyword("struct", TokenType.Struct) ||
-                    MatchKeyword("enum", TokenType.Enum) ||
-                    MatchKeyword("new", TokenType.New) ||
-                    MatchKeyword("delete", TokenType.Delete) ||
-                    MatchKeyword("define", TokenType.Define) ||
-                    MatchKeyword("void", TokenType.Void) ||
-                    MatchKeyword("public", TokenType.Public) ||
-                    MatchKeyword("private", TokenType.Private) ||
-                    MatchKeyword("protected", TokenType.Protected) ||
-                    MatchKeyword("static", TokenType.Static) ||
-                    MatchKeyword("override", TokenType.Override) ||
-                    MatchKeyword("virtual", TokenType.Virtual) ||
-                    MatchKeyword("recursive", TokenType.Recursive) ||
-                    MatchKeyword("globalvar", TokenType.GlobalVar) ||
-                    MatchKeyword("playervar", TokenType.PlayerVar) ||
-                    MatchKeyword("persist", TokenType.Persist) ||
-                    MatchKeyword("ref", TokenType.Ref) ||
-                    MatchKeyword("this", TokenType.This) ||
-                    MatchKeyword("root", TokenType.Root) ||
-                    MatchKeyword("async", TokenType.Async) ||
-                    MatchKeyword("constructor", TokenType.Constructor) ||
-                    MatchKeyword("as", TokenType.As) ||
-                    MatchKeyword("type", TokenType.Type) ||
-                    MatchKeyword("single", TokenType.Single) ||
-                    MatchKeyword("const", TokenType.Const) ||
-                    MatchKeyword("json", TokenType.Json) ||
-                    MatchIdentifier() ||
-                    MatchString();
+                bool didMatch = isWorkshopContext ? MatchWorkshopContext() : MatchDefault();
 
-                if (matched)
+                if (didMatch)
                     Skip();
                 else
                     Unknown();
             }
             PostMatch();
         }
+
+        public bool MatchDefault()
+        {
+            return
+                MatchActionComment() ||
+                MatchNumber() ||
+                MatchSymbol('{', TokenType.CurlyBracket_Open) ||
+                MatchSymbol('}', TokenType.CurlyBracket_Close) ||
+                MatchSymbol('(', TokenType.Parentheses_Open) ||
+                MatchSymbol(')', TokenType.Parentheses_Close) ||
+                MatchSymbol('[', TokenType.SquareBracket_Open) ||
+                MatchSymbol(']', TokenType.SquareBracket_Close) ||
+                MatchSymbol(':', TokenType.Colon) ||
+                MatchSymbol('?', TokenType.QuestionMark) ||
+                MatchSymbol(';', TokenType.Semicolon) ||
+                MatchSymbol("..", TokenType.Spread) ||
+                MatchSymbol('.', TokenType.Dot) ||
+                MatchSymbol('~', TokenType.Squiggle) ||
+                MatchSymbol("=>", TokenType.Arrow) ||
+                MatchSymbol("!=", TokenType.NotEqual) ||
+                MatchSymbol("==", TokenType.EqualEqual) ||
+                MatchSymbol("<=", TokenType.LessThanOrEqual) ||
+                MatchSymbol(">=", TokenType.GreaterThanOrEqual) ||
+                MatchSymbol('!', TokenType.Exclamation) ||
+                MatchSymbol("^=", TokenType.HatEqual) ||
+                MatchSymbol("*=", TokenType.MultiplyEqual) ||
+                MatchSymbol("/=", TokenType.DivideEqual) ||
+                MatchSymbol("%=", TokenType.ModuloEqual) ||
+                MatchSymbol("+=", TokenType.AddEqual) ||
+                MatchSymbol("-=", TokenType.SubtractEqual) ||
+                MatchSymbol('=', TokenType.Equal) ||
+                MatchSymbol('<', TokenType.LessThan) ||
+                MatchSymbol('>', TokenType.GreaterThan) ||
+                MatchSymbol(',', TokenType.Comma) ||
+                MatchSymbol('^', TokenType.Hat) ||
+                MatchSymbol('*', TokenType.Multiply) ||
+                MatchSymbol('/', TokenType.Divide) ||
+                MatchSymbol('%', TokenType.Modulo) ||
+                MatchSymbol("++", TokenType.PlusPlus) ||
+                MatchSymbol('+', TokenType.Add) ||
+                MatchSymbol("--", TokenType.MinusMinus) ||
+                MatchSymbol('-', TokenType.Subtract) ||
+                MatchSymbol("&&", TokenType.And) ||
+                MatchSymbol("||", TokenType.Or) ||
+                MatchSymbol("|", TokenType.Pipe) ||
+                MatchSymbol('@', TokenType.At) ||
+                MatchKeyword("import", TokenType.Import) ||
+                MatchKeyword("for", TokenType.For) ||
+                MatchKeyword("while", TokenType.While) ||
+                MatchKeyword("foreach", TokenType.Foreach) ||
+                MatchKeyword("in", TokenType.In) ||
+                MatchKeyword("rule", TokenType.Rule) ||
+                MatchKeyword("disabled", TokenType.Disabled) ||
+                MatchKeyword("true", TokenType.True) ||
+                MatchKeyword("false", TokenType.False) ||
+                MatchKeyword("null", TokenType.Null) ||
+                MatchKeyword("if", TokenType.If) ||
+                MatchKeyword("else", TokenType.Else) ||
+                MatchKeyword("break", TokenType.Break) ||
+                MatchKeyword("continue", TokenType.Continue) ||
+                MatchKeyword("return", TokenType.Return) ||
+                MatchKeyword("switch", TokenType.Switch) ||
+                MatchKeyword("case", TokenType.Case) ||
+                MatchKeyword("default", TokenType.Default) ||
+                MatchKeyword("class", TokenType.Class) ||
+                MatchKeyword("struct", TokenType.Struct) ||
+                MatchKeyword("enum", TokenType.Enum) ||
+                MatchKeyword("new", TokenType.New) ||
+                MatchKeyword("delete", TokenType.Delete) ||
+                MatchKeyword("define", TokenType.Define) ||
+                MatchKeyword("void", TokenType.Void) ||
+                MatchKeyword("public", TokenType.Public) ||
+                MatchKeyword("private", TokenType.Private) ||
+                MatchKeyword("protected", TokenType.Protected) ||
+                MatchKeyword("static", TokenType.Static) ||
+                MatchKeyword("override", TokenType.Override) ||
+                MatchKeyword("virtual", TokenType.Virtual) ||
+                MatchKeyword("recursive", TokenType.Recursive) ||
+                MatchKeyword("globalvar", TokenType.GlobalVar) ||
+                MatchKeyword("playervar", TokenType.PlayerVar) ||
+                MatchKeyword("persist", TokenType.Persist) ||
+                MatchKeyword("ref", TokenType.Ref) ||
+                MatchKeyword("this", TokenType.This) ||
+                MatchKeyword("root", TokenType.Root) ||
+                MatchKeyword("async", TokenType.Async) ||
+                MatchKeyword("constructor", TokenType.Constructor) ||
+                MatchKeyword("as", TokenType.As) ||
+                MatchKeyword("type", TokenType.Type) ||
+                MatchKeyword("single", TokenType.Single) ||
+                MatchKeyword("const", TokenType.Const) ||
+                MatchKeyword("json", TokenType.Json) ||
+                MatchIdentifier() ||
+                MatchString();
+        }
+
+        public bool MatchWorkshopContext()
+        {
+            return
+                MatchSymbol('{', TokenType.CurlyBracket_Open) ||
+                MatchSymbol('}', TokenType.CurlyBracket_Close) ||
+                MatchSymbol('(', TokenType.Parentheses_Open) ||
+                MatchSymbol(')', TokenType.Parentheses_Close) ||
+                MatchSymbol(';', TokenType.Semicolon) ||
+                MatchSymbol('.', TokenType.Dot) ||
+                MatchWorkshopConstant();
+        }
+
+        bool HasMoreContent() => Index < Content.Length && !_push.IncrementalStop();
 
         public void PostMatch()
         {
@@ -343,6 +374,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Index = scanner.Index;
             Line = scanner.Line;
             Column = scanner.Column;
+        }
+
+        private void Accept(WhitespaceLexScanner whitespaceLexScanner)
+        {
+            (Index, Line, Column) = whitespaceLexScanner.CurrentPosition();
         }
 
         // * Matchers *
@@ -556,7 +592,26 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return true;
         }
 
-        /// <summary>Unknown token.</summary>
+        bool MatchWorkshopConstant()
+        {
+            var scanner = new WhitespaceLexScanner(this);
+
+            var symbolTraveller = _vanillaSymbols.Values.Travel();
+            while (scanner.Current() is char current && symbolTraveller.Next(current))
+                scanner.Advance();
+
+            var word = symbolTraveller.Word();
+            if (word != null)
+            {
+                PushToken(scanner.AsToken(TokenType.WorkshopConstant));
+                Accept(scanner);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>The current character is unknown.</summary>
         public void Unknown()
         {
             LexScanner scanner = MakeScanner();
@@ -595,7 +650,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         private static readonly char[] identifierCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".ToCharArray();
         private static readonly char[] numericalCharacters = "0123456789".ToCharArray();
-        private static readonly char[] whitespaceCharacters = " \t\r\n".ToCharArray();
+        public static readonly char[] whitespaceCharacters = " \t\r\n".ToCharArray();
         public int Index { get; private set; }
         public int Line { get; private set; }
         public int Column { get; private set; }
@@ -647,12 +702,65 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return false;
         }
 
+        public char? Current() => _content.ElementAtOrDefault(Index);
         public bool At(char chr) => !ReachedEnd && _content[Index] == chr;
         public bool At(char chr, int lookahead) => Index + lookahead < _content.Length && _content[Index + lookahead] == chr;
         public bool AtIdentifierChar() => !ReachedEnd && identifierCharacters.Contains(_content[Index]);
         public bool AtWhitespace() => !ReachedEnd && whitespaceCharacters.Contains(_content[Index]);
         public bool AtNumeric() => !ReachedEnd && numericalCharacters.Contains(_content[Index]);
         public Token AsToken(TokenType tokenType) => new Token(_captured.ToString(), new DocRange(_startPos, new DocPos(Line, Column)), tokenType);
+    }
+
+    struct WhitespaceLexScanner
+    {
+        public record struct Position(int Index, int Line, int Column);
+
+        Position _start;
+        Position _currentPosition;
+        Position _lastNonWhitespacePosition;
+        readonly string _content;
+
+        public WhitespaceLexScanner(LexController controller)
+        {
+            _currentPosition = new(controller.Index, controller.Line, controller.Column);
+            _lastNonWhitespacePosition = _currentPosition;
+            _start = _currentPosition;
+            _content = controller.Content;
+        }
+
+        public readonly char? Current() => _content.ElementAtOrDefault(_currentPosition.Index);
+
+        public readonly bool ReachedEnd() => _currentPosition.Index >= _content.Length;
+
+        public readonly Position CurrentPosition() => _lastNonWhitespacePosition;
+
+        public void Advance()
+        {
+            if (ReachedEnd()) return;
+
+            char current = _content[_currentPosition.Index];
+            if (current == '\n')
+            {
+                _currentPosition.Line++;
+                _currentPosition.Column = 0;
+            }
+            else _currentPosition.Column++;
+            _currentPosition.Index++;
+
+            if (!LexScanner.whitespaceCharacters.Contains(current))
+            {
+                _lastNonWhitespacePosition = _currentPosition;
+            }
+        }
+
+        public readonly Token AsToken(TokenType tokenType)
+        {
+            string text = _content.Substring(_start.Index, _lastNonWhitespacePosition.Index);
+            return new(text, new(
+                start: new(_start.Line, _start.Column),
+                end: new(_lastNonWhitespacePosition.Line, _lastNonWhitespacePosition.Column)),
+                tokenType);
+        }
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Compiler.Parse.Operators;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Compiler.Parse
@@ -15,8 +16,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public TokenType Kind => Current?.TokenType ?? TokenType.EOF;
         public bool IsFinished => Lexer.IsFinished(Token) || Kind == TokenType.EOF;
 
-        public Stack<IOperatorInfo> Operators { get; } = new Stack<IOperatorInfo>();
-        public Stack<IParseExpression> Operands { get; } = new Stack<IParseExpression>();
         public Stack<TokenCapture> TokenCaptureStack { get; } = new Stack<TokenCapture>();
         public Stack<int> TokenRangeStart { get; } = new Stack<int>();
         public Stack<bool> TernaryCheck { get; } = new Stack<bool>();
@@ -25,6 +24,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public List<IParserError> Errors { get; } = new List<IParserError>();
         private readonly RootContext _last;
         private readonly ParserSettings _parserSettings;
+
+        readonly OperatorStack<IParseExpression> _operatorStack = new();
 
         private int LookaheadDepth = 0;
 
@@ -90,7 +91,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return node;
         }
 
-        T EndNodeFrom<T>(T node, DocPos start) where T : INodeRange
+        public T EndNodeFrom<T>(T node, DocPos start) where T : INodeRange
         {
             if (LookaheadDepth == 0)
                 node.Range = start + TokenAtOrEnd(Token - 1).Range.End;
@@ -332,114 +333,45 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         // Operators
-        void PushOperator(IOperatorInfo op)
-        {
-            while (CompilerOperator.Compare(Operators.Peek().Source, op.Source))
-                PopOperator();
-            Operators.Push(op);
-        }
+        void PushOperator(IStackOperator<IParseExpression> op) => _operatorStack.PushOperator(op);
 
-        void PopOperator()
+        bool TryParseBinaryOperator<T>(out IStackOperator<T> stackOperator)
         {
-            var iop = Operators.Pop();
-            if (iop is OperatorInfo op)
-            {
-                // Binary
-                if (op.Type == OperatorType.Binary)
-                {
-                    var right = Operands.Pop();
-                    var left = Operands.Pop();
-                    Operands.Push(new BinaryOperatorExpression(left, right, op));
-                }
-                // Unary
-                else if (op.Type == OperatorType.Unary)
-                {
-                    var value = Operands.Pop();
-                    Operands.Push(new UnaryOperatorExpression(value, op));
-                }
-                // Extraneous left-hand ternary
-                else if (op.Type == OperatorType.TernaryLeft)
-                {
-                    Operands.Pop();
-                    AddError(new MissingTernaryHand(op.Token, false));
-                }
-                // Ternary
-                else if (op.Type == OperatorType.TernaryRight)
-                {
-                    if (Operators.Peek() is OperatorInfo peek && peek.Type == OperatorType.TernaryLeft)
-                    {
-                        var op2 = Operators.Pop();
-                        var rhs = Operands.Pop();
-                        var middle = Operands.Pop();
-                        var lhs = Operands.Pop();
-                        Operands.Push(new TernaryExpression(lhs, middle, rhs));
-                    }
-                    // Missing left-hand ?
-                    else
-                    {
-                        Operands.Pop();
-                        AddError(new MissingTernaryHand(op.Token, true));
-                    }
-                }
-                else throw new NotImplementedException();
-            }
-            // Type cast operator.
-            else if (iop is TypeCastInfo typeCastOp)
-            {
-                var value = Operands.Pop();
-                Operands.Push(EndNodeFrom(new TypeCast(typeCastOp.CastingTo, value), typeCastOp.StartPosition));
-            }
-            // Array operator
-            else if (iop is ValueInArrayInfo valueInArray)
-            {
-                var value = Operands.Pop();
-                Operands.Push(new ValueInArray(value, valueInArray.Index, valueInArray.EndPosition));
-            }
-            // Invoke
-            else if (iop is InvokeInfo invoke)
-            {
-                var value = Operands.Pop();
-                Operands.Push(new FunctionExpression(value, invoke.LeftParentheses, invoke.RightParentheses, invoke.Values));
-            }
-        }
-
-        bool TryParseBinaryOperator(out OperatorInfo operatorInfo)
-        {
-            foreach (var op in CompilerOperator.BinaryOperators)
+            foreach (var op in CStyleOperator.BinaryOperators)
             {
                 // Do not parse '>' if we are in a formatted string and the following token is not an identifier.
-                if (op.Operator == ">" && StringCheck.Peek() && !Lexer.ScanTokenAt(Token + 1).TokenType.IsStartOfExpression())
+                if (op.Text == ">" && StringCheck.Peek() && !Lexer.ScanTokenAt(Token + 1).TokenType.IsStartOfExpression())
                     continue;
 
                 // Do not parse right-hand ternary if the top operator is not a left-hand ternary operator.
-                if (op.Type == OperatorType.TernaryRight && !TernaryCheck.Peek())
+                if (op.Type == CStyleOperatorType.TernaryRight && !TernaryCheck.Peek())
                     continue;
 
-                if (ParseOptional(op.RelatedToken, out Token token))
+                if (ParseOptional(op.OstwTokenType, out Token token))
                 {
-                    if (op.Type == OperatorType.TernaryLeft)
+                    if (op.Type == CStyleOperatorType.TernaryLeft)
                         TernaryCheck.Push(true);
-                    else if (op.Type == OperatorType.TernaryRight)
+                    else if (op.Type == CStyleOperatorType.TernaryRight)
                         TernaryCheck.Pop();
 
-                    operatorInfo = new OperatorInfo(op, token);
+                    stackOperator = op.AsStackOperator<T>(token);
                     return true;
                 }
             }
 
-            operatorInfo = null;
+            stackOperator = null;
             return false;
         }
 
-        OperatorInfo ParseUnaryOperator()
+        IStackOperator<IParseExpression> ParseUnaryOperator()
         {
             // Operator !expr
             if (ParseOptional(TokenType.Exclamation, out var not))
-                return new OperatorInfo(CompilerOperator.Not, not);
+                return CStyleOperator.Not.AsStackOperator<IParseExpression>(not);
 
             // Operator -expr
             else if (ParseOptional(TokenType.Subtract, out var inverse))
-                return new OperatorInfo(CompilerOperator.Inv, inverse);
+                return CStyleOperator.Inv.AsStackOperator<IParseExpression>(inverse);
 
             // No unary found.
             return null;
@@ -504,7 +436,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     expression = GetSubExpression();
                     break;
             }
-            Operands.Push(expression);
+            _operatorStack.PushOperand(expression);
             GetArrayAndInvokes();
         }
 
@@ -519,7 +451,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // End the closing square bracket.
                     var closing = ParseExpected(TokenType.SquareBracket_Close) ?? CurrentOrLast;
                     // Push operator
-                    PushOperator(new ValueInArrayInfo(index, closing.Range.End));
+                    PushOperator(new IndexerStackOperator<IParseExpression>(index, closing.Range.End));
                 }
                 // Invoke
                 else if (ParseOptional(TokenType.Parentheses_Open, out Token leftParentheses))
@@ -529,7 +461,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // End the parentheses.
                     Token rightParentheses = ParseExpected(TokenType.Parentheses_Close) ?? CurrentOrLast;
                     // Update the expression.
-                    PushOperator(new InvokeInfo(leftParentheses, rightParentheses, values));
+                    PushOperator(new InvokeStackOperator(leftParentheses, rightParentheses, values));
                 }
                 // No more array indices or invocations.
                 else break;
@@ -565,7 +497,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Array
                 case TokenType.SquareBracket_Open: return ParseCreateArray();
                 // Async
-                case TokenType.Async: return ParseAsync();
+                case TokenType.Async: return ParseAsyncExpression();
                 // Struct declaration
                 case TokenType.CurlyBracket_Open: return ParseStructDeclaration();
                 // Formatted string
@@ -606,19 +538,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
             GetExpressionWithArray();
 
             // Binary operator
-            while (TryParseBinaryOperator(out OperatorInfo op))
+            while (TryParseBinaryOperator<IParseExpression>(out var stackOperator))
             {
-                PushOperator(op);
-                op.Operator.RhsHandler.Get(op, this);
+                PushOperator(stackOperator);
+                op.Operator.RhsHandler.Get(stackOperator, this);
             }
 
-            PopAllOperators();
-        }
-
-        public void PopAllOperators()
-        {
-            while (Operators.Peek().Source.Precedence > 0)
-                PopOperator();
+            _operatorStack.PopAllOperators();
         }
 
         /// <summary>Contains the operator stack and parses an expression.</summary>
@@ -628,14 +554,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StringCheck.Push(stringCheck);
             TernaryCheck.Push(false);
 
-            Operators.Push(OperatorInfo.Sentinel);
-            GetExpressionWithOperators();
-            Operators.Pop();
+            var result = _operatorStack.GetExpression(GetExpressionWithOperators);
 
             StringCheck.Pop();
             TernaryCheck.Pop();
 
-            return Operands.Pop();
+            return result;
         }
 
         /// <summary>Parses an identifier or a function.</summary>
@@ -1658,7 +1582,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return generics;
         }
 
-        AsyncContext ParseAsync()
+        AsyncContext ParseAsyncExpression()
         {
             StartNode();
             var asyncToken = ParseExpected(TokenType.Async);
@@ -1754,7 +1678,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             while (ParseExpected(TokenType.CurlyBracket_Close))
             {
-                if (Lexer.ScanTokenAt(Token, () => Lexer.CurrentController.MatchString(true, single)))
+                if (Lexer.ScanTokenAt(Token, _ => Lexer.CurrentController.MatchString(true, single)))
                 {
                     Lexer.CurrentController.PostMatch();
                     // } {
@@ -1813,6 +1737,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     context.Classes.Add(ParseClassOrStruct());
                     return;
             }
+
+            // Workshop rule
+
 
             // Return false if the EOF was reached.
             switch (Kind)
@@ -2099,7 +2026,76 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new Hook(variableExpression, variableValue);
         }
 
-        public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
+        bool IsWorkshopRule() => Lookahead(() =>
+        {
+            ParseOptional(TokenType.Disabled);
+            return ParseExpected(TokenType.Rule) && ParseExpected(TokenType.Parentheses_Open);
+        });
+
+        void ParseWorkshopRule()
+        {
+            bool disabled = ParseOptional(TokenType.Disabled);
+            ParseExpected(TokenType.WorkshopRule);
+
+            // Parentheses containing name.
+            ParseExpected(TokenType.Parentheses_Open);
+            var name = ParseExpected(TokenType.String);
+            ParseExpected(TokenType.Parentheses_Close);
+
+            // Inner data
+            ParseExpected(TokenType.CurlyBracket_Open);
+
+            var ruleContent = new List<WorkshopRuleContent>();
+            while (TryParseWorkshopRuleContent(out var nextElement))
+                ruleContent.Add(nextElement);
+
+            ParseExpected(TokenType.CurlyBracket_Close);
+        }
+
+        bool TryParseWorkshopRuleContent(out WorkshopRuleContent nextElement)
+        {
+            nextElement = Lexer.InVanillaWorkshopContext(() => Kind switch
+            {
+                TokenType.WorkshopEvent => ParseWorkshopRuleContent(Kind),
+                TokenType.WorkshopConditions => ParseWorkshopRuleContent(Kind),
+                TokenType.WorkshopActions => ParseWorkshopRuleContent(Kind),
+                _ => default
+            });
+            return nextElement != null;
+        }
+
+        WorkshopRuleContent ParseWorkshopRuleContent(TokenType initiatingTokenType)
+        {
+            ParseExpected(initiatingTokenType);
+            ParseExpected(TokenType.CurlyBracket_Open);
+
+            List<IWorkshopExpression> items = new();
+            while (IsWorkshopExpression())
+            {
+                items.Add(ParseWorkshopExpression());
+                ParseExpected(TokenType.Semicolon);
+            }
+
+            ParseExpected(TokenType.CurlyBracket_Close);
+            return new(items.ToArray());
+        }
+
+        IWorkshopExpression ParseWorkshopExpression()
+        {
+            // Get identifier
+            ParseExpected(TokenType.WorkshopConstant, TokenType.WorkshopSymbol);
+
+            // Invoke
+            if (ParseOptional(TokenType.Parentheses_Open))
+            {
+                // Parameter list
+                ParseExpected(TokenType.Parentheses_Close);
+            }
+        }
+
+        bool IsWorkshopExpression() => Is(TokenType.WorkshopConstant) || Is(TokenType.WorkshopSymbol);
+
+        Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
         MetaComment ParseMetaComment()
         {
             if (!Is(TokenType.ActionComment))

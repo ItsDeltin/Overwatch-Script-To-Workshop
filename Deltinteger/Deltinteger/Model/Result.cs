@@ -97,4 +97,7 @@ public struct Result<T, E>
         else
             return Result<(T a, U b), E>.Error(other._error);
     }
+
+    public static implicit operator Result<T, E>(T value) => Ok(value);
+    public static implicit operator Result<T, E>(E error) => Error(error);
 }

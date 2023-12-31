@@ -549,6 +549,13 @@ namespace Deltin.Deltinteger.Compiler
         GreaterThanOrEqual,
         // Ternary
         QuestionMark,
+        // Workshop
+        WorkshopRule,
+        WorkshopEvent,
+        WorkshopActions,
+        WorkshopConditions,
+        WorkshopConstant,
+        WorkshopSymbol,
         // Other
         ActionComment,
         EOF,
