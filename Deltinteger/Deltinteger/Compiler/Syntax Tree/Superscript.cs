@@ -1,13 +1,23 @@
+#nullable enable
+
+using System.Collections.Generic;
+
 namespace Deltin.Deltinteger.Compiler.SyntaxTree;
 
-record class WorkshopRuleContent(IWorkshopExpression[] InnerItems);
+public record class VanillaRule(Token Disabled, Token Name, VanillaRuleContent[] Content);
 
-interface IWorkshopRuleElement { }
+public record class VanillaRuleContent(Token GroupToken, IVanillaExpression[] InnerItems);
 
-record class WorkshopRuleEvent : IWorkshopRuleElement;
+interface IVanillaRuleElement { }
 
-record class WorkshopRuleConditions(IWorkshopExpression[] Conditions) : IWorkshopRuleElement;
+record class VanillaRuleEvent : IVanillaRuleElement;
 
-record class WorkshopRuleActions(IWorkshopExpression[] Actions) : IWorkshopRuleElement;
+record class VanillaRuleConditions(IVanillaExpression[] Conditions) : IVanillaRuleElement;
 
-interface IWorkshopExpression { }
+record class VanillaRuleActions(IVanillaExpression[] Actions) : IVanillaRuleElement;
+
+public interface IVanillaExpression { }
+
+record class VanillaSymbolExpression(Token Token) : IVanillaExpression;
+
+record class VanillaInvokeExpression(IVanillaExpression Invoking, List<IVanillaExpression> Arguments) : IVanillaExpression { }

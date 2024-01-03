@@ -35,14 +35,14 @@ record CStyleOperator(int Precedence, string Text, CStyleOperatorType Type, Toke
         {
             var right = stackHelper.PopOperand();
             var left = stackHelper.PopOperand();
-            return stackHelper.GetFactory().CreateBinaryExpression(this, left, right);
+            return stackHelper.GetFactory().CreateBinaryExpression(new(Token, CStyleOperator.Text), left, right);
         }
 
         // Unary
         Result<T, IParserError> Unary(IExpressionStackHelper<T> stackHelper)
         {
             var value = stackHelper.PopOperand();
-            return stackHelper.GetFactory().CreateUnaryExpression(this, value);
+            return stackHelper.GetFactory().CreateUnaryExpression(new(Token, CStyleOperator.Text), value);
         }
 
         // Extraneous left-hand ternary
@@ -117,7 +117,7 @@ record CStyleOperator(int Precedence, string Text, CStyleOperatorType Type, Toke
 
     static CStyleOperator Binary(int precedence, string text, TokenType tokenType) => new(precedence, text, CStyleOperatorType.Binary, tokenType);
     static CStyleOperator Unary(int precedence, string text, TokenType tokenType) => new(precedence, text, CStyleOperatorType.Unary, tokenType);
-    static CStyleOperator DotOp(int precedence, string text, TokenType tokenType);
+    static CStyleOperator DotOp(int precedence, string text, TokenType tokenType) => Binary(precedence, text, tokenType);
 
     public static CStyleOperator[] BinaryOperators { get; } = new[] {
         Squiggle, Dot, Equal, NotEqual, GreaterThan, LessThan, GreaterThanOrEqual, LessThanOrEqual, And, Or, Subtract, Add, Modulo, Divide, Multiply, Power,

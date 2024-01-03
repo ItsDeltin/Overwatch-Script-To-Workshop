@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public void Init(VersionInstance content)
         {
             Content = content;
-            CurrentController = new LexController(_parseSettings, Content.Text, _currentTokenPush = new InitTokenPush(this));
+            CurrentController = new LexController(_parseSettings, Content.Text, _currentTokenPush = new InitTokenPush(this), VanillaSymbols.Instance);
         }
 
         public void Reset()
@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             _currentTokenPush = new IncrementalTokenInsert(this, affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex);
-            CurrentController = new LexController(_parseSettings, newContent.Text, _currentTokenPush);
+            CurrentController = new LexController(_parseSettings, newContent.Text, _currentTokenPush, VanillaSymbols.Instance);
 
             // Set start range
             CurrentController.Index = affectedArea.StartIndex;
@@ -596,7 +596,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             var scanner = new WhitespaceLexScanner(this);
 
-            var symbolTraveller = _vanillaSymbols.Values.Travel();
+            var symbolTraveller = _vanillaSymbols.ActionValues.Travel();
+            // Feed incoming characters into the symbol traveller
             while (scanner.Current() is char current && symbolTraveller.Next(current))
                 scanner.Advance();
 

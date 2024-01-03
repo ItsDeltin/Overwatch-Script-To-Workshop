@@ -1,14 +1,16 @@
 #nullable enable
 
+using Deltin.Deltinteger.Compiler.Parse.Operators;
+
 namespace Deltin.Deltinteger.Compiler.SyntaxTree;
 
 public class BinaryOperatorExpression : Node, IParseExpression
 {
     public IParseExpression Left { get; }
     public IParseExpression Right { get; }
-    public OperatorInfo Operator { get; }
+    public OperatorNode Operator { get; }
 
-    public BinaryOperatorExpression(IParseExpression left, IParseExpression right, OperatorInfo op)
+    public BinaryOperatorExpression(IParseExpression left, IParseExpression right, OperatorNode op)
     {
         Left = left;
         Right = right;
@@ -18,15 +20,15 @@ public class BinaryOperatorExpression : Node, IParseExpression
 
     public override string ToString() => Left.ToString() + " " + Operator.ToString() + " " + Right.ToString();
 
-    public bool IsDotExpression() => Operator.Operator == CompilerOperator.Dot || Operator.Operator == CompilerOperator.Squiggle;
+    public bool IsDotExpression() => Operator.Text == "." || Operator.Text == "~";
 }
 
 public class UnaryOperatorExpression : Node, IParseExpression
 {
     public IParseExpression Value { get; }
-    public OperatorInfo Operator { get; }
+    public OperatorNode Operator { get; }
 
-    public UnaryOperatorExpression(IParseExpression value, OperatorInfo op)
+    public UnaryOperatorExpression(IParseExpression value, OperatorNode op)
     {
         Value = value;
         Operator = op;

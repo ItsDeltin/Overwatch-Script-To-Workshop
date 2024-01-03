@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         private readonly RootContext _last;
         private readonly ParserSettings _parserSettings;
 
-        readonly OperatorStack<IParseExpression> _operatorStack = new();
+        readonly OperatorStack<IParseExpression> _operatorStack = new(new OstwOperandFactory());
 
         private int LookaheadDepth = 0;
 
@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 TokenRangeStart.Pop();
         }
 
-        T Node<T>(Func<T> func) where T : Node
+        T Node<T>(Func<T> func) where T : INodeRange
         {
             StartNode();
             T r = func();
@@ -335,7 +335,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
         // Operators
         void PushOperator(IStackOperator<IParseExpression> op) => _operatorStack.PushOperator(op);
 
-        bool TryParseBinaryOperator<T>(out IStackOperator<T> stackOperator)
+        enum BinaryRhsMode
+        {
+            Default,
+            Dot,
+            Squiggle
+        }
+
+        bool TryParseBinaryOperator<T>(out IStackOperator<T> stackOperator, out BinaryRhsMode binaryRhsMode)
         {
             foreach (var op in CStyleOperator.BinaryOperators)
             {
@@ -355,11 +362,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                         TernaryCheck.Pop();
 
                     stackOperator = op.AsStackOperator<T>(token);
+                    binaryRhsMode = op == CStyleOperator.Dot ? BinaryRhsMode.Dot :
+                        op == CStyleOperator.Squiggle ? BinaryRhsMode.Squiggle : BinaryRhsMode.Default;
                     return true;
                 }
             }
 
             stackOperator = null;
+            binaryRhsMode = BinaryRhsMode.Default;
             return false;
         }
 
@@ -538,10 +548,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
             GetExpressionWithArray();
 
             // Binary operator
-            while (TryParseBinaryOperator<IParseExpression>(out var stackOperator))
+            while (TryParseBinaryOperator<IParseExpression>(out var stackOperator, out var rhsMode))
             {
                 PushOperator(stackOperator);
-                op.Operator.RhsHandler.Get(stackOperator, this);
+                if (rhsMode == BinaryRhsMode.Default)
+                {
+                    GetExpressionWithArray();
+                }
+                else
+                {
+                    _operatorStack.PushOperand(Identifier());
+                    GetArrayAndInvokes();
+
+                    if (rhsMode == BinaryRhsMode.Squiggle)
+                        _operatorStack.PopAllOperators();
+                }
             }
 
             _operatorStack.PopAllOperators();
@@ -1524,7 +1545,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Parse the closing angled bracket.
             ParseExpected(TokenType.GreaterThan);
 
-            PushOperator(new TypeCastInfo(type, startPosition));
+            PushOperator(new TypeCastStackOperator(this, type, startPosition));
         }
 
         StringExpression ParseFormattedString()
@@ -1734,12 +1755,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Class
                 case TokenType.Class:
                 case TokenType.Struct:
-                    context.Classes.Add(ParseClassOrStruct());
+                    context.RootItems.Add(new(ParseClassOrStruct()));
                     return;
             }
 
             // Workshop rule
-
+            if (IsVanillaRule())
+            {
+                context.RootItems.Add(new(ParseVanillaRule()));
+                return;
+            }
 
             // Return false if the EOF was reached.
             switch (Kind)
@@ -1747,21 +1772,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Rule
                 case TokenType.Rule:
                 case TokenType.Disabled:
-                    context.Rules.Add(ParseRule());
+                    context.RootItems.Add(new(ParseRule()));
                     break;
 
                 // Enum
                 case TokenType.Enum:
-                    context.Enums.Add(ParseEnum());
+                    context.RootItems.Add(new(ParseEnum()));
                     break;
 
                 // Import
                 case TokenType.Import:
-                    context.Imports.Add(ParseImport());
+                    context.RootItems.Add(new(ParseImport()));
                     break;
 
                 case TokenType.Type:
-                    context.TypeAliases.Add(ParseTypeAlias());
+                    context.RootItems.Add(new(ParseTypeAlias()));
                     break;
 
                 case TokenType.GlobalVar:
@@ -1783,7 +1808,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 default:
                     // Variable declaration
                     if (IsDeclaration(true))
-                        context.Declarations.Add(ParseVariableOrFunctionDeclaration());
+                        context.RootItems.Add(new(ParseVariableOrFunctionDeclaration()));
                     // Hook
                     else if (IsHook())
                         context.Hooks.Add(ParseHook());
@@ -2026,15 +2051,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new Hook(variableExpression, variableValue);
         }
 
-        bool IsWorkshopRule() => Lookahead(() =>
+        bool IsVanillaRule() => Lookahead(() =>
         {
             ParseOptional(TokenType.Disabled);
             return ParseExpected(TokenType.Rule) && ParseExpected(TokenType.Parentheses_Open);
         });
 
-        void ParseWorkshopRule()
+        VanillaRule ParseVanillaRule()
         {
-            bool disabled = ParseOptional(TokenType.Disabled);
+            var disabled = ParseOptional(TokenType.Disabled);
             ParseExpected(TokenType.WorkshopRule);
 
             // Parentheses containing name.
@@ -2045,55 +2070,80 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Inner data
             ParseExpected(TokenType.CurlyBracket_Open);
 
-            var ruleContent = new List<WorkshopRuleContent>();
-            while (TryParseWorkshopRuleContent(out var nextElement))
+            var ruleContent = new List<VanillaRuleContent>();
+            while (TryParseVanillaRuleContent(out var nextElement))
                 ruleContent.Add(nextElement);
 
             ParseExpected(TokenType.CurlyBracket_Close);
+
+            return new(disabled, name, ruleContent.ToArray());
         }
 
-        bool TryParseWorkshopRuleContent(out WorkshopRuleContent nextElement)
+        bool TryParseVanillaRuleContent(out VanillaRuleContent nextElement)
         {
             nextElement = Lexer.InVanillaWorkshopContext(() => Kind switch
             {
-                TokenType.WorkshopEvent => ParseWorkshopRuleContent(Kind),
-                TokenType.WorkshopConditions => ParseWorkshopRuleContent(Kind),
-                TokenType.WorkshopActions => ParseWorkshopRuleContent(Kind),
+                TokenType.WorkshopEvent => ParseVanillaRuleContent(Kind),
+                TokenType.WorkshopConditions => ParseVanillaRuleContent(Kind),
+                TokenType.WorkshopActions => ParseVanillaRuleContent(Kind),
                 _ => default
             });
             return nextElement != null;
         }
 
-        WorkshopRuleContent ParseWorkshopRuleContent(TokenType initiatingTokenType)
+        VanillaRuleContent ParseVanillaRuleContent(TokenType initiatingTokenType)
         {
-            ParseExpected(initiatingTokenType);
+            var groupToken = ParseExpected(initiatingTokenType);
             ParseExpected(TokenType.CurlyBracket_Open);
 
-            List<IWorkshopExpression> items = new();
-            while (IsWorkshopExpression())
+            List<IVanillaExpression> items = new();
+            while (Kind.IsWorkshopExpression())
             {
-                items.Add(ParseWorkshopExpression());
+                items.Add(ParseVanillaExpression());
                 ParseExpected(TokenType.Semicolon);
             }
 
             ParseExpected(TokenType.CurlyBracket_Close);
-            return new(items.ToArray());
+            return new(groupToken, items.ToArray());
         }
 
-        IWorkshopExpression ParseWorkshopExpression()
+        IVanillaExpression ParseVanillaExpression()
         {
-            // Get identifier
-            ParseExpected(TokenType.WorkshopConstant, TokenType.WorkshopSymbol);
+            IVanillaExpression expression = null;
+            if (IsNumber())
+            {
+                expression = ParseNumber();
+            }
+            else if (Is(TokenType.WorkshopSymbol) || Is(TokenType.WorkshopConstant))
+            {
+                expression = new VanillaSymbolExpression(Consume());
+            }
+            // Expression contained in parentheses.
+            else if (Is(TokenType.Parentheses_Open))
+            {
+                Consume();
+                expression = ParseVanillaExpression();
+                ParseExpected(TokenType.Parentheses_Close);
+            }
 
             // Invoke
             if (ParseOptional(TokenType.Parentheses_Open))
             {
+                var arguments = new List<IVanillaExpression>();
+                if (Kind.IsWorkshopExpression())
+                {
+                    do arguments.Add(ParseVanillaExpression());
+                    while (ParseOptional(TokenType.Comma));
+                }
+
                 // Parameter list
                 ParseExpected(TokenType.Parentheses_Close);
-            }
-        }
 
-        bool IsWorkshopExpression() => Is(TokenType.WorkshopConstant) || Is(TokenType.WorkshopSymbol);
+                expression = new VanillaInvokeExpression(expression, arguments);
+            }
+
+            return expression;
+        }
 
         Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
         MetaComment ParseMetaComment()

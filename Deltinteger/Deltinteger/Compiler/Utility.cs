@@ -420,6 +420,17 @@ namespace Deltin.Deltinteger.Compiler
             }
         }
 
+        public static bool IsWorkshopExpression(this TokenType tokenType) => tokenType switch
+        {
+            TokenType.WorkshopSymbol or
+            TokenType.WorkshopConstant or
+            TokenType.Exclamation or
+            TokenType.Number or
+            TokenType.String or
+            TokenType.Parentheses_Open => true,
+            _ => false,
+        };
+
         public static bool IsDecorative(this TokenType tokenType)
         {
             switch (tokenType)

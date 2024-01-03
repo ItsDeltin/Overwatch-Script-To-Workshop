@@ -69,10 +69,10 @@ class OperatorStack<T> : IExpressionStackHelper<T>
 
 interface IOperandFactory<T>
 {
-    T CreateBinaryExpression(IStackOperator<T> op, T left, T right);
-    T CreateUnaryExpression(IStackOperator<T> op, T value);
+    T CreateBinaryExpression(OperatorNode op, T left, T right);
+    T CreateUnaryExpression(OperatorNode op, T value);
     T CreateTernary(T lhs, T middle, T rhs);
-    T CreateIndexer(T array, T index);
+    T CreateIndexer(T array, T index, DocPos endPos);
 }
 
 interface IExpressionStackHelper<T>
@@ -82,3 +82,5 @@ interface IExpressionStackHelper<T>
     IStackOperator<T> PopOperator();
     IOperandFactory<T> GetFactory();
 }
+
+public record struct OperatorNode(Token Token, string Text);

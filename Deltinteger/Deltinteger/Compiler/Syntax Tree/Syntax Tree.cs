@@ -7,19 +7,50 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 {
     public class RootContext
     {
-        public List<Import> Imports { get; } = new List<Import>();
-        public List<RuleContext> Rules { get; } = new List<RuleContext>();
-        public List<ClassContext> Classes { get; } = new List<ClassContext>();
-        public List<EnumContext> Enums { get; } = new List<EnumContext>();
-        public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
+        public List<RootElement> RootItems { get; } = new();
 
-        public List<TypeAliasContext> TypeAliases { get; } = new List<TypeAliasContext>();
+        public List<Token> PlayervarReservations { get; } = new();
+        public List<Token> GlobalvarReservations { get; } = new();
 
-        public List<Token> PlayervarReservations { get; } = new List<Token>();
-        public List<Token> GlobalvarReservations { get; } = new List<Token>();
-
-        public List<Hook> Hooks { get; } = new List<Hook>();
+        public List<Hook> Hooks { get; } = new();
         public List<TokenCapture> NodeCaptures { get; set; }
+    }
+
+    public readonly struct RootElement
+    {
+        readonly Import import = null;
+        readonly RuleContext rule = null;
+        readonly ClassContext classContext = null;
+        readonly EnumContext enumContext = null;
+        readonly IDeclaration declaration = null;
+        readonly VanillaRule vanillaRule = null;
+        readonly TypeAliasContext typeAlias = null;
+
+        public RootElement(Import import) => this.import = import;
+        public RootElement(RuleContext rule) => this.rule = rule;
+        public RootElement(ClassContext classContext) => this.classContext = classContext;
+        public RootElement(EnumContext enumContext) => this.enumContext = enumContext;
+        public RootElement(IDeclaration declaration) => this.declaration = declaration;
+        public RootElement(VanillaRule vanillaRule) => this.vanillaRule = vanillaRule;
+        public RootElement(TypeAliasContext typeAlias) => this.typeAlias = typeAlias;
+
+        public void Match(
+            Action<Import> import,
+            Action<RuleContext> rule,
+            Action<ClassContext> classContext,
+            Action<EnumContext> enumContext,
+            Action<IDeclaration> declaration,
+            Action<VanillaRule> vanillaRule,
+            Action<TypeAliasContext> typeAlias)
+        {
+            if (import is not null) import(this.import);
+            else if (rule is not null) rule(this.rule);
+            else if (classContext is not null) classContext(this.classContext);
+            else if (enumContext is not null) enumContext(this.enumContext);
+            else if (declaration is not null) declaration(this.declaration);
+            else if (vanillaRule is not null) vanillaRule(this.vanillaRule);
+            else if (typeAlias is not null) typeAlias(this.typeAlias);
+        }
     }
 
     public class Node : INodeRange
@@ -456,7 +487,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => Value.ToString();
     }
 
-    public class NumberExpression : Node, IParseExpression
+    public class NumberExpression : Node, IParseExpression, IVanillaExpression
     {
         public double Value { get; }
 
