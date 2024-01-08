@@ -2,6 +2,7 @@
 
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Vanilla.Ide;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -37,9 +38,11 @@ static class VanillaAnalysis
         }
     }
 
-    public static void AnalyzeContent(VanillaContext context, VanillaRuleContent content)
+    public static void AnalyzeContent(VanillaContext context, VanillaRuleContent contentSyntax)
     {
-        foreach (var expression in content.InnerItems)
+        context.AddCompletion(VanillaCompletion.CreateCompletion(contentSyntax.Range));
+
+        foreach (var expression in contentSyntax.InnerItems)
             AnalyzeExpression(context, expression);
     }
 
@@ -49,7 +52,7 @@ static class VanillaAnalysis
         {
             // Number expression
             case NumberExpression number:
-                break;
+                return VanillaExpressions.Number(context, number);
 
             // Workshop symbol or identifier
             case VanillaSymbolExpression symbol:
@@ -64,7 +67,7 @@ static class VanillaAnalysis
                 return VanillaExpressions.Binary(context, binary);
 
             // The parser will add an error if the value is missing, nothing needs to happen here.
-            case MissingVanillaExpression _:
+            case MissingVanillaExpression:
                 break;
 
             // Bug: There is a type not handled here.

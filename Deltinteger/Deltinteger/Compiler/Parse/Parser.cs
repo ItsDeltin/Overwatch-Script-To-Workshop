@@ -2101,7 +2101,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return nextElement != null;
         }
 
-        VanillaRuleContent ParseVanillaRuleContent(TokenType initiatingTokenType)
+        VanillaRuleContent ParseVanillaRuleContent(TokenType initiatingTokenType) => CaptureRange(r =>
         {
             var groupToken = ParseExpected(initiatingTokenType);
             ParseExpected(TokenType.CurlyBracket_Open);
@@ -2114,8 +2114,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             ParseExpected(TokenType.CurlyBracket_Close);
-            return new(groupToken, items.ToArray());
-        }
+            return new VanillaRuleContent(r.GetRange(), groupToken, items.ToArray());
+        });
 
         IVanillaExpression ParseVanillaExpression() => CaptureRange(r => _vanillaOperatorStack.GetExpression(() =>
         {

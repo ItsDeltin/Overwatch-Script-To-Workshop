@@ -6,7 +6,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree;
 
 public record class VanillaRule(Token Disabled, Token Name, VanillaRuleContent[] Content);
 
-public record class VanillaRuleContent(Token GroupToken, IVanillaExpression[] InnerItems);
+public record class VanillaRuleContent(DocRange Range, Token GroupToken, IVanillaExpression[] InnerItems);
 
 public interface IVanillaExpression
 {

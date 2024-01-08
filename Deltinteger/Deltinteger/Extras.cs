@@ -222,10 +222,10 @@ namespace Deltin.Deltinteger
             noMarkup.Append("\n");
             return this;
         }
-        public MarkupBuilder StartCodeLine()
+        public MarkupBuilder StartCodeLine(string language = "ostw")
         {
             inCodeLine = true;
-            result.Append("```ostw\n");
+            result.Append($"```{language}\n");
             return this;
         }
         public MarkupBuilder EndCodeLine()

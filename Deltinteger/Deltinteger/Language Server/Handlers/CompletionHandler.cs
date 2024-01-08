@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             // Get valid completion ranges.
             var completions = script.GetCompletionRanges();
-            List<CompletionRange> inRange = new List<CompletionRange>();
+            List<ICompletionRange> inRange = new List<ICompletionRange>();
             foreach (var completion in completions)
                 if (completion.Range.IsInside(completionParams.Position))
                     inRange.Add(completion);

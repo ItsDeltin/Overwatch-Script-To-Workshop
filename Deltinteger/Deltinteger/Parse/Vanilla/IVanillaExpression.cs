@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Vanilla.Ide;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -31,14 +32,17 @@ interface IVanillaNode
 
 static class VanillaExpressions
 {
+    public static IVanillaNode Number(VanillaContext context, NumberExpression syntax)
+    {
+        return IVanillaNode.New(syntax);
+    }
+
     public static IVanillaNode Symbol(VanillaContext context, VanillaSymbolExpression syntax)
     {
         void UnknownSymbol()
         {
             context.Warning("Unknown workshop symbol", syntax.Range);
         }
-
-        var parameterData = context.GetActiveParameterData();
 
         if (syntax.Token is WorkshopToken workshopToken)
         {
@@ -57,6 +61,14 @@ static class VanillaExpressions
                 }
 
                 var selected = items[0];
+
+                switch (selected)
+                {
+                    case WorkshopItem.ActionValue element:
+                        // Add hover info.
+                        context.AddHover(syntax.Range, VanillaCompletion.FunctionSignature(new(), element.Value));
+                        break;
+                }
             }
         }
         else

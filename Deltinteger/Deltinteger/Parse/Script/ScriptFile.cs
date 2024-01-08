@@ -8,6 +8,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 using LocationLink = OmniSharp.Extensions.LanguageServer.Protocol.Models.LocationLink;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using ColorInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ColorInformation;
+using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -19,8 +20,8 @@ namespace Deltin.Deltinteger.Parse
         public Document Document { get; }
         public ScriptElements Elements { get; } = new ScriptElements();
 
-        readonly List<CompletionRange> _completionRanges = new List<CompletionRange>();
-        readonly List<OverloadChooser> _overloads = new List<OverloadChooser>();
+        readonly List<ICompletionRange> _completionRanges = new List<ICompletionRange>();
+        readonly List<ISignatureHelp> _signatureHelps = new List<ISignatureHelp>();
         readonly List<LocationLink> _callLinks = new List<LocationLink>();
         readonly List<HoverRange> _hoverRanges = new List<HoverRange>();
         readonly List<CodeLensRange> _codeLensRanges = new List<CodeLensRange>();
@@ -43,11 +44,11 @@ namespace Deltin.Deltinteger.Parse
 
         public Location GetLocation(DocRange range) => new Location(Uri, range);
 
-        public void AddCompletionRange(CompletionRange completionRange) => _completionRanges.Add(completionRange);
-        public CompletionRange[] GetCompletionRanges() => _completionRanges.ToArray();
+        public void AddCompletionRange(ICompletionRange completionRange) => _completionRanges.Add(completionRange);
+        public ICompletionRange[] GetCompletionRanges() => _completionRanges.ToArray();
 
-        public void AddOverloadData(OverloadChooser overload) => _overloads.Add(overload);
-        public OverloadChooser[] GetSignatures() => _overloads.ToArray();
+        public void AddSignatureInfo(ISignatureHelp overload) => _signatureHelps.Add(overload);
+        public ISignatureHelp[] GetSignatures() => _signatureHelps.ToArray();
 
         /// <summary>Adds a link that can be clicked on in the script.</summary>
         public void AddDefinitionLink(DocRange source, Location target)
@@ -89,7 +90,29 @@ namespace Deltin.Deltinteger.Parse
         public ColorInformation[] GetColorRanges() => _colorRanges.ToArray();
     }
 
-    public class CompletionRange
+    public interface ICompletionRange
+    {
+        DocRange Range { get; }
+        CompletionRangeKind Kind { get; }
+        CompletionItem[] GetCompletion(DocPos pos, bool immediate);
+
+        public record struct GetCompletionParams(DocPos Pos, bool Immediate);
+
+        public static ICompletionRange New(
+            DocRange range,
+            CompletionRangeKind kind,
+            Func<GetCompletionParams, CompletionItem[]> getCompletion) => new CompletionRange(range, kind, getCompletion);
+
+        record CompletionRange(
+            DocRange Range,
+            CompletionRangeKind Kind,
+            Func<GetCompletionParams, CompletionItem[]> GetCompletionFunc) : ICompletionRange
+        {
+            public CompletionItem[] GetCompletion(DocPos pos, bool immediate) => GetCompletionFunc(new(pos, immediate));
+        }
+    }
+
+    public class CompletionRange : ICompletionRange
     {
         public DocRange Range { get; }
         public CompletionRangeKind Kind { get; }
@@ -135,6 +158,22 @@ namespace Deltin.Deltinteger.Parse
         Additive,
         Catch,
         ClearRest
+    }
+
+    public interface ISignatureHelp
+    {
+        DocRange Range { get; }
+        SignatureHelp GetSignatureHelp(DocPos caretPos);
+
+        public record struct GetSignatureHelpParams(DocPos CaretPos);
+
+        public static ISignatureHelp New(DocRange range, Func<GetSignatureHelpParams, SignatureHelp> getSignatureHelp) =>
+            new AnonymousSignatureHelp(range, getSignatureHelp);
+
+        record AnonymousSignatureHelp(DocRange Range, Func<GetSignatureHelpParams, SignatureHelp> GetSignatureHelpFunc) : ISignatureHelp
+        {
+            public SignatureHelp GetSignatureHelp(DocPos caretPos) => GetSignatureHelpFunc(new(caretPos));
+        }
     }
 
     public class HoverRange
