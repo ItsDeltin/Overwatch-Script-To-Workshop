@@ -38,13 +38,15 @@ public class Importer
         FileImporter importer = new(scriptFile.Diagnostics, this);
 
         // Get the imported files.
-        foreach (var importFileContext in scriptFile.Context.Imports)
+        RootElement.Iter(scriptFile.Context.RootItems, import: importFileContext =>
+        {
             if (importFileContext.File)
             {
                 string directory = GetImportedFile(deltinScript, scriptFile, importer, importFileContext);
                 if (Directory.Exists(directory))
                     AddImportCompletion(deltinScript, scriptFile, directory, importFileContext.File.Range);
             }
+        });
     }
 
     public static void AddImportCompletion(DeltinScript deltinScript, ScriptFile script, string directory, DocRange range)

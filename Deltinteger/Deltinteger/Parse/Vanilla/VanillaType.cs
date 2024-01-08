@@ -10,6 +10,6 @@ class TypeCompendium
 {
     public static TypeCompendium GenerateFromElements()
     {
-
+        return new();
     }
 }

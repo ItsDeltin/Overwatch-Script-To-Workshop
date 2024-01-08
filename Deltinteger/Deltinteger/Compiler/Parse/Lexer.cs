@@ -259,46 +259,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return
                 MatchActionComment() ||
                 MatchNumber() ||
-                MatchSymbol('{', TokenType.CurlyBracket_Open) ||
-                MatchSymbol('}', TokenType.CurlyBracket_Close) ||
-                MatchSymbol('(', TokenType.Parentheses_Open) ||
-                MatchSymbol(')', TokenType.Parentheses_Close) ||
-                MatchSymbol('[', TokenType.SquareBracket_Open) ||
-                MatchSymbol(']', TokenType.SquareBracket_Close) ||
-                MatchSymbol(':', TokenType.Colon) ||
-                MatchSymbol('?', TokenType.QuestionMark) ||
-                MatchSymbol(';', TokenType.Semicolon) ||
                 MatchSymbol("..", TokenType.Spread) ||
-                MatchSymbol('.', TokenType.Dot) ||
                 MatchSymbol('~', TokenType.Squiggle) ||
-                MatchSymbol("=>", TokenType.Arrow) ||
-                MatchSymbol("!=", TokenType.NotEqual) ||
-                MatchSymbol("==", TokenType.EqualEqual) ||
-                MatchSymbol("<=", TokenType.LessThanOrEqual) ||
-                MatchSymbol(">=", TokenType.GreaterThanOrEqual) ||
-                MatchSymbol('!', TokenType.Exclamation) ||
-                MatchSymbol("^=", TokenType.HatEqual) ||
-                MatchSymbol("*=", TokenType.MultiplyEqual) ||
-                MatchSymbol("/=", TokenType.DivideEqual) ||
-                MatchSymbol("%=", TokenType.ModuloEqual) ||
-                MatchSymbol("+=", TokenType.AddEqual) ||
-                MatchSymbol("-=", TokenType.SubtractEqual) ||
-                MatchSymbol('=', TokenType.Equal) ||
-                MatchSymbol('<', TokenType.LessThan) ||
-                MatchSymbol('>', TokenType.GreaterThan) ||
-                MatchSymbol(',', TokenType.Comma) ||
-                MatchSymbol('^', TokenType.Hat) ||
-                MatchSymbol('*', TokenType.Multiply) ||
-                MatchSymbol('/', TokenType.Divide) ||
-                MatchSymbol('%', TokenType.Modulo) ||
-                MatchSymbol("++", TokenType.PlusPlus) ||
-                MatchSymbol('+', TokenType.Add) ||
-                MatchSymbol("--", TokenType.MinusMinus) ||
-                MatchSymbol('-', TokenType.Subtract) ||
-                MatchSymbol("&&", TokenType.And) ||
-                MatchSymbol("||", TokenType.Or) ||
                 MatchSymbol("|", TokenType.Pipe) ||
                 MatchSymbol('@', TokenType.At) ||
+                MatchCSymbol() ||
                 MatchKeyword("import", TokenType.Import) ||
                 MatchKeyword("for", TokenType.For) ||
                 MatchKeyword("while", TokenType.While) ||
@@ -351,13 +316,53 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public bool MatchWorkshopContext()
         {
             return
-                MatchSymbol('{', TokenType.CurlyBracket_Open) ||
+                MatchNumber() ||
+                MatchCSymbol() ||
+                MatchVanillaConstant() ||
+                MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions) ||
+                MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions) ||
+                MatchVanillaKeyword(_vanillaSymbols.Event, TokenType.WorkshopEvent) ||
+                MatchVanillaSymbol();
+        }
+
+        public bool MatchCSymbol()
+        {
+            return MatchSymbol('{', TokenType.CurlyBracket_Open) ||
                 MatchSymbol('}', TokenType.CurlyBracket_Close) ||
                 MatchSymbol('(', TokenType.Parentheses_Open) ||
                 MatchSymbol(')', TokenType.Parentheses_Close) ||
+                MatchSymbol('[', TokenType.SquareBracket_Open) ||
+                MatchSymbol(']', TokenType.SquareBracket_Close) ||
+                MatchSymbol(':', TokenType.Colon) ||
+                MatchSymbol('?', TokenType.QuestionMark) ||
                 MatchSymbol(';', TokenType.Semicolon) ||
                 MatchSymbol('.', TokenType.Dot) ||
-                MatchWorkshopConstant();
+                MatchSymbol("=>", TokenType.Arrow) ||
+                MatchSymbol("!=", TokenType.NotEqual) ||
+                MatchSymbol("==", TokenType.EqualEqual) ||
+                MatchSymbol("<=", TokenType.LessThanOrEqual) ||
+                MatchSymbol(">=", TokenType.GreaterThanOrEqual) ||
+                MatchSymbol('!', TokenType.Exclamation) ||
+                MatchSymbol("^=", TokenType.HatEqual) ||
+                MatchSymbol("*=", TokenType.MultiplyEqual) ||
+                MatchSymbol("/=", TokenType.DivideEqual) ||
+                MatchSymbol("%=", TokenType.ModuloEqual) ||
+                MatchSymbol("+=", TokenType.AddEqual) ||
+                MatchSymbol("-=", TokenType.SubtractEqual) ||
+                MatchSymbol('=', TokenType.Equal) ||
+                MatchSymbol('<', TokenType.LessThan) ||
+                MatchSymbol('>', TokenType.GreaterThan) ||
+                MatchSymbol(',', TokenType.Comma) ||
+                MatchSymbol('^', TokenType.Hat) ||
+                MatchSymbol('*', TokenType.Multiply) ||
+                MatchSymbol('/', TokenType.Divide) ||
+                MatchSymbol('%', TokenType.Modulo) ||
+                MatchSymbol("++", TokenType.PlusPlus) ||
+                MatchSymbol('+', TokenType.Add) ||
+                MatchSymbol("--", TokenType.MinusMinus) ||
+                MatchSymbol('-', TokenType.Subtract) ||
+                MatchSymbol("&&", TokenType.And) ||
+                MatchSymbol("||", TokenType.Or);
         }
 
         bool HasMoreContent() => Index < Content.Length && !_push.IncrementalStop();
@@ -592,25 +597,51 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return true;
         }
 
-        bool MatchWorkshopConstant()
+        bool MatchVanillaConstant()
         {
             var scanner = new WhitespaceLexScanner(this);
 
             var symbolTraveller = _vanillaSymbols.ActionValues.Travel();
             // Feed incoming characters into the symbol traveller
-            while (scanner.Current() is char current && symbolTraveller.Next(current))
+            while (scanner.Next(out char current) && symbolTraveller.Next(current))
                 scanner.Advance();
 
+            // Do not create a workshop symbol in the middle of a word,
+            // ex: "[Small Message]s()"
+            bool isAtEndOfTerm = !scanner.Next(out char value) ||
+                LexScanner.whitespaceCharacters.Contains(value) ||
+                VanillaInfo.StructureCharacters.Contains(value);
+
             var word = symbolTraveller.Word();
-            if (word != null)
+            if (isAtEndOfTerm && word.HasValue)
             {
-                PushToken(scanner.AsToken(TokenType.WorkshopConstant));
+                PushToken(scanner.AsToken(TokenType.WorkshopConstant, word.Value.LinkedItems));
                 Accept(scanner);
                 return true;
             }
 
             return false;
         }
+
+        bool MatchVanillaSymbol()
+        {
+            var scanner = new WhitespaceLexScanner(this);
+
+            while (scanner.Next(out char current) &&
+                !VanillaInfo.StructureCharacters.Contains(current))
+                scanner.Advance();
+
+            if (scanner.DidAdvance())
+            {
+                PushToken(scanner.AsToken(TokenType.WorkshopSymbol));
+                Accept(scanner);
+                return true;
+            }
+
+            return false;
+        }
+
+        bool MatchVanillaKeyword(VanillaKeyword keyword, TokenType tokenType) => MatchSymbol(keyword.EnUs, tokenType);
 
         /// <summary>The current character is unknown.</summary>
         public void Unknown()
@@ -729,7 +760,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             _content = controller.Content;
         }
 
-        public readonly char? Current() => _content.ElementAtOrDefault(_currentPosition.Index);
+        public readonly bool Next(out char value)
+        {
+            value = _content.ElementAtOrDefault(_currentPosition.Index);
+            return !ReachedEnd();
+        }
 
         public readonly bool ReachedEnd() => _currentPosition.Index >= _content.Length;
 
@@ -754,13 +789,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
+        public readonly bool DidAdvance() => _currentPosition != _start;
+
+        private readonly string Text() => _content.Substring(_start.Index, _lastNonWhitespacePosition.Index - _start.Index);
+
+        private readonly DocRange Range() => new(new(_start.Line, _start.Column), new(_lastNonWhitespacePosition.Line, _lastNonWhitespacePosition.Column));
+
+        public readonly WorkshopToken AsToken(TokenType tokenType, IReadOnlySet<LanguageLinkedWorkshopItem> workshopItems)
+        {
+            return new(Text(), Range(), tokenType, workshopItems);
+        }
+
         public readonly Token AsToken(TokenType tokenType)
         {
-            string text = _content.Substring(_start.Index, _lastNonWhitespacePosition.Index);
-            return new(text, new(
-                start: new(_start.Line, _start.Column),
-                end: new(_lastNonWhitespacePosition.Line, _lastNonWhitespacePosition.Column)),
-                tokenType);
+            return new(Text(), Range(), tokenType);
         }
     }
 

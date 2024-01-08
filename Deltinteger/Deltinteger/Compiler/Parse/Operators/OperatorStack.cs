@@ -19,7 +19,8 @@ class OperatorStack<T> : IExpressionStackHelper<T>
     {
         operators.Push(IStackOperator<T>.Sentinel);
         getExpression();
-        operators.Pop();
+        PopAllOperators(); // Pop until sentinel
+        operators.Pop(); // Pop sentinel
         return operands.Pop();
     }
 
@@ -41,7 +42,11 @@ class OperatorStack<T> : IExpressionStackHelper<T>
     void PopOperator()
     {
         var iop = operators.Pop();
-        iop.ToExpression(this);
+        iop.ToExpression(this).Match(operands.Push, err =>
+        {
+            // todo: should we add missing value to operands?
+            // todo: handle error here
+        });
     }
 
     static bool ShouldPop(IStackOperator<T> last, IStackOperator<T> pushing)

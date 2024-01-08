@@ -1,25 +1,30 @@
 #nullable enable
 
 using System.Collections.Generic;
+using Deltin.Deltinteger.Elements;
 namespace Deltin.Deltinteger.Compiler.Parse.Vanilla;
 
 public class WorkshopSymbolTrie
 {
     private readonly Dictionary<char, WorkshopSymbolTrie> children = new();
     private readonly HashSet<WorkshopLanguage> languages = new();
-    public bool IsWord { get; private set; }
+    private readonly HashSet<LanguageLinkedWorkshopItem> workshopItems = new();
 
-    public void AddSymbol(string value, WorkshopLanguage language)
+    public bool IsWord() => workshopItems.Count != 0;
+
+    public IReadOnlySet<LanguageLinkedWorkshopItem> GetItems() => workshopItems;
+
+    public void AddSymbol(string value, WorkshopLanguage language, WorkshopItem item)
     {
         languages.Add(language);
 
         if (string.IsNullOrEmpty(value))
         {
-            IsWord = true;
+            workshopItems.Add(new(language, item));
         }
         else
         {
-            GetOrAddPath(value[0]).AddSymbol(value[1..], language);
+            GetOrAddPath(value[0]).AddSymbol(value[1..], language, item);
         }
     }
 
@@ -41,7 +46,7 @@ public class WorkshopSymbolTrie
 public struct WorkshopTrieTraveller
 {
     WorkshopSymbolTrie? current;
-    string? lastValidWord = null;
+    (string Word, WorkshopSymbolTrie Trie)? lastValid = null;
     string currentWord = "";
 
     public WorkshopTrieTraveller(WorkshopSymbolTrie root) => current = root;
@@ -51,13 +56,22 @@ public struct WorkshopTrieTraveller
         currentWord += value;
         current?.TryGetTrie(value, out current);
 
-        if (current is not null && current.IsWord)
+        if (current is not null && current.IsWord())
         {
-            lastValidWord = currentWord;
+            lastValid = (currentWord, current);
         }
 
-        return current is null;
+        return current is not null;
     }
 
-    public readonly string? Word() => lastValidWord;
+    public readonly (string Word, IReadOnlySet<LanguageLinkedWorkshopItem> LinkedItems)? Word() =>
+        lastValid.HasValue ? new(lastValid.Value.Word, lastValid.Value.Trie.GetItems()) : null;
 }
+
+public abstract record WorkshopItem
+{
+    public record ActionValue(ElementBaseJson Value) : WorkshopItem;
+    public record Enumerator(ElementEnumMember Member) : WorkshopItem;
+}
+
+public record struct LanguageLinkedWorkshopItem(WorkshopLanguage Language, WorkshopItem Item);

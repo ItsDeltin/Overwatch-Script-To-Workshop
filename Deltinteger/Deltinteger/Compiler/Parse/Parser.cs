@@ -26,6 +26,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         private readonly ParserSettings _parserSettings;
 
         readonly OperatorStack<IParseExpression> _operatorStack = new(new OstwOperandFactory());
+        readonly OperatorStack<IVanillaExpression> _vanillaOperatorStack = new(new VanillaOperandFactory());
 
         private int LookaheadDepth = 0;
 
@@ -109,6 +110,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StartNode();
             T r = func();
             return EndNode(r);
+        }
+
+        T CaptureRange<T>(Func<CaptureRangeHelper, T> func) => func(new CaptureRangeHelper(this, Token));
+
+        readonly record struct CaptureRangeHelper(Parser Parser, int StartToken)
+        {
+            public readonly DocRange GetRange() => new(
+                start: Parser.TokenAtOrEnd(StartToken).Range.Start,
+                end: Parser.TokenAtOrEnd(Math.Max(Parser.Token - 1, StartToken)).Range.End);
         }
 
         /// <summary>Gets an existing parsing tree at the current position.</summary>
@@ -2054,13 +2064,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool IsVanillaRule() => Lookahead(() =>
         {
             ParseOptional(TokenType.Disabled);
-            return ParseExpected(TokenType.Rule) && ParseExpected(TokenType.Parentheses_Open);
+            return ParseExpected(TokenType.Rule, TokenType.WorkshopRule) && ParseExpected(TokenType.Parentheses_Open);
         });
 
         VanillaRule ParseVanillaRule()
         {
             var disabled = ParseOptional(TokenType.Disabled);
-            ParseExpected(TokenType.WorkshopRule);
+            ParseExpected(TokenType.Rule, TokenType.WorkshopRule);
 
             // Parentheses containing name.
             ParseExpected(TokenType.Parentheses_Open);
@@ -2107,7 +2117,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new(groupToken, items.ToArray());
         }
 
-        IVanillaExpression ParseVanillaExpression()
+        IVanillaExpression ParseVanillaExpression() => CaptureRange(r => _vanillaOperatorStack.GetExpression(() =>
+        {
+            TernaryCheck.Push(false);
+            _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+
+            // Binary operators
+            while (TryParseBinaryOperator<IVanillaExpression>(out var op, out _))
+            {
+                _vanillaOperatorStack.PushOperator(op);
+                _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+            }
+            TernaryCheck.Pop();
+        }));
+
+        IVanillaExpression ParseVanillaExpressionTerm() => CaptureRange(r =>
         {
             IVanillaExpression expression = null;
             if (IsNumber())
@@ -2125,6 +2149,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 expression = ParseVanillaExpression();
                 ParseExpected(TokenType.Parentheses_Close);
             }
+            // Unknown
+            else
+            {
+                AddError(new InvalidExpressionTerm(Current));
+                return new MissingVanillaExpression(r.GetRange());
+            }
 
             // Invoke
             if (ParseOptional(TokenType.Parentheses_Open))
@@ -2139,11 +2169,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Parameter list
                 ParseExpected(TokenType.Parentheses_Close);
 
-                expression = new VanillaInvokeExpression(expression, arguments);
+                expression = new VanillaInvokeExpression(r.GetRange(), expression, arguments);
             }
 
             return expression;
-        }
+        });
 
         Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
         MetaComment ParseMetaComment()

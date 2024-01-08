@@ -10,6 +10,7 @@ using Deltin.Deltinteger.Debugger;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Workshop;
+using Deltin.Deltinteger.Parse.Vanilla;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -128,33 +129,52 @@ namespace Deltin.Deltinteger.Parse
                 InitComponent.Add(new InitComponent(typeof(T), component => apply.Invoke((T)component)));
         }
 
-        private List<RuleAction> rules { get; } = new List<RuleAction>();
+        private readonly List<RuleAction> rules = new();
 
         void Translate()
         {
             AddComponent<RecursionCheckComponent>();
 
-            // Get the enums
-            foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var enumContext in script.Context.Enums)
-                {
-                    var newEnum = new GenericCodeTypeInitializer(new DefinedEnum(new ParseInfo(script, this), enumContext));
-                    RulesetScope.AddType(newEnum);
-                    Types.AllTypes.Add(newEnum);
-                    Types.DefinedTypes.Add(newEnum);
-                }
+            CollectVanilla();
+            CollectTypes();
+            CollectVariableReservations();
+            CollectVariableDeclarations();
 
-            // Get the types
-            foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var typeContext in script.Context.Classes)
-                {
-                    var newType = IDefinedTypeInitializer.GetInitializer(new ParseInfo(script, this), RulesetScope, typeContext);
-                    RulesetScope.AddType(newType);
-                    Types.AllTypes.Add(newType);
-                    Types.DefinedTypes.Add(newType);
-                }
+            ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
+            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
 
-            // Get the variable reservations
+            CollectFunctionDeclarations();
+
+            StagedInitiation.Start();
+
+            CollectHooks();
+            CollectRules();
+
+            GetComponent<SymbolLinkComponent>().Collect();
+        }
+
+        void CollectTypes()
+        {
+            foreach (var script in Importer.ScriptFiles)
+                RootElement.Iter(script.Context.RootItems,
+                    classContext: classContext =>
+                    {
+                        var newType = IDefinedTypeInitializer.GetInitializer(new ParseInfo(script, this), RulesetScope, classContext);
+                        RulesetScope.AddType(newType);
+                        Types.AllTypes.Add(newType);
+                        Types.DefinedTypes.Add(newType);
+                    },
+                    enumContext: enumContext =>
+                    {
+                        var newEnum = new GenericCodeTypeInitializer(new DefinedEnum(new ParseInfo(script, this), enumContext));
+                        RulesetScope.AddType(newEnum);
+                        Types.AllTypes.Add(newEnum);
+                        Types.DefinedTypes.Add(newEnum);
+                    });
+        }
+
+        void CollectVariableReservations()
+        {
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 foreach (Token reservation in script.Context.GlobalvarReservations)
@@ -176,9 +196,13 @@ namespace Deltin.Deltinteger.Parse
                         VarCollection.Reserve(text, false);
                 }
             }
-            // Get variable declarations
+        }
+
+        void CollectVariableDeclarations()
+        {
             foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var declaration in script.Context.Declarations)
+                RootElement.Iter(script.Context.RootItems, declaration: declaration =>
+                {
                     if (declaration is VariableDeclaration variable)
                     {
                         Var var = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable)).GetVar();
@@ -192,32 +216,46 @@ namespace Deltin.Deltinteger.Parse
                                 PlayerVariableScope.CopyVariable(var.GetDefaultInstance(null));
                         }
                     }
+                });
+        }
 
-            ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
-            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
-
+        void CollectFunctionDeclarations()
+        {
             // Get the function declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 ParseInfo parseInfo = new ParseInfo(script, this);
-                foreach (var declaration in script.Context.Declarations)
+                RootElement.Iter(script.Context.RootItems, declaration: declaration =>
+                {
                     if (declaration is FunctionContext function)
                         DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, null);
+                });
             }
+        }
 
-            StagedInitiation.Start();
-
-            // Get hooks
+        void CollectHooks()
+        {
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var hookContext in script.Context.Hooks)
                     HookVar.GetHook(new ParseInfo(script, this), RulesetScope, hookContext);
+        }
 
-            // Get the rules
+        void CollectRules()
+        {
             foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var ruleContext in script.Context.Rules)
-                    rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
+                RootElement.Iter(script.Context.RootItems, rule: rule =>
+                {
+                    rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, rule));
+                });
+        }
 
-            GetComponent<SymbolLinkComponent>().Collect();
+        void CollectVanilla()
+        {
+            foreach (ScriptFile script in Importer.ScriptFiles)
+                RootElement.Iter(script.Context.RootItems, vanillaRule: vanillaRule =>
+                {
+                    VanillaAnalysis.AnalyzeRule(script, vanillaRule);
+                });
         }
 
         public string WorkshopCode { get; private set; }

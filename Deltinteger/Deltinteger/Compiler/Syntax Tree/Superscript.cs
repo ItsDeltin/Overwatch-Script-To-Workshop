@@ -8,16 +8,21 @@ public record class VanillaRule(Token Disabled, Token Name, VanillaRuleContent[]
 
 public record class VanillaRuleContent(Token GroupToken, IVanillaExpression[] InnerItems);
 
-interface IVanillaRuleElement { }
+public interface IVanillaExpression
+{
+    DocRange Range { get; }
+}
 
-record class VanillaRuleEvent : IVanillaRuleElement;
+record class VanillaSymbolExpression(Token Token) : IVanillaExpression
+{
+    public DocRange Range => Token;
+}
 
-record class VanillaRuleConditions(IVanillaExpression[] Conditions) : IVanillaRuleElement;
+record class VanillaInvokeExpression(DocRange Range, IVanillaExpression Invoking, List<IVanillaExpression> Arguments) : IVanillaExpression;
 
-record class VanillaRuleActions(IVanillaExpression[] Actions) : IVanillaRuleElement;
+record class MissingVanillaExpression(DocRange Range) : IVanillaExpression;
 
-public interface IVanillaExpression { }
-
-record class VanillaSymbolExpression(Token Token) : IVanillaExpression;
-
-record class VanillaInvokeExpression(IVanillaExpression Invoking, List<IVanillaExpression> Arguments) : IVanillaExpression { }
+record class VanillaBinaryOperatorExpression(IVanillaExpression Left, Token Symbol, IVanillaExpression Right) : IVanillaExpression
+{
+    public DocRange Range => Left.Range.Start + Right.Range.End;
+}

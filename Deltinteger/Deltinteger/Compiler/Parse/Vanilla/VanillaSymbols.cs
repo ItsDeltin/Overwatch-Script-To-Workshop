@@ -1,9 +1,15 @@
 #nullable enable
 
+using System;
 using Deltin.Deltinteger.Elements;
 namespace Deltin.Deltinteger.Compiler.Parse.Vanilla;
 
-public readonly record struct VanillaSymbols(WorkshopSymbolTrie ActionValues)
+public readonly record struct VanillaSymbols(
+    WorkshopSymbolTrie ActionValues,
+    VanillaKeyword Actions,
+    VanillaKeyword Conditions,
+    VanillaKeyword Event
+)
 {
     public static readonly VanillaSymbols Instance = Load();
 
@@ -12,15 +18,20 @@ public readonly record struct VanillaSymbols(WorkshopSymbolTrie ActionValues)
         var symbols = new WorkshopSymbolTrie();
 
         foreach (var action in ElementRoot.Instance.Actions)
-            symbols.AddSymbol(action.Name, WorkshopLanguage.EnUS);
+            symbols.AddSymbol(action.Name, WorkshopLanguage.EnUS, new WorkshopItem.ActionValue(action));
 
         foreach (var value in ElementRoot.Instance.Values)
-            symbols.AddSymbol(value.Name, WorkshopLanguage.EnUS);
+            symbols.AddSymbol(value.Name, WorkshopLanguage.EnUS, new WorkshopItem.ActionValue(value));
 
         foreach (var enumerator in ElementRoot.Instance.Enumerators)
             foreach (var member in enumerator.Members)
-                symbols.AddSymbol(member.WorkshopName(), WorkshopLanguage.EnUS);
+                symbols.AddSymbol(member.WorkshopName(), WorkshopLanguage.EnUS, new WorkshopItem.Enumerator(member));
 
-        return new(symbols);
+        return new(symbols, EnKwForTesting("actions"), EnKwForTesting("conditions"), EnKwForTesting("event"));
     }
+
+    static VanillaKeyword EnKwForTesting(string value) => new(value, Array.Empty<VanillaKeywordLanguageValue>());
 }
+
+public readonly record struct VanillaKeyword(string EnUs, VanillaKeywordLanguageValue[] Translations);
+public readonly record struct VanillaKeywordLanguageValue(WorkshopLanguage Language, string Value);

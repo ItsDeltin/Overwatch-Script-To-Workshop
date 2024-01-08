@@ -16,3 +16,24 @@ class OstwOperandFactory : IOperandFactory<IParseExpression>
     public IParseExpression CreateUnaryExpression(OperatorNode op, IParseExpression value)
         => new UnaryOperatorExpression(value, op);
 }
+
+class VanillaOperandFactory : IOperandFactory<IVanillaExpression>
+{
+    public IVanillaExpression CreateBinaryExpression(OperatorNode op, IVanillaExpression left, IVanillaExpression right)
+        => new VanillaBinaryOperatorExpression(left, op.Token, right);
+
+    public IVanillaExpression CreateIndexer(IVanillaExpression array, IVanillaExpression index, DocPos endPos)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public IVanillaExpression CreateTernary(IVanillaExpression lhs, IVanillaExpression middle, IVanillaExpression rhs)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public IVanillaExpression CreateUnaryExpression(OperatorNode op, IVanillaExpression value)
+    {
+        throw new System.NotImplementedException();
+    }
+}

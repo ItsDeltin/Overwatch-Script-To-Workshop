@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Newtonsoft.Json;
 using LSPos = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
 using LSRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
@@ -167,6 +168,16 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator !(Token x) => x == null;
         public static implicit operator bool(Token x) => x != null;
         public static implicit operator DocRange(Token x) => x.Range;
+    }
+
+    class WorkshopToken : Token
+    {
+        public IReadOnlySet<LanguageLinkedWorkshopItem> WorkshopItems { get; }
+
+        public WorkshopToken(string text, DocRange range, TokenType tokenType, IReadOnlySet<LanguageLinkedWorkshopItem> workshopItems) : base(text, range, tokenType)
+        {
+            WorkshopItems = workshopItems;
+        }
     }
 
     [Flags]

@@ -39,7 +39,7 @@ record IndexerStackOperator<T>(T Index, DocPos EndPosition) : IStackOperator<T>
     public Result<T, IParserError> ToExpression(IExpressionStackHelper<T> stackHelper)
     {
         var array = stackHelper.PopOperand();
-        return stackHelper.GetFactory().CreateIndexer(array, Index);
+        return stackHelper.GetFactory().CreateIndexer(array, Index, EndPosition);
     }
 }
 
