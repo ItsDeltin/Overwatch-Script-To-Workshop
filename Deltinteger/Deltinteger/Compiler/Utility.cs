@@ -301,6 +301,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.CurlyBracket_Open:
                 case TokenType.Async:
                 case TokenType.Import:
+                case TokenType.WorkshopVariablesEn:
                 // Unary
                 case TokenType.Subtract:
                 case TokenType.Exclamation:
@@ -572,6 +573,8 @@ namespace Deltin.Deltinteger.Compiler
         // Ternary
         QuestionMark,
         // Workshop
+        WorkshopVariablesEn,
+        WorkshopVariables,
         WorkshopRule,
         WorkshopEvent,
         WorkshopActions,

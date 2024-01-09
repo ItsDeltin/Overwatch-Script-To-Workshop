@@ -8,6 +8,11 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 
 static class VanillaAnalysis
 {
+    public static void AnalyzeVariables(ScriptFile script, VanillaVariableCollection variables)
+    {
+
+    }
+
     public static void AnalyzeRule(ScriptFile script, VanillaRule rule)
     {
         AnalyzeRule(new VanillaContext(script), rule);

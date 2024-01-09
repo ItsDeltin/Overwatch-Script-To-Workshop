@@ -8,7 +8,8 @@ public readonly record struct VanillaSymbols(
     WorkshopSymbolTrie ActionValues,
     VanillaKeyword Actions,
     VanillaKeyword Conditions,
-    VanillaKeyword Event
+    VanillaKeyword Event,
+    VanillaKeyword Variables
 )
 {
     public static readonly VanillaSymbols Instance = Load();
@@ -27,7 +28,11 @@ public readonly record struct VanillaSymbols(
             foreach (var member in enumerator.Members)
                 symbols.AddSymbol(member.WorkshopName(), WorkshopLanguage.EnUS, new WorkshopItem.Enumerator(member));
 
-        return new(symbols, EnKwForTesting("actions"), EnKwForTesting("conditions"), EnKwForTesting("event"));
+        return new(symbols,
+            Actions: EnKwForTesting("actions"),
+            Conditions: EnKwForTesting("conditions"),
+            Event: EnKwForTesting("event"),
+            Variables: EnKwForTesting("variables"));
     }
 
     static VanillaKeyword EnKwForTesting(string value) => new(value, Array.Empty<VanillaKeywordLanguageValue>());

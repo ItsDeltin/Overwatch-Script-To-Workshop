@@ -309,6 +309,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 MatchKeyword("single", TokenType.Single) ||
                 MatchKeyword("const", TokenType.Const) ||
                 MatchKeyword("json", TokenType.Json) ||
+                MatchKeyword("variables", TokenType.WorkshopVariablesEn) ||
+                MatchVanillaKeyword(_vanillaSymbols.Variables, TokenType.WorkshopVariables) ||
                 MatchIdentifier() ||
                 MatchString();
         }

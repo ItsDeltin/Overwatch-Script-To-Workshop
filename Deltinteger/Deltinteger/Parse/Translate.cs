@@ -135,7 +135,6 @@ namespace Deltin.Deltinteger.Parse
         {
             AddComponent<RecursionCheckComponent>();
 
-            CollectVanilla();
             CollectTypes();
             CollectVariableReservations();
             CollectVariableDeclarations();
@@ -243,19 +242,19 @@ namespace Deltin.Deltinteger.Parse
         void CollectRules()
         {
             foreach (ScriptFile script in Importer.ScriptFiles)
-                RootElement.Iter(script.Context.RootItems, rule: rule =>
-                {
-                    rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, rule));
-                });
-        }
-
-        void CollectVanilla()
-        {
-            foreach (ScriptFile script in Importer.ScriptFiles)
-                RootElement.Iter(script.Context.RootItems, vanillaRule: vanillaRule =>
-                {
-                    VanillaAnalysis.AnalyzeRule(script, vanillaRule);
-                });
+                RootElement.Iter(script.Context.RootItems,
+                    rule: rule =>
+                    {
+                        rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, rule));
+                    },
+                    variables: variables =>
+                    {
+                        VanillaAnalysis.AnalyzeVariables(script, variables);
+                    },
+                    vanillaRule: vanillaRule =>
+                    {
+                        VanillaAnalysis.AnalyzeRule(script, vanillaRule);
+                    });
         }
 
         public string WorkshopCode { get; private set; }
