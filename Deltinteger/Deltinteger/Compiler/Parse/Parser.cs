@@ -2134,10 +2134,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
         IVanillaExpression ParseVanillaExpressionTerm() => CaptureRange(r =>
         {
             IVanillaExpression expression = null;
+            // Numbers
             if (IsNumber())
             {
                 expression = ParseNumber();
             }
+            // Strings
+            else if (Is(TokenType.String))
+            {
+                expression = new VanillaStringExpression(Consume());
+            }
+            // Identifiers, constants, and workshop functions
             else if (Is(TokenType.WorkshopSymbol) || Is(TokenType.WorkshopConstant))
             {
                 expression = new VanillaSymbolExpression(Consume());
@@ -2146,8 +2153,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
             else if (Is(TokenType.Parentheses_Open))
             {
                 Consume();
-                expression = ParseVanillaExpression();
-                ParseExpected(TokenType.Parentheses_Close);
+                var innerExpression = ParseVanillaExpression();
+                var rightParentheses = ParseExpected(TokenType.Parentheses_Close);
+                expression = new ParenthesizedVanillaExpression(r.GetRange(), innerExpression);
             }
             // Unknown
             else
@@ -2157,19 +2165,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             // Invoke
-            if (ParseOptional(TokenType.Parentheses_Open))
+            if (ParseOptional(TokenType.Parentheses_Open, out var leftParentheses))
             {
-                var arguments = new List<IVanillaExpression>();
+                var arguments = new List<VanillaInvokeParameter>();
                 if (Kind.IsWorkshopExpression())
                 {
-                    do arguments.Add(ParseVanillaExpression());
-                    while (ParseOptional(TokenType.Comma));
+                    Token previousComma = null;
+                    do arguments.Add(new(previousComma, ParseVanillaExpression()));
+                    while (ParseOptional(TokenType.Comma, out previousComma));
                 }
 
                 // Parameter list
-                ParseExpected(TokenType.Parentheses_Close);
+                var rightParentheses = ParseExpected(TokenType.Parentheses_Close);
 
-                expression = new VanillaInvokeExpression(r.GetRange(), expression, arguments);
+                expression = new VanillaInvokeExpression(r.GetRange(), expression, arguments, leftParentheses, rightParentheses);
             }
 
             return expression;

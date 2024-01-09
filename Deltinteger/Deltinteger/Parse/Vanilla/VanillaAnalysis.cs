@@ -50,9 +50,17 @@ static class VanillaAnalysis
     {
         switch (expression)
         {
+            // Grouped expression
+            case ParenthesizedVanillaExpression grouped:
+                return VanillaExpressions.Grouped(context, grouped);
+
             // Number expression
             case NumberExpression number:
                 return VanillaExpressions.Number(context, number);
+
+            // String expression
+            case VanillaStringExpression str:
+                return VanillaExpressions.String(context, str);
 
             // Workshop symbol or identifier
             case VanillaSymbolExpression symbol:
@@ -76,6 +84,6 @@ static class VanillaAnalysis
                 break;
         }
         // Missing
-        return IVanillaNode.New(expression);
+        return IVanillaNode.New(expression, () => "Missing nodes cannot be converted to the workshop");
     }
 }

@@ -1,6 +1,8 @@
 #nullable enable
+using System;
 using System.Linq;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
@@ -48,5 +50,45 @@ static class VanillaCompletion
         }
 
         return builder;
+    }
+
+    public static string FunctionSignatureString(ElementBaseJson workshopFunction)
+    {
+        string result = workshopFunction.Name;
+
+        if (workshopFunction.Parameters is not null && workshopFunction.Parameters.Length > 0)
+        {
+            result += $"({string.Join(", ", workshopFunction.Parameters.Select(p => p.Name + "‎"))})";
+        }
+        return result;
+    }
+
+    public static int? GetActiveParameter(VanillaInvokeExpression expression, DocPos caretPos)
+    {
+        int selected = 0;
+        for (int i = 1; i < expression.Arguments.Count; i++)
+        {
+            if (caretPos >= expression.Arguments[i].PreceedingComma.Range.End)
+            {
+                selected = i;
+            }
+            else break;
+        }
+        return selected;
+    }
+
+    public static SignatureInformation GetFunctionSignatureInformation(ElementBaseJson element, int? activeParameter)
+    {
+        var args = element.Parameters ?? Array.Empty<ElementParameter>();
+        return new SignatureInformation()
+        {
+            Label = FunctionSignatureString(element!),
+            Parameters = args.Select(p => new ParameterInformation()
+            {
+                Label = p.Name + "‎",
+                Documentation = p.Documentation
+            }).ToArray(),
+            ActiveParameter = activeParameter
+        };
     }
 }

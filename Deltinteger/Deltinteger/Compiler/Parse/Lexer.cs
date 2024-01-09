@@ -318,6 +318,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return
                 MatchNumber() ||
                 MatchCSymbol() ||
+                MatchString() ||
                 MatchVanillaConstant() ||
                 MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions) ||
                 MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions) ||
