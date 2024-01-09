@@ -8,6 +8,8 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 class VanillaContext
 {
     readonly ScriptFile script;
+    ActiveParameterData activeParameterData;
+    VanillaType expectedType;
 
     public VanillaContext(ScriptFile script)
     {
@@ -27,9 +29,19 @@ class VanillaContext
 
     // Context
     public int? InvokeParameterCount() => 0;
-    public ActiveParameterData? GetActiveParameterData() => new();
-    public VanillaContext ExpectingType(VanillaType type) => this; // todo
+    public ActiveParameterData GetActiveParameterData() => activeParameterData;
     public WorkshopLanguage[]? LikelyLanguages() => new WorkshopLanguage[0];
+    public VanillaType GetExpectedType() => expectedType;
+
+    // Subcontext
+    public VanillaContext SetActiveParameterData(ActiveParameterData data) => new(script)
+    {
+        activeParameterData = data
+    };
+    public VanillaContext ExpectingType(VanillaType type) => this; // todo
 }
 
-readonly record struct ActiveParameterData(int ParameterCount);
+readonly record struct ActiveParameterData(
+    bool IsInvoked = false,
+    bool NeedsStringLiteral = false
+);

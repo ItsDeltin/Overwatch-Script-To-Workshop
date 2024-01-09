@@ -31,6 +31,20 @@ static class VanillaCompletion
         })).ToArray();
     }
 
+    public static CompletionItem[] GetConstantsCompletion(ElementEnum constants, DocRange replaceRange)
+    {
+        return constants.Members.Select(member => new CompletionItem()
+        {
+            Label = member.Name,
+            Kind = CompletionItemKind.Constant,
+            TextEdit = new(new InsertReplaceEdit()
+            {
+                NewText = member.Name,
+                Replace = replaceRange
+            })
+        }).ToArray();
+    }
+
     public static MarkupBuilder FunctionSignature(MarkupBuilder builder, ElementBaseJson workshopFunction)
     {
         builder.StartCodeLine("ow").Add($"{workshopFunction.Name}");
@@ -46,7 +60,7 @@ static class VanillaCompletion
 
         if (workshopFunction is ElementJsonValue value)
         {
-            builder.NewLine().Add("Returns: ").Code(value.ReturnType);
+            builder.NewLine().NewLine().Add("Returns: ").Code(value.ReturnType);
         }
 
         return builder;

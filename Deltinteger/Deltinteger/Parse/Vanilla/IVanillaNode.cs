@@ -61,6 +61,12 @@ static class VanillaExpressions
 
     public static IVanillaNode String(VanillaContext context, VanillaStringExpression syntax)
     {
+        // String literals can only be used inside the 'String' and 'Custom String' values.
+        if (!context.GetActiveParameterData().NeedsStringLiteral)
+        {
+            context.Error("String literal cannot be used here", syntax.Range);
+        }
+
         return IVanillaNode.New(syntax, () => "Bad string accepted, should be handled by parent function");
     }
 
@@ -98,6 +104,11 @@ static class VanillaExpressions
                         workshopFunction = element.Value;
                         // Add hover info.
                         context.AddHover(syntax.Range, VanillaCompletion.FunctionSignature(new(), element.Value));
+
+                        // If this expression needs to be invoked and is not, add an error.
+                        if (!context.GetActiveParameterData().IsInvoked && workshopFunction.Parameters?.Length is not null and > 0)
+                            context.Warning($"'{workshopFunction.Name}' requires {workshopFunction.Parameters.Length} parameter values", syntax.Range);
+
                         break;
 
                     case WorkshopItem.Enumerator enumerator:
@@ -149,7 +160,7 @@ static class VanillaExpressions
     public static IVanillaNode Invoke(VanillaContext context, VanillaInvokeExpression syntax)
     {
         // Analyse invoked value
-        var invoking = VanillaAnalysis.AnalyzeExpression(context, syntax.Invoking);
+        var invoking = VanillaAnalysis.AnalyzeExpression(context.SetActiveParameterData(new(IsInvoked: true)), syntax.Invoking);
         var symbolInformation = invoking.GetSymbolInformation();
 
         if (symbolInformation.WorkshopFunction is null && !symbolInformation.DoNotError)
@@ -157,11 +168,15 @@ static class VanillaExpressions
             context.Error("This expression cannot be invoked", syntax.Range);
         }
 
+        var element = symbolInformation.WorkshopFunction;
+        var elementParams = symbolInformation.WorkshopFunction?.Parameters;
+
+        // Add parameter completion for constant values.
+        AddCompletionForParameters(context, syntax, element);
+
         // Analyze arguments.
         var arguments = syntax.Arguments.Select(arg => VanillaAnalysis.AnalyzeExpression(context, arg.Value)).ToArray();
 
-        var element = symbolInformation.WorkshopFunction;
-        var elementParams = symbolInformation.WorkshopFunction?.Parameters;
         if (elementParams is not null)
         {
             // Not enough arguments.
@@ -179,17 +194,20 @@ static class VanillaExpressions
                     syntax.Invoking.Range);
             }
             // Add signature help
-            context.AddSignatureInfo(ISignatureHelp.New(
-                range: syntax.LeftParentheses.Range + syntax.RightParentheses.Range,
-                getSignatureHelp: getHelpArgs => new SignatureHelp()
-                {
-                    Signatures = new[] {
-                        VanillaCompletion.GetFunctionSignatureInformation(
-                            element!,
-                            VanillaCompletion.GetActiveParameter(syntax, getHelpArgs.CaretPos))
+            if (syntax.RightParentheses is not null)
+            {
+                context.AddSignatureInfo(ISignatureHelp.New(
+                    range: syntax.LeftParentheses.Range + syntax.RightParentheses.Range,
+                    getSignatureHelp: getHelpArgs => new SignatureHelp()
+                    {
+                        Signatures = new[] {
+                            VanillaCompletion.GetFunctionSignatureInformation(
+                                element!,
+                                VanillaCompletion.GetActiveParameter(syntax, getHelpArgs.CaretPos))
+                        }
                     }
-                }
-            ));
+                ));
+            }
         }
 
         return IVanillaNode.New(syntax, () =>
@@ -201,6 +219,33 @@ static class VanillaExpressions
                     null => "Attempted to compile invocation with incomplete data"
                 });
         });
+    }
+
+    static void AddCompletionForParameters(VanillaContext context, VanillaInvokeExpression syntax, ElementBaseJson? element)
+    {
+        var elementParams = element?.Parameters;
+        if (elementParams is null) return;
+
+        for (int i = 0; i < syntax.Arguments.Count; i++)
+        {
+            var arg = syntax.Arguments[i];
+
+            // Add special completion for constants
+            if (i < elementParams.Length &&
+                ElementRoot.Instance.TryGetEnum(elementParams[i].Type, out var constantsGroup))
+            {
+                // start of argument
+                DocPos start = (arg.PreceedingComma ?? syntax.LeftParentheses).Range.End;
+                // end of argument
+                DocPos? end = (syntax.Arguments.ElementAtOrDefault(i + 1).PreceedingComma ?? syntax.RightParentheses)?.Range.Start;
+
+                if (end is not null)
+                {
+                    context.AddCompletion(ICompletionRange.New(start + end, CompletionRangeKind.ClearRest, getCompletionArgs =>
+                        VanillaCompletion.GetConstantsCompletion(constantsGroup, arg.Value.Range)));
+                }
+            }
+        }
     }
 
     public static IVanillaNode Binary(VanillaContext context, VanillaBinaryOperatorExpression syntax)

@@ -18,7 +18,7 @@ record class VanillaSymbolExpression(Token Token) : IVanillaExpression
     public DocRange Range => Token;
 }
 
-record class VanillaInvokeExpression(DocRange Range, IVanillaExpression Invoking, List<VanillaInvokeParameter> Arguments, Token LeftParentheses, Token RightParentheses) : IVanillaExpression;
+record class VanillaInvokeExpression(DocRange Range, IVanillaExpression Invoking, List<VanillaInvokeParameter> Arguments, Token LeftParentheses, Token? RightParentheses) : IVanillaExpression;
 
 record struct VanillaInvokeParameter(Token PreceedingComma, IVanillaExpression Value);
 
