@@ -12,9 +12,6 @@ static class VanillaCompletion
 {
     static readonly CompletionItem[] VanillaCompletionItems = GetItems();
 
-    public static ICompletionRange CreateCompletion(DocRange range) =>
-        ICompletionRange.New(range, CompletionRangeKind.Catch, param => VanillaCompletionItems);
-
     static CompletionItem[] GetItems()
     {
         // Actions and values
@@ -31,6 +28,11 @@ static class VanillaCompletion
         })).ToArray();
     }
 
+    /// <summary>Creates completion for actions and values.</summary>
+    public static ICompletionRange CreateCompletion(DocRange range) =>
+        ICompletionRange.New(range, CompletionRangeKind.Catch, param => VanillaCompletionItems);
+
+    /// <summary>Creates completion for a group of constants (enum).</summary>
     public static CompletionItem[] GetConstantsCompletion(ElementEnum constants, DocRange replaceRange)
     {
         return constants.Members.Select(member => new CompletionItem()
@@ -45,6 +47,7 @@ static class VanillaCompletion
         }).ToArray();
     }
 
+    /// <summary>The signature of a function as markup.</summary>
     public static MarkupBuilder FunctionSignature(MarkupBuilder builder, ElementBaseJson workshopFunction)
     {
         builder.StartCodeLine("ow").Add($"{workshopFunction.Name}");
@@ -66,6 +69,7 @@ static class VanillaCompletion
         return builder;
     }
 
+    /// <summary>The signature of a function as a string.</summary>
     public static string FunctionSignatureString(ElementBaseJson workshopFunction)
     {
         string result = workshopFunction.Name;
@@ -105,4 +109,13 @@ static class VanillaCompletion
             ActiveParameter = activeParameter
         };
     }
+
+    /// <summary>Creates completion for variables in the scope.</summary>
+    public static CompletionItem[] GetDeclaredVariableCompletion(ScopedVanillaVariables scopedVariables, bool isGlobal) =>
+        scopedVariables.GetVariables(isGlobal).Select(v => new CompletionItem()
+        {
+            Label = v.Name,
+            Kind = CompletionItemKind.Variable,
+            Detail = $"({VanillaHelper.GlobalOrPlayerString(isGlobal)} variable) {v.Name}"
+        }).ToArray();
 }

@@ -58,6 +58,10 @@ namespace Deltin.Deltinteger.Parse
             // Macro
             if (_defineContext.MacroSymbol)
                 componentCollection.AddComponent(new MacroComponent(_defineContext.MacroSymbol.Range));
+
+            // Target workshop variable
+            if (_defineContext.Target.HasValue)
+                componentCollection.AddComponent(new TargetWorkshopComponent(_defineContext.Target.Value));
         }
     }
 }

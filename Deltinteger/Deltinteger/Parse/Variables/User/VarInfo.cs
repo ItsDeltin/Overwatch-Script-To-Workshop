@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Variables.Build;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -36,6 +37,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Persist { get; set; }
         public IVariableInstance Overriding { get; set; }
         public MarkupBuilder Documentation { get; set; }
+        public VariableLinkExpressionCollection LinkTargetVanilla { get; set; }
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)
         {

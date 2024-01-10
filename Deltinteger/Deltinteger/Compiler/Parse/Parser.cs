@@ -1429,9 +1429,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 // Parse an optional variable ID or extended collection marker.
                 Token id = null, ext = null, macro = null;
+                TargetWorkshopVariable? target = null;
 
                 if (!ParseOptional(TokenType.Number, out id))
-                    ParseOptional(TokenType.Exclamation, out ext);
+                    if (ParseOptional(TokenType.Exclamation, out ext))
+                        target = ParseOptionalTargetWorkshopVariable();
 
                 // Get the initial value.
                 IParseExpression initialValue = null;
@@ -1439,9 +1441,69 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     initialValue = GetContainExpression(); // Get the initial value.
 
                 ParseSemicolon();
-                return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment));
+                return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment, target));
             }
         }
+
+        TargetWorkshopVariable? ParseOptionalTargetWorkshopVariable() => CaptureRange<TargetWorkshopVariable?>(r =>
+        {
+            // globalvar and playervar variables can target vanilla workshop variables.
+            // Examples:
+            //    globalvar Number myVar!"a";
+            //    globalvar Number myVar!{"a"};
+            //    globalvar Number myVar!{"a", "b"};
+            //    globalvar Number myVar!"a"[0];
+            //    globalvar Number myVar!{"a"[0]};
+            //    globalvar Number myVar!{"a"[0], "b"[0]};
+
+            // Parses a chain of [..] or [expr] following the target variable string.
+            List<SpreadOrExpression> ParseVanillaTargetIndexer()
+            {
+                var indexer = new List<SpreadOrExpression>();
+
+                while (ParseOptional(TokenType.SquareBracket_Open))
+                {
+                    // [..]
+                    if (ParseOptional(TokenType.Spread, out var spread))
+                    {
+                        indexer.Add(new(spread, null));
+                    }
+                    // [expr]
+                    else
+                    {
+                        indexer.Add(new(spread, GetContainExpression()));
+                    }
+
+                    ParseExpected(TokenType.SquareBracket_Close);
+                }
+
+                return indexer;
+            }
+
+            var targets = new List<StackTarget>();
+
+            // Only one target. ex: !"a"
+            if (ParseOptional(TokenType.String, out var one))
+            {
+                targets.Add(new(one, ParseVanillaTargetIndexer()));
+            }
+            // Multiple targets. ex: !{"a", "b"}
+            else if (ParseOptional(TokenType.CurlyBracket_Open))
+            {
+                // Parse targets while there are strings.
+                do
+                {
+                    if (ParseExpected(TokenType.String, out var target))
+                    {
+                        targets.Add(new(target, ParseVanillaTargetIndexer()));
+                    }
+                }
+                while (ParseOptional(TokenType.Comma));
+                ParseExpected(TokenType.CurlyBracket_Close);
+            }
+            else return null;
+            return new TargetWorkshopVariable(r.GetRange(), targets);
+        });
 
         VariableDeclaration ParseDeclaration(bool parseSemicolon)
         {
@@ -1453,9 +1515,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Parse an optional variable ID or extended collection marker.
             Token id = null, ext = null, macro = null;
-
+            TargetWorkshopVariable? target = null;
             if (!ParseOptional(TokenType.Number, out id))
-                ParseOptional(TokenType.Exclamation, out ext);
+                if (ParseOptional(TokenType.Exclamation, out ext))
+                    target = ParseOptionalTargetWorkshopVariable();
 
             // Initial value
             IParseExpression initialValue = null;
@@ -1464,7 +1527,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 initialValue = GetContainExpression();
 
             ParseSemicolon(parseSemicolon);
-            return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment));
+            return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment, target));
         }
 
         ConstructorContext ParseConstructor()

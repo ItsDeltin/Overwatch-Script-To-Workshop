@@ -1,5 +1,5 @@
 using Deltin.Deltinteger.Elements;
-using static Deltin.Deltinteger.Elements.Element;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -35,8 +35,18 @@ namespace Deltin.Deltinteger.Parse
             // Inline
             if (inline) return new GettableAssignerResult(new WorkshopElementReference(initialValue), initialValue);
 
-            // Assign the index reference
-            var value = info.IndexReferenceCreator.Create(_attributes);
+            // Create the index reference
+            IndexReference value;
+            // Preassigned by writing something like !{'a'}
+            if (_attributes.TargetVariable is not null)
+            {
+                value = _attributes.TargetVariable.GetLinkRetriever(info.ActionSet).Next();
+            }
+            else
+            {
+                // Not preassigned, generate it.
+                value = info.IndexReferenceCreator.Create(_attributes);
+            }
             var nonrecursiveGettable = value;
 
             // Make recursive if requested.
@@ -94,16 +104,17 @@ namespace Deltin.Deltinteger.Parse
 
     public struct AssigningAttributes
     {
-        public static readonly AssigningAttributes Empty = new AssigningAttributes();
+        public static readonly AssigningAttributes Empty = new();
 
         public string Name;
         public VariableType VariableType;
         public StoreType StoreType;
         public bool IsGlobal;
         public bool Extended;
-        public bool Persist;
-        public int ID;
-        public IVariableDefault DefaultValue;
+        public bool Persist = false;
+        public int ID = -1;
+        public IVariableDefault DefaultValue = null;
+        public IGetLinkedVariableAssigner TargetVariable = null;
 
         public AssigningAttributes()
         {
@@ -112,8 +123,6 @@ namespace Deltin.Deltinteger.Parse
             StoreType = StoreType.None;
             IsGlobal = false;
             Extended = false;
-            Persist = false;
-            ID = 0;
             DefaultValue = null;
         }
 
@@ -124,9 +133,6 @@ namespace Deltin.Deltinteger.Parse
             StoreType = extended ? StoreType.Indexed : StoreType.FullVariable;
             IsGlobal = isGlobal;
             Extended = extended;
-            ID = -1;
-            DefaultValue = null;
-            Persist = false;
         }
     }
 }

@@ -13,6 +13,8 @@ using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.Signat
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
+using static VanillaHelper;
+
 interface IVanillaNode
 {
     public DocRange DocRange();
@@ -48,17 +50,20 @@ record struct NodeSymbolInformation(ElementBaseJson? WorkshopFunction, bool DoNo
 
 static class VanillaExpressions
 {
+    /// <summary>Creates a node for nodes contained in parentheses.</summary>
     public static IVanillaNode Grouped(VanillaContext context, ParenthesizedVanillaExpression syntax)
     {
         var item = VanillaAnalysis.AnalyzeExpression(context, syntax.Value);
         return IVanillaNode.New(syntax, () => item.GetWorkshopElement());
     }
 
+    /// <summary>Creates a number node.</summary>
     public static IVanillaNode Number(VanillaContext context, NumberExpression syntax)
     {
         return IVanillaNode.New(syntax, () => Element.Num(syntax.Value));
     }
 
+    /// <summary>Creates a string node.</summary>
     public static IVanillaNode String(VanillaContext context, VanillaStringExpression syntax)
     {
         // String literals can only be used inside the 'String' and 'Custom String' values.
@@ -70,11 +75,23 @@ static class VanillaExpressions
         return IVanillaNode.New(syntax, () => "Bad string accepted, should be handled by parent function");
     }
 
+    /// <summary>Creates a node representing a predefined workshop function or player-defined variable or subroutine</summary>
     public static IVanillaNode Symbol(VanillaContext context, VanillaSymbolExpression syntax)
     {
         void UnknownSymbol()
         {
-            context.Warning("Unknown workshop symbol", syntax.Range);
+            // For better diagnostics, search the context for the variable.
+            var variableInScope = context.ScopedVanillaVariables.GetScopedVariableOfAnyType(syntax.Token.Text);
+            if (variableInScope.HasValue)
+            {
+                string varType = GlobalOrPlayerString(variableInScope.Value.IsGlobal);
+                string varName = variableInScope.Value.Name;
+                context.Warning($"Unknown workshop symbol. Did you mean to reference the {varType} variable '{varName}'?", syntax.Range);
+            }
+            else
+            {
+                context.Warning("Unknown workshop symbol or variable", syntax.Range);
+            }
         }
 
         ElementBaseJson? workshopFunction = null;
@@ -250,8 +267,27 @@ static class VanillaExpressions
 
     public static IVanillaNode Binary(VanillaContext context, VanillaBinaryOperatorExpression syntax)
     {
-        var left = VanillaAnalysis.AnalyzeExpression(context, syntax.Left);
-        var right = VanillaAnalysis.AnalyzeExpression(context, syntax.Right);
+        IVanillaNode left = VanillaAnalysis.AnalyzeExpression(context, syntax.Left);
+        IVanillaNode right;
+        // Target variable.
+        if (syntax.Symbol.Text == ".")
+        {
+            // Player variable completion
+            context.AddCompletion(ICompletionRange.New(
+                range: syntax.Symbol.Range.End + context.NextToken(syntax.Symbol).Range.Start,
+                CompletionRangeKind.ClearRest,
+                getCompletionParams => VanillaCompletion.GetDeclaredVariableCompletion(
+                    context.ScopedVanillaVariables,
+                    isGlobal: false
+                )
+            ));
+            // Variable analysis
+            right = VanillaAnalysis.AnalyzeExpression(context, syntax.Right);
+        }
+        else
+        {
+            right = VanillaAnalysis.AnalyzeExpression(context, syntax.Right);
+        }
 
         return IVanillaNode.New(syntax, () =>
         {

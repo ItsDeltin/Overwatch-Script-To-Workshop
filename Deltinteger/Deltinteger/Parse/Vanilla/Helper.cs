@@ -11,4 +11,6 @@ static class VanillaHelper
         ElementJsonAction => "action",
         _ => "function"
     };
+
+    public static string GlobalOrPlayerString(bool isGlobal) => isGlobal ? "global" : "player";
 }

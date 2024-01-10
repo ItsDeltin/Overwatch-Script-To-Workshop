@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 namespace Deltin.Deltinteger.Compiler.Parse.Vanilla;
 
@@ -29,14 +30,17 @@ public readonly record struct VanillaSymbols(
                 symbols.AddSymbol(member.WorkshopName(), WorkshopLanguage.EnUS, new WorkshopItem.Enumerator(member));
 
         return new(symbols,
-            Actions: EnKwForTesting("actions"),
-            Conditions: EnKwForTesting("conditions"),
-            Event: EnKwForTesting("event"),
-            Variables: EnKwForTesting("variables"));
+            Actions: VanillaKeyword.EnKwForTesting("actions"),
+            Conditions: VanillaKeyword.EnKwForTesting("conditions"),
+            Event: VanillaKeyword.EnKwForTesting("event"),
+            Variables: VanillaKeyword.EnKwForTesting("variables"));
     }
-
-    static VanillaKeyword EnKwForTesting(string value) => new(value, Array.Empty<VanillaKeywordLanguageValue>());
 }
 
-public readonly record struct VanillaKeyword(string EnUs, VanillaKeywordLanguageValue[] Translations);
+public readonly record struct VanillaKeyword(string EnUs, VanillaKeywordLanguageValue[] Translations)
+{
+    public bool Match(string text) => text == EnUs || Translations.Any(t => t.Value == text);
+
+    public static VanillaKeyword EnKwForTesting(string value) => new(value, Array.Empty<VanillaKeywordLanguageValue>());
+}
 public readonly record struct VanillaKeywordLanguageValue(WorkshopLanguage Language, string Value);

@@ -951,8 +951,18 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token ID { get; }
         public Token MacroSymbol { get; }
         public MetaComment Comment { get; set; }
+        public TargetWorkshopVariable? Target { get; }
 
-        public VariableDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id, Token macroSymbol, MetaComment metaComment)
+        public VariableDeclaration(
+            AttributeTokens attributes,
+            IParseType type,
+            Token identifier,
+            IParseExpression initialValue,
+            Token ext,
+            Token id,
+            Token macroSymbol,
+            MetaComment metaComment,
+            TargetWorkshopVariable? target)
         {
             Attributes = attributes;
             Type = type;
@@ -962,8 +972,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             ID = id;
             MacroSymbol = macroSymbol;
             Comment = metaComment;
+            Target = target;
         }
     }
+
+    public record struct TargetWorkshopVariable(DocRange Range, List<StackTarget> Targets);
+
+    public record struct StackTarget(Token Target, List<SpreadOrExpression> Indexer);
+
+    public record struct SpreadOrExpression(Token Spread, IParseExpression Expression);
 
     public class MacroVarDeclaration : Node, IDeclaration
     {

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse.Variables.Build
 {
@@ -322,6 +323,83 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
         public string RejectMessage() => "Macros cannot be declared here.";
         public void Validate(VariableComponentCollection componentCollection) { }
         public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
+    }
+
+    class TargetWorkshopComponent : IVariableComponent
+    {
+        public DocRange Range => _syntax.Range;
+        public bool WasRejected { get; set; }
+        readonly TargetWorkshopVariable _syntax;
+        bool _isGlobal;
+
+        public TargetWorkshopComponent(TargetWorkshopVariable syntax)
+        {
+            _syntax = syntax;
+        }
+
+        public string RejectMessage() => "Only rule-level variables can target workshop variables";
+        public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
+        public void Validate(VariableComponentCollection componentCollection)
+        {
+            _isGlobal = componentCollection.IsAttribute(AttributeType.GlobalVar);
+        }
+        public void Apply(VarInfo varInfo)
+        {
+            var parseInfo = varInfo.ParseInfo;
+
+            var linkTargets = new List<VariableLinkExpressionTarget>();
+            bool anySpread = false;
+            foreach (var target in _syntax.Targets)
+            {
+                string targetName = Extras.RemoveQuotes(target.Target.Text);
+
+                // Is the vanilla variable in scope?
+                if (parseInfo.ScopedVanillaVariables.GetScopedVariable(targetName, _isGlobal) is null)
+                {
+                    parseInfo.Error($"No vanilla workshop variable named '{targetName}' is in the current scope", target.Target);
+                }
+
+                bool didSpread = false;
+                var analyzedIndexers = new List<IExpression>();
+                foreach (var indexer in target.Indexer)
+                {
+                    // !'a'[..][0] is not allowed.
+                    if (didSpread)
+                    {
+                        parseInfo.Error("Cannot index further after spread expression", indexer.Spread ?? indexer.Expression.Range);
+                    }
+                    else if (indexer.Spread)
+                    {
+                        // !{'a', 'b'[..]} is not allowed.
+                        if (_syntax.Targets.Count > 1)
+                            parseInfo.Error("Cannot use spread syntax with multiple variable targets", indexer.Spread);
+                        didSpread = true;
+                        anySpread = true;
+                    }
+                    else
+                    {
+                        // Get the expression.
+                        var nextExpr = parseInfo.GetExpression(varInfo.Scope, indexer.Expression);
+                        // Any more indexers after didSpread are invalid.
+                        if (!didSpread)
+                            analyzedIndexers.Add(nextExpr);
+                    }
+                }
+                linkTargets.Add(new(
+                    LinkingTo: targetName,
+                    Indexers: analyzedIndexers.ToArray()
+                ));
+            }
+
+            int requiredStackLength = varInfo.Type.Attributes.StackLength;
+            if (!anySpread && _syntax.Targets.Count != requiredStackLength)
+            {
+                parseInfo.Error($"Type '{varInfo.Type.GetName()}' requires {requiredStackLength} target variables, got {_syntax.Targets.Count}", _syntax.Range);
+            }
+
+            var links = new VariableLinkExpressionCollection(anySpread, linkTargets.ToArray());
+            varInfo.LinkTargetVanilla = links;
+        }
     }
 
     // * Rejectors *

@@ -8,12 +8,14 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 class VanillaContext
 {
     readonly ScriptFile script;
+    public ScopedVanillaVariables ScopedVanillaVariables { get; }
     ActiveParameterData activeParameterData;
     VanillaType expectedType;
 
-    public VanillaContext(ScriptFile script)
+    public VanillaContext(ScriptFile script, ScopedVanillaVariables scopedVanillaVariables)
     {
         this.script = script;
+        ScopedVanillaVariables = scopedVanillaVariables;
     }
 
     // Diagnostics
@@ -34,11 +36,14 @@ class VanillaContext
     public VanillaType GetExpectedType() => expectedType;
 
     // Subcontext
-    public VanillaContext SetActiveParameterData(ActiveParameterData data) => new(script)
+    public VanillaContext SetActiveParameterData(ActiveParameterData data) => new(script, ScopedVanillaVariables)
     {
         activeParameterData = data
     };
     public VanillaContext ExpectingType(VanillaType type) => this; // todo
+
+    // Utility
+    public Token NextToken(Token previousToken) => script.NextToken(previousToken);
 }
 
 readonly record struct ActiveParameterData(

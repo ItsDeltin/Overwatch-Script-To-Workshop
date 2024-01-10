@@ -8,14 +8,9 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 
 static class VanillaAnalysis
 {
-    public static void AnalyzeVariables(ScriptFile script, VanillaVariableCollection variables)
+    public static void AnalyzeRule(ScriptFile script, VanillaRule rule, ScopedVanillaVariables scopedVanillaVariables)
     {
-
-    }
-
-    public static void AnalyzeRule(ScriptFile script, VanillaRule rule)
-    {
-        AnalyzeRule(new VanillaContext(script), rule);
+        AnalyzeRule(new VanillaContext(script, scopedVanillaVariables), rule);
     }
 
     public static void AnalyzeRule(VanillaContext context, VanillaRule rule)
@@ -38,6 +33,7 @@ static class VanillaAnalysis
 
                 default:
                     context.Error($"Unknown rule category '{content.GroupToken.Text}'", content.GroupToken.Range);
+                    AnalyzeContent(context, content);
                     break;
             }
         }

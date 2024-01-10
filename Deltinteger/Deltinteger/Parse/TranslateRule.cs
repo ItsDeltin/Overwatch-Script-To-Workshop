@@ -4,6 +4,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Parse.Workshop;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -150,6 +151,7 @@ namespace Deltin.Deltinteger.Parse
         public IContinueContainer ContinueHandler { get; private set; }
         public IBreakContainer BreakHandler { get; private set; }
         public ISpreadHelper SpreadHelper { get; private set; }
+        public LinkableVanillaVariables LinkableVanillaVariables => ToWorkshop.LinkableVanillaVariables;
 
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
