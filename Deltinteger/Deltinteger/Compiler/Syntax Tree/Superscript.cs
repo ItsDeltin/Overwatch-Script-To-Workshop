@@ -56,7 +56,10 @@ public record struct VariableName(Token Id, Token? Name)
 public record class VanillaRule(Token Disabled, Token Name, VanillaRuleContent[] Content);
 
 /// <summary>The 'event', 'actions' or 'conditions' sections in a workshop rule.</summary>
-public record class VanillaRuleContent(DocRange Range, Token GroupToken, IVanillaExpression[] InnerItems);
+public record class VanillaRuleContent(DocRange Range, Token GroupToken, CommentedVanillaExpression[] InnerItems);
+
+/// <summary>A possibly commented action or condition.</summary>
+public record struct CommentedVanillaExpression(Token? Comment, IVanillaExpression Expression);
 
 /// <summary>The node for expressions in the vanilla superscript.</summary>
 public interface IVanillaExpression

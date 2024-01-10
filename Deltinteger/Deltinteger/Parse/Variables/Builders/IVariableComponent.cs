@@ -392,11 +392,16 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                 ));
             }
 
-            int requiredStackLength = varInfo.Type.Attributes.StackLength;
-            if (!anySpread && _syntax.Targets.Count != requiredStackLength)
+            // Not very nice but required because of some fun struct stuff.
+            varInfo.ParseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.PostContent, () =>
             {
-                parseInfo.Error($"Type '{varInfo.Type.GetName()}' requires {requiredStackLength} target variables, got {_syntax.Targets.Count}", _syntax.Range);
-            }
+                int requiredStackLength = varInfo.Type.Attributes.StackLength;
+                if (!anySpread && _syntax.Targets.Count != requiredStackLength)
+                {
+                    parseInfo.Error($"Type '{varInfo.Type.GetName()}' requires {requiredStackLength} target variables, got {_syntax.Targets.Count}", _syntax.Range);
+                }
+            });
+
 
             var links = new VariableLinkExpressionCollection(anySpread, linkTargets.ToArray());
             varInfo.LinkTargetVanilla = links;

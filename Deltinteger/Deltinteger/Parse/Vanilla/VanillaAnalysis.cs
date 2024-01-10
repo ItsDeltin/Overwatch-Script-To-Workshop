@@ -43,8 +43,8 @@ static class VanillaAnalysis
     {
         context.AddCompletion(VanillaCompletion.CreateCompletion(contentSyntax.Range));
 
-        foreach (var expression in contentSyntax.InnerItems)
-            AnalyzeExpression(context, expression);
+        foreach (var contentItem in contentSyntax.InnerItems)
+            AnalyzeExpression(context, contentItem.Expression);
     }
 
     public static IVanillaNode AnalyzeExpression(VanillaContext context, IVanillaExpression expression)

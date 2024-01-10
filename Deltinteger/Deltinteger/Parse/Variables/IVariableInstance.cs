@@ -1,4 +1,5 @@
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -40,6 +41,7 @@ namespace Deltin.Deltinteger.Parse
         public readonly bool IsGlobal;
         public readonly string Tag;
         public readonly bool Persist;
+        public readonly IGetLinkedVariableAssigner TargetVariable = null;
 
         public GetVariablesAssigner(ActionSet actionSet)
         {
@@ -49,12 +51,13 @@ namespace Deltin.Deltinteger.Parse
             Persist = false;
         }
 
-        public GetVariablesAssigner(ActionSet actionSet, string tag, bool persist)
+        public GetVariablesAssigner(ActionSet actionSet, string tag, bool persist, IGetLinkedVariableAssigner targetVariable)
         {
             TypeLinker = actionSet?.ThisTypeLinker;
             IsGlobal = actionSet?.IsGlobal ?? true;
             Tag = tag;
             Persist = persist;
+            TargetVariable = targetVariable;
         }
 
         public GetVariablesAssigner(InstanceAnonymousTypeLinker typeLinker)

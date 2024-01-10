@@ -16,7 +16,7 @@ public interface IGetLinkedVariableAssigner
     /// <summary>
     /// When the LinkedVariableAssigner is already known.
     /// </summary>
-    public IGetLinkedVariableAssigner From(LinkedVariableAssigner assigner) => new FromValue(assigner);
+    public static IGetLinkedVariableAssigner From(LinkedVariableAssigner assigner) => new FromValue(assigner);
 
     record FromValue(LinkedVariableAssigner Assigner) : IGetLinkedVariableAssigner
     {
@@ -27,12 +27,12 @@ public interface IGetLinkedVariableAssigner
 /// <summary>
 /// A node for the vanilla targets in a variable declaration.
 /// </summary>
-public readonly record struct VariableLinkExpressionCollection(
+public record class VariableLinkExpressionCollection(
     bool IsSpread,
     VariableLinkExpressionTarget[] Items
 ) : IGetLinkedVariableAssigner
 {
-    public readonly LinkedVariableAssigner GetLinkRetriever(ActionSet actionSet) => new(
+    public LinkedVariableAssigner GetLinkRetriever(ActionSet actionSet) => new(
         actionSet,
         IsSpread,
         targetVariables: Items.Select(item => new TargetVariableStack(

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -22,6 +23,9 @@ namespace Deltin.Deltinteger.Parse
         {
             IStructValue initialValue = null;
 
+            // When targetting a vanilla workshop variable, use this instead of the VarCollection.
+            var vanillaLinkRetriever = _attributes.TargetVariable?.GetLinkRetriever(info.ActionSet);
+
             // Set the initial value.
             // If an initial value is provided, use that.
             if (info.InitialValueOverride != null)
@@ -38,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the child gettable.
                 values.Add(
                     var.Name,
-                    var.GetAssigner(new(info.ActionSet, _attributes.Name + "_", _attributes.Persist))
+                    var.GetAssigner(new(info.ActionSet, _attributes.Name + "_", _attributes.Persist, IGetLinkedVariableAssigner.From(vanillaLinkRetriever)))
                         .GetValue(new GettableAssignerValueInfo(
                             actionSet: info.ActionSet,
                             setInitialValue: info.SetInitialValue,
@@ -112,6 +116,7 @@ namespace Deltin.Deltinteger.Parse
         public StoreType StoreType;
         public IVariableDefault DefaultValue;
         public bool Persist;
+        public IGetLinkedVariableAssigner TargetVariable;
 
         public StructAssigningAttributes(AssigningAttributes attributes)
         {
@@ -119,6 +124,7 @@ namespace Deltin.Deltinteger.Parse
             StoreType = attributes.StoreType;
             DefaultValue = attributes.DefaultValue;
             Persist = attributes.Persist;
+            TargetVariable = attributes.TargetVariable;
         }
     }
 
