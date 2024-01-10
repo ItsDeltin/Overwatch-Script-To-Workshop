@@ -46,7 +46,12 @@ interface IVanillaNode
     }
 }
 
-record struct NodeSymbolInformation(ElementBaseJson? WorkshopFunction, bool DoNotError);
+record struct NodeSymbolInformation(
+    ElementBaseJson? WorkshopFunction = default,
+    bool DoNotError = false,
+    bool IsVariable = false,
+    VanillaVariable? PointingToVariable = default,
+    bool IsGlobalSymbol = false);
 
 static class VanillaExpressions
 {
@@ -78,26 +83,52 @@ static class VanillaExpressions
     /// <summary>Creates a node representing a predefined workshop function or player-defined variable or subroutine</summary>
     public static IVanillaNode Symbol(VanillaContext context, VanillaSymbolExpression syntax)
     {
+        string name = syntax.Token.Text;
+
         void UnknownSymbol()
         {
             // For better diagnostics, search the context for the variable.
-            var variableInScope = context.ScopedVanillaVariables.GetScopedVariableOfAnyType(syntax.Token.Text);
+            var variableInScope = context.ScopedVariables.GetScopedVariableOfAnyType(name);
             if (variableInScope.HasValue)
             {
                 string varType = GlobalOrPlayerString(variableInScope.Value.IsGlobal);
-                string varName = variableInScope.Value.Name;
-                context.Warning($"Unknown workshop symbol. Did you mean to reference the {varType} variable '{varName}'?", syntax.Range);
+                context.Warning($"Unknown workshop symbol. Did you mean to reference the {varType} variable '{name}'?", syntax.Range);
             }
             else
             {
-                context.Warning("Unknown workshop symbol or variable", syntax.Range);
+                context.Warning("Unknown workshop symbol", syntax.Range);
             }
         }
 
         ElementBaseJson? workshopFunction = null;
         ElementEnumMember? workshopConstant = null;
+        VanillaVariable? declaredVariable = null;
+        bool isVariable = false;
+        bool isGlobalSymbol = false;
 
-        if (syntax.Token is WorkshopToken workshopToken)
+        var parameterData = context.GetActiveParameterData();
+        // User declared variable
+        if (parameterData.ExpectingVariable != ExpectingVariable.None)
+        {
+            isVariable = true;
+            bool isGlobalVarExpected = parameterData.ExpectingVariable == ExpectingVariable.Global;
+
+            // Find variable with name
+            declaredVariable = context.ScopedVariables.GetScopedVariable(name, isGlobalVarExpected);
+
+            // Warn if not found
+            if (declaredVariable is null)
+            {
+                context.Warning($"There is no {GlobalOrPlayerString(isGlobalVarExpected)} variable named '{name}'", syntax.Range);
+            }
+        }
+        // 'Global' symbol
+        else if (VanillaInfo.GlobalNamespace.Match(name))
+        {
+            isGlobalSymbol = true;
+        }
+        // Workshop function or constant
+        else if (syntax.Token is WorkshopToken workshopToken)
         {
             // Narrow down a symbol from the potential items.
             var items = FilterItemsFromContext(context, workshopToken.WorkshopItems);
@@ -123,7 +154,7 @@ static class VanillaExpressions
                         context.AddHover(syntax.Range, VanillaCompletion.FunctionSignature(new(), element.Value));
 
                         // If this expression needs to be invoked and is not, add an error.
-                        if (!context.GetActiveParameterData().IsInvoked && workshopFunction.Parameters?.Length is not null and > 0)
+                        if (!parameterData.IsInvoked && workshopFunction.Parameters?.Length is not null and > 0)
                             context.Warning($"'{workshopFunction.Name}' requires {workshopFunction.Parameters.Length} parameter values", syntax.Range);
 
                         break;
@@ -139,12 +170,20 @@ static class VanillaExpressions
             UnknownSymbol();
         }
 
-        return IVanillaNode.New(syntax, new() { WorkshopFunction = workshopFunction }, () => (workshopFunction, workshopConstant) switch
-        {
-            (ElementBaseJson, null) => Element.Part(workshopFunction),
-            (null, ElementEnumMember) => workshopConstant,
-            (null, null) or (_, _) => "Attempted to compile symbol information with incomplete data"
-        });
+        return IVanillaNode.New(syntax,
+            symbolInformation: new()
+            {
+                WorkshopFunction = workshopFunction,
+                PointingToVariable = declaredVariable,
+                IsVariable = isVariable,
+                IsGlobalSymbol = isGlobalSymbol
+            },
+            getWorkshopElement: () => (workshopFunction, workshopConstant) switch
+            {
+                (ElementBaseJson, null) => Element.Part(workshopFunction),
+                (null, ElementEnumMember) => workshopConstant,
+                (null, null) or (_, _) => "Attempted to compile symbol information with incomplete data"
+            });
     }
 
     static WorkshopItem[] FilterItemsFromContext(VanillaContext context, IEnumerable<LanguageLinkedWorkshopItem> items)
@@ -192,7 +231,8 @@ static class VanillaExpressions
         AddCompletionForParameters(context, syntax, element);
 
         // Analyze arguments.
-        var arguments = syntax.Arguments.Select(arg => VanillaAnalysis.AnalyzeExpression(context, arg.Value)).ToArray();
+        var arguments = syntax.Arguments.Select((arg, i) =>
+            VanillaAnalysis.AnalyzeExpression(GetContextForParameter(context, element, i), arg.Value)).ToArray();
 
         if (elementParams is not null)
         {
@@ -247,22 +287,45 @@ static class VanillaExpressions
         {
             var arg = syntax.Arguments[i];
 
-            // Add special completion for constants
-            if (i < elementParams.Length &&
-                ElementRoot.Instance.TryGetEnum(elementParams[i].Type, out var constantsGroup))
-            {
-                // start of argument
-                DocPos start = (arg.PreceedingComma ?? syntax.LeftParentheses).Range.End;
-                // end of argument
-                DocPos? end = (syntax.Arguments.ElementAtOrDefault(i + 1).PreceedingComma ?? syntax.RightParentheses)?.Range.Start;
+            // start of argument
+            DocPos start = (arg.PreceedingComma ?? syntax.LeftParentheses).Range.End;
+            // end of argument
+            DocPos? end = (syntax.Arguments.ElementAtOrDefault(i + 1).PreceedingComma ?? syntax.RightParentheses)?.Range.Start;
 
-                if (end is not null)
+            if (i < elementParams.Length && end is not null)
+            {
+                // Add special completion for constants
+                if (ElementRoot.Instance.TryGetEnum(elementParams[i].Type, out var constantsGroup))
                 {
                     context.AddCompletion(ICompletionRange.New(start + end, CompletionRangeKind.ClearRest, getCompletionArgs =>
                         VanillaCompletion.GetConstantsCompletion(constantsGroup, arg.Value.Range)));
                 }
+                // Add completion for items expecting a variable.
+                else if (elementParams[i].IsVariableReference)
+                {
+                    bool isGlobal = elementParams[i].VariableReferenceIsGlobal ?? false;
+                    context.AddCompletion(ICompletionRange.New(start + end, CompletionRangeKind.ClearRest, getCompletionArgs =>
+                        VanillaCompletion.GetVariableCompletion(context.ScopedVariables, isGlobal)));
+                }
             }
         }
+    }
+
+    static VanillaContext GetContextForParameter(VanillaContext context, ElementBaseJson? element, int parameter)
+    {
+        // Do not change context with incomplete parameter information. 
+        if (element?.Parameters is null || parameter >= element.Parameters.Length)
+            return context;
+
+        var param = element.Parameters[parameter];
+
+        return context.SetActiveParameterData(new(
+            ExpectingVariable: param.VariableReferenceIsGlobal switch
+            {
+                true => ExpectingVariable.Global,
+                false => ExpectingVariable.Player,
+                null or _ => ExpectingVariable.None
+            }));
     }
 
     public static IVanillaNode Binary(VanillaContext context, VanillaBinaryOperatorExpression syntax)
@@ -272,17 +335,25 @@ static class VanillaExpressions
         // Target variable.
         if (syntax.Symbol.Text == ".")
         {
+            bool isGlobal = left.GetSymbolInformation().IsGlobalSymbol;
             // Player variable completion
             context.AddCompletion(ICompletionRange.New(
                 range: syntax.Symbol.Range.End + context.NextToken(syntax.Symbol).Range.Start,
                 CompletionRangeKind.ClearRest,
-                getCompletionParams => VanillaCompletion.GetDeclaredVariableCompletion(
-                    context.ScopedVanillaVariables,
-                    isGlobal: false
+                getCompletionParams => VanillaCompletion.GetVariableCompletion(
+                    context.ScopedVariables,
+                    isGlobal: isGlobal
                 )
             ));
             // Variable analysis
-            right = VanillaAnalysis.AnalyzeExpression(context, syntax.Right);
+            right = VanillaAnalysis.AnalyzeExpression(context.SetActiveParameterData(new(
+                ExpectingVariable: isGlobal ? ExpectingVariable.Global : ExpectingVariable.Player
+            )), syntax.Right);
+            // Rhs *must* be a variable.
+            if (!right.GetSymbolInformation().IsVariable)
+            {
+                context.Error("The righthand side of a dot must be a variable", syntax.Right.Range);
+            }
         }
         else
         {

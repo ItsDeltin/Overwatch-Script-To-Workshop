@@ -111,7 +111,7 @@ static class VanillaCompletion
     }
 
     /// <summary>Creates completion for variables in the scope.</summary>
-    public static CompletionItem[] GetDeclaredVariableCompletion(ScopedVanillaVariables scopedVariables, bool isGlobal) =>
+    public static CompletionItem[] GetVariableCompletion(ScopedVanillaVariables scopedVariables, bool isGlobal) =>
         scopedVariables.GetVariables(isGlobal).Select(v => new CompletionItem()
         {
             Label = v.Name,

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Variables.VanillaLink;
+using Deltin.Deltinteger.Parse.Vanilla;
 
 namespace Deltin.Deltinteger.Parse.Variables.Build
 {
@@ -356,7 +357,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                 // Is the vanilla variable in scope?
                 if (parseInfo.ScopedVanillaVariables.GetScopedVariable(targetName, _isGlobal) is null)
                 {
-                    parseInfo.Error($"No vanilla workshop variable named '{targetName}' is in the current scope", target.Target);
+                    parseInfo.Error($"No {VanillaHelper.GlobalOrPlayerString(_isGlobal)} workshop variable named '{targetName}' is in the current scope", target.Target);
                 }
 
                 bool didSpread = false;

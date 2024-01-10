@@ -7,6 +7,7 @@ static class VanillaInfo
         '{', '}', ';', '"', '(', ')', '=', '+', '-', '/', '*', '.', ',', ':', '?', '\r', '\n'
     };
 
+    public static readonly VanillaKeyword GlobalNamespace = VanillaKeyword.EnKwForTesting("Global");
     public static readonly VanillaKeyword GlobalVariableGroup = VanillaKeyword.EnKwForTesting("global");
     public static readonly VanillaKeyword PlayerVariableGroup = VanillaKeyword.EnKwForTesting("player");
 }

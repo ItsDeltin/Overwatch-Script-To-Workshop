@@ -8,14 +8,14 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 class VanillaContext
 {
     readonly ScriptFile script;
-    public ScopedVanillaVariables ScopedVanillaVariables { get; }
+    public ScopedVanillaVariables ScopedVariables { get; }
     ActiveParameterData activeParameterData;
     VanillaType expectedType;
 
     public VanillaContext(ScriptFile script, ScopedVanillaVariables scopedVanillaVariables)
     {
         this.script = script;
-        ScopedVanillaVariables = scopedVanillaVariables;
+        ScopedVariables = scopedVanillaVariables;
     }
 
     // Diagnostics
@@ -36,7 +36,7 @@ class VanillaContext
     public VanillaType GetExpectedType() => expectedType;
 
     // Subcontext
-    public VanillaContext SetActiveParameterData(ActiveParameterData data) => new(script, ScopedVanillaVariables)
+    public VanillaContext SetActiveParameterData(ActiveParameterData data) => new(script, ScopedVariables)
     {
         activeParameterData = data
     };
@@ -48,5 +48,13 @@ class VanillaContext
 
 readonly record struct ActiveParameterData(
     bool IsInvoked = false,
-    bool NeedsStringLiteral = false
+    bool NeedsStringLiteral = false,
+    ExpectingVariable ExpectingVariable = default
 );
+
+enum ExpectingVariable
+{
+    None,
+    Global,
+    Player
+}

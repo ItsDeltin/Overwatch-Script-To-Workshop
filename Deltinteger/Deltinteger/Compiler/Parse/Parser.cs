@@ -1206,6 +1206,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 Is(TokenType.Exclamation) || // Extended collection marker.
                 Is(TokenType.Number) ||      // Assigned workshop ID.
                 Is(TokenType.Colon) ||       // Macro variable value.
+                Is(TokenType.CurlyBracket_Open) || // Target vanilla value
                 (functionDeclaration && (Is(TokenType.Parentheses_Open) || Is(TokenType.LessThan))) || // Function parameter start.
                 IsFinished                   // EOF was reached.
             ));
@@ -1432,7 +1433,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 TargetWorkshopVariable? target = null;
 
                 if (!ParseOptional(TokenType.Number, out id))
-                    if (ParseOptional(TokenType.Exclamation, out ext))
+                    if (!ParseOptional(TokenType.Exclamation, out ext))
                         target = ParseOptionalTargetWorkshopVariable();
 
                 // Get the initial value.
@@ -1482,13 +1483,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             var targets = new List<StackTarget>();
 
-            // Only one target. ex: !"a"
-            if (ParseOptional(TokenType.String, out var one))
-            {
-                targets.Add(new(one, ParseVanillaTargetIndexer()));
-            }
-            // Multiple targets. ex: !{"a", "b"}
-            else if (ParseOptional(TokenType.CurlyBracket_Open))
+            if (ParseOptional(TokenType.CurlyBracket_Open))
             {
                 // Parse targets while there are strings.
                 do
@@ -1517,7 +1512,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Token id = null, ext = null, macro = null;
             TargetWorkshopVariable? target = null;
             if (!ParseOptional(TokenType.Number, out id))
-                if (ParseOptional(TokenType.Exclamation, out ext))
+                if (!ParseOptional(TokenType.Exclamation, out ext))
                     target = ParseOptionalTargetWorkshopVariable();
 
             // Initial value
@@ -2238,7 +2233,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (ParseOptional(TokenType.Parentheses_Open, out var leftParentheses))
             {
                 var arguments = new List<VanillaInvokeParameter>();
-                if (Kind.IsWorkshopExpression())
+                if (Kind.IsWorkshopExpression() || Is(TokenType.Comma))
                 {
                     Token previousComma = null;
                     do arguments.Add(new(previousComma, ParseVanillaExpression()));
