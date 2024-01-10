@@ -2171,10 +2171,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var groupToken = ParseExpected(initiatingTokenType);
             ParseExpected(TokenType.CurlyBracket_Open);
 
-            List<IVanillaExpression> items = new();
+            List<CommentedVanillaExpression> items = new();
             while (Kind.IsWorkshopExpression())
             {
-                items.Add(ParseVanillaExpression());
+                // Comments
+                var comment = ParseOptional(TokenType.String);
+                var expression = ParseVanillaExpression();
+                items.Add(new(comment, expression));
                 ParseExpected(TokenType.Semicolon);
             }
 
