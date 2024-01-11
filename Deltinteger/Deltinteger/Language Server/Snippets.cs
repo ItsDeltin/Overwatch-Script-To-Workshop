@@ -48,14 +48,13 @@ namespace Deltin.Deltinteger.LanguageServer
             insert: "for (define ${1:i} = ${2:length} - 1; -1; -1)\n{\n    $0\n}"
         );
 
-        public static void AddSnippets(List<CompletionItem> items)
-        {
-            items.Add(Rule);
-            items.Add(For);
-            items.Add(Forr);
-            items.Add(AutoFor);
-            items.Add(AutoForr);
-        }
+        public static IEnumerable<CompletionItem> Snippets = new[] {
+            Rule,
+            For,
+            Forr,
+            AutoFor,
+            AutoForr
+        };
 
         // Creates the CompletionItem for a snippet.
         static CompletionItem MakeSnippet(string label, string detail, MarkupBuilder documentation, string insert) => new CompletionItem()

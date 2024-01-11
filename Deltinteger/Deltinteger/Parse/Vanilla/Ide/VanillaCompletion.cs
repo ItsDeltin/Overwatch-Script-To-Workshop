@@ -1,7 +1,9 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -10,27 +12,27 @@ namespace Deltin.Deltinteger.Parse.Vanilla.Ide;
 
 static class VanillaCompletion
 {
-    static readonly CompletionItem[] VanillaCompletionItems = GetItems();
-
-    static CompletionItem[] GetItems()
+    static readonly IEnumerable<CompletionItem> Actions = ElementRoot.Instance.Actions.Select(action => new CompletionItem()
     {
-        // Actions and values
-        return ElementRoot.Instance.Actions.Select(action => new CompletionItem()
-        {
-            Label = action.Name,
-            Kind = CompletionItemKind.Function,
-            Documentation = FunctionSignature(new(), action)
-        }).Concat(ElementRoot.Instance.Values.Select(value => new CompletionItem()
-        {
-            Label = value.Name,
-            Kind = CompletionItemKind.Method,
-            Documentation = FunctionSignature(new(), value)
-        })).ToArray();
-    }
+        Label = action.Name,
+        Kind = CompletionItemKind.Function,
+        Documentation = FunctionSignature(new(), action)
+    });
+
+    static readonly IEnumerable<CompletionItem> Values = ElementRoot.Instance.Values.Select(value => new CompletionItem()
+    {
+        Label = value.Name,
+        Kind = CompletionItemKind.Method,
+        Documentation = FunctionSignature(new(), value)
+    });
 
     /// <summary>Creates completion for actions and values.</summary>
-    public static ICompletionRange CreateCompletion(DocRange range) =>
-        ICompletionRange.New(range, CompletionRangeKind.Catch, param => VanillaCompletionItems);
+    public static ICompletionRange CreateActionValueCompletion(DocRange range) =>
+        ICompletionRange.New(range, CompletionRangeKind.Catch, param => Actions.Concat(Values));
+
+    /// <summary>Creates completion for values.</summary>
+    public static ICompletionRange CreateValueCompletion(DocRange range) =>
+        ICompletionRange.New(range, CompletionRangeKind.Catch, param => Values);
 
     /// <summary>Creates completion for a group of constants (enum).</summary>
     public static CompletionItem[] GetConstantsCompletion(ElementEnum constants, DocRange replaceRange)
@@ -118,4 +120,13 @@ static class VanillaCompletion
             Kind = CompletionItemKind.Variable,
             Detail = $"({VanillaHelper.GlobalOrPlayerString(isGlobal)} variable) {v.Name}"
         }).ToArray();
+
+    public static ICompletionRange CreateEventCompletion(DocRange range, VanillaKeyword[] items) => ICompletionRange.New(
+        range,
+        getCompletionParams => items.Select(item => new CompletionItem()
+        {
+            Label = item.EnUs,
+            Kind = CompletionItemKind.Constant
+        })
+    );
 }

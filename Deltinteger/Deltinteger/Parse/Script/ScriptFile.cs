@@ -94,21 +94,26 @@ namespace Deltin.Deltinteger.Parse
     {
         DocRange Range { get; }
         CompletionRangeKind Kind { get; }
-        CompletionItem[] GetCompletion(DocPos pos, bool immediate);
+        IEnumerable<CompletionItem> GetCompletion(DocPos pos, bool immediate);
 
         public record struct GetCompletionParams(DocPos Pos, bool Immediate);
 
         public static ICompletionRange New(
             DocRange range,
+            Func<GetCompletionParams, IEnumerable<CompletionItem>> getCompletion
+        ) => New(range, CompletionRangeKind.ClearRest, getCompletion);
+
+        public static ICompletionRange New(
+            DocRange range,
             CompletionRangeKind kind,
-            Func<GetCompletionParams, CompletionItem[]> getCompletion) => new CompletionRange(range, kind, getCompletion);
+            Func<GetCompletionParams, IEnumerable<CompletionItem>> getCompletion) => new CompletionRange(range, kind, getCompletion);
 
         record CompletionRange(
             DocRange Range,
             CompletionRangeKind Kind,
-            Func<GetCompletionParams, CompletionItem[]> GetCompletionFunc) : ICompletionRange
+            Func<GetCompletionParams, IEnumerable<CompletionItem>> GetCompletionFunc) : ICompletionRange
         {
-            public CompletionItem[] GetCompletion(DocPos pos, bool immediate) => GetCompletionFunc(new(pos, immediate));
+            public IEnumerable<CompletionItem> GetCompletion(DocPos pos, bool immediate) => GetCompletionFunc(new(pos, immediate));
         }
     }
 
@@ -146,7 +151,7 @@ namespace Deltin.Deltinteger.Parse
             Range = range;
         }
 
-        public CompletionItem[] GetCompletion(DocPos pos, bool immediate)
+        public IEnumerable<CompletionItem> GetCompletion(DocPos pos, bool immediate)
         {
             if (_scope == null) return _completionItems;
             return _scope.GetCompletion(_deltinScript, pos, immediate, _getter);

@@ -48,6 +48,7 @@ interface IVanillaNode
 
 record struct NodeSymbolInformation(
     ElementBaseJson? WorkshopFunction = default,
+    ElementEnumMember? WorkshopConstant = default,
     bool DoNotError = false,
     bool IsVariable = false,
     VanillaVariable? PointingToVariable = default,
@@ -174,6 +175,7 @@ static class VanillaExpressions
             symbolInformation: new()
             {
                 WorkshopFunction = workshopFunction,
+                WorkshopConstant = workshopConstant,
                 PointingToVariable = declaredVariable,
                 IsVariable = isVariable,
                 IsGlobalSymbol = isGlobalSymbol

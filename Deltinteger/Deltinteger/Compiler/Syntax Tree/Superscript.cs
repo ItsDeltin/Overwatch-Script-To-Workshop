@@ -59,7 +59,7 @@ public record class VanillaRule(Token Disabled, Token Name, VanillaRuleContent[]
 public record class VanillaRuleContent(DocRange Range, Token GroupToken, CommentedVanillaExpression[] InnerItems);
 
 /// <summary>A possibly commented action or condition.</summary>
-public record struct CommentedVanillaExpression(Token? Comment, IVanillaExpression Expression);
+public record struct CommentedVanillaExpression(Token? Comment, IVanillaExpression Expression, Token? Semicolon);
 
 /// <summary>The node for expressions in the vanilla superscript.</summary>
 public interface IVanillaExpression

@@ -2172,13 +2172,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Open);
 
             List<CommentedVanillaExpression> items = new();
-            while (Kind.IsWorkshopExpression())
+            while (Kind.IsWorkshopExpression() || Is(TokenType.Semicolon))
             {
-                // Comments
                 var comment = ParseOptional(TokenType.String);
                 var expression = ParseVanillaExpression();
-                items.Add(new(comment, expression));
-                ParseExpected(TokenType.Semicolon);
+                var semicolon = ParseExpected(TokenType.Semicolon);
+                items.Add(new(comment, expression, semicolon));
             }
 
             ParseExpected(TokenType.CurlyBracket_Close);

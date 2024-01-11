@@ -1,6 +1,8 @@
 #nullable enable
 
+using System.Linq;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Vanilla.Ide;
 
@@ -20,7 +22,7 @@ static class VanillaAnalysis
             switch (content.GroupToken.TokenType)
             {
                 case TokenType.WorkshopEvent:
-                    AnalyzeContent(context, content);
+                    AnalyzeEventContent(context, content);
                     break;
 
                 case TokenType.WorkshopConditions:
@@ -39,12 +41,57 @@ static class VanillaAnalysis
         }
     }
 
-    public static void AnalyzeContent(VanillaContext context, VanillaRuleContent contentSyntax)
+    public static void AnalyzeContent(VanillaContext context, VanillaRuleContent syntax)
     {
-        context.AddCompletion(VanillaCompletion.CreateCompletion(contentSyntax.Range));
+        // action value completion
+        context.AddCompletion(VanillaCompletion.CreateActionValueCompletion(syntax.Range));
 
-        foreach (var contentItem in contentSyntax.InnerItems)
+        foreach (var contentItem in syntax.InnerItems)
             AnalyzeExpression(context, contentItem.Expression);
+    }
+
+    public static void AnalyzeEventContent(VanillaContext context, VanillaRuleContent syntax)
+    {
+        // Analyze expressions.
+        for (int i = 0; i < syntax.InnerItems.Length; i++)
+        {
+            var analysis = AnalyzeExpression(context, syntax.InnerItems[i].Expression);
+
+            if (i == EventTypesOrder.Length)
+            {
+                context.Error("Too many statements in event category", analysis.DocRange());
+            }
+            else if (i < EventTypesOrder.Length)
+            {
+                var itemInformation = analysis.GetSymbolInformation();
+
+                string? eventTypeName = itemInformation.WorkshopConstant?.Enum.Name;
+                if (eventTypeName != EventTypesOrder[i])
+                {
+                    context.Error($"Invalid {EventTypesOrder[i]} option", analysis.DocRange());
+                }
+            }
+        }
+
+        // Add completion between each statement
+        DocPos start = syntax.Range.Start;
+        for (int i = 0; i < 3; i++)
+        {
+            Token? nextSemicolon = syntax.InnerItems.ElementAtOrDefault(i).Semicolon;
+            DocPos next = nextSemicolon?.Range.Start ?? syntax.Range.End;
+
+            // Todo: show completion per language
+            context.AddCompletion(VanillaCompletion.CreateEventCompletion(start + next, i switch
+            {
+                1 => VanillaInfo.Team,
+                2 => VanillaInfo.Player,
+                _ => VanillaInfo.Event,
+            }));
+
+            if (nextSemicolon is null)
+                break;
+            start = nextSemicolon.Range.End;
+        }
     }
 
     public static IVanillaNode AnalyzeExpression(VanillaContext context, IVanillaExpression expression)
@@ -87,4 +134,6 @@ static class VanillaAnalysis
         // Missing
         return IVanillaNode.New(expression, () => "Missing nodes cannot be converted to the workshop");
     }
+
+    static readonly string[] EventTypesOrder = new[] { "Event", "Team", "Player" };
 }
