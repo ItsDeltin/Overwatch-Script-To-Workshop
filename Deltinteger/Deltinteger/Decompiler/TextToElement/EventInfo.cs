@@ -1,10 +1,14 @@
+using System.Linq;
 using Deltin.Deltinteger.Elements;
+
+#nullable enable
 
 namespace Deltin.Deltinteger.Decompiler.TextToElement
 {
     public class EventInfo
     {
         public static readonly (string, RuleEvent)[] PlayerEventNames = new (string, RuleEvent)[] {
+            ("Ongoing - Global", RuleEvent.OngoingGlobal),
             ("Ongoing - Each Player", RuleEvent.OngoingPlayer),
             ("Player Earned Elimination", RuleEvent.OnElimination),
             ("Player Dealt Final Blow", RuleEvent.OnFinalBlow),
@@ -17,6 +21,13 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Player Left Match", RuleEvent.OnPlayerLeave),
             ("Player Dealt Knockback", RuleEvent.PlayerDealtKnockback),
             ("Player Received Knockback", RuleEvent.PlayerReceivedKnockback)
+        };
+        public static readonly (string, Team)[] PlayerTeamNames = new (string, Team)[] {
+            ("All", Team.All),
+            ("Team1", Team.Team1),
+            ("Team2", Team.Team2),
+            ("Team 1", Team.Team1),
+            ("Team 2", Team.Team2),
         };
         public static readonly (string, PlayerSelector)[] PlayerTypeNames = new (string, PlayerSelector)[] {
             ("All", PlayerSelector.All),
@@ -73,10 +84,20 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Zarya", PlayerSelector.Zarya),
             ("Zenyatta", PlayerSelector.Zenyatta)
         };
-        public RuleEvent Event { get; }
-        public PlayerSelector Player { get; }
-        public Team Team { get; }
-        public string SubroutineName { get; }
+
+        static T? Search<T>((string, T)[] collection, string enUsName)
+        {
+            return collection.FirstOrDefault(pair => pair.Item1 == enUsName).Item2;
+        }
+
+        public static RuleEvent? EventFromString(string enUsEventName) => Search(PlayerEventNames, enUsEventName);
+        public static Team? TeamFromString(string enUsTeamName) => Search(PlayerTeamNames, enUsTeamName);
+        public static PlayerSelector? PlayerFromString(string enUsPlayerName) => Search(PlayerTypeNames, enUsPlayerName);
+
+        public RuleEvent Event { get; } = default;
+        public PlayerSelector Player { get; } = default;
+        public Team Team { get; } = default;
+        public string? SubroutineName { get; }
 
         public EventInfo()
         {

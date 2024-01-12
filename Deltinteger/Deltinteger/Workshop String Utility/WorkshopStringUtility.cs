@@ -322,6 +322,9 @@ static class WorkshopStringUtility
     /// <param name="raw">The OSTW string. First and last character should be ' or ".</param>
     public static string WorkshopStringFromRawText(string raw)
     {
+        if (raw is null)
+            return null;
+
         // Single or double quoted string?
         bool isSingle = raw.StartsWith('\'');
         // Trim starting and ending quotations.

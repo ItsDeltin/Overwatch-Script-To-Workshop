@@ -1,57 +1,87 @@
 #nullable enable
 
+using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Vanilla.Ide;
+using Deltin.WorkshopString;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
 static class VanillaAnalysis
 {
-    public static void AnalyzeRule(ScriptFile script, VanillaRule rule, ScopedVanillaVariables scopedVanillaVariables)
+    public static VanillaRuleAnalysis AnalyzeRule(ScriptFile script, VanillaRule rule, ScopedVanillaVariables scopedVanillaVariables)
     {
-        AnalyzeRule(new VanillaContext(script, scopedVanillaVariables), rule);
+        return AnalyzeRule(new VanillaContext(script, scopedVanillaVariables), rule);
     }
 
-    public static void AnalyzeRule(VanillaContext context, VanillaRule rule)
+    public static VanillaRuleAnalysis AnalyzeRule(VanillaContext context, VanillaRule rule)
     {
-        foreach (var content in rule.Content)
+        string name = WorkshopStringUtility.WorkshopStringFromRawText(rule.Name.Text);
+        bool disabled = rule.Disabled;
+        var content = new List<AnalyzedEventOrContent>();
+
+        foreach (var contentGroup in rule.Content)
         {
-            switch (content.GroupToken.TokenType)
+            switch (contentGroup.GroupToken.TokenType)
             {
+                // Rule events
                 case TokenType.WorkshopEvent:
-                    AnalyzeEventContent(context, content);
+                    content.Add(new(AnalyzeEventContent(context, contentGroup)));
                     break;
 
+                // Rule conditions
                 case TokenType.WorkshopConditions:
-                    AnalyzeContent(context, content);
+                    content.Add(new(new AnalyzedRuleContent(
+                        VanillaRuleContentType.Conditions,
+                        AnalyzeContent(context, contentGroup))));
                     break;
 
+                // Rule actions
                 case TokenType.WorkshopActions:
-                    AnalyzeContent(context, content);
+                    content.Add(new(new AnalyzedRuleContent(
+                        VanillaRuleContentType.Actions,
+                        AnalyzeContent(context, contentGroup))));
                     break;
 
+                // Unknown category
                 default:
-                    context.Error($"Unknown rule category '{content.GroupToken.Text}'", content.GroupToken.Range);
-                    AnalyzeContent(context, content);
+                    context.Error($"Unknown rule category '{contentGroup.GroupToken.Text}'", contentGroup.GroupToken.Range);
+                    content.Add(new(new AnalyzedRuleContent(
+                        VanillaRuleContentType.Unknown,
+                        AnalyzeContent(context, contentGroup))));
                     break;
             }
         }
+        return new VanillaRuleAnalysis(disabled, name, content.ToArray());
     }
 
-    public static void AnalyzeContent(VanillaContext context, VanillaRuleContent syntax)
+    public static CommentedAnalyzedExpression[] AnalyzeContent(VanillaContext context, VanillaRuleContent syntax)
     {
         // action value completion
         context.AddCompletion(VanillaCompletion.CreateActionValueCompletion(syntax.Range));
 
+        var analyzedExpressions = new List<CommentedAnalyzedExpression>();
         foreach (var contentItem in syntax.InnerItems)
-            AnalyzeExpression(context, contentItem.Expression);
+        {
+            var comment = WorkshopStringUtility.WorkshopStringFromRawText(contentItem.Comment?.Text);
+            var node = AnalyzeExpression(context, contentItem.Expression);
+
+            // Make sure it is the right type.
+
+            analyzedExpressions.Add(new(comment, node));
+        }
+
+        return analyzedExpressions.ToArray();
     }
 
-    public static void AnalyzeEventContent(VanillaContext context, VanillaRuleContent syntax)
+    public static AnalyzedRuleEvent AnalyzeEventContent(VanillaContext context, VanillaRuleContent syntax)
     {
+        var parameters = new List<ElementEnumMember>();
+
         // Analyze expressions.
         for (int i = 0; i < syntax.InnerItems.Length; i++)
         {
@@ -65,10 +95,15 @@ static class VanillaAnalysis
             {
                 var itemInformation = analysis.GetSymbolInformation();
 
-                string? eventTypeName = itemInformation.WorkshopConstant?.Enum.Name;
+                var constant = itemInformation.WorkshopConstant;
+                string? eventTypeName = constant?.Enum.Name;
                 if (eventTypeName != EventTypesOrder[i])
                 {
                     context.Error($"Invalid {EventTypesOrder[i]} option", analysis.DocRange());
+                }
+                else
+                {
+                    parameters.Add(constant!);
                 }
             }
         }
@@ -92,6 +127,8 @@ static class VanillaAnalysis
                 break;
             start = nextSemicolon.Range.End;
         }
+
+        return new(parameters);
     }
 
     public static IVanillaNode AnalyzeExpression(VanillaContext context, IVanillaExpression expression)

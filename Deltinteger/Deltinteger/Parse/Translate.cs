@@ -11,6 +11,7 @@ using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Parse.Vanilla;
+using Deltin.Deltinteger.Model;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -134,7 +135,7 @@ namespace Deltin.Deltinteger.Parse
                 InitComponent.Add(new InitComponent(typeof(T), component => apply.Invoke((T)component)));
         }
 
-        private readonly List<RuleAction> rules = new();
+        private readonly List<Variant<RuleAction, VanillaRuleAnalysis>> rules = new();
 
         void Translate()
         {
@@ -277,7 +278,7 @@ namespace Deltin.Deltinteger.Parse
                     // vanilla
                     vanillaRule: vanillaRule =>
                     {
-                        VanillaAnalysis.AnalyzeRule(script, vanillaRule, scopedVanillaVariables);
+                        rules.Add(VanillaAnalysis.AnalyzeRule(script, vanillaRule, scopedVanillaVariables));
                     },
                     // scope vanilla variables
                     variables: syntax =>
@@ -334,12 +335,15 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Parse the rules.
-            foreach (var rule in rules)
+            foreach (var ruleVariant in rules)
             {
-                var translate = new TranslateRule(this, rule);
-                Rule newRule = GetRule(translate.GetRule());
-                WorkshopRules.Add(newRule);
-                rule.ElementCountLens.RuleParsed(newRule);
+                ruleVariant.Match(ostwRule =>
+                {
+                    var translate = new TranslateRule(this, ostwRule);
+                    Rule newRule = GetRule(translate.GetRule());
+                    WorkshopRules.Add(newRule);
+                    ostwRule.ElementCountLens.RuleParsed(newRule);
+                }, owRule => owRule.ToElement().Then(WorkshopRules.Add));
             }
 
             GetComponent<AutoCompileSubroutine>().ToWorkshop(WorkshopConverter);

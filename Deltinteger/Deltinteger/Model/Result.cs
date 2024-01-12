@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-static class Result
+static class ResultExtensions
 {
     public static Result<U, E> CastValue<T, E, U>(this Result<T, E> result) where T : U
     {
@@ -129,6 +129,12 @@ public readonly struct Result<T, E>
         }
         else
             return Result<(T a, U b), E>.Error(other._error!);
+    }
+
+    public void Then(Action<T> onValue)
+    {
+        if (_isOk)
+            onValue(_value!);
     }
 
     public static implicit operator Result<T, E>(T value) => Ok(value);
