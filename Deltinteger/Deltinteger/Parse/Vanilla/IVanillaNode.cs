@@ -10,6 +10,7 @@ using Deltin.Deltinteger.Parse.Vanilla.Ide;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Model;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
+using Deltin.WorkshopString;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -53,7 +54,16 @@ record struct NodeSymbolInformation(
     bool DoNotError = false,
     bool IsVariable = false,
     VanillaVariable? PointingToVariable = default,
-    bool IsGlobalSymbol = false);
+    bool IsGlobalSymbol = false,
+    StringFunctionType StringFunctionType = default,
+    string? StringLiteralValue = null);
+
+enum StringFunctionType
+{
+    NotAString,
+    String,
+    CustomString
+}
 
 static class VanillaExpressions
 {
@@ -76,10 +86,15 @@ static class VanillaExpressions
         // String literals can only be used inside the 'String' and 'Custom String' values.
         if (!context.GetActiveParameterData().NeedsStringLiteral)
         {
-            context.Error("String literal cannot be used here", syntax.Range);
+            context.Error("String literal cannot be used here, did you mean to use Custom String?", syntax.Range);
         }
 
-        return IVanillaNode.New(syntax, () => "Bad string accepted, should be handled by parent function");
+        string value = WorkshopStringUtility.WorkshopStringFromRawText(syntax.Token.Text);
+
+        return IVanillaNode.New(
+            syntax,
+            new(StringLiteralValue: value),
+            () => "Bad string accepted, should be handled by parent function");
     }
 
     /// <summary>Creates a node representing a predefined workshop function or player-defined variable or subroutine</summary>
@@ -108,6 +123,7 @@ static class VanillaExpressions
         VanillaSubroutine? subroutine = null;
         bool isVariable = false;
         bool isGlobalSymbol = false;
+        StringFunctionType stringFunctionType = default;
 
         var parameterData = context.GetActiveParameterData();
         // User declared variable
@@ -165,6 +181,11 @@ static class VanillaExpressions
                 {
                     case WorkshopItem.ActionValue element:
                         workshopFunction = element.Value;
+
+                        // String nodes
+                        if (workshopFunction.Name == "String") stringFunctionType = StringFunctionType.String;
+                        else if (workshopFunction.Name == "Custom String") stringFunctionType = StringFunctionType.CustomString;
+
                         // Add hover info.
                         context.AddHover(syntax.Range, VanillaCompletion.FunctionSignature(new(), element.Value));
 
@@ -193,7 +214,8 @@ static class VanillaExpressions
                 SymbolName = name,
                 PointingToVariable = declaredVariable,
                 IsVariable = isVariable,
-                IsGlobalSymbol = isGlobalSymbol
+                IsGlobalSymbol = isGlobalSymbol,
+                StringFunctionType = stringFunctionType
             },
             getWorkshopElement: () =>
             {
@@ -252,6 +274,49 @@ static class VanillaExpressions
 
         var element = symbolInformation.WorkshopFunction;
         var elementParams = symbolInformation.WorkshopFunction?.Parameters;
+
+        // Custom string function
+        if (symbolInformation.StringFunctionType != StringFunctionType.NotAString)
+        {
+            string? text = null;
+            var stringArgs = Array.Empty<IVanillaNode>();
+
+            // Make sure there is a string literal.
+            if (syntax.Arguments.Count == 0)
+            {
+                context.Error("Missing string literal", syntax.RightParentheses);
+            }
+            else
+            {
+                // Analyze the string literal expression.
+                var stringNode = VanillaAnalysis.AnalyzeExpression(
+                    context.SetActiveParameterData(new(NeedsStringLiteral: true, IsInvoked: true)),
+                    syntax.Arguments[0].Value);
+                text = stringNode.GetSymbolInformation().StringLiteralValue;
+
+                // Check if the first argument is a string literal.
+                if (text is null)
+                {
+                    context.Error("Expected string literal", syntax.Arguments[0].Value.Range);
+                }
+
+                // Check argument count.
+                if (syntax.Arguments.Count > 4)
+                {
+                    context.Warning("Strings can only have a max of 3 arguments", syntax.Arguments[4].Value.Range);
+                }
+
+                // Get args. Skip the string literal that was already analyzed.
+                stringArgs = syntax.Arguments.Skip(1).Select(arg => VanillaAnalysis.AnalyzeExpression(context, arg.Value))
+                    .ToArray();
+            }
+            // Return string node
+            return IVanillaNode.New(syntax, () => stringArgs.SelectResult(arg => arg.GetWorkshopElement()).AndThen<IWorkshopTree>(args =>
+                    new StringElement(
+                        value: text,
+                        localized: symbolInformation.StringFunctionType == StringFunctionType.String,
+                        formats: args.ToArray())));
+        }
 
         // Add parameter completion for constant values.
         AddCompletionForParameters(context, syntax, element);
