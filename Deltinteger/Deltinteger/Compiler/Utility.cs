@@ -302,6 +302,8 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Async:
                 case TokenType.Import:
                 case TokenType.WorkshopVariablesEn:
+                case TokenType.WorkshopSubroutinesEn:
+                case TokenType.WorkshopSettingsEn:
                 // Unary
                 case TokenType.Subtract:
                 case TokenType.Exclamation:
@@ -574,7 +576,11 @@ namespace Deltin.Deltinteger.Compiler
         QuestionMark,
         // Workshop
         WorkshopVariablesEn,
+        WorkshopSubroutinesEn,
+        WorkshopSettingsEn,
         WorkshopVariables,
+        WorkshopSubroutines,
+        WorkshopSettings,
         WorkshopRule,
         WorkshopEvent,
         WorkshopActions,

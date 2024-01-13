@@ -49,6 +49,7 @@ interface IVanillaNode
 record struct NodeSymbolInformation(
     ElementBaseJson? WorkshopFunction = default,
     ElementEnumMember? WorkshopConstant = default,
+    string? SymbolName = default,
     bool DoNotError = false,
     bool IsVariable = false,
     VanillaVariable? PointingToVariable = default,
@@ -104,6 +105,7 @@ static class VanillaExpressions
         ElementBaseJson? workshopFunction = null;
         ElementEnumMember? workshopConstant = null;
         VanillaVariable? declaredVariable = null;
+        VanillaSubroutine? subroutine = null;
         bool isVariable = false;
         bool isGlobalSymbol = false;
 
@@ -121,6 +123,18 @@ static class VanillaExpressions
             if (declaredVariable is null)
             {
                 context.Warning($"There is no {GlobalOrPlayerString(isGlobalVarExpected)} variable named '{name}'", syntax.Range);
+            }
+        }
+        // Subroutine
+        else if (parameterData.ExpectingSubroutine)
+        {
+            // Find subroutine with name
+            subroutine = context.ScopedVariables.GetSubroutine(name);
+
+            // Warn if not found
+            if (subroutine is null)
+            {
+                context.Warning($"There is no subroutine named '{name}'", syntax.Range);
             }
         }
         // 'Global' symbol
@@ -176,15 +190,25 @@ static class VanillaExpressions
             {
                 WorkshopFunction = workshopFunction,
                 WorkshopConstant = workshopConstant,
+                SymbolName = name,
                 PointingToVariable = declaredVariable,
                 IsVariable = isVariable,
                 IsGlobalSymbol = isGlobalSymbol
             },
-            getWorkshopElement: () => (workshopFunction, workshopConstant) switch
+            getWorkshopElement: () =>
             {
-                (ElementBaseJson, null) => Element.Part(workshopFunction),
-                (null, ElementEnumMember) => workshopConstant,
-                (null, null) or (_, _) => "Attempted to compile symbol information with incomplete data"
+                // Function
+                if (workshopFunction is not null)
+                    return Element.Part(workshopFunction);
+                // Constant
+                else if (workshopConstant is not null)
+                    return workshopConstant;
+                // Subroutine
+                else if (subroutine is not null)
+                    return new Subroutine(0, subroutine.Value.Name);
+                // Error
+                else
+                    return "Attempted to compile symbol information with incomplete data";
             });
     }
 
@@ -285,12 +309,14 @@ static class VanillaExpressions
         var elementParams = element?.Parameters;
         if (elementParams is null) return;
 
-        for (int i = 0; i < syntax.Arguments.Count; i++)
+        string elementName = element!.Name;
+
+        for (int i = 0; i <= syntax.Arguments.Count; i++)
         {
-            var arg = syntax.Arguments[i];
+            VanillaInvokeParameter? arg = i < syntax.Arguments.Count ? syntax.Arguments[i] : null;
 
             // start of argument
-            DocPos start = (arg.PreceedingComma ?? syntax.LeftParentheses).Range.End;
+            DocPos start = (arg?.PreceedingComma ?? syntax.LeftParentheses).Range.End;
             // end of argument
             DocPos? end = (syntax.Arguments.ElementAtOrDefault(i + 1).PreceedingComma ?? syntax.RightParentheses)?.Range.Start;
 
@@ -300,7 +326,7 @@ static class VanillaExpressions
                 if (ElementRoot.Instance.TryGetEnum(elementParams[i].Type, out var constantsGroup))
                 {
                     context.AddCompletion(ICompletionRange.New(start + end, CompletionRangeKind.ClearRest, getCompletionArgs =>
-                        VanillaCompletion.GetConstantsCompletion(constantsGroup, arg.Value.Range)));
+                        VanillaCompletion.GetConstantsCompletion(constantsGroup, arg?.Value.Range)));
                 }
                 // Add completion for items expecting a variable.
                 else if (elementParams[i].IsVariableReference)
@@ -308,6 +334,11 @@ static class VanillaExpressions
                     bool isGlobal = elementParams[i].VariableReferenceIsGlobal ?? false;
                     context.AddCompletion(ICompletionRange.New(start + end, CompletionRangeKind.ClearRest, getCompletionArgs =>
                         VanillaCompletion.GetVariableCompletion(context.ScopedVariables, isGlobal)));
+                }
+                // Subroutines
+                else if (DoesParameterNeedSubroutine(element, i))
+                {
+                    context.AddCompletion(VanillaCompletion.GetSubroutineCompletion(start + end, context.ScopedVariables));
                 }
             }
         }
@@ -327,7 +358,13 @@ static class VanillaExpressions
                 true => ExpectingVariable.Global,
                 false => ExpectingVariable.Player,
                 null or _ => ExpectingVariable.None
-            }));
+            },
+            ExpectingSubroutine: DoesParameterNeedSubroutine(element, parameter)));
+    }
+
+    static bool DoesParameterNeedSubroutine(ElementBaseJson element, int parameter)
+    {
+        return parameter == 0 && (element.Name == "Call Subroutine" || element.Name == "Start Rule");
     }
 
     public static IVanillaNode Binary(VanillaContext context, VanillaBinaryOperatorExpression syntax)

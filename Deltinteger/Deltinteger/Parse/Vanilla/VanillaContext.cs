@@ -8,11 +8,11 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 class VanillaContext
 {
     readonly ScriptFile script;
-    public ScopedVanillaVariables ScopedVariables { get; }
+    public VanillaScope ScopedVariables { get; }
     ActiveParameterData activeParameterData;
     VanillaType expectedType;
 
-    public VanillaContext(ScriptFile script, ScopedVanillaVariables scopedVanillaVariables)
+    public VanillaContext(ScriptFile script, VanillaScope scopedVanillaVariables)
     {
         this.script = script;
         ScopedVariables = scopedVanillaVariables;
@@ -49,7 +49,8 @@ class VanillaContext
 readonly record struct ActiveParameterData(
     bool IsInvoked = false,
     bool NeedsStringLiteral = false,
-    ExpectingVariable ExpectingVariable = default
+    ExpectingVariable ExpectingVariable = default,
+    bool ExpectingSubroutine = false
 );
 
 enum ExpectingVariable

@@ -22,11 +22,14 @@ record VanillaRuleAnalysis(bool Disabled, string Name, AnalyzedEventOrContent[] 
         var player = PlayerSelector.All;
         var actions = Array.Empty<Element>();
         var conditions = Array.Empty<Condition>();
+        string? subroutineName = null;
 
         foreach (var content in Content)
         {
             if (content.Variant.Get(out var eventData, out var expressionList))
             {
+                subroutineName ??= eventData.SubroutineName;
+
                 // Event
                 foreach (var (parameter, i) in eventData.Parameters.WithIndex())
                 {
@@ -91,7 +94,8 @@ record VanillaRuleAnalysis(bool Disabled, string Name, AnalyzedEventOrContent[] 
         {
             Disabled = Disabled,
             Actions = actions,
-            Conditions = conditions
+            Conditions = conditions,
+            Subroutine = subroutineName
         };
     }
 }
@@ -104,7 +108,7 @@ readonly record struct AnalyzedEventOrContent(Variant<AnalyzedRuleEvent, Analyze
 /// <summary>
 /// Contains a list of event parameters for an analyzed vanilla rule.
 /// </summary>
-readonly record struct AnalyzedRuleEvent(IReadOnlyList<ElementEnumMember> Parameters);
+readonly record struct AnalyzedRuleEvent(IReadOnlyList<ElementEnumMember> Parameters, string? SubroutineName);
 
 /// <summary>
 /// The analyzed conditions or actions of a vanilla rule.

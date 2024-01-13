@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
         public ToWorkshop WorkshopConverter { get; private set; }
 
         // Vanilla compiling stuff
-        readonly Dictionary<VanillaVariableCollection, VanillaVariableAnalysis> analyzedVanillaVariables = new();
+        readonly Dictionary<VanillaVariableCollection, IAnalyzedVanillaCollection> analyzedVanillaVariables = new();
 
         // Project wide items
         readonly List<Var> rulesetVariables = new();
@@ -207,7 +207,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
-                var scopedVanillaVariables = new ScopedVanillaVariables();
+                var scopedVanillaVariables = new VanillaScope();
                 RootElement.Iter(script.Context.RootItems,
                     declaration: declaration =>
                     {
@@ -231,10 +231,10 @@ namespace Deltin.Deltinteger.Parse
                     // so that the ostw variables can hook into the vanilla variables.
                     variables: vanillaVariables =>
                     {
-                        var analysis = VanillaVariableAnalysis.Analyze(script, vanillaVariables);
+                        var analysis = VanillaAnalysis.AnalyzeCollection(script, vanillaVariables);
 
                         // Lets rule-level variables see the vanilla variables in scope.
-                        analysis.AddVariablesToScope(scopedVanillaVariables);
+                        analysis.AddToScope(scopedVanillaVariables);
 
                         // Link the syntax to the analysis so that the variables are properly scoped
                         // when analyzing the vanilla rules.
@@ -268,7 +268,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
-                var scopedVanillaVariables = new ScopedVanillaVariables();
+                var scopedVanillaVariables = new VanillaScope();
                 RootElement.Iter(script.Context.RootItems,
                     // ostw
                     rule: rule =>
@@ -284,7 +284,7 @@ namespace Deltin.Deltinteger.Parse
                     variables: syntax =>
                     {
                         if (analyzedVanillaVariables.TryGetValue(syntax, out var analysis))
-                            analysis.AddVariablesToScope(scopedVanillaVariables);
+                            analysis.AddToScope(scopedVanillaVariables);
                     });
             }
         }
@@ -312,7 +312,7 @@ namespace Deltin.Deltinteger.Parse
             // Assign vanilla variables
             foreach (var vanillaVariables in analyzedVanillaVariables.Values)
             {
-                vanillaVariables.AssignWorkshopVariables(WorkshopConverter.LinkableVanillaVariables, VarCollection);
+                vanillaVariables.AssignWorkshopVariables(WorkshopConverter.LinkableVanillaVariables, VarCollection, SubroutineCollection);
             }
 
             // Assign variables at the rule-set level.

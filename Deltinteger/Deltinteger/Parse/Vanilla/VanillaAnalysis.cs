@@ -13,14 +13,21 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 
 static class VanillaAnalysis
 {
-    public static VanillaRuleAnalysis AnalyzeRule(ScriptFile script, VanillaRule rule, ScopedVanillaVariables scopedVanillaVariables)
+    public static IAnalyzedVanillaCollection AnalyzeCollection(ScriptFile script, VanillaVariableCollection syntax)
+    {
+        return syntax.IsSubroutineCollection() ?
+            VanillaSubroutineAnalysis.Analyze(script, syntax) :
+            VanillaVariableAnalysis.Analyze(script, syntax);
+    }
+
+    public static VanillaRuleAnalysis AnalyzeRule(ScriptFile script, VanillaRule rule, VanillaScope scopedVanillaVariables)
     {
         return AnalyzeRule(new VanillaContext(script, scopedVanillaVariables), rule);
     }
 
     public static VanillaRuleAnalysis AnalyzeRule(VanillaContext context, VanillaRule rule)
     {
-        string name = WorkshopStringUtility.WorkshopStringFromRawText(rule.Name.Text);
+        string name = WorkshopStringUtility.WorkshopStringFromRawText(rule.Name?.Text) ?? string.Empty;
         bool disabled = rule.Disabled;
         var content = new List<AnalyzedEventOrContent>();
 
@@ -81,21 +88,29 @@ static class VanillaAnalysis
     public static AnalyzedRuleEvent AnalyzeEventContent(VanillaContext context, VanillaRuleContent syntax)
     {
         var parameters = new List<ElementEnumMember>();
+        bool isSubroutine = false;
+        string? subroutineName = null;
 
         // Analyze expressions.
         for (int i = 0; i < syntax.InnerItems.Length; i++)
         {
-            var analysis = AnalyzeExpression(context, syntax.InnerItems[i].Expression);
+            var analysis = AnalyzeExpression(
+                context.SetActiveParameterData(new(ExpectingSubroutine: isSubroutine)),
+                syntax.InnerItems[i].Expression);
+            var itemInformation = analysis.GetSymbolInformation();
 
-            if (i == EventTypesOrder.Length)
+            if (i == (isSubroutine ? 2 : EventTypesOrder.Length))
             {
                 context.Error("Too many statements in event category", analysis.DocRange());
             }
-            else if (i < EventTypesOrder.Length)
+            else if (isSubroutine)
             {
-                var itemInformation = analysis.GetSymbolInformation();
-
+                subroutineName = itemInformation.SymbolName;
+            }
+            else if (i < EventTypesOrder.Length && !isSubroutine)
+            {
                 var constant = itemInformation.WorkshopConstant;
+                // Ensure the constant is the right type.
                 string? eventTypeName = constant?.Enum.Name;
                 if (eventTypeName != EventTypesOrder[i])
                 {
@@ -104,6 +119,7 @@ static class VanillaAnalysis
                 else
                 {
                     parameters.Add(constant!);
+                    isSubroutine |= i == 0 && constant!.Name == "Subroutine";
                 }
             }
         }
@@ -116,19 +132,26 @@ static class VanillaAnalysis
             DocPos next = nextSemicolon?.Range.Start ?? syntax.Range.End;
 
             // Todo: show completion per language
-            context.AddCompletion(VanillaCompletion.CreateEventCompletion(start + next, i switch
+            if (i == 0 || !isSubroutine)
             {
-                1 => VanillaInfo.Team,
-                2 => VanillaInfo.Player,
-                _ => VanillaInfo.Event,
-            }));
+                context.AddCompletion(VanillaCompletion.CreateEventCompletion(start + next, i switch
+                {
+                    1 => VanillaInfo.Team,
+                    2 => VanillaInfo.Player,
+                    _ => VanillaInfo.Event,
+                }));
+            }
+            else if (i == 1)
+            {
+                context.AddCompletion(VanillaCompletion.GetSubroutineCompletion(start + next, context.ScopedVariables));
+            }
 
             if (nextSemicolon is null)
                 break;
             start = nextSemicolon.Range.End;
         }
 
-        return new(parameters);
+        return new(parameters, subroutineName);
     }
 
     public static IVanillaNode AnalyzeExpression(VanillaContext context, IVanillaExpression expression)

@@ -1,5 +1,3 @@
-using Deltin.Deltinteger.I18n;
-
 namespace Deltin.Deltinteger.Elements
 {
     public class Rule
@@ -8,7 +6,7 @@ namespace Deltin.Deltinteger.Elements
         public RuleEvent RuleEvent { get; }
         public Team Team { get; }
         public PlayerSelector Player { get; }
-        public Subroutine Subroutine { get; set; }
+        public string Subroutine { get; set; }
         public RuleType RuleType { get; }
 
         public Condition[] Conditions { get; set; }
@@ -33,7 +31,7 @@ namespace Deltin.Deltinteger.Elements
             else RuleType = RuleType.PlayerBased;
         }
 
-        public Rule(string name, Subroutine subroutine)
+        public Rule(string name, string subroutine)
         {
             Name = name;
             RuleEvent = RuleEvent.Subroutine;
@@ -74,8 +72,7 @@ namespace Deltin.Deltinteger.Elements
                     break;
 
                 case RuleType.Subroutine:
-                    Subroutine.ToWorkshop(builder, ToWorkshopContext.Other); // Attribute name
-                    builder.Append(";").AppendLine();
+                    builder.Append(Subroutine).Append(";").AppendLine();
                     break;
             }
             builder.Outdent()

@@ -310,7 +310,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 MatchKeyword("const", TokenType.Const) ||
                 MatchKeyword("json", TokenType.Json) ||
                 MatchKeyword("variables", TokenType.WorkshopVariablesEn) ||
+                MatchKeyword("subroutines", TokenType.WorkshopSubroutinesEn) ||
+                MatchKeyword("settings", TokenType.WorkshopSettingsEn) ||
                 MatchVanillaKeyword(_vanillaSymbols.Variables, TokenType.WorkshopVariables) ||
+                MatchVanillaKeyword(_vanillaSymbols.Variables, TokenType.WorkshopSubroutines) ||
+                MatchVanillaKeyword(_vanillaSymbols.Variables, TokenType.WorkshopSettings) ||
                 MatchIdentifier() ||
                 MatchString();
         }

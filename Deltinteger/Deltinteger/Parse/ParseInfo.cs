@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
         public IDefinedTypeInitializer TypeInitializer { get; private set; }
         public VariableModifierGroup ContextualVariableModifiers { get; private set; }
         public ReturnTracker ReturnTracker { get; private set; }
-        public ScopedVanillaVariables ScopedVanillaVariables { get; init; }
+        public VanillaScope ScopedVanillaVariables { get; init; }
 
         // Target
         public CodeType ExpectingType { get; private set; }

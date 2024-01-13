@@ -11,7 +11,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree;
 ///     player:
 ///         2: aWorkshopVariable
 /// }</summary>
-public record class VanillaVariableCollection(DocRange Range, List<GroupOrName> Items);
+public record class VanillaVariableCollection(Token OpeningToken, DocRange Range, List<GroupOrName> Items)
+{
+    public bool IsSubroutineCollection() =>
+        OpeningToken.TokenType == TokenType.WorkshopSubroutines ||
+        OpeningToken.TokenType == TokenType.WorkshopSubroutinesEn;
+}
 
 /// <summary>In a workshop variables expression, represents a group (like global or player)
 /// or a declared variable.</summary>
@@ -53,7 +58,7 @@ public record struct VariableName(Token Id, Token? Name)
 /// }
 /// </code>
 /// </summary>
-public record class VanillaRule(Token Disabled, Token Name, VanillaRuleContent[] Content);
+public record class VanillaRule(Token Disabled, Token? Name, VanillaRuleContent[] Content);
 
 /// <summary>The 'event', 'actions' or 'conditions' sections in a workshop rule.</summary>
 public record class VanillaRuleContent(DocRange Range, Token GroupToken, CommentedVanillaExpression[] InnerItems);

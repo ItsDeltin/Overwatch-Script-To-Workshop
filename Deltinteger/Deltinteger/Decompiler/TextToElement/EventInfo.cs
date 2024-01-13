@@ -20,7 +20,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Player Joined Match", RuleEvent.OnPlayerJoin),
             ("Player Left Match", RuleEvent.OnPlayerLeave),
             ("Player Dealt Knockback", RuleEvent.PlayerDealtKnockback),
-            ("Player Received Knockback", RuleEvent.PlayerReceivedKnockback)
+            ("Player Received Knockback", RuleEvent.PlayerReceivedKnockback),
+            ("Subroutine", RuleEvent.Subroutine)
         };
         public static readonly (string, Team)[] PlayerTeamNames = new (string, Team)[] {
             ("All", Team.All),

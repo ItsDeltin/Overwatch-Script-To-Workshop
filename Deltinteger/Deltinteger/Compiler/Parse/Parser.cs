@@ -1827,11 +1827,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     return;
             }
 
-            // Workshop variable collection
-            if (Is(TokenType.WorkshopVariables) || Is(TokenType.WorkshopVariablesEn))
+            // Workshop variable or subroutine collection
+            if (Is(TokenType.WorkshopVariables) || Is(TokenType.WorkshopVariablesEn) ||
+                Is(TokenType.WorkshopSubroutines) || Is(TokenType.WorkshopSubroutinesEn))
             {
                 context.RootItems.Add(Lexer.InVanillaWorkshopContext(() => new RootElement(ParseVanillaVariableCollection())));
                 return;
+            }
+
+            // Vanilla settings
+            if (Is(TokenType.WorkshopSettings) || Is(TokenType.WorkshopSettingsEn))
+            {
             }
 
             // Workshop rule
@@ -2253,7 +2259,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         VanillaVariableCollection ParseVanillaVariableCollection() => CaptureRange(r =>
         {
-            ParseExpected(TokenType.WorkshopVariablesEn, TokenType.WorkshopVariables);
+            var openingToken = ParseExpected(
+                TokenType.WorkshopVariablesEn,
+                TokenType.WorkshopVariables,
+                TokenType.WorkshopSubroutinesEn,
+                TokenType.WorkshopSubroutines
+            );
             ParseExpected(TokenType.CurlyBracket_Open);
 
             var items = new List<GroupOrName>();
@@ -2276,7 +2287,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             ParseExpected(TokenType.CurlyBracket_Close);
-            return new VanillaVariableCollection(r.GetRange(), items);
+            return new VanillaVariableCollection(openingToken, r.GetRange(), items);
         });
 
         Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);

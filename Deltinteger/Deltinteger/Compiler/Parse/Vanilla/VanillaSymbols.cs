@@ -10,7 +10,9 @@ public readonly record struct VanillaSymbols(
     VanillaKeyword Actions,
     VanillaKeyword Conditions,
     VanillaKeyword Event,
-    VanillaKeyword Variables
+    VanillaKeyword Variables,
+    VanillaKeyword Subroutines,
+    VanillaKeyword Settings
 )
 {
     public static readonly VanillaSymbols Instance = Load();
@@ -33,7 +35,9 @@ public readonly record struct VanillaSymbols(
             Actions: VanillaKeyword.EnKwForTesting("actions"),
             Conditions: VanillaKeyword.EnKwForTesting("conditions"),
             Event: VanillaKeyword.EnKwForTesting("event"),
-            Variables: VanillaKeyword.EnKwForTesting("variables"));
+            Variables: VanillaKeyword.EnKwForTesting("variables"),
+            Subroutines: VanillaKeyword.EnKwForTesting("subroutines"),
+            Settings: VanillaKeyword.EnKwForTesting("settings"));
     }
 }
 

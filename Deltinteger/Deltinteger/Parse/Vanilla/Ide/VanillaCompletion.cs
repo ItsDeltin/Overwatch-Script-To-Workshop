@@ -35,13 +35,13 @@ static class VanillaCompletion
         ICompletionRange.New(range, CompletionRangeKind.Catch, param => Values);
 
     /// <summary>Creates completion for a group of constants (enum).</summary>
-    public static CompletionItem[] GetConstantsCompletion(ElementEnum constants, DocRange replaceRange)
+    public static CompletionItem[] GetConstantsCompletion(ElementEnum constants, DocRange? replaceRange)
     {
         return constants.Members.Select(member => new CompletionItem()
         {
             Label = member.Name,
             Kind = CompletionItemKind.Constant,
-            TextEdit = new(new InsertReplaceEdit()
+            TextEdit = replaceRange is null ? null : new(new InsertReplaceEdit()
             {
                 NewText = member.Name,
                 Replace = replaceRange
@@ -113,7 +113,7 @@ static class VanillaCompletion
     }
 
     /// <summary>Creates completion for variables in the scope.</summary>
-    public static CompletionItem[] GetVariableCompletion(ScopedVanillaVariables scopedVariables, bool isGlobal) =>
+    public static CompletionItem[] GetVariableCompletion(VanillaScope scopedVariables, bool isGlobal) =>
         scopedVariables.GetVariables(isGlobal).Select(v => new CompletionItem()
         {
             Label = v.Name,
@@ -121,6 +121,15 @@ static class VanillaCompletion
             Detail = $"({VanillaHelper.GlobalOrPlayerString(isGlobal)} variable) {v.Name}"
         }).ToArray();
 
+    public static ICompletionRange GetSubroutineCompletion(DocRange range, VanillaScope scopedVariables) => ICompletionRange.New(range, args =>
+        scopedVariables.GetSubroutines().Select(subroutine => new CompletionItem()
+        {
+            Label = subroutine.Name,
+            Kind = CompletionItemKind.Function,
+            Detail = $"(subroutine) {subroutine.Name}"
+        }).ToArray());
+
+    /// <summary>Creates completion for the Event, Team, and Player rule options.</summary>
     public static ICompletionRange CreateEventCompletion(DocRange range, VanillaKeyword[] items) => ICompletionRange.New(
         range,
         getCompletionParams => items.Select(item => new CompletionItem()

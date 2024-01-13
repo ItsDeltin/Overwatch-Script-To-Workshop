@@ -9,28 +9,6 @@ using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
 /// <summary>
-/// A collection of vanilla variables accessable via OSTW or Vanilla code.
-/// </summary>
-public class ScopedVanillaVariables
-{
-    readonly List<VanillaVariable> scopedVariables = new();
-
-    public void AddScopedVariable(VanillaVariable variable)
-    {
-        scopedVariables.Add(variable);
-    }
-
-    public VanillaVariable? GetScopedVariable(string name, bool isGlobal) =>
-        scopedVariables.Cast<VanillaVariable?>().FirstOrDefault(var => var is not null && var.Value.Name == name && var.Value.IsGlobal == isGlobal);
-
-    public VanillaVariable? GetScopedVariableOfAnyType(string name) =>
-        scopedVariables.AsEnumerable().Reverse().Cast<VanillaVariable?>().FirstOrDefault(
-            var => var is not null && var.Value.Name == name);
-
-    public IEnumerable<VanillaVariable> GetVariables(bool isGlobal) => scopedVariables.Where(var => var.IsGlobal == isGlobal);
-}
-
-/// <summary>
 /// A declared vanilla variable.
 /// </summary>
 public readonly record struct VanillaVariable(int Id, string Name, bool IsGlobal);
@@ -38,21 +16,21 @@ public readonly record struct VanillaVariable(int Id, string Name, bool IsGlobal
 /// <summary>
 /// Analyzes a vanilla 'variables' declaration in the script.
 /// </summary>
-class VanillaVariableAnalysis
+class VanillaVariableAnalysis : IAnalyzedVanillaCollection
 {
     readonly IReadOnlyList<VanillaVariable> vanillaVariables;
 
     VanillaVariableAnalysis(List<VanillaVariable> vanillaVariables) => this.vanillaVariables = vanillaVariables;
 
     /// <summary>Adds vanilla variables to the scope for OSTW access and vanilla completion.</summary>
-    public void AddVariablesToScope(ScopedVanillaVariables scopedVariables)
+    public void AddToScope(VanillaScope scope)
     {
         foreach (var vanillaVariable in vanillaVariables)
-            scopedVariables.AddScopedVariable(vanillaVariable);
+            scope.AddScopedVariable(vanillaVariable);
     }
 
     /// <summary>Assigns the vanilla variables to the workshop.</summary>
-    public void AssignWorkshopVariables(LinkableVanillaVariables varAssigner, VarCollection varCollection)
+    public void AssignWorkshopVariables(LinkableVanillaVariables varAssigner, VarCollection varCollection, SubroutineCollection subroutineCollection)
     {
         foreach (var vanillaVariable in vanillaVariables)
         {

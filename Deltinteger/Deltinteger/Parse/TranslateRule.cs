@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger.Parse
             if (Subroutine == null)
                 rule = new Rule(Name, EventType, Team, Player);
             else
-                rule = new Rule(Name, Subroutine);
+                rule = new Rule(Name, Subroutine.Name);
             rule.Actions = GetActions();
             rule.Conditions = Conditions.ToArray();
             rule.Disabled = Disabled;
