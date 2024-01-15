@@ -39,15 +39,19 @@ public readonly record struct VanillaSymbols(
                 symbols.AddSymbol(member.WorkshopName(), WorkshopLanguage.EnUS, new WorkshopItem.Enumerator(member));
 
         // Settings
-        var settingsSymbols = new WorkshopSymbolTrie();
+        var lobbySettings = new WorkshopSymbolTrie();
         foreach (var setting in IterAllWorkshopSettings(SourceLobbySettings.Instance!.Root))
         {
-            settingsSymbols.AddSymbol(setting.Name, WorkshopLanguage.EnUS, new WorkshopItem.LobbySetting(setting));
+            lobbySettings.AddSymbol(setting.Name, WorkshopLanguage.EnUS, new WorkshopItem.LobbySetting(setting));
+            foreach (var option in setting.Options)
+            {
+                lobbySettings.AddSymbol(option, WorkshopLanguage.EnUS, new WorkshopItem.LobbyValue(option));
+            }
         }
 
         return new(
             ScriptSymbols: symbols,
-            LobbySettings: settingsSymbols,
+            LobbySettings: lobbySettings,
             Actions: VanillaKeyword.EnKwForTesting("actions"),
             Conditions: VanillaKeyword.EnKwForTesting("conditions"),
             Event: VanillaKeyword.EnKwForTesting("event"),

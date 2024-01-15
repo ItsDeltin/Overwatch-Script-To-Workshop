@@ -355,10 +355,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public bool MatchLobbySettingsContext()
         {
             return
+                MatchVanillaConstant(_vanillaSymbols.LobbySettings) ||
                 MatchNumber() ||
                 MatchCSymbol() ||
                 MatchSymbol('%', TokenType.PercentSign) ||
-                MatchVanillaConstant(_vanillaSymbols.LobbySettings) ||
                 MatchVanillaSymbol();
         }
 

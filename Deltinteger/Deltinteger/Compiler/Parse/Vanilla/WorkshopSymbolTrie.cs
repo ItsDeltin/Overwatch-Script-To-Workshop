@@ -74,6 +74,7 @@ public abstract record WorkshopItem
     public record ActionValue(ElementBaseJson Value) : WorkshopItem;
     public record Enumerator(ElementEnumMember Member) : WorkshopItem;
     public record LobbySetting(EObject Setting) : WorkshopItem;
+    public record LobbyValue(string EnUs) : WorkshopItem;
 }
 
 public record struct LanguageLinkedWorkshopItem(WorkshopLanguage Language, WorkshopItem Item);

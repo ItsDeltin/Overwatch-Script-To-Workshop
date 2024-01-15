@@ -2301,7 +2301,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         VanillaSettingsGroupSyntax ParseListOfSettings() => CaptureRange(r =>
         {
-            ParseExpected(TokenType.CurlyBracket_Open);
+            var openingBracket = ParseExpected(TokenType.CurlyBracket_Open);
 
             var settings = new List<VanillaSettingSyntax>();
 
@@ -2344,7 +2344,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             ParseExpected(TokenType.CurlyBracket_Close);
 
-            return new VanillaSettingsGroupSyntax(r.GetRange(), settings.ToArray());
+            return new VanillaSettingsGroupSyntax(r.GetRange(), openingBracket, settings.ToArray());
         });
 
         Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);

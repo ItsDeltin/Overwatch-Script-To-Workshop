@@ -103,16 +103,28 @@ record class VanillaStringExpression(Token Token) : IVanillaExpression
 }
 
 /// <summary>Syntax for vanilla settings. Can be used as value or as the top-level settings group.</summary>
-public record class VanillaSettingsGroupSyntax(DocRange Range, VanillaSettingSyntax[] Settings) : IVanillaSettingValueSyntax;
+public record class VanillaSettingsGroupSyntax(DocRange Range, Token OpeningBracket, VanillaSettingSyntax[] Settings) : IVanillaSettingValueSyntax
+{
+    public DocRange ErrorRange => OpeningBracket;
+}
 
 /// <summary>A workshop lobby setting.</summary>
 public record class VanillaSettingSyntax(Token Name, Token? Colon, Token? TokenAfterColon, IVanillaSettingValueSyntax? Value);
 
 /// <summary>The value of a 'VanillaSettingSyntax'.</summary>
-public interface IVanillaSettingValueSyntax { }
+public interface IVanillaSettingValueSyntax
+{
+    public DocRange ErrorRange { get; }
+}
 
 /// <summary>A number value for a lobby setting.</summary>
-record class NumberSettingSyntax(Token Value, Token? PercentSign) : IVanillaSettingValueSyntax;
+record class NumberSettingSyntax(Token Value, Token? PercentSign) : IVanillaSettingValueSyntax
+{
+    public DocRange ErrorRange => Value.Range.Start + (PercentSign ?? Value).Range.End;
+}
 
 /// <summary>A setting pointing to a setting symbol.</summary>
-record class SymbolSettingSyntax(Token Symbol) : IVanillaSettingValueSyntax;
+record class SymbolSettingSyntax(Token Symbol) : IVanillaSettingValueSyntax
+{
+    public DocRange ErrorRange => Symbol;
+}
