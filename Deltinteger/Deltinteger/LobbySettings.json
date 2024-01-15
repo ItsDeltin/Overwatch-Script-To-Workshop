@@ -57,7 +57,6 @@
                         {
                             "name": "Coach Gun",
                             "template": "ability",
-                            "$has_knockback": true,
                             "$self_knockback": true
                         },
                         {
@@ -131,7 +130,7 @@
                 "ult": {
                     "then": [
                         {
-                            "name": "Ultimate Generation ($0)",
+                            "name": "Ultimate Generation ($value)",
                             "type": "range_percentage"
                         }
                     ]
@@ -185,9 +184,45 @@
             }
         },
         "ability": {
+            "sibling": true,
+            "base_type": "boolean_onoff",
             "params": {
-                "has_knockback": {},
-                "self_knockback": {}
+                "no_cooldown": {
+                    "else": [
+                        {
+                            "name": "$name Cooldown Time",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        }
+                    ]
+                },
+                "knockback": {
+                    "then": [
+                        {
+                            "name": "$name Knockback Scalar",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 300
+                        }
+                    ]
+                },
+                "self_knockback": {
+                    "then": [
+                        {
+                            "name": "$name Knockback Scalar Enemy",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 300
+                        },
+                        {
+                            "name": "$name Knockback Scalar Self",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 300
+                        }
+                    ]
+                }
             }
         },
         "base_mode": {

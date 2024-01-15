@@ -2312,9 +2312,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Extensions will not have a value.
                 IVanillaSettingValueSyntax settingValue = null;
 
+                Token tokenAfterColon = null;
+
                 // Key/value pair
-                if (ParseOptional(TokenType.Colon))
+                if (ParseOptional(TokenType.Colon, out var colon))
                 {
+                    tokenAfterColon = Current;
                     // Keyword
                     if (Is(TokenType.WorkshopConstant) || Is(TokenType.WorkshopSymbol))
                     {
@@ -2336,7 +2339,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     settingValue = ParseListOfSettings();
                 }
 
-                settings.Add(new(settingToken, settingValue));
+                settings.Add(new(settingToken, colon, tokenAfterColon, settingValue));
             }
 
             ParseExpected(TokenType.CurlyBracket_Close);

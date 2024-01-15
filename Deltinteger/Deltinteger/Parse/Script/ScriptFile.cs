@@ -108,6 +108,10 @@ namespace Deltin.Deltinteger.Parse
             CompletionRangeKind kind,
             Func<GetCompletionParams, IEnumerable<CompletionItem>> getCompletion) => new CompletionRange(range, kind, getCompletion);
 
+        public static ICompletionRange New(
+            DocRange range,
+            IEnumerable<CompletionItem> items) => New(range, _ => items);
+
         record CompletionRange(
             DocRange Range,
             CompletionRangeKind Kind,

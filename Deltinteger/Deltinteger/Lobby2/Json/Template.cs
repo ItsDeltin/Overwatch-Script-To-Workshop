@@ -12,6 +12,12 @@ class Template
 
     [JsonProperty("content")]
     public SObject[]? Content { get; set; }
+
+    [JsonProperty("sibling")]
+    public bool Sibling { get; set; }
+
+    [JsonProperty("base_type")]
+    public string? BaseType { get; set; }
 }
 
 class TemplateParam

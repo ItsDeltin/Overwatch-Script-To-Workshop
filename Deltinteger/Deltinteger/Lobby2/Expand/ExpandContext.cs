@@ -14,11 +14,11 @@ struct ExpandContext
     readonly IDictionary<string, Template> templates;
     readonly IList<EObject> repository;
     EObject? parent = default;
+    FormatLinkedList? format = default;
 
     public ExpandContext(
         IDictionary<string, Template> templates,
-        IList<EObject> repository
-        )
+        IList<EObject> repository)
     {
         this.templates = templates;
         this.repository = repository;
@@ -31,12 +31,36 @@ struct ExpandContext
         return copy;
     }
 
+    public readonly ExpandContext AddFormat(string key, string replaceWith)
+    {
+        ExpandContext copy = this;
+        copy.format = new(copy.format, key, replaceWith);
+        return copy;
+    }
+
     public void Report(string message) { }
 
-    public readonly Template? GetTemplate(string name) => templates.TryGetValue(name, out var template) ? template : null;
+    public readonly Template? GetTemplate(string? name) =>
+        name is null ? null : templates.TryGetValue(name, out var template) ? template : null;
 
     public readonly bool TryGetRef(string id, [NotNullWhen(true)] out EObject? eObject)
     {
         return repository.TryGetValue(eObject => eObject.Id == id, out eObject);
     }
+
+    public readonly string FormatName(string? inputName)
+    {
+        if (inputName is null)
+            return "?";
+
+        var current = format;
+        while (current is not null)
+        {
+            inputName = inputName.Replace(current.Key, current.ReplaceWith);
+            current = current.Parent;
+        }
+        return inputName;
+    }
 }
+
+record FormatLinkedList(FormatLinkedList? Parent, string Key, string ReplaceWith);

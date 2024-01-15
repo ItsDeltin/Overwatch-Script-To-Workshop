@@ -61,15 +61,43 @@ class LobbySettings
     static IEnumerable<EObject> ExpandObjects(ExpandContext context, IEnumerable<SObject> objects)
     {
         foreach (var obj in objects)
-            yield return ExpandObject(context, obj);
+        {
+            var (expanded, siblings) = ExpandObject(context, obj);
+            yield return expanded;
+            foreach (var sibling in siblings)
+                yield return sibling;
+        }
     }
 
-    static EObject ExpandObject(ExpandContext context, SObject jsonObject)
+    static (EObject Object, IEnumerable<EObject> Siblings) ExpandObject(ExpandContext context, SObject jsonObject)
     {
-        var expanded = new EObject(jsonObject.Name ?? "?", jsonObject.Id);
+        // Find template
+        var template = context.GetTemplate(jsonObject.Template);
+
+        // Create new EObject
+        var expanded = new EObject(
+            name: context.FormatName(jsonObject.Name),
+            id: jsonObject.Id,
+            type: DetermineType(jsonObject, template?.BaseType));
+
+        context = context.AddFormat("$name", expanded.Name);
+
+        var siblings = Enumerable.Empty<EObject>();
+        var content = Enumerable.Empty<EObject>();
 
         // Apply template.
-        var content = EvaluateParams(context.SetParent(expanded), jsonObject);
+        {
+            var addObjects = EvaluateParams(context.SetParent(expanded), jsonObject, template);
+
+            if (template is not null && template.Sibling)
+            {
+                siblings = addObjects;
+            }
+            else
+            {
+                content = addObjects;
+            }
+        }
 
         // Add content.
         if (jsonObject.Content is not null)
@@ -77,23 +105,15 @@ class LobbySettings
 
         // Copy ref
         if (jsonObject.Ref is not null && context.TryGetRef(jsonObject.Ref, out var refObject))
-        {
             content = content.Concat(refObject.Children);
-        }
 
         expanded.Children = content.ToArray();
-        return expanded;
+        return (expanded, siblings);
     }
 
-    static IEnumerable<EObject> EvaluateParams(ExpandContext context, SObject obj)
+    static IEnumerable<EObject> EvaluateParams(ExpandContext context, SObject obj, Template? template)
     {
         // No template, no params.
-        if (obj.Template is null)
-            yield break;
-
-        var template = context.GetTemplate(obj.Template);
-
-        // Template name not found.
         if (template is null)
             yield break;
 
@@ -125,11 +145,27 @@ class LobbySettings
                     var inputValueString = inputValue?.Value.ToString();
                     if (inputValueString is not null)
                     {
-                        foreach (var item in ExpandObjects(context, param.Value.Then))
+                        foreach (var item in ExpandObjects(context.AddFormat("$value", inputValueString), param.Value.Then))
                             yield return item;
                     }
                 }
             }
         }
+    }
+
+    static EObjectType DetermineType(SObject obj, string? templateType)
+    {
+        if (obj.Content is not null && obj.Content.Length > 0)
+            return EObjectType.Group;
+
+        return (obj.Type ?? templateType) switch
+        {
+            "boolean_onoff" => EObjectType.OnOff,
+            "boolean_enableddisabled" => EObjectType.EnabledDisabled,
+            "range_percentage" => EObjectType.Range,
+            "range_int" => EObjectType.Int,
+            "switch" => EObjectType.Switch,
+            _ => EObjectType.Unknown
+        };
     }
 }

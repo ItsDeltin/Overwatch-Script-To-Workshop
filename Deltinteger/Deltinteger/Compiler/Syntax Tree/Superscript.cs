@@ -106,7 +106,7 @@ record class VanillaStringExpression(Token Token) : IVanillaExpression
 public record class VanillaSettingsGroupSyntax(DocRange Range, VanillaSettingSyntax[] Settings) : IVanillaSettingValueSyntax;
 
 /// <summary>A workshop lobby setting.</summary>
-public record class VanillaSettingSyntax(Token Name, IVanillaSettingValueSyntax? Value);
+public record class VanillaSettingSyntax(Token Name, Token? Colon, Token? TokenAfterColon, IVanillaSettingValueSyntax? Value);
 
 /// <summary>The value of a 'VanillaSettingSyntax'.</summary>
 public interface IVanillaSettingValueSyntax { }

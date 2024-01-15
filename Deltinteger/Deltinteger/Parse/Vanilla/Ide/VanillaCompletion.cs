@@ -140,12 +140,17 @@ static class VanillaCompletion
         })
     );
 
-    public static ICompletionRange CreateLobbySettingCompletion(DocRange range, EObject[] objects) =>
-        NewRange(range, objects.Select(o => new CompletionItem()
+    public static ICompletionRange CreateLobbySettingCompletion(DocRange range, EObject[] objects, IEnumerable<string> alreadyIncluded) =>
+        ICompletionRange.New(range, objects.Where(o => !alreadyIncluded.Contains(o.Name)).Select(o => new CompletionItem()
         {
             Label = o.Name,
             Kind = CompletionItemKind.Property
         }));
 
-    static ICompletionRange NewRange(DocRange range, IEnumerable<CompletionItem> items) => ICompletionRange.New(range, param => items);
+    public static ICompletionRange CreateKeywords(DocRange range, params string[] keywords) =>
+        ICompletionRange.New(range, keywords.Select(keyword => new CompletionItem()
+        {
+            Label = keyword,
+            Kind = CompletionItemKind.Constant
+        }));
 }
