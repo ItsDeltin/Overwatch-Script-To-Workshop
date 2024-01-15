@@ -587,6 +587,8 @@ namespace Deltin.Deltinteger.Compiler
         WorkshopConditions,
         WorkshopConstant,
         WorkshopSymbol,
+        // Workshop (Lobby settings)
+        PercentSign,
         // Other
         ActionComment,
         EOF,

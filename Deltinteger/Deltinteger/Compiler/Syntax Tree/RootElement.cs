@@ -15,6 +15,7 @@ public readonly struct RootElement
     readonly VanillaVariableCollection? _variables = null;
     readonly VanillaRule? _vanillaRule = null;
     readonly TypeAliasContext? _typeAlias = null;
+    readonly VanillaSettingsGroupSyntax? _vanillaSettings = null;
 
     public RootElement(Import import) => _import = import;
     public RootElement(RuleContext rule) => _rule = rule;
@@ -24,6 +25,7 @@ public readonly struct RootElement
     public RootElement(VanillaVariableCollection variables) => _variables = variables;
     public RootElement(VanillaRule vanillaRule) => _vanillaRule = vanillaRule;
     public RootElement(TypeAliasContext typeAlias) => _typeAlias = typeAlias;
+    public RootElement(VanillaSettingsGroupSyntax vanillaSettings) => _vanillaSettings = vanillaSettings;
 
     public static void Iter(
         IEnumerable<RootElement> rootObjects,
@@ -34,12 +36,21 @@ public readonly struct RootElement
         Action<IDeclaration>? declaration = null,
         Action<VanillaVariableCollection>? variables = null,
         Action<VanillaRule>? vanillaRule = null,
-        Action<TypeAliasContext>? typeAlias = null
-    )
+        Action<TypeAliasContext>? typeAlias = null,
+        Action<VanillaSettingsGroupSyntax>? vanillaSettings = null)
     {
         foreach (var rootObject in rootObjects)
         {
-            rootObject.Match(import, rule, classContext, enumContext, declaration, variables, vanillaRule, typeAlias);
+            rootObject.Match(
+                import,
+                rule,
+                classContext,
+                enumContext,
+                declaration,
+                variables,
+                vanillaRule,
+                typeAlias,
+                vanillaSettings);
         }
     }
 
@@ -51,16 +62,17 @@ public readonly struct RootElement
         Action<IDeclaration>? declaration = null,
         Action<VanillaVariableCollection>? variables = null,
         Action<VanillaRule>? vanillaRule = null,
-        Action<TypeAliasContext>? typeAlias = null
-        )
+        Action<TypeAliasContext>? typeAlias = null,
+        Action<VanillaSettingsGroupSyntax>? vanillaSettings = null)
     {
-        if (_import is not null) import?.Invoke(_import!);
-        else if (_rule is not null) rule?.Invoke(_rule!);
-        else if (_classContext is not null) classContext?.Invoke(_classContext!);
-        else if (_enumContext is not null) enumContext?.Invoke(_enumContext!);
-        else if (_declaration is not null) declaration?.Invoke(_declaration!);
-        else if (_variables is not null) variables?.Invoke(_variables!);
-        else if (_vanillaRule is not null) vanillaRule?.Invoke(_vanillaRule!);
-        else if (_typeAlias is not null) typeAlias?.Invoke(_typeAlias!);
+        if (_import is not null) import?.Invoke(_import);
+        else if (_rule is not null) rule?.Invoke(_rule);
+        else if (_classContext is not null) classContext?.Invoke(_classContext);
+        else if (_enumContext is not null) enumContext?.Invoke(_enumContext);
+        else if (_declaration is not null) declaration?.Invoke(_declaration);
+        else if (_variables is not null) variables?.Invoke(_variables);
+        else if (_vanillaRule is not null) vanillaRule?.Invoke(_vanillaRule);
+        else if (_typeAlias is not null) typeAlias?.Invoke(_typeAlias);
+        else if (_vanillaSettings is not null) vanillaSettings?.Invoke(_vanillaSettings);
     }
 }

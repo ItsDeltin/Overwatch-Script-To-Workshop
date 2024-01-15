@@ -8,6 +8,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
         DocRange Range { get; }
         string Message();
         Diagnostic GetDiagnostic() => new Diagnostic(Message(), Range, Diagnostic.Error);
+
+        public static IParserError New(DocRange range, string text) => new ParserError(range, text);
+
+        record ParserError(DocRange Range, string Text) : IParserError
+        {
+            public string Message() => Text;
+        }
     }
 
     class ExpectedTokenError : IParserError

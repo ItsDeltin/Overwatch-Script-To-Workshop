@@ -1,0 +1,328 @@
+{
+    "repository": [
+        {
+            "name": "Quick Melee",
+            "id": "quick_melee",
+            "type": "boolean_onoff",
+            "default": true
+        },
+        {
+            "name": "Competitive Rules",
+            "id": "competitive_rules",
+            "type": "boolean_onoff"
+        },
+        {
+            "name": "Capture Speed Modifier",
+            "id": "capture_speed_modifier",
+            "type": "range_percentage",
+            "min": 10,
+            "max": 500
+        },
+        {
+            "name": "Payload Speed Modifier",
+            "id": "payload_speed_modifier",
+            "type": "range_percentage",
+            "min": 10,
+            "max": 500
+        },
+        {
+            "id": "hero_list",
+            "content": [
+                {
+                    "name": "Ana",
+                    "template": "base_hero",
+                    "$ult": "Nano Boost",
+                    "$projectile": "yes",
+                    "$healer": true,
+                    "$scope": true,
+                    "content": [
+                        {
+                            "name": "Biotic Grenade",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Sleep Dart",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ashe",
+                    "template": "base_hero",
+                    "$ult": "B.O.B.",
+                    "$projectile": true,
+                    "$scope": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Coach Gun",
+                            "template": "ability",
+                            "$has_knockback": true,
+                            "$self_knockback": true
+                        },
+                        {
+                            "name": "Dynamite",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Dynamite Fuse Time Scalar",
+                            "type": "range_percentage"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "root": [
+        {
+            "name": "lobby",
+            "content": []
+        },
+        {
+            "name": "modes",
+            "content": [
+                {
+                    "name": "All",
+                    "template": "base_mode"
+                },
+                {
+                    "name": "Assault",
+                    "template": "base_mode",
+                    "$competitive": true,
+                    "$capture_speed": true,
+                    "content": []
+                }
+            ]
+        },
+        {
+            "name": "heroes",
+            "content": [
+                {
+                    "name": "General",
+                    "ref": "hero_list"
+                },
+                {
+                    "name": "Team 1",
+                    "ref": "hero_list"
+                },
+                {
+                    "name": "Team 2",
+                    "ref": "hero_list"
+                }
+            ]
+        },
+        {
+            "name": "extensions",
+            "content": [
+                {
+                    "name": "Beam Effects",
+                    "type": "switch"
+                }
+            ]
+        },
+        {
+            "name": "workshop",
+            "type": "keyvalue"
+        }
+    ],
+    "templates": {
+        "base_hero": {
+            "params": {
+                "ult": {
+                    "then": [
+                        {
+                            "name": "Ultimate Generation ($0)",
+                            "type": "range_percentage"
+                        }
+                    ]
+                },
+                "projectile": {
+                    "then": [
+                        {
+                            "name": "Projectile Speed",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        }
+                    ]
+                },
+                "projectile_gravity": {
+                    "then": [
+                        {
+                            "name": "Projectile Gravity",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        }
+                    ]
+                },
+                "healer": {
+                    "then": [
+                        {
+                            "name": "Healing Dealt",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                "scope": {
+                    "then": [
+                        {
+                            "name": "No Automatic Fire",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                "no_ammunition": {
+                    "else": [
+                        {
+                            "name": "No Scope",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                }
+            }
+        },
+        "ability": {
+            "params": {
+                "has_knockback": {},
+                "self_knockback": {}
+            }
+        },
+        "base_mode": {
+            "params": {
+                "competitive": {
+                    "then": [
+                        {
+                            "ref": "competitive_rules"
+                        }
+                    ]
+                },
+                "capture_speed": {
+                    "then": [
+                        {
+                            "ref": "capture_speed_modifier"
+                        }
+                    ]
+                },
+                "payload_speed": {
+                    "then": [
+                        {
+                            "ref": "payload_speed_modifier"
+                        }
+                    ]
+                }
+            },
+            "content": [
+                {
+                    "name": "Enemy Health Bars",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Game Mode Start",
+                    "type": "select",
+                    "options": [
+                        "All Slots Filled",
+                        "Immediately",
+                        "Manual"
+                    ]
+                },
+                {
+                    "name": "Health Pack Respawn Time Scalar",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Kill Cam",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Kill Feed",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Skins",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Spawn Health Packs",
+                    "type": "select",
+                    "options": [
+                        "Determined By Mode",
+                        "Enabled",
+                        "Disabled"
+                    ]
+                },
+                {
+                    "name": "Allow Hero Switching",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Hero Limit",
+                    "type": "select",
+                    "options": [
+                        "1 Per Team",
+                        "2 Per Team",
+                        "1 Per Game",
+                        "2 Per Game",
+                        "Off"
+                    ]
+                },
+                {
+                    "name": "Limit Roles",
+                    "type": "select",
+                    "options": [
+                        "1 Tank 2 Offense 2 Support",
+                        "Off",
+                        "2 Of Each Role Per Team"
+                    ]
+                },
+                {
+                    "name": "Respawn As Random Hero",
+                    "type": "boolean_onoff"
+                },
+                {
+                    "name": "Random Hero Role Limit Per Team",
+                    "type": "range_int",
+                    "min": 1,
+                    "max": 6,
+                    "default": 6
+                },
+                {
+                    "name": "Respawn Time Scalar",
+                    "min": 0,
+                    "max": 100,
+                    "default": 100
+                },
+                {
+                    "name": "Tank Role Passive Health Bonus",
+                    "type": "select",
+                    "options": [
+                        "1 Tank 2 Offense 2 Support",
+                        "Always Enabled",
+                        "Disabled"
+                    ]
+                }
+            ]
+        }
+    },
+    "map": [
+        {
+            "from": "Heroes.$0.$1",
+            "to": "Heroes.$0.General.$1",
+            "if": [
+                {
+                    "param": "$0",
+                    "type_is_not": "content"
+                }
+            ]
+        }
+    ]
+}

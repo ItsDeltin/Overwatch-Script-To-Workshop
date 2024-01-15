@@ -101,3 +101,18 @@ record class VanillaStringExpression(Token Token) : IVanillaExpression
 {
     public DocRange Range => Token;
 }
+
+/// <summary>Syntax for vanilla settings. Can be used as value or as the top-level settings group.</summary>
+public record class VanillaSettingsGroupSyntax(DocRange Range, VanillaSettingSyntax[] Settings) : IVanillaSettingValueSyntax;
+
+/// <summary>A workshop lobby setting.</summary>
+public record class VanillaSettingSyntax(Token Name, IVanillaSettingValueSyntax? Value);
+
+/// <summary>The value of a 'VanillaSettingSyntax'.</summary>
+public interface IVanillaSettingValueSyntax { }
+
+/// <summary>A number value for a lobby setting.</summary>
+record class NumberSettingSyntax(Token Value, Token? PercentSign) : IVanillaSettingValueSyntax;
+
+/// <summary>A setting pointing to a setting symbol.</summary>
+record class SymbolSettingSyntax(Token Symbol) : IVanillaSettingValueSyntax;

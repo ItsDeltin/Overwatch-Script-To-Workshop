@@ -12,6 +12,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Parse.Vanilla;
 using Deltin.Deltinteger.Model;
+using Deltin.Deltinteger.Parse.Vanilla.Settings;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -141,6 +142,7 @@ namespace Deltin.Deltinteger.Parse
         {
             AddComponent<RecursionCheckComponent>();
 
+            CollectVanillaSettings();
             CollectTypes();
             CollectVariableReservations();
             CollectVariableDeclarations();
@@ -287,6 +289,15 @@ namespace Deltin.Deltinteger.Parse
                             analysis.AddToScope(scopedVanillaVariables);
                     });
             }
+        }
+
+        void CollectVanillaSettings()
+        {
+            foreach (var script in Importer.ScriptFiles)
+                RootElement.Iter(script.Context.RootItems, vanillaSettings: vanillaSettings =>
+                {
+                    AnalyzeSettings.Analyze(script, vanillaSettings);
+                });
         }
 
         public string WorkshopCode { get; private set; }

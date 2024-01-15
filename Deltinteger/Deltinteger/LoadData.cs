@@ -2,6 +2,7 @@
 namespace Deltin.Deltinteger;
 
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Lobby2.Expand;
 using System.IO;
 
 static class LoadData
@@ -15,10 +16,13 @@ static class LoadData
             return;
         }
 
-        LoadWith(elementsJson: File.ReadAllText(Path.Combine(Program.ExeFolder, "Elements.json")));
+        LoadWith(
+            elementsJson: FromApplicationFolder("Elements.json"),
+            settingsJson: FromApplicationFolder("LobbySettings.json")
+        );
     }
 
-    public static void LoadWith(string elementsJson)
+    public static void LoadWith(string elementsJson, string settingsJson)
     {
         if (IsLoaded)
         {
@@ -27,5 +31,11 @@ static class LoadData
         IsLoaded = true;
 
         ElementRoot.LoadFromJson(elementsJson);
+        LobbySettings.LoadFromJson(settingsJson);
+    }
+
+    static string FromApplicationFolder(string name)
+    {
+        return File.ReadAllText(Path.Combine(Program.ExeFolder, name));
     }
 }

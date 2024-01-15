@@ -1,12 +1,16 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Lobby2.Expand;
+using SourceLobbySettings = Deltin.Deltinteger.Lobby2.Expand.LobbySettings;
 namespace Deltin.Deltinteger.Compiler.Parse.Vanilla;
 
 public readonly record struct VanillaSymbols(
-    WorkshopSymbolTrie ActionValues,
+    WorkshopSymbolTrie ScriptSymbols,
+    WorkshopSymbolTrie LobbySettings,
     VanillaKeyword Actions,
     VanillaKeyword Conditions,
     VanillaKeyword Event,
@@ -21,23 +25,45 @@ public readonly record struct VanillaSymbols(
     {
         var symbols = new WorkshopSymbolTrie();
 
+        // Actions
         foreach (var action in ElementRoot.Instance.Actions)
             symbols.AddSymbol(action.Name, WorkshopLanguage.EnUS, new WorkshopItem.ActionValue(action));
 
+        // Values
         foreach (var value in ElementRoot.Instance.Values)
             symbols.AddSymbol(value.Name, WorkshopLanguage.EnUS, new WorkshopItem.ActionValue(value));
 
+        // Constants
         foreach (var enumerator in ElementRoot.Instance.Enumerators)
             foreach (var member in enumerator.Members)
                 symbols.AddSymbol(member.WorkshopName(), WorkshopLanguage.EnUS, new WorkshopItem.Enumerator(member));
 
-        return new(symbols,
+        // Settings
+        var settingsSymbols = new WorkshopSymbolTrie();
+        foreach (var setting in IterAllWorkshopSettings(SourceLobbySettings.Instance!.Root))
+        {
+            settingsSymbols.AddSymbol(setting.Name, WorkshopLanguage.EnUS, new WorkshopItem.LobbySetting(setting));
+        }
+
+        return new(
+            ScriptSymbols: symbols,
+            LobbySettings: settingsSymbols,
             Actions: VanillaKeyword.EnKwForTesting("actions"),
             Conditions: VanillaKeyword.EnKwForTesting("conditions"),
             Event: VanillaKeyword.EnKwForTesting("event"),
             Variables: VanillaKeyword.EnKwForTesting("variables"),
             Subroutines: VanillaKeyword.EnKwForTesting("subroutines"),
             Settings: VanillaKeyword.EnKwForTesting("settings"));
+    }
+
+    static IEnumerable<EObject> IterAllWorkshopSettings(IEnumerable<EObject> settings)
+    {
+        foreach (var item in settings)
+        {
+            yield return item;
+            foreach (var subitem in IterAllWorkshopSettings(item.Children))
+                yield return subitem;
+        }
     }
 }
 

@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         private ITokenPush _currentTokenPush;
         private int _lastTokenCount;
         private readonly ParserSettings _parseSettings;
-        private readonly Stack<bool> _isInVanillaWorkshopContext = new(new[] { false });
+        private readonly Stack<LexerContextKind> _context = new(new[] { LexerContextKind.Normal });
 
         public Lexer(ParserSettings parseSettings)
         {
@@ -179,10 +179,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public Token ScanTokenAt(int tokenIndex) => ScanTokenAt(tokenIndex, CurrentController.MatchOne);
 
-        public Token ScanTokenAt(int tokenIndex, Action<bool> match)
+        public Token ScanTokenAt(int tokenIndex, Action<LexerContextKind> match)
         {
             while (!IsPushCompleted && !_currentTokenPush.IncrementalStop() && _currentTokenPush.Current <= tokenIndex)
-                match(_isInVanillaWorkshopContext.Peek());
+                match(_context.Peek());
             return Tokens.ElementAtOrDefault(tokenIndex);
         }
 
@@ -203,9 +203,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public T InVanillaWorkshopContext<T>(Func<T> task)
         {
-            _isInVanillaWorkshopContext.Push(true);
+            _context.Push(LexerContextKind.Workshop);
             var result = task();
-            _isInVanillaWorkshopContext.Pop();
+            _context.Pop();
+            return result;
+        }
+
+        public T InSettingsContext<T>(Func<T> task)
+        {
+            _context.Push(LexerContextKind.LobbySettings);
+            var result = task();
+            _context.Pop();
             return result;
         }
 
@@ -219,6 +227,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         private static int NumberOfCharactersInLastLine(string text) => text.Split('\n').Last().Length;
+    }
+
+    public enum LexerContextKind
+    {
+        Normal,
+        Workshop,
+        LobbySettings
     }
 
     public class LexController
@@ -239,12 +254,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
             _settings = settings;
         }
 
-        public void MatchOne(bool isWorkshopContext)
+        public void MatchOne(LexerContextKind contextKind)
         {
             Skip();
             if (HasMoreContent())
             {
-                bool didMatch = isWorkshopContext ? MatchWorkshopContext() : MatchDefault();
+                bool didMatch = contextKind switch
+                {
+                    LexerContextKind.Workshop => MatchWorkshopContext(),
+                    LexerContextKind.LobbySettings => MatchLobbySettingsContext(),
+                    LexerContextKind.Normal or _ => MatchDefault()
+                };
 
                 if (didMatch)
                     Skip();
@@ -325,10 +345,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 MatchNumber() ||
                 MatchCSymbol() ||
                 MatchString() ||
-                MatchVanillaConstant() ||
+                MatchVanillaConstant(_vanillaSymbols.ScriptSymbols) ||
                 MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions) ||
                 MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions) ||
                 MatchVanillaKeyword(_vanillaSymbols.Event, TokenType.WorkshopEvent) ||
+                MatchVanillaSymbol();
+        }
+
+        public bool MatchLobbySettingsContext()
+        {
+            return
+                MatchNumber() ||
+                MatchCSymbol() ||
+                MatchSymbol('%', TokenType.PercentSign) ||
+                MatchVanillaConstant(_vanillaSymbols.LobbySettings) ||
                 MatchVanillaSymbol();
         }
 
@@ -604,11 +634,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return true;
         }
 
-        bool MatchVanillaConstant()
+        bool MatchVanillaConstant(WorkshopSymbolTrie symbolSet)
         {
             var scanner = new WhitespaceLexScanner(this);
 
-            var symbolTraveller = _vanillaSymbols.ActionValues.Travel();
+            var symbolTraveller = symbolSet.Travel();
             // Feed incoming characters into the symbol traveller
             while (scanner.Next(out char current) && symbolTraveller.Next(current))
                 scanner.Advance();

@@ -184,6 +184,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Errors.Add(error);
         }
 
+        void AddError(string message) => AddError(IParserError.New(CurrentOrLast.Range, message));
+
         void Lookahead(Action action)
         {
             LookaheadDepth++;
@@ -1838,6 +1840,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Vanilla settings
             if (Is(TokenType.WorkshopSettings) || Is(TokenType.WorkshopSettingsEn))
             {
+                context.RootItems.Add(new(ParseVanillaLobbySettings()));
             }
 
             // Workshop rule
@@ -2288,6 +2291,57 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             ParseExpected(TokenType.CurlyBracket_Close);
             return new VanillaVariableCollection(openingToken, r.GetRange(), items);
+        });
+
+        VanillaSettingsGroupSyntax ParseVanillaLobbySettings() => Lexer.InSettingsContext(() =>
+        {
+            ParseExpected(TokenType.WorkshopSettings, TokenType.WorkshopSettingsEn);
+            return ParseListOfSettings();
+        });
+
+        VanillaSettingsGroupSyntax ParseListOfSettings() => CaptureRange(r =>
+        {
+            ParseExpected(TokenType.CurlyBracket_Open);
+
+            var settings = new List<VanillaSettingSyntax>();
+
+            while (Is(TokenType.WorkshopSymbol) || Is(TokenType.WorkshopConstant))
+            {
+                var settingToken = Consume();
+
+                // Extensions will not have a value.
+                IVanillaSettingValueSyntax settingValue = null;
+
+                // Key/value pair
+                if (ParseOptional(TokenType.Colon))
+                {
+                    // Keyword
+                    if (Is(TokenType.WorkshopConstant) || Is(TokenType.WorkshopSymbol))
+                    {
+                        settingValue = new SymbolSettingSyntax(Consume());
+                    }
+                    // Number
+                    else if (ParseOptional(TokenType.Number, out var numberToken))
+                    {
+                        // Percent sign
+                        var percentSign = ParseOptional(TokenType.PercentSign);
+                        settingValue = new NumberSettingSyntax(numberToken, percentSign);
+                    }
+                    // Error
+                    else AddError("Expected symbol or number");
+                }
+                // Sublist
+                else if (Is(TokenType.CurlyBracket_Open))
+                {
+                    settingValue = ParseListOfSettings();
+                }
+
+                settings.Add(new(settingToken, settingValue));
+            }
+
+            ParseExpected(TokenType.CurlyBracket_Close);
+
+            return new VanillaSettingsGroupSyntax(r.GetRange(), settings.ToArray());
         });
 
         Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);

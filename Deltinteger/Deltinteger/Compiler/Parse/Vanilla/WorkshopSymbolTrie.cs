@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Lobby2.Expand;
 namespace Deltin.Deltinteger.Compiler.Parse.Vanilla;
 
 public class WorkshopSymbolTrie
@@ -72,6 +73,7 @@ public abstract record WorkshopItem
 {
     public record ActionValue(ElementBaseJson Value) : WorkshopItem;
     public record Enumerator(ElementEnumMember Member) : WorkshopItem;
+    public record LobbySetting(EObject Setting) : WorkshopItem;
 }
 
 public record struct LanguageLinkedWorkshopItem(WorkshopLanguage Language, WorkshopItem Item);

@@ -6,6 +6,7 @@ using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Lobby2.Expand;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse.Vanilla.Ide;
@@ -138,4 +139,13 @@ static class VanillaCompletion
             Kind = CompletionItemKind.Constant
         })
     );
+
+    public static ICompletionRange CreateLobbySettingCompletion(DocRange range, EObject[] objects) =>
+        NewRange(range, objects.Select(o => new CompletionItem()
+        {
+            Label = o.Name,
+            Kind = CompletionItemKind.Property
+        }));
+
+    static ICompletionRange NewRange(DocRange range, IEnumerable<CompletionItem> items) => ICompletionRange.New(range, param => items);
 }

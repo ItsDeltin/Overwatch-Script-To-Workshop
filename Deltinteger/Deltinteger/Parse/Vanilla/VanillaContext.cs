@@ -10,7 +10,6 @@ class VanillaContext
     readonly ScriptFile script;
     public VanillaScope ScopedVariables { get; }
     ActiveParameterData activeParameterData;
-    VanillaType expectedType;
 
     public VanillaContext(ScriptFile script, VanillaScope scopedVanillaVariables)
     {
@@ -33,7 +32,6 @@ class VanillaContext
     public int? InvokeParameterCount() => 0;
     public ActiveParameterData GetActiveParameterData() => activeParameterData;
     public WorkshopLanguage[]? LikelyLanguages() => new WorkshopLanguage[0];
-    public VanillaType GetExpectedType() => expectedType;
 
     // Subcontext
     public VanillaContext SetActiveParameterData(ActiveParameterData data) => new(script, ScopedVariables)
