@@ -144,7 +144,8 @@ static class VanillaCompletion
         ICompletionRange.New(range, objects.Where(o => !alreadyIncluded.Contains(o.Name)).Select(o => new CompletionItem()
         {
             Label = o.Name,
-            Kind = CompletionItemKind.Property
+            Kind = CompletionItemKind.Property,
+            InsertText = o.CompletionInsertText()
         }));
 
     public static ICompletionRange CreateKeywords(DocRange range, params string[] keywords) =>
@@ -153,4 +154,6 @@ static class VanillaCompletion
             Label = keyword,
             Kind = CompletionItemKind.Constant
         }));
+
+    public static ICompletionRange Clear(DocRange range) => ICompletionRange.New(range, Enumerable.Empty<CompletionItem>());
 }

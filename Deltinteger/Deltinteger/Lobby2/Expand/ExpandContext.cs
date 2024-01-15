@@ -48,11 +48,8 @@ struct ExpandContext
         return repository.TryGetValue(eObject => eObject.Id == id, out eObject);
     }
 
-    public readonly string FormatName(string? inputName)
+    public readonly string FormatName(string inputName)
     {
-        if (inputName is null)
-            return "?";
-
         var current = format;
         while (current is not null)
         {

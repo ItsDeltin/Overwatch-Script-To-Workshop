@@ -52,19 +52,13 @@ class AnalyzeSettings
         {
             var hintRange = setting.Colon.Range.End + setting.TokenAfterColon.Range.End;
 
-            switch (context.CurrentObject.Type)
+            context.AddCompletion(context.CurrentObject.Type switch
             {
-                case EObjectType.OnOff:
-                    context.AddCompletion(VanillaCompletion.CreateKeywords(hintRange, "On", "Off"));
-                    break;
-
-                case EObjectType.EnabledDisabled:
-                    context.AddCompletion(VanillaCompletion.CreateKeywords(hintRange, "Enabled", "Disabled"));
-                    break;
-
-                case EObjectType.Option:
-                    break;
-            }
+                EObjectType.OnOff => VanillaCompletion.CreateKeywords(hintRange, "On", "Off"),
+                EObjectType.EnabledDisabled => VanillaCompletion.CreateKeywords(hintRange, "Enabled", "Disabled"),
+                EObjectType.Option => VanillaCompletion.CreateKeywords(hintRange, context.CurrentObject.Options),
+                _ => VanillaCompletion.Clear(hintRange)
+            });
         }
     }
 

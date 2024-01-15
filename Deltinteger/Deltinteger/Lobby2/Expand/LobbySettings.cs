@@ -71,14 +71,21 @@ class LobbySettings
 
     static (EObject Object, IEnumerable<EObject> Siblings) ExpandObject(ExpandContext context, SObject jsonObject)
     {
+        // Find ref object in repository.
+        EObject? refObject = null;
+        if (jsonObject.Ref is not null)
+            context.TryGetRef(jsonObject.Ref, out refObject);
+
         // Find template
         var template = context.GetTemplate(jsonObject.Template);
 
         // Create new EObject
         var expanded = new EObject(
-            name: context.FormatName(jsonObject.Name),
+            // Find name in json object, otherwise look at ref object
+            name: context.FormatName(jsonObject.Name ?? refObject?.Name ?? "?"),
             id: jsonObject.Id,
-            type: DetermineType(jsonObject, template?.BaseType));
+            type: DetermineType(jsonObject, template?.BaseType),
+            options: jsonObject.Options);
 
         context = context.AddFormat("$name", expanded.Name);
 
@@ -103,8 +110,8 @@ class LobbySettings
         if (jsonObject.Content is not null)
             content = content.Concat(ExpandObjects(context.SetParent(expanded), jsonObject.Content));
 
-        // Copy ref
-        if (jsonObject.Ref is not null && context.TryGetRef(jsonObject.Ref, out var refObject))
+        // Copy ref children.
+        if (refObject is not null)
             content = content.Concat(refObject.Children);
 
         expanded.Children = content.ToArray();
@@ -157,6 +164,9 @@ class LobbySettings
     {
         if (obj.Content is not null && obj.Content.Length > 0)
             return EObjectType.Group;
+
+        if (obj.Options is not null && obj.Options.Length > 0)
+            return EObjectType.Option;
 
         return (obj.Type ?? templateType) switch
         {
