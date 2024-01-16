@@ -27,6 +27,13 @@ static class VanillaAnalysis
 
     public static VanillaRuleAnalysis AnalyzeRule(VanillaContext context, VanillaRule rule)
     {
+        // Add completion for event, conditions, and actions.
+        if (rule.Begin && rule.End)
+        {
+            var contentRange = rule.Begin!.Range.End + rule.End!.Range.Start;
+            context.AddCompletion(VanillaCompletion.CreateEventDeclarationCompletion(contentRange));
+        }
+
         string name = WorkshopStringUtility.WorkshopStringFromRawText(rule.Name?.Text) ?? string.Empty;
         bool disabled = rule.Disabled;
         var content = new List<AnalyzedEventOrContent>();

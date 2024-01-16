@@ -67,7 +67,7 @@ static class ElementWorkshopWriter
         }
 
         var action = element.Function as ElementJsonAction;
-        if (action != null && (action.Indentation == "outdent" || action.Indentation == "drop")) b.Outdent();
+        if (action != null && (action.Indentation == "outdent" || action.Indentation == "drop")) b.Outdent(2);
 
         // Add a comment and newline
         if (element.Comment != null) b.AppendLine($"\"{element.Comment}\"");

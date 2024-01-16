@@ -2152,15 +2152,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.Parentheses_Close);
 
             // Inner data
-            ParseExpected(TokenType.CurlyBracket_Open);
+            var begin = ParseExpected(TokenType.CurlyBracket_Open);
 
             var ruleContent = new List<VanillaRuleContent>();
             while (TryParseVanillaRuleContent(out var nextElement))
                 ruleContent.Add(nextElement);
 
             ParseExpected(TokenType.CurlyBracket_Close);
+            var end = Previous;
 
-            return new(disabled, name, ruleContent.ToArray());
+            return new(disabled, name, begin, ruleContent.ToArray(), end);
         }
 
         bool TryParseVanillaRuleContent(out VanillaRuleContent nextElement)

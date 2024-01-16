@@ -48,12 +48,62 @@ namespace Deltin.Deltinteger.LanguageServer
             insert: "for (define ${1:i} = ${2:length} - 1; -1; -1)\n{\n    $0\n}"
         );
 
+        // Vanilla
+        public static readonly CompletionItem EnUsVanillaRule = MakeSnippet(
+            label: "workshop rule",
+            detail: "workshop rule (ow)",
+            documentation: new MarkupBuilder(),
+            insert: """
+            rule("$1") {
+                $0
+            }
+            """
+        );
+
+        public static readonly CompletionItem EnUsSettings = MakeSnippet(
+            label: "workshop settings",
+            detail: "workshop settings (ow)",
+            documentation: new MarkupBuilder(),
+            insert: """
+            settings {
+                $0
+            }
+            """
+        );
+
+        public static readonly CompletionItem EnUsVariables = MakeSnippet(
+            label: "workshop variables",
+            detail: "workshop variables (ow)",
+            documentation: new MarkupBuilder(),
+            insert: """
+            variables {
+                ${1|global,player|}:
+                    ${2: 0}: ${3:myVariable}
+            }$0
+            """
+        );
+
+        public static readonly CompletionItem EnUsSubroutines = MakeSnippet(
+            label: "workshop subroutines",
+            detail: "workshop subroutines (ow)",
+            documentation: new MarkupBuilder(),
+            insert: """
+            subroutines {
+                ${1: 0}: ${2:mySubroutine}
+            }$0
+            """
+        );
+
         public static IEnumerable<CompletionItem> Snippets = new[] {
             Rule,
             For,
             Forr,
             AutoFor,
-            AutoForr
+            AutoForr,
+            EnUsVanillaRule,
+            EnUsSettings,
+            EnUsVariables,
+            EnUsSubroutines
         };
 
         // Creates the CompletionItem for a snippet.

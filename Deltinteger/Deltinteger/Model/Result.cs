@@ -5,8 +5,30 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-static class ResultExtensions
+static class Result
 {
+    /// <summary>
+    /// Converts `Result(T, E)?` to `Result(T?, E)`.
+    /// </summary>
+    public static Result<T?, E> Maybe<T, E>(Result<T, E>? result)
+    {
+        // ok (no value)
+        if (result is null)
+        {
+            return Result<T?, E>.Ok(default);
+        }
+        // ok (with value)
+        else if (result.Value.Get(out var value, out var error))
+        {
+            return value;
+        }
+        // error
+        else
+        {
+            return error;
+        }
+    }
+
     public static Result<U, E> CastValue<T, E, U>(this Result<T, E> result) where T : U
     {
         return result.MapValue(v => (U)v);

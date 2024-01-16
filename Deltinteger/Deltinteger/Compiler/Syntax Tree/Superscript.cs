@@ -58,7 +58,7 @@ public record struct VariableName(Token Id, Token? Name)
 /// }
 /// </code>
 /// </summary>
-public record class VanillaRule(Token Disabled, Token? Name, VanillaRuleContent[] Content);
+public record class VanillaRule(Token Disabled, Token? Name, Token? Begin, VanillaRuleContent[] Content, Token? End);
 
 /// <summary>The 'event', 'actions' or 'conditions' sections in a workshop rule.</summary>
 public record class VanillaRuleContent(DocRange Range, Token GroupToken, CommentedVanillaExpression[] InnerItems);

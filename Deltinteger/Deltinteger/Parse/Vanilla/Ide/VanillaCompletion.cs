@@ -36,6 +36,7 @@ static class VanillaCompletion
     });
 
     static readonly IEnumerable<CompletionItem> Values = ElementRoot.Instance.Values.Select(value => GetValueCompletionItem(value));
+    static readonly string[] RuleContentNames = new[] { "event", "conditions", "actions" };
 
     static CompletionItem GetValueCompletionItem(ElementJsonValue value, bool highlight = false, bool expectingAnotherValue = false)
     {
@@ -178,6 +179,17 @@ static class VanillaCompletion
         {
             Label = item.EnUs,
             Kind = CompletionItemKind.Constant
+        })
+    );
+
+    public static ICompletionRange CreateEventDeclarationCompletion(DocRange range) => ICompletionRange.New(
+        range,
+        RuleContentNames.Select(item => new CompletionItem()
+        {
+            Label = item,
+            Kind = CompletionItemKind.Keyword,
+            InsertText = item + " {\n\t$0\n}",
+            InsertTextFormat = InsertTextFormat.Snippet
         })
     );
 
