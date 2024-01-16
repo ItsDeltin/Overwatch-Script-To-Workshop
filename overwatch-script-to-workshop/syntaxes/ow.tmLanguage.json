@@ -870,7 +870,7 @@
       ]
     },
     "rule": {
-      "begin": "rule",
+      "begin": "rule(?=\\s*\\()",
       "beginCaptures": {
         "0": {
           "name": "keyword.control"

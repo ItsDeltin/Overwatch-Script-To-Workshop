@@ -24,6 +24,18 @@
       "include": "#enum-declaration"
     },
     {
+      "include": "source.ow#rule"
+    },
+    {
+      "include": "source.ow#settings"
+    },
+    {
+      "include": "source.ow#variables"
+    },
+    {
+      "include": "source.ow#subroutines"
+    },
+    {
       "include": "#rule"
     },
     {

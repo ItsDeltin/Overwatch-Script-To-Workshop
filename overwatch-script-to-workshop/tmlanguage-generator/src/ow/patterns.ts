@@ -62,7 +62,7 @@ const variables: Pattern = util.makeDictionaryLike('variables', [
 const subroutines: Pattern = util.makeDictionaryLike("subroutines", [util.numberedList('entity.name.function')]);
 
 const rule: Pattern = {
-    begin: 'rule',
+    begin: /rule(?=\s*\()/,
     end: '}',
     zeroBeginCapture: { name: 'keyword.control' },
     zeroEndCapture: { name: 'punctuation.definition.block', },
