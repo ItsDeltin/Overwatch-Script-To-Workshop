@@ -22,14 +22,14 @@ class VanillaTypeData : IElementsJsonTypeSupplier<VanillaType>
     public VanillaType BooleanType { get; } = NewType("boolean", "True", "False");
     public VanillaType NumberType { get; } = NewType("number");
     public VanillaType StringType { get; } = NewType("string", "Custom String", "String");
-    public VanillaType VectorType { get; } = NewType("vector", "Vector");
-    public VanillaType PlayerType { get; } = NewType("player", "Event Player", "Local Player", "Host Player");
-    public VanillaType ButtonType { get; } = NewType("button", "Button");
-    public VanillaType HeroType { get; } = NewType("hero", "Hero");
+    public VanillaType VectorType { get; } = NewType("vector", "Vector", "Forward", "Backward", "Left", "Right", "Up", "Down", "Position Of");
+    public VanillaType PlayerType { get; } = NewType("player", "Event Player", "Local Player", "Host Player", "Attacker", "Victim", "Healee", "Healer", "Player Carrying Flag");
+    public VanillaType ButtonType { get; } = NewType("button", "Button", "Event Ability");
+    public VanillaType HeroType { get; } = NewType("hero", "Hero", "Hero Of", "Hero Being Duplicated");
     public VanillaType ColorType { get; } = NewType("color", "Color", "Custom Color");
-    public VanillaType MapType { get; } = NewType("map", "Map");
-    public VanillaType GameModeType { get; } = NewType("gamemode", "Game Mode");
-    public VanillaType TeamType { get; } = NewType("team", "Team");
+    public VanillaType MapType { get; } = NewType("map", "Map", "Current Map");
+    public VanillaType GameModeType { get; } = NewType("gamemode", "Game Mode", "Current Game Mode");
+    public VanillaType TeamType { get; } = NewType("team", "Team", "Team Of", "Opposite Team Of", "Control Mode Scoring Team");
     public Dictionary<string, VanillaType> EnumTypes { get; }
     readonly List<VanillaArrayType> arrayTypes = new();
     readonly List<VanillaPipeType> pipeTypes = new();

@@ -2193,19 +2193,31 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new VanillaRuleContent(r.GetRange(), groupToken, items.ToArray());
         });
 
-        IVanillaExpression ParseVanillaExpression() => CaptureRange(r => _vanillaOperatorStack.GetExpression(() =>
+        IVanillaExpression ParseVanillaExpression()
         {
-            TernaryCheck.Push(false);
-            _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
-
-            // Binary operators
-            while (TryParseBinaryOperator<IVanillaExpression>(out var op, out _))
+            var expr = _vanillaOperatorStack.GetExpression(() =>
             {
-                _vanillaOperatorStack.PushOperator(op);
+                TernaryCheck.Push(false);
                 _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+
+                // Binary operators
+                while (TryParseBinaryOperator<IVanillaExpression>(out var op, out _))
+                {
+                    _vanillaOperatorStack.PushOperator(op);
+                    _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+                }
+                TernaryCheck.Pop();
+            });
+            // Assignment operators
+            if (TokenExtensions.Assignment_Tokens.Contains(Kind))
+            {
+                var token = Consume();
+                var rhs = ParseVanillaExpression();
+                expr = new VanillaAssignmentExpression(expr, token, rhs);
             }
-            TernaryCheck.Pop();
-        }));
+
+            return expr;
+        }
 
         IVanillaExpression ParseVanillaExpressionTerm() => CaptureRange(r =>
         {

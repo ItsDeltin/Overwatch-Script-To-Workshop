@@ -437,7 +437,10 @@ static class VanillaExpressions
                     var notableValuesForParameterType = context.VanillaTypeFromJsonName(elementParams[i].Type)
                         ?.NotableValues ?? Enumerable.Empty<string>();
 
-                    context.AddCompletion(VanillaCompletion.GetValueCompletion(range, notableValuesForParameterType));
+                    context.AddCompletion(VanillaCompletion.GetValueCompletion(
+                        range: range,
+                        notableValues: notableValuesForParameterType,
+                        expectingAnotherValue: i < elementParams.Length - 1));
                 }
             }
         }
@@ -499,7 +502,9 @@ static class VanillaExpressions
             right = VanillaAnalysis.AnalyzeExpression(context, syntax.Right);
         }
 
-        return IVanillaNode.New(syntax, () =>
+        return IVanillaNode.New(syntax, new(
+            IsVariable: right.GetSymbolInformation().IsVariable
+        ), () =>
         {
             var a = left.GetWorkshopElement();
             var b = right.GetWorkshopElement();
@@ -509,8 +514,22 @@ static class VanillaExpressions
                 "+" => Element.Add(ab.a, ab.b),
                 "*" => Element.Multiply(ab.a, ab.b),
                 "/" => Element.Divide(ab.a, ab.b),
+                "^" => Element.Pow(ab.a, ab.b),
                 _ => $"Unhandled binary operator: '{syntax.Symbol.Text}'"
             });
         });
+    }
+
+    public static IVanillaNode Assignment(VanillaContext context, VanillaAssignmentExpression syntax)
+    {
+        var lhs = VanillaAnalysis.AnalyzeExpression(context, syntax.Lhs);
+        var rhs = VanillaAnalysis.AnalyzeExpression(context, syntax.Rhs);
+
+        if (!lhs.GetSymbolInformation().IsVariable)
+        {
+            context.Warning("Left hand side of assignment should be a variable", syntax.Lhs.Range);
+        }
+
+        return IVanillaNode.New(syntax, () => "unimplemented");
     }
 }

@@ -102,6 +102,11 @@ record class VanillaStringExpression(Token Token) : IVanillaExpression
     public DocRange Range => Token;
 }
 
+record class VanillaAssignmentExpression(IVanillaExpression Lhs, Token AssignmentToken, IVanillaExpression Rhs) : IVanillaExpression
+{
+    public DocRange Range => Lhs.Range.Start + Rhs.Range.End;
+}
+
 /// <summary>Syntax for vanilla settings. Can be used as value or as the top-level settings group.</summary>
 public record class VanillaSettingsGroupSyntax(DocRange Range, Token OpeningBracket, VanillaSettingSyntax[] Settings) : IVanillaSettingValueSyntax
 {

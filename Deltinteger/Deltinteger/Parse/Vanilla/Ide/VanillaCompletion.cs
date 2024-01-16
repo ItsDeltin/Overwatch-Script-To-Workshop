@@ -13,10 +13,23 @@ namespace Deltin.Deltinteger.Parse.Vanilla.Ide;
 
 static class VanillaCompletion
 {
+    static readonly IEnumerable<CompletionItem> Keywords = new CompletionItem[] {
+        new() {
+            Label = "Global",
+            Kind = CompletionItemKind.Module,
+            InsertText = "Global.",
+            SortText = "\"",
+            Command = new Command() {
+                Title = "Suggest",
+                Name = "editor.action.triggerSuggest"
+            }
+        }
+    };
+
     static readonly IEnumerable<CompletionItem> Actions = ElementRoot.Instance.Actions.Select(action => new CompletionItem()
     {
         Label = action.Name,
-        InsertText = $"{action.Name}{GetParametersSnippetInsert(action)};$0",
+        InsertText = $"{action.Name}{GetParametersSnippetInsert(action, 1)};$0",
         InsertTextFormat = InsertTextFormat.Snippet,
         Kind = CompletionItemKind.Function,
         Documentation = FunctionSignature(new(), action)
@@ -24,30 +37,37 @@ static class VanillaCompletion
 
     static readonly IEnumerable<CompletionItem> Values = ElementRoot.Instance.Values.Select(value => GetValueCompletionItem(value));
 
-    static CompletionItem GetValueCompletionItem(ElementJsonValue value, bool highlight = false) => new()
+    static CompletionItem GetValueCompletionItem(ElementJsonValue value, bool highlight = false, bool expectingAnotherValue = false)
     {
-        Label = highlight ? $"★ {value.Name}" : value.Name,
-        SortText = highlight ? $"!{value.Name}" : value.Name,
-        InsertText = $"{value.Name}{GetParametersSnippetInsert(value)}$0",
-        InsertTextFormat = InsertTextFormat.Snippet,
-        Kind = CompletionItemKind.Method,
-        Documentation = FunctionSignature(new(), value)
-    };
+        bool returnsComparable = value.ReturnType == "vector" || value.ReturnType == "number";
+        string separator = expectingAnotherValue ? ", $0" : returnsComparable ? "$0" : "";
+        int ci = expectingAnotherValue || returnsComparable ? 1 : 0;
+        return new()
+        {
+            Label = highlight ? $"★ {value.Name}" : value.Name,
+            SortText = highlight ? $"!{value.Name}" : value.Name,
+            FilterText = value.Name,
+            InsertText = $"{value.Name}{GetParametersSnippetInsert(value, ci)}{separator}",
+            InsertTextFormat = InsertTextFormat.Snippet,
+            Kind = CompletionItemKind.Method,
+            Documentation = FunctionSignature(new(), value)
+        };
+    }
 
-    static string GetParametersSnippetInsert(ElementBaseJson function)
+    static string GetParametersSnippetInsert(ElementBaseJson function, int ci)
     {
         if (function.Name == "String" || function.Name == "Custom String")
-            return "(\"$1\")";
-        return function.HasParameters() ? "($1)" : "";
+            return $"(\"${ci}\")";
+        return function.HasParameters() ? $"(${ci})" : "";
     }
 
     /// <summary>Creates completion for actions and values.</summary>
     public static ICompletionRange CreateActionValueCompletion(DocRange range) =>
-        ICompletionRange.New(range, CompletionRangeKind.Catch, param => Actions.Concat(Values));
+        ICompletionRange.New(range, Actions.Concat(Values).Concat(Keywords));
 
     /// <summary>Creates completion for values.</summary>
     public static ICompletionRange CreateValueCompletion(DocRange range) =>
-        ICompletionRange.New(range, CompletionRangeKind.Catch, param => Values);
+        ICompletionRange.New(range, Values.Concat(Keywords));
 
     /// <summary>Creates completion for a group of constants (enum).</summary>
     public static CompletionItem[] GetConstantsCompletion(ElementEnum constants, DocRange? replaceRange)
@@ -144,8 +164,11 @@ static class VanillaCompletion
             Detail = $"(subroutine) {subroutine.Name}"
         }).ToArray());
 
-    public static ICompletionRange GetValueCompletion(DocRange range, IEnumerable<string> notableValues) => ICompletionRange.New(range,
-        ElementRoot.Instance.Values.Select(value => GetValueCompletionItem(value, notableValues.Contains(value.Name))));
+    public static ICompletionRange GetValueCompletion(DocRange range, IEnumerable<string> notableValues, bool expectingAnotherValue) =>
+        ICompletionRange.New(range,
+            ElementRoot.Instance.Values.Select(value =>
+                GetValueCompletionItem(value, notableValues.Contains(value.Name), expectingAnotherValue)
+                ).Concat(Keywords));
 
     /// <summary>Creates completion for the Event, Team, and Player rule options.</summary>
     public static ICompletionRange CreateEventCompletion(DocRange range, VanillaKeyword[] items) => ICompletionRange.New(

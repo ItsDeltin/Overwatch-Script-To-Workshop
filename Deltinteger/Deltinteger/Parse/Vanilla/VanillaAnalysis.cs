@@ -188,6 +188,10 @@ static class VanillaAnalysis
             case VanillaBinaryOperatorExpression binary:
                 return VanillaExpressions.Binary(context, binary);
 
+            // Assignment
+            case VanillaAssignmentExpression assignment:
+                return VanillaExpressions.Assignment(context, assignment);
+
             // The parser will add an error if the value is missing, nothing needs to happen here.
             case MissingVanillaExpression:
                 break;
