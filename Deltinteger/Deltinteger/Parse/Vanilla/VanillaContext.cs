@@ -43,7 +43,7 @@ class VanillaContext
     public Token NextToken(Token previousToken) => script.NextToken(previousToken);
 
     // Types
-    public VanillaType? VanillaTypeFromJsonName(string name) => ElementJsonTypeHelper.FromString(StaticAnalysisData.Instance.TypeData, name);
+    public VanillaType? VanillaTypeFromJsonName(string? name) => ElementJsonTypeHelper.FromString(StaticAnalysisData.Instance.TypeData, name);
 }
 
 readonly record struct ActiveParameterData(

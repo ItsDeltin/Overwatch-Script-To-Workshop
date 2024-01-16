@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Elements;
 
 static class ElementJsonTypeHelper
 {
-    public static T? FromString<T>(IElementsJsonTypeSupplier<T> typeSupplier, string value) => value switch
+    public static T? FromString<T>(IElementsJsonTypeSupplier<T> typeSupplier, string? value) => value switch
     {
         "any" => typeSupplier.Any(),
         "any[]" => typeSupplier.AnyArray(),
@@ -21,7 +21,7 @@ static class ElementJsonTypeHelper
         "vector[]" => typeSupplier.VectorArray(),
         "vector | player" or
         "player | vector" => typeSupplier.PlayerOrVector(),
-        "button" => typeSupplier.EnumType("Button"),
+        "button" => typeSupplier.Button(),
         "hero" => typeSupplier.Hero(),
         "map" => typeSupplier.Map(),
         "team" => typeSupplier.Team(),
@@ -30,6 +30,7 @@ static class ElementJsonTypeHelper
         "hero[]" => typeSupplier.Array(typeSupplier.Hero()),
         "string[]" => typeSupplier.Array(typeSupplier.String()),
         "hero | hero[]" => typeSupplier.PipeType(typeSupplier.Hero(), typeSupplier.Array(typeSupplier.Hero())),
+        null => typeSupplier.Default(),
         _ => typeSupplier.EnumType(value) ?? typeSupplier.Default()
     };
 }
@@ -49,6 +50,7 @@ public interface IElementsJsonTypeSupplier<T>
     T PlayerArray();
     T Players();
     T PlayerOrVector();
+    T Button();
     T Hero();
     T Color();
     T Map();
@@ -62,7 +64,6 @@ public interface ITypeSupplier : IElementsJsonTypeSupplier<CodeType>
 {
     CodeType Unknown();
     CodeType NumberArray() => new ArrayType(this, Number());
-    CodeType? Button() => EnumType("Button");
     ArrayProvider ArrayProvider();
 
     public CodeType? FromString(string value) => ElementJsonTypeHelper.FromString(this, value);

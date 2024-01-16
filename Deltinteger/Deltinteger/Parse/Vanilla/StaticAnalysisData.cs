@@ -24,6 +24,7 @@ class VanillaTypeData : IElementsJsonTypeSupplier<VanillaType>
     public VanillaType StringType { get; } = NewType("string", "Custom String", "String");
     public VanillaType VectorType { get; } = NewType("vector", "Vector");
     public VanillaType PlayerType { get; } = NewType("player", "Event Player", "Local Player", "Host Player");
+    public VanillaType ButtonType { get; } = NewType("button", "Button");
     public VanillaType HeroType { get; } = NewType("hero", "Hero");
     public VanillaType ColorType { get; } = NewType("color", "Color", "Custom Color");
     public VanillaType MapType { get; } = NewType("map", "Map");
@@ -57,6 +58,7 @@ class VanillaTypeData : IElementsJsonTypeSupplier<VanillaType>
     public VanillaType PlayerArray() => Array(Player());
     public VanillaType Players() => PipeType(Player(), Array(Player()));
     public VanillaType PlayerOrVector() => PipeType(Player(), Vector());
+    public VanillaType Button() => ButtonType;
     public VanillaType Hero() => HeroType;
     public VanillaType Color() => ColorType;
     public VanillaType Map() => MapType;
