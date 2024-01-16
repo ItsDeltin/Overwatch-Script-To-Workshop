@@ -80,6 +80,18 @@ namespace Deltin.Deltinteger.Parse
                     return valueGroupType;
             throw new Exception("No enum type by the name of '" + typeName + "' exists.");
         }
+
+        public CodeType VectorArray() => new ArrayType(this, Vector());
+        public CodeType PlayerArray() => new ArrayType(this, Player());
+        public CodeType Players() => new PipeType(Player(), PlayerArray());
+        public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
+        public CodeType Hero() => EnumType("Hero");
+        public CodeType Color() => EnumType("Color");
+        public CodeType Map() => EnumType("Map");
+        public CodeType GameMode() => EnumType("GameMode");
+        public CodeType Team() => EnumType("Team");
+        public CodeType Array(CodeType innerType) => new ArrayType(this, innerType);
+        public CodeType PipeType(CodeType a, CodeType b) => new PipeType(a, b);
     }
 
     public readonly struct ArrayProvider

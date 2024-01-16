@@ -236,15 +236,34 @@ static class VanillaExpressions
 
     static WorkshopItem[] FilterItemsFromContext(VanillaContext context, IEnumerable<LanguageLinkedWorkshopItem> items)
     {
+        var parameterData = context.GetActiveParameterData();
+
+        // Filter by type
+        if (parameterData.ExpectingType is not null)
+        {
+            var filterTypes = items.Where(item => item.Item switch
+            {
+                // Filter constants
+                WorkshopItem.Enumerator enumerator => context.VanillaTypeFromJsonName(enumerator.Member.Enum.Name) == parameterData.ExpectingType,
+                _ => true
+            });
+            // Only accept if there are still items.
+            if (filterTypes.Any())
+                items = filterTypes;
+        }
+
         // Filter by parameter count
-        int? invokeParameterCount = context.InvokeParameterCount();
+        int? invokeParameterCount = parameterData.InvokeParameterCount;
         var filterParameters = items.Where(item => item.Item switch
         {
+            // Argument count matches.
             WorkshopItem.ActionValue actionValue => invokeParameterCount.HasValue &&
                 invokeParameterCount.Value == (actionValue.Value.Parameters?.Length ?? 0),
+            // Enumerators should not be invoked.
             WorkshopItem.Enumerator enumerator => !invokeParameterCount.HasValue,
             _ => false
         });
+        // Only accept if there are still items.
         if (filterParameters.Any())
             items = filterParameters;
 
@@ -253,6 +272,7 @@ static class VanillaExpressions
         if (likelyLanguages is not null)
         {
             var filterLanguages = items.Where(item => likelyLanguages.Contains(item.Language));
+            // Only accept if there are still items.
             if (filterLanguages.Any())
                 items = filterLanguages;
         }
@@ -263,8 +283,10 @@ static class VanillaExpressions
 
     public static IVanillaNode Invoke(VanillaContext context, VanillaInvokeExpression syntax)
     {
-        // Analyse invoked value
-        var invoking = VanillaAnalysis.AnalyzeExpression(context.SetActiveParameterData(new(IsInvoked: true)), syntax.Invoking);
+        // Analyze invoked value
+        var invoking = VanillaAnalysis.AnalyzeExpression(context.SetActiveParameterData(new(
+            IsInvoked: true, InvokeParameterCount: syntax.Arguments.Count)), syntax.Invoking);
+
         var symbolInformation = invoking.GetSymbolInformation();
 
         if (symbolInformation.WorkshopFunction is null && !symbolInformation.DoNotError)
@@ -424,7 +446,8 @@ static class VanillaExpressions
                 false => ExpectingVariable.Player,
                 null or _ => ExpectingVariable.None
             },
-            ExpectingSubroutine: DoesParameterNeedSubroutine(element, parameter)));
+            ExpectingSubroutine: DoesParameterNeedSubroutine(element, parameter),
+            ExpectingType: context.VanillaTypeFromJsonName(param.Type)));
     }
 
     static bool DoesParameterNeedSubroutine(ElementBaseJson element, int parameter)

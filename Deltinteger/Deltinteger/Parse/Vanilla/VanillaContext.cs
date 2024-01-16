@@ -2,6 +2,7 @@
 
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
+using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -29,7 +30,6 @@ class VanillaContext
     public void AddSignatureInfo(ISignatureHelp signatureHelp) => script.AddSignatureInfo(signatureHelp);
 
     // Context
-    public int? InvokeParameterCount() => 0;
     public ActiveParameterData GetActiveParameterData() => activeParameterData;
     public WorkshopLanguage[]? LikelyLanguages() => new WorkshopLanguage[0];
 
@@ -38,17 +38,21 @@ class VanillaContext
     {
         activeParameterData = data
     };
-    public VanillaContext ExpectingType(VanillaType type) => this; // todo
 
     // Utility
     public Token NextToken(Token previousToken) => script.NextToken(previousToken);
+
+    // Types
+    public VanillaType? VanillaTypeFromJsonName(string name) => ElementJsonTypeHelper.FromString(StaticAnalysisData.Instance.TypeData, name);
 }
 
 readonly record struct ActiveParameterData(
+    int? InvokeParameterCount = null,
     bool IsInvoked = false,
     bool NeedsStringLiteral = false,
     ExpectingVariable ExpectingVariable = default,
-    bool ExpectingSubroutine = false
+    bool ExpectingSubroutine = false,
+    VanillaType? ExpectingType = default
 );
 
 enum ExpectingVariable

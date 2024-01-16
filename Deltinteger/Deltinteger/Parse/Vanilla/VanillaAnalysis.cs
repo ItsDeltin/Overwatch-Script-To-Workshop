@@ -95,7 +95,13 @@ static class VanillaAnalysis
         for (int i = 0; i < syntax.InnerItems.Length; i++)
         {
             var analysis = AnalyzeExpression(
-                context.SetActiveParameterData(new(ExpectingSubroutine: isSubroutine)),
+                context.SetActiveParameterData(new(
+                    ExpectingSubroutine: isSubroutine,
+                    // This will allow symbol analysis to select the right keyword.
+                    ExpectingType: isSubroutine || i >= EventTypesOrder.Length
+                        ? null
+                        : context.VanillaTypeFromJsonName(EventTypesOrder[i])
+                )),
                 syntax.InnerItems[i].Expression);
             var itemInformation = analysis.GetSymbolInformation();
 
