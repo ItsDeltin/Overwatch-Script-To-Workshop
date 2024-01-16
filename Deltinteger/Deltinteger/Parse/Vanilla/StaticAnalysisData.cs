@@ -69,6 +69,13 @@ class VanillaTypeData : IElementsJsonTypeSupplier<VanillaType>
         if (type is null)
         {
             type = new(innerType);
+
+            // Notable values for player array
+            if (innerType == PlayerType)
+            {
+                type.NotableValues = new[] { "All Players" };
+            }
+
             arrayTypes.Add(type);
         }
 

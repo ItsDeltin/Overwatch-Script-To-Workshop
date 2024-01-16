@@ -22,14 +22,17 @@ static class VanillaCompletion
         Documentation = FunctionSignature(new(), action)
     });
 
-    static readonly IEnumerable<CompletionItem> Values = ElementRoot.Instance.Values.Select(value => new CompletionItem()
+    static readonly IEnumerable<CompletionItem> Values = ElementRoot.Instance.Values.Select(value => GetValueCompletionItem(value));
+
+    static CompletionItem GetValueCompletionItem(ElementJsonValue value, bool highlight = false) => new()
     {
-        Label = value.Name,
+        Label = highlight ? $"★ {value.Name}" : value.Name,
+        SortText = highlight ? $"!{value.Name}" : value.Name,
         InsertText = $"{value.Name}{GetParametersSnippetInsert(value)}$0",
         InsertTextFormat = InsertTextFormat.Snippet,
         Kind = CompletionItemKind.Method,
         Documentation = FunctionSignature(new(), value)
-    });
+    };
 
     static string GetParametersSnippetInsert(ElementBaseJson function)
     {
@@ -140,6 +143,9 @@ static class VanillaCompletion
             Kind = CompletionItemKind.Function,
             Detail = $"(subroutine) {subroutine.Name}"
         }).ToArray());
+
+    public static ICompletionRange GetValueCompletion(DocRange range, IEnumerable<string> notableValues) => ICompletionRange.New(range,
+        ElementRoot.Instance.Values.Select(value => GetValueCompletionItem(value, notableValues.Contains(value.Name))));
 
     /// <summary>Creates completion for the Event, Team, and Player rule options.</summary>
     public static ICompletionRange CreateEventCompletion(DocRange range, VanillaKeyword[] items) => ICompletionRange.New(

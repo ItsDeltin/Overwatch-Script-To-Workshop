@@ -409,23 +409,35 @@ static class VanillaExpressions
 
             if (i < elementParams.Length && end is not null)
             {
+                var range = start + end;
+
                 // Add special completion for constants
                 if (ElementRoot.Instance.TryGetEnum(elementParams[i].Type, out var constantsGroup))
                 {
-                    context.AddCompletion(ICompletionRange.New(start + end, CompletionRangeKind.ClearRest, getCompletionArgs =>
+                    context.AddCompletion(ICompletionRange.New(range, CompletionRangeKind.ClearRest, getCompletionArgs =>
                         VanillaCompletion.GetConstantsCompletion(constantsGroup, arg?.Value.Range)));
                 }
                 // Add completion for items expecting a variable.
                 else if (elementParams[i].IsVariableReference)
                 {
                     bool isGlobal = elementParams[i].VariableReferenceIsGlobal ?? false;
-                    context.AddCompletion(ICompletionRange.New(start + end, CompletionRangeKind.ClearRest, getCompletionArgs =>
+                    context.AddCompletion(ICompletionRange.New(range, CompletionRangeKind.ClearRest, getCompletionArgs =>
                         VanillaCompletion.GetVariableCompletion(context.ScopedVariables, isGlobal)));
                 }
                 // Subroutines
                 else if (DoesParameterNeedSubroutine(element, i))
                 {
-                    context.AddCompletion(VanillaCompletion.GetSubroutineCompletion(start + end, context.ScopedVariables));
+                    context.AddCompletion(VanillaCompletion.GetSubroutineCompletion(range, context.ScopedVariables));
+                }
+                // Add completion for values
+                else
+                {
+                    // Get the notable values from the parameter type.
+                    // Notable values will have a star next to their name.
+                    var notableValuesForParameterType = context.VanillaTypeFromJsonName(elementParams[i].Type)
+                        ?.NotableValues ?? Enumerable.Empty<string>();
+
+                    context.AddCompletion(VanillaCompletion.GetValueCompletion(range, notableValuesForParameterType));
                 }
             }
         }

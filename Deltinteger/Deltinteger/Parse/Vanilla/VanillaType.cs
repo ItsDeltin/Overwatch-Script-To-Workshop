@@ -1,11 +1,13 @@
 #nullable enable
 
+using System.Linq;
+
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
 class VanillaType
 {
     public string Name { get; }
-    public string[] NotableValues { get; }
+    public string[] NotableValues { get; set; }
 
     public VanillaType(string name, params string[] notableValues)
     {
@@ -35,6 +37,7 @@ class VanillaPipeType : VanillaType
     {
         A = a;
         B = b;
+        NotableValues = A.NotableValues.Concat(B.NotableValues).ToArray();
     }
 
     public override string ToString() => A.ToString() + " | " + B.ToString();
