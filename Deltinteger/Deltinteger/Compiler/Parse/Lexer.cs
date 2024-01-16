@@ -358,7 +358,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 MatchVanillaConstant(_vanillaSymbols.LobbySettings) ||
                 MatchNumber() ||
                 MatchCSymbol() ||
-                MatchSymbol('%', TokenType.PercentSign) ||
                 MatchVanillaSymbol();
         }
 

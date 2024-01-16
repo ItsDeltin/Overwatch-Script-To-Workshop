@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.Lobby2.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -35,6 +37,7 @@ class LobbySettings
         Root = root;
     }
 
+    /// <summary>Converts a `SettingsSchemaJson` to a `LobbySettings`</summary>
     public static LobbySettings Expand(SettingsSchemaJson top)
     {
         // Collect templates
@@ -84,7 +87,7 @@ class LobbySettings
             // Find name in json object, otherwise look at ref object
             name: context.FormatName(jsonObject.Name ?? refObject?.Name ?? "?"),
             id: jsonObject.Id,
-            type: DetermineType(jsonObject, template?.BaseType),
+            type: DetermineType(jsonObject, template, refObject),
             options: jsonObject.Options);
 
         context = context.AddFormat("$name", expanded.Name);
@@ -109,6 +112,21 @@ class LobbySettings
         // Add content.
         if (jsonObject.Content is not null)
             content = content.Concat(ExpandObjects(context.SetParent(expanded), jsonObject.Content));
+
+        // Insert maps
+        if (jsonObject.InsertMaps is not null)
+        {
+            var modeName = context.FormatName(jsonObject.InsertMaps);
+            content = content.Concat(LobbyMap.AllMaps
+                .Where(map => map.GameModes.Contains(modeName))
+                .Select(map => new EObject(map.Name, EObjectType.Switch)));
+        }
+
+        // Insert heroes
+        if (jsonObject.InsertHeroes && ElementRoot.Instance.TryGetEnum("Hero", out var heroes))
+        {
+            content = content.Concat(heroes.Members.Select(member => new EObject(member.Name, EObjectType.Switch)));
+        }
 
         // Copy ref children.
         if (refObject is not null)
@@ -160,22 +178,29 @@ class LobbySettings
         }
     }
 
-    static EObjectType DetermineType(SObject obj, string? templateType)
+    static EObjectType DetermineType(SObject obj, Template? template, EObject? refObject)
     {
+        // Contains content, is a group.
         if (obj.Content is not null && obj.Content.Length > 0)
+            return EObjectType.Group;
+
+        if (template is not null && !template.Sibling && template.Content is not null && template.Content.Length > 0)
+            return EObjectType.Group;
+
+        if (obj.InsertMaps is not null || obj.InsertHeroes)
             return EObjectType.Group;
 
         if (obj.Options is not null && obj.Options.Length > 0)
             return EObjectType.Option;
 
-        return (obj.Type ?? templateType) switch
+        return (obj.Type ?? template?.BaseType) switch
         {
             "boolean_onoff" => EObjectType.OnOff,
             "boolean_enableddisabled" => EObjectType.EnabledDisabled,
             "range_percentage" => EObjectType.Range,
             "range_int" => EObjectType.Int,
             "switch" => EObjectType.Switch,
-            _ => EObjectType.Unknown
+            _ => refObject?.Type ?? EObjectType.Unknown
         };
     }
 }

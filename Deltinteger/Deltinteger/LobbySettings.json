@@ -29,6 +29,14 @@
             "id": "hero_list",
             "content": [
                 {
+                    "name": "enabled heroes",
+                    "insert_heroes": true
+                },
+                {
+                    "name": "disabled heroes",
+                    "insert_heroes": true
+                },
+                {
                     "name": "Ana",
                     "template": "base_hero",
                     "$ult": "Nano Boost",
@@ -81,12 +89,13 @@
             "name": "modes",
             "content": [
                 {
-                    "name": "All",
-                    "template": "base_mode"
+                    "template": "base_mode",
+                    "name": "All"
                 },
                 {
-                    "name": "Assault",
                     "template": "base_mode",
+                    "name": "Assault",
+                    "$with_maps": "Assault",
                     "$competitive": true,
                     "$capture_speed": true,
                     "content": []
@@ -247,6 +256,18 @@
                             "ref": "payload_speed_modifier"
                         }
                     ]
+                },
+                "with_maps": {
+                    "then": [
+                        {
+                            "name": "enabled maps",
+                            "insert_maps": "$value"
+                        },
+                        {
+                            "name": "disabled maps",
+                            "insert_maps": "$value"
+                        }
+                    ]
                 }
             },
             "content": [
@@ -257,7 +278,6 @@
                 },
                 {
                     "name": "Game Mode Start",
-                    "type": "select",
                     "options": [
                         "All Slots Filled",
                         "Immediately",
@@ -287,7 +307,6 @@
                 },
                 {
                     "name": "Spawn Health Packs",
-                    "type": "select",
                     "options": [
                         "Determined By Mode",
                         "Enabled",
@@ -301,7 +320,6 @@
                 },
                 {
                     "name": "Hero Limit",
-                    "type": "select",
                     "options": [
                         "1 Per Team",
                         "2 Per Team",
@@ -312,7 +330,6 @@
                 },
                 {
                     "name": "Limit Roles",
-                    "type": "select",
                     "options": [
                         "1 Tank 2 Offense 2 Support",
                         "Off",
@@ -332,13 +349,13 @@
                 },
                 {
                     "name": "Respawn Time Scalar",
+                    "type": "range_percentage",
                     "min": 0,
                     "max": 100,
                     "default": 100
                 },
                 {
                     "name": "Tank Role Passive Health Bonus",
-                    "type": "select",
                     "options": [
                         "1 Tank 2 Offense 2 Support",
                         "Always Enabled",
@@ -350,8 +367,8 @@
     },
     "map": [
         {
-            "from": "Heroes.$0.$1",
-            "to": "Heroes.$0.General.$1",
+            "from": "heroes.$0.$1",
+            "to": "heroes.$0.General.$1",
             "if": [
                 {
                     "param": "$0",

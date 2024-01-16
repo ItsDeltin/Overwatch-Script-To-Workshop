@@ -17,14 +17,23 @@ public class EObject
         Name = name;
         Id = id ?? name;
         Type = type;
-        Options = options ?? Array.Empty<string>();
+        Options = options ?? type switch
+        {
+            EObjectType.OnOff => new[] { "On", "Off" },
+            EObjectType.EnabledDisabled => new[] { "Enabled", "Disabled" },
+            _ => Array.Empty<string>()
+        };
     }
+
+    public EObject(string name, EObjectType type) : this(name, null, type, null) { }
 
     public bool HasContent() => Children.Length > 0;
 
     public string CompletionInsertText() => Type switch
     {
-        EObjectType.Unknown or EObjectType.Group or EObjectType.Switch => Name,
+        EObjectType.Unknown or EObjectType.Switch => Name,
+        EObjectType.Group => $"{Name} {{\n$0\n}}",
+        EObjectType.Range => $"{Name}: $1%$0",
         _ => $"{Name}: "
     };
 

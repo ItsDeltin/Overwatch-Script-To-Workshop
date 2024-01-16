@@ -37,6 +37,12 @@ class SObject
     [JsonProperty("max")]
     public double Max { get; set; } = 500;
 
+    [JsonProperty("insert_maps")]
+    public string? InsertMaps { get; set; }
+
+    [JsonProperty("insert_heroes")]
+    public bool InsertHeroes { get; set; }
+
     [JsonExtensionData]
     public IDictionary<string, JToken>? Parameters { get; set; }
 }

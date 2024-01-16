@@ -66,11 +66,27 @@ class AnalyzeSettings
                 }
                 break;
 
+            // Number value
             case NumberSettingSyntax number:
-                isMatch = context.CurrentObject?.Type switch
+                switch (context.CurrentObject?.Type)
                 {
-                    EObjectType.Int or EObjectType.Range => true,
-                    _ => false
+                    case EObjectType.Int or EObjectType.Range:
+                        isMatch = true;
+
+                        // Make sure the percent sign or lack thereof is valid.
+                        if (number.PercentSign is null && context.CurrentObject.Type == EObjectType.Range)
+                        {
+                            context.Warn(number.Value, "Range settings should be followed by %");
+                        }
+                        else if (number.PercentSign is not null && context.CurrentObject.Type == EObjectType.Int)
+                        {
+                            context.Warn(number.PercentSign, "Integer settings should not be followed by %");
+                        }
+                        break;
+
+                    default:
+                        isMatch = false;
+                        break;
                 };
                 break;
 

@@ -2327,7 +2327,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     else if (ParseOptional(TokenType.Number, out var numberToken))
                     {
                         // Percent sign
-                        var percentSign = ParseOptional(TokenType.PercentSign);
+                        var percentSign = ParseOptional(TokenType.Modulo);
                         settingValue = new NumberSettingSyntax(numberToken, percentSign);
                     }
                     // Error

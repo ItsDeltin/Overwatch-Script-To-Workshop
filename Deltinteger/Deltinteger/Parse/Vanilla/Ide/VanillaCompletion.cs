@@ -16,6 +16,8 @@ static class VanillaCompletion
     static readonly IEnumerable<CompletionItem> Actions = ElementRoot.Instance.Actions.Select(action => new CompletionItem()
     {
         Label = action.Name,
+        InsertText = $"{action.Name}{GetParametersSnippetInsert(action)};$0",
+        InsertTextFormat = InsertTextFormat.Snippet,
         Kind = CompletionItemKind.Function,
         Documentation = FunctionSignature(new(), action)
     });
@@ -23,9 +25,18 @@ static class VanillaCompletion
     static readonly IEnumerable<CompletionItem> Values = ElementRoot.Instance.Values.Select(value => new CompletionItem()
     {
         Label = value.Name,
+        InsertText = $"{value.Name}{GetParametersSnippetInsert(value)}$0",
+        InsertTextFormat = InsertTextFormat.Snippet,
         Kind = CompletionItemKind.Method,
         Documentation = FunctionSignature(new(), value)
     });
+
+    static string GetParametersSnippetInsert(ElementBaseJson function)
+    {
+        if (function.Name == "String" || function.Name == "Custom String")
+            return "(\"$1\")";
+        return function.HasParameters() ? "($1)" : "";
+    }
 
     /// <summary>Creates completion for actions and values.</summary>
     public static ICompletionRange CreateActionValueCompletion(DocRange range) =>
@@ -145,7 +156,8 @@ static class VanillaCompletion
         {
             Label = o.Name,
             Kind = CompletionItemKind.Property,
-            InsertText = o.CompletionInsertText()
+            InsertText = o.CompletionInsertText(),
+            InsertTextFormat = InsertTextFormat.Snippet
         }));
 
     public static ICompletionRange CreateKeywords(DocRange range, params string[] keywords) =>

@@ -101,6 +101,8 @@ namespace Deltin.Deltinteger.Elements
         public override string ToString() => Name + (Parameters == null ? "" : "(" + string.Join(", ", Parameters.Select(v => v.ToString())) + ")");
 
         public string CodeName() => Alias ?? Name.Replace(" ", "").Replace("-", "");
+
+        public bool HasParameters() => Parameters is not null && Parameters.Length > 0;
     }
 
     public class ElementJsonValue : ElementBaseJson
