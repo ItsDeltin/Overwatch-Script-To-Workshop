@@ -354,7 +354,7 @@ namespace Deltin.Deltinteger.Parse
                     Rule newRule = GetRule(translate.GetRule());
                     WorkshopRules.Add(newRule);
                     ostwRule.ElementCountLens.RuleParsed(newRule);
-                }, owRule => owRule.ToElement().Then(WorkshopRules.Add));
+                }, owRule => owRule.ToElement(new(WorkshopConverter.LinkableVanillaVariables)).Then(WorkshopRules.Add));
             }
 
             GetComponent<AutoCompileSubroutine>().ToWorkshop(WorkshopConverter);

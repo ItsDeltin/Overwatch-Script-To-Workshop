@@ -39,6 +39,8 @@ class VanillaContext
         activeParameterData = data
     };
 
+    public VanillaContext ClearContext() => SetActiveParameterData(new());
+
     // Utility
     public Token NextToken(Token previousToken) => script.NextToken(previousToken);
 
@@ -52,7 +54,8 @@ readonly record struct ActiveParameterData(
     bool NeedsStringLiteral = false,
     ExpectingVariable ExpectingVariable = default,
     bool ExpectingSubroutine = false,
-    VanillaType? ExpectingType = default
+    VanillaType? ExpectingType = default,
+    bool ExpectingVariableIndexer = false
 );
 
 enum ExpectingVariable

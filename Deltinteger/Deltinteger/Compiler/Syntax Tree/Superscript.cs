@@ -93,6 +93,11 @@ record class VanillaBinaryOperatorExpression(IVanillaExpression Left, Token Symb
     public DocRange Range => Left.Range.Start + Right.Range.End;
 }
 
+record class VanillaIndexerExpression(IVanillaExpression Value, Token LeftBracket, IVanillaExpression Index, Token? RightBracket) : IVanillaExpression
+{
+    public DocRange Range => Value.Range.Start + (RightBracket?.Range ?? Index.Range).End;
+}
+
 /// <summary>A vanilla expression wrapped in parentheses.</summary>
 record class ParenthesizedVanillaExpression(DocRange Range, IVanillaExpression Value) : IVanillaExpression;
 

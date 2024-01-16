@@ -467,13 +467,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
             while (true)
             {
                 // Get the array index.
-                if (ParseOptional(TokenType.SquareBracket_Open))
+                if (ParseOptional(TokenType.SquareBracket_Open, out var open))
                 {
                     IParseExpression index = GetContainExpression();
                     // End the closing square bracket.
-                    var closing = ParseExpected(TokenType.SquareBracket_Close) ?? CurrentOrLast;
+                    var close = ParseExpected(TokenType.SquareBracket_Close);
                     // Push operator
-                    PushOperator(new IndexerStackOperator<IParseExpression>(index, closing.Range.End));
+                    PushOperator(new IndexerStackOperator<IParseExpression>(open, index, close));
                 }
                 // Invoke
                 else if (ParseOptional(TokenType.Parentheses_Open, out Token leftParentheses))
@@ -2200,11 +2200,24 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 TernaryCheck.Push(false);
                 _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
 
-                // Binary operators
-                while (TryParseBinaryOperator<IVanillaExpression>(out var op, out _))
+                while (true)
                 {
-                    _vanillaOperatorStack.PushOperator(op);
-                    _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+                    // Binary operators
+                    if (TryParseBinaryOperator<IVanillaExpression>(out var op, out _))
+                    {
+                        _vanillaOperatorStack.PushOperator(op);
+                        _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+                    }
+                    // Array indexer
+                    else if (ParseOptional(TokenType.SquareBracket_Open, out var open))
+                    {
+                        var indexer = ParseVanillaExpression();
+                        var close = ParseExpected(TokenType.SquareBracket_Close);
+                        _vanillaOperatorStack.PushOperator(
+                            new IndexerStackOperator<IVanillaExpression>(open, indexer, close));
+
+                    }
+                    else break;
                 }
                 TernaryCheck.Pop();
             });

@@ -184,6 +184,10 @@ static class VanillaAnalysis
             case VanillaInvokeExpression invoke:
                 return VanillaExpressions.Invoke(context, invoke);
 
+            // Indexer
+            case VanillaIndexerExpression indexer:
+                return VanillaExpressions.Indexer(context, indexer);
+
             // Binary operator
             case VanillaBinaryOperatorExpression binary:
                 return VanillaExpressions.Binary(context, binary);
@@ -202,7 +206,7 @@ static class VanillaAnalysis
                 break;
         }
         // Missing
-        return IVanillaNode.New(expression, () => "Missing nodes cannot be converted to the workshop");
+        return IVanillaNode.New(expression, _ => "Missing nodes cannot be converted to the workshop");
     }
 
     static readonly string[] EventTypesOrder = new[] { "Event", "Team", "Player" };

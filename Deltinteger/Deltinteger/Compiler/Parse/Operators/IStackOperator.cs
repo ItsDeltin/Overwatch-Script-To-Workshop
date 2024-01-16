@@ -32,14 +32,14 @@ interface IStackOperator<T>
     }
 }
 
-record IndexerStackOperator<T>(T Index, DocPos EndPosition) : IStackOperator<T>
+record IndexerStackOperator<T>(Token LeftBracket, T Index, Token? RightBracket) : IStackOperator<T>
 {
     public OperatorType GetOperatorType() => OperatorType.Other;
     public int GetPrecedence() => CStyleOperator.ArrayIndexPrecedence;
     public Result<T, IParserError> ToExpression(IExpressionStackHelper<T> stackHelper)
     {
         var array = stackHelper.PopOperand();
-        return stackHelper.GetFactory().CreateIndexer(array, Index, EndPosition);
+        return stackHelper.GetFactory().CreateIndexer(array, LeftBracket, Index, RightBracket);
     }
 }
 

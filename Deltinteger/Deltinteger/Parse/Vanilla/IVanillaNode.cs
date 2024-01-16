@@ -11,6 +11,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Model;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
 using Deltin.WorkshopString;
+using Deltin.Deltinteger.Parse.Vanilla.ToWorkshop;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -20,25 +21,25 @@ interface IVanillaNode
 {
     public DocRange DocRange();
     public VanillaType Type();
-    public Result<IWorkshopTree, string> GetWorkshopElement();
+    public Result<IWorkshopTree, string> GetWorkshopElement(VanillaWorkshopConverter converter);
     public NodeSymbolInformation GetSymbolInformation();
 
-    public static IVanillaNode New(IVanillaExpression node, Func<Result<IWorkshopTree, string>> getWorkshopElement)
+    public static IVanillaNode New(IVanillaExpression node, Func<VanillaWorkshopConverter, Result<IWorkshopTree, string>> getWorkshopElement)
         => new VanillaExpression(node.Range, new(), getWorkshopElement);
 
     public static IVanillaNode New(
         IVanillaExpression node,
         NodeSymbolInformation symbolInformation,
-        Func<Result<IWorkshopTree, string>> getWorkshopElement)
+        Func<VanillaWorkshopConverter, Result<IWorkshopTree, string>> getWorkshopElement)
         => new VanillaExpression(node.Range, symbolInformation, getWorkshopElement);
 
     record class VanillaExpression(
         DocRange Range,
         NodeSymbolInformation SymbolInformation,
-        Func<Result<IWorkshopTree, string>> GetWorkshopElementFunc) : IVanillaNode
+        Func<VanillaWorkshopConverter, Result<IWorkshopTree, string>> GetWorkshopElementFunc) : IVanillaNode
     {
         public DocRange DocRange() => Range;
-        public Result<IWorkshopTree, string> GetWorkshopElement() => GetWorkshopElementFunc();
+        public Result<IWorkshopTree, string> GetWorkshopElement(VanillaWorkshopConverter converter) => GetWorkshopElementFunc(converter);
         public VanillaType Type()
         {
             throw new NotImplementedException();
@@ -54,9 +55,12 @@ record struct NodeSymbolInformation(
     bool DoNotError = false,
     bool IsVariable = false,
     VanillaVariable? PointingToVariable = default,
+    Indexer? Indexer = default,
     bool IsGlobalSymbol = false,
     StringFunctionType StringFunctionType = default,
     string? StringLiteralValue = null);
+
+record Indexer(IVanillaNode? Player, VanillaVariable Variable, IVanillaNode? Index);
 
 enum StringFunctionType
 {
@@ -71,13 +75,13 @@ static class VanillaExpressions
     public static IVanillaNode Grouped(VanillaContext context, ParenthesizedVanillaExpression syntax)
     {
         var item = VanillaAnalysis.AnalyzeExpression(context, syntax.Value);
-        return IVanillaNode.New(syntax, () => item.GetWorkshopElement());
+        return IVanillaNode.New(syntax, c => item.GetWorkshopElement(c));
     }
 
     /// <summary>Creates a number node.</summary>
     public static IVanillaNode Number(VanillaContext context, NumberExpression syntax)
     {
-        return IVanillaNode.New(syntax, () => Element.Num(syntax.Value));
+        return IVanillaNode.New(syntax, c => Element.Num(syntax.Value));
     }
 
     /// <summary>Creates a string node.</summary>
@@ -94,7 +98,7 @@ static class VanillaExpressions
         return IVanillaNode.New(
             syntax,
             new(StringLiteralValue: value),
-            () => "Bad string accepted, should be handled by parent function");
+            c => "Bad string accepted, should be handled by parent function");
     }
 
     /// <summary>Creates a node representing a predefined workshop function or player-defined variable or subroutine</summary>
@@ -217,7 +221,7 @@ static class VanillaExpressions
                 IsGlobalSymbol = isGlobalSymbol,
                 StringFunctionType = stringFunctionType
             },
-            getWorkshopElement: () =>
+            getWorkshopElement: c =>
             {
                 // Function
                 if (workshopFunction is not null)
@@ -229,6 +233,17 @@ static class VanillaExpressions
                 else if (subroutine is not null)
                     return new Subroutine(0, subroutine.Value.Name);
                 // Error
+                else if (declaredVariable is not null)
+                {
+                    var value = c.LinkedVariables
+                        .GetVariable(declaredVariable.Value.Name, declaredVariable.Value.IsGlobal)
+                        ?.Get(c.CurrentObject as Element);
+
+                    if (value is not null)
+                        return value;
+                    else
+                        return $"'{declaredVariable.Value.Name}' is not linked to an Index Reference";
+                }
                 else
                     return "Attempted to compile symbol information with incomplete data";
             });
@@ -333,11 +348,11 @@ static class VanillaExpressions
                     .ToArray();
             }
             // Return string node
-            return IVanillaNode.New(syntax, () => stringArgs.SelectResult(arg => arg.GetWorkshopElement()).AndThen<IWorkshopTree>(args =>
-                    new StringElement(
-                        value: text,
-                        localized: symbolInformation.StringFunctionType == StringFunctionType.String,
-                        formats: args.ToArray())));
+            return IVanillaNode.New(syntax, c => stringArgs.SelectResult(arg => arg.GetWorkshopElement(c)).AndThen<IWorkshopTree>(args =>
+                new StringElement(
+                    value: text,
+                    localized: symbolInformation.StringFunctionType == StringFunctionType.String,
+                    formats: args.ToArray())));
         }
 
         // Add parameter completion for constant values.
@@ -380,9 +395,9 @@ static class VanillaExpressions
             }
         }
 
-        return IVanillaNode.New(syntax, () =>
+        return IVanillaNode.New(syntax, c =>
         {
-            return arguments.SelectResult(arg => arg.GetWorkshopElement()).AndThen<IWorkshopTree>(args =>
+            return arguments.SelectResult(arg => arg.GetWorkshopElement(c)).AndThen<IWorkshopTree>(args =>
                 symbolInformation.WorkshopFunction switch
                 {
                     ElementBaseJson => Element.Part(symbolInformation.WorkshopFunction, args.ToArray()),
@@ -475,8 +490,33 @@ static class VanillaExpressions
         return parameter == 0 && (element.Name == "Call Subroutine" || element.Name == "Start Rule");
     }
 
+    public static IVanillaNode Indexer(VanillaContext context, VanillaIndexerExpression indexer)
+    {
+        var value = VanillaAnalysis.AnalyzeExpression(context.ClearContext(), indexer.Value);
+        var index = VanillaAnalysis.AnalyzeExpression(context.ClearContext(), indexer.Index);
+
+        var valueIndexer = value.GetSymbolInformation().Indexer;
+
+        // Depth warning
+        if (context.GetActiveParameterData().ExpectingVariableIndexer && valueIndexer?.Index is not null)
+            context.Warning(
+                "The workshop cannot modify multidimensional arrays",
+                indexer.LeftBracket.Range + indexer.Range);
+
+        return IVanillaNode.New(indexer, new(
+            Indexer: valueIndexer is null ? null : new(
+                valueIndexer.Player,
+                valueIndexer.Variable,
+                index
+            )
+        ), c =>
+            value.GetWorkshopElement(c).And(index.GetWorkshopElement(c)).AndThen<IWorkshopTree>(ab =>
+                Element.ValueInArray(ab.a, ab.b)));
+    }
+
     public static IVanillaNode Binary(VanillaContext context, VanillaBinaryOperatorExpression syntax)
     {
+        Indexer? indexer = null;
         IVanillaNode left = VanillaAnalysis.AnalyzeExpression(context, syntax.Left);
         IVanillaNode right;
         // Target variable.
@@ -499,6 +539,14 @@ static class VanillaExpressions
             {
                 context.Error("The righthand side of a dot must be a variable", syntax.Right.Range);
             }
+            else
+            {
+                var pointingTo = right.GetSymbolInformation().PointingToVariable;
+                if (pointingTo is not null)
+                {
+                    indexer = new(isGlobal ? null : left, pointingTo.Value, null);
+                }
+            }
         }
         else
         {
@@ -506,33 +554,69 @@ static class VanillaExpressions
         }
 
         return IVanillaNode.New(syntax, new(
-            IsVariable: right.GetSymbolInformation().IsVariable
-        ), () =>
-        {
-            var a = left.GetWorkshopElement();
-            var b = right.GetWorkshopElement();
-            return a.And(b).AndThen<IWorkshopTree>(ab => syntax.Symbol.Text switch
-            {
-                "-" => Element.Subtract(ab.a, ab.b),
-                "+" => Element.Add(ab.a, ab.b),
-                "*" => Element.Multiply(ab.a, ab.b),
-                "/" => Element.Divide(ab.a, ab.b),
-                "^" => Element.Pow(ab.a, ab.b),
-                _ => $"Unhandled binary operator: '{syntax.Symbol.Text}'"
-            });
-        });
+            IsVariable: right.GetSymbolInformation().IsVariable,
+            Indexer: indexer
+        ), c => left.GetWorkshopElement(c)
+                .AndThen(a => right.GetWorkshopElement(indexer is null ? c : c.SetCurrentObject(a)).MapValue(b => (a, b)))
+                .AndThen<IWorkshopTree>(ab => syntax.Symbol.Text switch
+                {
+                    "-" => Element.Subtract(ab.a, ab.b),
+                    "+" => Element.Add(ab.a, ab.b),
+                    "*" => Element.Multiply(ab.a, ab.b),
+                    "/" => Element.Divide(ab.a, ab.b),
+                    "%" => Element.Modulo(ab.a, ab.b),
+                    "^" => Element.Pow(ab.a, ab.b),
+                    "||" => Element.Or(ab.a, ab.b),
+                    "&&" => Element.And(ab.a, ab.b),
+                    "<" => Element.Compare(ab.a, Operator.LessThan, ab.b),
+                    "<=" => Element.Compare(ab.a, Operator.LessThanOrEqual, ab.b),
+                    ">" => Element.Compare(ab.a, Operator.GreaterThan, ab.b),
+                    ">=" => Element.Compare(ab.a, Operator.GreaterThanOrEqual, ab.b),
+                    "==" => Element.Compare(ab.a, Operator.Equal, ab.b),
+                    "!=" => Element.Compare(ab.a, Operator.NotEqual, ab.b),
+                    _ => $"Unimplemented binary operator: '{syntax.Symbol.Text}'"
+                }));
     }
 
     public static IVanillaNode Assignment(VanillaContext context, VanillaAssignmentExpression syntax)
     {
-        var lhs = VanillaAnalysis.AnalyzeExpression(context, syntax.Lhs);
+        var lhs = VanillaAnalysis.AnalyzeExpression(
+            context.SetActiveParameterData(new(ExpectingVariableIndexer: true)),
+            syntax.Lhs);
         var rhs = VanillaAnalysis.AnalyzeExpression(context, syntax.Rhs);
 
-        if (!lhs.GetSymbolInformation().IsVariable)
+        var indexer = lhs.GetSymbolInformation().Indexer;
+
+        if (indexer is null)
         {
             context.Warning("Left hand side of assignment should be a variable", syntax.Lhs.Range);
         }
 
-        return IVanillaNode.New(syntax, () => "unimplemented");
+        return IVanillaNode.New(syntax, c => indexer switch
+        {
+            null => "Attempted to compile assignment with missing indexer",
+            _ => Result.Maybe(indexer.Player?.GetWorkshopElement(c))
+                .And(Result.Maybe(indexer.Index?.GetWorkshopElement(c)))
+                .And(rhs.GetWorkshopElement(c))
+                .AndThen<IWorkshopTree>(piv =>
+                {
+                    var ((player, index), value) = piv;
+
+                    // Find index reference
+                    var indexReference = c.LinkedVariables.GetVariable(indexer.Variable.Name, indexer.Variable.IsGlobal);
+                    if (indexReference is null)
+                        return $"'{indexer.Variable.Name}' is not linked to an index reference";
+
+                    // Set at index
+                    if (index is Element indexElement)
+                        indexReference = indexReference.CreateChild(indexElement);
+
+                    var setElements = indexReference.SetVariable(value as Element, player as Element);
+                    if (setElements.Length != 1)
+                        return "Setting a value needs to result in a single action";
+
+                    return setElements[0];
+                })
+        });
     }
 }

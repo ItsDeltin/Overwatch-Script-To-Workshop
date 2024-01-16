@@ -26,7 +26,7 @@ public class LinkedVariableAssigner
 
     public IndexReference Next()
     {
-        var nextIndexReference = actionSet.LinkableVanillaVariables.GetVanillaVariable(
+        var nextIndexReference = actionSet.LinkableVanillaVariables.GetVariable(
             targetVariables[current].Name,
             actionSet.IsGlobal
         )!;

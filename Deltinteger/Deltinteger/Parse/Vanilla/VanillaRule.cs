@@ -7,6 +7,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Decompiler.TextToElement;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Model;
+using Deltin.Deltinteger.Parse.Vanilla.ToWorkshop;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -15,7 +16,7 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 /// </summary>
 record VanillaRuleAnalysis(bool Disabled, string Name, AnalyzedEventOrContent[] Content)
 {
-    public Result<Rule, string> ToElement()
+    public Result<Rule, string> ToElement(VanillaWorkshopConverter converter)
     {
         var ruleEvent = RuleEvent.OngoingGlobal;
         var team = Team.All;
@@ -58,7 +59,7 @@ record VanillaRuleAnalysis(bool Disabled, string Name, AnalyzedEventOrContent[] 
                     case VanillaRuleContentType.Conditions:
                         {
                             // Set conditions
-                            var conditionResult = expressionList.Expressions.SelectResult(e => e.AsCondition());
+                            var conditionResult = expressionList.Expressions.SelectResult(e => e.AsCondition(converter));
                             if (conditionResult.Get(out var enumerateConditions, out var error))
                             {
                                 conditions = enumerateConditions.ToArray();
@@ -73,7 +74,7 @@ record VanillaRuleAnalysis(bool Disabled, string Name, AnalyzedEventOrContent[] 
                     case VanillaRuleContentType.Actions:
                         {
                             // Set actions
-                            var actionResults = expressionList.Expressions.SelectResult(e => e.AsAction());
+                            var actionResults = expressionList.Expressions.SelectResult(e => e.AsAction(converter));
                             if (actionResults.Get(out var enumerateActions, out var error))
                             {
                                 actions = enumerateActions.ToArray();
@@ -133,10 +134,10 @@ readonly record struct CommentedAnalyzedExpression(
     IVanillaNode Expression
 )
 {
-    public readonly Result<Element, string> AsAction()
+    public readonly Result<Element, string> AsAction(VanillaWorkshopConverter converter)
     {
         string? comment = Comment;
-        return Expression.GetWorkshopElement().MapValue(value =>
+        return Expression.GetWorkshopElement(converter).MapValue(value =>
         {
             var asElement = (Element)value;
             asElement.Comment = comment;
@@ -144,10 +145,10 @@ readonly record struct CommentedAnalyzedExpression(
         });
     }
 
-    public readonly Result<Condition, string> AsCondition()
+    public readonly Result<Condition, string> AsCondition(VanillaWorkshopConverter converter)
     {
         string? comment = Comment;
-        return Expression.GetWorkshopElement().MapValue(value => new Condition((Element)value)
+        return Expression.GetWorkshopElement(converter).MapValue(value => new Condition((Element)value)
         {
             Comment = comment
         });

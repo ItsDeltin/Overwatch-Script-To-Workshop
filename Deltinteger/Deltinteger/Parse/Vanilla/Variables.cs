@@ -34,7 +34,7 @@ class VanillaVariableAnalysis : IAnalyzedVanillaCollection
     {
         foreach (var vanillaVariable in vanillaVariables)
         {
-            var indexReference = varAssigner.GetVanillaVariable(vanillaVariable.Name, vanillaVariable.IsGlobal)
+            var indexReference = varAssigner.GetVariable(vanillaVariable.Name, vanillaVariable.IsGlobal)
                 // No existing variable, create it.
                 ?? varCollection.Assign(vanillaVariable.Name, VariableType.Dynamic, vanillaVariable.IsGlobal, false, vanillaVariable.Id);
 

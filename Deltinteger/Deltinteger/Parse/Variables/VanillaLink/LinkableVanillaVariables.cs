@@ -17,7 +17,7 @@ public class LinkableVanillaVariables
         (isGlobal ? global : player).Add(name, value);
     }
 
-    public IndexReference? GetVanillaVariable(string name, bool isGlobal)
+    public IndexReference? GetVariable(string name, bool isGlobal)
     {
         return (isGlobal ? global : player).GetValueOrDefault(name);
     }

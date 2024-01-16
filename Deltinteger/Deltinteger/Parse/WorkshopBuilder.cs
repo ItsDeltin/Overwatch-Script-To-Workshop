@@ -54,9 +54,9 @@ namespace Deltin.Deltinteger
             return this;
         }
 
-        public WorkshopBuilder Outdent()
+        public WorkshopBuilder Outdent(int min = 0)
         {
-            _indentCount--;
+            _indentCount = Math.Max(_indentCount - 1, min);
             return this;
         }
 

@@ -77,7 +77,7 @@ interface IOperandFactory<T>
     T CreateBinaryExpression(OperatorNode op, T left, T right);
     T CreateUnaryExpression(OperatorNode op, T value);
     T CreateTernary(T lhs, T middle, T rhs);
-    T CreateIndexer(T array, T index, DocPos endPos);
+    T CreateIndexer(T array, Token leftBracket, T index, Token? rightBracket);
 }
 
 interface IExpressionStackHelper<T>
