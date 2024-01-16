@@ -70,19 +70,18 @@ static class VanillaCompletion
         ICompletionRange.New(range, Values.Concat(Keywords));
 
     /// <summary>Creates completion for a group of constants (enum).</summary>
-    public static CompletionItem[] GetConstantsCompletion(ElementEnum constants, DocRange? replaceRange)
-    {
-        return constants.Members.Select(member => new CompletionItem()
+    public static ICompletionRange GetConstantsCompletion(DocRange range, ElementEnum constants, DocRange? replaceRange, bool expectingAnotherValue) =>
+        ICompletionRange.New(range, constants.Members.Select(member => new CompletionItem()
         {
             Label = member.Name,
+            InsertText = expectingAnotherValue ? $"{member.Name}, " : member.Name,
             Kind = CompletionItemKind.Constant,
             TextEdit = replaceRange is null ? null : new(new InsertReplaceEdit()
             {
                 NewText = member.Name,
                 Replace = replaceRange
             })
-        }).ToArray();
-    }
+        }));
 
     /// <summary>The signature of a function as markup.</summary>
     public static MarkupBuilder FunctionSignature(MarkupBuilder builder, ElementBaseJson workshopFunction)
@@ -148,21 +147,23 @@ static class VanillaCompletion
     }
 
     /// <summary>Creates completion for variables in the scope.</summary>
-    public static CompletionItem[] GetVariableCompletion(VanillaScope scopedVariables, bool isGlobal) =>
-        scopedVariables.GetVariables(isGlobal).Select(v => new CompletionItem()
+    public static ICompletionRange GetVariableCompletion(DocRange range, VanillaScope scopedVariables, bool isGlobal, bool expectingAnotherValue) =>
+        ICompletionRange.New(range, scopedVariables.GetVariables(isGlobal).Select(v => new CompletionItem()
         {
             Label = v.Name,
+            InsertText = expectingAnotherValue ? $"{v.Name}, " : v.Name,
             Kind = CompletionItemKind.Variable,
             Detail = $"({VanillaHelper.GlobalOrPlayerString(isGlobal)} variable) {v.Name}"
-        }).ToArray();
+        }));
 
-    public static ICompletionRange GetSubroutineCompletion(DocRange range, VanillaScope scopedVariables) => ICompletionRange.New(range, args =>
-        scopedVariables.GetSubroutines().Select(subroutine => new CompletionItem()
+    public static ICompletionRange GetSubroutineCompletion(DocRange range, VanillaScope scopedVariables, bool expectingAnotherValue) =>
+        ICompletionRange.New(range, scopedVariables.GetSubroutines().Select(subroutine => new CompletionItem()
         {
             Label = subroutine.Name,
+            InsertText = expectingAnotherValue ? $"{subroutine.Name}, " : subroutine.Name,
             Kind = CompletionItemKind.Function,
             Detail = $"(subroutine) {subroutine.Name}"
-        }).ToArray());
+        }));
 
     public static ICompletionRange GetValueCompletion(DocRange range, IEnumerable<string> notableValues, bool expectingAnotherValue) =>
         ICompletionRange.New(range,

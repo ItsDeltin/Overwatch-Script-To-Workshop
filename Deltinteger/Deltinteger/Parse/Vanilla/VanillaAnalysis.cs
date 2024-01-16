@@ -149,7 +149,7 @@ static class VanillaAnalysis
             }
             else if (i == 1)
             {
-                context.AddCompletion(VanillaCompletion.GetSubroutineCompletion(start + next, context.ScopedVariables));
+                context.AddCompletion(VanillaCompletion.GetSubroutineCompletion(start + next, context.ScopedVariables, false));
             }
 
             if (nextSemicolon is null)

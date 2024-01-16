@@ -410,24 +410,29 @@ static class VanillaExpressions
             if (i < elementParams.Length && end is not null)
             {
                 var range = start + end;
+                bool expectingAnotherValue = i < elementParams.Length - 1;
 
                 // Add special completion for constants
                 if (ElementRoot.Instance.TryGetEnum(elementParams[i].Type, out var constantsGroup))
                 {
-                    context.AddCompletion(ICompletionRange.New(range, CompletionRangeKind.ClearRest, getCompletionArgs =>
-                        VanillaCompletion.GetConstantsCompletion(constantsGroup, arg?.Value.Range)));
+                    context.AddCompletion(
+                        VanillaCompletion.GetConstantsCompletion(
+                            range,
+                            constantsGroup,
+                            replaceRange: arg?.Value.Range,
+                            expectingAnotherValue));
                 }
                 // Add completion for items expecting a variable.
                 else if (elementParams[i].IsVariableReference)
                 {
                     bool isGlobal = elementParams[i].VariableReferenceIsGlobal ?? false;
-                    context.AddCompletion(ICompletionRange.New(range, CompletionRangeKind.ClearRest, getCompletionArgs =>
-                        VanillaCompletion.GetVariableCompletion(context.ScopedVariables, isGlobal)));
+                    context.AddCompletion(VanillaCompletion.GetVariableCompletion(
+                        range, context.ScopedVariables, isGlobal, expectingAnotherValue));
                 }
                 // Subroutines
                 else if (DoesParameterNeedSubroutine(element, i))
                 {
-                    context.AddCompletion(VanillaCompletion.GetSubroutineCompletion(range, context.ScopedVariables));
+                    context.AddCompletion(VanillaCompletion.GetSubroutineCompletion(range, context.ScopedVariables, expectingAnotherValue));
                 }
                 // Add completion for values
                 else
@@ -440,7 +445,7 @@ static class VanillaExpressions
                     context.AddCompletion(VanillaCompletion.GetValueCompletion(
                         range: range,
                         notableValues: notableValuesForParameterType,
-                        expectingAnotherValue: i < elementParams.Length - 1));
+                        expectingAnotherValue));
                 }
             }
         }
@@ -479,13 +484,11 @@ static class VanillaExpressions
         {
             bool isGlobal = left.GetSymbolInformation().IsGlobalSymbol;
             // Player variable completion
-            context.AddCompletion(ICompletionRange.New(
+            context.AddCompletion(VanillaCompletion.GetVariableCompletion(
                 range: syntax.Symbol.Range.End + context.NextToken(syntax.Symbol).Range.Start,
-                CompletionRangeKind.ClearRest,
-                getCompletionParams => VanillaCompletion.GetVariableCompletion(
-                    context.ScopedVariables,
-                    isGlobal: isGlobal
-                )
+                context.ScopedVariables,
+                isGlobal: isGlobal,
+                false
             ));
             // Variable analysis
             right = VanillaAnalysis.AnalyzeExpression(context.SetActiveParameterData(new(
