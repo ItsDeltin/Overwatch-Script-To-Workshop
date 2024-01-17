@@ -4233,7 +4233,8 @@
           "defaultValue": "Compare"
         }
       },
-      "hidden": true
+      "hidden": true,
+      "indent": "drop"
     },
     {
       "name": "Else",
