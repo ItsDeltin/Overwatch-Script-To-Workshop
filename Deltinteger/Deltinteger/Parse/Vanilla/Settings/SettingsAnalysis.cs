@@ -1,22 +1,25 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Lobby2.Expand;
+using Deltin.Deltinteger.Lobby2.KeyValues;
+using Deltin.Deltinteger.Model;
 using Deltin.Deltinteger.Parse.Vanilla.Ide;
 
 namespace Deltin.Deltinteger.Parse.Vanilla.Settings;
 
-class AnalyzeSettings
+static class AnalyzeSettings
 {
-    public static void Analyze(ScriptFile script, VanillaSettingsGroupSyntax settingsGroup)
+    public static GroupSettingValue Analyze(ScriptFile script, VanillaSettingsGroupSyntax settingsGroup)
     {
-        AnalyzeGroup(new(script, null, LobbySettings.Instance?.Root ?? Array.Empty<EObject>()), settingsGroup);
+        return AnalyzeGroup(new(script, null, LobbySettings.Instance?.Root ?? Array.Empty<EObject>()), settingsGroup);
     }
 
-    static void AnalyzeGroup(SettingsAnalysisContext context, VanillaSettingsGroupSyntax settingsGroup)
+    static GroupSettingValue AnalyzeGroup(SettingsAnalysisContext context, VanillaSettingsGroupSyntax settingsGroup)
     {
         // Collect the names of the settings that the user already wrote down.
         // They will not be included in the completion list.
@@ -29,13 +32,16 @@ class AnalyzeSettings
             alreadyIncluded));
 
         // Analyze children.
+        var keyValues = new List<SettingKeyValue>();
         foreach (var setting in settingsGroup.Settings)
         {
-            AnalyzeSetting(context, setting);
+            keyValues.Add(AnalyzeSetting(context, setting));
         }
+
+        return new(keyValues);
     }
 
-    static void AnalyzeSetting(SettingsAnalysisContext context, VanillaSettingSyntax setting)
+    static SettingKeyValue AnalyzeSetting(SettingsAnalysisContext context, VanillaSettingSyntax setting)
     {
         bool parentWasValid = context.CurrentObjectChildren is not null;
         context = context.NewWithChild(setting.Name.Text);
@@ -46,17 +52,20 @@ class AnalyzeSettings
 
         bool isMatch = false;
 
+        ISettingValue? value = null;
+
         // Analyze the value.
         switch (setting.Value)
         {
             // Analyze the subsettings.
             case VanillaSettingsGroupSyntax subgroup:
-                AnalyzeGroup(context, subgroup);
+                value = AnalyzeGroup(context, subgroup);
                 isMatch = context.CurrentObject?.Type == EObjectType.Group;
                 break;
 
             // This is probably an option value, or maybe on/off or enabled/disabled.
             case SymbolSettingSyntax symbolSetting:
+                value = new OptionSettingValue(symbolSetting.Symbol.Text);
                 switch (context.CurrentObject?.Type)
                 {
                     // Check for invalid option
@@ -68,6 +77,7 @@ class AnalyzeSettings
 
             // Number value
             case NumberSettingSyntax number:
+                value = new NumberSettingValue(double.Parse(number.Value.Text), number.PercentSign);
                 switch (context.CurrentObject?.Type)
                 {
                     case EObjectType.Int or EObjectType.Range:
@@ -131,6 +141,9 @@ class AnalyzeSettings
                 _ => VanillaCompletion.Clear(hintRange)
             });
         }
+
+        Variant<EObject, string> source = context.CurrentObject?.Name ?? setting.Name.Text;
+        return new(source, value);
     }
 
     record struct SettingsAnalysisContext(ScriptFile Script, EObject? CurrentObject, EObject[] CurrentObjectChildren)

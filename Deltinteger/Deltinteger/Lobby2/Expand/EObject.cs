@@ -32,8 +32,8 @@ public class EObject
     public string CompletionInsertText() => Type switch
     {
         EObjectType.Unknown or EObjectType.Switch => Name,
-        EObjectType.Group => $"{Name} {{\n$0\n}}",
-        EObjectType.Range => $"{Name}: $1%$0",
+        EObjectType.Group => $"{Name} {{\n\t$0\n}}",
+        EObjectType.Range => $"{Name}: ${{1:100}}%$0",
         _ => $"{Name}: "
     };
 

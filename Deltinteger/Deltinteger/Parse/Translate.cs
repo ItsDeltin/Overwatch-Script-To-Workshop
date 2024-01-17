@@ -13,6 +13,7 @@ using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Parse.Vanilla;
 using Deltin.Deltinteger.Model;
 using Deltin.Deltinteger.Parse.Vanilla.Settings;
+using Deltin.Deltinteger.Lobby2.KeyValues;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -43,6 +44,7 @@ namespace Deltin.Deltinteger.Parse
 
         // Vanilla compiling stuff
         readonly Dictionary<VanillaVariableCollection, IAnalyzedVanillaCollection> analyzedVanillaVariables = new();
+        readonly GroupSettingValue workshopSettings = new();
 
         // Project wide items
         readonly List<Var> rulesetVariables = new();
@@ -296,7 +298,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var script in Importer.ScriptFiles)
                 RootElement.Iter(script.Context.RootItems, vanillaSettings: vanillaSettings =>
                 {
-                    AnalyzeSettings.Analyze(script, vanillaSettings);
+                    workshopSettings.Merge(AnalyzeSettings.Analyze(script, vanillaSettings));
                 });
         }
 
@@ -391,6 +393,7 @@ namespace Deltin.Deltinteger.Parse
                 settings.ToWorkshop(result);
                 result.AppendLine();
             }
+            workshopSettings.ToWorkshopTop(result);
 
             // Get the variables.
             VarCollection.ToWorkshop(result);
