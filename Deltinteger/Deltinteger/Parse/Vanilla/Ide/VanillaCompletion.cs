@@ -26,17 +26,22 @@ static class VanillaCompletion
         }
     };
 
-    static readonly IEnumerable<CompletionItem> Actions = ElementRoot.Instance.Actions.Select(action => new CompletionItem()
-    {
-        Label = action.Name,
-        InsertText = $"{action.Name}{GetParametersSnippetInsert(action, 1)};$0",
-        InsertTextFormat = InsertTextFormat.Snippet,
-        Kind = CompletionItemKind.Function,
-        Documentation = FunctionSignature(new(), action)
-    });
-
     static readonly IEnumerable<CompletionItem> Values = ElementRoot.Instance.Values.Select(value => GetValueCompletionItem(value));
     static readonly string[] RuleContentNames = new[] { "event", "conditions", "actions" };
+
+    static CompletionItem GetActionCompletionItem(ElementJsonAction action, bool highlight)
+    {
+        return new()
+        {
+            Label = highlight ? $"★ {action.Name}" : action.Name,
+            SortText = highlight ? $"!{action.Name}" : action.Name,
+            FilterText = action.Name,
+            InsertText = $"{action.Name}{GetParametersSnippetInsert(action, 1)};$0",
+            InsertTextFormat = InsertTextFormat.Snippet,
+            Kind = CompletionItemKind.Function,
+            Documentation = FunctionSignature(new(), action)
+        };
+    }
 
     static CompletionItem GetValueCompletionItem(ElementJsonValue value, bool highlight = false, bool expectingAnotherValue = false)
     {
@@ -63,8 +68,14 @@ static class VanillaCompletion
     }
 
     /// <summary>Creates completion for actions and values.</summary>
-    public static ICompletionRange CreateActionValueCompletion(DocRange range) =>
-        ICompletionRange.New(range, Actions.Concat(Values).Concat(Keywords));
+    public static ICompletionRange CreateStatementCompletion(DocRange range, BalancedActions balancer) =>
+        ICompletionRange.New(range, args =>
+        {
+            var notable = balancer.GetNotableActionsFromPos(args.Pos);
+            return ElementRoot.Instance.Actions
+                .Select(action => GetActionCompletionItem(action, notable.Contains(action.Name)))
+                .Concat(Values).Concat(Keywords);
+        });
 
     /// <summary>Creates completion for values.</summary>
     public static ICompletionRange CreateValueCompletion(DocRange range) =>

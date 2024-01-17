@@ -75,19 +75,25 @@ static class VanillaAnalysis
 
     public static CommentedAnalyzedExpression[] AnalyzeContent(VanillaContext context, VanillaRuleContent syntax)
     {
-        // action value completion
-        context.AddCompletion(VanillaCompletion.CreateActionValueCompletion(syntax.Range));
+        var balancer = new BalancedActions();
+        context = context.AddActionBalancer(balancer);
 
         var analyzedExpressions = new List<CommentedAnalyzedExpression>();
-        foreach (var contentItem in syntax.InnerItems)
+        foreach (var statement in syntax.InnerItems)
         {
-            var comment = WorkshopStringUtility.WorkshopStringFromRawText(contentItem.Comment?.Text);
-            var node = AnalyzeExpression(context, contentItem.Expression);
+            if (statement.Semicolon is not null)
+            {
+                balancer.SetCurrentPosition(statement.Semicolon.Range.End);
+            }
+            var comment = WorkshopStringUtility.WorkshopStringFromRawText(statement.Comment?.Text);
+            var node = AnalyzeExpression(context, statement.Expression);
 
             // Make sure it is the right type.
-
             analyzedExpressions.Add(new(comment, node));
         }
+
+        // action value completion
+        context.AddCompletion(VanillaCompletion.CreateStatementCompletion(syntax.Range, balancer));
 
         return analyzedExpressions.ToArray();
     }

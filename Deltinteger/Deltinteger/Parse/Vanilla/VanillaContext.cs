@@ -8,14 +8,23 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 
 class VanillaContext
 {
-    readonly ScriptFile script;
     public VanillaScope ScopedVariables { get; }
+    public BalancedActions? ActionBalancer { get; init; }
+    readonly ScriptFile script;
     ActiveParameterData activeParameterData;
 
     public VanillaContext(ScriptFile script, VanillaScope scopedVanillaVariables)
     {
         this.script = script;
         ScopedVariables = scopedVanillaVariables;
+    }
+
+    public VanillaContext(VanillaContext other)
+    {
+        ScopedVariables = other.ScopedVariables;
+        ActionBalancer = other.ActionBalancer;
+        script = other.script;
+        activeParameterData = other.activeParameterData;
     }
 
     // Diagnostics
@@ -34,11 +43,14 @@ class VanillaContext
     public WorkshopLanguage[]? LikelyLanguages() => new WorkshopLanguage[0];
 
     // Subcontext
-    public VanillaContext SetActiveParameterData(ActiveParameterData data) => new(script, ScopedVariables)
+    public VanillaContext SetActiveParameterData(ActiveParameterData data) => new(this)
     {
         activeParameterData = data
     };
-
+    public VanillaContext AddActionBalancer(BalancedActions balancer) => new(this)
+    {
+        ActionBalancer = balancer
+    };
     public VanillaContext ClearContext() => SetActiveParameterData(new());
 
     // Utility

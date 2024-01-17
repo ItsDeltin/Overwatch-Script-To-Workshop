@@ -18,7 +18,7 @@ class VanillaTypeData : IElementsJsonTypeSupplier<VanillaType>
     public VanillaType UnknownType { get; } = NewType("unknown");
     public VanillaType VoidType { get; } = NewType("void");
     public VanillaType GlobalType { get; } = NewType("global");
-    public VanillaType AnyType { get; } = NewType("any");
+    public VanillaType AnyType { get; } = NewType("any", "Custom String", "String");
     public VanillaType BooleanType { get; } = NewType("boolean", "True", "False");
     public VanillaType NumberType { get; } = NewType("number");
     public VanillaType StringType { get; } = NewType("string", "Custom String", "String");

@@ -197,6 +197,8 @@ static class VanillaExpressions
                         if (!parameterData.IsInvoked && workshopFunction.Parameters?.Length is not null and > 0)
                             context.Warning($"'{workshopFunction.Name}' requires {workshopFunction.Parameters.Length} parameter values", syntax.Range);
 
+                        // Action balancing!
+                        context.ActionBalancer?.FromFunction(workshopFunction.Name);
                         break;
 
                     case WorkshopItem.Enumerator enumerator:
