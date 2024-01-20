@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Vanilla.Ide;
 using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
@@ -44,6 +45,9 @@ class VanillaVariableAnalysis : IAnalyzedVanillaCollection
 
     public static VanillaVariableAnalysis Analyze(ScriptFile script, VanillaVariableCollection syntax)
     {
+        // Add completion
+        script.AddCompletionRange(VanillaCompletion.CreateKeywords(syntax.Range, "global", "player"));
+
         var vanillaVariables = new List<VanillaVariable>();
         var currentGroup = CurrentGroup.None;
         var didAddNoGroupError = false;
