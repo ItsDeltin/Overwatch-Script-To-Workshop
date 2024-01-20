@@ -150,6 +150,11 @@ class LobbySettings
         // Add template params.
         if (template.Params is not null)
         {
+            // Add keys
+            if (obj.Parameters is not null)
+                foreach (var input in obj.Parameters)
+                    context = context.AddFormat(input.Key, input.Value.ToString());
+
             foreach (var param in template.Params)
             {
                 // Find value in obj
