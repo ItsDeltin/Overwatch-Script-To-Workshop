@@ -83,7 +83,7 @@ static class VanillaAnalysis
         {
             if (statement.Semicolon is not null)
             {
-                balancer.SetCurrentPosition(statement.Semicolon.Range.End);
+                balancer.SetCurrentPosition(statement.Semicolon.Range.Start);
             }
             var comment = WorkshopStringUtility.WorkshopStringFromRawText(statement.Comment?.Text);
             var node = AnalyzeExpression(context, statement.Expression);
