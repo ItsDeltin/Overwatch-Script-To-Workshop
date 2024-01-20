@@ -1,33 +1,33 @@
 {
     "repository": [
         {
-            "name": "Quick Melee",
-            "id": "quick_melee",
-            "type": "boolean_onoff",
-            "default": true
-        },
-        {
-            "name": "Competitive Rules",
-            "id": "competitive_rules",
-            "type": "boolean_onoff"
-        },
-        {
-            "name": "Capture Speed Modifier",
-            "id": "capture_speed_modifier",
-            "type": "range_percentage",
-            "min": 10,
-            "max": 500
-        },
-        {
-            "name": "Payload Speed Modifier",
-            "id": "payload_speed_modifier",
-            "type": "range_percentage",
-            "min": 10,
-            "max": 500
-        },
-        {
             "id": "hero_list",
+            "template": "base_hero",
+            "$projectile": true,
+            "$projectile_gravity": true,
+            "$healer": true,
+            "$ult_duration": true,
             "content": [
+                {
+                    "name": "Ability Cooldown Time",
+                    "type": "range_percentage"
+                },
+                {
+                    "name": "Ultimate Ability",
+                    "type": "boolean_onoff"
+                },
+                {
+                    "name": "Ultimate Generation",
+                    "type": "range_percentage"
+                },
+                {
+                    "name": "Ultimate Generation - Passive",
+                    "type": "range_percentage"
+                },
+                {
+                    "name": "Ultimate Generation - Combat",
+                    "type": "range_percentage"
+                },
                 {
                     "name": "enabled heroes",
                     "insert_heroes": true
@@ -1100,7 +1100,118 @@
     "root": [
         {
             "name": "lobby",
-            "content": []
+            "content": [
+                {
+                    "name": "Map Rotation",
+                    "options": [
+                        "After A Mirror Match",
+                        "After A Game",
+                        "Paused"
+                    ]
+                },
+                {
+                    "name": "Return To Lobby",
+                    "options": [
+                        "After A Mirror Match",
+                        "After A Game",
+                        "Never"
+                    ]
+                },
+                {
+                    "name": "Team Balancing",
+                    "options": [
+                        "Off",
+                        "After A Mirror Match",
+                        "After A Game"
+                    ]
+                },
+                {
+                    "name": "Swap Teams After Match",
+                    "type": "boolean_yesno",
+                    "default": true
+                },
+                {
+                    "name": "Max Team 1 Players",
+                    "type": "range_int",
+                    "min": 0,
+                    "max": 12,
+                    "default": 6
+                },
+                {
+                    "name": "Max Team 2 Players",
+                    "type": "range_int",
+                    "min": 0,
+                    "max": 12,
+                    "default": 6
+                },
+                {
+                    "name": "Max FFA Players",
+                    "type": "range_int",
+                    "min": 0,
+                    "max": 12,
+                    "default": 0
+                },
+                {
+                    "name": "Max Spectators",
+                    "type": "range_int",
+                    "min": 0,
+                    "max": 12,
+                    "default": 2
+                },
+                {
+                    "name": "Allow Players Who Are In Queue",
+                    "type": "boolean_yesno"
+                },
+                {
+                    "name": "Use Experimental Update If Available",
+                    "type": "boolean_yesno"
+                },
+                {
+                    "name": "Match Voice Chat",
+                    "type": "boolean_enableddisabled"
+                },
+                {
+                    "name": "Pause Game On Player Disconnect",
+                    "type": "boolean_yesno"
+                },
+                {
+                    "name": "Data Center Preference",
+                    "options": [
+                        "Best Available",
+                        "Netherlands",
+                        "France",
+                        "China - Hangzhou",
+                        "China - Hangzhou 2",
+                        "South Korea",
+                        "USA - Southwest",
+                        "USA - West",
+                        "Australia 2",
+                        "Australia 3",
+                        "Taiwan",
+                        "Japan",
+                        "Singapore",
+                        "Australia",
+                        "Brazil",
+                        "South Korea 2",
+                        "Germany",
+                        "Ireland",
+                        "USA - East",
+                        "USA - Northwest",
+                        "China - Beijing",
+                        "Argentina",
+                        "Chile",
+                        "Brazil 2",
+                        "Peru",
+                        "USA - Central",
+                        "Bahrain"
+                    ],
+                    "comment": [
+                        "Sources: https://www.reddit.com/r/Overwatch/comments/aipsn7/data_center_switcher/ and https://us.forums.blizzard.com/en/overwatch/t/information-about-the-global-play-server-selection/618941",
+                        "It's better for this list to be too expansive, since porting modes globally with a valid Data Center set can fail if the datacenter is not available in the importer's region.",
+                        "It's not OSTW's problem if the datacenter can't be reached for whatever reason (taken offline, unavailable, invalid name). People shouldn't set Data Center anyways. Best we can do is let it compile/decompile."
+                    ]
+                }
+            ]
         },
         {
             "name": "modes",
@@ -1110,12 +1221,335 @@
                     "name": "All"
                 },
                 {
-                    "template": "base_mode",
                     "name": "Assault",
+                    "template": "base_mode",
                     "$with_maps": "Assault",
                     "$competitive": true,
+                    "$capture_speed": true
+                },
+                {
+                    "name": "Control",
+                    "template": "base_mode",
+                    "$with_maps": "Control",
+                    "$competitive": true,
                     "$capture_speed": true,
-                    "content": []
+                    "$limit_valid_control_points": true,
+                    "$scoring_speed_modifier": true,
+                    "content": [
+                        {
+                            "name": "Score To Win",
+                            "type": "range_percentage",
+                            "min": 1,
+                            "max": 3,
+                            "default": 2
+                        }
+                    ]
+                },
+                {
+                    "name": "Escort",
+                    "$with_maps": "Escort",
+                    "template": "base_mode",
+                    "$competitive": true,
+                    "$payload_speed": true
+                },
+                {
+                    "name": "Hybrid",
+                    "template": "base_mode",
+                    "$with_maps": "Hybrid",
+                    "$competitive": true,
+                    "$capture_speed": true,
+                    "$payload_speed": true
+                },
+                {
+                    "name": "Push",
+                    "template": "base_mode",
+                    "$with_maps": "Push",
+                    "$competitive": true,
+                    "content": [
+                        {
+                            "name": "TS-1 Walk Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "TS-1 Push Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                {
+                    "name": "Flashpoint",
+                    "template": "base_mode",
+                    "$with_maps": "Flashpoint",
+                    "$competitive": true,
+                    "$capture_speed": true,
+                    "$scoring_speed_modifier": true,
+                    "content": [
+                        {
+                            "name": "Control Point A",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point B",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point C",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point D",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point E",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "First Active Control Point",
+                            "options": [
+                                "A",
+                                "B",
+                                "C",
+                                "D",
+                                "E",
+                                "Random"
+                            ]
+                        },
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 10,
+                            "default": 3
+                        }
+                    ]
+                },
+                {
+                    "name": "Capture The Flag",
+                    "template": "base_mode",
+                    "$with_maps": "Capture The Flag",
+                    "content": [
+                        {
+                            "name": "Blitz Flag Locations",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Damage Interrupts Flag Interaction",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Flag Carrier Abilities",
+                            "options": [
+                                "Restricted",
+                                "All",
+                                "None"
+                            ]
+                        },
+                        {
+                            "name": "Flag Dropped Lock Time",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 10,
+                            "default": 5
+                        },
+                        {
+                            "name": "Flag Pickup Time",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 5,
+                            "default": 0
+                        },
+                        {
+                            "name": "Flag Return Time",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 5,
+                            "default": 4
+                        },
+                        {
+                            "name": "Flag Score Respawn Time",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 20,
+                            "default": 15
+                        },
+                        {
+                            "name": "Game Length (Minutes)",
+                            "type": "range_int",
+                            "min": 5,
+                            "max": 15,
+                            "default": 8
+                        },
+                        {
+                            "name": "Respawn Speed Buff Duration",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 60,
+                            "default": 0
+                        },
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 9,
+                            "default": 3
+                        },
+                        {
+                            "name": "Team Needs Flag At Base To Score",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                {
+                    "name": "Deathmatch",
+                    "template": "base_mode",
+                    "$with_maps": "Deathmatch",
+                    "$game_length": true,
+                    "$self_respawn": true,
+                    "content": [
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 5000,
+                            "default": 20
+                        }
+                    ]
+                },
+                {
+                    "name": "Elimination",
+                    "template": "base_mode",
+                    "$with_maps": "Elimination",
+                    "$elimination": true
+                },
+                {
+                    "name": "Team Deathmatch",
+                    "template": "base_mode",
+                    "$with_maps": "Team Deathmatch",
+                    "$game_length": true,
+                    "$self_respawn": true,
+                    "content": [
+                        {
+                            "name": "Mercy Resurrect Counteracts Kills",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 200,
+                            "default": 30
+                        },
+                        {
+                            "name": "Imbalanced Team Score To Win",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Team 1 Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 200,
+                            "default": 30
+                        },
+                        {
+                            "name": "Team 2 Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 200,
+                            "default": 30
+                        }
+                    ]
+                },
+                {
+                    "name": "Skirmish",
+                    "template": "base_mode",
+                    "$with_maps": "Skirmish",
+                    "$limit_valid_control_points": true
+                },
+                {
+                    "name": "Practice Range",
+                    "template": "base_mode",
+                    "$with_maps": "Practice Range",
+                    "content": [
+                        {
+                            "name": "Spawn Training Bots",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Training Bot Respawn Time Scalar",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                {
+                    "name": "Freezethaw Elimination",
+                    "template": "base_mode",
+                    "$with_maps": "Freezethaw Elimination",
+                    "$elimination": true
+                },
+                {
+                    "name": "Bounty Hunter",
+                    "template": "base_mode",
+                    "$with_maps": "Bounty Hunter",
+                    "$game_length": true,
+                    "$self_respawn": true,
+                    "content": [
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 5000,
+                            "default": 20
+                        },
+                        {
+                            "name": "Base Score For Killing A Bounty Target",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 300,
+                            "default": 100
+                        },
+                        {
+                            "name": "Bounty Increase Per Kill As Bounty Target",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 1000,
+                            "default": 0
+                        },
+                        {
+                            "name": "Bounty Target Count",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 1,
+                            "default": 1,
+                            "comment": "what?"
+                        },
+                        {
+                            "name": "Score Per Kill",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 1000,
+                            "default": 100
+                        },
+                        {
+                            "name": "Score Per Kill As Bounty Target",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 1000,
+                            "default": 300
+                        }
+                    ]
                 }
             ]
         },
@@ -1141,7 +1575,58 @@
             "content": [
                 {
                     "name": "Beam Effects",
-                    "type": "switch"
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Beam Sounds",
+                    "type": "switch",
+                    "cost": 1
+                },
+                {
+                    "name": "Buff Status Effects",
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Debuff Status Effects",
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Buff and Debuff Sounds",
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Energy Explosion Effects",
+                    "type": "switch",
+                    "cost": 4
+                },
+                {
+                    "name": "Kinetic Explosion Effects",
+                    "type": "switch",
+                    "cost": 4
+                },
+                {
+                    "name": "Explosion Sounds",
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Play More Effects",
+                    "type": "switch",
+                    "cost": 1
+                },
+                {
+                    "name": "Projectiles",
+                    "type": "switch",
+                    "cost": 4
+                },
+                {
+                    "name": "Spawn More Dummy Bots",
+                    "type": "switch",
+                    "cost": 4
                 }
             ]
         },
@@ -1156,7 +1641,19 @@
                 "ult": {
                     "then": [
                         {
+                            "name": "Ultimate Ability ($value)",
+                            "type": "range_percentage"
+                        },
+                        {
                             "name": "Ultimate Generation ($value)",
+                            "type": "range_percentage"
+                        },
+                        {
+                            "name": "Ultimate Generation - Passive ($value)",
+                            "type": "range_percentage"
+                        },
+                        {
+                            "name": "Ultimate Generation - Combat ($value)",
                             "type": "range_percentage"
                         }
                     ]
@@ -1243,7 +1740,75 @@
                         }
                     ]
                 }
-            }
+            },
+            "content": [
+                {
+                    "name": "Quick Melee",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Spawn With Ultimate Ready",
+                    "type": "boolean_onoff"
+                },
+                {
+                    "name": "Health",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Damage Dealt",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Damage Received",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Healing Received",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Jump Vertical Speed",
+                    "type": "range_percentage",
+                    "min": 25,
+                    "max": 800
+                },
+                {
+                    "name": "Movement Gravity",
+                    "type": "range_percentage",
+                    "min": 25,
+                    "max": 400
+                },
+                {
+                    "name": "Movement Speed",
+                    "type": "range_percentage",
+                    "min": 50,
+                    "max": 300
+                },
+                {
+                    "name": "Receive Headshots Only",
+                    "type": "boolean_onoff"
+                },
+                {
+                    "name": "Primary Fire",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Ammunition Clip Size Scalar",
+                    "type": "range_percentage",
+                    "min": 25,
+                    "max": 500
+                }
+            ]
         },
         "ability": {
             "sibling": true,
@@ -1318,21 +1883,28 @@
                 "competitive": {
                     "then": [
                         {
-                            "ref": "competitive_rules"
+                            "name": "Competitive Rules",
+                            "type": "boolean_onoff"
                         }
                     ]
                 },
                 "capture_speed": {
                     "then": [
                         {
-                            "ref": "capture_speed_modifier"
+                            "name": "Capture Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
                         }
                     ]
                 },
                 "payload_speed": {
                     "then": [
                         {
-                            "ref": "payload_speed_modifier"
+                            "name": "Payload Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
                         }
                     ]
                 },
@@ -1345,6 +1917,130 @@
                         {
                             "name": "disabled maps",
                             "insert_maps": "$value"
+                        }
+                    ]
+                },
+                "limit_valid_control_points": {
+                    "then": [
+                        {
+                            "name": "Limit Valid Control Points",
+                            "options": [
+                                "All",
+                                "First",
+                                "Second",
+                                "Third"
+                            ]
+                        }
+                    ]
+                },
+                "scoring_speed_modifier": {
+                    "then": [
+                        {
+                            "name": "Scoring Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                "game_length": {
+                    "then": [
+                        {
+                            "name": "Game Length In Minutes",
+                            "type": "range_int",
+                            "min": 5,
+                            "max": 15,
+                            "default": 10
+                        }
+                    ]
+                },
+                "self_respawn": {
+                    "then": [
+                        {
+                            "name": "Self Initiated Respawn",
+                            "type": "boolean_onoff",
+                            "default": true
+                        }
+                    ]
+                },
+                "elimination": {
+                    "then": [
+                        {
+                            "name": "Hero Selection Time",
+                            "type": "range_int",
+                            "min": 20,
+                            "max": 60,
+                            "default": 20
+                        },
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 9,
+                            "default": 3
+                        },
+                        {
+                            "name": "Restrict Previously Used Heroes",
+                            "options": [
+                                "Off",
+                                "After Round Won",
+                                "After Round Played"
+                            ]
+                        },
+                        {
+                            "name": "Hero Selection",
+                            "options": [
+                                "Any",
+                                "Limited",
+                                "Random",
+                                "Random (Mirrored)"
+                            ]
+                        },
+                        {
+                            "name": "Limited Choice Pool",
+                            "options": [
+                                "Team Size +2",
+                                "Team Size",
+                                "Team Size +1",
+                                "Team Size +3"
+                            ]
+                        },
+                        {
+                            "name": "Capture Objective Tiebreaker",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Tiebreaker After Match Time Elapsed",
+                            "type": "range_int",
+                            "min": 30,
+                            "max": 300,
+                            "default": 105
+                        },
+                        {
+                            "name": "Time To Capture",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 7,
+                            "default": 3
+                        },
+                        {
+                            "name": "Draw After Match Time Elapsed With No Tiebreaker",
+                            "type": "range_int",
+                            "min": 60,
+                            "max": 300,
+                            "default": 135
+                        },
+                        {
+                            "name": "Reveal Heroes",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Reveal Heroes After Match Time Elapsed",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 180,
+                            "default": 75
                         }
                     ]
                 }

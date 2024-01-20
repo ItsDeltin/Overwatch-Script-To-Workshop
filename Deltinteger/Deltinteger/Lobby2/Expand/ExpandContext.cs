@@ -12,13 +12,13 @@ struct ExpandContext
     public readonly EObject? Parent => parent;
 
     readonly IDictionary<string, Template> templates;
-    readonly IList<EObject> repository;
+    readonly IList<SObject> repository;
     EObject? parent = default;
     FormatLinkedList? format = default;
 
     public ExpandContext(
         IDictionary<string, Template> templates,
-        IList<EObject> repository)
+        IList<SObject> repository)
     {
         this.templates = templates;
         this.repository = repository;
@@ -43,10 +43,12 @@ struct ExpandContext
     public readonly Template? GetTemplate(string? name) =>
         name is null ? null : templates.TryGetValue(name, out var template) ? template : null;
 
-    public readonly bool TryGetRef(string id, [NotNullWhen(true)] out EObject? eObject)
+    public readonly bool TryGetRef(string id, [NotNullWhen(true)] out SObject? eObject)
     {
         return repository.TryGetValue(eObject => eObject.Id == id, out eObject);
     }
+
+    public readonly SObject? GetRef(string? id) => id is null ? null : repository.FirstOrDefault(obj => obj.Id == id);
 
     public readonly string FormatName(string inputName)
     {

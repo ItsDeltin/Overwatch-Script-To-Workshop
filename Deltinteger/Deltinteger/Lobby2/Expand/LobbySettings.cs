@@ -42,14 +42,8 @@ class LobbySettings
     {
         // Collect templates
         var templates = top.Templates ?? new();
-        var repository = new List<EObject>();
+        IList<SObject> repository = top.Repository ?? Array.Empty<SObject>();
         var context = new ExpandContext(templates, repository);
-
-        // Expand repository
-        if (top.Repository is not null)
-        {
-            repository.AddRange(ExpandObjects(context, top.Repository));
-        }
 
         // Get root items
         var root = Array.Empty<EObject>();
@@ -61,8 +55,11 @@ class LobbySettings
         return new(root);
     }
 
-    static IEnumerable<EObject> ExpandObjects(ExpandContext context, IEnumerable<SObject> objects)
+    static IEnumerable<EObject> ExpandObjects(ExpandContext context, IEnumerable<SObject>? objects)
     {
+        if (objects is null)
+            yield break;
+
         foreach (var obj in objects)
         {
             var (expanded, siblings) = ExpandObject(context, obj);
@@ -75,7 +72,7 @@ class LobbySettings
     static (EObject Object, IEnumerable<EObject> Siblings) ExpandObject(ExpandContext context, SObject jsonObject)
     {
         // Find ref object in repository.
-        EObject? refObject = null;
+        SObject? refObject = null;
         if (jsonObject.Ref is not null)
             context.TryGetRef(jsonObject.Ref, out refObject);
 
@@ -87,8 +84,9 @@ class LobbySettings
             // Find name in json object, otherwise look at ref object
             name: context.FormatName(jsonObject.Name ?? refObject?.Name ?? "?"),
             id: jsonObject.Id,
-            type: DetermineType(jsonObject, template, refObject),
-            options: jsonObject.Options);
+            type: DetermineType(context, jsonObject, template),
+            options: jsonObject.Options,
+            def: jsonObject.Default);
 
         context = context.AddFormat("$name", expanded.Name);
 
@@ -97,7 +95,7 @@ class LobbySettings
 
         // Apply template.
         {
-            var addObjects = EvaluateParams(context.SetParent(expanded), jsonObject, template);
+            var addObjects = EvaluateParams(context.SetParent(expanded), jsonObject, refObject, template);
 
             if (template is not null && template.Sibling)
             {
@@ -130,13 +128,13 @@ class LobbySettings
 
         // Copy ref children.
         if (refObject is not null)
-            content = content.Concat(refObject.Children);
+            content = content.Concat(ExpandObjects(context, refObject.Content));
 
         expanded.Children = content.ToArray();
         return (expanded, siblings);
     }
 
-    static IEnumerable<EObject> EvaluateParams(ExpandContext context, SObject obj, Template? template)
+    static IEnumerable<EObject> EvaluateParams(ExpandContext context, SObject obj, SObject? refObject, Template? template)
     {
         // No template, no params.
         if (template is null)
@@ -147,19 +145,26 @@ class LobbySettings
             foreach (var item in ExpandObjects(context, template.Content))
                 yield return item;
 
+        // Collect inputs from object and ref object.
+        IEnumerable<KeyValuePair<string, JToken>> inputs = obj.Parameters ??
+            Enumerable.Empty<KeyValuePair<string, JToken>>();
+
+        if (refObject?.Parameters is not null)
+        {
+            inputs = inputs.Concat(refObject.Parameters);
+        }
+
         // Add template params.
         if (template.Params is not null)
         {
             // Add keys
-            if (obj.Parameters is not null)
-                foreach (var input in obj.Parameters)
-                    context = context.AddFormat(input.Key, input.Value.ToString());
+            foreach (var input in inputs)
+                context = context.AddFormat(input.Key, input.Value.ToString());
 
             foreach (var param in template.Params)
             {
                 // Find value in obj
-                var inputValue = obj.Parameters?
-                    .Cast<KeyValuePair<string, JToken>?>()
+                var inputValue = inputs.Cast<KeyValuePair<string, JToken>?>()
                     .FirstOrDefault(p => p!.Value.Key == $"${param.Key}");
 
                 if (inputValue is null)
@@ -183,7 +188,7 @@ class LobbySettings
         }
     }
 
-    static EObjectType DetermineType(SObject obj, Template? template, EObject? refObject)
+    static EObjectType DetermineType(ExpandContext context, SObject obj, Template? template)
     {
         // Contains content, is a group.
         if (obj.Content is not null && obj.Content.Length > 0)
@@ -198,14 +203,20 @@ class LobbySettings
         if (obj.Options is not null && obj.Options.Length > 0)
             return EObjectType.Option;
 
+        var refObject = context.GetRef(obj.Ref);
+        Template? refTemplate = context.GetTemplate(refObject?.Template);
+
         return (obj.Type ?? template?.BaseType) switch
         {
             "boolean_onoff" => EObjectType.OnOff,
+            "boolean_yesno" => EObjectType.YesNo,
             "boolean_enableddisabled" => EObjectType.EnabledDisabled,
             "range_percentage" => EObjectType.Range,
             "range_int" => EObjectType.Int,
             "switch" => EObjectType.Switch,
-            _ => refObject?.Type ?? EObjectType.Unknown
+            _ => refObject is not null
+                ? DetermineType(context, refObject, refTemplate)
+                : EObjectType.Unknown
         };
     }
 }

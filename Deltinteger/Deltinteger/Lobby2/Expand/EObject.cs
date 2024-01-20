@@ -10,9 +10,10 @@ public class EObject
     public string Id { get; }
     public EObjectType Type { get; }
     public string[] Options { get; }
+    public object? Default { get; }
     public EObject[] Children { get; set; } = Array.Empty<EObject>();
 
-    public EObject(string name, string? id, EObjectType type, string[]? options)
+    public EObject(string name, string? id, EObjectType type, string[]? options, object? def)
     {
         Name = name;
         Id = id ?? name;
@@ -23,9 +24,10 @@ public class EObject
             EObjectType.EnabledDisabled => new[] { "Enabled", "Disabled" },
             _ => Array.Empty<string>()
         };
+        Default = def;
     }
 
-    public EObject(string name, EObjectType type) : this(name, null, type, null) { }
+    public EObject(string name, EObjectType type) : this(name, null, type, null, null) { }
 
     public bool HasContent() => Children.Length > 0;
 
@@ -33,7 +35,11 @@ public class EObject
     {
         EObjectType.Unknown or EObjectType.Switch => Name,
         EObjectType.Group => $"{Name} {{\n\t$0\n}}",
-        EObjectType.Range => $"{Name}: ${{1:100}}%$0",
+        EObjectType.Range => $"{Name}: ${{1:{Default ?? 100}}}%$0",
+        EObjectType.Int => $"{Name}: ${{1:{Default ?? 0}}}$0",
+        EObjectType.OnOff => $"{Name}: ${{1|On,Off|}}$0",
+        EObjectType.YesNo => $"{Name}: ${{1|Yes,No|}}$0",
+        EObjectType.EnabledDisabled => $"{Name}: ${{1|Enabled,Disabled|}}$0",
         _ => $"{Name}: "
     };
 
@@ -47,6 +53,7 @@ public enum EObjectType
     Group,
     Switch,
     OnOff,
+    YesNo,
     EnabledDisabled,
     Range,
     Int,
