@@ -264,7 +264,7 @@ namespace Deltin.Deltinteger.Parse
                 VariableElements elements = VariableResolve.ParseElements(actionSet);
                 gettable = elements.IndexReference;
 
-                target = gettable.GetWorkshopVariablePosition()?.Target ?? elements.Target;
+                target = gettable.GetWorkshopVariablePosition()?.Target ?? elements.Target ?? Element.EventPlayer();
                 start = (Element)InitialResolveValue?.Parse(actionSet) ?? Element.Num(0);
             }
             // New variable being use in for.

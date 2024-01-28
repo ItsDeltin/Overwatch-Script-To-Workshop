@@ -9,9 +9,43 @@ namespace Deltin.Deltinteger.Elements
     public class Element : IWorkshopTree
     {
         public static Element Part(string name, params IWorkshopTree[] parameterValues)
-            => new Element(ElementRoot.Instance.GetFunction(name), parameterValues);
+        {
+            var function = ElementRoot.Instance.GetFunction(name);
+            return new(function, ValidateParameters(function, parameterValues));
+        }
         public static Element Part(ElementBaseJson function, params IWorkshopTree[] parameterValues)
-            => new Element(function, parameterValues);
+            => new(function, ValidateParameters(function, parameterValues));
+
+        /// <summary>Makes sure no parameter values are null.</summary>
+        public static IWorkshopTree[] ValidateParameters(ElementBaseJson function, IWorkshopTree[] values)
+        {
+            int expectedCount = function.Parameters?.Length ?? 0;
+
+            // Make sure the array is large enough.
+            if (values.Length < expectedCount)
+            {
+                var old = values;
+                values = new IWorkshopTree[expectedCount];
+                Array.Copy(old, values, old.Length);
+            }
+
+            // Fill null values
+            if (function.Parameters is not null)
+            {
+                for (int i = 0; i < expectedCount; i++)
+                    if (values[i] is null)
+                        values[i] = function.Parameters[i].GetDefaultValue() ??
+                            throw new Exception("Null argument");
+            }
+
+            // Out of bounds, still keep but make sure none are null.
+            for (int i = expectedCount; i < values.Length; i++)
+                if (values[i] is null)
+                    values[i] = Null();
+
+            return values;
+        }
+
 
         public ElementBaseJson Function { get; }
         public IWorkshopTree[] ParameterValues { get; set; }
@@ -44,17 +78,6 @@ namespace Deltin.Deltinteger.Elements
 
         /// <summary>Gets the index of the last parameter that is not Null. -1 is returned if every parameter is Null.</summary>
         public int IndexOfLastNotNullParameter() => Array.FindLastIndex(ParameterValues, p => p is Element element && element.Function.Name != "Null");
-
-        /// <summary>Makes sure no parameter values are null.</summary>
-        public void AddMissingParameters()
-        {
-            List<IWorkshopTree> parameters = new List<IWorkshopTree>();
-
-            for (int i = 0; (Function.Parameters != null && i < Function.Parameters.Length) || (ParameterValues != null && i < ParameterValues.Length); i++)
-                parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? Function.Parameters[i].GetDefaultValue() ?? throw new Exception("Null argument"));
-
-            ParameterValues = parameters.ToArray();
-        }
 
         public virtual bool EqualTo(IWorkshopTree other)
         {
@@ -96,7 +119,6 @@ namespace Deltin.Deltinteger.Elements
 
         protected void OptimizeChildren()
         {
-            AddMissingParameters();
             for (int i = 0; i < ParameterValues.Length; i++)
                 if (ParameterValues[i] is Element element)
                     ParameterValues[i] = element.Optimized();
@@ -152,8 +174,6 @@ namespace Deltin.Deltinteger.Elements
 
         public virtual int ElementCount()
         {
-            AddMissingParameters();
-
             int count = 1 + Function.AdditionalElementCount;
             int parameterOffset = Function is ElementJsonAction ? -1 : 0;
 
@@ -245,6 +265,10 @@ namespace Deltin.Deltinteger.Elements
         public static Element ForPlayerVariable(Element player, WorkshopVariable variable, Element start, Element end, Element step) => Element.Part("For Player Variable", player, variable, start, end, step);
         public static Element LogToInspector(IWorkshopTree value) => Element.Part("Log To Inspector", value);
         public static Element CustomColor(IWorkshopTree r, IWorkshopTree g, IWorkshopTree b, IWorkshopTree a) => Element.Part("Custom Color", r, g, b, a);
+        public static Element SetGlobalVariable(IWorkshopTree variable, IWorkshopTree value) => Part("Set Global Variable", variable, value);
+        public static Element SetPlayerVariable(IWorkshopTree targetPlayer, IWorkshopTree variable, IWorkshopTree value) => Part("Set Player Variable", targetPlayer, variable, value);
+        public static Element SetGlobalVariableAtIndex(IWorkshopTree variable, IWorkshopTree index, IWorkshopTree value) => Part("Set Global Variable At Index", variable, index, value);
+        public static Element SetPlayerVariableAtIndex(IWorkshopTree targetPlayer, IWorkshopTree variable, IWorkshopTree index, IWorkshopTree value) => Part("Set Player Variable At Index", targetPlayer, variable, index, value);
 
         public static Element Hud(
             IWorkshopTree players = null,

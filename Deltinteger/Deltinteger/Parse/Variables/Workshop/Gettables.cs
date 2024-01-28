@@ -19,16 +19,16 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual IWorkshopTree GetVariable(Element targetPlayer = null)
         {
-            return WorkshopArrayBuilder.GetVariable(targetPlayer, WorkshopVariable, Index);
+            return WorkshopArrayBuilder.GetVariable(targetPlayer ?? Element.EventPlayer(), WorkshopVariable, Index);
         }
 
         public Element Get(Element targetPlayer = null) => (Element)GetVariable(targetPlayer);
 
         public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
-            => WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer, WorkshopVariable, false, ArrayBuilder<Element>.Build(Index, index));
+            => WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer ?? Element.EventPlayer(), WorkshopVariable, false, ArrayBuilder<Element>.Build(Index, index));
 
         public virtual Element[] ModifyVariable(Operation operation, IWorkshopTree value, Element targetPlayer = null, params Element[] index)
-            => WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
+            => WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer ?? Element.EventPlayer(), WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
 
         public void Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, Element[] index)
             => actionSet.AddAction(ModifyVariable(operation, value, target, index));
