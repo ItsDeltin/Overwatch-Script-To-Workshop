@@ -9,7 +9,6 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.LanguageServer.Settings.TomlSettings;
 using Deltin.Deltinteger.LanguageServer.Model;
 using Deltin.Deltinteger;
-using LspSerializer = OmniSharp.Extensions.LanguageServer.Protocol.Serialization.LspSerializer;
 using System.Linq;
 using Deltin.Deltinteger.Decompiler;
 using Deltin.Deltinteger.Parse;
@@ -30,7 +29,7 @@ using Deltin.Deltinteger.Lobby;
 public static partial class OstwJavascript
 {
     static OstwLangServer? langServer;
-    static TaskCompletionSource<bool> langServerStatus = new();
+    static readonly TaskCompletionSource<bool> langServerStatus = new();
     static bool isStartingLanguageServer;
 
     // ~ Imported Javascript functions ~
@@ -39,6 +38,9 @@ public static partial class OstwJavascript
 
     [JSImport("ostwWeb.getWorkshopElements", "main.js")]
     public static partial Task<string> GetWorkshopElements();
+
+    [JSImport("ostwWeb.getLobbySettings", "main.js")]
+    public static partial Task<string> GetLobbySettings();
 
     [JSImport("ostwWeb.setDiagnostics", "main.js")]
     public static partial void SetDiagnostics(string publish);
@@ -159,7 +161,7 @@ public static partial class OstwJavascript
         else
         {
             isStartingLanguageServer = true;
-            LoadData.LoadWith(await GetWorkshopElements());
+            LoadData.LoadWith(await GetWorkshopElements(), await GetLobbySettings());
             HeroSettingCollection.Init();
             ModeSettingCollection.Init();
             langServer = new OstwLangServer(
