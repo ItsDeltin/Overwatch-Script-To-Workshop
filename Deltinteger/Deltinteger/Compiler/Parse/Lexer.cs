@@ -357,6 +357,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return
                 MatchVanillaConstant(_vanillaSymbols.LobbySettings) ||
                 MatchNumber() ||
+                MatchString() ||
                 MatchCSymbol() ||
                 MatchVanillaSymbol();
         }

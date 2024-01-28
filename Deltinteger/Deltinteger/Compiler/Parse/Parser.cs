@@ -2357,8 +2357,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
                         var percentSign = ParseOptional(TokenType.Modulo);
                         settingValue = new NumberSettingSyntax(numberToken, percentSign);
                     }
+                    // String
+                    else if (ParseOptional(TokenType.String, out var stringToken))
+                    {
+                        settingValue = new StringSettingSyntax(stringToken);
+                    }
                     // Error
-                    else AddError("Expected symbol or number");
+                    else AddError("Expected symbol, number, or string");
                 }
                 // Sublist
                 else if (Is(TokenType.CurlyBracket_Open))

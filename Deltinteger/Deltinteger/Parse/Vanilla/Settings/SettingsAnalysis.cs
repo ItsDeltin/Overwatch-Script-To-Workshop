@@ -9,6 +9,7 @@ using Deltin.Deltinteger.Lobby2.Expand;
 using Deltin.Deltinteger.Lobby2.KeyValues;
 using Deltin.Deltinteger.Model;
 using Deltin.Deltinteger.Parse.Vanilla.Ide;
+using Deltin.WorkshopString;
 
 namespace Deltin.Deltinteger.Parse.Vanilla.Settings;
 
@@ -98,6 +99,12 @@ static class AnalyzeSettings
                         isMatch = false;
                         break;
                 };
+                break;
+
+            // String value
+            case StringSettingSyntax str:
+                value = new StringSettingValue(WorkshopStringUtility.WorkshopStringFromRawText(str.Value.Text));
+                isMatch = context.CurrentObject?.Type == EObjectType.String;
                 break;
 
             // No value, setting type must be a switch.

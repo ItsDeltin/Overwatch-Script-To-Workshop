@@ -114,3 +114,13 @@ record OptionSettingValue(string Text) : ISettingValue
         builder.AppendLine($": {Text}");
     }
 }
+
+record StringSettingValue(string Text) : ISettingValue
+{
+    public ISettingValue Merge(ISettingValue Other) => Other;
+
+    public void ToWorkshop(WorkshopBuilder builder)
+    {
+        builder.AppendLine($": \"{Text}\"");
+    }
+}

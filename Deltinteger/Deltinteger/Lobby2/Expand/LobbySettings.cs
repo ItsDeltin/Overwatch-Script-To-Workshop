@@ -214,6 +214,7 @@ class LobbySettings
             "range_percentage" => EObjectType.Range,
             "range_int" => EObjectType.Int,
             "switch" => EObjectType.Switch,
+            "string" => EObjectType.String,
             _ => refObject is not null
                 ? DetermineType(context, refObject, refTemplate)
                 : EObjectType.Unknown

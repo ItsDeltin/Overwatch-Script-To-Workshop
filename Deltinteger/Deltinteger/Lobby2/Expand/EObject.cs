@@ -40,6 +40,7 @@ public class EObject
         EObjectType.OnOff => $"{Name}: ${{1|On,Off|}}$0",
         EObjectType.YesNo => $"{Name}: ${{1|Yes,No|}}$0",
         EObjectType.EnabledDisabled => $"{Name}: ${{1|Enabled,Disabled|}}$0",
+        EObjectType.String => $"{Name}: \"$1\"$0",
         _ => $"{Name}: "
     };
 
@@ -57,5 +58,6 @@ public enum EObjectType
     EnabledDisabled,
     Range,
     Int,
-    Option
+    Option,
+    String
 }

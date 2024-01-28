@@ -138,3 +138,9 @@ record class SymbolSettingSyntax(Token Symbol) : IVanillaSettingValueSyntax
 {
     public DocRange ErrorRange => Symbol;
 }
+
+/// <summary>A string value for a lobby settings.</summary>
+record class StringSettingSyntax(Token Value) : IVanillaSettingValueSyntax
+{
+    public DocRange ErrorRange => Value;
+}

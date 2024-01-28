@@ -1099,6 +1099,19 @@
     ],
     "root": [
         {
+            "name": "main",
+            "content": [
+                {
+                    "name": "Description",
+                    "type": "string"
+                },
+                {
+                    "name": "Mode Name",
+                    "type": "string"
+                }
+            ]
+        },
+        {
             "name": "lobby",
             "content": [
                 {
