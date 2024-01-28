@@ -16,7 +16,8 @@ public interface IGetLinkedVariableAssigner
     /// <summary>
     /// When the LinkedVariableAssigner is already known.
     /// </summary>
-    public static IGetLinkedVariableAssigner From(LinkedVariableAssigner assigner) => new FromValue(assigner);
+    public static IGetLinkedVariableAssigner? From(LinkedVariableAssigner assigner) =>
+        assigner == null ? null : new FromValue(assigner);
 
     record FromValue(LinkedVariableAssigner Assigner) : IGetLinkedVariableAssigner
     {
