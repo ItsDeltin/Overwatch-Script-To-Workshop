@@ -1841,6 +1841,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (Is(TokenType.WorkshopSettings) || Is(TokenType.WorkshopSettingsEn))
             {
                 context.RootItems.Add(new(ParseVanillaLobbySettings()));
+                return;
             }
 
             // Workshop rule
