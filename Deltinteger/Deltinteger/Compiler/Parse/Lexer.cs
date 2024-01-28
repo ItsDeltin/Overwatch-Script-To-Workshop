@@ -280,10 +280,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 MatchActionComment() ||
                 MatchNumber() ||
                 MatchSymbol("..", TokenType.Spread) ||
+                MatchCSymbol() ||
                 MatchSymbol('~', TokenType.Squiggle) ||
                 MatchSymbol("|", TokenType.Pipe) ||
                 MatchSymbol('@', TokenType.At) ||
-                MatchCSymbol() ||
                 MatchKeyword("import", TokenType.Import) ||
                 MatchKeyword("for", TokenType.For) ||
                 MatchKeyword("while", TokenType.While) ||
