@@ -14,4 +14,7 @@ class SettingsSchemaJson
 
     [JsonProperty("templates")]
     public Dictionary<string, Template>? Templates { get; set; }
+
+    [JsonProperty("map_legacy_json")]
+    public MapToOstw[]? MapLegacyJson { get; set; }
 }

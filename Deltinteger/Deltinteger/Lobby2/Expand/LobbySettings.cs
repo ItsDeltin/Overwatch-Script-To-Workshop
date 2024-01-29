@@ -26,15 +26,19 @@ class LobbySettings
         }
         catch (Exception ex)
         {
-            // TODO: handle bad json
+            // TODO: do someting with ex
+            // awkward position due to this being kind of a class initializer
+            Instance = new(Array.Empty<EObject>(), new());
         }
     }
 
     public EObject[] Root { get; }
+    public LegacyMapList MapLegacy { get; }
 
-    LobbySettings(EObject[] root)
+    LobbySettings(EObject[] root, LegacyMapList mapLegacy)
     {
         Root = root;
+        MapLegacy = mapLegacy;
     }
 
     /// <summary>Converts a `SettingsSchemaJson` to a `LobbySettings`</summary>
@@ -52,7 +56,7 @@ class LobbySettings
             root = ExpandObjects(context, top.Root).ToArray();
         }
 
-        return new(root);
+        return new(root, LegacyMapList.FromJson(top.MapLegacyJson));
     }
 
     static IEnumerable<EObject> ExpandObjects(ExpandContext context, IEnumerable<SObject>? objects)

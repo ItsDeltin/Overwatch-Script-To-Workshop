@@ -149,7 +149,7 @@ static class AnalyzeSettings
             });
         }
 
-        Variant<EObject, string> source = context.CurrentObject?.Name ?? setting.Name.Text;
+        Variant<EObject, string> source = Variant.AElseB(context.CurrentObject, setting.Name.Text);
         return new(source, value);
     }
 

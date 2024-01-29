@@ -29,11 +29,6 @@ static class Result
         }
     }
 
-    public static Result<U, E> CastValue<T, E, U>(this Result<T, E> result) where T : U
-    {
-        return result.MapValue(v => (U)v);
-    }
-
     public static Result<IEnumerable<TResult>, E> SelectResult<TSource, TResult, E>(this IEnumerable<TSource> collection, Func<TSource, Result<TResult, E>> selector)
     {
         var items = new List<TResult>();
@@ -45,6 +40,18 @@ static class Result
                 return error;
         }
         return items;
+    }
+
+    public static Result<T, string> Try<T>(Func<T> func)
+    {
+        try
+        {
+            return func();
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
     }
 }
 

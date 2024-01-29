@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Linq;
 
 namespace Deltin.Deltinteger.Lobby2.Expand;
 
@@ -22,6 +23,7 @@ public class EObject
         {
             EObjectType.OnOff => new[] { "On", "Off" },
             EObjectType.EnabledDisabled => new[] { "Enabled", "Disabled" },
+            EObjectType.YesNo => new[] { "Yes", "No" },
             _ => Array.Empty<string>()
         };
         Default = def;
@@ -60,4 +62,25 @@ public enum EObjectType
     Int,
     Option,
     String
+}
+
+/// <summary>Assists in travelling through EObject descendants.</summary>
+readonly struct SettingsTraveller
+{
+    public readonly EObject? CurrentObject;
+    readonly EObject[]? currentChildren;
+
+    private SettingsTraveller(EObject? currentObject, EObject[]? currentChildren)
+    {
+        CurrentObject = currentObject;
+        this.currentChildren = currentChildren;
+    }
+
+    public SettingsTraveller Step(string name)
+    {
+        var next = currentChildren?.FirstOrDefault(c => c.Name == name);
+        return new(next, next?.Children);
+    }
+
+    public static SettingsTraveller Root() => new(null, LobbySettings.Instance?.Root);
 }

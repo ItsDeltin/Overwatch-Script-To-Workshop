@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
 
         // Vanilla compiling stuff
         readonly Dictionary<VanillaVariableCollection, IAnalyzedVanillaCollection> analyzedVanillaVariables = new();
-        readonly GroupSettingValue workshopSettings = new();
+        public GroupSettingValue WorkshopSettings { get; } = new();
 
         // Project wide items
         readonly List<Var> rulesetVariables = new();
@@ -298,7 +298,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var script in Importer.ScriptFiles)
                 RootElement.Iter(script.Context.RootItems, vanillaSettings: vanillaSettings =>
                 {
-                    workshopSettings.Merge(AnalyzeSettings.Analyze(script, vanillaSettings));
+                    WorkshopSettings.Merge(AnalyzeSettings.Analyze(script, vanillaSettings));
                 });
         }
 
@@ -387,13 +387,7 @@ namespace Deltin.Deltinteger.Parse
             LanguageInfo.I18nWarningMessage(result, Language);
 
             // Get the custom game settings.
-            if (Importer.MergedLobbySettings != null)
-            {
-                Ruleset settings = Ruleset.Parse(Importer.MergedLobbySettings);
-                settings.ToWorkshop(result);
-                result.AppendLine();
-            }
-            workshopSettings.ToWorkshopTop(result);
+            WorkshopSettings.ToWorkshopTop(result);
 
             // Get the variables.
             VarCollection.ToWorkshop(result);

@@ -2153,16 +2153,22 @@
             ]
         }
     },
-    "map": [
+    "map_legacy_json": [
         {
-            "from": "heroes.$0.$1",
-            "to": "heroes.$0.General.$1",
-            "if": [
-                {
-                    "param": "$0",
-                    "type_is_not": "content"
-                }
-            ]
+            "from": "Heroes.$0.General",
+            "to": "heroes.$0"
+        },
+        {
+            "from": "Modes",
+            "to": "modes"
+        },
+        {
+            "from": "Description",
+            "to": "main.Description"
+        },
+        {
+            "from": "Mode Name",
+            "to": "main.Mode Name"
         }
     ]
 }

@@ -1,11 +1,12 @@
 #nullable enable
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Lobby2.Expand;
 using Deltin.Deltinteger.Model;
 
 namespace Deltin.Deltinteger.Lobby2.KeyValues;
 
-class SettingKeyValue
+public class SettingKeyValue
 {
     public Variant<EObject, string> Name { get; set; }
     public ISettingValue? Value { get; set; }
@@ -30,14 +31,14 @@ class SettingKeyValue
     }
 }
 
-interface ISettingValue
+public interface ISettingValue
 {
     ISettingValue Merge(ISettingValue other);
 
     void ToWorkshop(WorkshopBuilder builder);
 }
 
-class GroupSettingValue : ISettingValue
+public class GroupSettingValue : ISettingValue
 {
     readonly List<SettingKeyValue> keyValues;
 
@@ -88,10 +89,23 @@ class GroupSettingValue : ISettingValue
     public void Add(SettingKeyValue add)
     {
         int replaceIndex = keyValues.FindIndex(kv => kv.Conflicts(add));
+        // Key being added does not exist.
         if (replaceIndex == -1)
             keyValues.Add(add);
+        // If both settings are groups, merge them.
+        else if (keyValues[replaceIndex].Value is GroupSettingValue thisKeyGroup
+            && add.Value is GroupSettingValue otherKeyGroup)
+        {
+            thisKeyGroup.Merge(otherKeyGroup);
+        }
+        // Replace key
         else
             keyValues[replaceIndex].Value = add.Value;
+    }
+
+    public SettingKeyValue? Get(Variant<EObject, string> name)
+    {
+        return keyValues.FirstOrDefault(kv => kv.Name == name);
     }
 }
 
