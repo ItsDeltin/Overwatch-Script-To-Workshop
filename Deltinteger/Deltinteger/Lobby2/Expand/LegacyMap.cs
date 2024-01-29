@@ -16,15 +16,15 @@ readonly struct LegacyMapList
         this.legacyMaps = legacyMaps;
     }
 
-    public IEnumerable<string>? MatchPath(IEnumerable<string> path)
+    public (LegacyPathResult, IEnumerable<string>?) MatchPath(IEnumerable<string> path)
     {
         foreach (var map in legacyMaps)
         {
             var format = map.Format(path);
-            if (format is not null)
+            if (format.Item1 != LegacyPathResult.NoMatch)
                 return format;
         }
-        return null;
+        return default;
     }
 
     public static LegacyMapList FromJson(MapToOstw[]? legacyMapJsons)
@@ -46,25 +46,36 @@ readonly struct LegacyMapList
     }
 }
 
+enum LegacyPathResult
+{
+    NoMatch,
+    Discard,
+    OverridePath
+}
+
 class LegacyMap
 {
     readonly LegacyMapPath from;
-    readonly LegacyMapPath to;
+    readonly LegacyMapPath? to;
 
-    LegacyMap(LegacyMapPath from, LegacyMapPath to)
+    LegacyMap(LegacyMapPath from, LegacyMapPath? to)
     {
         this.from = from;
         this.to = to;
     }
 
-    public IEnumerable<string>? Format(IEnumerable<string> path)
+    public (LegacyPathResult, IEnumerable<string>?) Format(IEnumerable<string> path)
     {
         var match = from.Match(path);
 
         if (match is not null)
-            return to.Format(match.Value);
-
-        return null;
+        {
+            if (to is null)
+                return (LegacyPathResult.Discard, null);
+            else
+                return (LegacyPathResult.OverridePath, to.Value.Format(match.Value));
+        }
+        return default;
     }
 
     public static LegacyMap? From(MapToOstw jsonMap)
@@ -72,10 +83,9 @@ class LegacyMap
         var from = Compartmentalize(jsonMap.From);
         var to = Compartmentalize(jsonMap.To);
 
-        if (from is not null && to is not null)
-            return new LegacyMap(from.Value, to.Value);
+        if (from is not null)
+            return new LegacyMap(from.Value, to);
         return null;
-
     }
 
     static LegacyMapPath? Compartmentalize(string? input)

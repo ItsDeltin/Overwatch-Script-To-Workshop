@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Deltin.Deltinteger.Lobby2.Expand;
@@ -80,6 +81,16 @@ readonly struct SettingsTraveller
     {
         var next = currentChildren?.FirstOrDefault(c => c.Name == name);
         return new(next, next?.Children);
+    }
+
+    public SettingsTraveller StepRange(IEnumerable<string> path)
+    {
+        var current = this;
+        foreach (var step in path)
+        {
+            current = current.Step(step);
+        }
+        return current;
     }
 
     public static SettingsTraveller Root() => new(null, LobbySettings.Instance?.Root);

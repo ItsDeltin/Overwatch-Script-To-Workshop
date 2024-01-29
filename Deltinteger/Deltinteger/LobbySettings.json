@@ -2159,6 +2159,10 @@
             "to": "heroes.$0"
         },
         {
+            "from": "Modes.$0.Enabled",
+            "to": null
+        },
+        {
             "from": "Modes",
             "to": "modes"
         },
@@ -2169,6 +2173,14 @@
         {
             "from": "Mode Name",
             "to": "main.Mode Name"
+        },
+        {
+            "from": "Extensions",
+            "to": "extensions"
+        },
+        {
+            "from": "Lobby",
+            "to": "lobby"
         }
     ]
 }

@@ -71,7 +71,25 @@ static class ParseLegacySettingsJson
         // Key/value
         else
         {
-            var targetPath = MatchLegacyPath(travelParams.Path) ?? travelParams.Path;
+            var (legacyMapResult, targetPath) = MatchLegacyPath(travelParams.Path);
+            targetPath ??= travelParams.Path;
+
+            // Should be disarded?
+            if (legacyMapResult == LegacyPathResult.Discard)
+                return;
+
+            // Preemptive check for false switches, which should be ignored.
+            if (prop.Value.Type == JTokenType.Boolean)
+            {
+                // linkedSetting is the same as what "keyValue.Name.A" would have been down below.
+                var linkedSetting = SettingsTraveller.Root().StepRange(targetPath).CurrentObject;
+                var setTo = prop.Value.ToObject<bool>();
+
+                if (linkedSetting?.Type is EObjectType.Switch && !setTo)
+                    // This is a switch set to false, ignore it.
+                    return;
+            }
+
             var keyValue = KeyValueFromPath(travelParams.TopGroup!, targetPath.ToArray());
             ISettingValue? value = null;
 
@@ -104,14 +122,14 @@ static class ParseLegacySettingsJson
 
                     break;
 
-                // On/Off, Enabled/Disabled, and Yes/No.
+                // On/Off, Enabled/Disabled, Yes/No, or switches.
                 case JTokenType.Boolean:
                     bool set = prop.Value.ToObject<bool>();
                     if (keyValue.Name.A?.Type is EObjectType.OnOff or EObjectType.EnabledDisabled or EObjectType.YesNo)
                     {
                         value = new OptionSettingValue(keyValue.Name.A.Options[set ? 1 : 0]);
                     }
-                    else
+                    else if (keyValue.Name.A?.Type is not EObjectType.Switch)
                     {
                         // Fallback (not very cool)
                         value = new OptionSettingValue(set ? "On" : "Off");
@@ -123,9 +141,9 @@ static class ParseLegacySettingsJson
         }
     }
 
-    static IEnumerable<string>? MatchLegacyPath(IEnumerable<string> path)
+    static (LegacyPathResult, IEnumerable<string>?) MatchLegacyPath(IEnumerable<string> path)
     {
-        return LobbySettings.Instance?.MapLegacy.MatchPath(path);
+        return LobbySettings.Instance?.MapLegacy.MatchPath(path) ?? default;
     }
 
     static SettingKeyValue KeyValueFromPath(GroupSettingValue topGroup, string[] path)
