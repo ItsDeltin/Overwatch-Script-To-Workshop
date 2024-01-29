@@ -2159,8 +2159,28 @@
             "to": "heroes.$0"
         },
         {
+            "from": "Heroes.$0.Enabled Heroes",
+            "to": "heroes.$0.enabled heroes"
+        },
+        {
+            "from": "Heroes.$0.Disabled Heroes",
+            "to": "heroes.$0.disabled heroes"
+        },
+        {
+            "from": "Heroes",
+            "to": "heroes"
+        },
+        {
             "from": "Modes.$0.Enabled",
             "to": null
+        },
+        {
+            "from": "Modes.$0.Enabled Maps",
+            "to": "modes.$0.enabled maps"
+        },
+        {
+            "from": "Modes.$0.Disabled Maps",
+            "to": "modes.$0.disabled maps"
         },
         {
             "from": "Modes",

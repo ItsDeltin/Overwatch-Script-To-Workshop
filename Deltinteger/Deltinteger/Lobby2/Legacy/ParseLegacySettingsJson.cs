@@ -58,32 +58,44 @@ static class ParseLegacySettingsJson
     {
         // Analyze each property.
         foreach (var prop in obj.Properties())
-            AnalyzeProperty(prop, travelParams.Step(prop.Name));
+            AnalyzeProperty(prop.Value, travelParams.Step(prop.Name));
     }
 
-    static void AnalyzeProperty(JProperty prop, TravelParams travelParams)
+    static void AnalyzeProperty(JToken propValue, TravelParams travelParams)
     {
         // Recursively check objects.
-        if (prop.Value.Type == JTokenType.Object)
+        if (propValue.Type == JTokenType.Object)
         {
-            CheckObject((JObject)prop.Value, travelParams);
+            CheckObject((JObject)propValue, travelParams);
+        }
+        // Array of switches
+        else if (propValue.Type == JTokenType.Array)
+        {
+            foreach (var arrayItem in ((JArray)propValue).Values())
+            {
+                // Get path to switch.
+                var (legacyMapResult, switchPath) = MatchLegacyPath(travelParams.Path.Append(arrayItem.ToString()));
+
+                // Add switch if it is not discarded.
+                if (legacyMapResult != LegacyPathResult.Discard)
+                    KeyValueFromPath(travelParams.TopGroup, switchPath.ToArray());
+            }
         }
         // Key/value
         else
         {
             var (legacyMapResult, targetPath) = MatchLegacyPath(travelParams.Path);
-            targetPath ??= travelParams.Path;
 
             // Should be disarded?
             if (legacyMapResult == LegacyPathResult.Discard)
                 return;
 
             // Preemptive check for false switches, which should be ignored.
-            if (prop.Value.Type == JTokenType.Boolean)
+            if (propValue.Type == JTokenType.Boolean)
             {
                 // linkedSetting is the same as what "keyValue.Name.A" would have been down below.
                 var linkedSetting = SettingsTraveller.Root().StepRange(targetPath).CurrentObject;
-                var setTo = prop.Value.ToObject<bool>();
+                var setTo = propValue.ToObject<bool>();
 
                 if (linkedSetting?.Type is EObjectType.Switch && !setTo)
                     // This is a switch set to false, ignore it.
@@ -94,16 +106,16 @@ static class ParseLegacySettingsJson
             ISettingValue? value = null;
 
             // Get value
-            switch (prop.Value.Type)
+            switch (propValue.Type)
             {
                 // Assume floats are percentage numbers.
                 case JTokenType.Float:
-                    value = new NumberSettingValue(prop.Value.ToObject<double>(), true);
+                    value = new NumberSettingValue(propValue.ToObject<double>(), true);
                     break;
 
                 // Assume integers are percentages if the linked EObject is not known.
                 case JTokenType.Integer:
-                    value = new NumberSettingValue(prop.Value.ToObject<double>(),
+                    value = new NumberSettingValue(propValue.ToObject<double>(),
                         keyValue.Name.A?.Type is null or EObjectType.Range);
                     break;
 
@@ -113,25 +125,27 @@ static class ParseLegacySettingsJson
                     // Is expecting literal string value? (Description and Mode name)
                     if (keyValue.Name.A?.Type is EObjectType.String)
                     {
-                        value = new StringSettingValue(WorkshopStringUtility.WorkshopStringFromRawText(prop.Value.ToString()));
+                        value = new StringSettingValue(WorkshopStringUtility.WorkshopStringFromRawText(propValue.ToString()));
                     }
                     else // Otherwise, this is an option type.
                     {
-                        value = new OptionSettingValue(prop.Value.ToString());
+                        value = new OptionSettingValue(propValue.ToString());
                     }
 
                     break;
 
                 // On/Off, Enabled/Disabled, Yes/No, or switches.
                 case JTokenType.Boolean:
-                    bool set = prop.Value.ToObject<bool>();
+                    bool set = propValue.ToObject<bool>();
+                    // Is the boolean kind known?
                     if (keyValue.Name.A?.Type is EObjectType.OnOff or EObjectType.EnabledDisabled or EObjectType.YesNo)
                     {
                         value = new OptionSettingValue(keyValue.Name.A.Options[set ? 1 : 0]);
                     }
+                    // Do nothing if this is a switch.
                     else if (keyValue.Name.A?.Type is not EObjectType.Switch)
                     {
-                        // Fallback (not very cool)
+                        // Fallback strategy
                         value = new OptionSettingValue(set ? "On" : "Off");
                     }
                     break;
@@ -141,9 +155,11 @@ static class ParseLegacySettingsJson
         }
     }
 
-    static (LegacyPathResult, IEnumerable<string>?) MatchLegacyPath(IEnumerable<string> path)
+    static (LegacyPathResult, IEnumerable<string>) MatchLegacyPath(IEnumerable<string> path)
     {
-        return LobbySettings.Instance?.MapLegacy.MatchPath(path) ?? default;
+        var (result, newPath) = LobbySettings.Instance?.MapLegacy.MatchPath(path) ?? default;
+        newPath ??= path;
+        return (result, newPath);
     }
 
     static SettingKeyValue KeyValueFromPath(GroupSettingValue topGroup, string[] path)
