@@ -2172,7 +2172,8 @@
         },
         {
             "from": "Modes.$0.Enabled",
-            "to": null
+            "to": null,
+            "link_state": "modes.$0"
         },
         {
             "from": "Modes.$0.Enabled Maps",

@@ -10,4 +10,7 @@ class MapToOstw
 
     [JsonProperty("to")]
     public string? To { get; set; }
+
+    [JsonProperty("link_state")]
+    public string? LinkState { get; set; }
 }

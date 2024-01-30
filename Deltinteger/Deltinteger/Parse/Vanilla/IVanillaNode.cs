@@ -580,6 +580,27 @@ static class VanillaExpressions
                 }));
     }
 
+    public static IVanillaNode Not(VanillaContext context, VanillaNotExpression syntax)
+    {
+        var value = VanillaAnalysis.AnalyzeExpression(context.ClearContext(), syntax.Value);
+
+        return IVanillaNode.New(syntax, c => value.GetWorkshopElement(c)
+            .AndThen<IWorkshopTree>(value => Element.Not(value)));
+    }
+
+    public static IVanillaNode Ternary(VanillaContext context, VanillaTernaryExpression syntax)
+    {
+        var lhs = VanillaAnalysis.AnalyzeExpression(context.ClearContext(), syntax.Lhs);
+        var middle = VanillaAnalysis.AnalyzeExpression(context.ClearContext(), syntax.Middle);
+        var rhs = VanillaAnalysis.AnalyzeExpression(context.ClearContext(), syntax.Rhs);
+
+        return IVanillaNode.New(syntax, c =>
+            lhs.GetWorkshopElement(c)
+                .And(middle.GetWorkshopElement(c))
+                .And(rhs.GetWorkshopElement(c))
+                .AndThen<IWorkshopTree>(lmr => Element.TernaryConditional(lmr.a.a, lmr.a.b, lmr.b)));
+    }
+
     public static IVanillaNode Assignment(VanillaContext context, VanillaAssignmentExpression syntax)
     {
         var lhs = VanillaAnalysis.AnalyzeExpression(

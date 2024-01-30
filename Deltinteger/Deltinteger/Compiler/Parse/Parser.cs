@@ -2200,7 +2200,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var expr = _vanillaOperatorStack.GetExpression(() =>
             {
                 TernaryCheck.Push(false);
-                _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+                ParseVanillaOperandToStack();
 
                 while (true)
                 {
@@ -2208,7 +2208,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     if (TryParseBinaryOperator<IVanillaExpression>(out var op, out _))
                     {
                         _vanillaOperatorStack.PushOperator(op);
-                        _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+                        ParseVanillaOperandToStack();
                     }
                     // Array indexer
                     else if (ParseOptional(TokenType.SquareBracket_Open, out var open))
@@ -2234,9 +2234,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return expr;
         }
 
+        void ParseVanillaOperandToStack()
+        {
+            // Check for NOT operator
+            if (ParseOptional(TokenType.Exclamation, out var not))
+            {
+                _vanillaOperatorStack.PushOperator(
+                    CStyleOperator.Not.AsStackOperator<IVanillaExpression>(not)
+                );
+                ParseVanillaOperandToStack();
+            }
+            else
+                _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+        }
+
         IVanillaExpression ParseVanillaExpressionTerm() => CaptureRange(r =>
         {
-            IVanillaExpression expression = null;
+            IVanillaExpression expression;
             // Numbers
             if (IsNumber())
             {
@@ -2263,6 +2277,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Unknown
             else
             {
+                Consume();
                 AddError(new InvalidExpressionTerm(Current));
                 return new MissingVanillaExpression(r.GetRange());
             }

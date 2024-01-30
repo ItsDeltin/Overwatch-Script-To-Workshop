@@ -10,6 +10,7 @@ public class SettingKeyValue
 {
     public Variant<EObject, string> Name { get; set; }
     public ISettingValue? Value { get; set; }
+    public bool Disabled { get; set; }
 
     public SettingKeyValue(Variant<EObject, string> name, ISettingValue? value)
     {
@@ -72,6 +73,9 @@ public class GroupSettingValue : ISettingValue
         builder.Indent();
         foreach (var keyValue in keyValues)
         {
+            if (keyValue.Disabled)
+                builder.AppendKeyword("disabled").Append(" ");
+
             builder.Append(keyValue.Symbol());
             if (keyValue.Value is not null)
             {

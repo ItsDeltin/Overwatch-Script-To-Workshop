@@ -16,12 +16,12 @@ readonly struct LegacyMapList
         this.legacyMaps = legacyMaps;
     }
 
-    public (LegacyPathResult, IEnumerable<string>?) MatchPath(IEnumerable<string> path)
+    public LegacyMapFormat MatchPath(IEnumerable<string> path)
     {
         foreach (var map in legacyMaps)
         {
             var format = map.Format(path);
-            if (format.Item1 != LegacyPathResult.NoMatch)
+            if (format.Result != LegacyPathResult.NoMatch)
                 return format;
         }
         return default;
@@ -57,23 +57,26 @@ class LegacyMap
 {
     readonly LegacyMapPath from;
     readonly LegacyMapPath? to;
+    readonly LegacyMapPath? linkState;
 
-    LegacyMap(LegacyMapPath from, LegacyMapPath? to)
+    LegacyMap(LegacyMapPath from, LegacyMapPath? to, LegacyMapPath? linkState)
     {
         this.from = from;
         this.to = to;
+        this.linkState = linkState;
     }
 
-    public (LegacyPathResult, IEnumerable<string>?) Format(IEnumerable<string> path)
+    public LegacyMapFormat Format(IEnumerable<string> path)
     {
         var match = from.Match(path);
 
         if (match is not null)
         {
+            var link = linkState?.Format(match.Value);
             if (to is null)
-                return (LegacyPathResult.Discard, null);
+                return new(LegacyPathResult.Discard, null, link);
             else
-                return (LegacyPathResult.OverridePath, to.Value.Format(match.Value));
+                return new(LegacyPathResult.OverridePath, to.Value.Format(match.Value), link);
         }
         return default;
     }
@@ -82,9 +85,10 @@ class LegacyMap
     {
         var from = Compartmentalize(jsonMap.From);
         var to = Compartmentalize(jsonMap.To);
+        var linkState = Compartmentalize(jsonMap.LinkState);
 
         if (from is not null)
-            return new LegacyMap(from.Value, to);
+            return new LegacyMap(from.Value, to, linkState);
         return null;
     }
 
@@ -106,6 +110,8 @@ class LegacyMap
         return new(parts);
     }
 }
+
+readonly record struct LegacyMapFormat(LegacyPathResult Result, IEnumerable<string>? NewPath, IEnumerable<string>? LinkState);
 
 /// <summary>Used with both the 'from' and 'to' parameters.</summary>
 readonly record struct LegacyMapPath(IReadOnlyList<LegacyMapPathPart> Parts)

@@ -90,12 +90,34 @@ record class MissingVanillaExpression(DocRange Range) : IVanillaExpression;
 /// <summary>Expressions joined by a binary operator. Includes dot, math, and boolean logic.</summary>
 record class VanillaBinaryOperatorExpression(IVanillaExpression Left, Token Symbol, IVanillaExpression Right) : IVanillaExpression
 {
-    public DocRange Range => Left.Range.Start + Right.Range.End;
+    public DocRange Range => Left.Range + Right.Range;
 }
 
+/// <summary>The boolean NOT operator: !</summary>
+/// <param name="Symbol">The ! symbol</param>
+/// <param name="Value">The value that is being executed with Not.</param>
+record class VanillaNotExpression(Token Symbol, IVanillaExpression Value) : IVanillaExpression
+{
+    public DocRange Range => Symbol.Range + Value.Range;
+}
+
+/// <summary>:? ternary operator syntax.</summary>
+/// <param name="Lhs">The ternary condition.</param>
+/// <param name="Middle">The ternary consequent.</param>
+/// <param name="Rhs">The ternary alternative.</param>
+record class VanillaTernaryExpression(IVanillaExpression Lhs, IVanillaExpression Middle, IVanillaExpression Rhs) : IVanillaExpression
+{
+    public DocRange Range => Lhs.Range + Rhs.Range;
+}
+
+/// <summary>Index operator syntax.</summary>
+/// <param name="Value">The value that is indexed into</param>
+/// <param name="LeftBracket">The '[' symbol</param>
+/// <param name="Index">The index value</param>
+/// <param name="RightBracket">The ']' symbol</param>
 record class VanillaIndexerExpression(IVanillaExpression Value, Token LeftBracket, IVanillaExpression Index, Token? RightBracket) : IVanillaExpression
 {
-    public DocRange Range => Value.Range.Start + (RightBracket?.Range ?? Index.Range).End;
+    public DocRange Range => Value.Range + (RightBracket?.Range ?? Index.Range);
 }
 
 /// <summary>A vanilla expression wrapped in parentheses.</summary>
@@ -109,7 +131,7 @@ record class VanillaStringExpression(Token Token) : IVanillaExpression
 
 record class VanillaAssignmentExpression(IVanillaExpression Lhs, Token AssignmentToken, IVanillaExpression Rhs) : IVanillaExpression
 {
-    public DocRange Range => Lhs.Range.Start + Rhs.Range.End;
+    public DocRange Range => Lhs.Range + Rhs.Range;
 }
 
 /// <summary>Syntax for vanilla settings. Can be used as value or as the top-level settings group.</summary>
@@ -130,7 +152,7 @@ public interface IVanillaSettingValueSyntax
 /// <summary>A number value for a lobby setting.</summary>
 record class NumberSettingSyntax(Token Value, Token? PercentSign) : IVanillaSettingValueSyntax
 {
-    public DocRange ErrorRange => Value.Range.Start + (PercentSign ?? Value).Range.End;
+    public DocRange ErrorRange => Value.Range + (PercentSign ?? Value).Range;
 }
 
 /// <summary>A setting pointing to a setting symbol.</summary>

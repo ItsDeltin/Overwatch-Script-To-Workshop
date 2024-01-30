@@ -74,7 +74,7 @@ static class ParseLegacySettingsJson
             foreach (var arrayItem in ((JArray)propValue).Values())
             {
                 // Get path to switch.
-                var (legacyMapResult, switchPath) = MatchLegacyPath(travelParams.Path.Append(arrayItem.ToString()));
+                var (legacyMapResult, switchPath, _) = MatchLegacyPath(travelParams.Path.Append(arrayItem.ToString()));
 
                 // Add switch if it is not discarded.
                 if (legacyMapResult != LegacyPathResult.Discard)
@@ -84,7 +84,14 @@ static class ParseLegacySettingsJson
         // Key/value
         else
         {
-            var (legacyMapResult, targetPath) = MatchLegacyPath(travelParams.Path);
+            var (legacyMapResult, targetPath, linkState) = MatchLegacyPath(travelParams.Path);
+
+            // If the setting is linked to a path, share the disabled state.
+            if (linkState is not null && propValue.Type == JTokenType.Boolean)
+            {
+                var toggleKeyValue = KeyValueFromPath(travelParams.TopGroup, linkState.ToArray());
+                toggleKeyValue.Disabled = !propValue.ToObject<bool>();
+            }
 
             // Should be disarded?
             if (legacyMapResult == LegacyPathResult.Discard)
@@ -155,11 +162,11 @@ static class ParseLegacySettingsJson
         }
     }
 
-    static (LegacyPathResult, IEnumerable<string>) MatchLegacyPath(IEnumerable<string> path)
+    static (LegacyPathResult Result, IEnumerable<string> Path, IEnumerable<string>? LinkState) MatchLegacyPath(IEnumerable<string> path)
     {
-        var (result, newPath) = LobbySettings.Instance?.MapLegacy.MatchPath(path) ?? default;
+        var (result, newPath, linkState) = LobbySettings.Instance?.MapLegacy.MatchPath(path) ?? default;
         newPath ??= path;
-        return (result, newPath);
+        return (result, newPath, linkState);
     }
 
     static SettingKeyValue KeyValueFromPath(GroupSettingValue topGroup, string[] path)

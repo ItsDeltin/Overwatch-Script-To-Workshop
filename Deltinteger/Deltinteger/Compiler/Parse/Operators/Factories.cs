@@ -28,12 +28,8 @@ class VanillaOperandFactory : IOperandFactory<IVanillaExpression>
         => new VanillaIndexerExpression(array, leftBracket, index, rightBracket);
 
     public IVanillaExpression CreateTernary(IVanillaExpression lhs, IVanillaExpression middle, IVanillaExpression rhs)
-    {
-        throw new System.NotImplementedException();
-    }
+        => new VanillaTernaryExpression(lhs, middle, rhs);
 
     public IVanillaExpression CreateUnaryExpression(OperatorNode op, IVanillaExpression value)
-    {
-        throw new System.NotImplementedException();
-    }
+        => new VanillaNotExpression(op.Token, value);
 }

@@ -205,6 +205,14 @@ static class VanillaAnalysis
             case VanillaBinaryOperatorExpression binary:
                 return VanillaExpressions.Binary(context, binary);
 
+            // Not
+            case VanillaNotExpression not:
+                return VanillaExpressions.Not(context, not);
+
+            // Ternary
+            case VanillaTernaryExpression ternary:
+                return VanillaExpressions.Ternary(context, ternary);
+
             // Assignment
             case VanillaAssignmentExpression assignment:
                 return VanillaExpressions.Assignment(context, assignment);
