@@ -117,7 +117,7 @@ static class VanillaExpressions
             }
             else
             {
-                context.Warning("Unknown workshop symbol", syntax.Range);
+                context.Warning($"Unknown workshop symbol '{name}'", syntax.Range);
             }
         }
 
