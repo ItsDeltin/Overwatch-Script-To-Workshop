@@ -444,6 +444,7 @@ namespace Deltin.Deltinteger.Compiler
             TokenType.WorkshopConstant or
             TokenType.Exclamation or
             TokenType.Number or
+            TokenType.Subtract or
             TokenType.String or
             TokenType.Parentheses_Open => true,
             _ => false,
@@ -591,8 +592,7 @@ namespace Deltin.Deltinteger.Compiler
         WorkshopConditions,
         WorkshopConstant,
         WorkshopSymbol,
-        // Workshop (Lobby Settings)
-        DisabledLobbySetting,
+        DisabledWorkshopItem,
         // Other
         BlockComment,
         LineComment,

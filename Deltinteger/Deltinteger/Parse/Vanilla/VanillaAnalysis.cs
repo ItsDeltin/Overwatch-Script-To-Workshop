@@ -89,7 +89,7 @@ static class VanillaAnalysis
             var node = AnalyzeExpression(context, statement.Expression);
 
             // Make sure it is the right type.
-            analyzedExpressions.Add(new(comment, node));
+            analyzedExpressions.Add(new(comment, statement.Disabled, node));
         }
 
         // action value completion

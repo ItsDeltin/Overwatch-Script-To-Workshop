@@ -31,3 +31,4 @@ public record struct LexPosition(int Index, int Line, int Column)
     public static readonly LexPosition Zero = new();
 }
 
+public record struct MatchError(string Message);

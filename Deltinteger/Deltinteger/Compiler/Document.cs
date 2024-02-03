@@ -40,11 +40,14 @@ public class Document
             lexer.Init(new(Content));
             var parser = new Parser(lexer, ParserSettings, ParseResult?.Syntax);
             var syntax = parser.Parse();
-            ParseResult = new(syntax, lexer.CurrentController.GetCompletedTokenList(), parser.Errors);
+
+            var completedTokenList = lexer.CurrentController.GetCompletedTokenList();
+            ParseResult = new(syntax, completedTokenList, completedTokenList.GetErrors().Concat(parser.Errors));
         }
         catch (Exception ex)
         {
             ErrorReport.Add(ex.ToString());
+            ParseResult = new(new(), new(new()), Array.Empty<IParserError>());
         }
     }
 
@@ -106,4 +109,4 @@ public class Document
 public record DocumentParseResult(
     RootContext Syntax,
     ReadonlyTokenList Tokens,
-    IReadOnlyList<IParserError> ParserErrors);
+    IEnumerable<IParserError> ParserErrors);

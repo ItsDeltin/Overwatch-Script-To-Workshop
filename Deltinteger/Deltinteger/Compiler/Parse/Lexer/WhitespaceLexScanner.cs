@@ -21,6 +21,8 @@ struct WhitespaceLexScanner
         _content = content;
     }
 
+    public readonly char? Next() => ReachedEnd() ? null : _content[_currentPosition.Index];
+
     public readonly bool Next(out char value)
     {
         value = _content.ElementAtOrDefault(_currentPosition.Index);

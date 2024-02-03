@@ -43,13 +43,13 @@ public class LexController
         while (listed.Count <= token)
         {
             var scanAt = GetScanPositionForToken(token);
-            var nextTokens = MatchTokenAtPosition(scanAt, contextKind);
+            var nextTokens = MatchTokensAtPosition(scanAt, contextKind);
 
             // Add tokens
             if (nextTokens is not null)
             {
                 foreach (var add in nextTokens)
-                    listed.Add(add.MatchedToken, add.NewPosition, contextKind);
+                    listed.Add(add.MatchedToken, add.NewPosition, contextKind, add.Error);
             }
             else return null;
         }
@@ -76,7 +76,7 @@ public class LexController
         }
     }
 
-    private Match[]? MatchTokenAtPosition(LexPosition position, LexerContextKind contextKind)
+    private Match[]? MatchTokensAtPosition(LexPosition position, LexerContextKind contextKind)
     {
         var matcher = new LexMatcher(parserSettings, content, vanillaSymbols, contextKind, position);
         return matcher.MatchOne();
@@ -116,7 +116,7 @@ public class LexMatcher
 
         Match[]? matched = _contextKind switch
         {
-            LexerContextKind.Workshop => One(MatchWorkshopContext()),
+            LexerContextKind.Workshop => MatchWorkshopContext(),
             LexerContextKind.LobbySettings => MatchLobbySettingsContext(),
             LexerContextKind.Normal or _ => One(MatchDefault())
         };
@@ -189,15 +189,17 @@ public class LexMatcher
         MatchIdentifier,
         () => MatchString());
 
-    Match? MatchWorkshopContext() => Match(
-        MatchNumber,
-        MatchCSymbol,
-        () => MatchString(),
-        () => MatchVanillaConstant(_vanillaSymbols.ScriptSymbols),
-        () => MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions),
-        () => MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions),
-        () => MatchVanillaKeyword(_vanillaSymbols.Event, TokenType.WorkshopEvent),
-        MatchVanillaSymbol);
+    Match[]? MatchWorkshopContext() =>
+        MatchVanillaConstantWithDisabledMoniker(_vanillaSymbols.ScriptSymbols) ??
+        One(Match(
+            MatchNumber,
+            MatchCSymbol,
+            () => MatchString(),
+            () => MatchVanillaConstant(_vanillaSymbols.ScriptSymbols),
+            () => MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions),
+            () => MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions),
+            () => MatchVanillaKeyword(_vanillaSymbols.Event, TokenType.WorkshopEvent),
+            MatchVanillaSymbol));
 
     Match[]? MatchLobbySettingsContext()
     {
@@ -466,7 +468,7 @@ public class LexMatcher
     Match[]? MatchVanillaConstantWithDisabledMoniker(WorkshopSymbolTrie symbolSet)
     {
         // Match the 'disabled' keyword.
-        var disabled = MatchVanillaKeyword(VanillaInfo.LowercaseDisabled, TokenType.DisabledLobbySetting);
+        var disabled = MatchVanillaKeyword(VanillaInfo.LowercaseDisabled, TokenType.DisabledWorkshopItem);
         if (disabled is null) return null;
 
         // Try to match a workshop setting after the disabled keyword.
@@ -517,11 +519,59 @@ public class LexMatcher
 
     Match? MatchVanillaKeyword(VanillaKeyword keyword, TokenType tokenType) => MatchSymbol(keyword.EnUs, tokenType);
 
+    Match? MatchVanillaDouble()
+    {
+        var scanner = MakeWsLexScanner();
+
+        MatchError? error = null;
+
+        // Negative number
+        bool isNegative = scanner.Next() is '-';
+        if (isNegative)
+            scanner.Advance();
+
+        // First number
+        bool gotIntegerPart = false;
+        while (scanner.Next(out char next) && CharData.NumericalCharacters.Contains(next))
+        {
+            gotIntegerPart = true;
+            scanner.Advance();
+        }
+
+        // Not a number
+        if (!isNegative && !gotIntegerPart)
+        {
+            return null;
+        }
+        // Float
+        else if (scanner.Next() is '.')
+        {
+            scanner.Advance(); // consume '.'
+            bool gotFractionalPart = false;
+            while (scanner.Next(out char next) && CharData.NumericalCharacters.Contains(next))
+            {
+                gotFractionalPart = true;
+                scanner.Advance();
+            }
+
+            if (!gotFractionalPart)
+            {
+                error = new("Number is missing decimal");
+            }
+        }
+        // - with no number.
+        else if (isNegative && !gotIntegerPart)
+        {
+            error = new("Number is missing integer");
+        }
+
+        return GetMatch(scanner, TokenType.Number, error);
+    }
+
     /// <summary>The current character is unknown.</summary>
     Match Unknown()
     {
         LexScanner scanner = MakeScanner();
-        // var token = new Token(Content[Index].ToString(), new DocRange(new DocPos(Line, Column), new DocPos(Line, Column + 1)), TokenType.Unknown);
         scanner.Advance();
         return GetMatch(scanner, TokenType.Unknown);
     }
@@ -550,12 +600,13 @@ public class LexMatcher
         return new(token, scanner.Position);
     }
     static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType) => new(scanner.AsToken(tokenType), scanner.CurrentPosition());
+    static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType, MatchError? error) => new(scanner.AsToken(tokenType), scanner.CurrentPosition(), error);
     static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType, IReadOnlySet<LanguageLinkedWorkshopItem> workshopItems) => new(
         scanner.AsToken(tokenType, workshopItems),
         scanner.CurrentPosition());
 }
 
-public record struct Match(Token MatchedToken, LexPosition NewPosition)
+public record struct Match(Token MatchedToken, LexPosition NewPosition, MatchError? Error = null)
 {
     public void JumpTo(LexPosition position)
     {

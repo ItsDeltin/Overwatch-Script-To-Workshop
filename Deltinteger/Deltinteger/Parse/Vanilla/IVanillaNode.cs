@@ -105,9 +105,12 @@ static class VanillaExpressions
     public static IVanillaNode Symbol(VanillaContext context, VanillaSymbolExpression syntax)
     {
         string name = syntax.Token.Text;
+        bool doNotError = false;
 
         void UnknownSymbol()
         {
+            doNotError = true;
+
             // For better diagnostics, search the context for the variable.
             var variableInScope = context.ScopedVariables.GetScopedVariableOfAnyType(name);
             if (variableInScope.HasValue)
@@ -142,6 +145,7 @@ static class VanillaExpressions
             // Warn if not found
             if (declaredVariable is null)
             {
+                doNotError = true;
                 context.Warning($"There is no {GlobalOrPlayerString(isGlobalVarExpected)} variable named '{name}'", syntax.Range);
             }
         }
@@ -154,6 +158,7 @@ static class VanillaExpressions
             // Warn if not found
             if (subroutine is null)
             {
+                doNotError = true;
                 context.Warning($"There is no subroutine named '{name}'", syntax.Range);
             }
         }
@@ -221,7 +226,8 @@ static class VanillaExpressions
                 PointingToVariable = declaredVariable,
                 IsVariable = isVariable,
                 IsGlobalSymbol = isGlobalSymbol,
-                StringFunctionType = stringFunctionType
+                StringFunctionType = stringFunctionType,
+                DoNotError = doNotError
             },
             getWorkshopElement: c =>
             {
@@ -557,7 +563,8 @@ static class VanillaExpressions
 
         return IVanillaNode.New(syntax, new(
             IsVariable: right.GetSymbolInformation().IsVariable,
-            Indexer: indexer
+            Indexer: indexer,
+            DoNotError: ShouldErrorDependents(left, right)
         ), c => left.GetWorkshopElement(c)
                 .AndThen(a => right.GetWorkshopElement(indexer is null ? c : c.SetCurrentObject(a)).MapValue(b => (a, b)))
                 .AndThen<IWorkshopTree>(ab => syntax.Symbol.Text switch
@@ -610,7 +617,7 @@ static class VanillaExpressions
 
         var indexer = lhs.GetSymbolInformation().Indexer;
 
-        if (indexer is null)
+        if (indexer is null && !lhs.GetSymbolInformation().DoNotError)
         {
             context.Warning("Left hand side of assignment should be a variable", syntax.Lhs.Range);
         }
@@ -641,5 +648,10 @@ static class VanillaExpressions
                     return setElements[0];
                 })
         });
+    }
+
+    static bool ShouldErrorDependents(params IVanillaNode[] dependents)
+    {
+        return dependents.Any(d => d.GetSymbolInformation().DoNotError);
     }
 }

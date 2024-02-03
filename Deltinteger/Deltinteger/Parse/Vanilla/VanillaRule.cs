@@ -131,16 +131,19 @@ enum VanillaRuleContentType
 /// </summary>
 readonly record struct CommentedAnalyzedExpression(
     string? Comment,
+    bool Disabled,
     IVanillaNode Expression
 )
 {
     public readonly Result<Element, string> AsAction(VanillaWorkshopConverter converter)
     {
         string? comment = Comment;
+        bool disabled = Disabled;
         return Expression.GetWorkshopElement(converter).MapValue(value =>
         {
             var asElement = (Element)value;
             asElement.Comment = comment;
+            asElement.Disabled = disabled;
             return asElement;
         });
     }

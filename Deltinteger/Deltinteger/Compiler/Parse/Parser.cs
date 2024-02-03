@@ -2189,12 +2189,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Open);
 
             List<CommentedVanillaExpression> items = new();
-            while (Kind.IsWorkshopExpression() || Is(TokenType.Semicolon))
+            while (Kind.IsWorkshopExpression() || Is(TokenType.Semicolon) || Is(TokenType.DisabledWorkshopItem))
             {
                 var comment = ParseOptional(TokenType.String);
+                var disabled = ParseOptional(TokenType.DisabledWorkshopItem);
                 var expression = ParseVanillaExpression();
                 var semicolon = ParseExpected(TokenType.Semicolon);
-                items.Add(new(comment, expression, semicolon));
+                items.Add(new(comment, disabled, expression, semicolon));
             }
 
             ParseExpected(TokenType.CurlyBracket_Close);
@@ -2356,9 +2357,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             var settings = new List<VanillaSettingSyntax>();
 
-            while (Is(TokenType.WorkshopSymbol) || Is(TokenType.WorkshopConstant) || Is(TokenType.DisabledLobbySetting))
+            while (Is(TokenType.WorkshopSymbol) || Is(TokenType.WorkshopConstant) || Is(TokenType.DisabledWorkshopItem))
             {
-                var disabled = ParseOptional(TokenType.DisabledLobbySetting);
+                var disabled = ParseOptional(TokenType.DisabledWorkshopItem);
                 var settingToken = Consume();
 
                 // Extensions will not have a value.
