@@ -121,7 +121,7 @@ class LobbySettings
             var modeName = context.FormatName(jsonObject.InsertMaps);
             content = content.Concat(LobbyMap.AllMaps
                 .Where(map => map.GameModes.Contains(modeName))
-                .Select(map => new EObject(map.Name, EObjectType.Switch)));
+                .Select(map => new EObject(map.GetWorkshopName(), EObjectType.Switch)));
         }
 
         // Insert heroes

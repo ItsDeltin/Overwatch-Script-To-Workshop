@@ -6542,23 +6542,23 @@
           "alias": "OngoingPlayer"
         },
         {
-          "name": "Player earned elimination",
+          "name": "Player Earned Elimination",
           "alias": "OnElimination"
         },
         {
-          "name": "Player dealt final blow",
+          "name": "Player Dealt Final Blow",
           "alias": "OnFinalBlow"
         },
         {
-          "name": "Player dealt damage",
+          "name": "Player Dealt Damage",
           "alias": "OnDamageDealt"
         },
         {
-          "name": "Player took damage",
+          "name": "Player Took Damage",
           "alias": "OnDamageTaken"
         },
         {
-          "name": "Player died",
+          "name": "Player Died",
           "alias": "OnDeath"
         },
         {
