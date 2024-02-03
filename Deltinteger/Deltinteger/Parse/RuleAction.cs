@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = ruleContext.Name;
             Disabled = ruleContext.Disabled != null;
-            DocRange ruleInfoRange = ruleContext.RuleToken.Range;
+            DocRange ruleInfoRange = ruleContext.RuleToken?.Range;
 
             GetRuleSettings(parseInfo, scope, ruleContext);
 
@@ -64,8 +64,11 @@ namespace Deltin.Deltinteger.Parse
             if (ruleContext.Order != null)
                 Priority = ruleContext.Order.Value;
 
-            ElementCountLens = new ElementCountCodeLens(ruleInfoRange);
-            parseInfo.Script.AddCodeLensRange(ElementCountLens);
+            if (ruleInfoRange is not null)
+            {
+                ElementCountLens = new ElementCountCodeLens(ruleInfoRange);
+                parseInfo.Script.AddCodeLensRange(ElementCountLens);
+            }
         }
 
         private void GetRuleSettings(ParseInfo parseInfo, Scope scope, RuleContext ruleContext)
@@ -134,14 +137,14 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private static T GetMember<T>(string groupName, string name, FileDiagnostics diagnostics, DocRange range) where T: Enum
+        private static T GetMember<T>(string groupName, string name, FileDiagnostics diagnostics, DocRange range) where T : Enum
         {
             var elementEnum = ElementRoot.Instance.GetEnum(groupName);
 
             foreach (var m in elementEnum.Members)
                 if (name == m.CodeName())
                     return m.ToEnum<T>();
-                
+
             diagnostics.Error("Invalid " + groupName + " value.", range);
             return default(T);
         }
@@ -166,11 +169,12 @@ namespace Deltin.Deltinteger.Parse
         private static readonly CompletionItem[] TeamItems = GetItems(ElementRoot.Instance.GetEnum("Team"));
         private static readonly CompletionItem[] PlayerItems = GetItems(ElementRoot.Instance.GetEnum("Player"));
 
-        private static CompletionItem[] GetItems(ElementEnum elementEnum) => elementEnum.Members.Select(m => new CompletionItem() {
-                Label = m.CodeName(),
-                Detail = m.CodeName(),
-                Kind = CompletionItemKind.Constant
-            }).ToArray();
+        private static CompletionItem[] GetItems(ElementEnum elementEnum) => elementEnum.Members.Select(m => new CompletionItem()
+        {
+            Label = m.CodeName(),
+            Detail = m.CodeName(),
+            Kind = CompletionItemKind.Constant
+        }).ToArray();
     }
 
     public class ConditionAction
