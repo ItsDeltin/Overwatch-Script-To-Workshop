@@ -62,5 +62,5 @@ public class LexScanner
     public bool AtIdentifierChar() => !ReachedEnd && CharData.IdentifierCharacters.Contains(_content[_position.Index]);
     public bool AtWhitespace() => !ReachedEnd && CharData.WhitespaceCharacters.Contains(_content[_position.Index]);
     public bool AtNumeric() => !ReachedEnd && CharData.NumericalCharacters.Contains(_content[_position.Index]);
-    public Token AsToken(TokenType tokenType) => new Token(_captured.ToString(), new DocRange(_startPos, new DocPos(_position.Index, _position.Column)), tokenType);
+    public Token AsToken(TokenType tokenType) => new Token(_captured.ToString(), new DocRange(_startPos, new DocPos(_position.Line, _position.Column)), tokenType);
 }

@@ -1839,7 +1839,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (Is(TokenType.WorkshopVariables) || Is(TokenType.WorkshopVariablesEn) ||
                 Is(TokenType.WorkshopSubroutines) || Is(TokenType.WorkshopSubroutinesEn))
             {
-                context.RootItems.Add(Lexer.InVanillaWorkshopContext(() => new RootElement(ParseVanillaVariableCollection())));
+                context.RootItems.Add(new(ParseVanillaVariableCollection()));
                 return;
             }
 
@@ -2316,29 +2316,32 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 TokenType.WorkshopSubroutinesEn,
                 TokenType.WorkshopSubroutines
             );
-            ParseExpected(TokenType.CurlyBracket_Open);
-
-            var items = new List<GroupOrName>();
-            while (true)
+            return Lexer.InVanillaWorkshopContext(() =>
             {
-                // New group
-                if (ParseOptional(TokenType.WorkshopSymbol, out var groupToken))
-                {
-                    ParseExpected(TokenType.Colon);
-                    items.Add(new(new VariableGroup(groupToken)));
-                }
-                // Assigned variable in current group
-                else if (ParseOptional(TokenType.Number, out var varId))
-                {
-                    ParseExpected(TokenType.Colon);
-                    var name = ParseExpected(TokenType.WorkshopSymbol, TokenType.WorkshopConstant);
-                    items.Add(new(new VariableName(varId, name)));
-                }
-                else break;
-            }
+                ParseExpected(TokenType.CurlyBracket_Open);
 
-            ParseExpected(TokenType.CurlyBracket_Close);
-            return new VanillaVariableCollection(openingToken, r.GetRange(), items);
+                var items = new List<GroupOrName>();
+                while (true)
+                {
+                    // New group
+                    if (ParseOptional(TokenType.WorkshopSymbol, out var groupToken))
+                    {
+                        ParseExpected(TokenType.Colon);
+                        items.Add(new(new VariableGroup(groupToken)));
+                    }
+                    // Assigned variable in current group
+                    else if (ParseOptional(TokenType.Number, out var varId))
+                    {
+                        ParseExpected(TokenType.Colon);
+                        var name = ParseExpected(TokenType.WorkshopSymbol, TokenType.WorkshopConstant);
+                        items.Add(new(new VariableName(varId, name)));
+                    }
+                    else break;
+                }
+
+                ParseExpected(TokenType.CurlyBracket_Close);
+                return new VanillaVariableCollection(openingToken, r.GetRange(), items);
+            });
         });
 
         VanillaSettingsGroupSyntax ParseVanillaLobbySettings()

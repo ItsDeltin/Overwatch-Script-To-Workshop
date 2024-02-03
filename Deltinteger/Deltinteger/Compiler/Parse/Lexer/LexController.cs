@@ -542,15 +542,15 @@ public class LexMatcher
 
     LexPosition NextWhitespace(LexPosition from) => Skip(MakeScanner(from));
 
-    Match GetMatch(LexScanner scanner, TokenType tokenType) => new(scanner.AsToken(tokenType), scanner.Position);
-    Match GetMatch(LexScanner scanner, TokenType tokenType, TokenFlags flags)
+    static Match GetMatch(LexScanner scanner, TokenType tokenType) => new(scanner.AsToken(tokenType), scanner.Position);
+    static Match GetMatch(LexScanner scanner, TokenType tokenType, TokenFlags flags)
     {
         var token = scanner.AsToken(tokenType);
         token.Flags = flags;
         return new(token, scanner.Position);
     }
-    Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType) => new(scanner.AsToken(tokenType), scanner.CurrentPosition());
-    Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType, IReadOnlySet<LanguageLinkedWorkshopItem> workshopItems) => new(
+    static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType) => new(scanner.AsToken(tokenType), scanner.CurrentPosition());
+    static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType, IReadOnlySet<LanguageLinkedWorkshopItem> workshopItems) => new(
         scanner.AsToken(tokenType, workshopItems),
         scanner.CurrentPosition());
 }
