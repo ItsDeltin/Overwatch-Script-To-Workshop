@@ -217,6 +217,10 @@ static class VanillaAnalysis
             case VanillaAssignmentExpression assignment:
                 return VanillaExpressions.Assignment(context, assignment);
 
+            // "All Teams", "Team 1", and "Team 2"
+            case VanillaTeamSugarExpression teamSugar:
+                return VanillaExpressions.TeamSugar(context, teamSugar);
+
             // The parser will add an error if the value is missing, nothing needs to happen here.
             case MissingVanillaExpression:
                 break;

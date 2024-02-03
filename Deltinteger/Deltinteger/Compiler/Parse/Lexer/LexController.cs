@@ -199,6 +199,9 @@ public class LexMatcher
             () => MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions),
             () => MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions),
             () => MatchVanillaKeyword(_vanillaSymbols.Event, TokenType.WorkshopEvent),
+            () => MatchVanillaKeyword(_vanillaSymbols.AllTeams, TokenType.AllTeams),
+            () => MatchVanillaKeyword(_vanillaSymbols.Team1, TokenType.Team1),
+            () => MatchVanillaKeyword(_vanillaSymbols.Team2, TokenType.Team2),
             MatchVanillaSymbol));
 
     Match[]? MatchLobbySettingsContext()

@@ -16,7 +16,10 @@ public readonly record struct VanillaSymbols(
     VanillaKeyword Event,
     VanillaKeyword Variables,
     VanillaKeyword Subroutines,
-    VanillaKeyword Settings
+    VanillaKeyword Settings,
+    VanillaKeyword AllTeams,
+    VanillaKeyword Team1,
+    VanillaKeyword Team2
 )
 {
     public static readonly VanillaSymbols Instance = Load();
@@ -57,7 +60,10 @@ public readonly record struct VanillaSymbols(
             Event: VanillaKeyword.EnKwForTesting("event"),
             Variables: VanillaKeyword.EnKwForTesting("variables"),
             Subroutines: VanillaKeyword.EnKwForTesting("subroutines"),
-            Settings: VanillaKeyword.EnKwForTesting("settings"));
+            Settings: VanillaKeyword.EnKwForTesting("settings"),
+            AllTeams: VanillaKeyword.EnKwForTesting("All Teams"),
+            Team1: VanillaKeyword.EnKwForTesting("Team 1"),
+            Team2: VanillaKeyword.EnKwForTesting("Team 2"));
     }
 
     static IEnumerable<EObject> IterAllWorkshopSettings(IEnumerable<EObject> settings)

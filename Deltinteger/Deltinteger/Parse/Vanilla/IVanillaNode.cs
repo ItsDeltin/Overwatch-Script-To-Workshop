@@ -650,6 +650,16 @@ static class VanillaExpressions
         });
     }
 
+    public static IVanillaNode TeamSugar(VanillaContext _, VanillaTeamSugarExpression syntax)
+    {
+        return IVanillaNode.New(syntax, c => Element.Part("Team", syntax.Token.TokenType switch
+        {
+            TokenType.Team1 => ElementRoot.Instance.GetEnumValue("Team", "Team 1"),
+            TokenType.Team2 => ElementRoot.Instance.GetEnumValue("Team", "Team 2"),
+            TokenType.AllTeams or _ => ElementRoot.Instance.GetEnumValue("Team", "All")
+        }));
+    }
+
     static bool ShouldErrorDependents(params IVanillaNode[] dependents)
     {
         return dependents.Any(d => d.GetSymbolInformation().DoNotError);

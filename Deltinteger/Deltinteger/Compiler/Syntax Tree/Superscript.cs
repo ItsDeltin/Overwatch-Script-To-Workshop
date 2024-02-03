@@ -134,6 +134,12 @@ record class VanillaAssignmentExpression(IVanillaExpression Lhs, Token Assignmen
     public DocRange Range => Lhs.Range + Rhs.Range;
 }
 
+/// <summary>The "All Teams", "Team 1", and "Team 2" symbols not encapsulated in "Team()".</summary>
+record class VanillaTeamSugarExpression(Token Token) : IVanillaExpression
+{
+    public DocRange Range => Token;
+}
+
 /// <summary>Syntax for vanilla settings. Can be used as value or as the top-level settings group.</summary>
 public record class VanillaSettingsGroupSyntax(DocRange Range, Token OpeningBracket, VanillaSettingSyntax[] Settings) : IVanillaSettingValueSyntax
 {

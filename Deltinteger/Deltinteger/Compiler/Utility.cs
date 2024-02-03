@@ -446,7 +446,10 @@ namespace Deltin.Deltinteger.Compiler
             TokenType.Number or
             TokenType.Subtract or
             TokenType.String or
-            TokenType.Parentheses_Open => true,
+            TokenType.Parentheses_Open or
+            TokenType.AllTeams or
+            TokenType.Team1 or
+            TokenType.Team2 => true,
             _ => false,
         };
 
@@ -593,6 +596,9 @@ namespace Deltin.Deltinteger.Compiler
         WorkshopConstant,
         WorkshopSymbol,
         DisabledWorkshopItem,
+        AllTeams,
+        Team1,
+        Team2,
         // Other
         BlockComment,
         LineComment,

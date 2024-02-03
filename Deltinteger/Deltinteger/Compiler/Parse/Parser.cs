@@ -2281,6 +2281,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 var rightParentheses = ParseExpected(TokenType.Parentheses_Close);
                 expression = new ParenthesizedVanillaExpression(r.GetRange(), innerExpression);
             }
+            // Team sugar
+            else if (Is(TokenType.AllTeams) || Is(TokenType.Team1) || Is(TokenType.Team2))
+            {
+                expression = new VanillaTeamSugarExpression(Consume());
+            }
             // Unknown
             else
             {
