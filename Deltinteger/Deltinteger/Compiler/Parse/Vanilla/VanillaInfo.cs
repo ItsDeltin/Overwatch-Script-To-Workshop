@@ -1,4 +1,5 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 
@@ -6,8 +7,8 @@ namespace Deltin.Deltinteger.Compiler.Parse.Vanilla;
 
 static class VanillaInfo
 {
-    public static readonly char[] StructureCharacters = new char[] {
-        '{', '}', ';', '"', '(', ')', '[', ']', '=', '+', '-', '/', '*', '^', '.', ',', ':', '?', '\r', '\n', '<', '>'
+    public static readonly HashSet<char> StructureCharacters = new HashSet<char> {
+        '{', '}', ';', '"', '(', ')', '[', ']', '=', '+', '-', '/', '*', '^', '.', ',', ':', '?', '\r', '\n', '<', '>', '!', '&', '|'
     };
 
     public static readonly VanillaKeyword GlobalNamespace = VanillaKeyword.EnKwForTesting("Global");
