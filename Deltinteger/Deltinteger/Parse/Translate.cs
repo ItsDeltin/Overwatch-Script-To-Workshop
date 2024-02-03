@@ -44,6 +44,7 @@ namespace Deltin.Deltinteger.Parse
 
         // Vanilla compiling stuff
         readonly Dictionary<VanillaVariableCollection, IAnalyzedVanillaCollection> analyzedVanillaVariables = new();
+        readonly DefaultVariableReport defaultVanillaVariables = new();
         public GroupSettingValue WorkshopSettings { get; } = new();
 
         // Project wide items
@@ -211,7 +212,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
-                var scopedVanillaVariables = new VanillaScope();
+                var scopedVanillaVariables = new VanillaScope(defaultVanillaVariables);
                 RootElement.Iter(script.Context.RootItems,
                     declaration: declaration =>
                     {
@@ -272,7 +273,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
-                var scopedVanillaVariables = new VanillaScope();
+                var scopedVanillaVariables = new VanillaScope(defaultVanillaVariables);
                 RootElement.Iter(script.Context.RootItems,
                     // ostw
                     rule: rule =>
@@ -327,6 +328,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 vanillaVariables.AssignWorkshopVariables(WorkshopConverter.LinkableVanillaVariables, VarCollection, SubroutineCollection);
             }
+            defaultVanillaVariables.Assign(VarCollection, WorkshopConverter.LinkableVanillaVariables);
 
             // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
