@@ -60,6 +60,21 @@ static class VanillaCompletion
         };
     }
 
+    static CompletionItem[] GetTeamSugarCompletions(bool highlight, bool expectingAnotherValue) => new CompletionItem[] {
+        GetTeamSugarCompletion("All Teams", highlight, expectingAnotherValue),
+        GetTeamSugarCompletion("Team 1", highlight, expectingAnotherValue),
+        GetTeamSugarCompletion("Team 2", highlight, expectingAnotherValue),
+    };
+
+    static CompletionItem GetTeamSugarCompletion(string name, bool highlight, bool expectingAnotherValue) => new()
+    {
+        Label = highlight ? $"★ {name}" : name,
+        SortText = highlight ? $"!!{name}" : name,
+        FilterText = name,
+        InsertText = expectingAnotherValue ? $"{name}, " : name,
+        Kind = CompletionItemKind.Constant
+    };
+
     static string GetParametersSnippetInsert(ElementBaseJson function, int ci)
     {
         if (function.Name == "String" || function.Name == "Custom String")
@@ -181,7 +196,8 @@ static class VanillaCompletion
         ICompletionRange.New(range,
             ElementRoot.Instance.Values.Select(value =>
                 GetValueCompletionItem(value, notableValues.Contains(value.Name), expectingAnotherValue)
-                ).Concat(Keywords));
+            ).Concat(GetTeamSugarCompletions(highlight: notableValues.Contains("Team"), expectingAnotherValue))
+            .Concat(Keywords));
 
     /// <summary>Creates completion for the Event, Team, and Player rule options.</summary>
     public static ICompletionRange CreateEventCompletion(DocRange range, VanillaKeyword[] items) => ICompletionRange.New(
