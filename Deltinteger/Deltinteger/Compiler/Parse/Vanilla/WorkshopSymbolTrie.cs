@@ -17,6 +17,11 @@ public class WorkshopSymbolTrie
 
     public void AddSymbol(string value, WorkshopLanguage language, WorkshopItem item)
     {
+        AddSymbolInternal(value.ToLower(), language, item);
+    }
+
+    void AddSymbolInternal(string value, WorkshopLanguage language, WorkshopItem item)
+    {
         languages.Add(language);
 
         if (string.IsNullOrEmpty(value))
@@ -25,7 +30,7 @@ public class WorkshopSymbolTrie
         }
         else
         {
-            GetOrAddPath(value[0]).AddSymbol(value[1..], language, item);
+            GetOrAddPath(value[0]).AddSymbolInternal(value[1..], language, item);
         }
     }
 

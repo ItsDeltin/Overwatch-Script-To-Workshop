@@ -487,7 +487,7 @@ public class LexMatcher
 
         var symbolTraveller = symbolSet.Travel();
         // Feed incoming characters into the symbol traveller
-        while (scanner.Next(out char current) && symbolTraveller.Next(current))
+        while (scanner.Next(out char current) && symbolTraveller.Next(char.ToLower(current)))
             scanner.Advance();
 
         // Do not create a workshop symbol in the middle of a word,
