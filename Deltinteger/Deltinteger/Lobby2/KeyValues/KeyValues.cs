@@ -12,10 +12,11 @@ public class SettingKeyValue
     public ISettingValue? Value { get; set; }
     public bool Disabled { get; set; }
 
-    public SettingKeyValue(Variant<EObject, string> name, ISettingValue? value)
+    public SettingKeyValue(Variant<EObject, string> name, ISettingValue? value, bool disabled = false)
     {
         Name = name;
         Value = value;
+        Disabled = disabled;
     }
 
     public string Symbol() => Name.Match(eObject => eObject.Name, name => name);

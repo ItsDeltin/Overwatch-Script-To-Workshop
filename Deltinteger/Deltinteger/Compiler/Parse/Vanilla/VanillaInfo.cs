@@ -18,6 +18,7 @@ static class VanillaInfo
     public static readonly VanillaKeyword Off = VanillaKeyword.EnKwForTesting("Off");
     public static readonly VanillaKeyword Enabled = VanillaKeyword.EnKwForTesting("Enabled");
     public static readonly VanillaKeyword Disabled = VanillaKeyword.EnKwForTesting("Disabled");
+    public static readonly VanillaKeyword LowercaseDisabled = VanillaKeyword.EnKwForTesting("disabled");
 
     public static readonly VanillaKeyword[] Event = GetConstantKeyword("Event");
     public static readonly VanillaKeyword[] Team = GetConstantKeyword("Team");

@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
     public class ScriptFile
     {
         public Uri Uri => Document.Uri;
-        public RootContext Context => Document.Syntax;
+        public RootContext Context => Document.ParseResult.Syntax;
         public FileDiagnostics Diagnostics { get; }
         public Document Document { get; }
         public ScriptElements Elements { get; } = new ScriptElements();
@@ -39,8 +39,8 @@ namespace Deltin.Deltinteger.Parse
         {
         }
 
-        public Token NextToken(Token token) => Document.Lexer.Tokens[Document.Lexer.Tokens.IndexOf(token) + 1];
-        public bool IsTokenLast(Token token) => Document.Lexer.Tokens.Count - 1 == Document.Lexer.Tokens.IndexOf(token);
+        public Token NextToken(Token token) => Document.ParseResult.Tokens.NextToken(token);
+        public bool IsTokenLast(Token token) => Document.ParseResult.Tokens.IsTokenLast(token);
 
         public Location GetLocation(DocRange range) => new Location(Uri, range);
 

@@ -141,7 +141,7 @@ public record class VanillaSettingsGroupSyntax(DocRange Range, Token OpeningBrac
 }
 
 /// <summary>A workshop lobby setting.</summary>
-public record class VanillaSettingSyntax(Token Name, Token? Colon, Token? TokenAfterColon, IVanillaSettingValueSyntax? Value);
+public record class VanillaSettingSyntax(Token? Disabled, Token Name, Token? Colon, Token? TokenAfterColon, IVanillaSettingValueSyntax? Value);
 
 /// <summary>The value of a 'VanillaSettingSyntax'.</summary>
 public interface IVanillaSettingValueSyntax

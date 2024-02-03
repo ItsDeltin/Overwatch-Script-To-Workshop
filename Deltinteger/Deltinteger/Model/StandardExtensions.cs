@@ -8,6 +8,9 @@ namespace Deltin.Deltinteger.Model;
 
 static class StandardExtensions
 {
+    /// <summary>
+    /// Creates an enumerable with the index.
+    /// </summary>
     public static IEnumerable<KeyValuePair<T, int>> WithIndex<T>(this IEnumerable<T> enumerable) =>
         enumerable.Select((item, i) => new KeyValuePair<T, int>(item, i));
 
@@ -24,4 +27,15 @@ static class StandardExtensions
         value = default;
         return false;
     }
+
+    public static T? Or<T>(this T? maybe, T? otherwise)
+    {
+        return maybe is not null ? maybe : otherwise;
+    }
+
+    public static T Unwrap<T>(this T? nullable, string message) where T : struct =>
+        nullable ?? throw new Exception(message);
+
+    public static T Unwrap<T>(this T? nullable, string message) where T : class =>
+        nullable ?? throw new Exception(message);
 }

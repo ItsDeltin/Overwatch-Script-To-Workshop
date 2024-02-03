@@ -90,6 +90,9 @@ export async function startLanguageServer() {
 		documentSelector: [selector],
 		synchronize: {
 			configurationSection: 'ostw'
+		},
+		connectionOptions: {
+			maxRestartCount: 0
 		}
 	};
 
@@ -143,6 +146,11 @@ function clientReady() {
 	client.onNotification("elementCount", (count: string) => {
 		setElementCount(count);
 	});
+	
+	// On server error
+	client.onNotification("serverError", (message: string) => {
+		window.showErrorMessage("ostw server error: " + message);
+	}); 
 
 	// Check version.
 	// client.onNotification("version", gotVersion);

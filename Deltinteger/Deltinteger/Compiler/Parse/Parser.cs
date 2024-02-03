@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler.Parse.Operators;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Compiler.Parse.Lexing;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
     public class Parser
     {
-        public Lexer Lexer { get; }
-        public int Token { get; private set; }
-        public Token Current => Lexer.ScanTokenAt(Token);
-        public Token CurrentOrLast => Lexer.ScanTokenAt(Token) ?? Lexer.Tokens.Last();
-        public Token Previous => Lexer.ScanTokenAt(Token - 1);
-        public TokenType Kind => Current?.TokenType ?? TokenType.EOF;
-        public bool IsFinished => Lexer.IsFinished(Token) || Kind == TokenType.EOF;
+        Lexer Lexer { get; }
+        int Token { get; set; }
+        Token Current => Lexer.ScanTokenAt(Token);
+        Token CurrentOrLast => Lexer.ScanTokenAt(Token) ?? Lexer.GetLastToken();
+        Token Previous => Lexer.ScanTokenAt(Token - 1);
+        TokenType Kind => Current?.TokenType ?? TokenType.EOF;
+        bool IsFinished => Kind == TokenType.EOF;
 
         public Stack<TokenCapture> TokenCaptureStack { get; } = new Stack<TokenCapture>();
         public Stack<int> TokenRangeStart { get; } = new Stack<int>();
@@ -40,9 +41,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         Token Consume()
         {
-            if (!Lexer.IsFinished(Token))
+            if (!IsFinished)
             {
                 Token++;
+
+                if (LookaheadDepth == 0)
+                    Lexer.ProgressTo(Token);
+
                 return Lexer.ScanTokenAt(Token - 1);
             }
             return null;
@@ -236,7 +241,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
-        Token TokenAtOrEnd(int position) => Lexer.ScanTokenAt(position) ?? Lexer.Tokens.Last();
+        Token TokenAtOrEnd(int position) => Lexer.ScanTokenAt(position) ?? Lexer.GetLastToken();
 
         /// <summary>If the current token's type is equal to the specified type in the 'type' parameter,
         /// advance then return true. Otherwise, error then return false.</summary>
@@ -1769,28 +1774,29 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             while (ParseExpected(TokenType.CurlyBracket_Close))
             {
-                if (Lexer.ScanTokenAt(Token, _ => Lexer.CurrentController.MatchString(true, single)))
-                {
-                    Lexer.CurrentController.PostMatch();
-                    // } {
-                    if (ParseOptional(TokenType.InterpolatedStringMiddle, out Token middle))
-                    {
-                        parts.Add(new InterpolatedStringPart(interpolatedValue, middle));
-                        interpolatedValue = GetContainExpression();
-                    }
-                    // }"
-                    else if (ParseOptional(TokenType.InterpolatedStringHead, out Token head) || ParseOptional(TokenType.String, out head))
-                    {
-                        parts.Add(new InterpolatedStringPart(interpolatedValue, head));
-                        break;
-                    }
-                    else throw new Exception("Resulting match should either be InterpolatedStringMiddle or InterpolatedStringHead.");
-                }
-                else
-                {
-                    AddError(new InterpolationMissingTerminator(tail.Range));
-                    break;
-                }
+#warning fix this!!
+                // if (Lexer.ScanTokenAt(Token, _ => Lexer.CurrentController.MatchString(true, single)))
+                // {
+                //     Lexer.CurrentController.PostMatch();
+                //     // } {
+                //     if (ParseOptional(TokenType.InterpolatedStringMiddle, out Token middle))
+                //     {
+                //         parts.Add(new InterpolatedStringPart(interpolatedValue, middle));
+                //         interpolatedValue = GetContainExpression();
+                //     }
+                //     // }"
+                //     else if (ParseOptional(TokenType.InterpolatedStringHead, out Token head) || ParseOptional(TokenType.String, out head))
+                //     {
+                //         parts.Add(new InterpolatedStringPart(interpolatedValue, head));
+                //         break;
+                //     }
+                //     else throw new Exception("Resulting match should either be InterpolatedStringMiddle or InterpolatedStringHead.");
+                // }
+                // else
+                // {
+                //     AddError(new InterpolationMissingTerminator(tail.Range));
+                //     break;
+                // }
             }
 
             return EndNode(new InterpolatedStringExpression(tail, parts));
@@ -2335,11 +2341,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new VanillaVariableCollection(openingToken, r.GetRange(), items);
         });
 
-        VanillaSettingsGroupSyntax ParseVanillaLobbySettings() => Lexer.InSettingsContext(() =>
+        VanillaSettingsGroupSyntax ParseVanillaLobbySettings()
         {
             ParseExpected(TokenType.WorkshopSettings, TokenType.WorkshopSettingsEn);
-            return ParseListOfSettings();
-        });
+            return Lexer.InSettingsContext(ParseListOfSettings);
+        }
 
         VanillaSettingsGroupSyntax ParseListOfSettings() => CaptureRange(r =>
         {
@@ -2347,8 +2353,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             var settings = new List<VanillaSettingSyntax>();
 
-            while (Is(TokenType.WorkshopSymbol) || Is(TokenType.WorkshopConstant))
+            while (Is(TokenType.WorkshopSymbol) || Is(TokenType.WorkshopConstant) || Is(TokenType.DisabledLobbySetting))
             {
+                var disabled = ParseOptional(TokenType.DisabledLobbySetting);
                 var settingToken = Consume();
 
                 // Extensions will not have a value.
@@ -2386,7 +2393,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     settingValue = ParseListOfSettings();
                 }
 
-                settings.Add(new(settingToken, colon, tokenAfterColon, settingValue));
+                settings.Add(new(disabled, settingToken, colon, tokenAfterColon, settingValue));
             }
 
             ParseExpected(TokenType.CurlyBracket_Close);

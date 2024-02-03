@@ -44,6 +44,7 @@ static class AnalyzeSettings
 
     static SettingKeyValue AnalyzeSetting(SettingsAnalysisContext context, VanillaSettingSyntax setting)
     {
+        // The 'parentWasValid' flag is used to trim down unneeded errors because the problem is elsewhere.
         bool parentWasValid = context.CurrentObjectChildren is not null;
         context = context.NewWithChild(setting.Name.Text);
 
@@ -150,7 +151,7 @@ static class AnalyzeSettings
         }
 
         Variant<EObject, string> source = Variant.AElseB(context.CurrentObject, setting.Name.Text);
-        return new(source, value);
+        return new(source, value, setting.Disabled);
     }
 
     record struct SettingsAnalysisContext(ScriptFile Script, EObject? CurrentObject, EObject[] CurrentObjectChildren)
