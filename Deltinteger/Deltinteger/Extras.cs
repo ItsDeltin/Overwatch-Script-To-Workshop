@@ -241,6 +241,11 @@ namespace Deltin.Deltinteger
             return this;
         }
         public MarkupBuilder Indent() => Add("    ");
+        public MarkupBuilder If(bool condition, Action<MarkupBuilder> modify)
+        {
+            if (condition) modify(this);
+            return this;
+        }
 
         public override string ToString() => noMarkup.ToString();
         public string ToString(bool markup) => markup ? result.ToString() : noMarkup.ToString();

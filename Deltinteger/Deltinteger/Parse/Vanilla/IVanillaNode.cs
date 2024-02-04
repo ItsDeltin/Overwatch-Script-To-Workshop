@@ -58,7 +58,8 @@ record struct NodeSymbolInformation(
     Indexer? Indexer = default,
     bool IsGlobalSymbol = false,
     StringFunctionType StringFunctionType = default,
-    string? StringLiteralValue = null);
+    string? StringLiteralValue = null,
+    bool IsAction = false);
 
 record Indexer(IVanillaNode? Player, VanillaVariable Variable, IVanillaNode? Index);
 
@@ -131,6 +132,7 @@ static class VanillaExpressions
         bool isVariable = false;
         bool isGlobalSymbol = false;
         StringFunctionType stringFunctionType = default;
+        bool isAction = false;
 
         var parameterData = context.GetActiveParameterData();
         // User declared variable
@@ -140,13 +142,25 @@ static class VanillaExpressions
             bool isGlobalVarExpected = parameterData.ExpectingVariable == ExpectingVariable.Global;
 
             // Find variable with name
-            declaredVariable = context.ScopedVariables.GetScopedVariable(name, isGlobalVarExpected);
+            var (Variable, IsImplicit) = context.ScopedVariables.GetScopedVariable(name, isGlobalVarExpected);
+            declaredVariable = Variable;
 
             // Warn if not found
             if (declaredVariable is null)
             {
                 doNotError = true;
                 context.Warning($"There is no {GlobalOrPlayerString(isGlobalVarExpected)} variable named '{name}'", syntax.Range);
+            }
+            else
+            {
+                // Add link and hover information
+                context.AddHover(syntax.Range, new MarkupBuilder().StartCodeLine()
+                    .Add("variables {")
+                    .NewLine().Indent().Add(GlobalOrPlayerString(declaredVariable.Value.IsGlobal) + ":")
+                    .If(IsImplicit, m => m.NewLine().Indent().Indent().Add("// implicit default variable"))
+                    .NewLine().Indent().Indent().Add($"{declaredVariable.Value.Id}: {declaredVariable.Value.Name}")
+                    .NewLine().Add("}")
+                    .EndCodeLine());
             }
         }
         // Subroutine
@@ -204,6 +218,9 @@ static class VanillaExpressions
 
                         // Action balancing!
                         context.ActionBalancer?.FromFunction(workshopFunction.Name);
+
+                        // Is this an action?
+                        isAction = workshopFunction is ElementJsonAction;
                         break;
 
                     case WorkshopItem.Enumerator enumerator:
@@ -227,7 +244,8 @@ static class VanillaExpressions
                 IsVariable = isVariable,
                 IsGlobalSymbol = isGlobalSymbol,
                 StringFunctionType = stringFunctionType,
-                DoNotError = doNotError
+                DoNotError = doNotError,
+                IsAction = isAction
             },
             getWorkshopElement: c =>
             {
@@ -401,7 +419,9 @@ static class VanillaExpressions
             ));
         }
 
-        return IVanillaNode.New(syntax, c =>
+        return IVanillaNode.New(syntax, new(
+            IsAction: symbolInformation.IsAction
+        ), c =>
         {
             return arguments.SelectResult(arg => arg.GetWorkshopElement(c)).AndThen<IWorkshopTree>(args =>
                 symbolInformation.WorkshopFunction switch
@@ -417,8 +437,6 @@ static class VanillaExpressions
         var elementParams = element?.Parameters;
         if (elementParams is null) return;
 
-        string elementName = element!.Name;
-
         for (int i = 0; i <= syntax.Arguments.Count; i++)
         {
             VanillaInvokeParameter? arg = i < syntax.Arguments.Count ? syntax.Arguments[i] : null;
@@ -431,7 +449,7 @@ static class VanillaExpressions
             if (i < elementParams.Length && end is not null)
             {
                 var range = start + end;
-                bool expectingAnotherValue = i < elementParams.Length - 1;
+                bool expectingAnotherValue = i < elementParams.Length - 1 && i == syntax.Arguments.Count - 1;
 
                 // Add special completion for constants
                 if (ElementRoot.Instance.TryGetEnum(elementParams[i].Type, out var constantsGroup))
@@ -451,7 +469,7 @@ static class VanillaExpressions
                         range, context.ScopedVariables, isGlobal, expectingAnotherValue));
                 }
                 // Subroutines
-                else if (DoesParameterNeedSubroutine(element, i))
+                else if (DoesParameterNeedSubroutine(element!, i))
                 {
                     context.AddCompletion(VanillaCompletion.GetSubroutineCompletion(range, context.ScopedVariables, expectingAnotherValue));
                 }
@@ -620,7 +638,7 @@ static class VanillaExpressions
             context.Warning("Left hand side of assignment should be a variable", syntax.Lhs.Range);
         }
 
-        return IVanillaNode.New(syntax, c => indexer switch
+        return IVanillaNode.New(syntax, new(IsAction: true), c => indexer switch
         {
             null => "Attempted to compile assignment with missing indexer",
             _ => Result.Maybe(indexer.Player?.GetWorkshopElement(c))
@@ -648,13 +666,20 @@ static class VanillaExpressions
         });
     }
 
-    public static IVanillaNode TeamSugar(VanillaContext _, VanillaTeamSugarExpression syntax)
+    public static IVanillaNode TeamSugar(VanillaContext context, VanillaTeamSugarExpression syntax)
     {
+        context.AddHover(syntax.Range, syntax.Token.TokenType switch
+        {
+            TokenType.Team1 => Team1Hover,
+            TokenType.Team2 => Team2Hover,
+            _ => AllTeamsHover
+        });
+
         return IVanillaNode.New(syntax, c => Element.Part("Team", syntax.Token.TokenType switch
         {
-            TokenType.Team1 => ElementRoot.Instance.GetEnumValue("Team", "Team 1"),
-            TokenType.Team2 => ElementRoot.Instance.GetEnumValue("Team", "Team 2"),
-            TokenType.AllTeams or _ => ElementRoot.Instance.GetEnumValue("Team", "All")
+            TokenType.Team1 => ElementRoot.Instance.GetEnumValueFromWorkshop("Team", "Team 1"),
+            TokenType.Team2 => ElementRoot.Instance.GetEnumValueFromWorkshop("Team", "Team 2"),
+            TokenType.AllTeams or _ => ElementRoot.Instance.GetEnumValueFromWorkshop("Team", "All")
         }));
     }
 
@@ -662,4 +687,8 @@ static class VanillaExpressions
     {
         return dependents.Any(d => d.GetSymbolInformation().DoNotError);
     }
+
+    static readonly MarkupBuilder AllTeamsHover = new MarkupBuilder().Add("Shorthand for ").Code("Team(All)");
+    static readonly MarkupBuilder Team1Hover = new MarkupBuilder().Add("Shorthand for ").Code("Team(Team 1)");
+    static readonly MarkupBuilder Team2Hover = new MarkupBuilder().Add("Shorthand for ").Code("Team(Team 2)");
 }

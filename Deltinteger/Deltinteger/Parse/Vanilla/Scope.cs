@@ -61,7 +61,7 @@ public class VanillaScope
     public void AddScopedVariable(VanillaVariable variable) => scopedVariables.Add(variable);
 
     /// <summary>Gets a by its name and collection type.</summary>
-    public VanillaVariable? GetScopedVariable(string name, bool isGlobal)
+    public (VanillaVariable? Variable, bool IsImplicit) GetScopedVariable(string name, bool isGlobal)
     {
         var result = scopedVariables.Cast<VanillaVariable?>().FirstOrDefault(var => var is not null && var.Value.Name == name && var.Value.IsGlobal == isGlobal);
 
@@ -74,10 +74,11 @@ public class VanillaScope
             {
                 result = new VanillaVariable(defaultIndex, name, isGlobal);
                 report.Notify(result.Value);
+                return (result, true);
             }
         }
 
-        return result;
+        return (result, false);
     }
 
     /// <summary>Gets a variable with a matching name of any type.</summary>

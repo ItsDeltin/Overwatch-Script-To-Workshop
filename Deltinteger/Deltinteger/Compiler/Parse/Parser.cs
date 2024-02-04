@@ -133,7 +133,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool GetIncrementalNode<T>(out T node)
         {
             // If the last syntax tree was not provided or the current token is inside the change range, return null.
-            if (_last == null || (Token >= Lexer.IncrementalChangeStart && Token <= Lexer.IncrementalChangeEnd))
+            if (_last?.NodeCaptures == null || (Token >= Lexer.IncrementalChangeStart && Token <= Lexer.IncrementalChangeEnd))
             {
                 node = default(T);
                 return false;
@@ -2303,11 +2303,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     Token previousComma = null;
                     do
                     {
-                        if (Is(TokenType.Parentheses_Close))
+                        if (Is(TokenType.Parentheses_Close) || Is(TokenType.Comma))
                         {
                             AddError(new InvalidExpressionTerm(Current));
                             arguments.Add(new(previousComma, new MissingVanillaExpression(Current)));
-                            break;
+
+                            if (Is(TokenType.Parentheses_Close))
+                                break;
                         }
                         else
                             arguments.Add(new(previousComma, ParseVanillaExpression()));

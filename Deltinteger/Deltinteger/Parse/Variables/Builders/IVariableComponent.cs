@@ -355,7 +355,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
                 string targetName = Extras.RemoveQuotes(target.Target.Text);
 
                 // Is the vanilla variable in scope?
-                if (parseInfo.ScopedVanillaVariables.GetScopedVariable(targetName, _isGlobal) is null)
+                if (parseInfo.ScopedVanillaVariables.GetScopedVariable(targetName, _isGlobal).Variable is null)
                 {
                     parseInfo.Error($"No {VanillaHelper.GlobalOrPlayerString(_isGlobal)} workshop variable named '{targetName}' is in the current scope", target.Target);
                 }

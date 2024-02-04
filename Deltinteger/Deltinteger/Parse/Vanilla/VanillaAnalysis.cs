@@ -51,14 +51,14 @@ static class VanillaAnalysis
                 case TokenType.WorkshopConditions:
                     content.Add(new(new AnalyzedRuleContent(
                         VanillaRuleContentType.Conditions,
-                        AnalyzeContent(context, contentGroup))));
+                        AnalyzeContent(context, contentGroup, RuleContentType.Conditions))));
                     break;
 
                 // Rule actions
                 case TokenType.WorkshopActions:
                     content.Add(new(new AnalyzedRuleContent(
                         VanillaRuleContentType.Actions,
-                        AnalyzeContent(context, contentGroup))));
+                        AnalyzeContent(context, contentGroup, RuleContentType.Actions))));
                     break;
 
                 // Unknown category
@@ -66,14 +66,21 @@ static class VanillaAnalysis
                     context.Error($"Unknown rule category '{contentGroup.GroupToken.Text}'", contentGroup.GroupToken.Range);
                     content.Add(new(new AnalyzedRuleContent(
                         VanillaRuleContentType.Unknown,
-                        AnalyzeContent(context, contentGroup))));
+                        AnalyzeContent(context, contentGroup, RuleContentType.Unknown))));
                     break;
             }
         }
         return new VanillaRuleAnalysis(disabled, name, content.ToArray());
     }
 
-    public static CommentedAnalyzedExpression[] AnalyzeContent(VanillaContext context, VanillaRuleContent syntax)
+    enum RuleContentType
+    {
+        Unknown,
+        Conditions,
+        Actions
+    }
+
+    static CommentedAnalyzedExpression[] AnalyzeContent(VanillaContext context, VanillaRuleContent syntax, RuleContentType contentType)
     {
         var balancer = new BalancedActions();
         context = context.AddActionBalancer(balancer);
@@ -81,15 +88,29 @@ static class VanillaAnalysis
         var analyzedExpressions = new List<CommentedAnalyzedExpression>();
         foreach (var statement in syntax.InnerItems)
         {
+            // Update balancer position to the next semicolon.
             if (statement.Semicolon is not null)
             {
                 balancer.SetCurrentPosition(statement.Semicolon.Range.Start);
             }
             var comment = WorkshopStringUtility.WorkshopStringFromRawText(statement.Comment?.Text);
             var node = AnalyzeExpression(context, statement.Expression);
+            analyzedExpressions.Add(new(comment, statement.Disabled, node));
 
             // Make sure it is the right type.
-            analyzedExpressions.Add(new(comment, statement.Disabled, node));
+            var isAction = node.GetSymbolInformation().IsAction;
+            var doNotError = node.GetSymbolInformation().DoNotError;
+
+            if (!doNotError)
+            {
+                // Should be value, got action.
+                if (contentType == RuleContentType.Conditions && isAction)
+                    context.Error("Expected value, got an action", statement.Expression.Range);
+
+                // Should be action, got value.
+                else if (contentType == RuleContentType.Actions && !isAction)
+                    context.Error("Expected action, got a value", statement.Expression.Range);
+            }
         }
 
         // action value completion
