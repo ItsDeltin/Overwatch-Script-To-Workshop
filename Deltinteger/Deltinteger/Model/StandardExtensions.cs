@@ -38,4 +38,7 @@ static class StandardExtensions
 
     public static T Unwrap<T>(this T? nullable, string message) where T : class =>
         nullable ?? throw new Exception(message);
+
+    public static Result<T, E> OkOr<T, E>(this T? nullable, E error) =>
+        nullable is null ? error : nullable;
 }

@@ -3,6 +3,7 @@
 namespace Deltin.Deltinteger.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 static class Result
@@ -84,7 +85,11 @@ public readonly struct Result<T, E>
     public Result(T? value, E? error, bool isOk) => (_value, _error, _isOk) = (value, error, isOk);
 
     public static Result<T, E> Ok(T value) => new(value, default, true);
-    public static Result<T, E> Error(E error) => new(default, error, false);
+    public static Result<T, E> Error(E error)
+    {
+        Debugger.Break();
+        return new(default, error, false);
+    }
 
     public void Match(Action<T> onValue, Action<E> onError)
     {

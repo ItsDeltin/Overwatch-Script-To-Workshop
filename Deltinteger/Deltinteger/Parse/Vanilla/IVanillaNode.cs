@@ -596,7 +596,29 @@ static class VanillaExpressions
             IsVariable: right.GetSymbolInformation().IsVariable,
             Indexer: indexer,
             DoNotError: ShouldErrorDependents(left, right)
-        ), c => left.GetWorkshopElement(c)
+        ), c =>
+        {
+            // This is a variable.
+            if (indexer is not null)
+            {
+                return c.LinkedVariables.GetVariable(indexer.Variable.Name, indexer.Variable.IsGlobal)
+                    .OkOr($"Failed to find link to {GlobalOrPlayerString(indexer.Variable.IsGlobal)} variable '{indexer.Variable.Name}'")
+                    .And(Result.Maybe(indexer.Player?.GetWorkshopElement(c)))
+                    .And(Result.Maybe(indexer.Index?.GetWorkshopElement(c)))
+                    .AndThen<IWorkshopTree>(vpi =>
+                    {
+                        var ((variable, player), index) = vpi;
+                        var result = variable.Get(player as Element);
+
+                        // Add indexer
+                        if (index is not null)
+                            result = Element.ValueInArray(result, index);
+
+                        return result;
+                    });
+            }
+
+            return left.GetWorkshopElement(c)
                 .AndThen(a => right.GetWorkshopElement(indexer is null ? c : c.SetCurrentObject(a)).MapValue(b => (a, b)))
                 .AndThen<IWorkshopTree>(ab => syntax.Symbol.Text switch
                 {
@@ -615,7 +637,8 @@ static class VanillaExpressions
                     "==" => Element.Compare(ab.a, Operator.Equal, ab.b),
                     "!=" => Element.Compare(ab.a, Operator.NotEqual, ab.b),
                     _ => $"Unimplemented binary operator: '{syntax.Symbol.Text}'"
-                }));
+                });
+        });
     }
 
     public static IVanillaNode Not(VanillaContext context, VanillaNotExpression syntax)
