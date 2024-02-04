@@ -224,7 +224,7 @@ static class VanillaExpressions
                         isAction = workshopFunction is ElementJsonAction;
 
                         // Validate restricted call
-                        if (workshopFunction.Restricted is not null && context.EventType is not null)
+                        if (workshopFunction.Restricted is not null && context.EventType is not null and not RuleEvent.Subroutine)
                         {
                             var restrictedType = RestrictedCall.GetRestrictedCallTypeFromString(workshopFunction.Restricted);
                             if (restrictedType is not null)
