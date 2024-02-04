@@ -117,11 +117,11 @@ static class VanillaExpressions
             if (variableInScope.HasValue)
             {
                 string varType = GlobalOrPlayerString(variableInScope.Value.IsGlobal);
-                context.Warning($"Unknown workshop symbol. Did you mean to reference the {varType} variable '{name}'?", syntax.Range);
+                context.Error($"Unknown workshop symbol. Did you mean to reference the {varType} variable '{name}'?", syntax.Range);
             }
             else
             {
-                context.Warning($"Unknown workshop symbol '{name}'", syntax.Range);
+                context.Error($"Unknown workshop symbol '{name}'", syntax.Range);
             }
         }
 

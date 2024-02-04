@@ -195,19 +195,19 @@ public class LexMatcher
         () => MatchString());
 
     Match[]? MatchWorkshopContext() =>
-        MatchVanillaConstantWithDisabledMoniker(_vanillaSymbols.ScriptSymbols) ??
-        One(Match(
-            MatchNumber,
-            MatchCSymbol,
-            () => MatchString(),
-            () => MatchVanillaKeyword(_vanillaSymbols.AllTeams, TokenType.AllTeams),
-            () => MatchVanillaKeyword(_vanillaSymbols.Team1, TokenType.Team1),
-            () => MatchVanillaKeyword(_vanillaSymbols.Team2, TokenType.Team2),
-            () => MatchVanillaConstant(_vanillaSymbols.ScriptSymbols),
-            () => MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions),
-            () => MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions),
-            () => MatchVanillaKeyword(_vanillaSymbols.Event, TokenType.WorkshopEvent),
-            MatchVanillaSymbol));
+        MatchMany(
+            () => One(MatchNumber()),
+            () => One(MatchCSymbol()),
+            () => MatchVanillaConstantWithDisabledMoniker(_vanillaSymbols.ScriptSymbols),
+            () => One(MatchString()),
+            () => One(MatchVanillaKeyword(_vanillaSymbols.AllTeams, TokenType.AllTeams)),
+            () => One(MatchVanillaKeyword(_vanillaSymbols.Team1, TokenType.Team1)),
+            () => One(MatchVanillaKeyword(_vanillaSymbols.Team2, TokenType.Team2)),
+            () => One(MatchVanillaConstant(_vanillaSymbols.ScriptSymbols)),
+            () => One(MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions)),
+            () => One(MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions)),
+            () => One(MatchVanillaKeyword(_vanillaSymbols.Event, TokenType.WorkshopEvent)),
+            () => One(MatchVanillaSymbol()));
 
     Match[]? MatchLobbySettingsContext()
     {
@@ -266,6 +266,17 @@ public class LexMatcher
     static Match[]? One(Match? match) => match is null ? null : new[] { match.Value };
 
     static Match? Match(params Func<Match?>[] matchers)
+    {
+        foreach (var match in matchers)
+        {
+            var m = match();
+            if (m is not null)
+                return m;
+        }
+        return null;
+    }
+
+    static Match[]? MatchMany(params Func<Match[]?>[] matchers)
     {
         foreach (var match in matchers)
         {

@@ -103,11 +103,6 @@ static class VanillaCompletion
             Label = member.Name,
             InsertText = expectingAnotherValue ? $"{member.Name}, " : member.Name,
             Kind = CompletionItemKind.Constant,
-            TextEdit = replaceRange is null ? null : new(new InsertReplaceEdit()
-            {
-                NewText = member.Name,
-                Replace = replaceRange
-            })
         }));
 
     /// <summary>The signature of a function as markup.</summary>
