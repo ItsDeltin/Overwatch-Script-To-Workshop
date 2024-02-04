@@ -4,8 +4,8 @@ import { Pattern } from '../Pattern';
 import { Repository } from './repository';
 import * as util from './utils';
 
-const elementName = /(?![\s(),;0-9])[^/\\\+\*\"\';<>=(),\{\}\[\]\.#`]+/;
-const functionName = /(?![\s(),;0-9])[^/\\\+\*\"\';<>=(),\{\}\[\]\.#`]+/;
+const elementName = /(?![\s(),;0-9])[^/\\\+\*\"\';:<>=(),\{\}\[\]\.#`]+/;
+const functionName = elementName;
 
 const comment: Pattern = {
     patterns: [
@@ -35,11 +35,21 @@ const comment: Pattern = {
 }
 
 const settings: Pattern = util.makeDictionaryLike('settings', [
-    util.makeDictionaryLike('lobby', []),
-    util.makeDictionaryLike('modes', []),
+    util.makeDictionaryLike('lobby', [
+        {include: Repository.lobby_settings_group}
+    ]),
+    util.makeDictionaryLike('modes', [
+        {include: Repository.lobby_settings_group}
+    ]),
+    util.makeDictionaryLike('heroes', [
+        {include: Repository.lobby_settings_group}
+    ]),
     util.makeDictionaryLike('extensions', [{
         match: elementName
-    }])
+    }]),
+    util.makeDictionaryLike('main', [
+        {include: Repository.lobby_settings_group}
+    ])
 ]);
 
 const variables: Pattern = util.makeDictionaryLike('variables', [
@@ -62,7 +72,7 @@ const variables: Pattern = util.makeDictionaryLike('variables', [
 const subroutines: Pattern = util.makeDictionaryLike("subroutines", [util.numberedList('entity.name.function')]);
 
 const rule: Pattern = {
-    begin: /rule(?=\s*\()/,
+    begin: /(disabled\s+)?rule(?=\s*\()/,
     end: '}',
     zeroBeginCapture: { name: 'keyword.control' },
     zeroEndCapture: { name: 'punctuation.definition.block', },
@@ -102,11 +112,27 @@ const rule: Pattern = {
     ]
 };
 
-const action_list: Pattern = util.makeDictionaryLike('actions', [{include: Repository.action}]);
-const condition_list: Pattern = util.makeDictionaryLike('conditions', [{ include: Repository.expression }]);
+const action_list: Pattern = util.makeDictionaryLike('actions', [{ include: Repository.action }]);
+const condition_list: Pattern = util.makeDictionaryLike('conditions', [
+    {
+        begin: /disabled\b/,
+        end: /(?=;|})/,
+        zeroBeginCapture: { name: 'keyword.control.flow.disabled' },
+        patterns: [{ include: Repository.expression }]
+    },
+    {
+        include: Repository.expression
+    }]);
 
 const action: Pattern = {
     patterns: [
+        // Disabled action
+        {
+            begin: /disabled\b/,
+            end: /(?<=;)/,
+            zeroBeginCapture: { name: 'keyword.control.flow.disabled' },
+            patterns: [{ include: Repository.action }]
+        },
         // Flow with parameters
         {
             begin: [
@@ -271,6 +297,33 @@ const func: Pattern = {
 
 const string_literal: Pattern = util.string();
 
+const lobby_settings_group: Pattern = {
+    patterns: [
+        {
+            begin: '{',
+            end: '}',
+            name: 'meta.ostw.settings-group',
+            zeroBeginCapture: { name: 'punctuation.definition.dictionary.begin' },
+            zeroEndCapture: { name: 'punctuation.definition.dictionary.end' },
+            patterns: [
+                { include: Repository.lobby_settings_group },
+            ]
+        },
+        {
+            begin: [tm.Match(elementName, 'entity.name.tag.yaml'), w, tm.Match(/:/, 'punctuation.separator.key-value.mapping')],
+            end: /(?=$)/,
+            patterns: [
+                { include: Repository.string_literal },
+                { match: tm.Match(/-?[0-9]+(\.[0-9]+)?%?/, 'constant.numeric') }
+            ]
+        },
+        {
+            match: [tm.Maybe([tm.Match('disabled', 'keyword.control.flow.disabled'), w]), elementName],
+            zeroCapture: { name: 'keyword.control' },
+        }
+    ]
+};
+
 export function getRepository() {
     return tm.makeRepository(add => {
         add(Repository.comment, comment);
@@ -284,5 +337,6 @@ export function getRepository() {
         add(Repository.variables, variables);
         add(Repository.subroutines, subroutines);
         add(Repository.rule, rule);
+        add(Repository.lobby_settings_group, lobby_settings_group)
     });
 }
