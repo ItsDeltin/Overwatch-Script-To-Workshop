@@ -9,6 +9,7 @@ namespace Deltin.Deltinteger.Parse.Vanilla;
 class VanillaContext
 {
     public VanillaScope ScopedVariables { get; }
+    public RuleEvent? EventType { get; init; }
     public BalancedActions? ActionBalancer { get; init; }
     readonly ScriptFile script;
     ActiveParameterData activeParameterData;
@@ -24,6 +25,7 @@ class VanillaContext
         ScopedVariables = other.ScopedVariables;
         ActionBalancer = other.ActionBalancer;
         script = other.script;
+        EventType = other.EventType;
         activeParameterData = other.activeParameterData;
     }
 
@@ -43,6 +45,10 @@ class VanillaContext
     public WorkshopLanguage[]? LikelyLanguages() => new WorkshopLanguage[0];
 
     // Subcontext
+    public VanillaContext SetEventType(RuleEvent? eventType) => new(this)
+    {
+        EventType = eventType
+    };
     public VanillaContext SetActiveParameterData(ActiveParameterData data) => new(this)
     {
         activeParameterData = data

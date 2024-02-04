@@ -202,6 +202,7 @@ static class VanillaExpressions
 
                 switch (selected)
                 {
+                    // Workshop function
                     case WorkshopItem.ActionValue element:
                         workshopFunction = element.Value;
 
@@ -221,8 +222,22 @@ static class VanillaExpressions
 
                         // Is this an action?
                         isAction = workshopFunction is ElementJsonAction;
+
+                        // Validate restricted call
+                        if (workshopFunction.Restricted is not null && context.EventType is not null)
+                        {
+                            var restrictedType = RestrictedCall.GetRestrictedCallTypeFromString(workshopFunction.Restricted);
+                            if (restrictedType is not null)
+                            {
+                                bool isSupported = RestrictedCall.SupportedGroups[restrictedType.Value].Contains(context.EventType.Value);
+                                if (!isSupported)
+                                    context.Error($"A restricted value of type '{RestrictedCall.StringFromCallType(restrictedType.Value)}' cannot be called in this rule", syntax.Range);
+                            }
+                        }
+
                         break;
 
+                    // Constant
                     case WorkshopItem.Enumerator enumerator:
                         workshopConstant = enumerator.Member;
                         break;

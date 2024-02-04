@@ -37,6 +37,7 @@ static class VanillaAnalysis
         string name = WorkshopStringUtility.WorkshopStringFromRawText(rule.Name?.Text) ?? string.Empty;
         bool disabled = rule.Disabled;
         var content = new List<AnalyzedEventOrContent>();
+        RuleEvent? eventType = null;
 
         foreach (var contentGroup in rule.Content)
         {
@@ -44,21 +45,23 @@ static class VanillaAnalysis
             {
                 // Rule events
                 case TokenType.WorkshopEvent:
-                    content.Add(new(AnalyzeEventContent(context, contentGroup)));
+                    var eventInfo = AnalyzeEventContent(context, contentGroup);
+                    content.Add(new(eventInfo));
+                    eventType = eventInfo.GetEventType() ?? eventType;
                     break;
 
                 // Rule conditions
                 case TokenType.WorkshopConditions:
                     content.Add(new(new AnalyzedRuleContent(
                         VanillaRuleContentType.Conditions,
-                        AnalyzeContent(context, contentGroup, RuleContentType.Conditions))));
+                        AnalyzeContent(context.SetEventType(eventType), contentGroup, RuleContentType.Conditions))));
                     break;
 
                 // Rule actions
                 case TokenType.WorkshopActions:
                     content.Add(new(new AnalyzedRuleContent(
                         VanillaRuleContentType.Actions,
-                        AnalyzeContent(context, contentGroup, RuleContentType.Actions))));
+                        AnalyzeContent(context.SetEventType(eventType), contentGroup, RuleContentType.Actions))));
                     break;
 
                 // Unknown category
@@ -66,7 +69,7 @@ static class VanillaAnalysis
                     context.Error($"Unknown rule category '{contentGroup.GroupToken.Text}'", contentGroup.GroupToken.Range);
                     content.Add(new(new AnalyzedRuleContent(
                         VanillaRuleContentType.Unknown,
-                        AnalyzeContent(context, contentGroup, RuleContentType.Unknown))));
+                        AnalyzeContent(context.SetEventType(eventType), contentGroup, RuleContentType.Unknown))));
                     break;
             }
         }

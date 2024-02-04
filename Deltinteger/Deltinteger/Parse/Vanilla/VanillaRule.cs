@@ -109,7 +109,13 @@ readonly record struct AnalyzedEventOrContent(Variant<AnalyzedRuleEvent, Analyze
 /// <summary>
 /// Contains a list of event parameters for an analyzed vanilla rule.
 /// </summary>
-readonly record struct AnalyzedRuleEvent(IReadOnlyList<ElementEnumMember> Parameters, string? SubroutineName);
+readonly record struct AnalyzedRuleEvent(IReadOnlyList<ElementEnumMember> Parameters, string? SubroutineName)
+{
+    public readonly RuleEvent? GetEventType()
+    {
+        return Parameters.Count == 0 ? null : EventInfo.EventFromString(Parameters[0].Name);
+    }
+}
 
 /// <summary>
 /// The analyzed conditions or actions of a vanilla rule.
