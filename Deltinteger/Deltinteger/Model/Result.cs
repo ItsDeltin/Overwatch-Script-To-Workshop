@@ -158,11 +158,11 @@ public readonly struct Result<T, E>
         if (_isOk)
         {
             if (other._isOk)
-                return Result<(T a, U b), E>.Ok((_value!, other._value!));
-            return Result<(T a, U b), E>.Error(other._error!);
+                return (_value!, other._value!);
+            return other._error!;
         }
         else
-            return Result<(T a, U b), E>.Error(other._error!);
+            return _error!;
     }
 
     public void Then(Action<T> onValue)
