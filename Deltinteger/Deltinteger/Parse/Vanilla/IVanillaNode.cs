@@ -327,7 +327,7 @@ static class VanillaExpressions
             var stringArgs = Array.Empty<IVanillaNode>();
 
             // Make sure there is a string literal.
-            if (syntax.Arguments.Count == 0)
+            if (syntax.Arguments.Count == 0 && syntax.RightParentheses)
             {
                 context.Error("Missing string literal", syntax.RightParentheses);
             }
@@ -387,20 +387,18 @@ static class VanillaExpressions
                     syntax.Invoking.Range);
             }
             // Add signature help
-            if (syntax.RightParentheses is not null)
-            {
-                context.AddSignatureInfo(ISignatureHelp.New(
-                    range: syntax.LeftParentheses.Range + syntax.RightParentheses.Range,
-                    getSignatureHelp: getHelpArgs => new SignatureHelp()
-                    {
-                        Signatures = new[] {
-                            VanillaCompletion.GetFunctionSignatureInformation(
-                                element!,
-                                VanillaCompletion.GetActiveParameter(syntax, getHelpArgs.CaretPos))
-                        }
+            var signatureHelpRange = syntax.LeftParentheses.Range + (syntax.RightParentheses ?? syntax.Range);
+            context.AddSignatureInfo(ISignatureHelp.New(
+                range: signatureHelpRange,
+                getSignatureHelp: getHelpArgs => new SignatureHelp()
+                {
+                    Signatures = new[] {
+                        VanillaCompletion.GetFunctionSignatureInformation(
+                            element!,
+                            VanillaCompletion.GetActiveParameter(syntax, getHelpArgs.CaretPos))
                     }
-                ));
-            }
+                }
+            ));
         }
 
         return IVanillaNode.New(syntax, c =>
@@ -428,7 +426,7 @@ static class VanillaExpressions
             // start of argument
             DocPos start = (arg?.PreceedingComma ?? syntax.LeftParentheses).Range.End;
             // end of argument
-            DocPos? end = (syntax.Arguments.ElementAtOrDefault(i + 1).PreceedingComma ?? syntax.RightParentheses)?.Range.Start;
+            DocPos? end = (syntax.Arguments.ElementAtOrDefault(i + 1).PreceedingComma?.Range ?? syntax.RightParentheses?.Range ?? syntax.Range)?.Start;
 
             if (i < elementParams.Length && end is not null)
             {

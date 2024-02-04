@@ -2298,10 +2298,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (ParseOptional(TokenType.Parentheses_Open, out var leftParentheses))
             {
                 var arguments = new List<VanillaInvokeParameter>();
-                if (Kind.IsWorkshopExpression() || Is(TokenType.Comma))
+                if (!Is(TokenType.Parentheses_Close))
                 {
                     Token previousComma = null;
-                    do arguments.Add(new(previousComma, ParseVanillaExpression()));
+                    do
+                    {
+                        if (Is(TokenType.Parentheses_Close))
+                        {
+                            AddError(new InvalidExpressionTerm(Current));
+                            arguments.Add(new(previousComma, new MissingVanillaExpression(Current)));
+                            break;
+                        }
+                        else
+                            arguments.Add(new(previousComma, ParseVanillaExpression()));
+                    }
                     while (ParseOptional(TokenType.Comma, out previousComma));
                 }
 

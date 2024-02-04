@@ -19,10 +19,10 @@ class VanillaTypeData : IElementsJsonTypeSupplier<VanillaType>
     public VanillaType VoidType { get; } = NewType("void");
     public VanillaType GlobalType { get; } = NewType("global");
     public VanillaType AnyType { get; } = NewType("any", "Custom String", "String");
-    public VanillaType BooleanType { get; } = NewType("boolean", "True", "False");
+    public VanillaType BooleanType { get; } = NewType("boolean", "True", "False", "Not");
     public VanillaType NumberType { get; } = NewType("number");
     public VanillaType StringType { get; } = NewType("string", "Custom String", "String");
-    public VanillaType VectorType { get; } = NewType("vector", "Vector", "Forward", "Backward", "Left", "Right", "Up", "Down", "Position Of");
+    public VanillaType VectorType { get; } = NewType("vector", "Vector", "Forward", "Backward", "Left", "Right", "Up", "Down", "Position Of", "Eye Position");
     public VanillaType PlayerType { get; } = NewType("player", "Event Player", "Local Player", "Host Player", "Attacker", "Victim", "Healee", "Healer", "Player Carrying Flag");
     public VanillaType ButtonType { get; } = NewType("button", "Button", "Event Ability");
     public VanillaType HeroType { get; } = NewType("hero", "Hero", "Hero Of", "Hero Being Duplicated");
