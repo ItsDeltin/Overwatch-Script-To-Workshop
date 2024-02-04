@@ -58,6 +58,11 @@ public class LexController
         return listed[token];
     }
 
+    public Token GetTokenAtOrLast(int token, LexerContextKind contextKind)
+    {
+        return GetTokenAt(token, contextKind) ?? listed.Last();
+    }
+
     void DiscardCurrentState()
     {
         for (int i = lockedInTokens; i < listed.Count; i++)
@@ -470,18 +475,28 @@ public class LexMatcher
 
     Match[]? MatchVanillaConstantWithDisabledMoniker(WorkshopSymbolTrie symbolSet)
     {
+        // Try to match the entire constant at the current position.
+        // ie: "[disabled heroes]"
+        var tryWholeWord = MatchVanillaConstant(symbolSet);
+
         // Match the 'disabled' keyword.
-        var disabled = MatchVanillaKeyword(VanillaInfo.LowercaseDisabled, TokenType.DisabledWorkshopItem);
-        if (disabled is null) return null;
+        // ie: "[disabled] heroes"
+        var disabledKw = MatchVanillaKeyword(VanillaInfo.LowercaseDisabled, TokenType.DisabledWorkshopItem);
+        if (disabledKw is null) return One(tryWholeWord);
 
         // Try to match a workshop setting after the disabled keyword.
-        var constant = MatchVanillaConstant(symbolSet, NextWhitespace(disabled.Value.NewPosition));
-        if (constant is null) return null;
+        // ie: "disabled [heroes]"
+        var disabling = MatchVanillaConstant(symbolSet, NextWhitespace(disabledKw.Value.NewPosition));
+        if (disabling is null) return One(tryWholeWord);
 
-        return new[] {
-            disabled.Value,
-            constant.Value
-        };
+        // Choose between the ambiguous "[disabled heroes]" or "[disabled] [heroes]"
+        if (tryWholeWord is not null && tryWholeWord.Value.NewPosition.Index >= disabling.Value.NewPosition.Index)
+            return One(tryWholeWord);
+        else
+            return new[] {
+                disabledKw.Value,
+                disabling.Value
+            };
     }
 
     Match? MatchVanillaConstant(WorkshopSymbolTrie symbolSet, LexPosition? at = default)

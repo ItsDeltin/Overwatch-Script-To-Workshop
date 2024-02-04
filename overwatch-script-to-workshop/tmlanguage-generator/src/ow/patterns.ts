@@ -320,7 +320,8 @@ const lobby_settings_group: Pattern = {
         {
             match: [tm.Maybe([tm.Match('disabled', 'keyword.control.flow.disabled'), w]), elementName],
             zeroCapture: { name: 'keyword.control' },
-        }
+        },
+        { include: Repository.comment }
     ]
 };
 

@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         Lexer Lexer { get; }
         int Token { get; set; }
         Token Current => Lexer.ScanTokenAt(Token);
-        Token CurrentOrLast => Lexer.ScanTokenAt(Token) ?? Lexer.GetLastToken();
+        Token CurrentOrLast => Lexer.ScanTokenAtOrLast(Token);
         Token Previous => Lexer.ScanTokenAt(Token - 1);
         TokenType Kind => Current?.TokenType ?? TokenType.EOF;
         bool IsFinished => Kind == TokenType.EOF;
@@ -241,7 +241,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
-        Token TokenAtOrEnd(int position) => Lexer.ScanTokenAt(position) ?? Lexer.GetLastToken();
+        Token TokenAtOrEnd(int position) => Lexer.ScanTokenAtOrLast(position);
 
         /// <summary>If the current token's type is equal to the specified type in the 'type' parameter,
         /// advance then return true. Otherwise, error then return false.</summary>

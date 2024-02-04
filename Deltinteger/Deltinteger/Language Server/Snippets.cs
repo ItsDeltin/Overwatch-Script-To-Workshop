@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.LanguageServer
             insert: """
             variables {
                 ${1|global,player|}:
-                    ${2: 0}: ${3:myVariable}
+                    ${2:0}: ${3:myVariable}
             }$0
             """
         );
@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.LanguageServer
             documentation: new MarkupBuilder(),
             insert: """
             subroutines {
-                ${1: 0}: ${2:mySubroutine}
+                ${1:0}: ${2:mySubroutine}
             }$0
             """
         );

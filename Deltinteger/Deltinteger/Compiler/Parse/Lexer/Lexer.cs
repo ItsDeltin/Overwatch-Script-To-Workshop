@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 
 namespace Deltin.Deltinteger.Compiler.Parse.Lexing;
@@ -41,13 +40,7 @@ public class Lexer
 
     public Token? ScanTokenAt(int tokenIndex) => CurrentController.GetTokenAt(tokenIndex, _context.Peek());
 
-    public Token? ScanTokenAt(int tokenIndex, Action<LexerContextKind> match) => null;
-
-    public Token? GetLastToken()
-    {
-#warning toodles
-        return null;
-    }
+    public Token? ScanTokenAtOrLast(int tokenIndex) => CurrentController.GetTokenAtOrLast(tokenIndex, _context.Peek());
 
     public void PushCompleted()
     {
@@ -64,17 +57,13 @@ public class Lexer
         // return Tokens.Count - _lastTokenCount;
     }
 
-    public T InVanillaWorkshopContext<T>(Func<T> task)
-    {
-        _context.Push(LexerContextKind.Workshop);
-        var result = task();
-        _context.Pop();
-        return result;
-    }
+    public T InVanillaWorkshopContext<T>(Func<T> task) => InContext(LexerContextKind.Workshop, task);
 
-    public T InSettingsContext<T>(Func<T> task)
+    public T InSettingsContext<T>(Func<T> task) => InContext(LexerContextKind.LobbySettings, task);
+
+    private T InContext<T>(LexerContextKind contextKind, Func<T> task)
     {
-        _context.Push(LexerContextKind.LobbySettings);
+        _context.Push(contextKind);
         var result = task();
         _context.Pop();
         return result;

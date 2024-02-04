@@ -413,6 +413,9 @@
           "endCaptures": {},
           "patterns": [
             {
+              "include": "#comment"
+            },
+            {
               "include": "#action"
             }
           ]
@@ -443,6 +446,9 @@
           "end": "(?=})",
           "endCaptures": {},
           "patterns": [
+            {
+              "include": "#comment"
+            },
             {
               "begin": "disabled\\b",
               "beginCaptures": {
@@ -694,6 +700,9 @@
           "endCaptures": {},
           "patterns": [
             {
+              "include": "#comment"
+            },
+            {
               "begin": "\\blobby\\b",
               "beginCaptures": {
                 "0": {
@@ -717,6 +726,9 @@
                   "end": "(?=})",
                   "endCaptures": {},
                   "patterns": [
+                    {
+                      "include": "#comment"
+                    },
                     {
                       "include": "#lobby-settings-group"
                     }
@@ -749,6 +761,9 @@
                   "endCaptures": {},
                   "patterns": [
                     {
+                      "include": "#comment"
+                    },
+                    {
                       "include": "#lobby-settings-group"
                     }
                   ]
@@ -779,6 +794,9 @@
                   "end": "(?=})",
                   "endCaptures": {},
                   "patterns": [
+                    {
+                      "include": "#comment"
+                    },
                     {
                       "include": "#lobby-settings-group"
                     }
@@ -811,6 +829,9 @@
                   "endCaptures": {},
                   "patterns": [
                     {
+                      "include": "#comment"
+                    },
+                    {
                       "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';:<>=(),\\{\\}\\[\\]\\.#`]+",
                       "captures": {}
                     }
@@ -842,6 +863,9 @@
                   "end": "(?=})",
                   "endCaptures": {},
                   "patterns": [
+                    {
+                      "include": "#comment"
+                    },
                     {
                       "include": "#lobby-settings-group"
                     }
@@ -877,6 +901,9 @@
           "end": "(?=})",
           "endCaptures": {},
           "patterns": [
+            {
+              "include": "#comment"
+            },
             {
               "name": "keyword.control",
               "begin": "\\bglobal\\s*:",
@@ -951,6 +978,9 @@
           "end": "(?=})",
           "endCaptures": {},
           "patterns": [
+            {
+              "include": "#comment"
+            },
             {
               "match": "([0-9]+)\\s*(:)\\s*([a-zA-Z0-9_]+)",
               "captures": {
@@ -1028,6 +1058,9 @@
                   "end": "(?=})",
                   "endCaptures": {},
                   "patterns": [
+                    {
+                      "include": "#comment"
+                    },
                     {
                       "begin": "(Subroutine)\\s*;",
                       "beginCaptures": {
@@ -1126,6 +1159,9 @@
               "name": "keyword.control.flow.disabled"
             }
           }
+        },
+        {
+          "include": "#comment"
         }
       ]
     }

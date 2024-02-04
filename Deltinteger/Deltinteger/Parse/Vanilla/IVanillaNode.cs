@@ -463,7 +463,7 @@ static class VanillaExpressions
             if (i < elementParams.Length && end is not null)
             {
                 var range = start + end;
-                bool expectingAnotherValue = i < elementParams.Length - 1 && i == syntax.Arguments.Count - 1;
+                bool expectingAnotherValue = i < elementParams.Length - 1 && i == Math.Max(syntax.Arguments.Count - 1, 0);
 
                 // Add special completion for constants
                 if (ElementRoot.Instance.TryGetEnum(elementParams[i].Type, out var constantsGroup))
