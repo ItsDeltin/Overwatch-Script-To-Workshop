@@ -81,7 +81,7 @@ class LobbySettings
             context.TryGetRef(jsonObject.Ref, out refObject);
 
         // Find template
-        var template = context.GetTemplate(jsonObject.Template);
+        var template = context.GetTemplate(jsonObject.Template) ?? context.GetTemplate(refObject?.Template);
 
         // Create new EObject
         var expanded = new EObject(
