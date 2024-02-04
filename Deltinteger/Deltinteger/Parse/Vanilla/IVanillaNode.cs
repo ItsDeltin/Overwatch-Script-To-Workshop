@@ -294,43 +294,42 @@ static class VanillaExpressions
     {
         var parameterData = context.GetActiveParameterData();
 
-        // Filter by type
-        if (parameterData.ExpectingType is not null)
-        {
-            var filterTypes = items.Where(item => item.Item switch
-            {
-                // Filter constants
-                WorkshopItem.Enumerator enumerator => context.VanillaTypeFromJsonName(enumerator.Member.Enum.Name) == parameterData.ExpectingType,
-                _ => true
-            });
-            // Only accept if there are still items.
-            if (filterTypes.Any())
-                items = filterTypes;
-        }
+        var filters = new Func<IEnumerable<LanguageLinkedWorkshopItem>, IEnumerable<LanguageLinkedWorkshopItem>?>[] {
+            // Filter by type
+            current => {
+                return current.Where(item => item.Item switch {
+                    // Filter constants
+                    WorkshopItem.Enumerator enumerator => parameterData.ExpectingType is not null && context.VanillaTypeFromJsonName(enumerator.Member.Enum.Name) == parameterData.ExpectingType,
+                    _ => true
+                });
+            },
+            // Filter by parameter count
+            current => {
+                int? invokeParameterCount = parameterData.InvokeParameterCount;
+                return current.Where(item => item.Item switch
+                {
+                    // Argument count matches.
+                    WorkshopItem.ActionValue actionValue => (invokeParameterCount ?? 0) == (actionValue.Value.Parameters?.Length ?? 0),
+                    // Enumerators should not be invoked.
+                    WorkshopItem.Enumerator enumerator => !invokeParameterCount.HasValue,
+                    _ => false
+                });
+            },
+            // Filter by language
+            current => {
+                var likelyLanguages = context.LikelyLanguages();
+                if (likelyLanguages is null)
+                    return null;
 
-        // Filter by parameter count
-        int? invokeParameterCount = parameterData.InvokeParameterCount;
-        var filterParameters = items.Where(item => item.Item switch
-        {
-            // Argument count matches.
-            WorkshopItem.ActionValue actionValue => invokeParameterCount.HasValue &&
-                invokeParameterCount.Value == (actionValue.Value.Parameters?.Length ?? 0),
-            // Enumerators should not be invoked.
-            WorkshopItem.Enumerator enumerator => !invokeParameterCount.HasValue,
-            _ => false
-        });
-        // Only accept if there are still items.
-        if (filterParameters.Any())
-            items = filterParameters;
+                return current.Where(item => likelyLanguages.Contains(item.Language));
+            }
+        };
 
-        // Filter by language
-        var likelyLanguages = context.LikelyLanguages();
-        if (likelyLanguages is not null)
+        foreach (var filter in filters)
         {
-            var filterLanguages = items.Where(item => likelyLanguages.Contains(item.Language));
-            // Only accept if there are still items.
-            if (filterLanguages.Any())
-                items = filterLanguages;
+            var newItems = filter(items);
+            if (newItems is not null && newItems.Any())
+                items = newItems;
         }
 
         // Get unique items.
