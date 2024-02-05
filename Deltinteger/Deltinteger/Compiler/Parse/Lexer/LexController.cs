@@ -198,12 +198,11 @@ public class LexMatcher
         MatchMany(
             () => One(MatchNumber()),
             () => One(MatchCSymbol()),
-            () => MatchVanillaConstantWithDisabledMoniker(_vanillaSymbols.ScriptSymbols),
             () => One(MatchString()),
             () => One(MatchVanillaKeyword(_vanillaSymbols.AllTeams, TokenType.AllTeams)),
             () => One(MatchVanillaKeyword(_vanillaSymbols.Team1, TokenType.Team1)),
             () => One(MatchVanillaKeyword(_vanillaSymbols.Team2, TokenType.Team2)),
-            () => One(MatchVanillaConstant(_vanillaSymbols.ScriptSymbols)),
+            () => MatchVanillaConstantWithDisabledMoniker(_vanillaSymbols.ScriptSymbols),
             () => One(MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions)),
             () => One(MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions)),
             () => One(MatchVanillaKeyword(_vanillaSymbols.Event, TokenType.WorkshopEvent)),
@@ -216,7 +215,6 @@ public class LexMatcher
             return disabledSettingMatch;
 
         var match = Match(
-            () => MatchVanillaConstant(_vanillaSymbols.LobbySettings),
             MatchNumber,
             () => MatchString(),
             MatchCSymbol,
@@ -513,21 +511,33 @@ public class LexMatcher
     Match? MatchVanillaConstant(WorkshopSymbolTrie symbolSet, LexPosition? at = default)
     {
         var scanner = MakeWsLexScanner(at);
+        WhitespaceLexScanner? lastValidState = null;
 
         var symbolTraveller = symbolSet.Travel();
         // Feed incoming characters into the symbol traveller
-        while (scanner.Next(out char current) && symbolTraveller.Next(char.ToLower(current)))
-            scanner.Advance();
+        while (scanner.Next(out char current))
+        {
+            var (valid, newWord) = symbolTraveller.Next(char.ToLower(current));
+            if (valid)
+            {
+                scanner.Advance();
+                if (newWord)
+                    lastValidState = scanner;
+            }
+            else break;
+        }
+
+        if (lastValidState is null) return null;
 
         // Do not create a workshop symbol in the middle of a word,
         // ex: "[Small Message]s()"
-        bool isAtEndOfTerm = !scanner.Next(out char value) ||
+        bool isAtEndOfTerm = !lastValidState.Value.Next(out char value) ||
             CharData.WhitespaceCharacters.Contains(value) ||
             VanillaInfo.StructureCharacters.Contains(value);
 
         var word = symbolTraveller.Word();
         if (isAtEndOfTerm && word.HasValue)
-            return GetMatch(scanner, TokenType.WorkshopConstant, word.Value.LinkedItems);
+            return GetMatch(lastValidState.Value, TokenType.WorkshopConstant, word.Value.LinkedItems);
 
         return null;
     }
