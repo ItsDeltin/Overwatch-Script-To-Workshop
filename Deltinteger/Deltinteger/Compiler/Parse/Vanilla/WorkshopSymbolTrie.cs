@@ -57,17 +57,19 @@ public struct WorkshopTrieTraveller
 
     public WorkshopTrieTraveller(WorkshopSymbolTrie root) => current = root;
 
-    public bool Next(char value)
+    public (bool Valid, bool NewWord) Next(char value)
     {
         currentWord += value;
         current?.TryGetTrie(value, out current);
 
+        bool didFindNewWord = false;
         if (current is not null && current.IsWord())
         {
             lastValid = (currentWord, current);
+            didFindNewWord = true;
         }
 
-        return current is not null;
+        return (current is not null, didFindNewWord);
     }
 
     public readonly (string Word, IReadOnlySet<LanguageLinkedWorkshopItem> LinkedItems)? Word() =>
