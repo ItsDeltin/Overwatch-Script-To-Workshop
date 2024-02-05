@@ -142,25 +142,19 @@ static class VanillaExpressions
             bool isGlobalVarExpected = parameterData.ExpectingVariable == ExpectingVariable.Global;
 
             // Find variable with name
-            var (Variable, IsImplicit) = context.ScopedVariables.GetScopedVariable(name, isGlobalVarExpected);
-            declaredVariable = Variable;
+            var (foundVariable, isImplicit) = context.ScopedVariables.GetScopedVariable(name, isGlobalVarExpected);
+            declaredVariable = foundVariable;
 
             // Warn if not found
             if (declaredVariable is null)
             {
                 doNotError = true;
-                context.Warning($"There is no {GlobalOrPlayerString(isGlobalVarExpected)} variable named '{name}'", syntax.Range);
+                context.Error($"There is no {GlobalOrPlayerString(isGlobalVarExpected)} variable named '{name}'", syntax.Range);
             }
             else
             {
                 // Add link and hover information
-                context.AddHover(syntax.Range, new MarkupBuilder().StartCodeLine()
-                    .Add("variables {")
-                    .NewLine().Indent().Add(GlobalOrPlayerString(declaredVariable.Value.IsGlobal) + ":")
-                    .If(IsImplicit, m => m.NewLine().Indent().Indent().Add("// implicit default variable"))
-                    .NewLine().Indent().Indent().Add($"{declaredVariable.Value.Id}: {declaredVariable.Value.Name}")
-                    .NewLine().Add("}")
-                    .EndCodeLine());
+                context.AddHover(syntax.Range, VanillaCompletion.GetVariableHover(declaredVariable.Value, isImplicit));
             }
         }
         // Subroutine
@@ -173,7 +167,7 @@ static class VanillaExpressions
             if (subroutine is null)
             {
                 doNotError = true;
-                context.Warning($"There is no subroutine named '{name}'", syntax.Range);
+                context.Error($"There is no subroutine named '{name}'", syntax.Range);
             }
         }
         // 'Global' symbol
@@ -215,7 +209,7 @@ static class VanillaExpressions
 
                         // If this expression needs to be invoked and is not, add an error.
                         if (!parameterData.IsInvoked && workshopFunction.Parameters?.Length is not null and > 0)
-                            context.Warning($"'{workshopFunction.Name}' requires {workshopFunction.Parameters.Length} parameter values", syntax.Range);
+                            context.Error($"'{workshopFunction.Name}' requires {workshopFunction.Parameters.Length} parameter values", syntax.Range);
 
                         // Action balancing!
                         context.ActionBalancer?.FromFunction(workshopFunction.Name);
@@ -380,7 +374,7 @@ static class VanillaExpressions
                 // Check argument count.
                 if (syntax.Arguments.Count > 4)
                 {
-                    context.Warning("Strings can only have a max of 3 arguments", syntax.Arguments[4].Value.Range);
+                    context.Error("Strings can only have a max of 3 arguments", syntax.Arguments[4].Value.Range);
                 }
 
                 // Get args. Skip the string literal that was already analyzed.
@@ -407,14 +401,14 @@ static class VanillaExpressions
             // Not enough arguments.
             if (arguments.Length < elementParams.Length)
             {
-                context.Warning(
+                context.Error(
                     $"The argument '{elementParams[arguments.Length].Name}' is missing from {VanillaHelper.GetTypeOfWorkshopFunction(element!)} '{element!.Name}'",
                     syntax.Invoking.Range);
             }
             // Too many arguments
             else if (arguments.Length > elementParams.Length)
             {
-                context.Warning(
+                context.Error(
                     $"{VanillaHelper.GetTypeOfWorkshopFunction(element!)} '{element!.Name}' takes {elementParams.Length} parameters; got {arguments.Length}",
                     syntax.Invoking.Range);
             }
@@ -535,9 +529,9 @@ static class VanillaExpressions
 
         var valueIndexer = value.GetSymbolInformation().Indexer;
 
-        // Depth warning
+        // Depth error
         if (context.GetActiveParameterData().ExpectingVariableIndexer && valueIndexer?.Index is not null)
-            context.Warning(
+            context.Error(
                 "The workshop cannot modify multidimensional arrays",
                 indexer.LeftBracket.Range + indexer.Range);
 
@@ -672,7 +666,7 @@ static class VanillaExpressions
 
         if (indexer is null && !lhs.GetSymbolInformation().DoNotError)
         {
-            context.Warning("Left hand side of assignment should be a variable", syntax.Lhs.Range);
+            context.Error("Left hand side of assignment should be a variable", syntax.Lhs.Range);
         }
 
         return IVanillaNode.New(syntax, new(IsAction: true), c => indexer switch

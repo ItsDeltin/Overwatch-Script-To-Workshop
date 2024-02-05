@@ -51,6 +51,8 @@ public class VanillaScope
     readonly DefaultVariableReport report;
     readonly List<VanillaVariable> scopedVariables = new();
     readonly List<VanillaSubroutine> scopedSubroutines = new();
+    readonly List<(string, int)> defaultGlobal = new(DefaultVariableNames.Select((d, i) => (d, i)));
+    readonly List<(string, int)> defaultPlayer = new(DefaultVariableNames.Select((d, i) => (d, i)));
 
     public VanillaScope(DefaultVariableReport report)
     {
@@ -58,7 +60,20 @@ public class VanillaScope
     }
 
     /// <summary>Adds a vanilla variable to the scope.</summary>
-    public void AddScopedVariable(VanillaVariable variable) => scopedVariables.Add(variable);
+    public void AddScopedVariable(VanillaVariable variable)
+    {
+        scopedVariables.Add(variable);
+
+        var removeDefaultFrom = variable.IsGlobal ? defaultGlobal : defaultPlayer;
+        var rename = (variable.Name, variable.Id);
+        removeDefaultFrom.Remove(rename);
+
+        if (variable.Id < DefaultVariableNames.Count)
+        {
+            var replace = (DefaultVariableNames[variable.Id], variable.Id);
+            removeDefaultFrom.Remove(replace);
+        }
+    }
 
     /// <summary>Gets a by its name and collection type.</summary>
     public (VanillaVariable? Variable, bool IsImplicit) GetScopedVariable(string name, bool isGlobal)
@@ -88,7 +103,7 @@ public class VanillaScope
 
     /// <summary>Get all variables of a certain type.</summary>
     public IEnumerable<VanillaVariable> GetVariables(bool isGlobal) => scopedVariables.Where(var => var.IsGlobal == isGlobal)
-        .Concat(report.GetUsedDefaults().Where(d => d.IsGlobal == isGlobal));
+        .Concat((isGlobal ? defaultGlobal : defaultPlayer).Select(def => new VanillaVariable(def.Item2, def.Item1, isGlobal)));
 
     /// <summary>Adds a subroutine to the scope.</summary>
     public void AddSubroutine(VanillaSubroutine subroutine) => scopedSubroutines.Add(subroutine);
