@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Model;
 using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
@@ -97,9 +98,26 @@ public class VanillaScope
     }
 
     /// <summary>Gets a variable with a matching name of any type.</summary>
-    public VanillaVariable? GetScopedVariableOfAnyType(string name) =>
-        scopedVariables.AsEnumerable().Reverse().Cast<VanillaVariable?>().FirstOrDefault(
+    public VanillaVariable? GetScopedVariableOfAnyType(string name)
+    {
+        var declared = scopedVariables.AsEnumerable().Reverse().Cast<VanillaVariable?>().FirstOrDefault(
             var => var is not null && var.Value.Name == name);
+
+        if (declared is not null)
+            return declared;
+
+        // Implicit global variable
+        var foundGlobalDefault = defaultGlobal.FirstOrNull(d => d.Item1 == name);
+        if (foundGlobalDefault is not null)
+            return new(foundGlobalDefault.Value.Item2, foundGlobalDefault.Value.Item1, true);
+
+        // Implicit player variable
+        var foundPlayerDefault = defaultGlobal.FirstOrNull(d => d.Item1 == name);
+        if (foundPlayerDefault is not null)
+            return new(foundPlayerDefault.Value.Item2, foundPlayerDefault.Value.Item1, false);
+
+        return null;
+    }
 
     /// <summary>Get all variables of a certain type.</summary>
     public IEnumerable<VanillaVariable> GetVariables(bool isGlobal) => scopedVariables.Where(var => var.IsGlobal == isGlobal)

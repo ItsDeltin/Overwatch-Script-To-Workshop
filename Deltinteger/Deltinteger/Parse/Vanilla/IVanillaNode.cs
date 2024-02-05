@@ -169,6 +169,8 @@ static class VanillaExpressions
                 doNotError = true;
                 context.Error($"There is no subroutine named '{name}'", syntax.Range);
             }
+            else // Add hover information
+                context.AddHover(syntax.Range, VanillaCompletion.GetSubroutineHover(subroutine.Value));
         }
         // 'Global' symbol
         else if (VanillaInfo.GlobalNamespace.Match(name))

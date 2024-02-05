@@ -28,6 +28,14 @@ static class StandardExtensions
         return false;
     }
 
+    public static T? FirstOrNull<T>(this IEnumerable<T> enumerable, Func<T, bool> selector) where T : struct
+    {
+        foreach (var item in enumerable)
+            if (selector(item))
+                return item;
+        return default;
+    }
+
     public static T? Or<T>(this T? maybe, T? otherwise)
     {
         return maybe is not null ? maybe : otherwise;

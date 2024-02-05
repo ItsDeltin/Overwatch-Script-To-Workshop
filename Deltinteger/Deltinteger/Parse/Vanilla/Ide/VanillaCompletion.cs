@@ -27,7 +27,6 @@ static class VanillaCompletion
     };
 
     static readonly IEnumerable<CompletionItem> Values = ElementRoot.Instance.Values.Select(value => GetValueCompletionItem(value));
-    static readonly string[] RuleContentNames = new[] { "event", "conditions", "actions" };
 
     static CompletionItem GetActionCompletionItem(ElementJsonAction action, bool highlight)
     {
@@ -200,13 +199,15 @@ static class VanillaCompletion
         getCompletionParams => items.Select(item => new CompletionItem()
         {
             Label = item.EnUs,
-            Kind = CompletionItemKind.Constant
+            Kind = CompletionItemKind.Constant,
+            InsertText = $"{item.EnUs};"
         })
     );
 
-    public static ICompletionRange CreateEventDeclarationCompletion(DocRange range) => ICompletionRange.New(
+    /// <summary>Creates completion for the 'event', 'conditions', and 'actions' definitions in rules.</summary>
+    public static ICompletionRange CreateEventDeclarationCompletion(DocRange range, List<string> missingCategories) => ICompletionRange.New(
         range,
-        RuleContentNames.Select(item => new CompletionItem()
+        missingCategories.Select(item => new CompletionItem()
         {
             Label = item,
             Kind = CompletionItemKind.Keyword,
@@ -235,9 +236,15 @@ static class VanillaCompletion
 
     public static MarkupBuilder GetVariableHover(VanillaVariable var, bool isImplicit) => new MarkupBuilder().StartCodeLine()
         .Add("variables {")
-        .NewLine().Indent().Add(VanillaHelper.GlobalOrPlayerString(var.IsGlobal) + ":")
-        .If(isImplicit, m => m.NewLine().Indent().Indent().Add("// implicit default variable"))
-        .NewLine().Indent().Indent().Add($"{var.Id}: {var.Name}")
+        .NewLine().Add($"  {VanillaHelper.GlobalOrPlayerString(var.IsGlobal)}:")
+        .If(isImplicit, m => m.NewLine().Add("    // implicit default variable"))
+        .NewLine().Add($"    {var.Id}: {var.Name}")
+        .NewLine().Add("}")
+        .EndCodeLine();
+
+    public static MarkupBuilder GetSubroutineHover(VanillaSubroutine subroutine) => new MarkupBuilder().StartCodeLine()
+        .Add("subroutines {")
+        .NewLine().Add($"  {subroutine.Id}: {subroutine.Name}")
         .NewLine().Add("}")
         .EndCodeLine();
 }

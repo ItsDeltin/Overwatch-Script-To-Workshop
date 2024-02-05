@@ -352,13 +352,23 @@ namespace Deltin.Deltinteger.Parse
             // Parse the rules.
             foreach (var ruleVariant in rules)
             {
-                ruleVariant.Match(ostwRule =>
-                {
-                    var translate = new TranslateRule(this, ostwRule);
-                    Rule newRule = GetRule(translate.GetRule());
-                    WorkshopRules.Add(newRule);
-                    ostwRule.ElementCountLens.RuleParsed(newRule);
-                }, owRule => owRule.ToElement(new(WorkshopConverter.LinkableVanillaVariables)).Then(WorkshopRules.Add));
+                ruleVariant.Match(
+                    // OSTW rule
+                    ostwRule =>
+                    {
+                        var translate = new TranslateRule(this, ostwRule);
+                        Rule newRule = GetRule(translate.GetRule());
+                        WorkshopRules.Add(newRule);
+                        ostwRule.ElementCountLens.RuleParsed(newRule);
+                    },
+                    // Vanilla rule
+                    owRule => owRule.ToElement(new(WorkshopConverter.LinkableVanillaVariables)).Match(
+                        WorkshopRules.Add,
+                        err =>
+                        {
+                            throw new Exception(err);
+                        }
+                    ));
             }
 
             GetComponent<AutoCompileSubroutine>().ToWorkshop(WorkshopConverter);

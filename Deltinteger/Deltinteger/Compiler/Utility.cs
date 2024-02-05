@@ -122,6 +122,11 @@ namespace Deltin.Deltinteger.Compiler
             throw new Exception();
         }
 
+        public DocRange Inset() => new(
+            new(Start.Line, Start.Character + 1),
+            new(End.Line, End.Character - 1)
+        );
+
         public int LineSpan() => End.Line - Start.Line;
         public int ColumnSpan()
         {

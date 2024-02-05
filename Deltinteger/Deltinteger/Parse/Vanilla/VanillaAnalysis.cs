@@ -27,17 +27,11 @@ static class VanillaAnalysis
 
     public static VanillaRuleAnalysis AnalyzeRule(VanillaContext context, VanillaRule rule)
     {
-        // Add completion for event, conditions, and actions.
-        if (rule.Begin && rule.End)
-        {
-            var contentRange = rule.Begin!.Range.End + rule.End!.Range.Start;
-            context.AddCompletion(VanillaCompletion.CreateEventDeclarationCompletion(contentRange));
-        }
-
         string name = WorkshopStringUtility.WorkshopStringFromRawText(rule.Name?.Text) ?? string.Empty;
         bool disabled = rule.Disabled;
         var content = new List<AnalyzedEventOrContent>();
         RuleEvent? eventType = null;
+        bool gotEvent = false, gotConditions = false, gotActions = false;
 
         foreach (var contentGroup in rule.Content)
         {
@@ -45,6 +39,10 @@ static class VanillaAnalysis
             {
                 // Rule events
                 case TokenType.WorkshopEvent:
+                    if (gotEvent)
+                        context.Error("Duplicate 'event' definition", contentGroup.GroupToken);
+
+                    gotEvent = true;
                     var eventInfo = AnalyzeEventContent(context, contentGroup);
                     content.Add(new(eventInfo));
                     eventType = eventInfo.GetEventType() ?? eventType;
@@ -52,6 +50,10 @@ static class VanillaAnalysis
 
                 // Rule conditions
                 case TokenType.WorkshopConditions:
+                    if (gotConditions)
+                        context.Error("Duplicate 'conditions' definition", contentGroup.GroupToken);
+
+                    gotConditions = true;
                     content.Add(new(new AnalyzedRuleContent(
                         VanillaRuleContentType.Conditions,
                         AnalyzeContent(context.SetEventType(eventType), contentGroup, RuleContentType.Conditions))));
@@ -59,6 +61,10 @@ static class VanillaAnalysis
 
                 // Rule actions
                 case TokenType.WorkshopActions:
+                    if (gotActions)
+                        context.Error("Duplicate 'actions' definition", contentGroup.GroupToken);
+
+                    gotActions = true;
                     content.Add(new(new AnalyzedRuleContent(
                         VanillaRuleContentType.Actions,
                         AnalyzeContent(context.SetEventType(eventType), contentGroup, RuleContentType.Actions))));
@@ -73,6 +79,25 @@ static class VanillaAnalysis
                     break;
             }
         }
+
+        // Missing event error
+        if (!gotEvent && rule.Keyword is not null)
+            context.Error("Missing 'event' definition", rule.Keyword);
+
+        // Add completion for event, conditions, and actions.
+        if (rule.Begin && rule.End)
+        {
+            var contentRange = rule.Begin!.Range.End + rule.End!.Range.Start;
+
+            List<string> missingCategories = new(3);
+            if (!gotEvent) missingCategories.Add("event");
+            if (!gotConditions) missingCategories.Add("conditions");
+            if (!gotActions) missingCategories.Add("actions");
+
+            context.AddCompletion(VanillaCompletion.CreateEventDeclarationCompletion(contentRange, missingCategories));
+        }
+
+
         return new VanillaRuleAnalysis(disabled, name, content.ToArray());
     }
 

@@ -1,8 +1,10 @@
 #nullable enable
 
+using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Elements;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -37,6 +39,7 @@ class VanillaContext
 
     // IDE
     public void AddCompletion(ICompletionRange completionRange) => script.AddCompletionRange(completionRange);
+    public void AddCompletionCatch(DocRange range) => script.AddCompletionRange(ICompletionRange.New(range, CompletionRangeKind.Catch, _ => Enumerable.Empty<CompletionItem>()));
     public void AddHover(DocRange range, MarkupBuilder content) => script.AddHover(range, content);
     public void AddSignatureInfo(ISignatureHelp signatureHelp) => script.AddSignatureInfo(signatureHelp);
 

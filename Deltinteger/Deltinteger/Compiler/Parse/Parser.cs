@@ -2166,7 +2166,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         VanillaRule ParseVanillaRule()
         {
             var disabled = ParseOptional(TokenType.Disabled);
-            ParseExpected(TokenType.Rule, TokenType.WorkshopRule);
+            var keyword = ParseExpected(TokenType.Rule, TokenType.WorkshopRule);
 
             // Parentheses containing name.
             ParseExpected(TokenType.Parentheses_Open);
@@ -2183,7 +2183,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Close);
             var end = Previous;
 
-            return new(disabled, name, begin, ruleContent.ToArray(), end);
+            return new(disabled, keyword, name, begin, ruleContent.ToArray(), end);
         }
 
         bool TryParseVanillaRuleContent(out VanillaRuleContent nextElement)
