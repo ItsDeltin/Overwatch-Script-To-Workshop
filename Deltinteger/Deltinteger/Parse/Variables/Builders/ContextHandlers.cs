@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Add workshop ID
             if (_defineContext.ID)
-                componentCollection.AddComponent(new WorkshopIndexComponent(int.Parse(_defineContext.ID.Text), _defineContext.ID.Range));
+                componentCollection.AddComponent(new WorkshopIndexComponent((int)double.Parse(_defineContext.ID.Text), _defineContext.ID.Range));
 
             // Extended collection
             if (_defineContext.Extended)
