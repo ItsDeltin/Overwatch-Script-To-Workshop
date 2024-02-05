@@ -150,7 +150,14 @@ namespace Deltin.Deltinteger.Elements
             if (!HasDefaultValue) throw new Exception("Parameter has no default value.");
 
             // Enumerator default value
-            if (ElementRoot.Instance.TryGetEnum(Type, out ElementEnum enumerator)) return enumerator.GetMemberFromWorkshop((string)DefaultValue);
+            if (ElementRoot.Instance.TryGetEnum(Type, out ElementEnum enumerator))
+            {
+                // hacky hack hack uwu
+                if (enumerator.Name == "Operators")
+                    return new OperatorElement(Operator.Equal);
+
+                return enumerator.GetMemberFromWorkshop((string)DefaultValue);
+            }
             // Null
             else if (DefaultValue == null) return Element.Null();
             // Boolean
