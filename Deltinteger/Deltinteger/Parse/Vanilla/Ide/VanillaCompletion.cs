@@ -144,7 +144,7 @@ static class VanillaCompletion
         int selected = 0;
         for (int i = 1; i < expression.Arguments.Count; i++)
         {
-            if (caretPos >= expression.Arguments[i].PreceedingComma.Range.End)
+            if (expression.Arguments[i].PreceedingComma is not null && caretPos >= expression.Arguments[i].PreceedingComma!.Range.End)
             {
                 selected = i;
             }
@@ -232,4 +232,12 @@ static class VanillaCompletion
         }));
 
     public static ICompletionRange Clear(DocRange range) => ICompletionRange.New(range, Enumerable.Empty<CompletionItem>());
+
+    public static MarkupBuilder GetVariableHover(VanillaVariable var, bool isImplicit) => new MarkupBuilder().StartCodeLine()
+        .Add("variables {")
+        .NewLine().Indent().Add(VanillaHelper.GlobalOrPlayerString(var.IsGlobal) + ":")
+        .If(isImplicit, m => m.NewLine().Indent().Indent().Add("// implicit default variable"))
+        .NewLine().Indent().Indent().Add($"{var.Id}: {var.Name}")
+        .NewLine().Add("}")
+        .EndCodeLine();
 }

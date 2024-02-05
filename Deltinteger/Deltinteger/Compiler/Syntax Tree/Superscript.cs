@@ -82,7 +82,7 @@ record class VanillaSymbolExpression(Token Token) : IVanillaExpression
 record class VanillaInvokeExpression(DocRange Range, IVanillaExpression Invoking, List<VanillaInvokeParameter> Arguments, Token LeftParentheses, Token? RightParentheses) : IVanillaExpression;
 
 /// <summary>A function call argument used by VanillaInvokeExpression.</summary>
-record struct VanillaInvokeParameter(Token PreceedingComma, IVanillaExpression Value);
+record struct VanillaInvokeParameter(Token? PreceedingComma, IVanillaExpression Value);
 
 /// <summary>Placeholder when an expression is missing.</summary>
 record class MissingVanillaExpression(DocRange Range) : IVanillaExpression;

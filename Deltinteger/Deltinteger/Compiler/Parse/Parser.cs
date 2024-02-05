@@ -651,20 +651,29 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         List<T> ParseDelimitedList<T>(TokenType terminator, Func<bool> elementDeterminer, Func<T> parseElement)
         {
+            return ParseDelimitedList(terminator, elementDeterminer, _ => parseElement(), null);
+        }
+
+        List<T> ParseDelimitedList<T>(TokenType terminator, Func<bool> elementDeterminer, Func<Token, T> parseElement, Func<Token, T> onMissing)
+        {
             var values = new List<T>();
 
+            Token lastComma = null;
+            bool requireThisTime = false;
             while (true)
             {
                 if (elementDeterminer())
                 {
+                    requireThisTime = false;
                     int s = Token;
 
-                    T lastElement = parseElement();
+                    T lastElement = parseElement(lastComma);
                     values.Add(lastElement);
 
-                    if (ParseOptional(TokenType.Comma, out Token comma))
+                    if (ParseOptional(TokenType.Comma, out lastComma))
                     {
-                        if (lastElement is IListComma listComma) listComma.NextComma = comma;
+                        requireThisTime = true;
+                        if (lastElement is IListComma listComma) listComma.NextComma = lastComma;
                         continue;
                     }
 
@@ -687,6 +696,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     }
                     continue;
                 }
+                else if (requireThisTime && onMissing is not null)
+                {
+                    values.Add(onMissing(lastComma));
+                }
+                lastComma = null;
+                requireThisTime = false;
 
                 if (Is(terminator))
                     break;
@@ -2297,27 +2312,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Invoke
             if (ParseOptional(TokenType.Parentheses_Open, out var leftParentheses))
             {
-                var arguments = new List<VanillaInvokeParameter>();
-                if (!Is(TokenType.Parentheses_Close))
-                {
-                    Token previousComma = null;
-                    do
+                var arguments = ParseDelimitedList(
+                    TokenType.Parentheses_Close,
+                    () => Kind.IsWorkshopExpression(),
+                    previousComma => new VanillaInvokeParameter(previousComma, ParseVanillaExpression()),
+                    previousComma =>
                     {
-                        if (Is(TokenType.Parentheses_Close) || Is(TokenType.Comma))
-                        {
-                            AddError(new InvalidExpressionTerm(Current));
-                            arguments.Add(new(previousComma, new MissingVanillaExpression(Current)));
+                        AddError(new UnexpectedToken(Current));
+                        return new VanillaInvokeParameter(previousComma, new MissingVanillaExpression(Current));
+                    });
 
-                            if (Is(TokenType.Parentheses_Close))
-                                break;
-                        }
-                        else
-                            arguments.Add(new(previousComma, ParseVanillaExpression()));
-                    }
-                    while (ParseOptional(TokenType.Comma, out previousComma));
-                }
-
-                // Parameter list
+                // End parameter list
                 var rightParentheses = ParseExpected(TokenType.Parentheses_Close);
 
                 expression = new VanillaInvokeExpression(r.GetRange(), expression, arguments, leftParentheses, rightParentheses);
