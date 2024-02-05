@@ -26,7 +26,7 @@ static class ElementJsonTypeHelper
         "map" => typeSupplier.Map(),
         "team" => typeSupplier.Team(),
         "gamemode" => typeSupplier.GameMode(),
-        "color" => typeSupplier.EnumType("Color"),
+        "color" => typeSupplier.Color(),
         "hero[]" => typeSupplier.Array(typeSupplier.Hero()),
         "string[]" => typeSupplier.Array(typeSupplier.String()),
         "hero | hero[]" => typeSupplier.PipeType(typeSupplier.Hero(), typeSupplier.Array(typeSupplier.Hero())),
