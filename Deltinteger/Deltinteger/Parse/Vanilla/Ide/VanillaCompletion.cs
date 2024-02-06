@@ -82,13 +82,16 @@ static class VanillaCompletion
     }
 
     /// <summary>Creates completion for actions and values.</summary>
-    public static ICompletionRange CreateStatementCompletion(DocRange range, BalancedActions balancer) =>
+    public static ICompletionRange CreateStatementCompletion(DocRange range, BalancedActions balancer, bool includeActions) =>
         ICompletionRange.New(range, args =>
         {
             var notable = balancer.GetNotableActionsFromPos(args.Pos);
-            return ElementRoot.Instance.Actions
-                .Select(action => GetActionCompletionItem(action, notable.Contains(action.Name)))
-                .Concat(Values).Concat(Keywords);
+            var actions = includeActions ?
+                ElementRoot.Instance.Actions.Select(
+                    action => GetActionCompletionItem(action, notable.Contains(action.Name)))
+                : Enumerable.Empty<CompletionItem>();
+
+            return actions.Concat(Values).Concat(Keywords);
         });
 
     /// <summary>Creates completion for values.</summary>

@@ -142,7 +142,7 @@ static class VanillaAnalysis
         }
 
         // action value completion
-        context.AddCompletion(VanillaCompletion.CreateStatementCompletion(syntax.Range, balancer));
+        context.AddCompletion(VanillaCompletion.CreateStatementCompletion(syntax.Range, balancer, contentType != RuleContentType.Conditions));
 
         return analyzedExpressions.ToArray();
     }
