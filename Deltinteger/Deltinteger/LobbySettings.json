@@ -2184,6 +2184,10 @@
             "to": "modes.$0.disabled maps"
         },
         {
+            "from": "Modes.All",
+            "to": "modes.General"
+        },
+        {
             "from": "Modes",
             "to": "modes"
         },
