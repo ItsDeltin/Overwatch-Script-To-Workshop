@@ -265,12 +265,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Block Block { get; }
         public Token GlobalVar { get; }
         public Token PlayerVar { get; }
-        public Token Subroutine { get; }
+        public FunctionSubroutineSyntax Subroutine { get; }
 
         // Macro
         public IParseExpression MacroValue { get; }
 
-        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine, MetaComment metaComment)
+        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, FunctionSubroutineSyntax subroutine, MetaComment metaComment)
         {
             Attributes = attributes;
             Type = type;
@@ -295,6 +295,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             MetaComment = metaComment;
         }
     }
+
+    public record FunctionSubroutineSyntax(Token Name, Token Target);
 
     public class ConstructorContext
     {

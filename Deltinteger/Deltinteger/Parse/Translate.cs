@@ -253,12 +253,25 @@ namespace Deltin.Deltinteger.Parse
             // Get the function declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
-                ParseInfo parseInfo = new ParseInfo(script, this);
-                RootElement.Iter(script.Context.RootItems, declaration: declaration =>
+                var scopedSubroutines = new VanillaScope(defaultVanillaVariables);
+                ParseInfo parseInfo = new(script, this)
                 {
-                    if (declaration is FunctionContext function)
-                        DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, null);
-                });
+                    ScopedVanillaVariables = scopedSubroutines
+                };
+                RootElement.Iter(script.Context.RootItems,
+                    // OSTW function
+                    declaration: declaration =>
+                    {
+                        if (declaration is FunctionContext function)
+                            DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, null);
+                    },
+                    // Vanilla subroutine
+                    variables: vanillaCollection =>
+                    {
+                        var analyzedSubroutineCollection = analyzedVanillaVariables[vanillaCollection];
+                        analyzedSubroutineCollection.AddToScope(scopedSubroutines);
+                    }
+                );
             }
         }
 

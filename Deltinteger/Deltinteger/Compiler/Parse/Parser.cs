@@ -1431,16 +1431,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 else
                 {
                     // Get optional subroutine attributes.
-                    Token globalvar = null, playervar = null, subroutine = null;
+                    Token globalvar = null, playervar = null;
+                    FunctionSubroutineSyntax subroutine = null;
 
                     // This will parse either the globalvar or playervar tokens.
                     if (ParseOptional(TokenType.GlobalVar, out globalvar) || ParseOptional(TokenType.PlayerVar, out playervar))
                     {
                         // Get the subroutine name.
-                        subroutine = ParseExpected(TokenType.String);
+                        subroutine = ParseSubroutineName(true);
                     }
                     // Get the optional subroutine name.
-                    else subroutine = ParseOptional(TokenType.String);
+                    else subroutine = ParseSubroutineName(false);
 
                     // Get the function's block.
                     Block block = ParseBlock();
@@ -1521,6 +1522,19 @@ namespace Deltin.Deltinteger.Compiler.Parse
             else return null;
             return new TargetWorkshopVariable(r.GetRange(), targets);
         });
+
+        FunctionSubroutineSyntax ParseSubroutineName(bool required)
+        {
+            Token name = required ? ParseExpected(TokenType.String) : ParseOptional(TokenType.String);
+            Token target = null;
+
+            if (name && ParseOptional(TokenType.Colon))
+            {
+                target = ParseExpected(TokenType.String);
+            }
+
+            return new(name, target);
+        }
 
         VariableDeclaration ParseDeclaration(bool parseSemicolon)
         {

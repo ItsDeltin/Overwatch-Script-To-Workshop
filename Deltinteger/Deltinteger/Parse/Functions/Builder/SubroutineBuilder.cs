@@ -24,7 +24,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         public SubroutineCatalogItem Initiate()
         {
             // Setup the subroutine element.
-            Subroutine subroutine = _deltinScript.SubroutineCollection.NewSubroutine(_context.ElementName);
+            Subroutine subroutine = _context.TargetSubroutine;
+            subroutine ??= _deltinScript.SubroutineCollection.NewSubroutine(_context.ElementName);
 
             // Create the rule.
             _subroutineRule = new TranslateRule(_deltinScript, subroutine, _context.RuleName, _context.VariableGlobalDefault);
@@ -113,5 +114,6 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         public CodeType ContainingType;
         public IWorkshopFunctionController Controller;
         public InstanceAnonymousTypeLinker TypeLinker;
+        public Subroutine TargetSubroutine;
     }
 }
