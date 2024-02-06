@@ -134,6 +134,7 @@
                         },
                         {
                             "name": "Shield Bash",
+                            "template": "ability",
                             "$knockback": true
                         },
                         {
