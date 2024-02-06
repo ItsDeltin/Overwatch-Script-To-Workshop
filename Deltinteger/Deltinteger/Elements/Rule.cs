@@ -101,10 +101,12 @@ namespace Deltin.Deltinteger.Elements
                     builder.AppendLine("// Action count: " + Actions.Length);
 
                 builder.AppendKeywordLine("actions").AppendLine("{").Indent();
+                int resetIndentInCaseOfUnbalance = builder.GetCurrentIndent();
 
                 foreach (var action in Actions)
                     action.ToWorkshop(builder, ToWorkshopContext.Action);
 
+                builder.SetCurrentIndent(resetIndentInCaseOfUnbalance);
                 builder.Outdent().AppendLine("}");
             }
             builder.Outdent().AppendLine("}");

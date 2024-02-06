@@ -60,7 +60,9 @@ namespace Deltin.Deltinteger
             return this;
         }
 
-        public string Translate(string keyword) => LanguageInfo.Translate(OutputLanguage, keyword);
+        public int GetCurrentIndent() => _indentCount;
+        public void SetCurrentIndent(int count) => Math.Max(_indentCount = count, 0);
+
 
         public string GetResult() => _builder.ToString();
     }
