@@ -194,6 +194,13 @@ static class VanillaAnalysis
             }
         }
 
+        // Error if there are not enough options.
+        int expectedItemCount = isSubroutine ? 2 : 3;
+        if (syntax.InnerItems.Length < expectedItemCount)
+        {
+            context.Error($"Expected {expectedItemCount} rule parameters", syntax.GroupToken);
+        }
+
         // Add completion between each statement
         DocPos start = syntax.Range.Start;
         for (int i = 0; i < 3; i++)
