@@ -966,7 +966,7 @@
     },
     "variable-declaration": {
       "name": "meta.declaration.variable",
-      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist)\\b\\s*)*)(?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)([a-zA-Z0-9_]+\\b)\\s*(((!)\\s*)?(=)|(:))?",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist)\\b\\s*)*)(?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)([a-zA-Z0-9_]+\\b)\\s*",
       "beginCaptures": {
         "1": {
           "name": "storage.modifier"
@@ -981,15 +981,6 @@
         },
         "14": {
           "name": "entity.name.variable.field"
-        },
-        "17": {
-          "name": "keyword.operator.assignment"
-        },
-        "18": {
-          "name": "keyword.operator.assignment"
-        },
-        "19": {
-          "name": "punctuation.separator.key-value"
         }
       },
       "end": ";",
@@ -1000,7 +991,57 @@
       },
       "patterns": [
         {
-          "include": "#expression"
+          "begin": "(=)|(:)",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.operator.assignment"
+            },
+            "1": {
+              "name": "keyword.operator.assignment"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value"
+            }
+          },
+          "end": "(?=;)",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "name": "keyword.operator.assignment",
+          "match": "!",
+          "captures": {}
+        },
+        {
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.block"
+            }
+          },
+          "end": "\\}",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.block"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#string-literal"
+            },
+            {
+              "match": "(,)",
+              "captures": {
+                "1": {
+                  "name": "punctuation.separator.comma"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -1053,7 +1094,7 @@
               "name": "keyword.operator.assignment"
             }
           },
-          "end": ";",
+          "end": ";|(?={)",
           "endCaptures": {
             "0": {
               "name": "punctuation.terminator.statement.ostw"
