@@ -25,8 +25,8 @@ struct WhitespaceLexScanner
 
     public readonly bool Next(out char value)
     {
-        value = _content.ElementAtOrDefault(_currentPosition.Index);
-        return !ReachedEnd();
+        value = _currentPosition.Index < _content.Length ? _content[_currentPosition.Index] : default;
+        return _currentPosition.Index < _content.Length;
     }
 
     public readonly bool ReachedEnd() => _currentPosition.Index >= _content.Length;
