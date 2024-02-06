@@ -312,7 +312,7 @@ static class WorkshopStringUtility
     readonly record struct DecoratedStub(string Text, bool AddNextStub);
 
     /// <summary>Gets the byte count of a string once it is imported into the workshop.</summary>
-    static int LengthOfStringInWorkshop(string str)
+    public static int LengthOfStringInWorkshop(string str)
     {
         return Encoding.UTF8.GetByteCount(str.Replace("\r", "\\r").Replace("\n", "\\n"));
     }

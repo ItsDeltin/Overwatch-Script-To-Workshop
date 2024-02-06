@@ -88,13 +88,18 @@ static class VanillaExpressions
     /// <summary>Creates a string node.</summary>
     public static IVanillaNode String(VanillaContext context, VanillaStringExpression syntax)
     {
+        string value = WorkshopStringUtility.WorkshopStringFromRawText(syntax.Token.Text);
+
         // String literals can only be used inside the 'String' and 'Custom String' values.
         if (!context.GetActiveParameterData().NeedsStringLiteral)
         {
             context.Error("String literal cannot be used here, did you mean to use Custom String?", syntax.Range);
         }
-
-        string value = WorkshopStringUtility.WorkshopStringFromRawText(syntax.Token.Text);
+        // Warning if the string literal is too large.
+        else if (WorkshopStringUtility.LengthOfStringInWorkshop(value) >= Constants.MAX_STRING_STUB_BYTE_LENGTH)
+        {
+            context.Warning($"String literal is larger than {Constants.MAX_STRING_STUB_BYTE_LENGTH} bytes, this may be trimmed by Overwatch", syntax.Range);
+        }
 
         return IVanillaNode.New(
             syntax,
