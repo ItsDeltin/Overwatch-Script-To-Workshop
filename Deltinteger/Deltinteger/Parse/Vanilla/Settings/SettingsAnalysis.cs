@@ -159,7 +159,7 @@ static class AnalyzeSettings
         public readonly SettingsAnalysisContext NewWithChild(string name)
         {
             var copy = this;
-            copy.CurrentObject = CurrentObjectChildren.FirstOrDefault(child => child.Name == name);
+            copy.CurrentObject = CurrentObjectChildren.FirstOrDefault(child => child.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
             copy.CurrentObjectChildren = copy.CurrentObject?.Children ?? Array.Empty<EObject>();
             return copy;
         }

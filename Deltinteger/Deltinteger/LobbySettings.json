@@ -623,6 +623,11 @@
                                 "Caduceus Staff Only",
                                 "Caduceus Blaster Only"
                             ]
+                        },
+                        {
+                            "name": "Angelic Descent",
+                            "type": "boolean_onoff",
+                            "default": true
                         }
                     ]
                 },
@@ -715,6 +720,10 @@
                         {
                             "name": "Hover Jets Unlimited Fuel",
                             "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Jump Jet",
+                            "template": "ability"
                         }
                     ]
                 },
@@ -874,6 +883,11 @@
                         {
                             "name": "Power Slide",
                             "template": "ability"
+                        },
+                        {
+                            "name": "Railgun Alt Fire",
+                            "type": "boolean_onoff",
+                            "default": true
                         },
                         {
                             "name": "Railgun Alt Fire Energy Charge Rate",
@@ -1654,19 +1668,19 @@
                 "ult": {
                     "then": [
                         {
-                            "name": "Ultimate Ability ($value)",
+                            "name": "Ultimate Ability $value",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Ultimate Generation $value",
                             "type": "range_percentage"
                         },
                         {
-                            "name": "Ultimate Generation ($value)",
+                            "name": "Ultimate Generation - Passive $value",
                             "type": "range_percentage"
                         },
                         {
-                            "name": "Ultimate Generation - Passive ($value)",
-                            "type": "range_percentage"
-                        },
-                        {
-                            "name": "Ultimate Generation - Combat ($value)",
+                            "name": "Ultimate Generation - Combat $value",
                             "type": "range_percentage"
                         }
                     ]
@@ -1726,6 +1740,10 @@
                     "then": [
                         {
                             "name": "No Automatic Fire",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "No Scope",
                             "type": "boolean_onoff"
                         }
                     ]

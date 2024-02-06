@@ -167,7 +167,8 @@ static class VanillaAnalysis
                 syntax.InnerItems[i].Expression);
             var itemInformation = analysis.GetSymbolInformation();
 
-            if (i == (isSubroutine ? 2 : EventTypesOrder.Length))
+            // Three options for events, two options for subroutines.
+            if (i == (isSubroutine ? 2 : 3))
             {
                 context.Error("Too many statements in event category", analysis.DocRange());
             }
@@ -187,6 +188,7 @@ static class VanillaAnalysis
                 else
                 {
                     parameters.Add(constant!);
+                    // Require the next value to be a subroutine.
                     isSubroutine |= i == 0 && constant!.Name == "Subroutine";
                 }
             }

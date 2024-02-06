@@ -227,7 +227,7 @@ static class VanillaExpressions
                             {
                                 bool isSupported = RestrictedCall.SupportedGroups[restrictedType.Value].Contains(context.EventType.Value);
                                 if (!isSupported)
-                                    context.Error($"A restricted value of type '{RestrictedCall.StringFromCallType(restrictedType.Value)}' cannot be called in this rule", syntax.Range);
+                                    context.Warning($"A restricted value of type '{RestrictedCall.StringFromCallType(restrictedType.Value)}' cannot be called in this rule", syntax.Range);
                             }
                         }
 
@@ -701,19 +701,18 @@ static class VanillaExpressions
 
     public static IVanillaNode TeamSugar(VanillaContext context, VanillaTeamSugarExpression syntax)
     {
-        context.AddHover(syntax.Range, syntax.Token.TokenType switch
+        var (constant, mayConflict, hover) = syntax.Token.TokenType switch
         {
-            TokenType.Team1 => Team1Hover,
-            TokenType.Team2 => Team2Hover,
-            _ => AllTeamsHover
-        });
+            TokenType.Team1 => (ElementRoot.Instance.GetEnumValueFromWorkshop("Team", "Team 1"), true, Team1Hover),
+            TokenType.Team2 => (ElementRoot.Instance.GetEnumValueFromWorkshop("Team", "Team 2"), true, Team2Hover),
+            TokenType.AllTeams or _ => (ElementRoot.Instance.GetEnumValueFromWorkshop("Team", "All"), false, AllTeamsHover)
+        };
 
-        return IVanillaNode.New(syntax, c => Element.Part("Team", syntax.Token.TokenType switch
-        {
-            TokenType.Team1 => ElementRoot.Instance.GetEnumValueFromWorkshop("Team", "Team 1"),
-            TokenType.Team2 => ElementRoot.Instance.GetEnumValueFromWorkshop("Team", "Team 2"),
-            TokenType.AllTeams or _ => ElementRoot.Instance.GetEnumValueFromWorkshop("Team", "All")
-        }));
+        context.AddHover(syntax.Range, hover);
+
+        return IVanillaNode.New(syntax,
+            new(WorkshopConstant: mayConflict ? constant : null),
+            c => Element.Part("Team", constant));
     }
 
     static bool ShouldErrorDependents(params IVanillaNode[] dependents)
