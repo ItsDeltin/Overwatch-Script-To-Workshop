@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Compiler.Parse.Vanilla;
 static class VanillaInfo
 {
     public static readonly HashSet<char> StructureCharacters = new HashSet<char> {
-        '{', '}', ';', '"', '(', ')', '[', ']', '=', '+', '-', '/', '*', '^', '.', ',', ':', '?', '\r', '\n', '<', '>', '!', '&', '|'
+        '{', '}', ';', '"', '(', ')', '[', ']', '=', '+', '-', '/', '*', '%', '^', '.', ',', ':', '?', '\r', '\n', '<', '>', '!', '&', '|'
     };
 
     public static readonly VanillaKeyword GlobalNamespace = VanillaKeyword.EnKwForTesting("Global");

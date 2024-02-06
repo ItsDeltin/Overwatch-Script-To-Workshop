@@ -2432,6 +2432,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 {
                     settingValue = ParseListOfSettings();
                 }
+                // Map ID thing (ex: Workshop Island Night 972777519512064579)
+                else if (ParseOptional(TokenType.Number))
+                {
+                    // ...not sure what to do with this
+                }
 
                 settings.Add(new(disabled, settingToken, colon, tokenAfterColon, settingValue));
             }
