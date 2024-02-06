@@ -112,7 +112,7 @@ record CStyleOperator(int Precedence, string Text, CStyleOperatorType Type, Toke
     public static CStyleOperator Dot { get; } = DotOp(13, ".", TokenType.Dot);
     // Some more precedence data for other types of operators.
     public const int TypeCastPrecedence = 11;
-    public const int ArrayIndexPrecedence = 12;
+    public const int ArrayIndexPrecedence = 13;
     public const int InvokePrecedence = 14;
 
     static CStyleOperator Binary(int precedence, string text, TokenType tokenType) => new(precedence, text, CStyleOperatorType.Binary, tokenType);
