@@ -71,8 +71,8 @@ class VanillaVariableAnalysis : IAnalyzedVanillaCollection
                     }
                 }
                 // Check for duplicates.
-                else if (vanillaVariables.Any(otherItem => name == otherItem.Name))
-                    script.Diagnostics.Warning($"Duplicate workshop variable name '{item.Name}'", item.Name.Value.Range);
+                else if (currentGroup != CurrentGroup.None && vanillaVariables.Any(otherItem => name == otherItem.Name && otherItem.IsGlobal == (currentGroup == CurrentGroup.Global)))
+                    script.Diagnostics.Warning($"Duplicate workshop variable name '{item.Name.Value.Name}'", item.Name.Value.Range);
                 else
                 {
                     int id = -1;

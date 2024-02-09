@@ -274,18 +274,17 @@ static class VanillaExpressions
                 // Subroutine
                 else if (subroutine is not null)
                     return new Subroutine(0, subroutine.Value.Name);
-                // Error
+                // Variable
                 else if (declaredVariable is not null)
                 {
-                    var value = c.LinkedVariables
-                        .GetVariable(declaredVariable.Value.Name, declaredVariable.Value.IsGlobal)
-                        ?.Get(c.CurrentObject as Element);
+                    var value = c.LinkedVariables.GetVariable(
+                        declaredVariable.Value.Name,
+                        declaredVariable.Value.IsGlobal)
+                        ?.WorkshopVariable;
 
-                    if (value is not null)
-                        return value;
-                    else
-                        return $"'{declaredVariable.Value.Name}' is not linked to an Index Reference";
+                    return value is not null ? value : $"'{declaredVariable.Value.Name}' is not linked to an Index Reference";
                 }
+                // Error
                 else
                     return "Attempted to compile symbol information with incomplete data";
             });
