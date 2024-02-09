@@ -11,13 +11,18 @@ namespace Deltin.Deltinteger.Parse
         private List<Subroutine> Subroutines { get; } = new List<Subroutine>();
         private int CurrentID = 0;
 
-        public Subroutine NewSubroutine(string name)
+        public Subroutine NewSubroutine(string name, int? id = null)
         {
             // Get the next available name.
             name = MetaElement.WorkshopNameFromCodeName(name, Subroutines.Select(sr => sr.Name).ToArray());
 
-            Subroutine newRoutine = new Subroutine(CurrentID, name);
-            CurrentID++;
+            if (id is null)
+            {
+                id = CurrentID;
+                CurrentID++;
+            }
+
+            Subroutine newRoutine = new Subroutine(id.Value, name);
             Subroutines.Add(newRoutine);
 
             return newRoutine;

@@ -71,8 +71,6 @@ public class LexController
         return listed[token];
     }
 
-    //  1234589
-
     bool IsTokenReady(int token)
     {
         return token < listed.Count && (
@@ -444,13 +442,10 @@ public class LexMatcher
             foundLeftNumber = true;
         }
 
-        Skip(scanner);
-
         // At decimal
         if (scanner.At('.'))
         {
             scanner.Advance();
-            Skip(scanner);
 
             // Get the decimal.
             bool decimalFound = false;

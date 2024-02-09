@@ -27,7 +27,7 @@ readonly struct VanillaSubroutineAnalysis : IAnalyzedVanillaCollection
         foreach (var subroutine in vanillaSubroutines)
         {
             var subroutineElement = varAssigner.GetSubroutine(subroutine.Name)
-                ?? subroutineCollection.NewSubroutine(subroutine.Name);
+                ?? subroutineCollection.NewSubroutine(subroutine.Name, subroutine.Id);
 
             varAssigner.AddSubroutine(subroutine.Name, subroutineElement);
         }

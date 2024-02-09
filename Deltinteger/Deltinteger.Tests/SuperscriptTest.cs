@@ -23,4 +23,18 @@ public class SuperscriptTest
     {
         TestUtils.AtomizeAndReconstruct("SUPERHOT.ostw");
     }
+
+    [TestMethod("Overwatch Unlimited 3")]
+    [DeploymentItem(@"TestWorkshopScripts\OverwatchUnlimited3.ostw")]
+    public void OverwatchUnlimited3()
+    {
+        TestUtils.AtomizeAndReconstruct("OverwatchUnlimited3.ostw");
+    }
+
+    [TestMethod("Roll For Initiative")]
+    [DeploymentItem(@"TestWorkshopScripts\RollForInitiative.ostw")]
+    public void RollForInitiative()
+    {
+        TestUtils.AtomizeAndReconstruct("RollForInitiative.ostw");
+    }
 }
