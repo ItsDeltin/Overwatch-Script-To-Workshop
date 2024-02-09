@@ -150,7 +150,7 @@ static class VanillaAnalysis
     public static AnalyzedRuleEvent AnalyzeEventContent(VanillaContext context, VanillaRuleContent syntax)
     {
         var parameters = new List<ElementEnumMember>();
-        bool isSubroutine = false;
+        TopKind topKind = TopKind.Unknown;
         string? subroutineName = null;
 
         // Analyze expressions.
@@ -158,9 +158,9 @@ static class VanillaAnalysis
         {
             var analysis = AnalyzeExpression(
                 context.SetActiveParameterData(new(
-                    ExpectingSubroutine: isSubroutine,
+                    ExpectingSubroutine: IsSubroutine(topKind),
                     // This will allow symbol analysis to select the right keyword.
-                    ExpectingType: isSubroutine || i >= EventTypesOrder.Length
+                    ExpectingType: IsSubroutine(topKind) || i >= EventTypesOrder.Length
                         ? null
                         : context.VanillaTypeFromJsonName(EventTypesOrder[i])
                 )),
@@ -168,15 +168,15 @@ static class VanillaAnalysis
             var itemInformation = analysis.GetSymbolInformation();
 
             // Three options for events, two options for subroutines.
-            if (i == (isSubroutine ? 2 : 3))
+            if (i == GetExpectedItemCount(topKind))
             {
                 context.Error("Too many statements in event category", analysis.DocRange());
             }
-            else if (isSubroutine)
+            else if (IsSubroutine(topKind))
             {
                 subroutineName = itemInformation.SymbolName;
             }
-            else if (i < EventTypesOrder.Length && !isSubroutine)
+            else if (i < EventTypesOrder.Length && !IsSubroutine(topKind))
             {
                 var constant = itemInformation.WorkshopConstant;
                 // Ensure the constant is the right type.
@@ -188,17 +188,24 @@ static class VanillaAnalysis
                 else
                 {
                     parameters.Add(constant!);
-                    // Require the next value to be a subroutine.
-                    isSubroutine |= i == 0 && constant!.Name == "Subroutine";
+
+                    if (i == 0)
+                    {
+                        topKind = constant!.Name switch
+                        {
+                            "Subroutine" => TopKind.Subroutine,
+                            "Ongoing - Global" => TopKind.Global,
+                            _ => TopKind.PlayerLike
+                        };
+                    }
                 }
             }
         }
 
         // Error if there are not enough options.
-        int expectedItemCount = isSubroutine ? 2 : 3;
-        if (syntax.InnerItems.Length < expectedItemCount)
+        if (syntax.InnerItems.Length < GetExpectedItemCount(topKind))
         {
-            context.Error($"Expected {expectedItemCount} rule parameters", syntax.GroupToken);
+            context.Error($"Expected {GetExpectedItemCount(topKind)} rule parameters", syntax.GroupToken);
         }
 
         // Add completion between each statement
@@ -209,7 +216,7 @@ static class VanillaAnalysis
             DocPos next = nextSemicolon?.Range.Start ?? syntax.Range.End;
 
             // Todo: show completion per language
-            if (i == 0 || !isSubroutine)
+            if (i == 0 || !IsSubroutine(topKind))
             {
                 context.AddCompletion(VanillaCompletion.CreateEventCompletion(start + next, i switch
                 {
@@ -293,4 +300,21 @@ static class VanillaAnalysis
     }
 
     static readonly string[] EventTypesOrder = new[] { "Event", "Team", "Player" };
+
+    static bool IsSubroutine(TopKind topKind) => topKind == TopKind.Subroutine;
+
+    static int GetExpectedItemCount(TopKind topKind) => topKind switch
+    {
+        TopKind.Subroutine => 2,
+        TopKind.Global => 1,
+        _ => 3
+    };
+
+    enum TopKind
+    {
+        Unknown,
+        Subroutine,
+        Global,
+        PlayerLike
+    }
 }
