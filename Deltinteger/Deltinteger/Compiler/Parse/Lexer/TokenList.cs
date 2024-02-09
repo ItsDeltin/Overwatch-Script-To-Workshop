@@ -13,11 +13,11 @@ public class TokenList
 
     public Token this[int i] { get => tokens[i]; }
 
-    public bool Add(Token token, LexPosition endPosition, LexerContextKind contextKind, MatchError? Error)
+    public bool Add(int index, Token token, LexPosition startPosition, LexPosition endPosition, LexerContextKind contextKind, MatchError? Error)
     {
-        if (tokenData.TryAdd(token, new(Count, endPosition, contextKind, Error)))
+        if (tokenData.TryAdd(token, new(index, startPosition, endPosition, contextKind, Error)))
         {
-            tokens.Add(token);
+            tokens.Insert(index, token);
             return true;
         }
         return false;
@@ -35,16 +35,28 @@ public class TokenList
 
     public Token Last() => tokens.Last();
 
-    public Token? ElementAtOrDefault(int index) => tokens.ElementAtOrDefault(index);
+    public Token? ElementAtOrDefault(int index) => index < tokens.Count ? tokens[index] : null;
+
+    public Token? NextToken(Token previous) => ElementAtOrDefault(IndexOf(previous) + 1);
+
+    public bool IsTokenLast(Token token) => Last() == token;
 
     public IEnumerator<KeyValuePair<Token, TokenNode>> GetEnumerator() => tokenData.GetEnumerator();
+
+    public override string ToString()
+    {
+        return $"[{string.Join(", ", tokens.Select(t => t.ToString()))}]";
+    }
 }
 
-public record struct TokenNode(
-    int Index,
-    LexPosition EndPosition,
-    LexerContextKind ContextKind,
-    MatchError? Error);
+public class TokenNode(int index, LexPosition startPosition, LexPosition endPosition, LexerContextKind contextKind, MatchError? error)
+{
+    public int Index = index;
+    public LexPosition StartPosition = startPosition;
+    public LexPosition EndPosition = endPosition;
+    public LexerContextKind ContextKind = contextKind;
+    public MatchError? Error = error;
+}
 
 public readonly struct ReadonlyTokenList
 {

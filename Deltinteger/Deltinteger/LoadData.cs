@@ -5,7 +5,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby2.Expand;
 using System.IO;
 
-static class LoadData
+public static class LoadData
 {
     public static bool IsLoaded { get; private set; } = false;
 

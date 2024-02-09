@@ -1,30 +1,31 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Compiler.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Cache;
 using TextDocumentItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.TextDocumentItem;
 using Deltin.Deltinteger.Compiler.Parse.Lexing;
+using System.Diagnostics;
+using Deltin.Deltinteger.Compiler.File;
 
 namespace Deltin.Deltinteger.Compiler;
 
 public class Document
 {
     public Uri Uri { get; }
-    public string Content { get; private set; }
     public int? Version { get; private set; }
-    public ParserSettings ParserSettings { get; private set; }
+    public ParserSettings ParserSettings { get; private set; } = ParserSettings.Default;
     public CacheWatcher Cache { get; } = new CacheWatcher();
     public DocumentParseResult? ParseResult { get; private set; }
+
+    private VersionInstance content;
 
     public Document(Uri uri, string initialContent)
     {
         Uri = uri;
-        Content = initialContent;
-        Parse();
+        content = new(initialContent);
+        Parse(content);
     }
 
     public Document(TextDocumentItem document) : this(document.Uri.ToUri(), document.Text)
@@ -32,56 +33,52 @@ public class Document
         Version = document.Version;
     }
 
-    private void Parse()
+    private void Parse(VersionInstance newContent, IncrementalParse? incrementalParse = null)
     {
+        content = newContent;
         try
         {
-            var lexer = new Lexer(ParserSettings.Default);
-            lexer.Init(new(Content));
-            var parser = new Parser(lexer, ParserSettings, ParseResult?.Syntax);
-            var syntax = parser.Parse();
-
-            var completedTokenList = lexer.CurrentController.GetCompletedTokenList();
-            ParseResult = new(syntax, completedTokenList, completedTokenList.GetErrors().Concat(parser.Errors));
+            var parser = new Parser(newContent, ParserSettings, incrementalParse);
+            ParseResult = parser.Parse();
+            Debug.WriteLine(ParseResult.Tokens.ToString());
         }
         catch (Exception ex)
         {
             ErrorReport.Add(ex.ToString());
-            ParseResult = new(new(), new(new()), Array.Empty<IParserError>());
+            ParseResult = DocumentParseResult.Default;
         }
     }
 
-    public void Update(string newContent, UpdateRange updateRange, int? version, ParserSettings parserSettings)
+    public void Update(DocumentUpdateRange updateRange, ParserSettings parserSettings)
     {
-        Version = version;
-        Content = newContent;
+        var newContent = new VersionInstance(updateRange.ApplyChangeToString(content.Text));
 
         if (!parserSettings.Equals(ParserSettings))
         {
             ParserSettings = parserSettings;
-            Parse();
+            Parse(newContent);
+        }
+        else if (ParseResult is not null)
+        {
+            var change = ParseResult.Update(newContent, updateRange);
+            Parse(newContent, change);
         }
         else
         {
-            Parse();
-            // incremental lexer is having some issues
-            // todo: make toggleable in ParserSettings!
-            // Lexer.Update(new VersionInstance(newContent), updateRange);
-            // Parse();
+            Parse(newContent);
         }
     }
 
     public void UpdateIfChanged(string newContent, ParserSettings parserSettings)
     {
-        if (newContent == null || (newContent == Content && parserSettings.Equals(ParserSettings))) return;
+        if (newContent is null || (newContent == content.Text && parserSettings.Equals(ParserSettings))) return;
         Update(newContent, parserSettings);
     }
 
     public void Update(string newContent, ParserSettings parserSettings)
     {
-        Content = newContent;
         ParserSettings = parserSettings;
-        Parse();
+        Parse(new(newContent));
     }
 
     public Diagnostic[] GetDiagnostics()
@@ -96,7 +93,7 @@ public class Document
     public TextDocumentItem AsItem() => new TextDocumentItem()
     {
         Uri = Uri,
-        Text = Content,
+        Text = content.Text,
         LanguageId = "ostw"
     };
 
@@ -104,9 +101,6 @@ public class Document
     {
         Cache.Unregister();
     }
-}
 
-public record DocumentParseResult(
-    RootContext Syntax,
-    ReadonlyTokenList Tokens,
-    IEnumerable<IParserError> ParserErrors);
+    public string GetContent() => content.Text;
+}

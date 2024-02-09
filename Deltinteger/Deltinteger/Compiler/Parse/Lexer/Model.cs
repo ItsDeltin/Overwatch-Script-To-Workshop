@@ -1,4 +1,6 @@
 #nullable enable
+using System.Collections.Generic;
+
 namespace Deltin.Deltinteger.Compiler.Parse.Lexing;
 
 public enum LexerContextKind
@@ -8,27 +10,23 @@ public enum LexerContextKind
     LobbySettings
 }
 
-/// <summary>The affected range of a file when it's contents were changed.</summary>
-class AffectedAreaInfo
-{
-    /// <summary>The starting character where the change occured.</summary>
-    public int StartIndex { get; }
-    /// <summary>The index of the exising token stream where the change starts.</summary>
-    public int StartingTokenIndex { get; }
-    /// <summary>The index of the exising token stream where the change ends.</summary>
-    public int EndingTokenIndex { get; }
-
-    public AffectedAreaInfo(int startIndex, int startingTokenIndex, int endingTokenIndex)
-    {
-        StartIndex = startIndex;
-        StartingTokenIndex = startingTokenIndex;
-        EndingTokenIndex = endingTokenIndex;
-    }
-}
-
+/// <summary>A position in the document.</summary>
+/// <param name="Index">The character index of the position.</param>
+/// <param name="Line">The line of the position.</param>
+/// <param name="Column">The current column in the line.</param>
 public record struct LexPosition(int Index, int Line, int Column)
 {
     public static readonly LexPosition Zero = new();
+
+    public static implicit operator DocPos(LexPosition lexPosition) => new(lexPosition.Line, lexPosition.Column);
 }
 
+/// <summary>An error that opccured while matching a token.</summary>
 public record struct MatchError(string Message);
+
+/// <summary>Contains data for parsing incrementally.</summary>
+public readonly record struct IncrementalParse(LexerIncrementalChange IncrementalLexer, IReadOnlyList<TokenCapture> NodeCaptures)
+{
+    public readonly int ChangeStartToken() => IncrementalLexer.ChangeStartToken;
+    public readonly int ChangeEndToken() => 0;
+}

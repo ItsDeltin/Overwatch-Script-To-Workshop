@@ -81,7 +81,7 @@ class WebFileGetter : IFileGetter
         _documentHandler = documentHandler;
     }
 
-    public string? GetContent(Uri uri) => _documentHandler.TextDocumentFromUri(uri).Content;
+    public string? GetContent(Uri uri) => _documentHandler.TextDocumentFromUri(uri)?.GetContent();
 
     public Document? GetScript(Uri uri) => _documentHandler.TextDocumentFromUri(uri);
 

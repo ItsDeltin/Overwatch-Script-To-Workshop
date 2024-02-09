@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Deltin.Deltinteger;
 
@@ -11,6 +12,8 @@ static class ErrorReport
 
     public static void Add(string message)
     {
+        Debug.WriteLine(message);
+
         if (errorReporter is null)
             messages.Enqueue(message);
         else
@@ -24,6 +27,19 @@ static class ErrorReport
             onError.OnError(messages.Dequeue());
         }
         errorReporter = onError;
+    }
+
+    public static T TryOr<T>(T or, Func<T> func)
+    {
+        try
+        {
+            return func();
+        }
+        catch (Exception ex)
+        {
+            Add(ex.Message);
+            return or;
+        }
     }
 }
 

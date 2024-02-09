@@ -10,17 +10,17 @@ public class LexScanner
     public bool WasAdvanced { get; private set; }
     public bool ReachedEnd => _position.Index >= _content.Length;
     public LexPosition Position => _position;
+    public LexPosition StartPos { get; }
 
     private LexPosition _position;
     private readonly string _content;
-    private readonly DocPos _startPos;
     private readonly StringBuilder _captured = new StringBuilder();
 
     public LexScanner(LexPosition position, string content)
     {
         _position = position;
         _content = content;
-        _startPos = new DocPos(position.Line, position.Column);
+        StartPos = position;
     }
 
     public void Advance()
@@ -62,5 +62,5 @@ public class LexScanner
     public bool AtIdentifierChar() => !ReachedEnd && CharData.IdentifierCharacters.Contains(_content[_position.Index]);
     public bool AtWhitespace() => !ReachedEnd && CharData.WhitespaceCharacters.Contains(_content[_position.Index]);
     public bool AtNumeric() => !ReachedEnd && CharData.NumericalCharacters.Contains(_content[_position.Index]);
-    public Token AsToken(TokenType tokenType) => new Token(_captured.ToString(), new DocRange(_startPos, new DocPos(_position.Line, _position.Column)), tokenType);
+    public Token AsToken(TokenType tokenType) => new Token(_captured.ToString(), new(StartPos, new(_position.Line, _position.Column)), tokenType);
 }

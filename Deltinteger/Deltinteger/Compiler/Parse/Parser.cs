@@ -4,6 +4,7 @@ using System.Linq;
 using Deltin.Deltinteger.Compiler.Parse.Operators;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Compiler.Parse.Lexing;
+using Deltin.Deltinteger.Compiler.File;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
@@ -23,19 +24,22 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public Stack<bool> StringCheck { get; } = new Stack<bool>();
         public List<TokenCapture> NodeCaptures { get; } = new List<TokenCapture>();
         public List<IParserError> Errors { get; } = new List<IParserError>();
-        private readonly RootContext _last;
+
+        private readonly VersionInstance _content;
         private readonly ParserSettings _parserSettings;
+        private readonly IncrementalParse? _increment;
 
         readonly OperatorStack<IParseExpression> _operatorStack = new(new OstwOperandFactory());
         readonly OperatorStack<IVanillaExpression> _vanillaOperatorStack = new(new VanillaOperandFactory());
 
         private int LookaheadDepth = 0;
 
-        public Parser(Lexer lexer, ParserSettings parserSettings, RootContext last = null)
+        public Parser(VersionInstance content, ParserSettings parserSettings, IncrementalParse? increment)
         {
-            Lexer = lexer;
+            Lexer = new(parserSettings, increment?.IncrementalLexer, content);
+            _content = content;
             _parserSettings = parserSettings;
-            _last = last;
+            _increment = increment;
             StringCheck.Push(false);
         }
 
@@ -133,16 +137,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool GetIncrementalNode<T>(out T node)
         {
             // If the last syntax tree was not provided or the current token is inside the change range, return null.
-            if (_last?.NodeCaptures == null || (Token >= Lexer.IncrementalChangeStart && Token <= Lexer.IncrementalChangeEnd))
+            if (_increment is null || (Token >= _increment.Value.ChangeStartToken() && Token <= _increment.Value.ChangeEndToken()))
             {
-                node = default(T);
+                node = default;
                 return false;
             }
 
             // Iterate through each cached node.
-            foreach (var capture in _last.NodeCaptures)
+            foreach (var capture in _increment.Value.NodeCaptures)
             {
-                bool surpassesIncrementalChange = Token > Lexer.IncrementalChangeStart;
+                bool surpassesIncrementalChange = Token > _increment.Value.ChangeStartToken();
 
                 // If the node's type is equal to the expected node type
                 // and the cached node's start token index is equal to the current token's index (adjusted for token difference if the current token is past the change position) 
@@ -152,9 +156,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // the change starts (Lexer.IncrementalChangeStart)
                     //
                     // This makes sure we do not reuse a changed incremental node.
-                    (capture.StartToken + capture.Length < Lexer.IncrementalChangeStart || (Lexer.IsPushCompleted && capture.StartToken > Lexer.IncrementalChangeEnd)) &&
+                    (capture.StartToken + capture.Length < _increment.Value.ChangeStartToken() || (Lexer.IsLexCompleted() && capture.StartToken > _increment.Value.ChangeEndToken())) &&
                     // If this surpasses the incremental change range, make sure the push is completed.
-                    (!surpassesIncrementalChange || Lexer.IsPushCompleted) &&
+                    (!surpassesIncrementalChange || Lexer.IsLexCompleted()) &&
                     // Make sure the incremental node's position matches the current Token (capture.StartToken + ... = Token).
                     // If Token surpasses the incremental change range (surpassesIncrementalChange), then offset by the change delta.
                     capture.StartToken + (surpassesIncrementalChange ? Lexer.GetTokenDelta() : 0) == Token)
@@ -167,7 +171,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             // No matching node was found.
-            node = default(T);
+            node = default;
             return false;
         }
 
@@ -1843,12 +1847,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Parses the root of a file.</summary>
-        public RootContext Parse()
+        public DocumentParseResult Parse()
         {
             var context = new RootContext();
             while (!IsFinished) ParseScriptRootElement(context);
-            context.NodeCaptures = NodeCaptures;
-            return context;
+
+            return new(context, Lexer.CurrentController.GetTokenList(), Errors, NodeCaptures, _content);
         }
 
         /// <summary>Parses a single import, rule, variable, class, etc.</summary>
@@ -2319,7 +2323,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             else
             {
                 Consume();
-                AddError(new InvalidExpressionTerm(Current));
+                AddError(new InvalidExpressionTerm(CurrentOrLast));
                 return new MissingVanillaExpression(r.GetRange());
             }
 
@@ -2332,8 +2336,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     previousComma => new VanillaInvokeParameter(previousComma, ParseVanillaExpression()),
                     previousComma =>
                     {
-                        AddError(new UnexpectedToken(Current));
-                        return new VanillaInvokeParameter(previousComma, new MissingVanillaExpression(Current));
+                        AddError(new UnexpectedToken(CurrentOrLast));
+                        return new VanillaInvokeParameter(previousComma, new MissingVanillaExpression(CurrentOrLast));
                     });
 
                 // End parameter list

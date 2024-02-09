@@ -68,7 +68,7 @@ public class DocumentHandler : ITextDocumentSyncHandler
     };
 
     // Handle save.
-    public Task<Unit> Handle(DidSaveTextDocumentParams saveParams, CancellationToken token)
+    public Task<Unit> Handle(DidSaveTextDocumentParams saveParams, CancellationToken token) => ErrorReport.TryOr(Unit.Task, () =>
     {
         var uri = saveParams.TextDocument.Uri.ToUri();
         _logger.LogMessage("Saving " + uri);
@@ -86,17 +86,17 @@ public class DocumentHandler : ITextDocumentSyncHandler
         }
         _languageServer.ProjectUpdater.UpdateProject(document);
         return Unit.Task;
-    }
+    });
 
     // Handle close.
-    public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
+    public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token) => ErrorReport.TryOr(Unit.Task, () =>
     {
         RemoveDocument(closeParams.TextDocument.Uri.ToUri());
         return Unit.Task;
-    }
+    });
 
     // Handle open.
-    public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
+    public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token) => ErrorReport.TryOr(Unit.Task, () =>
     {
         _logger.LogMessage($"Opening '{openParams.TextDocument.Uri}'");
 
@@ -104,10 +104,10 @@ public class DocumentHandler : ITextDocumentSyncHandler
         _documents.Add(newDocument);
         _languageServer.ProjectUpdater.UpdateProject(newDocument);
         return Unit.Task;
-    }
+    });
 
     // Handle change.
-    public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
+    public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token) => ErrorReport.TryOr(Unit.Task, () =>
     {
         var uri = changeParams.TextDocument.Uri.ToUri();
         var document = TextDocumentFromUri(uri);
@@ -123,19 +123,12 @@ public class DocumentHandler : ITextDocumentSyncHandler
             if (change.Range is null)
                 continue;
 
-            int start = Extras.TextIndexFromPosition(document.Content, change.Range.Start);
-            int length = Extras.TextIndexFromPosition(document.Content, change.Range.End) - start;
-
-            StringBuilder rep = new StringBuilder(document.Content);
-            rep.Remove(start, length);
-            rep.Insert(start, change.Text);
-
-            document.Update(rep.ToString(), change, changeParams.TextDocument.Version, _parserSettingsResolver.GetParserSettings(document.Uri));
+            document.Update(change, _parserSettingsResolver.GetParserSettings(document.Uri));
         }
 
         _languageServer.ProjectUpdater.UpdateProject(document);
         return Unit.Task;
-    }
+    });
 
     // ~ Public methods
     public IReadOnlyList<Document> GetDocuments() => _documents;

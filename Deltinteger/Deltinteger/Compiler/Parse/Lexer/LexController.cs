@@ -14,53 +14,81 @@ public class LexController
     readonly ParserSettings parserSettings;
     readonly string content;
     readonly VanillaSymbols vanillaSymbols;
+    readonly int initialTokenCount;
+    readonly int relexAt;
+    readonly int stopRelexingAt;
 
     // State
-    readonly TokenList listed = new();
+    readonly TokenList listed;
     int lockedInTokens = 0;
+    bool lexCompleted = false;
+    int relexSpan;
 
-    public LexController(ParserSettings parserSettings, string content, VanillaSymbols vanillaSymbols)
+    public LexController(
+        ParserSettings parserSettings,
+        string content,
+        VanillaSymbols vanillaSymbols,
+        LexerIncrementalChange? incrementalChange)
     {
         this.parserSettings = parserSettings;
         this.content = content;
         this.vanillaSymbols = vanillaSymbols;
-    }
 
-    public void ProgressTo(int tokenIndex)
-    {
-        lockedInTokens = tokenIndex;
+        listed = incrementalChange?.Tokens ?? new();
+        initialTokenCount = listed.Count;
+        relexAt = incrementalChange?.ChangeStartToken ?? 0;
+        stopRelexingAt = incrementalChange?.StopLexingAtIndex ?? int.MaxValue;
     }
 
     public Token? GetTokenAt(int token, LexerContextKind contextKind)
     {
         // Token is already known but the context was changed.
-        if (token < listed.Count && contextKind != listed.GetNode(token).ContextKind)
-        {
-            DiscardCurrentState();
-        }
+        // if (token < listed.Count && contextKind != listed.GetNode(token).ContextKind)
+        // {
+        //     DiscardCurrentState();
+        // }
+
 
         // Scan tokens until requested position.
-        while (listed.Count <= token)
+        while (!IsTokenReady(token))
         {
-            var scanAt = GetScanPositionForToken(token);
-            var nextTokens = MatchTokensAtPosition(scanAt, contextKind);
+            var nextTokens = MatchTokensAtIndex(token, contextKind);
 
-            // Add tokens
-            if (nextTokens is not null)
+            if (nextTokens is null)
             {
-                foreach (var add in nextTokens)
-                    listed.Add(add.MatchedToken, add.NewPosition, contextKind, add.Error);
+                lexCompleted = true; // note: state
+                return null;
             }
-            else return null;
+
+            foreach (var add in nextTokens)
+            {
+                if (add.NewPosition.Index <= stopRelexingAt)
+                    listed.Add(relexAt + relexSpan, add.MatchedToken, add.StartPosition, add.NewPosition, contextKind, add.Error);
+                relexSpan++;
+            }
         }
 
-
         return listed[token];
+    }
+
+    //  1234589
+
+    bool IsTokenReady(int token)
+    {
+        return token < listed.Count && (
+            token < relexAt ||
+            relexAt + relexSpan > token ||
+            (token != 0 && listed.GetNode(token - 1).EndPosition.Index >= stopRelexingAt));
     }
 
     public Token GetTokenAtOrLast(int token, LexerContextKind contextKind)
     {
         return GetTokenAt(token, contextKind) ?? listed.Last();
+    }
+
+    public void ProgressTo(int tokenIndex)
+    {
+        lockedInTokens = tokenIndex;
     }
 
     void DiscardCurrentState()
@@ -87,7 +115,20 @@ public class LexController
         return matcher.MatchOne();
     }
 
+    private Match[]? MatchTokensAtIndex(int index, LexerContextKind contextKind)
+    {
+        return MatchTokensAtPosition(GetScanPositionForToken(index), contextKind);
+    }
+
+    public int? GetTokenDelta()
+    {
+        if (!lexCompleted)
+            return null;
+        return listed.Count - initialTokenCount;
+    }
+
     public ReadonlyTokenList GetCompletedTokenList() => new(listed);
+    public TokenList GetTokenList() => listed;
 }
 
 public class LexMatcher
@@ -631,21 +672,26 @@ public class LexMatcher
 
     LexPosition NextWhitespace(LexPosition from) => Skip(MakeScanner(from));
 
-    static Match GetMatch(LexScanner scanner, TokenType tokenType) => new(scanner.AsToken(tokenType), scanner.Position);
+    static Match GetMatch(LexScanner scanner, TokenType tokenType) => new(scanner.AsToken(tokenType), scanner.StartPos, scanner.Position);
     static Match GetMatch(LexScanner scanner, TokenType tokenType, TokenFlags flags)
     {
         var token = scanner.AsToken(tokenType);
         token.Flags = flags;
-        return new(token, scanner.Position);
+        return new(token, scanner.StartPos, scanner.Position);
     }
-    static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType) => new(scanner.AsToken(tokenType), scanner.CurrentPosition());
-    static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType, MatchError? error) => new(scanner.AsToken(tokenType), scanner.CurrentPosition(), error);
+    static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType) => new(scanner.AsToken(tokenType), scanner.CurrentPosition(), scanner.CurrentPosition());
+    static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType, MatchError? error) => new(scanner.AsToken(tokenType), scanner.StartPosition(), scanner.CurrentPosition(), error);
     static Match GetMatch(WhitespaceLexScanner scanner, TokenType tokenType, IReadOnlySet<LanguageLinkedWorkshopItem> workshopItems) => new(
         scanner.AsToken(tokenType, workshopItems),
+        scanner.StartPosition(),
         scanner.CurrentPosition());
 }
 
-public record struct Match(Token MatchedToken, LexPosition NewPosition, MatchError? Error = null)
+public record struct Match(
+    Token MatchedToken,
+    LexPosition StartPosition,
+    LexPosition NewPosition,
+    MatchError? Error = null)
 {
     public void JumpTo(LexPosition position)
     {

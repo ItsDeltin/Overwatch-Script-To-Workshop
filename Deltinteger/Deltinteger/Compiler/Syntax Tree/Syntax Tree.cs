@@ -13,7 +13,6 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<Token> GlobalvarReservations { get; } = new();
 
         public List<Hook> Hooks { get; } = new();
-        public List<TokenCapture> NodeCaptures { get; set; }
     }
 
     public class Node : INodeRange

@@ -31,6 +31,8 @@ struct WhitespaceLexScanner
 
     public readonly bool ReachedEnd() => _currentPosition.Index >= _content.Length;
 
+    public readonly LexPosition StartPosition() => _start;
+
     public readonly LexPosition CurrentPosition() => _lastNonWhitespacePosition;
 
     public void Advance()

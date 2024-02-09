@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using Deltin.Deltinteger;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
 
 namespace Deltinteger.Tests;
@@ -27,15 +26,20 @@ static class TestUtils
         return (ds.WorkshopCode, d);
     }
 
-    public static void AtomizeAndReconstruct(string name)
+    /// <summary>Sends OW code through OSTW and determines if it comes out unscathed.</summary>
+    /// <param name="filename">The file name of the workshop code.</param>
+    public static void AtomizeAndReconstruct(string filename)
     {
         Setup();
-        string text = File.ReadAllText(name);
+        string text = File.ReadAllText(filename);
         var (compiled, diagnostics) = Compile(text);
 
         Assert.IsFalse(diagnostics.ContainsErrors());
 
         // Remove all whitespace and trailing zeros in numbers
+        // Parentheses are also ignored because ostw doesn't bother with some optional groupings
+        // that code from overwatch includes. Unfortunately this means any issues with precedence
+        // will not be caught by any test calling this function.
         var r = new Regex(@"\s+|\(|\)|(([0-9]+\.[0-9]*?[1-9])|([0-9]+)\.)0+(?=[^0-9]|$)", RegexOptions.Multiline);
         var textNoWs = r.Replace(text, "$2$3").ToLower();
         var compiledNoWs = r.Replace(compiled, "$2$3").ToLower();
