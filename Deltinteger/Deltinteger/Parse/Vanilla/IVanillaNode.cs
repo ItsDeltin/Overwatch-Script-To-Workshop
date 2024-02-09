@@ -694,7 +694,27 @@ static class VanillaExpressions
                     if (index is Element indexElement)
                         indexReference = indexReference.CreateChild(indexElement);
 
-                    var setElements = indexReference.SetVariable(value as Element, player as Element);
+                    // Select operation
+                    Operation? op = syntax.AssignmentToken.Text switch
+                    {
+                        "+=" => Operation.Add,
+                        "-=" => Operation.Subtract,
+                        "*=" => Operation.Multiply,
+                        "/=" => Operation.Divide,
+                        "%=" => Operation.Modulo,
+                        "^=" => Operation.RaiseToPower,
+                        "=" or _ => null,
+                    };
+
+                    Element[] setElements;
+
+                    // Normal set variable
+                    if (op is null)
+                        setElements = indexReference.SetVariable(value as Element, player as Element);
+                    // Assignment
+                    else
+                        setElements = indexReference.ModifyVariable(op.Value, value as Element, player as Element);
+
                     if (setElements.Length != 1)
                         return "Setting a value needs to result in a single action";
 
