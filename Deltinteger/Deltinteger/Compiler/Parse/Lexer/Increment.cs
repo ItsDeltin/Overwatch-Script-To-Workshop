@@ -134,6 +134,12 @@ public readonly record struct LexerIncrementalChange(
             length++;
         }
 
+        // Stretch length to end of line
+        while (startingTokenIndex + length < tokens.Count &&
+            tokens[startingTokenIndex].Range.End.Line ==
+            tokens[startingTokenIndex + length].Range.Start.Line)
+            length++;
+
         return new AffectedAreaInfo(startingTokenIndex, length);
     }
 
