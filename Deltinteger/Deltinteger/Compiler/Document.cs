@@ -40,7 +40,6 @@ public class Document
         {
             var parser = new Parser(newContent, ParserSettings, incrementalParse);
             ParseResult = parser.Parse();
-            Debug.WriteLine(ParseResult.Tokens.ToString());
         }
         catch (Exception ex)
         {

@@ -21,15 +21,32 @@ public class VersionInstance
 
     public int GetLine(int index)
     {
-        int r;
-        for (r = 0; r < _newlines.Count && _newlines[r] < index; r++) ;
-        return r;
+        if (_newlines.Count == 0 || index < _newlines[0])
+            return 0;
+
+        int l = 0, r = _newlines.Count;
+        while (true)
+        {
+            int current = l + (r - l) / 2;
+
+            // Too low
+            if (_newlines[current] < index && current + 1 < _newlines.Count && _newlines[current + 1] < index)
+            {
+                l = current + 1;
+            }
+            // Too high
+            else if (_newlines[current] > index)
+            {
+                r = current - 1;
+            }
+            else return current + 1;
+        }
     }
     public int GetColumn(int index) => index - GetLineIndex(GetLine(index));
     public DocPos GetPos(int index)
     {
         var line = GetLine(index);
-        return new(line, index - GetLineIndex(index));
+        return new(line, index - GetLineIndex(line));
     }
     public int IndexOf(DocPos pos) => GetLineIndex(pos.Line) + pos.Character;
     public int GetLineIndex(int line) => line == 0 ? 0 : (_newlines[line - 1] + 1);
