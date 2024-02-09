@@ -15,7 +15,7 @@ public class TokenList
 
     public bool Add(int index, Token token, LexPosition startPosition, LexPosition endPosition, LexerContextKind contextKind, MatchError? Error)
     {
-        if (tokenData.TryAdd(token, new(index, startPosition, endPosition, contextKind, Error)))
+        if (tokenData.TryAdd(token, new(startPosition, endPosition, contextKind, Error)))
         {
             tokens.Insert(index, token);
             return true;
@@ -31,7 +31,7 @@ public class TokenList
 
     public TokenNode GetNode(int index) => tokenData[tokens[index]];
 
-    public int IndexOf(Token token) => tokenData[token].Index;
+    public int IndexOf(Token token) => tokens.IndexOf(token);
 
     public Token Last() => tokens.Last();
 
@@ -49,30 +49,10 @@ public class TokenList
     }
 }
 
-public class TokenNode(int index, LexPosition startPosition, LexPosition endPosition, LexerContextKind contextKind, MatchError? error)
+public class TokenNode(LexPosition startPosition, LexPosition endPosition, LexerContextKind contextKind, MatchError? error)
 {
-    public int Index = index;
     public LexPosition StartPosition = startPosition;
     public LexPosition EndPosition = endPosition;
     public LexerContextKind ContextKind = contextKind;
     public MatchError? Error = error;
-}
-
-public readonly struct ReadonlyTokenList
-{
-    readonly TokenList tokens;
-
-    public ReadonlyTokenList(TokenList tokens) => this.tokens = tokens;
-
-    public readonly Token? NextToken(Token token) => tokens.ElementAtOrDefault(tokens.IndexOf(token) + 1);
-    public readonly bool IsTokenLast(Token token) => tokens.Count == 0 || tokens.Last() == token;
-
-    public readonly IEnumerable<IParserError> GetErrors()
-    {
-        foreach (var token in tokens)
-        {
-            if (token.Value.Error is not null)
-                yield return IParserError.New(token.Key.Range, token.Value.Error.Value.Message);
-        }
-    }
 }

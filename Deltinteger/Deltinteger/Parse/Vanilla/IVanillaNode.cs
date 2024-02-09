@@ -561,13 +561,17 @@ static class VanillaExpressions
         if (syntax.Symbol.Text == ".")
         {
             bool isGlobal = left.GetSymbolInformation().IsGlobalSymbol;
+
             // Player variable completion
-            context.AddCompletion(VanillaCompletion.GetVariableCompletion(
-                range: syntax.Symbol.Range.End + context.NextToken(syntax.Symbol).Range.Start,
-                context.ScopedVariables,
-                isGlobal: isGlobal,
-                false
-            ));
+            var nextToken = context.NextToken(syntax.Symbol);
+            if (nextToken is not null)
+                context.AddCompletion(VanillaCompletion.GetVariableCompletion(
+                    range: syntax.Symbol.Range.End + nextToken.Range.Start,
+                    context.ScopedVariables,
+                    isGlobal: isGlobal,
+                    false
+                ));
+
             // Variable analysis
             right = VanillaAnalysis.AnalyzeExpression(context.SetActiveParameterData(new(
                 ExpectingVariable: isGlobal ? ExpectingVariable.Global : ExpectingVariable.Player

@@ -104,6 +104,8 @@ class TestLexIncrementer
         ParserTestUtil.AssertTokens(currentList!, tokens);
         return this;
     }
+
+    public int IndexOfSnippet(string text) => content.Text.IndexOf(text);
 }
 
 class TestIncrementalParser

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using Deltin.Deltinteger.Compiler.Parse.Lexing;
 
 namespace Deltin.Deltinteger.Compiler.File;
 
@@ -45,8 +46,14 @@ public class VersionInstance
     public int GetColumn(int index) => index - GetLineIndex(GetLine(index));
     public DocPos GetPos(int index)
     {
+        var pos = GetLexPosition(index);
+        return new(pos.Line, pos.Column);
+    }
+    public LexPosition GetLexPosition(int index)
+    {
         var line = GetLine(index);
-        return new(line, index - GetLineIndex(line));
+        var column = index - GetLineIndex(line);
+        return new(index, line, column);
     }
     public int IndexOf(DocPos pos) => GetLineIndex(pos.Line) + pos.Character;
     public int GetLineIndex(int line) => line == 0 ? 0 : (_newlines[line - 1] + 1);

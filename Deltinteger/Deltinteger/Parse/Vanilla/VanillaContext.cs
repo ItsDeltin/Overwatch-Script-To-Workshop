@@ -63,7 +63,7 @@ class VanillaContext
     public VanillaContext ClearContext() => SetActiveParameterData(new());
 
     // Utility
-    public Token NextToken(Token previousToken) => script.NextToken(previousToken);
+    public Token? NextToken(Token previousToken) => script.NextToken(previousToken);
 
     // Types
     public VanillaType? VanillaTypeFromJsonName(string? name) => ElementJsonTypeHelper.FromString(StaticAnalysisData.Instance.TypeData, name);

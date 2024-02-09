@@ -36,13 +36,8 @@ public readonly record struct LexerIncrementalChange(
                 newContent.UpdatePosition(tokens[i].Range.End, e);
 
                 var node = tokens.GetNode(i);
-                node.StartPosition.Index += indexOffset;
-                node.StartPosition.Line = newContent.GetLine(node.StartPosition.Index);
-                node.StartPosition.Column = newContent.GetColumn(node.StartPosition.Index);
-
-                node.EndPosition.Index += indexOffset;
-                node.EndPosition.Line = newContent.GetLine(node.EndPosition.Index);
-                node.EndPosition.Column = newContent.GetColumn(node.EndPosition.Index);
+                node.StartPosition = newContent.GetLexPosition(node.StartPosition.Index + indexOffset);
+                node.EndPosition = newContent.GetLexPosition(node.EndPosition.Index + indexOffset);
             }
         }
         int endIndex = tokens.Count == 0 || finalTokenInChange >= tokens.Count ? newContent.Length :

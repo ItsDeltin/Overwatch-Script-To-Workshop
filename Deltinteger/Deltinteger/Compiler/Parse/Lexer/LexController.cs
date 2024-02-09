@@ -125,7 +125,6 @@ public class LexController
         return listed.Count - initialTokenCount;
     }
 
-    public ReadonlyTokenList GetCompletedTokenList() => new(listed);
     public TokenList GetTokenList() => listed;
 }
 

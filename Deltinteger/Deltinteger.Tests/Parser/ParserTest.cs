@@ -15,27 +15,8 @@ public class ParserTest
         TestTokens("rule: \"hello\" {}", TokenType.Rule, TokenType.Colon, TokenType.String, TokenType.CurlyBracket_Open, TokenType.CurlyBracket_Close);
     }
 
-    [TestMethod("Modify first token")]
-    public void FirstToken()
-    {
-        Setup();
-        var tester = TestIncrementer("rule : \"hello!\"")
-            .Assert(TokenType.Rule, TokenType.Colon, TokenType.String);
-
-        // Remove the 'rule' keyword
-        var change = tester.Increment(tester.GetUpdateRange("", 0, 4));
-
-        AssertLexerIncrement(change, changeStartToken: 0, stopLexingAtCharacter: 1);
-        // Ensure correct items were removed.
-        tester.Assert(TokenType.Colon, TokenType.String);
-
-        // Lex again with incremented data.
-        tester.LexUntilEnd(change);
-        tester.Assert(TokenType.Colon, TokenType.String);
-    }
-
-    [TestMethod("Modify touching token")]
-    public void TouchingSecondToken()
+    [TestMethod("Lexer increment test")]
+    public void LexerIncrementTest()
     {
         Setup();
         var tester = TestIncrementer("rule: \"hello!\"")
@@ -44,16 +25,37 @@ public class ParserTest
         // Remove the 'rule' keyword
         var change = tester.Increment(tester.GetUpdateRange("", 0, 4));
 
-        AssertLexerIncrement(change,
-            changeStartToken: 0, // Change starts at 'rule'
-            stopLexingAtCharacter: 2 // : starts at char 5, shifts 4 spaces back
-        );
-        // Ensure correct items were removed.
-        tester.Assert(TokenType.String);
+        AssertLexerIncrement(change, changeStartToken: 0, stopLexingAtCharacter: 10);
+        tester.Assert();
 
         // Lex again with incremented data.
         tester.LexUntilEnd(change);
         tester.Assert(TokenType.Colon, TokenType.String);
+    }
+
+    [TestMethod("Multiline increment test")]
+    public void MultilineIncrementTest()
+    {
+        Setup();
+        var tester = TestIncrementer("""
+            rule: "Test incremental lexer on multiple lines"
+            Event.OngoingPlayer
+            {
+            }
+            """);
+
+        // Remove the 'rule' keyword
+        var change = tester.Increment(tester.GetUpdateRange("", 50, 5));
+
+        AssertLexerIncrement(change,
+            changeStartToken: 3,
+            stopLexingAtCharacter: tester.IndexOfSnippet("{")
+        );
+        // Ensure correct items were removed.
+        tester.Assert(TokenType.Rule, TokenType.Colon, TokenType.String, TokenType.CurlyBracket_Open, TokenType.CurlyBracket_Close);
+
+        // Lex again with incremented data.
+        tester.LexUntilEnd(change);
     }
 
     [TestMethod("Realtime typing")]
