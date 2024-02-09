@@ -1,0 +1,1387 @@
+variables
+{
+	global:
+		26: Color_R
+		27: Color_G
+		28: Color_B
+}
+
+rule("MADE BY VIPER")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Disable Inspector Recording;
+	}
+}
+
+rule("START GAME")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Wait(1, Ignore Condition);
+		Start Game Mode;
+	}
+}
+
+rule("NO MATCH TIME")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Assembling Heroes == True;
+	}
+
+	actions
+	{
+		Set Match Time(0);
+	}
+}
+
+rule("SLOW")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Moving(All Players(Team 1)) == False;
+		Is Dead(All Players(Team 1)) == False;
+		Is Using Ultimate(Event Player) == False;
+		Has Spawned(Event Player) == True;
+		Is Alive(Event Player) == True;
+	}
+
+	actions
+	{
+		Set Slow Motion(50);
+		Set Damage Received(Event Player, 60);
+		disabled Disallow Button(All Players(Team 2), Button(Primary Fire));
+		Disallow Button(All Players(Team 2), Button(Secondary Fire));
+		Disallow Button(All Players(Team 2), Button(Ability 1));
+		Disallow Button(All Players(Team 2), Button(Ability 2));
+		Disallow Button(All Players(Team 2), Button(Ultimate));
+		Set Damage Dealt(Event Player, 500);
+		Set Damage Received(Event Player, 120);
+	}
+}
+
+rule("NORMAL")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Moving(All Players(Team 1)) == True;
+	}
+
+	actions
+	{
+		Set Slow Motion(100);
+		Set Damage Received(Event Player, 100);
+		Allow Button(All Players(Team 2), Button(Primary Fire));
+		Allow Button(All Living Players(Team 2), Button(Secondary Fire));
+		Allow Button(All Players(Team 2), Button(Ability 1));
+		Allow Button(All Living Players(Team 2), Button(Ability 2));
+		Allow Button(All Players(Team 2), Button(Ultimate));
+		Set Damage Received(Event Player, 90);
+	}
+}
+
+rule("TEAM 1 ICON")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	actions
+	{
+		disabled Create Icon(All Players(Team 2), All Players(Team 1), Skull, Visible To and Position, Color(Red), True);
+		Disable Nameplates(All Living Players(Team 1), All Players(Team 2));
+		Create In-World Text(All Players(Team 2), Custom String("{0}", Hero Icon String(Hero Of(All Players(Team 1))), Update Every Frame(
+			Position Of(Event Player))), All Players(Team 1), 2, Do Not Clip, Visible To Position and String, Color(White),
+			Default Visibility);
+	}
+}
+
+rule("RANDOMIZE HERO CHARACTER IF DEATH")
+{
+	event
+	{
+		Player Died;
+		Team 2;
+		All;
+	}
+
+	actions
+	{
+		Wait(2, Ignore Condition);
+		Start Forcing Player To Be Hero(Event Player, Random Value In Array(Remove From Array(All Heroes, Hero Of(Event Player))));
+	}
+}
+
+rule("DMG DEALT INCREASE TEAM 1")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	actions
+	{
+		Set Damage Dealt(Event Player, 150);
+	}
+}
+
+rule("DVA TEAM 1 INCREASE")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		D.Va;
+	}
+
+	actions
+	{
+		Set Damage Dealt(Event Player, 200);
+		Set Damage Received(Event Player, 150);
+	}
+}
+
+rule("MEI PRIMARY FIRE WILL FREEZE AFTER 3 SECONDS")
+{
+	event
+	{
+		Player Dealt Damage;
+		Team 1;
+		Mei;
+	}
+
+	conditions
+	{
+		Is Firing Primary(Event Player) == True;
+	}
+
+	actions
+	{
+		Wait(3, Ignore Condition);
+		Set Status(Victim, Null, Frozen, 2);
+	}
+}
+
+disabled rule("DUMMY BOT")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Interact)) == True;
+	}
+
+	actions
+	{
+		Destroy All Dummy Bots;
+		Create Dummy Bot(Hero(Ana), Team 1, -1, Event Player, Event Player);
+	}
+}
+
+rule("MEI HEALING IS GONE")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Mei;
+	}
+
+	actions
+	{
+		Set Healing Dealt(Event Player, 0);
+	}
+}
+
+disabled rule("MEI  HP IS INCREASED BY 100")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Mei;
+	}
+
+	actions
+	{
+		Add Health Pool To Player(Event Player, Health, 100, True, True);
+	}
+}
+
+rule("SCALE ON TEAM 1 HUGE")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	actions
+	{
+		Start Scaling Player(Event Player, 1.500, True);
+	}
+}
+
+rule("SPEED INCREASE BY 200 ON TEAM 2")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	actions
+	{
+		Set Move Speed(Event Player, 200);
+	}
+}
+
+rule("TEAM 2 IS SMALLER")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Mei;
+	}
+
+	actions
+	{
+		Start Scaling Player(Event Player, 0.900, True);
+	}
+}
+
+rule("HEALING IS 0 TEAM 1")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	actions
+	{
+		Set Healing Dealt(Event Player, 0);
+		Set Healing Received(Event Player, 0);
+	}
+}
+
+rule("HEALING  INCREASED TO 3K TEAM 1")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	actions
+	{
+		Add Health Pool To Player(Event Player, Health, 2000, True, True);
+	}
+}
+
+rule("old ult, except is his ability one")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		Bastion;
+	}
+
+	conditions
+	{
+		Is In Alternate Form(Event Player) == True;
+		Is Using Ability 1(Event Player) == True;
+	}
+
+	actions
+	{
+		Set Knockback Received(Event Player, 0);
+		Set Knockback Dealt(Event Player, 200);
+		Disallow Button(Event Player, Button(Primary Fire));
+		Allow Button(Event Player, Button(Secondary Fire));
+		Set Move Speed(Event Player, 75);
+		Set Damage Dealt(Event Player, 500);
+		Wait(8, Ignore Condition);
+		Allow Button(Event Player, Button(Primary Fire));
+		Disallow Button(Event Player, Button(Secondary Fire));
+		Set Damage Dealt(Event Player, 100);
+		Set Move Speed(Event Player, 200);
+		Set Knockback Dealt(Event Player, 100);
+		Set Knockback Received(Event Player, 100);
+	}
+}
+
+disabled rule("Disallow button when spawned")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Bastion;
+	}
+
+	actions
+	{
+		Disallow Button(Event Player, Button(Secondary Fire));
+	}
+}
+
+disabled rule("Primary fire will press secondary fire")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Bastion;
+	}
+
+	conditions
+	{
+		Is Using Ability 1(Event Player) == True;
+		Is Button Held(Event Player, Button(Primary Fire)) == True;
+	}
+
+	actions
+	{
+		Press Button(Event Player, Button(Secondary Fire));
+		Wait(1, Ignore Condition);
+	}
+}
+
+rule("Damage Dealt Decrease If Spamming Secondary Fire")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		Bastion;
+	}
+
+	conditions
+	{
+		Is Using Ability 1(Event Player) == True;
+		Is Button Held(Event Player, Button(Secondary Fire)) == True;
+	}
+
+	actions
+	{
+		Set Damage Dealt(Event Player, 200);
+		Wait(1, Ignore Condition);
+	}
+}
+
+rule("HEALTH BAR")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		disabled Is Alive(Event Player) == True;
+	}
+
+	actions
+	{
+		Destroy All HUD Text;
+		Create Progress Bar HUD Text(All Players(Team 2), Health(Event Player) / Max Health(Event Player) * 100, Custom String(
+			"SUPERHOT HP"), Top, 0, Color(Green), Color(White), Visible To Values and Color, Visible Always);
+	}
+}
+
+rule("HEALTH BAR HUD")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Dead(All Players(Team 1)) == True;
+	}
+
+	actions
+	{
+		Destroy All HUD Text;
+	}
+}
+
+rule("SCALE ON TEAM 2 SMALL")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	actions
+	{
+		Start Scaling Player(Event Player, 0.500, True);
+	}
+}
+
+rule("SCALE ON TEAM 1 HUGE")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Alive(Event Player) == True;
+		Is Crouching(Event Player) == False;
+	}
+
+	actions
+	{
+		Start Scaling Player(Event Player, 1.500, True);
+	}
+}
+
+rule("allow button  if died")
+{
+	event
+	{
+		Player Died;
+		All;
+		All;
+	}
+
+	actions
+	{
+		Allow Button(Event Player, Button(Secondary Fire));
+		Allow Button(Event Player, Button(Primary Fire));
+		Set Knockback Received(Event Player, 100);
+		Set Move Speed(Event Player, 200);
+		Set Damage Dealt(Event Player, 100);
+		Set Knockback Received(Event Player, 100);
+	}
+}
+
+rule("RANDOMIZE HERO CHARACTER IF DEATH TEAM 2")
+{
+	event
+	{
+		Player Died;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Has Spawned(Event Player) == True;
+	}
+
+	actions
+	{
+		Wait(2, Ignore Condition);
+		Start Forcing Player To Be Hero(Event Player, Random Value In Array(Remove From Array(All Heroes, Hero Of(Event Player))));
+	}
+}
+
+rule("Moira Goku Ult If Button Held R")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Moira;
+	}
+
+	conditions
+	{
+		disabled Ultimate Charge Percent(Event Player) == 0;
+		Is Button Held(Event Player, Button(Reload)) == True;
+		Is Alive(Event Player) == True;
+		Is Using Ability 1(Event Player) == False;
+		Is Using Ability 2(Event Player) == False;
+		Is Meleeing(Event Player) == False;
+		Is Communicating Any Emote(Event Player) == False;
+		Has Spawned(Event Player) == True;
+		Has Status(Event Player, Hacked) == False;
+	}
+
+	actions
+	{
+		Set Damage Received(Event Player, 40);
+		Set Move Speed(Event Player, 30);
+		Disallow Button(Event Player, Button(Secondary Fire));
+		Disallow Button(Event Player, Button(Ability 1));
+		Disallow Button(Event Player, Button(Ability 2));
+		Disallow Button(Event Player, Button(Crouch));
+		Disallow Button(Event Player, Button(Jump));
+		Disallow Button(Event Player, Button(Melee));
+		Wait(3, Ignore Condition);
+		Press Button(Event Player, Button(Ultimate));
+		Set Ultimate Charge(Event Player, 100);
+		Allow Button(Event Player, Button(Ability 1));
+		Set Damage Received(Event Player, 200);
+		Set Move Speed(Event Player, 150);
+		Set Damage Dealt(Event Player, 500);
+		Allow Button(Event Player, Button(Ultimate));
+		Allow Button(Event Player, Button(Secondary Fire));
+		Allow Button(Event Player, Button(Ability 1));
+		Allow Button(Event Player, Button(Ability 2));
+		Allow Button(Event Player, Button(Jump));
+		Allow Button(Event Player, Button(Crouch));
+		Allow Button(Event Player, Button(Melee));
+		Wait(6, Ignore Condition);
+		Set Damage Received(Event Player, 90);
+		Set Damage Dealt(Event Player, 150);
+		Set Move Speed(Event Player, 100);
+	}
+}
+
+rule("Moira Press Ult If Ready")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Moira;
+	}
+
+	actions
+	{
+		Press Button(Event Player, Button(Ultimate));
+		Wait(0.100, Ignore Condition);
+		Loop;
+	}
+}
+
+rule("Boss HUD")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Has Spawned(Event Player) == True;
+	}
+
+	actions
+	{
+		Wait(1, Ignore Condition);
+		Create HUD Text(All Players(Team 1), Custom String("YOURE THE BOSS!"), Null, Null, Top, 0, Color(Red), Color(White), Color(White),
+			Visible To and String, Visible Never);
+		"Workshop Code Link"
+		disabled Create HUD Text(All Players(Team 1), Null, Null, Custom String("workshop.codes/superhot"), Right, -4, Color(White), Color(White),
+			Custom Color(Global.Color_R, Global.Color_G, Global.Color_B, 255), Visible To String and Color, Default Visibility);
+		"Mod Creator"
+		disabled Create HUD Text(All Players(All Teams), Null, Null, Custom String("Mod-Creator: viper"), Right, -3, Color(White), Color(White),
+			Color(Orange), Visible To and String, Default Visibility);
+		"Workshop Code"
+		disabled Create HUD Text(All Players(All Teams), Null, Null, Custom String("Workshop Code: 7Z9W24"), Right, -2, Color(White), Color(White),
+			Color(Turquoise), Visible To and String, Default Visibility);
+		"Version"
+		disabled Create HUD Text(All Players(All Teams), Null, Custom String("Current Version Is 0.2", Input Binding String(Button(Reload))), Null,
+			Right, -1, Color(White), Color(White), Color(Lime Green), Visible To and String, Default Visibility);
+		"Header"
+		Create HUD Text(Team Of(Local Player) == Team 1 ? Local Player : Null, Null, Null, Custom String(
+			"               {0} {1} {2}\n-------------------------------------------", Hero Icon String(Hero Of(Players In Slot(0,
+			Team 1))), String("Boss"), Custom String("{0} {1}", String("Bonus"), String("Abilities"))), Left, 14, Color(White), Color(
+			White), Color(Red), Visible To and String, Default Visibility);
+		"Subheader 1(Mercy)"
+		Create HUD Text(Team Of(Local Player) == Team 1 && Hero Of(Local Player) == Hero(Mercy) ? Local Player : Null, Null, Custom String(
+			"• {0} You Can Self Ressurect", Ability Icon String(Hero(Mercy), Button(Ability 2))), Null, Left, 15, Color(White), Color(
+			White), Color(White), Visible To String and Color, Default Visibility);
+		"Subheader 2(Moira)"
+		Create HUD Text(Team Of(Local Player) == Team 1 && Hero Of(Local Player) == Hero(Moira) ? Local Player : Null, Null, Custom String(
+			"• {0} You Have Goku Hold Your R For 3 Seconds", Ability Icon String(Hero(Moira), Button(Ultimate)), String(
+			"Ultimate Ability")), Null, Left, 15, Color(White), Color(White), Color(White), Visible To String and Color,
+			Default Visibility);
+		"Subheader 1(Baptiste)"
+		Create HUD Text(Team Of(Local Player) == Team 1 && Hero Of(Local Player) == Hero(Baptiste) ? Local Player : Null, Null,
+			Custom String("• {0} You Can Give Ads To All Players Within A Radius If You Press F", Icon String(Skull), String(
+			"Ultimate Ability")), Null, Left, 15, Color(White), Color(White), Color(White), Visible To String and Color,
+			Default Visibility);
+		"Subheader 1(Reinhardt)"
+		Create HUD Text(Team Of(Local Player) == Team 1 && Hero Of(Local Player) == Hero(Reinhardt) ? Local Player : Null, Null,
+			Custom String("• {0} A Firestrike gives fire to victim", Ability Icon String(Hero(Reinhardt), Button(Ability 2))), Null, Left,
+			15, Color(White), Color(White), Color(White), Visible To String and Color, Default Visibility);
+		"Subheader 1(Bastion)"
+		Create HUD Text(Team Of(Local Player) == Team 1 && Hero Of(Local Player) == Hero(Bastion) ? Local Player : Null, Null,
+			Custom String("• {0} {1} You Have Overwatch 1 Reconfigure ", Icon String(Skull), Ability Icon String(Hero(Bastion), Button(
+			Ability 1))), Null, Left, 15, Color(White), Color(White), Color(White), Visible To String and Color, Default Visibility);
+		"Subheader 1(Kiriko)"
+		Create HUD Text(Team Of(Local Player) == Team 1 && Hero Of(Local Player) == Hero(Kiriko) ? Local Player : Null, Null,
+			Custom String("• {0} - You Have ESP", Ability Icon String(Hero(Kiriko), Button(Ability 2))), Null, Left, 15, Color(White),
+			Color(White), Color(White), Visible To String and Color, Default Visibility);
+		"Subheader 1(Mercy)"
+		Create HUD Text(Team Of(Local Player) == Team 1 && Hero Of(Local Player) == Hero(Doomfist) ? Local Player : Null, Null,
+			Custom String("• {0} You Have Rising Uppercut", Ability Icon String(Hero(Doomfist), Button(Secondary Fire))), Null, Left, 15,
+			Color(White), Color(White), Color(White), Visible To String and Color, Default Visibility);
+		"Subheader 1(Tracer)"
+		Create HUD Text(Team Of(Local Player) == Team 1 && Hero Of(Local Player) == Hero(Tracer) ? Local Player : Null, Null,
+			Custom String("• {0} You Have Infinite Blinks", Ability Icon String(Hero(Tracer), Button(Ability 1))), Null, Left, 15, Color(
+			White), Color(White), Color(White), Visible To String and Color, Default Visibility);
+	}
+}
+
+rule("SLOW")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Moving(All Players(Team 1)) == False;
+		Is Dead(All Players(Team 1)) == False;
+	}
+
+	actions
+	{
+		Set Slow Motion(50);
+		Set Damage Received(Event Player, 60);
+	}
+}
+
+rule("NORMAL")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Moving(All Players(Team 1)) == True;
+	}
+
+	actions
+	{
+		Set Slow Motion(100);
+	}
+}
+
+rule("crouch as team 1 will make you smaller")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Alive(Event Player) == True;
+		Is Crouching(Event Player) == True;
+	}
+
+	actions
+	{
+		Start Scaling Player(Event Player, 0.500, True);
+	}
+}
+
+rule("NON SUPPORT ON MAPS")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Current Map == Map(Workshop Chamber);
+	}
+
+	actions
+	{
+		Create HUD Text(All Players(Team 2), Custom String(""), Custom String("MAP NOT SUPPORTED RECOMMEND PLAY OTHER MAPS"), Null, Top, 0,
+			Color(White), Color(Orange), Color(White), Visible To and String, Default Visibility);
+	}
+}
+
+rule("NON SUPPORT ON MAPS")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Current Map == Map(Workshop Island);
+	}
+
+	actions
+	{
+		Create HUD Text(All Players(Team 2), Custom String(""), Custom String("MAP NOT SUPPORTED RECOMMEND PLAY OTHER MAPS"), Null, Top, 0,
+			Color(White), Color(Orange), Color(White), Visible To and String, Default Visibility);
+	}
+}
+
+rule("RANDOMIZE HERO CHARACTER IF SPAWN ALL")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	actions
+	{
+		Wait(1, Ignore Condition);
+		Start Forcing Player To Be Hero(Event Player, Random Value In Array(Remove From Array(All Heroes, Hero Of(Event Player))));
+		Press Button(Event Player, Button(Jump));
+	}
+}
+
+rule("SOMBRA NO MORE STEALTH")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		Sombra;
+	}
+
+	conditions
+	{
+		Is Hero Being Played(Hero(Sombra), All Teams) == True;
+		Is Firing Secondary(Event Player) == False;
+	}
+
+	actions
+	{
+		Damage(Event Player, Null, 1);
+		Heal(Event Player, Null, 2);
+		Wait(1, Ignore Condition);
+		Loop If Condition Is True;
+	}
+}
+
+rule("SOMBRA NO MORE STEALTH")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Is Hero Being Played(Hero(Sombra), All Teams) != True;
+	}
+
+	actions
+	{
+		Heal(Event Player, Null, 2);
+		Wait(3.500, Ignore Condition);
+		Loop If Condition Is True;
+	}
+}
+
+rule("SOMBRA BUTTON HELD LS  WILL INVIS FOR 5 SECONDS")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		Sombra;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Ability 1)) == True;
+		Is Alive(Event Player) == True;
+		Has Spawned(Event Player) == True;
+		Is Dead(Event Player) == False;
+		disabled Is Communicating Any Emote(Event Player) == False;
+		disabled Is Button Held(Event Player, Button(Primary Fire)) == False;
+		disabled Is Button Held(Event Player, Button(Secondary Fire)) == False;
+		disabled Is Button Held(Event Player, Button(Ability 1)) == False;
+		disabled Is Button Held(Event Player, Button(Ability 2)) == False;
+		disabled Is Using Ultimate(Event Player) == False;
+		disabled Is Button Held(Event Player, Button(Ultimate)) == False;
+	}
+
+	actions
+	{
+		Create Effect(All Players(Team 2), Sphere, Color(Purple), Event Player, 1, Visible To Position and Radius);
+		Set Invisible(Event Player, Enemies);
+		Disallow Button(Event Player, Button(Primary Fire));
+		Disallow Button(Event Player, Button(Secondary Fire));
+		Disallow Button(Event Player, Button(Ability 1));
+		Disallow Button(Event Player, Button(Ability 2));
+		Disallow Button(Event Player, Button(Ultimate));
+		Set Move Speed(Players On Hero(Hero(Sombra), Team 2), 295);
+		Set Damage Received(Event Player, 0);
+		Wait(5, Ignore Condition);
+		Destroy All Effects;
+		Set Invisible(Event Player, None);
+		Allow Button(Event Player, Button(Primary Fire));
+		Allow Button(Event Player, Button(Secondary Fire));
+		Allow Button(Event Player, Button(Ability 1));
+		Allow Button(Event Player, Button(Ability 2));
+		Allow Button(Event Player, Button(Ultimate));
+		Set Move Speed(Players On Hero(Hero(Sombra), Team 2), 200);
+		Set Damage Received(Event Player, 100);
+		Set Ability Cooldown(Event Player, Button(Ability 1), 21);
+		Wait(21, Ignore Condition);
+	}
+}
+
+rule("Doomfist Upppercut Return")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Doomfist;
+	}
+
+	conditions
+	{
+		Is Using Ability 2(Event Player) == True;
+	}
+
+	actions
+	{
+		Cancel Primary Action(Event Player);
+		Play Effect(All Players(All Teams), Bad Explosion, Color(White), Event Player, 1);
+		Apply Impulse(Event Player, Up, 15, To Player, Cancel Contrary Motion);
+		Apply Impulse(Players Within Radius(Position Of(Event Player), 5, Opposite Team Of(Team Of(Event Player)), Off), Up, 15, To World,
+			Cancel Contrary Motion);
+		Damage(Players Within Radius(Position Of(Event Player), 5, Opposite Team Of(Team Of(Event Player)), Off), Event Player, 200);
+		Set Status(Players Within Radius(Position Of(Event Player), 5, Opposite Team Of(Team Of(Event Player)), Off), Null, Stunned,
+			0.500);
+		Add Health Pool To Player(Event Player, Health, 15, False, True);
+		Set Ability Cooldown(Event Player, Button(Ability 2), 6);
+	}
+}
+
+rule("Replace Boss Each Game")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Match Complete == True;
+	}
+
+	actions
+	{
+		"hiya! just to let you know this might not work cause i play with robots and i dont think the robots can switch teams so this might work or not and yes this is with a pattern so if youre on slot 1"
+		Wait(1.500, Ignore Condition);
+		"you will switch to team 2, im too lazy to add want to be boss thingy like in 1 dad vs 11 kids"
+		Move Player to Team(All Living Players(Team 1), Team 2, 1);
+		Wait(1, Ignore Condition);
+		Move Player to Team(Players In Slot(1, Team 2), Team 1, 1);
+	}
+}
+
+rule("Bap Damage Dealt Increase Using Ult")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Baptiste;
+	}
+
+	conditions
+	{
+		Is Using Ultimate(Event Player) == True;
+	}
+
+	actions
+	{
+		Set Damage Dealt(Event Player, 300);
+	}
+}
+
+rule("Bap Damage Dealt Decrease If Not Using Ult")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Baptiste;
+	}
+
+	conditions
+	{
+		Is Using Ultimate(Event Player) == False;
+	}
+
+	actions
+	{
+		Set Damage Dealt(Event Player, 150);
+	}
+}
+
+rule("Bap INF if using ult like mauga")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		Baptiste;
+	}
+
+	conditions
+	{
+		Is Using Ultimate(Event Player) == True;
+		Is Reloading(Event Player) == True;
+	}
+
+	actions
+	{
+		Set Ammo(Event Player, 0, 36);
+	}
+}
+
+rule("MATCH TIME IS ONE HOUR LONG")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+	}
+
+	actions
+	{
+		Set Match Time(3599);
+	}
+}
+
+rule("BOSSED KILLED THEMSELFS")
+{
+	event
+	{
+		Player Died;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Attacker == Event Player;
+	}
+
+	actions
+	{
+		Modify Team Score(All Teams, 1);
+	}
+}
+
+rule("NO POTG")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Match Complete == True;
+	}
+
+	actions
+	{
+		Wait(3, Ignore Condition);
+		Restart Match;
+	}
+}
+
+rule("PLAYER KILLED THEMSELFS")
+{
+	event
+	{
+		Player Died;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Attacker == Event Player;
+	}
+
+	actions
+	{
+		Modify Team Score(All Teams, 1);
+		disabled Modify Team Score(Team 2, 1);
+	}
+}
+
+rule("BOTH TEAMS LEFT")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+		Is In Setup == False;
+		Is Assembling Heroes == False;
+		Number Of Players(All Teams) == 0;
+	}
+
+	actions
+	{
+		Wait(5, Abort When False);
+		Restart Match;
+	}
+}
+
+rule("OLD BASTION ASSAULT OW1")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Bastion;
+	}
+
+	conditions
+	{
+		Is Using Ability 1(Event Player) == True;
+	}
+
+	actions
+	{
+		Set Move Speed(Event Player, 0);
+		Set Damage Dealt(Event Player, 240);
+		Set Knockback Received(Event Player, 0);
+	}
+}
+
+rule("OLD BASTION NOT IN ASSAULT OW1")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Bastion;
+	}
+
+	conditions
+	{
+		Is Using Ability 1(Event Player) == False;
+	}
+
+	actions
+	{
+		Set Move Speed(Event Player, 100);
+		Set Damage Dealt(Event Player, 150);
+		Set Ability Cooldown(Event Player, Button(Ability 1), 0);
+		Set Knockback Received(Event Player, 100);
+	}
+}
+
+rule("GG IF GAME ENDED")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Match Complete == True;
+	}
+
+	actions
+	{
+		Big Message(All Players(All Teams), Custom String("{0} GOOD GAME {0}", Icon String(Happy)));
+	}
+}
+
+rule("RGB FOR HUD")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		"thanks for mamo for letting me skid this <3"
+		Global.Color_R = 0;
+		Global.Color_G = 0;
+		Global.Color_B = 0;
+		Chase Global Variable Over Time(Color_R, 255, 2, Destination and Duration);
+		Wait Until(Global.Color_R == 255, 99999);
+		Chase Global Variable Over Time(Color_G, 255, 2, Destination and Duration);
+		Wait Until(Global.Color_G == 255, 99999);
+		Chase Global Variable Over Time(Color_R, 0, 2, Destination and Duration);
+		Wait Until(Global.Color_R == 0, 99999);
+		Chase Global Variable Over Time(Color_B, 255, 2, Destination and Duration);
+		Wait Until(Global.Color_B == 255, 99999);
+		Chase Global Variable Over Time(Color_G, 0, 2, Destination and Duration);
+		Wait Until(Global.Color_G == 0, 99999);
+		Chase Global Variable Over Time(Color_R, 255, 2, Destination and Duration);
+		Wait Until(Global.Color_R == 255, 99999);
+		Chase Global Variable Over Time(Color_G, 255, 2, Destination and Duration);
+		Wait Until(Global.Color_G == 255, 99999);
+		Chase Global Variable Over Time(Color_R, 0, 2, Destination and Duration);
+		Chase Global Variable Over Time(Color_G, 0, 2, Destination and Duration);
+		Chase Global Variable Over Time(Color_B, 0, 2, Destination and Duration);
+		Wait Until(Global.Color_B == 0, 99999);
+		Loop;
+	}
+}
+
+rule("MERCY SELF RESSURECT")
+{
+	event
+	{
+		Player Died;
+		All;
+		Mercy;
+	}
+
+	actions
+	{
+		Resurrect(Event Player);
+		Wait(360, Ignore Condition);
+	}
+}
+
+rule("REIN CAUSES FIRE")
+{
+	event
+	{
+		Player Dealt Damage;
+		Team 1;
+		Reinhardt;
+	}
+
+	conditions
+	{
+		Is Using Ability 2(Event Player) == True;
+	}
+
+	actions
+	{
+		Set Status(Victim, Null, Burning, 10);
+		Start Damage Over Time(Victim, Event Player, 10, 5);
+	}
+}
+
+rule("BAP ADS")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Baptiste;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Interact)) == True;
+	}
+
+	actions
+	{
+		Set Status(Players Within Radius(Position Of(Event Player), 15, Team 2, Off), Null, Stunned, 9999);
+		"Version"
+		Create HUD Text(Players Within Radius(Position Of(Event Player), 15, All Teams, Off), Null, Custom String(
+			"PRESS YOUR ABILITY 1 TO STOP AD", Input Binding String(Button(Ability 1))), Null, Top, -1, Color(White), Color(White), Color(
+			White), Visible To and String, Default Visibility);
+	}
+}
+
+rule("BAP ADS STOP")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Ability 1)) == True;
+	}
+
+	actions
+	{
+		Clear Status(Event Player, Stunned);
+	}
+}
+
+rule("REIN FIRESTRIKE NERF")
+{
+	event
+	{
+		Player Died;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Has Status(Event Player, Burning) == True;
+	}
+
+	actions
+	{
+		Clear Status(Event Player, Burning);
+		Heal(Event Player, Null, 999);
+	}
+}
+
+rule("NORMAL HUD")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	actions
+	{
+		"Workshop Code Link"
+		Create HUD Text(Event Player, Null, Null, Custom String("workshop.codes/superhot"), Right, -4, Color(White), Color(White),
+			Custom Color(Global.Color_R, Global.Color_G, Global.Color_B, 255), Visible To String and Color, Default Visibility);
+		"Mod Creator"
+		Create HUD Text(Event Player, Null, Null, Custom String("Mod-Creator: viper"), Right, -3, Color(White), Color(White), Color(
+			Orange), Visible To and String, Default Visibility);
+		"Workshop Code"
+		Create HUD Text(Event Player, Null, Null, Custom String("Workshop Code: 7Z9W24"), Right, -2, Color(White), Color(White), Color(
+			Turquoise), Visible To and String, Default Visibility);
+		"Version"
+		Create HUD Text(Event Player, Null, Custom String("Current Version Is 0.3", Input Binding String(Button(Reload))), Null, Right, -1,
+			Color(White), Color(White), Color(Lime Green), Visible To and String, Default Visibility);
+		"Header"
+		disabled Create HUD Text(Team Of(Event Player) == Team 1 ? Local Player : Null, Null, Null, Custom String(
+			"               {0} {1} {2}\n-------------------------------------------", Hero Icon String(Hero Of(Players In Slot(0,
+			Team 1))), String("Boss"), Custom String("{0} {1}", String("Bonus"), String("Abilities"))), Left, 14, Color(White), Color(
+			White), Color(Red), Visible To and String, Default Visibility);
+		"Subheader 1(Mercy)"
+		disabled Create HUD Text(Team Of(Event Player) == Team 1 && Hero Of(Local Player) == Hero(Mercy) ? Local Player : Null, Null, Custom String(
+			"• {0} You Can Self Ressurect", Ability Icon String(Hero(Mercy), Button(Ability 2))), Null, Left, 15, Color(White), Color(
+			White), Color(White), Visible To String and Color, Default Visibility);
+		"Subheader 2(Moira)"
+		disabled Create HUD Text(Team Of(Event Player) == Team 1 && Hero Of(Local Player) == Hero(Moira) ? Local Player : Null, Null, Custom String(
+			"• {0} You Have Goku Hold Your R For 3 Seconds", Ability Icon String(Hero(Moira), Button(Ultimate)), String(
+			"Ultimate Ability")), Null, Left, 15, Color(White), Color(White), Color(White), Visible To String and Color,
+			Default Visibility);
+		"Subheader 1(Baptiste)"
+		disabled Create HUD Text(Team Of(Event Player) == Team 1 && Hero Of(Local Player) == Hero(Baptiste) ? Local Player : Null, Null,
+			Custom String("• {0} You Can Give Ads To All Players Within A Radius If You Press F", Icon String(Skull), String(
+			"Ultimate Ability")), Null, Left, 15, Color(White), Color(White), Color(White), Visible To String and Color,
+			Default Visibility);
+		"Subheader 1(Reinhardt)"
+		disabled Create HUD Text(Team Of(Event Player) == Team 1 && Hero Of(Local Player) == Hero(Reinhardt) ? Local Player : Null, Null,
+			Custom String("• {0} A Firestrike gives fire to victim", Ability Icon String(Hero(Reinhardt), Button(Ability 2))), Null, Left,
+			15, Color(White), Color(White), Color(White), Visible To String and Color, Default Visibility);
+		"Subheader 1(Bastion)"
+		disabled Create HUD Text(Team Of(Event Player) == Team 1 && Hero Of(Local Player) == Hero(Bastion) ? Local Player : Null, Null,
+			Custom String("• {0} {1} You Have Overwatch 1 Reconfigure ", Icon String(Skull), Ability Icon String(Hero(Bastion), Button(
+			Ability 1))), Null, Left, 15, Color(White), Color(White), Color(White), Visible To String and Color, Default Visibility);
+		"Subheader 1(Kiriko)"
+		disabled Create HUD Text(Team Of(Event Player) == Team 1 && Hero Of(Local Player) == Hero(Kiriko) ? Local Player : Null, Null,
+			Custom String("• {0} - You Have ESP", Ability Icon String(Hero(Kiriko), Button(Ability 2))), Null, Left, 15, Color(White),
+			Color(White), Color(White), Visible To String and Color, Default Visibility);
+		"Subheader 1(Mercy)"
+		disabled Create HUD Text(Team Of(Event Player) == Team 1 && Hero Of(Local Player) == Hero(Doomfist) ? Local Player : Null, Null,
+			Custom String("• {0} You Have Rising Uppercut", Ability Icon String(Hero(Doomfist), Button(Secondary Fire))), Null, Left, 15,
+			Color(White), Color(White), Color(White), Visible To String and Color, Default Visibility);
+	}
+}
+
+rule("KIRIKO ESP 2.0")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	actions
+	{
+		"since her old esp barely works i decided to remake it instead of using crappy player outlines."
+		Create In-World Text(Players On Hero(Hero(Kiriko), All Teams), Custom String("{0}", Hero Icon String(Hero Of(Event Player)),
+			Update Every Frame(Position Of(Event Player))), Event Player, 1.500, Do Not Clip, Visible To Position and String, Color(White),
+			Default Visibility);
+	}
+}
