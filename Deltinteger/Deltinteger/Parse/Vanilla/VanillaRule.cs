@@ -157,9 +157,11 @@ readonly record struct CommentedAnalyzedExpression(
     public readonly Result<Condition, string> AsCondition(VanillaWorkshopConverter converter)
     {
         string? comment = Comment;
+        bool disabled = Disabled;
         return Expression.GetWorkshopElement(converter).MapValue(value => new Condition((Element)value)
         {
-            Comment = comment
+            Comment = comment,
+            Disabled = disabled
         });
     }
 }
