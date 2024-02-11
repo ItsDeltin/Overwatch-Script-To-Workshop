@@ -31,9 +31,11 @@ public class Lexer
         CurrentController.ProgressTo(token);
     }
 
-    public Token? ScanTokenAt(int tokenIndex) => CurrentController.GetTokenAt(tokenIndex, _context.Peek());
+    public Token? ScanTokenAt(int tokenIndex) => CurrentController.ScanTokenAt(tokenIndex, _context.Peek());
 
-    public Token? ScanTokenAtOrLast(int tokenIndex) => CurrentController.GetTokenAtOrLast(tokenIndex, _context.Peek());
+    public Token? ScanTokenAtOrLast(int tokenIndex) => CurrentController.ScanTokenAtOrLast(tokenIndex, _context.Peek());
+
+    public Token? GetTokenAtOrEnd(int tokenIndex) => CurrentController.GetTokenAtOrLast(tokenIndex)?.Token;
 
     public int? GetTokenDelta() => CurrentController.GetTokenDelta();
 
@@ -43,7 +45,7 @@ public class Lexer
 
     public T InSettingsContext<T>(Func<T> task) => InContext(LexerContextKind.LobbySettings, task);
 
-    private T InContext<T>(LexerContextKind contextKind, Func<T> task)
+    public T InContext<T>(LexerContextKind contextKind, Func<T> task)
     {
         _context.Push(contextKind);
         var result = task();

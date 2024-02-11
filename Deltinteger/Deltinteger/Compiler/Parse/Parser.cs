@@ -5,6 +5,7 @@ using Deltin.Deltinteger.Compiler.Parse.Operators;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Compiler.Parse.Lexing;
 using Deltin.Deltinteger.Compiler.File;
+using MediatR;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
@@ -90,7 +91,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNode<T>(T node) where T : INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(TokenAtOrEnd(TokenRangeStart.Pop()).Range.Start, TokenAtOrEnd(Token - 1).Range.End);
+                node.Range = new DocRange(
+                    Lexer.GetTokenAtOrEnd(TokenRangeStart.Pop()).Range.Start,
+                    Lexer.GetTokenAtOrEnd(Token - 1).Range.End);
             return node;
         }
 
@@ -126,8 +129,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
         readonly record struct CaptureRangeHelper(Parser Parser, int StartToken)
         {
             public readonly DocRange GetRange() => new(
-                start: Parser.TokenAtOrEnd(StartToken).Range.Start,
-                end: Parser.TokenAtOrEnd(Math.Max(Parser.Token - 1, StartToken)).Range.End);
+                start: Parser.Lexer.GetTokenAtOrEnd(StartToken).Range.Start,
+                end: Parser.Lexer.GetTokenAtOrEnd(Math.Max(Parser.Token - 1, StartToken)).Range.End);
         }
 
         /// <summary>Gets an existing parsing tree at the current position.</summary>
@@ -1805,32 +1808,31 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             var parts = new List<InterpolatedStringPart>();
 
-            while (ParseExpected(TokenType.CurlyBracket_Close))
+            // Continue string.
+            Lexer.InContext(LexerContextKind.InterpolatedString, () =>
             {
-#warning fix this!!
-                // if (Lexer.ScanTokenAt(Token, _ => Lexer.CurrentController.MatchString(true, single)))
-                // {
-                //     Lexer.CurrentController.PostMatch();
-                //     // } {
-                //     if (ParseOptional(TokenType.InterpolatedStringMiddle, out Token middle))
-                //     {
-                //         parts.Add(new InterpolatedStringPart(interpolatedValue, middle));
-                //         interpolatedValue = GetContainExpression();
-                //     }
-                //     // }"
-                //     else if (ParseOptional(TokenType.InterpolatedStringHead, out Token head) || ParseOptional(TokenType.String, out head))
-                //     {
-                //         parts.Add(new InterpolatedStringPart(interpolatedValue, head));
-                //         break;
-                //     }
-                //     else throw new Exception("Resulting match should either be InterpolatedStringMiddle or InterpolatedStringHead.");
-                // }
-                // else
-                // {
-                //     AddError(new InterpolationMissingTerminator(tail.Range));
-                //     break;
-                // }
-            }
+                while (true)
+                {
+                    // } {
+                    if (ParseOptional(TokenType.InterpolatedStringMiddle, out Token middle))
+                    {
+                        parts.Add(new InterpolatedStringPart(interpolatedValue, middle));
+                        interpolatedValue = Lexer.InContext(LexerContextKind.Normal, () => GetContainExpression());
+                    }
+                    // }"
+                    else if (ParseOptional(TokenType.InterpolatedStringHead, out Token head) || ParseOptional(TokenType.String, out head))
+                    {
+                        parts.Add(new InterpolatedStringPart(interpolatedValue, head));
+                        break;
+                    }
+                    else
+                    {
+                        AddError(new InterpolationMissingTerminator(tail.Range));
+                        break;
+                    }
+                }
+                return Unit.Value;
+            });
 
             return EndNode(new InterpolatedStringExpression(tail, parts));
         }

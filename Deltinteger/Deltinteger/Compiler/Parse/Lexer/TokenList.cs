@@ -6,53 +6,47 @@ namespace Deltin.Deltinteger.Compiler.Parse.Lexing;
 
 public class TokenList
 {
-    readonly List<Token> tokens = new();
-    readonly Dictionary<Token, TokenNode> tokenData = new();
+    readonly List<TokenNode> tokens = new();
 
     public int Count => tokens.Count;
 
-    public Token this[int i] { get => tokens[i]; }
+    public Token this[int i] { get => tokens[i].Token; }
 
-    public bool Add(int index, Token token, LexPosition startPosition, LexPosition endPosition, LexerContextKind contextKind, MatchError? Error)
+    public void Add(int index, TokenNode node)
     {
-        if (tokenData.TryAdd(token, new(startPosition, endPosition, contextKind, Error)))
-        {
-            tokens.Insert(index, token);
-            return true;
-        }
-        return false;
+        tokens.Insert(index, node);
     }
 
     public void RemoveAt(int index)
     {
-        tokenData.Remove(tokens[index]);
         tokens.RemoveAt(index);
     }
 
-    public TokenNode GetNode(int index) => tokenData[tokens[index]];
+    public TokenNode GetNode(int index) => tokens[index];
 
-    public int IndexOf(Token token) => tokens.IndexOf(token);
+    public int IndexOf(Token token) => tokens.FindIndex(t => t.Token == token);
 
-    public Token Last() => tokens.Last();
+    public Token? Last() => tokens.Count == 0 ? null : tokens[^1].Token;
 
-    public Token? ElementAtOrDefault(int index) => index < tokens.Count ? tokens[index] : null;
+    public Token? ElementAtOrDefault(int index) => index < tokens.Count ? tokens[index].Token : null;
 
     public Token? NextToken(Token previous) => ElementAtOrDefault(IndexOf(previous) + 1);
 
     public bool IsTokenLast(Token token) => Last() == token;
 
-    public IEnumerator<KeyValuePair<Token, TokenNode>> GetEnumerator() => tokenData.GetEnumerator();
-
     public override string ToString()
     {
-        return $"[{string.Join(", ", tokens.Select(t => t.ToString()))}]";
+        return $"[{string.Join(", ", tokens.Select(t => t.Token.ToString()))}]";
     }
 }
 
-public class TokenNode(LexPosition startPosition, LexPosition endPosition, LexerContextKind contextKind, MatchError? error)
+public class TokenNode(Token token, LexPosition startPosition, LexPosition endPosition, LexerContextKind contextKind, MatchError? error)
 {
+    public Token Token = token;
     public LexPosition StartPosition = startPosition;
     public LexPosition EndPosition = endPosition;
     public LexerContextKind ContextKind = contextKind;
     public MatchError? Error = error;
+
+    public override string ToString() => Token.ToString();
 }

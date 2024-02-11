@@ -45,18 +45,18 @@ namespace Deltin.Deltinteger.Parse.Strings
             switch (token.TokenType)
             {
                 // Trim a string beginning with $
-                case Compiler.TokenType.InterpolatedStringTail:
+                case TokenType.InterpolatedStringTail:
                     string reduce = token.Text.Substring(1).TrimStart(); // Remove the $ and the whitespace between the $ and ".
-                    return reduce.Substring(1, reduce.Length - 2); // Remove the quotes.
+                    return reduce[1..^1]; // Remove the quotes.
 
                 // Remove the quotes.
-                case Compiler.TokenType.InterpolatedStringMiddle:
-                    return token.Text.Substring(0, token.Text.Length - 1);
+                case TokenType.InterpolatedStringMiddle:
+                    return token.Text.TrimStart()[1..^1];
 
                 // 'Head' will begin with $ if 'isStart' is true.
-                case Compiler.TokenType.InterpolatedStringHead:
-                    if (isStart) goto case Compiler.TokenType.InterpolatedStringTail;
-                    else goto case Compiler.TokenType.InterpolatedStringMiddle;
+                case TokenType.InterpolatedStringHead:
+                    if (isStart) goto case TokenType.InterpolatedStringTail;
+                    else goto case TokenType.InterpolatedStringMiddle;
 
                 default:
                     return token.Text.RemoveQuotes();

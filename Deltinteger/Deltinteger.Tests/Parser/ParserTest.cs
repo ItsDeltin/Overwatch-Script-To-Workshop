@@ -102,4 +102,18 @@ public class ParserTest
         tester.DeleteSnippet("Custom String(\"This is a test!\")", "");
         tester.Append("}");
     }
+
+    [TestMethod("Interpolated string")]
+    public void InterpolatedString()
+    {
+        Setup();
+        var tester = TestParser();
+        tester.Sequence("""
+            rule: "Interpolated string test"
+            {
+                define x = $'Total time elapsed: {TotalTimeElapsed()}, time remaining: {60 - TotalTimeElapsed()}';
+            }
+            """);
+        tester.Insert("", tester.IndexOf("()}';") + 3, 1);
+    }
 }

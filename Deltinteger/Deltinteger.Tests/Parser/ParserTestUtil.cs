@@ -65,8 +65,11 @@ class TestLexIncrementer
         var controller = new LexController(ParserSettings.Default, content.Text, VanillaSymbols.Instance, incrementalChange);
 
         int current = 0;
-        while (controller.GetTokenAt(current, LexerContextKind.Normal))
+        while (controller.ScanTokenAt(current, LexerContextKind.Normal))
+        {
             current++;
+            controller.ProgressTo(current);
+        }
 
         currentList = controller.GetTokenList();
     }

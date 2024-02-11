@@ -14,15 +14,13 @@ public class LexController
     readonly ParserSettings parserSettings;
     readonly string content;
     readonly VanillaSymbols vanillaSymbols;
-    readonly int initialTokenCount;
     readonly int relexAt;
-    readonly int stopRelexingAt;
 
     // State
-    readonly TokenList listed;
     int lockedInTokens = 0;
-    bool lexCompleted = false;
-    int relexSpan;
+    LexerState lockedInState;
+    readonly TokenList tokens;
+    readonly List<LexerStateModification> states = [];
 
     public LexController(
         ParserSettings parserSettings,
@@ -34,20 +32,18 @@ public class LexController
         this.content = content;
         this.vanillaSymbols = vanillaSymbols;
 
-        listed = incrementalChange?.Tokens ?? new();
-        initialTokenCount = listed.Count;
+        tokens = incrementalChange?.Tokens ?? new();
         relexAt = incrementalChange?.ChangeStartToken ?? 0;
-        stopRelexingAt = incrementalChange?.StopLexingAtIndex ?? int.MaxValue;
+        lockedInState = new(RelexSpan: 0, incrementalChange?.StopLexingAtIndex ?? int.MaxValue);
     }
 
-    public Token? GetTokenAt(int token, LexerContextKind contextKind)
+    public Token? ScanTokenAt(int token, LexerContextKind contextKind)
     {
         // Token is already known but the context was changed.
-        // if (token < listed.Count && contextKind != listed.GetNode(token).ContextKind)
-        // {
-        //     DiscardCurrentState();
-        // }
-
+        if (IsTokenReady(token) && contextKind != GetTokenAt(token).ContextKind)
+        {
+            DiscardCurrentState();
+        }
 
         // Scan tokens until requested position.
         while (!IsTokenReady(token))
@@ -55,45 +51,140 @@ public class LexController
             var nextTokens = MatchTokensAtIndex(token, contextKind);
 
             if (nextTokens is null)
-            {
-                lexCompleted = true; // note: state
                 return null;
-            }
 
-            foreach (var add in nextTokens)
-            {
-                if (add.NewPosition.Index <= stopRelexingAt)
-                    listed.Add(relexAt + relexSpan, add.MatchedToken, add.StartPosition, add.NewPosition, contextKind, add.Error);
-                relexSpan++;
-            }
+            states.Add(CreateStateForMatchedToken(token, contextKind, nextTokens));
         }
 
-        return listed[token];
+        return GetTokenAt(token).Token;
     }
 
     bool IsTokenReady(int token)
     {
-        return token < listed.Count && (
-            token < relexAt ||
-            relexAt + relexSpan > token ||
-            (token != 0 && listed.GetNode(token - 1).EndPosition.Index >= stopRelexingAt));
+        var state = GetCurrentState();
+        return token < GetTokenCount() && (
+            token < relexAt || // Before change
+            relexAt + GetCurrentState().RelexSpan > token || // Lexer progress past this point
+            (token != 0 && GetTokenAt(token - 1).EndPosition.Index >= state.StopRelexingAt));
     }
 
-    public Token GetTokenAtOrLast(int token, LexerContextKind contextKind)
+    LexerStateModification CreateStateForMatchedToken(int token, LexerContextKind contextKind, Match[] matchedTokens)
     {
-        return GetTokenAt(token, contextKind) ?? listed.Last();
+        var addedTokens = new List<TokenNode>();
+        int? startOverwritingAt = null;
+        int overwriteCount = 0;
+        var newState = GetCurrentState();
+
+        for (int i = 0; i < matchedTokens.Length; i++)
+        {
+            var add = matchedTokens[i];
+            TokenNode node = new(add.MatchedToken, add.StartPosition, add.NewPosition, contextKind, add.Error);
+
+            // Before change range
+            if (add.NewPosition.Index <= newState.StopRelexingAt)
+            {
+                // Ok, add token.
+                addedTokens.Add(node);
+                newState.RelexSpan++;
+            }
+            // At change
+            else
+            {
+                // Resync
+                var resync = GetTokenAt(token);
+                if (resync.Token.TokenType == add.MatchedToken.TokenType &&
+                    resync.Token.Text == add.MatchedToken.Text &&
+                    resync.Token.Range == add.MatchedToken.Range)
+                {
+                    newState.RelexSpan++;
+                }
+                else
+                {
+                    // Ok, add token.
+                    addedTokens.Add(node);
+                    newState.RelexSpan++;
+
+                    // Collision
+                    int tokenCount = GetTokenCount();
+                    for (int c = token + i; c < tokenCount; c++)
+                    {
+                        var collision = GetTokenAt(c);
+
+                        if (add.NewPosition.Index <= collision.StartPosition.Index)
+                            break;
+                        else
+                        {
+                            startOverwritingAt ??= i;
+                            overwriteCount++;
+                            newState.StopRelexingAt = Math.Max(
+                                newState.StopRelexingAt,
+                                GetTokenAtOrNull(c + 1)?.StartPosition.Index ?? int.MaxValue
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        return new LexerStateModification(token, newState, startOverwritingAt, overwriteCount, addedTokens);
+    }
+
+    public Token ScanTokenAtOrLast(int token, LexerContextKind contextKind)
+    {
+        return ScanTokenAt(token, contextKind) ?? GetTokenAt(GetTokenCount() - 1).Token;
     }
 
     public void ProgressTo(int tokenIndex)
     {
         lockedInTokens = tokenIndex;
+
+        while (states.Count > 0 && states[0].Token < lockedInTokens)
+        {
+            states[0].Commit(tokens);
+            lockedInState = states[0].State;
+            states.RemoveAt(0);
+        }
     }
 
     void DiscardCurrentState()
     {
-        for (int i = lockedInTokens; i < listed.Count; i++)
-            listed.RemoveAt(i);
+        states.Clear();
     }
+
+    public TokenNode GetTokenAt(int index)
+    {
+        for (int i = states.Count - 1; i >= 0; i--)
+        {
+            var item = states[i].GetAtIndex(index, out index);
+            if (item is not null)
+                return item;
+        }
+        return tokens.GetNode(index);
+    }
+
+    public TokenNode? GetTokenAtOrLast(int index)
+    {
+        var count = GetTokenCount();
+        if (count == 0) return null;
+        return GetTokenAt(Math.Min(count - 1, index));
+    }
+
+    public TokenNode? GetTokenAtOrNull(int index)
+    {
+        var count = GetTokenCount();
+        if (index >= count) return null;
+        return GetTokenAt(index);
+    }
+
+    int GetTokenCount()
+    {
+        int count = tokens.Count;
+        foreach (var state in states)
+            count += state.Delta();
+        return count;
+    }
+
+    LexerState GetCurrentState() => states.Count == 0 ? lockedInState : states[^1].State;
 
     LexPosition GetScanPositionForToken(int token)
     {
@@ -103,7 +194,7 @@ public class LexController
         }
         else
         {
-            return listed.GetNode(token - 1).EndPosition;
+            return GetTokenAt(token - 1).EndPosition;
         }
     }
 
@@ -120,12 +211,10 @@ public class LexController
 
     public int? GetTokenDelta()
     {
-        if (!lexCompleted)
-            return null;
-        return listed.Count - initialTokenCount;
+        return 0;
     }
 
-    public TokenList GetTokenList() => listed;
+    public TokenList GetTokenList() => tokens;
 }
 
 public class LexMatcher
@@ -161,6 +250,7 @@ public class LexMatcher
         {
             LexerContextKind.Workshop => MatchWorkshopContext(),
             LexerContextKind.LobbySettings => MatchLobbySettingsContext(),
+            LexerContextKind.InterpolatedString => One(MatchString(true, true)),
             LexerContextKind.Normal or _ => One(MatchDefault())
         };
 
@@ -395,6 +485,12 @@ public class LexMatcher
 
             // Not a string.
             if (!single && !scanner.Match('\"')) return null;
+        }
+        else
+        {
+            Skip(scanner);
+            if (!scanner.Match('}'))
+                return null;
         }
 
         char lookingFor = single ? '\'' : '\"';

@@ -144,6 +144,9 @@ namespace Deltin.Deltinteger.Compiler
 
         public override int GetHashCode() => HashCode.Combine(Start, End);
 
+        public static bool operator ==(DocRange r1, DocRange r2) => r1.Equals(r2);
+        public static bool operator !=(DocRange r1, DocRange r2) => !r1.Equals(r2);
+
         public static bool operator <(DocRange r1, DocRange r2) => r1.CompareTo(r2) < 0;
         public static bool operator >(DocRange r1, DocRange r2) => r1.CompareTo(r2) > 0;
         public static bool operator <=(DocRange r1, DocRange r2) => r1.CompareTo(r2) <= 0;
