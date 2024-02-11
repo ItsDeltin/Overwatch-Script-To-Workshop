@@ -22,7 +22,7 @@ public class VersionInstance
 
     public int GetLine(int index)
     {
-        if (_newlines.Count == 0 || index < _newlines[0])
+        if (_newlines.Count == 0 || index <= _newlines[0])
             return 0;
 
         int l = 0, r = _newlines.Count;
@@ -40,10 +40,12 @@ public class VersionInstance
             {
                 r = current - 1;
             }
-            else return current + 1;
+            else if (_newlines[current] == index)
+                return current;
+            else
+                return current + 1;
         }
     }
-    public int GetColumn(int index) => index - GetLineIndex(GetLine(index));
     public DocPos GetPos(int index)
     {
         var pos = GetLexPosition(index);
@@ -56,7 +58,7 @@ public class VersionInstance
         return new(index, line, column);
     }
     public int IndexOf(DocPos pos) => GetLineIndex(pos.Line) + pos.Character;
-    public int GetLineIndex(int line) => line == 0 ? 0 : (_newlines[line - 1] + 1);
+    private int GetLineIndex(int line) => line == 0 ? 0 : (_newlines[line - 1] + 1);
 
     public int NumberOfLines() => _newlines.Count;
     public int IndexOfLastLine() => _newlines.Count == 0 ? 0 : _newlines[^1];
