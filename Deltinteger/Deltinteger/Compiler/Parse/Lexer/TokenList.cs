@@ -6,7 +6,8 @@ namespace Deltin.Deltinteger.Compiler.Parse.Lexing;
 
 public class TokenList
 {
-    readonly List<TokenNode> tokens = new();
+    readonly List<TokenNode> tokens = [];
+    Dictionary<Token, int>? tokenIndexMap = [];
 
     public int Count => tokens.Count;
 
@@ -14,17 +15,23 @@ public class TokenList
 
     public void Add(int index, TokenNode node)
     {
+        tokenIndexMap = null;
         tokens.Insert(index, node);
     }
 
     public void RemoveAt(int index)
     {
+        tokenIndexMap = null;
         tokens.RemoveAt(index);
     }
 
     public TokenNode GetNode(int index) => tokens[index];
 
-    public int IndexOf(Token token) => tokens.FindIndex(t => t.Token == token);
+    public int IndexOf(Token token)
+    {
+        tokenIndexMap ??= tokens.Select((t, i) => new KeyValuePair<Token, int>(t.Token, i)).ToDictionary();
+        return tokenIndexMap[token];
+    }
 
     public Token? Last() => tokens.Count == 0 ? null : tokens[^1].Token;
 
