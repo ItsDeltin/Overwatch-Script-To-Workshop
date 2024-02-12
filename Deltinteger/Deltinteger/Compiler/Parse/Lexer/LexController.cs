@@ -17,10 +17,8 @@ public class LexController
     readonly int relexAt;
 
     // State
-    int lockedInTokens = 0;
-    LexerState lockedInState;
+    readonly LexerStateManager stateManager;
     readonly TokenList tokens;
-    readonly List<LexerStateModification> states = [];
 
     public LexController(
         ParserSettings parserSettings,
@@ -34,7 +32,7 @@ public class LexController
 
         tokens = incrementalChange?.Tokens ?? new();
         relexAt = incrementalChange?.ChangeStartToken ?? 0;
-        lockedInState = new(RelexSpan: 0, incrementalChange?.StopLexingAtIndex ?? int.MaxValue);
+        stateManager = new(tokens, incrementalChange?.StopLexingAtIndex ?? int.MaxValue);
     }
 
     public Token? ScanTokenAt(int token, LexerContextKind contextKind)
@@ -42,7 +40,7 @@ public class LexController
         // Token is already known but the context was changed.
         if (IsTokenReady(token) && contextKind != GetTokenAt(token).ContextKind)
         {
-            DiscardCurrentState();
+            stateManager.DiscardCurrentState();
         }
 
         // Scan tokens until requested position.
@@ -53,7 +51,7 @@ public class LexController
             if (nextTokens is null)
                 return null;
 
-            states.Add(CreateStateForMatchedToken(token, contextKind, nextTokens));
+            stateManager.AddState(CreateStateForMatchedToken(token, contextKind, nextTokens));
         }
 
         return GetTokenAt(token).Token;
@@ -61,11 +59,10 @@ public class LexController
 
     bool IsTokenReady(int token)
     {
-        var state = GetCurrentState();
-        return token < GetTokenCount() && (
+        return token < stateManager.TokenCount && (
             token < relexAt || // Before change
-            relexAt + GetCurrentState().RelexSpan > token || // Lexer progress past this point
-            (token != 0 && GetTokenAt(token - 1).EndPosition.Index >= state.StopRelexingAt));
+            relexAt + stateManager.CurrentState.RelexSpan > token || // Lexer progress past this point
+            (token != 0 && GetTokenAt(token - 1).EndPosition.Index >= stateManager.CurrentState.StopRelexingAt));
     }
 
     LexerStateModification CreateStateForMatchedToken(int token, LexerContextKind contextKind, Match[] matchedTokens)
@@ -73,7 +70,7 @@ public class LexController
         var addedTokens = new List<TokenNode>();
         int? startOverwritingAt = null;
         int overwriteCount = 0;
-        var newState = GetCurrentState();
+        var newState = stateManager.CurrentState;
 
         for (int i = 0; i < matchedTokens.Length; i++)
         {
@@ -105,7 +102,7 @@ public class LexController
                     newState.RelexSpan++;
 
                     // Collision
-                    int tokenCount = GetTokenCount();
+                    int tokenCount = stateManager.TokenCount;
                     for (int c = token + i; c < tokenCount; c++)
                     {
                         var collision = GetTokenAt(c);
@@ -131,60 +128,25 @@ public class LexController
 
     public Token ScanTokenAtOrLast(int token, LexerContextKind contextKind)
     {
-        return ScanTokenAt(token, contextKind) ?? GetTokenAt(GetTokenCount() - 1).Token;
+        return ScanTokenAt(token, contextKind) ?? GetTokenAt(stateManager.TokenCount - 1).Token;
     }
 
-    public void ProgressTo(int tokenIndex)
-    {
-        lockedInTokens = tokenIndex;
-
-        while (states.Count > 0 && states[0].Token < lockedInTokens)
-        {
-            states[0].Commit(tokens);
-            lockedInState = states[0].State;
-            states.RemoveAt(0);
-        }
-    }
-
-    void DiscardCurrentState()
-    {
-        states.Clear();
-    }
-
-    public TokenNode GetTokenAt(int index)
-    {
-        for (int i = states.Count - 1; i >= 0; i--)
-        {
-            var item = states[i].GetAtIndex(index, out index);
-            if (item is not null)
-                return item;
-        }
-        return tokens.GetNode(index);
-    }
+    public void ProgressTo(int tokenIndex) => stateManager.ProgressTo(tokenIndex);
+    private TokenNode GetTokenAt(int index) => stateManager.GetTokenAt(index);
 
     public TokenNode? GetTokenAtOrLast(int index)
     {
-        var count = GetTokenCount();
+        var count = stateManager.TokenCount;
         if (count == 0) return null;
         return GetTokenAt(Math.Min(count - 1, index));
     }
 
     public TokenNode? GetTokenAtOrNull(int index)
     {
-        var count = GetTokenCount();
+        var count = stateManager.TokenCount;
         if (index >= count) return null;
         return GetTokenAt(index);
     }
-
-    int GetTokenCount()
-    {
-        int count = tokens.Count;
-        foreach (var state in states)
-            count += state.Delta();
-        return count;
-    }
-
-    LexerState GetCurrentState() => states.Count == 0 ? lockedInState : states[^1].State;
 
     LexPosition GetScanPositionForToken(int token)
     {
