@@ -317,6 +317,11 @@ static class WorkshopStringUtility
         return Encoding.UTF8.GetByteCount(str.Replace("\r", "\\r").Replace("\n", "\\n"));
     }
 
+    public static int LengthOfStringInWorkshopUnescape(string str)
+    {
+        return Encoding.UTF8.GetByteCount(str.Replace("\\r", "\r").Replace("\\n", "\n"));
+    }
+
     /// <summary>Makes an OSTW string more compatible with the workshop.
     /// Escaped single quotes are unescaped, unescaped double quotes are escaped.</summary>
     /// <param name="raw">The OSTW string. First and last character should be ' or ".</param>

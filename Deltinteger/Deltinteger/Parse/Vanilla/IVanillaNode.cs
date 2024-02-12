@@ -96,7 +96,7 @@ static class VanillaExpressions
             context.Error("String literal cannot be used here, did you mean to use Custom String?", syntax.Range);
         }
         // Warning if the string literal is too large.
-        else if (WorkshopStringUtility.LengthOfStringInWorkshop(value) >= Constants.MAX_STRING_STUB_BYTE_LENGTH)
+        else if (WorkshopStringUtility.LengthOfStringInWorkshopUnescape(value) > Constants.MAX_STRING_STUB_BYTE_LENGTH)
         {
             context.Warning($"String literal is larger than {Constants.MAX_STRING_STUB_BYTE_LENGTH} bytes, this may be trimmed by Overwatch", syntax.Range);
         }
