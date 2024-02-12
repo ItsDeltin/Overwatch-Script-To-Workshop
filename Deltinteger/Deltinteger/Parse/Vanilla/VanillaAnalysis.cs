@@ -107,7 +107,7 @@ static class VanillaAnalysis
                 eventType == RuleEvent.Subroutine ? SymbolKind.Function : SymbolKind.Event,
                 rule.Range,
                 rule.Name ?? rule.Keyword ?? rule.Disabled,
-                eventType is null ? null : EventInfo.EventToString(eventType.Value)).ToLsp());
+                eventType is null ? null : EventInfo.EventToString(eventType.Value)));
         }
 
         return new VanillaRuleAnalysis(disabled, name, content.ToArray());

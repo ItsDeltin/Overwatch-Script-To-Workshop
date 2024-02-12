@@ -1,13 +1,11 @@
 #nullable enable
 
 using System.Collections.Generic;
-using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using DocumentSymbol = OmniSharp.Extensions.LanguageServer.Protocol.Models.DocumentSymbol;
+using Deltin.Deltinteger.Parse.Vanilla.Ide;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -47,7 +45,7 @@ class VanillaContext
     public void AddCompletion(ICompletionRange completionRange) => ideItems.Completions.Add(completionRange);
     public void AddHover(DocRange range, MarkupBuilder content) => ideItems.Hovers.Add((range, content));
     public void AddSignatureInfo(ISignatureHelp signatureHelp) => ideItems.SignatureHelps.Add(signatureHelp);
-    public void AddDocumentSymbol(DocumentSymbol symbol) => ideItems.DocumentSymbols.Add(symbol);
+    public void AddDocumentSymbol(DocumentSymbolNode symbol) => ideItems.DocumentSymbols.Add(symbol);
 
     // Context
     public ActiveParameterData GetActiveParameterData() => activeParameterData;
@@ -98,7 +96,7 @@ readonly struct IdeItems
     public readonly List<ICompletionRange> Completions = [];
     public readonly List<(DocRange, MarkupBuilder)> Hovers = [];
     public readonly List<ISignatureHelp> SignatureHelps = [];
-    public readonly List<DocumentSymbol> DocumentSymbols = [];
+    public readonly List<DocumentSymbolNode> DocumentSymbols = [];
 
     public IdeItems() { }
 
@@ -117,6 +115,6 @@ readonly struct IdeItems
             script.AddSignatureInfo(signature);
 
         foreach (var symbol in DocumentSymbols)
-            script.AddDocumentSymbol(symbol);
+            script.AddDocumentSymbol(symbol.ToLsp());
     }
 }
