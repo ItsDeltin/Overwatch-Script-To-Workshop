@@ -9,6 +9,7 @@ using LocationLink = OmniSharp.Extensions.LanguageServer.Protocol.Models.Locatio
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using ColorInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ColorInformation;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
+using DocumentSymbol = OmniSharp.Extensions.LanguageServer.Protocol.Models.DocumentSymbol;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -20,13 +21,14 @@ namespace Deltin.Deltinteger.Parse
         public Document Document { get; }
         public ScriptElements Elements { get; } = new ScriptElements();
 
-        readonly List<ICompletionRange> _completionRanges = new List<ICompletionRange>();
-        readonly List<ISignatureHelp> _signatureHelps = new List<ISignatureHelp>();
-        readonly List<LocationLink> _callLinks = new List<LocationLink>();
-        readonly List<HoverRange> _hoverRanges = new List<HoverRange>();
-        readonly List<CodeLensRange> _codeLensRanges = new List<CodeLensRange>();
-        readonly List<SemanticToken> _semanticTokens = new List<SemanticToken>();
-        readonly List<ColorInformation> _colorRanges = new List<ColorInformation>();
+        readonly List<ICompletionRange> _completionRanges = [];
+        readonly List<ISignatureHelp> _signatureHelps = [];
+        readonly List<LocationLink> _callLinks = [];
+        readonly List<HoverRange> _hoverRanges = [];
+        readonly List<CodeLensRange> _codeLensRanges = [];
+        readonly List<SemanticToken> _semanticTokens = [];
+        readonly List<ColorInformation> _colorRanges = [];
+        readonly List<DocumentSymbol> _documentSymbols = [];
 
         public ScriptFile(Diagnostics diagnostics, Document document)
         {
@@ -45,16 +47,16 @@ namespace Deltin.Deltinteger.Parse
         public Location GetLocation(DocRange range) => new Location(Uri, range);
 
         public void AddCompletionRange(ICompletionRange completionRange) => _completionRanges.Add(completionRange);
-        public ICompletionRange[] GetCompletionRanges() => _completionRanges.ToArray();
+        public List<ICompletionRange> GetCompletionRanges() => _completionRanges;
 
         public void AddSignatureInfo(ISignatureHelp overload) => _signatureHelps.Add(overload);
-        public ISignatureHelp[] GetSignatures() => _signatureHelps.ToArray();
+        public List<ISignatureHelp> GetSignatures() => _signatureHelps;
 
         /// <summary>Adds a link that can be clicked on in the script.</summary>
         public void AddDefinitionLink(DocRange source, Location target)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (target == null) throw new ArgumentNullException(nameof(target));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(target);
 
             _callLinks.Add(new LocationLink()
             {
@@ -64,7 +66,7 @@ namespace Deltin.Deltinteger.Parse
                 TargetSelectionRange = target.range
             });
         }
-        public LocationLink[] GetDefinitionLinks() => _callLinks.ToArray();
+        public List<LocationLink> GetDefinitionLinks() => _callLinks;
 
         ///<summary>Adds a hover to the file.</summary>
         public void AddHover(DocRange range, MarkupBuilder content)
@@ -74,20 +76,23 @@ namespace Deltin.Deltinteger.Parse
 
             _hoverRanges.Add(new HoverRange(range, content));
         }
-        public HoverRange[] GetHoverRanges() => _hoverRanges.ToArray();
+        public List<HoverRange> GetHoverRanges() => _hoverRanges;
 
         ///<summary>Adds a codelens to the file.</summary>
         public void AddCodeLensRange(CodeLensRange codeLensRange) => _codeLensRanges.Add(codeLensRange ?? throw new ArgumentNullException(nameof(codeLensRange)));
-        public CodeLensRange[] GetCodeLensRanges() => _codeLensRanges.ToArray();
+        public List<CodeLensRange> GetCodeLensRanges() => _codeLensRanges;
 
         /// <summary>Adds a semantic token to the file.</summary>
         public void AddToken(DocRange range, SemanticTokenType type, params TokenModifier[] modifiers) => AddToken(new SemanticToken(range, type, modifiers));
         /// <summary>Adds a semantic token to the file.</summary>
         public void AddToken(SemanticToken token) => _semanticTokens.Add(token);
-        public SemanticToken[] GetSemanticTokens() => _semanticTokens.ToArray();
+        public List<SemanticToken> GetSemanticTokens() => _semanticTokens;
 
         public void AddColorRange(ColorInformation colorRange) => _colorRanges.Add(colorRange);
-        public ColorInformation[] GetColorRanges() => _colorRanges.ToArray();
+        public List<ColorInformation> GetColorRanges() => _colorRanges;
+
+        public void AddDocumentSymbol(DocumentSymbol symbol) => _documentSymbols.Add(symbol);
+        public List<DocumentSymbol> GetDocumentSymbols() => _documentSymbols;
     }
 
     public interface ICompletionRange

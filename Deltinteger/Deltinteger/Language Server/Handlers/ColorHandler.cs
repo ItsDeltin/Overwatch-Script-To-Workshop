@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             var compilation = await _server.ProjectUpdater.GetProjectCompilationAsync();
             var ranges = compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetColorRanges();
-            return new Container<ColorInformation>(ranges ?? Array.Empty<ColorInformation>());
+            return new Container<ColorInformation>(ranges ?? []);
         }
 
         public Task<Container<ColorPresentation>> Handle(ColorPresentationParams request, CancellationToken cancellationToken)

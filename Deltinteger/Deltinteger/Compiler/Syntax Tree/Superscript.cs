@@ -58,7 +58,10 @@ public record struct VariableName(Token Id, Token? Name)
 /// }
 /// </code>
 /// </summary>
-public record class VanillaRule(Token? Disabled, Token? Keyword, Token? Name, Token? Begin, VanillaRuleContent[] Content, Token? End);
+public record class VanillaRule(Token? Disabled, Token? Keyword, Token? Name, Token? Begin, VanillaRuleContent[] Content, Token? End)
+{
+    public DocRange Range => (Disabled ?? Keyword)!.Range + End;
+}
 
 /// <summary>The 'event', 'actions' or 'conditions' sections in a workshop rule.</summary>
 public record class VanillaRuleContent(DocRange Range, Token GroupToken, CommentedVanillaExpression[] InnerItems);
@@ -138,6 +141,12 @@ record class VanillaAssignmentExpression(IVanillaExpression Lhs, Token Assignmen
 record class VanillaTeamSugarExpression(Token Token) : IVanillaExpression
 {
     public DocRange Range => Token;
+}
+
+/// <summary>settings { ... }</summary>
+public record class VanillaSettingsSyntax(Token Opener, VanillaSettingsGroupSyntax Settings)
+{
+    public DocRange Range => Opener.Range + Settings.Range;
 }
 
 /// <summary>Syntax for vanilla settings. Can be used as value or as the top-level settings group.</summary>

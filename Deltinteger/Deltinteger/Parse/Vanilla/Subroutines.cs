@@ -3,7 +3,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Vanilla.Ide;
 using Deltin.Deltinteger.Parse.Variables.VanillaLink;
+using SymbolKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.SymbolKind;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -36,6 +38,7 @@ readonly struct VanillaSubroutineAnalysis : IAnalyzedVanillaCollection
     public static VanillaSubroutineAnalysis Analyze(ScriptFile script, VanillaVariableCollection syntax)
     {
         var subroutines = new List<VanillaSubroutine>();
+        script.AddDocumentSymbol(new DocumentSymbolNode("subroutines", SymbolKind.Namespace, syntax.Range, syntax.OpeningToken).ToLsp());
 
         foreach (var item in syntax.Items)
         {

@@ -60,7 +60,8 @@ class StdServer : ITomlDiagnosticReporter, IDocumentEvent
             .AddHandler(LangServer.RenameHandler)
             .AddHandler(LangServer.ColorHandler)
             .AddHandler(LangServer.SemanticTokenHandler)
-            .AddHandler(LangServer.Builder.FileHandlerBuilder.GetHandler()))
+            .AddHandler(LangServer.DocumentSymbolHandler))
+            .AddHandler(LangServer.Builder.FileHandlerBuilder.GetHandler())
         );
 
         LangServer.Workspace.SetWorkspaceFolders(ProtocolServer.ClientSettings.WorkspaceFolders);

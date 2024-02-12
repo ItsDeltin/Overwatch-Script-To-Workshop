@@ -5,9 +5,11 @@ using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using EventInfo = Deltin.Deltinteger.Decompiler.TextToElement.EventInfo;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Vanilla.Ide;
 using Deltin.WorkshopString;
+using SymbolKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.SymbolKind;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -97,6 +99,16 @@ static class VanillaAnalysis
             context.AddCompletion(VanillaCompletion.CreateEventDeclarationCompletion(contentRange, missingCategories));
         }
 
+        // Empty names are not allowed in LSP
+        if (!string.IsNullOrEmpty(name))
+        {
+            context.AddDocumentSymbol(new DocumentSymbolNode(
+                name,
+                eventType == RuleEvent.Subroutine ? SymbolKind.Function : SymbolKind.Event,
+                rule.Range,
+                rule.Name ?? rule.Keyword ?? rule.Disabled,
+                eventType is null ? null : EventInfo.EventToString(eventType.Value)).ToLsp());
+        }
 
         return new VanillaRuleAnalysis(disabled, name, content.ToArray());
     }

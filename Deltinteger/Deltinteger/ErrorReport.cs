@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Deltin.Deltinteger;
 
@@ -39,6 +40,19 @@ static class ErrorReport
         {
             Add(ex.Message);
             return or;
+        }
+    }
+
+    public static async Task<T> TryOrDefaultAsync<T>(Func<Task<T>> func) where T : new()
+    {
+        try
+        {
+            return await func();
+        }
+        catch (Exception ex)
+        {
+            Add(ex.Message);
+            return new();
         }
     }
 }

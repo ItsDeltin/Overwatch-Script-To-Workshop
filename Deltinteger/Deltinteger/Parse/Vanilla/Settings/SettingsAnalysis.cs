@@ -10,14 +10,16 @@ using Deltin.Deltinteger.Lobby2.KeyValues;
 using Deltin.Deltinteger.Model;
 using Deltin.Deltinteger.Parse.Vanilla.Ide;
 using Deltin.WorkshopString;
+using SymbolKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.SymbolKind;
 
 namespace Deltin.Deltinteger.Parse.Vanilla.Settings;
 
 static class AnalyzeSettings
 {
-    public static GroupSettingValue Analyze(ScriptFile script, VanillaSettingsGroupSyntax settingsGroup)
+    public static GroupSettingValue Analyze(ScriptFile script, VanillaSettingsSyntax settingsGroup)
     {
-        return AnalyzeGroup(new(script, null, LobbySettings.Instance?.Root ?? Array.Empty<EObject>()), settingsGroup);
+        script.AddDocumentSymbol(new DocumentSymbolNode("settings", SymbolKind.Namespace, settingsGroup.Range, settingsGroup.Opener).ToLsp());
+        return AnalyzeGroup(new(script, null, LobbySettings.Instance?.Root ?? Array.Empty<EObject>()), settingsGroup.Settings);
     }
 
     static GroupSettingValue AnalyzeGroup(SettingsAnalysisContext context, VanillaSettingsGroupSyntax settingsGroup)

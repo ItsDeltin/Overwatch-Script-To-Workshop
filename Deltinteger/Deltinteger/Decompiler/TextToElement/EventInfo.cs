@@ -91,9 +91,16 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return collection.FirstOrDefault(pair => pair.Item1 == enUsName).Item2;
         }
 
+        static string? GetString<T>((string, T)[] collection, T item)
+        {
+            return collection.FirstOrDefault(pair => pair.Item2!.Equals(item)).Item1;
+        }
+
         public static RuleEvent? EventFromString(string enUsEventName) => Search(PlayerEventNames, enUsEventName);
         public static Team? TeamFromString(string enUsTeamName) => Search(PlayerTeamNames, enUsTeamName);
         public static PlayerSelector? PlayerFromString(string enUsPlayerName) => Search(PlayerTypeNames, enUsPlayerName);
+
+        public static string? EventToString(RuleEvent ruleEvent) => GetString(PlayerEventNames, ruleEvent);
 
         public RuleEvent Event { get; } = default;
         public PlayerSelector Player { get; } = default;

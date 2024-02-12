@@ -2409,10 +2409,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
             });
         });
 
-        VanillaSettingsGroupSyntax ParseVanillaLobbySettings()
+        VanillaSettingsSyntax ParseVanillaLobbySettings()
         {
-            ParseExpected(TokenType.WorkshopSettings, TokenType.WorkshopSettingsEn);
-            return Lexer.InSettingsContext(ParseListOfSettings);
+            var openingToken = ParseExpected(TokenType.WorkshopSettings, TokenType.WorkshopSettingsEn);
+            return Lexer.InSettingsContext(() =>
+            {
+                var group = ParseListOfSettings();
+                return new VanillaSettingsSyntax(openingToken, group);
+            });
         }
 
         VanillaSettingsGroupSyntax ParseListOfSettings() => CaptureRange(r =>

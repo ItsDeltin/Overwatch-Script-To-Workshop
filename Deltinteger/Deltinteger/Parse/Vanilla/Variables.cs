@@ -6,6 +6,7 @@ using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Vanilla.Ide;
 using Deltin.Deltinteger.Parse.Variables.VanillaLink;
+using SymbolKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.SymbolKind;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -53,6 +54,9 @@ class VanillaVariableAnalysis : IAnalyzedVanillaCollection
         var didAddNoGroupError = false;
         var didGetGroup = false;
 
+        var top = new DocumentSymbolNode("variables", SymbolKind.Namespace, syntax.Range, syntax.OpeningToken);
+        var current = top;
+
         foreach (var item in syntax.Items)
         {
             // Name
@@ -82,6 +86,10 @@ class VanillaVariableAnalysis : IAnalyzedVanillaCollection
                     bool isGlobal = currentGroup == CurrentGroup.Global;
                     vanillaVariables.Add(new(id, name, isGlobal));
                 }
+
+                // This adds a symbol for variables.
+                // I decided to remove it because it makes the vscode symbol menu messy
+                // current.Add(new(name, SymbolKind.Variable, item.Name.Value.Range));
             }
             // Group
             else if (item.Group.HasValue)
@@ -101,9 +109,12 @@ class VanillaVariableAnalysis : IAnalyzedVanillaCollection
                     currentGroup = CurrentGroup.None;
                     script.Diagnostics.Warning("Unknown variable group name, expected 'global' or 'player'", item.Group.Value.GroupToken);
                 }
+                current = new DocumentSymbolNode(groupName, SymbolKind.Module, item.Group.Value.GroupToken);
+                top.Add(current);
             }
         }
 
+        script.AddDocumentSymbol(top.ToLsp());
         return new VanillaVariableAnalysis(vanillaVariables);
     }
 

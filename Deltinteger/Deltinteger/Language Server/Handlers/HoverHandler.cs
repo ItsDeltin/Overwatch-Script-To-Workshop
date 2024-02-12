@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
             var hoverRanges = compilation?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
-            if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
+            if (hoverRanges == null || hoverRanges.Count == 0) return new Hover();
 
             HoverRange chosen = hoverRanges
                 .Where(hoverRange => hoverRange.Range.IsInside(request.Position))

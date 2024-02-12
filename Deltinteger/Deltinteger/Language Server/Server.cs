@@ -30,6 +30,7 @@ public class OstwLangServer
     public DoRenameHandler RenameHandler { get; private set; }
     public ColorHandler ColorHandler { get; private set; }
     public SemanticTokenHandler SemanticTokenHandler { get; private set; }
+    public DocumentSymbolsHandler DocumentSymbolHandler { get; private set; }
     // ~ End Protocol Handlers
 
     public LanguageServerBuilder Builder { get; }
@@ -68,6 +69,7 @@ public class OstwLangServer
         RenameHandler = new DoRenameHandler(this);
         ColorHandler = new ColorHandler(this);
         SemanticTokenHandler = new SemanticTokenHandler(this);
+        DocumentSymbolHandler = new(this);
     }
 
     private LanguageServerOptions AddRequests(LanguageServerOptions options)
@@ -143,8 +145,8 @@ public class OstwLangServer
         options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(async () =>
         {
             var compilation = await ProjectUpdater.GetProjectCompilationAsync();
-            SemanticToken[] tokens = compilation?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
-            return tokens ?? new SemanticToken[0];
+            var tokens = compilation?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
+            return tokens.ToArray() ?? [];
         }));
 
         // debugger start

@@ -15,7 +15,7 @@ public readonly struct RootElement
     readonly VanillaVariableCollection? _variables = null;
     readonly VanillaRule? _vanillaRule = null;
     readonly TypeAliasContext? _typeAlias = null;
-    readonly VanillaSettingsGroupSyntax? _vanillaSettings = null;
+    readonly VanillaSettingsSyntax? _vanillaSettings = null;
 
     public RootElement(Import import) => _import = import;
     public RootElement(RuleContext rule) => _rule = rule;
@@ -25,7 +25,7 @@ public readonly struct RootElement
     public RootElement(VanillaVariableCollection variables) => _variables = variables;
     public RootElement(VanillaRule vanillaRule) => _vanillaRule = vanillaRule;
     public RootElement(TypeAliasContext typeAlias) => _typeAlias = typeAlias;
-    public RootElement(VanillaSettingsGroupSyntax vanillaSettings) => _vanillaSettings = vanillaSettings;
+    public RootElement(VanillaSettingsSyntax vanillaSettings) => _vanillaSettings = vanillaSettings;
 
     public static void Iter(
         IEnumerable<RootElement> rootObjects,
@@ -37,7 +37,7 @@ public readonly struct RootElement
         Action<VanillaVariableCollection>? variables = null,
         Action<VanillaRule>? vanillaRule = null,
         Action<TypeAliasContext>? typeAlias = null,
-        Action<VanillaSettingsGroupSyntax>? vanillaSettings = null)
+        Action<VanillaSettingsSyntax>? vanillaSettings = null)
     {
         foreach (var rootObject in rootObjects)
         {
@@ -63,7 +63,7 @@ public readonly struct RootElement
         Action<VanillaVariableCollection>? variables = null,
         Action<VanillaRule>? vanillaRule = null,
         Action<TypeAliasContext>? typeAlias = null,
-        Action<VanillaSettingsGroupSyntax>? vanillaSettings = null)
+        Action<VanillaSettingsSyntax>? vanillaSettings = null)
     {
         if (_import is not null) import?.Invoke(_import);
         else if (_rule is not null) rule?.Invoke(_rule);
