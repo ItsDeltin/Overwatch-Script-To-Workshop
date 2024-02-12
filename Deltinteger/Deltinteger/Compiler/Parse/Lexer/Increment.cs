@@ -70,6 +70,8 @@ public readonly record struct LexerIncrementalChange(
         bool startSet = false;
         int startingTokenIndex = 0; // The position in the token list where new tokens will be inserted into.
         int length = 0;
+        int lineOfChangeStart = updateRange.Range.Start.Line;
+        int lineOfChangeEnd = updateRange.Range.End.Line;
 
         // Find the first token to the left of the update range and the first token to the right of the update range.
         // Set 'startIndex', 'startingTokenIndex' with the left token and 'endingTokenIndex' with the right token.
@@ -78,8 +80,8 @@ public readonly record struct LexerIncrementalChange(
         // the default values of 'startIndex', 'startingTokenIndex', and 'endingTokenIndex' should handle it fine.
         for (int i = 0; i < tokens.Count; i++)
         {
-            // If the current token overlaps the update range, set startTokenIndex.
-            if (tokens[i].Range.DoOverlap(updateRange.Range))
+            // If the current token overlaps the update range or intersect with a line of the change, set the startTokenIndex.
+            if (tokens[i].Range.DoOverlap(updateRange.Range) || (tokens[i].Range.End.Line >= lineOfChangeStart && tokens[i].Range.Start.Line <= lineOfChangeEnd))
             {
                 // Don't set the starting position and index again if it was already set via overlap.
                 // We use a seperate if rather than an && because the proceeding else-ifs cannot run if the token overlaps the update range.

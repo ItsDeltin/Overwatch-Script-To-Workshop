@@ -116,4 +116,22 @@ public class ParserTest
             """);
         tester.Insert("", tester.IndexOf("()}';") + 3, 1);
     }
+
+    [TestMethod("Slide symbols together")]
+    public void SlideSymbolsTogether()
+    {
+        Setup();
+        var tester = TestParser();
+        tester.Sequence("""
+            rule("Slide workshop tokens together")
+            {
+                actions {
+                    Small Message(Event 
+                        Player);
+                }
+            }
+            """);
+        var slidePosition = tester.IndexOf(" \r\n            Player);");
+        Assert.AreNotEqual(-1, slidePosition);
+    }
 }
