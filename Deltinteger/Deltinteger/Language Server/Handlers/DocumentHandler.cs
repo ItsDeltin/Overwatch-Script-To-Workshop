@@ -80,9 +80,12 @@ public class DocumentHandler : ITextDocumentSyncHandler
             return Unit.Task;
         }
 
-        if (_sendTextOnSave)
+        if (_sendTextOnSave && saveParams.Text is not null)
         {
-            document.UpdateIfChanged(saveParams.Text, _parserSettingsResolver.GetParserSettings(document.Uri));
+            _languageServer.ProjectUpdater.Lock(() =>
+            {
+                document.UpdateIfChanged(saveParams.Text, _parserSettingsResolver.GetParserSettings(document.Uri));
+            });
         }
         _languageServer.ProjectUpdater.UpdateProject(document);
         return Unit.Task;
@@ -123,7 +126,10 @@ public class DocumentHandler : ITextDocumentSyncHandler
             if (change.Range is null)
                 continue;
 
-            document.Update(change, _parserSettingsResolver.GetParserSettings(document.Uri));
+            _languageServer.ProjectUpdater.Lock(() =>
+            {
+                document.Update(change, _parserSettingsResolver.GetParserSettings(document.Uri));
+            });
         }
 
         _languageServer.ProjectUpdater.UpdateProject(document);
