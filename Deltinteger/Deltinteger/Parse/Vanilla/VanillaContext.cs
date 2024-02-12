@@ -1,10 +1,12 @@
 #nullable enable
 
+using System.Collections.Concurrent;
 using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Deltin.Deltinteger.Elements;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Deltin.Deltinteger.LanguageServer;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
 namespace Deltin.Deltinteger.Parse.Vanilla;
 
@@ -14,11 +16,13 @@ class VanillaContext
     public RuleEvent? EventType { get; init; }
     public BalancedActions? ActionBalancer { get; init; }
     readonly ScriptFile script;
+    readonly IdeItems ideItems;
     ActiveParameterData activeParameterData;
 
-    public VanillaContext(ScriptFile script, VanillaScope scopedVanillaVariables)
+    public VanillaContext(ScriptFile script, VanillaScope scopedVanillaVariables, IdeItems ideItems)
     {
         this.script = script;
+        this.ideItems = ideItems;
         ScopedVariables = scopedVanillaVariables;
     }
 
@@ -27,25 +31,26 @@ class VanillaContext
         ScopedVariables = other.ScopedVariables;
         ActionBalancer = other.ActionBalancer;
         script = other.script;
+        ideItems = other.ideItems;
         EventType = other.EventType;
         activeParameterData = other.activeParameterData;
     }
 
     // Diagnostics
-    public void Error(string text, DocRange range) => script.Diagnostics.Error(text, range);
-    public void Warning(string text, DocRange range) => script.Diagnostics.Warning(text, range);
-    public void Info(string text, DocRange range) => script.Diagnostics.Information(text, range);
-    public void Hint(string text, DocRange range) => script.Diagnostics.Hint(text, range);
+    public void Error(string text, DocRange range) => ideItems.Diagnostics.Add(new Diagnostic(text, range, Diagnostic.Error));
+    public void Warning(string text, DocRange range) => ideItems.Diagnostics.Add(new Diagnostic(text, range, Diagnostic.Warning));
+    public void Info(string text, DocRange range) => ideItems.Diagnostics.Add(new Diagnostic(text, range, Diagnostic.Information));
+    public void Hint(string text, DocRange range) => ideItems.Diagnostics.Add(new Diagnostic(text, range, Diagnostic.Hint));
 
     // IDE
-    public void AddCompletion(ICompletionRange completionRange) => script.AddCompletionRange(completionRange);
-    public void AddCompletionCatch(DocRange range) => script.AddCompletionRange(ICompletionRange.New(range, CompletionRangeKind.Catch, _ => Enumerable.Empty<CompletionItem>()));
-    public void AddHover(DocRange range, MarkupBuilder content) => script.AddHover(range, content);
-    public void AddSignatureInfo(ISignatureHelp signatureHelp) => script.AddSignatureInfo(signatureHelp);
+    public void AddCompletion(ICompletionRange completionRange) => ideItems.Completions.Add(completionRange);
+    public void AddCompletionCatch(DocRange range) => ideItems.Completions.Add(ICompletionRange.New(range, CompletionRangeKind.Catch, _ => Enumerable.Empty<CompletionItem>()));
+    public void AddHover(DocRange range, MarkupBuilder content) => ideItems.Hovers.Add((range, content));
+    public void AddSignatureInfo(ISignatureHelp signatureHelp) => ideItems.SignatureHelps.Add(signatureHelp);
 
     // Context
     public ActiveParameterData GetActiveParameterData() => activeParameterData;
-    public WorkshopLanguage[]? LikelyLanguages() => new WorkshopLanguage[0];
+    public WorkshopLanguage[]? LikelyLanguages() => [];
 
     // Subcontext
     public VanillaContext SetEventType(RuleEvent? eventType) => new(this)
@@ -84,4 +89,29 @@ enum ExpectingVariable
     None,
     Global,
     Player
+}
+
+readonly struct IdeItems
+{
+    public readonly ConcurrentBag<Diagnostic> Diagnostics = [];
+    public readonly ConcurrentBag<ICompletionRange> Completions = [];
+    public readonly ConcurrentBag<(DocRange, MarkupBuilder)> Hovers = [];
+    public readonly ConcurrentBag<ISignatureHelp> SignatureHelps = [];
+
+    public IdeItems() { }
+
+    public readonly void AddToScript(ScriptFile script)
+    {
+        foreach (var item in Diagnostics)
+            script.Diagnostics.AddDiagnostic(item);
+
+        foreach (var completion in Completions)
+            script.AddCompletionRange(completion);
+
+        foreach (var hover in Hovers)
+            script.AddHover(hover.Item1, hover.Item2);
+
+        foreach (var signature in SignatureHelps)
+            script.AddSignatureInfo(signature);
+    }
 }

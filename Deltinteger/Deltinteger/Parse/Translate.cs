@@ -14,6 +14,8 @@ using Deltin.Deltinteger.Parse.Vanilla;
 using Deltin.Deltinteger.Model;
 using Deltin.Deltinteger.Parse.Vanilla.Settings;
 using Deltin.Deltinteger.Lobby2.KeyValues;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -286,6 +288,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
+                var analyzeVanillaRules = new List<VanillaRule>();
                 var scopedVanillaVariables = new VanillaScope(defaultVanillaVariables);
                 RootElement.Iter(script.Context.RootItems,
                     // ostw
@@ -294,16 +297,22 @@ namespace Deltin.Deltinteger.Parse
                         rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, rule));
                     },
                     // vanilla
-                    vanillaRule: vanillaRule =>
-                    {
-                        rules.Add(VanillaAnalysis.AnalyzeRule(script, vanillaRule, scopedVanillaVariables));
-                    },
+                    vanillaRule: analyzeVanillaRules.Add,
                     // scope vanilla variables
                     variables: syntax =>
                     {
                         if (analyzedVanillaVariables.TryGetValue(syntax, out var analysis))
                             analysis.AddToScope(scopedVanillaVariables);
                     });
+
+                var result = new ConcurrentBag<(long, Variant<RuleAction, VanillaRuleAnalysis>)>();
+                var ideItems = new IdeItems();
+                Parallel.ForEach(analyzeVanillaRules, (vanillaRule, s, i) =>
+                {
+                    result.Add((i, VanillaAnalysis.AnalyzeRule(script, vanillaRule, scopedVanillaVariables, ideItems)));
+                });
+                rules.AddRange(result.OrderBy(r => r.Item1).Select(r => r.Item2));
+                ideItems.AddToScript(script);
             }
         }
 

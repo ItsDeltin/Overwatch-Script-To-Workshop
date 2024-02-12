@@ -20,9 +20,9 @@ static class VanillaAnalysis
             VanillaVariableAnalysis.Analyze(script, syntax);
     }
 
-    public static VanillaRuleAnalysis AnalyzeRule(ScriptFile script, VanillaRule rule, VanillaScope scopedVanillaVariables)
+    public static VanillaRuleAnalysis AnalyzeRule(ScriptFile script, VanillaRule rule, VanillaScope scopedVanillaVariables, IdeItems ideItems)
     {
-        return AnalyzeRule(new VanillaContext(script, scopedVanillaVariables), rule);
+        return AnalyzeRule(new VanillaContext(script, scopedVanillaVariables, ideItems), rule);
     }
 
     public static VanillaRuleAnalysis AnalyzeRule(VanillaContext context, VanillaRule rule)

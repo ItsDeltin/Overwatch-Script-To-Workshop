@@ -33,6 +33,7 @@ class VanillaTypeData : IElementsJsonTypeSupplier<VanillaType>
     public Dictionary<string, VanillaType> EnumTypes { get; }
     readonly List<VanillaArrayType> arrayTypes = new();
     readonly List<VanillaPipeType> pipeTypes = new();
+    readonly object locker = new();
 
     public VanillaTypeData()
     {
@@ -66,33 +67,39 @@ class VanillaTypeData : IElementsJsonTypeSupplier<VanillaType>
     public VanillaType Team() => TeamType;
     public VanillaType Array(VanillaType innerType)
     {
-        var type = arrayTypes.FirstOrDefault(arrayType => arrayType.InnerType == innerType);
-
-        if (type is null)
+        lock (locker)
         {
-            type = new(innerType);
+            var type = arrayTypes.FirstOrDefault(arrayType => arrayType.InnerType == innerType);
 
-            // Notable values for player array
-            if (innerType == PlayerType)
+            if (type is null)
             {
-                type.NotableValues = new[] { "All Players" };
+                type = new(innerType);
+
+                // Notable values for player array
+                if (innerType == PlayerType)
+                {
+                    type.NotableValues = new[] { "All Players" };
+                }
+
+                arrayTypes.Add(type);
             }
 
-            arrayTypes.Add(type);
+            return type;
         }
-
-        return type;
     }
     public VanillaType PipeType(VanillaType a, VanillaType b)
     {
-        var type = pipeTypes.FirstOrDefault(pipeType => pipeType.A == a && pipeType.B == b);
-
-        if (type is null)
+        lock (locker)
         {
-            type = new(a, b);
-            pipeTypes.Add(type);
-        }
+            var type = pipeTypes.FirstOrDefault(pipeType => pipeType.A == a && pipeType.B == b);
 
-        return type;
+            if (type is null)
+            {
+                type = new(a, b);
+                pipeTypes.Add(type);
+            }
+
+            return type;
+        }
     }
 }
