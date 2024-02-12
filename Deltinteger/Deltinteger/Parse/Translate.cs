@@ -16,6 +16,7 @@ using Deltin.Deltinteger.Parse.Vanilla.Settings;
 using Deltin.Deltinteger.Lobby2.KeyValues;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using Deltin.Deltinteger.Parse.Vanilla.Cache;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -286,6 +287,7 @@ namespace Deltin.Deltinteger.Parse
 
         void CollectRules()
         {
+            VanillaCache.Instance.BeginTracking();
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 var analyzeVanillaRules = new List<VanillaRule>();
@@ -305,15 +307,30 @@ namespace Deltin.Deltinteger.Parse
                             analysis.AddToScope(scopedVanillaVariables);
                     });
 
-                var result = new ConcurrentBag<(long, Variant<RuleAction, VanillaRuleAnalysis>)>();
-                var ideItems = new IdeItems();
+                var group = VanillaCache.Instance.GetGroup(script.Uri, new(scopedVanillaVariables));
+                var result = new ConcurrentBag<(long I, VanillaRule, VanillaRuleAnalysis, IdeItems, bool)>();
                 Parallel.ForEach(analyzeVanillaRules, (vanillaRule, s, i) =>
                 {
-                    result.Add((i, VanillaAnalysis.AnalyzeRule(script, vanillaRule, scopedVanillaVariables, ideItems)));
+                    if (group.TryGetCacheItem(vanillaRule, out var cache))
+                    {
+                        result.Add((i, vanillaRule, cache.Value.Analysis, cache.Value.IdeItems, false));
+                    }
+                    else
+                    {
+                        var ideItems = new IdeItems();
+                        var rule = VanillaAnalysis.AnalyzeRule(script, vanillaRule, scopedVanillaVariables, ideItems);
+                        result.Add((i, vanillaRule, rule, ideItems, true));
+                    }
                 });
-                rules.AddRange(result.OrderBy(r => r.Item1).Select(r => r.Item2));
-                ideItems.AddToScript(script);
+                foreach (var (_, syntax, analysis, ide, cache) in result.OrderBy(r => r.I))
+                {
+                    rules.Add(analysis);
+                    ide.AddToScript(script);
+                    if (cache)
+                        group.Cache(syntax, new(new(scopedVanillaVariables), analysis, ide));
+                }
             }
+            VanillaCache.Instance.RemoveUnused();
         }
 
         void CollectVanillaSettings()

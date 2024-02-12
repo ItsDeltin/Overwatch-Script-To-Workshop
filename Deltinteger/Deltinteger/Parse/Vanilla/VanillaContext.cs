@@ -1,6 +1,6 @@
 #nullable enable
 
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.Parse.Vanilla;
@@ -93,10 +93,10 @@ enum ExpectingVariable
 
 readonly struct IdeItems
 {
-    public readonly ConcurrentBag<Diagnostic> Diagnostics = [];
-    public readonly ConcurrentBag<ICompletionRange> Completions = [];
-    public readonly ConcurrentBag<(DocRange, MarkupBuilder)> Hovers = [];
-    public readonly ConcurrentBag<ISignatureHelp> SignatureHelps = [];
+    public readonly List<Diagnostic> Diagnostics = [];
+    public readonly List<ICompletionRange> Completions = [];
+    public readonly List<(DocRange, MarkupBuilder)> Hovers = [];
+    public readonly List<ISignatureHelp> SignatureHelps = [];
 
     public IdeItems() { }
 

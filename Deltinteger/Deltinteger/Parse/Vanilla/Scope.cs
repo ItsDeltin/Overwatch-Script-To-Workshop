@@ -133,4 +133,7 @@ public class VanillaScope
 
     /// <summary>Gets all subroutines.</summary>
     public IEnumerable<VanillaSubroutine> GetSubroutines() => scopedSubroutines;
+
+    /// <summary>Gets all variables.</summary>
+    public IEnumerable<VanillaVariable> GetVariables() => scopedVariables;
 }
