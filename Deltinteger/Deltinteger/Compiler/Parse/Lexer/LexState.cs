@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Deltin.Deltinteger.Compiler.Parse.Lexing;
 
-record struct LexerState(int RelexSpan, int StopRelexingAt);
+record struct LexerState(int RelexSpan, int StopRelexingAt, bool LexCompleted, int? ResyncToken);
 
 record LexerStateModification(int Token, LexerState State, int? StartOverwriteAt, int OverwriteTokenCount, List<TokenNode> AddedTokens)
 {
@@ -55,7 +55,7 @@ class LexerStateManager
     public LexerStateManager(TokenList tokens, int stopRelexingAt)
     {
         this.tokens = tokens;
-        lockedInState = new(0, stopRelexingAt);
+        lockedInState = new(0, stopRelexingAt, false, null);
         TokenCount = tokens.Count;
         CurrentState = lockedInState;
     }

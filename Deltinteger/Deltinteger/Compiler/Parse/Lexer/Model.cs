@@ -29,5 +29,4 @@ public record struct MatchError(string Message);
 public readonly record struct IncrementalParse(LexerIncrementalChange IncrementalLexer, IReadOnlyList<TokenCapture> NodeCaptures)
 {
     public readonly int ChangeStartToken() => IncrementalLexer.ChangeStartToken;
-    public readonly int ChangeEndToken() => 0;
 }

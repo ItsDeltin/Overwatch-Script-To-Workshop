@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using Deltin.Deltinteger.Compiler.File;
 
 namespace Deltin.Deltinteger.Compiler.Parse.Lexing;
@@ -7,7 +6,8 @@ namespace Deltin.Deltinteger.Compiler.Parse.Lexing;
 public readonly record struct LexerIncrementalChange(
     TokenList Tokens,
     int ChangeStartToken,
-    int StopLexingAtIndex)
+    int StopLexingAtIndex,
+    int InitialTokenCount)
 {
     public static LexerIncrementalChange Update(
         TokenList tokens,
@@ -17,10 +17,9 @@ public readonly record struct LexerIncrementalChange(
     {
         AffectedAreaInfo affectedArea = GetAffectedArea(tokens, updateRange, previousContent);
 
-        // var (lineDelta, columnDelta) = GetChangeDelta(updateRange);
         int indexOffset = updateRange.Text.Length - (previousContent.IndexOf(updateRange.Range.End) - previousContent.IndexOf(updateRange.Range.Start));
-
         int finalTokenInChange = affectedArea.StartingTokenIndex + affectedArea.Length;
+        int initialTokenCount = tokens.Count;
 
         // Adjust token ranges.
         for (int i = finalTokenInChange; i < tokens.Count; i++)
@@ -52,7 +51,8 @@ public readonly record struct LexerIncrementalChange(
         return new(
             tokens,
             affectedArea.StartingTokenIndex,
-            endIndex
+            endIndex,
+            initialTokenCount
         );
     }
 

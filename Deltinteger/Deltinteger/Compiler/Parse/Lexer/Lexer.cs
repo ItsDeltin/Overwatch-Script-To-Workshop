@@ -37,9 +37,11 @@ public class Lexer
 
     public Token? GetTokenAtOrEnd(int tokenIndex) => CurrentController.GetTokenAtOrLast(tokenIndex)?.Token;
 
-    public int? GetTokenDelta() => CurrentController.GetTokenDelta();
+    public int GetTokenDelta() => CurrentController.GetTokenDelta();
 
-    public bool IsLexCompleted() => false;
+    public bool IsLexCompleted() => CurrentController.IsLexCompleted();
+
+    public int? LexResyncedAt() => CurrentController.LexResyncedAt();
 
     public T InVanillaWorkshopContext<T>(Func<T> task) => InContext(LexerContextKind.Workshop, task);
 

@@ -70,10 +70,22 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 var capture = TokenCaptureStack.Pop();
                 capture.Finish(Token, node);
-                node.Range = new DocRange(TokenAtOrEnd(capture.StartToken).Range.Start, Previous.Range.End);
+                node.Range = TokenAtOrEnd(capture.StartToken).Range + Previous.Range;
                 if (capture.IsValid) NodeCaptures.Add(capture);
             }
             return node;
+        }
+
+        void PopEndTokenCapture(object node)
+        {
+            if (LookaheadDepth == 0)
+            {
+                var capture = TokenCaptureStack.Pop();
+                // todo: Shouldn't this be T - 1?
+                capture.Finish(Token, node);
+                if (capture.IsValid)
+                    NodeCaptures.Add(capture);
+            }
         }
 
         void StartNode()
@@ -140,7 +152,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool GetIncrementalNode<T>(out T node)
         {
             // If the last syntax tree was not provided or the current token is inside the change range, return null.
-            if (_increment is null || (Token >= _increment.Value.ChangeStartToken() && Token <= _increment.Value.ChangeEndToken()))
+            if (_increment is null || (Token >= _increment.Value.ChangeStartToken() && !Lexer.IsLexCompleted()))
             {
                 node = default;
                 return false;
@@ -150,6 +162,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             foreach (var capture in _increment.Value.NodeCaptures)
             {
                 bool surpassesIncrementalChange = Token > _increment.Value.ChangeStartToken();
+                int delta = surpassesIncrementalChange ? Lexer.GetTokenDelta() : 0;
 
                 // If the node's type is equal to the expected node type
                 // and the cached node's start token index is equal to the current token's index (adjusted for token difference if the current token is past the change position) 
@@ -159,12 +172,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // the change starts (Lexer.IncrementalChangeStart)
                     //
                     // This makes sure we do not reuse a changed incremental node.
-                    (capture.StartToken + capture.Length < _increment.Value.ChangeStartToken() || (Lexer.IsLexCompleted() && capture.StartToken > _increment.Value.ChangeEndToken())) &&
+                    (capture.StartToken + capture.Length < _increment.Value.ChangeStartToken() || (Lexer.IsLexCompleted() && capture.StartToken > Lexer.LexResyncedAt())) &&
                     // If this surpasses the incremental change range, make sure the push is completed.
                     (!surpassesIncrementalChange || Lexer.IsLexCompleted()) &&
                     // Make sure the incremental node's position matches the current Token (capture.StartToken + ... = Token).
                     // If Token surpasses the incremental change range (surpassesIncrementalChange), then offset by the change delta.
-                    capture.StartToken + (surpassesIncrementalChange ? Lexer.GetTokenDelta() : 0) == Token)
+                    capture.StartToken + delta == Token)
                 {
                     // Then return the node then advance by the number of tokens in the cached node.
                     node = (T)capture.Node;
@@ -176,6 +189,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // No matching node was found.
             node = default;
             return false;
+        }
+
+        T GetIncrementalNode<T>(Func<T> factory)
+        {
+            StartTokenCapture();
+            if (!GetIncrementalNode(out T node))
+                node = factory();
+            PopEndTokenCapture(node);
+            return node;
         }
 
         void AddError(IParserError error)
@@ -2183,7 +2205,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return ParseExpected(TokenType.Rule, TokenType.WorkshopRule) && ParseExpected(TokenType.Parentheses_Open);
         });
 
-        VanillaRule ParseVanillaRule()
+        VanillaRule ParseVanillaRule() => GetIncrementalNode<VanillaRule>(() =>
         {
             var disabled = ParseOptional(TokenType.Disabled);
             var keyword = ParseExpected(TokenType.Rule, TokenType.WorkshopRule);
@@ -2204,7 +2226,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var end = Previous;
 
             return new(disabled, keyword, name, begin, ruleContent.ToArray(), end);
-        }
+        });
 
         bool TryParseVanillaRuleContent(out VanillaRuleContent nextElement)
         {

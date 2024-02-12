@@ -15,6 +15,7 @@ public class LexController
     readonly string content;
     readonly VanillaSymbols vanillaSymbols;
     readonly int relexAt;
+    readonly int initialTokenCount;
 
     // State
     readonly LexerStateManager stateManager;
@@ -33,6 +34,7 @@ public class LexController
         tokens = incrementalChange?.Tokens ?? new();
         relexAt = incrementalChange?.ChangeStartToken ?? 0;
         stateManager = new(tokens, incrementalChange?.StopLexingAtIndex ?? int.MaxValue);
+        initialTokenCount = incrementalChange?.InitialTokenCount ?? 0;
     }
 
     public Token? ScanTokenAt(int token, LexerContextKind contextKind)
@@ -74,6 +76,7 @@ public class LexController
 
         for (int i = 0; i < matchedTokens.Length; i++)
         {
+            int ti = token + i;
             var add = matchedTokens[i];
             TokenNode node = new(add.MatchedToken, add.StartPosition, add.NewPosition, contextKind, add.Error);
 
@@ -94,6 +97,8 @@ public class LexController
                     resync.Token.Range == add.MatchedToken.Range)
                 {
                     newState.RelexSpan++;
+                    newState.LexCompleted = true;
+                    newState.ResyncToken = ti;
                 }
                 else
                 {
@@ -102,8 +107,7 @@ public class LexController
                     newState.RelexSpan++;
 
                     // Collision
-                    int tokenCount = stateManager.TokenCount;
-                    for (int c = token + i; c < tokenCount; c++)
+                    for (int c = ti; c < stateManager.TokenCount; c++)
                     {
                         var collision = GetTokenAt(c);
 
@@ -171,10 +175,16 @@ public class LexController
         return MatchTokensAtPosition(GetScanPositionForToken(index), contextKind);
     }
 
-    public int? GetTokenDelta()
+    public int GetTokenDelta()
     {
-        return 0;
+        if (!IsLexCompleted())
+            throw new Exception("Cannot get the token delta before the lex is completed");
+        return tokens.Count - initialTokenCount;
     }
+
+    public bool IsLexCompleted() => stateManager.CurrentState.LexCompleted;
+
+    public int? LexResyncedAt() => stateManager.CurrentState.ResyncToken;
 
     public TokenList GetTokenList() => tokens;
 }
