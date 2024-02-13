@@ -167,6 +167,7 @@
                     "$ult": "Self-Destruct",
                     "$ult_duration": true,
                     "$no_ammunition": true,
+                    "$projectile": true,
                     "content": [
                         {
                             "name": "Self Destruct Knockback Scalar",
@@ -417,6 +418,7 @@
                         },
                         {
                             "name": "Protection Suzu",
+                            "template": "ability",
                             "$knockback": true
                         }
                     ]
@@ -725,6 +727,10 @@
                         {
                             "name": "Jump Jet",
                             "template": "ability"
+                        },
+                        {
+                            "name": "Rocket Launcher Knockback Scalar",
+                            "type": "range_percentage"
                         }
                     ]
                 },
