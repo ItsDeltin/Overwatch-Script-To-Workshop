@@ -16,6 +16,7 @@ setModuleImports("main.js", {
     },
     ostwWeb: {
         getWorkshopElements: async () => await window.ostwWeb.getWorkshopElements(),
+        getLobbySettings: async () => await window.ostwWeb.getLobbySettings(),
         setDiagnostics: (publish) => window.ostwWeb.setDiagnostics(publish),
         setCompiledWorkshopCode: (code, elementCount) => window.ostwWeb.setCompiledWorkshopCode(code, elementCount)
     }

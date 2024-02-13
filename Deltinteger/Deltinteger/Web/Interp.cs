@@ -62,14 +62,17 @@ public record struct InterpDiagnostic(string message, InterpRange range, string 
     );
 }
 
-public record struct InterpCompletionItem(string label, string kind, string detail, string documentationMarkdown, string insertText)
+public record struct InterpCompletionItem(string label, string kind, string detail, string documentationMarkdown, string insertText, string filterText, string sortText, string documentation)
 {
     public static InterpCompletionItem FromLsp(LspCompletionItem lspCompletionItem) => new(
         lspCompletionItem.Label,
         lspCompletionItem.Kind.ToString(),
         lspCompletionItem.Detail ?? "",
         LspUtility.GetMarkdownContent(lspCompletionItem.Documentation),
-        lspCompletionItem.InsertText ?? lspCompletionItem.Label
+        lspCompletionItem.InsertText ?? lspCompletionItem.Label,
+        lspCompletionItem.FilterText ?? lspCompletionItem.Label,
+        lspCompletionItem.SortText ?? lspCompletionItem.Label,
+        LspUtility.GetMarkdownContent(lspCompletionItem.Documentation)
     );
 }
 
