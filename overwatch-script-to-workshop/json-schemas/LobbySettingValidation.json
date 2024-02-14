@@ -2249,6 +2249,15 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Jet Dash": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Jet Dash Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Concussive Blast": {
       "default": true,
       "type": "boolean"
@@ -2288,6 +2297,11 @@
       "default": false,
       "type": "boolean"
     },
+    "Hover Jets Extra Fuel Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 200.0
+    },
     "Jump Jet": {
       "default": true,
       "type": "boolean"
@@ -2302,6 +2316,11 @@
       "type": "number",
       "minimum": 25.0,
       "maximum": 300.0
+    },
+    "Jump Jet Refuel Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 400.0
     },
     "Rocket Launcher Knockback Scalar": {
       "default": 100.0,
@@ -5188,6 +5207,12 @@
             "Projectile Speed": {
               "$ref": "#/definitions/Projectile Speed"
             },
+            "Jet Dash": {
+              "$ref": "#/definitions/Jet Dash"
+            },
+            "Jet Dash Cooldown Time": {
+              "$ref": "#/definitions/Jet Dash Cooldown Time"
+            },
             "Concussive Blast": {
               "$ref": "#/definitions/Concussive Blast"
             },
@@ -5212,6 +5237,9 @@
             "Hover Jets Unlimited Fuel": {
               "$ref": "#/definitions/Hover Jets Unlimited Fuel"
             },
+            "Hover Jets Extra Fuel Scalar": {
+              "$ref": "#/definitions/Hover Jets Extra Fuel Scalar"
+            },
             "Jump Jet": {
               "$ref": "#/definitions/Jump Jet"
             },
@@ -5220,6 +5248,9 @@
             },
             "Jump Jet Acceleration Scalar": {
               "$ref": "#/definitions/Jump Jet Acceleration Scalar"
+            },
+            "Jump Jet Refuel Scalar": {
+              "$ref": "#/definitions/Jump Jet Refuel Scalar"
             },
             "Rocket Launcher Knockback Scalar": {
               "$ref": "#/definitions/Rocket Launcher Knockback Scalar"

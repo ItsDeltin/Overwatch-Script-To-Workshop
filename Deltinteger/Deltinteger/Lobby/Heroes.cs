@@ -230,7 +230,14 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Mercy").AddUlt("Valkyrie").AddProjectile(false).AddSecondaryFire().AddHealer().AddAbility("Guardian Angel").AddAbility("Sympathetic Recovery", hasCooldown: false).AddAbility("Resurrect").AddSelectRef("Weapons Enabled Mercy", "Weapons Enabled", "All", "Caduceus Staff Only", "Caduceus Blaster Only"),
                 new HeroSettingCollection("Moira").AddUlt("Coalescence", hasDuration: true).AddProjectile(false).AddSecondaryFire().RemoveAmmunition().AddHealer().AddAbility("Fade").AddAbility("Biotic Orb").AddRange("Biotic Orb Max Damage Scalar", 10).AddRange("Biotic Orb Max Healing Scalar", 10).AddRange("Biotic Energy Maximum", 20).AddRange("Biotic Energy Recharge Rate"),
                 new HeroSettingCollection("Orisa").AddUlt("Terra Surge").AddAbility("Fortify").AddAbility("Energy Javelin").AddProjectile(true).AddAbility("Javelin Spin"),
-                new HeroSettingCollection("Pharah").AddUlt("Barrage").AddProjectile(false).AddAbility("Concussive Blast", hasKnockback: true).AddAbility("Hover Jets", hasCooldown: false, rechargeable: true).AddRange("Hover Jets Vertical Speed Scalar", 25, 300).AddSwitch("Hover Jets Unlimited Fuel", false).AddAbility("Jump Jet").AddRange("Jump Jet Acceleration Scalar", 25, 300).AddRange("Rocket Launcher Knockback Scalar", 0, 400),
+                new HeroSettingCollection("Pharah")
+                    .AddUlt("Barrage")
+                    .AddProjectile(false)
+                    .AddAbility("Jet Dash")
+                    .AddAbility("Concussive Blast", hasKnockback: true)
+                    .AddAbility("Hover Jets", hasCooldown: false, rechargeable: true).AddRange("Hover Jets Vertical Speed Scalar", 25, 300).AddSwitch("Hover Jets Unlimited Fuel", false).AddRange("Hover Jets Extra Fuel Scalar", 0, 200)
+                    .AddAbility("Jump Jet").AddRange("Jump Jet Acceleration Scalar", 25, 300).AddRange("Jump Jet Refuel Scalar", 0, 400)
+                    .AddRange("Rocket Launcher Knockback Scalar", 0, 400),
                 new HeroSettingCollection("Ramattra").AddUlt("Annihilation").AddProjectile(false).AddAbility("Void Barrier Omnic Form").AddAbility("Nemisis Form").AddAbility("Block Nemesis Form", hasCooldown: false).AddAbility("Ravenous Vortex"),
                 new HeroSettingCollection("Reaper").AddUlt("Death Blossom").AddHealer().AddAbility("Shadow Step").AddAbility("Wraith Form"),
                 new HeroSettingCollection("Reinhardt").AddUlt("Earthshatter").AddProjectile(false).RemoveAmmunition().AddAbility("Barrier Field", rechargeable: true, noMaximumTime: true).AddAbility("Charge", hasKnockback: true).AddAbility("Fire Strike").AddRange("Rocket Hammer Knockback Scalar", 0, 400),
