@@ -327,7 +327,7 @@ namespace Deltin.Deltinteger.Parse
                     rules.Add(analysis);
                     ide.AddToScript(script);
                     if (cache)
-                        group.Cache(syntax, new(new(scopedVanillaVariables), analysis, ide));
+                        group.Cache(syntax, new(analysis, ide));
                 }
             }
             VanillaCache.Instance.RemoveUnused();

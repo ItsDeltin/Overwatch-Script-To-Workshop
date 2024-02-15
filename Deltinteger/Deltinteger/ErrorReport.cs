@@ -38,7 +38,7 @@ static class ErrorReport
         }
         catch (Exception ex)
         {
-            Add(ex.Message);
+            Add(ex.ToString());
             return or;
         }
     }
@@ -51,7 +51,7 @@ static class ErrorReport
         }
         catch (Exception ex)
         {
-            Add(ex.Message);
+            Add(ex.ToString());
             return new();
         }
     }

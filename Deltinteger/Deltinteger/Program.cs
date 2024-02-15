@@ -14,6 +14,8 @@ using Deltin.Deltinteger.Decompiler.ElementToCode;
 using TextCopy;
 using System.Diagnostics.CodeAnalysis;
 using Deltin.Deltinteger.LanguageServer.Model;
+using Deltin.Deltinteger.Lobby2.Json;
+using Deltin.Deltinteger.Lobby;
 
 namespace Deltin.Deltinteger
 {
@@ -47,6 +49,14 @@ namespace Deltin.Deltinteger
         [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ElementEnum))]
         [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ElementEnumMember))]
         [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ElementParameter))]
+        // Lobby settings:
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(SettingsSchemaJson))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(SObject))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Template))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TemplateParam))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MapToOstw))]
+        // Lobby settings (map):
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(LobbyMap))]
         // Wasm interp types:
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpChangeEvent))]
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InterpRange))]

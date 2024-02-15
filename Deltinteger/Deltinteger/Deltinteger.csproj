@@ -3,9 +3,18 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Deltin</RootNamespace>
-    <RuntimeIdentifiers>win-x64;win-x86;linux-x64</RuntimeIdentifiers>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RuntimeIdentifiers>win-x64;win-x86;linux-x64;browser-wasm</RuntimeIdentifiers>
+    <!-- JS things -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks> <!-- Is this required? -->
     <WasmMainJSPath>main.js</WasmMainJSPath>
+
+    <!-- Reduce output size -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <WasmEmitSymbolMap>false</WasmEmitSymbolMap>
+    <InvariantTimezone>true</InvariantTimezone>
+
+    <!-- Defaults to ./bin/configuration/version/browser-wasm/AppBundle -->
+    <WasmAppDir>../bin/AppBundle</WasmAppDir>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
@@ -32,6 +41,10 @@
     <Content Include="LobbySettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <WasmExtraFilesToDeploy Include="main.js" />
+    <WasmExtraFilesToDeploy Include="package.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Custom Methods/**" />

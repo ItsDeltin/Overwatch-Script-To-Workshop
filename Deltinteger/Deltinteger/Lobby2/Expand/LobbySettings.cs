@@ -23,12 +23,16 @@ class LobbySettings
             {
                 Instance = Expand(deserialized);
             }
+            else
+            {
+                ErrorReport.Add("Empty lobby settings");
+                Instance = new([], new());
+            }
         }
         catch (Exception ex)
         {
-            // TODO: do someting with ex
-            // awkward position due to this being kind of a class initializer
-            Instance = new(Array.Empty<EObject>(), new());
+            ErrorReport.Add(ex.ToString());
+            Instance = new([], new());
         }
     }
 
@@ -116,7 +120,7 @@ class LobbySettings
             content = content.Concat(ExpandObjects(context.SetParent(expanded), jsonObject.Content));
 
         // Insert maps
-        if (jsonObject.InsertMaps is not null)
+        if (jsonObject.InsertMaps is not null && LobbyMap.AllMaps is not null)
         {
             var modeName = context.FormatName(jsonObject.InsertMaps);
             content = content.Concat(LobbyMap.AllMaps

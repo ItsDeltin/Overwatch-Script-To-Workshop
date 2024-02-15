@@ -6,6 +6,9 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse.Vanilla.Cache;
 
+/// <summary>The inputs to a cached vanilla analyzed rule. This determines if the
+/// cached data may be reused.</summary>
+/// <param name="Scope">The variables and subroutines in the scope.</param>
 record struct CacheInput(VanillaScope Scope)
 {
     public readonly bool CompatibleWith(CacheInput other)
@@ -15,19 +18,25 @@ record struct CacheInput(VanillaScope Scope)
     }
 }
 
-record struct CacheItem(CacheInput Input, VanillaRuleAnalysis Analysis, IdeItems IdeItems);
+/// <summary>Cached vanilla data.</summary>
+/// <param name="Analysis">The analyzed rule.</param>
+/// <param name="IdeItems">Completion and signature help that this rule adds to the file.</param>
+record struct CacheItem(VanillaRuleAnalysis Analysis, IdeItems IdeItems);
 
+/// <summary>Caches analyzed vanilla rules so that they can be reused in multiple parses.</summary>
 class VanillaCache
 {
     readonly Dictionary<object, VanillaCacheGroup> groups = [];
     HashSet<object> untracked = [];
 
+    /// <summary>Finds a cache group using the provided key and input.</summary>
     public VanillaCacheGroup GetGroup(object key, CacheInput inputs)
     {
         if (groups.TryGetValue(key, out var group))
         {
             if (!group.CompatibleWith(inputs))
             {
+                // Existing group is not compatible, replace it with a fresh one.
                 group = new(inputs);
                 groups[key] = group;
             }

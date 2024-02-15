@@ -42,6 +42,9 @@ public static partial class OstwJavascript
     [JSImport("ostwWeb.getLobbySettings", "main.js")]
     public static partial Task<string> GetLobbySettings();
 
+    [JSImport("ostwWeb.getMaps", "main.js")]
+    public static partial Task<string> GetMaps();
+
     [JSImport("ostwWeb.setDiagnostics", "main.js")]
     public static partial void SetDiagnostics(string publish);
 
@@ -161,7 +164,8 @@ public static partial class OstwJavascript
         else
         {
             isStartingLanguageServer = true;
-            LoadData.LoadWith(await GetWorkshopElements(), await GetLobbySettings());
+            ErrorReport.FlushQueuedMessages(IErrorReporter.New(ConsoleLog));
+            LoadData.LoadWith(await GetWorkshopElements(), await GetLobbySettings(), await GetMaps());
             HeroSettingCollection.Init();
             ModeSettingCollection.Init();
             langServer = new OstwLangServer(

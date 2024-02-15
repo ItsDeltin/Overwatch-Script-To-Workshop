@@ -2,7 +2,9 @@
 namespace Deltin.Deltinteger;
 
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.Lobby2.Expand;
+using System;
 using System.IO;
 
 public static class LoadData
@@ -18,11 +20,12 @@ public static class LoadData
 
         LoadWith(
             elementsJson: FromApplicationFolder("Elements.json"),
-            settingsJson: FromApplicationFolder("LobbySettings.json")
+            settingsJson: FromApplicationFolder("LobbySettings.json"),
+            mapsJson: FromApplicationFolder("Maps.json")
         );
     }
 
-    public static void LoadWith(string elementsJson, string settingsJson)
+    public static void LoadWith(string elementsJson, string settingsJson, string mapsJson)
     {
         if (IsLoaded)
         {
@@ -32,10 +35,19 @@ public static class LoadData
 
         ElementRoot.LoadFromJson(elementsJson);
         LobbySettings.LoadFromJson(settingsJson);
+        LobbyMap.LoadFromJson(mapsJson);
     }
 
     static string FromApplicationFolder(string name)
     {
-        return File.ReadAllText(Path.Combine(Program.ExeFolder, name));
+        try
+        {
+            return File.ReadAllText(Path.Combine(Program.ExeFolder, name));
+        }
+        catch (Exception ex)
+        {
+            ErrorReport.Add($"Failed to read {name}: {ex}");
+            return string.Empty;
+        }
     }
 }
