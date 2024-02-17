@@ -132,7 +132,12 @@ public class ParserTest
                 define x = $'Total time elapsed: {TotalTimeElapsed()}, time remaining: {60 - TotalTimeElapsed()}';
             }
             """);
-        tester.Insert("", tester.IndexOf("()}';") + 3, 1);
+        tester.AssertOk();
+        // Replace single quotes with double quotes
+        tester.Insert("\"", tester.IndexOf("()}';") + 3, 1);
+        tester.AssertNotOk();
+        tester.Insert("\"", tester.IndexOf("$'Total") + 1, 1);
+        tester.AssertOk();
     }
 
     [TestMethod("Slide symbols together")]

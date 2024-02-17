@@ -8,7 +8,8 @@ public enum LexerContextKind
     Normal,
     Workshop,
     LobbySettings,
-    InterpolatedString
+    InterpolatedStringSingle,
+    InterpolatedStringDouble
 }
 
 /// <summary>A position in the document.</summary>

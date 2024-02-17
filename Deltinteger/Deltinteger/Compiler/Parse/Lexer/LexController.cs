@@ -222,7 +222,8 @@ public class LexMatcher
         {
             LexerContextKind.Workshop => MatchWorkshopContext(),
             LexerContextKind.LobbySettings => MatchLobbySettingsContext(),
-            LexerContextKind.InterpolatedString => One(MatchString(true, true)),
+            LexerContextKind.InterpolatedStringSingle => One(MatchString(true, true)),
+            LexerContextKind.InterpolatedStringDouble => One(MatchString(true, false)),
             LexerContextKind.Normal or _ => One(MatchDefault())
         };
 

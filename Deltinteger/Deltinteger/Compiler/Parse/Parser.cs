@@ -1831,7 +1831,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var parts = new List<InterpolatedStringPart>();
 
             // Continue string.
-            Lexer.InContext(LexerContextKind.InterpolatedString, () =>
+            Lexer.InContext(single ? LexerContextKind.InterpolatedStringSingle : LexerContextKind.InterpolatedStringDouble, () =>
             {
                 while (true)
                 {

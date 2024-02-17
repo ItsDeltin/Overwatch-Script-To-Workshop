@@ -114,7 +114,7 @@ class TestLexIncrementer
 class TestIncrementalParser
 {
     VersionInstance content;
-    DocumentParseResult? lastParseResult;
+    DocumentParseResult lastParseResult;
 
     public TestIncrementalParser(string initialContent)
     {
@@ -171,5 +171,15 @@ class TestIncrementalParser
     {
         var pos = IndexOf(snippet);
         return Insert(replaceWith, pos, replaceWith.Length);
+    }
+
+    public void AssertOk()
+    {
+        Assert.AreEqual(0, lastParseResult.ParserErrors.Count, "Parser has unexpected syntax errors");
+    }
+
+    public void AssertNotOk()
+    {
+        Assert.AreNotEqual(0, lastParseResult.ParserErrors.Count, "Expected syntax errors, got none");
     }
 }
