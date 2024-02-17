@@ -18,6 +18,20 @@ namespace Deltin.Deltinteger.LanguageServer
             insert: "rule: '${1:My Rule}'\n{\n    $0\n}"
         );
 
+        public static readonly CompletionItem PlayerRule = MakeSnippet(
+            label: "rule (player)",
+            detail: "player rule (ostw)",
+            insert: """
+            rule: '${1:My Player Rule}'
+            Event.OngoingPlayer
+            Team.All
+            Player.All
+            {
+                $0
+            }
+            """
+        );
+
         // Struct
         public static readonly CompletionItem Struct = MakeSnippet(
             label: "struct",
@@ -40,6 +54,19 @@ namespace Deltin.Deltinteger.LanguageServer
                 public ${3:Any} ${2:Variable};
 
                 public static $1 New($3 value): single { $2: value };
+            }
+            """
+        );
+
+        // class
+        public static readonly CompletionItem Class = MakeSnippet(
+            label: "class",
+            detail: "class (ostw)",
+            insert: """
+            class ${1:NewClass} {
+                public constructor() {
+                    $0
+                }
             }
             """
         );
@@ -126,8 +153,10 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public static IEnumerable<CompletionItem> Snippets = new[] {
             Rule,
+            PlayerRule,
             Struct,
             SingleStruct,
+            Class,
             EnUsVanillaRule,
             EnUsSettings,
             EnUsVariables,
