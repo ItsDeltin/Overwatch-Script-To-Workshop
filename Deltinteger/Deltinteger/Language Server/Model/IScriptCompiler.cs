@@ -15,7 +15,7 @@ interface IScriptCompiler
 class ScriptCompiler : IScriptCompiler
 {
     readonly IDocumentEvent documentEvent;
-    readonly DsTomlWatcher projectSettings;
+    readonly IDsSettingsProvider projectSettings;
     readonly OstwLangServer languageServer;
     DeltinScript deltinScript;
 

@@ -4,6 +4,8 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 using CompletionItemTag = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemTag;
 using InsertTextFormat = OmniSharp.Extensions.LanguageServer.Protocol.Models.InsertTextFormat;
 
+#nullable enable
+
 namespace Deltin.Deltinteger.LanguageServer
 {
     public static class Snippet
@@ -14,6 +16,32 @@ namespace Deltin.Deltinteger.LanguageServer
             detail: "rule (ostw)",
             documentation: new MarkupBuilder().StartCodeLine().Add("rule: 'My Rule'").NewLine().Add("{").NewLine().NewLine().Add("}").EndCodeLine(),
             insert: "rule: '${1:My Rule}'\n{\n    $0\n}"
+        );
+
+        // Struct
+        public static readonly CompletionItem Struct = MakeSnippet(
+            label: "struct",
+            detail: "struct (ostw)",
+            insert: """
+            struct ${1:NewStruct} {
+                public ${3:Any} ${2:Variable};
+
+                public static $1 New($3 value): { $2: value };
+            }
+            """
+        );
+
+        // Single Struct
+        public static readonly CompletionItem SingleStruct = MakeSnippet(
+            label: "single struct",
+            detail: "single struct (ostw)",
+            insert: """
+            single struct ${1:NewStruct} {
+                public ${3:Any} ${2:Variable};
+
+                public static $1 New($3 value): single { $2: value };
+            }
+            """
         );
 
         // For snippet.
@@ -55,7 +83,9 @@ namespace Deltin.Deltinteger.LanguageServer
             documentation: new MarkupBuilder(),
             insert: """
             rule("$1") {
-                $0
+                event {
+                    $0
+                }
             }
             """
         );
@@ -96,10 +126,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public static IEnumerable<CompletionItem> Snippets = new[] {
             Rule,
-            For,
-            Forr,
-            AutoFor,
-            AutoForr,
+            Struct,
+            SingleStruct,
             EnUsVanillaRule,
             EnUsSettings,
             EnUsVariables,
@@ -107,14 +135,14 @@ namespace Deltin.Deltinteger.LanguageServer
         };
 
         // Creates the CompletionItem for a snippet.
-        static CompletionItem MakeSnippet(string label, string detail, MarkupBuilder documentation, string insert) => new CompletionItem()
+        static CompletionItem MakeSnippet(string label, string detail, string insert, MarkupBuilder? documentation = null) => new CompletionItem()
         {
             Kind = CompletionItemKind.Snippet,
             InsertTextFormat = InsertTextFormat.Snippet,
             Label = label,
             InsertText = insert,
             Detail = detail,
-            Documentation = documentation.ToMarkup()
+            Documentation = documentation?.ToMarkup()
         };
     }
 }

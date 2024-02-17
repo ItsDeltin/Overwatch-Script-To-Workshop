@@ -47,12 +47,13 @@ public class OstwLangServer
         ITomlDiagnosticReporter tomlDiagnosticsReporter,
         IDocumentEvent documentEventHandler,
         ILangLogger langLogger = null,
-        Func<DocumentHandler, IParserSettingsResolver, IFileGetter> createFileGetter = null)
+        Func<DocumentHandler, IParserSettingsResolver, IFileGetter> createFileGetter = null,
+        IDsSettingsProvider settingsProvider = null)
     {
         // _debugger = new ClipboardListener(this);
         createFileGetter ??= (doc, settings) => new LsFileGetter(doc, settings);
 
-        Builder = new LanguageServerBuilder(this, tomlDiagnosticsReporter, langLogger ?? ILangLogger.Default);
+        Builder = new LanguageServerBuilder(this, tomlDiagnosticsReporter, langLogger ?? ILangLogger.Default, settingsProvider);
 
         var scriptCompiler = new ScriptCompiler(Builder, documentEventHandler);
         ProjectUpdater = new TimedProjectUpdater(scriptCompiler);

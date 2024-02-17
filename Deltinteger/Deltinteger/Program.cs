@@ -81,7 +81,6 @@ namespace Deltin.Deltinteger
                 return;
 
             Program.args = args;
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
 
             LoadData.LoadFromFileSystem();
             Lobby.HeroSettingCollection.Init();

@@ -1,7 +1,9 @@
 import { dotnet } from './_framework/dotnet.js'
 
-const is_browser = typeof window != "undefined";
-if (!is_browser) throw new Error(`Expected to be running in a browser`);
+// const is_browser = typeof window != "undefined";
+// if (!is_browser) throw new Error(`Expected to be running in a browser`);
+
+console.log('⭐ set up ostw dotnet ⭐');
 
 const { setModuleImports, getAssemblyExports, getConfig } = await dotnet.create();
 
@@ -15,7 +17,8 @@ export function setImports(
     getLobbySettings,
     getMaps,
     setDiagnostics,
-    setCompiledWorkshopCode
+    setCompiledWorkshopCode,
+    onNotification
 ) {
     setModuleImports("main.js", {
         window: {
@@ -31,10 +34,13 @@ export function setImports(
             getLobbySettings: getLobbySettings,
             getMaps: getMaps,
             setDiagnostics: setDiagnostics,
-            setCompiledWorkshopCode: setCompiledWorkshopCode
+            setCompiledWorkshopCode: setCompiledWorkshopCode,
+            onNotification: onNotification
         }
     });
 }
+
+console.log('⭐ ostw dotnet ready ⭐');
 
 // Runs Program.Main
 // await dotnet.run();
