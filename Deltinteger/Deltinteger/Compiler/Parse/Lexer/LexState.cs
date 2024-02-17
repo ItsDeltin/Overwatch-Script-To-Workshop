@@ -36,7 +36,10 @@ record LexerStateModification(int Token, LexerState State, int? StartOverwriteAt
             if (StartOverwriteAt is not null && StartOverwriteAt == i)
             {
                 for (int remove = 0; remove < OverwriteTokenCount; remove++)
-                    tokens.RemoveAt(Token + StartOverwriteAt.Value + remove);
+                    // Upcoming tokens will naturally slide back so we do not
+                    // need to add remove to the index.
+                    // Also see: Token collision test.
+                    tokens.RemoveAt(Token + StartOverwriteAt.Value);
             }
             tokens.Add(Token + i, AddedTokens[i]);
         }

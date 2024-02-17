@@ -103,6 +103,24 @@ public class ParserTest
         tester.Append("}");
     }
 
+    [TestMethod("Token collision")]
+    public void TokenCollision()
+    {
+        Setup();
+        var tester = TestParser();
+        tester.Sequence("""
+            rule("wow") {
+                event {
+                    Ongoing - Global;
+                }
+                actions {
+                    Small Message(All Players(All Teams), Custom String(""));
+                }
+            }
+            """);
+        tester.Insert("", tester.IndexOf("String(\"\")") + 8, 1);
+    }
+
     [TestMethod("Interpolated string")]
     public void InterpolatedString()
     {
