@@ -81,14 +81,14 @@ namespace Deltin.Deltinteger.Parse
             return publishDiagnostics;
         }
 
-        public Diagnostic[] GetDiagnostics()
+        public IEnumerable<Diagnostic> GetErrors()
         {
-            var diagnostics = new List<Diagnostic>();
+            var diagnostics = Enumerable.Empty<Diagnostic>();
 
             foreach (var file in diagnosticFiles)
-                diagnostics.AddRange(file.Diagnostics);
+                diagnostics = diagnostics.Concat(file.Diagnostics.Where(d => d.severity == Diagnostic.Error));
 
-            return diagnostics.ToArray();
+            return diagnostics;
         }
 
         public IEnumerable<Diagnostic> Enumerate()

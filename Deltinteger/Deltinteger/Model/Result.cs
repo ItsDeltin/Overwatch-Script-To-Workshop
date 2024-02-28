@@ -30,6 +30,13 @@ static class Result
         }
     }
 
+    /// <summary>Applies a selector to each element in a enumerable until the end is reached or an error occurs.</summary>
+    /// <typeparam name="TSource">The type of the collection.</typeparam>
+    /// <typeparam name="TResult">The new type the collection will be converted into.</typeparam>
+    /// <typeparam name="E">The error type that may appear when converting elements.</typeparam>
+    /// <param name="collection">This enumerable will be iterated.</param>
+    /// <param name="selector">Converts TSource to TResult or E.</param>
+    /// <returns></returns>
     public static Result<IEnumerable<TResult>, E> SelectResult<TSource, TResult, E>(this IEnumerable<TSource> collection, Func<TSource, Result<TResult, E>> selector)
     {
         var items = new List<TResult>();
@@ -53,6 +60,14 @@ static class Result
         {
             return ex.Message;
         }
+    }
+
+    public static T Unwrap<T>(this Result<T, string> result)
+    {
+        if (result.IsOk)
+            return result.Value;
+        else
+            throw new Exception(result.Err);
     }
 }
 
@@ -107,7 +122,7 @@ public readonly struct Result<T, E>
             return onError(_error!);
     }
 
-    public bool TryGetValue(out T? value)
+    public bool TryGetValue([NotNullWhen(true)] out T? value)
     {
         value = _value;
         return _isOk;

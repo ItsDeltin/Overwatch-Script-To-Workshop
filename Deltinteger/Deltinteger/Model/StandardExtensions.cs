@@ -36,6 +36,13 @@ static class StandardExtensions
         return default;
     }
 
+    public static T? ElementAtOrNull<T>(this IList<T> list, int index)
+    {
+        if (list.Count <= index)
+            return list[index];
+        return default;
+    }
+
     public static T? Or<T>(this T? maybe, T? otherwise)
     {
         return maybe is not null ? maybe : otherwise;
@@ -47,6 +54,14 @@ static class StandardExtensions
     public static T Unwrap<T>(this T? nullable, string message) where T : class =>
         nullable ?? throw new Exception(message);
 
-    public static Result<T, E> OkOr<T, E>(this T? nullable, E error) =>
+    public static Result<T, E> OkOr<T, E>(this T? nullable, E error) where T : struct =>
+        nullable is null ? error : nullable.Value;
+
+    public static Result<T, E> OkOr<T, E>(this T? nullable, E error) where T : class =>
         nullable is null ? error : nullable;
+
+    public static U? Map<T, U>(this T? nullable, Func<T, U> map) =>
+        nullable is null ? default : map(nullable);
+
+    public static (T, U)? Zip<T, U>(this T? nullable, U? other) => nullable is null || other is null ? default : (nullable, other);
 }

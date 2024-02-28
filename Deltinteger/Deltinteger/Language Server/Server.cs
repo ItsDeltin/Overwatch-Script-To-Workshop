@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using Settings.TomlSettings;
 using Deltin.Deltinteger.LanguageServer.Model;
 using Deltin.Deltinteger.LanguageServer.Settings;
+using System.Linq;
 
 public class OstwLangServer
 {
@@ -131,7 +132,7 @@ public class OstwLangServer
                 }
 
                 if (compile.Diagnostics.ContainsErrors())
-                    return new PathmapEditorResult("An error was found in the pathmap script: " + compile.Diagnostics.GetDiagnostics()[0].ToString()); // error
+                    return new PathmapEditorResult("An error was found in the pathmap script: " + compile.Diagnostics.GetErrors().First().ToString()); // error
 
                 Clipboard.SetText(compile.WorkshopCode);
                 return new PathmapEditorResult(); // success
