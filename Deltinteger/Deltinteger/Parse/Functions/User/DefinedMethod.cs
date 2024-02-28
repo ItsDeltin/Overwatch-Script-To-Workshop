@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
             MetaComment = ParsedMetaComment.FromMetaComment(context.MetaComment);
 
             // Setup the parameters.
-            ParameterProviders = ParameterProvider.GetParameterProviders(parseInfo, _methodScope, context.Parameters, IsSubroutine, MetaComment);
+            ParameterProviders = ParameterProvider.GetParameterProviders(parseInfo, _methodScope, context.Parameters, IsSubroutine, SubroutineDefaultGlobal, MetaComment);
             ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
 
             // Override

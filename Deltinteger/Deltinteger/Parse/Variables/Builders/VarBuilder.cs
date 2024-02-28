@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get then check components.
             ComponentCollection = new VariableComponentCollection(_diagnostics);
-            _contextHandler.GetComponents(ComponentCollection);
+            _contextHandler.GetComponents(ComponentCollection, GetVariableSetKind());
             CheckComponents();
             ComponentCollection.FinishedObtainingComponents();
 
@@ -160,5 +160,14 @@ namespace Deltin.Deltinteger.Parse
             if (!ComponentCollection.IsComponent<MacroComponent>())
                 RejectAttributes(new AttributeComponentIdentifier(AttributeType.Virtual, AttributeType.Override));
         }
+
+        protected virtual VariableSetKind GetVariableSetKind() => VariableSetKind.Unknown;
+    }
+
+    public enum VariableSetKind
+    {
+        Unknown,
+        Global,
+        Player
     }
 }

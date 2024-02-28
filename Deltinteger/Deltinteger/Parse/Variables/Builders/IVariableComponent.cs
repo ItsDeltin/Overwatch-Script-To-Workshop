@@ -331,18 +331,25 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
         public DocRange Range => _syntax.Range;
         public bool WasRejected { get; set; }
         readonly TargetWorkshopVariable _syntax;
+        readonly VariableSetKind _variableSetKind;
         bool _isGlobal;
 
-        public TargetWorkshopComponent(TargetWorkshopVariable syntax)
+        public TargetWorkshopComponent(TargetWorkshopVariable syntax, VariableSetKind variableSetKind)
         {
             _syntax = syntax;
+            _variableSetKind = variableSetKind;
         }
 
         public string RejectMessage() => "Only rule-level variables can target workshop variables";
         public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
         public void Validate(VariableComponentCollection componentCollection)
         {
-            _isGlobal = componentCollection.IsAttribute(AttributeType.GlobalVar);
+            _isGlobal = _variableSetKind switch
+            {
+                VariableSetKind.Global => true,
+                VariableSetKind.Player => false,
+                VariableSetKind.Unknown or _ => componentCollection.IsAttribute(AttributeType.GlobalVar)
+            };
         }
         public void Apply(VarInfo varInfo)
         {

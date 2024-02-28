@@ -406,7 +406,7 @@ namespace Deltin.Deltinteger.Parse
                 _foreachContext = foreachContext;
             }
 
-            public void GetComponents(VariableComponentCollection componentCollection) { }
+            public void GetComponents(VariableComponentCollection componentCollection, VariableSetKind variableSetKind) { }
             public IParseType GetCodeType() => _foreachContext.Type;
             public Location GetDefineLocation() => _foreachContext.Identifier ? new Location(ParseInfo.Script.Uri, GetNameRange()) : null;
             public string GetName() => _foreachContext.Identifier?.Text;

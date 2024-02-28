@@ -249,7 +249,7 @@ namespace Deltin.Deltinteger.Parse
                 _context = context;
             }
 
-            public void GetComponents(VariableComponentCollection componentCollection)
+            public void GetComponents(VariableComponentCollection componentCollection, VariableSetKind variableSetKind)
             {
                 componentCollection.AddComponent(new InitialValueComponent(_context.Value));
             }

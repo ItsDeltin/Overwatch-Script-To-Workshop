@@ -4,7 +4,12 @@ namespace Deltin.Deltinteger.Parse
 {
     class SubroutineParameterVariable : ParameterVariable
     {
-        public SubroutineParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler, null) { }
+        readonly bool variableIsGlobal;
+
+        public SubroutineParameterVariable(Scope operationalScope, IVarContextHandler contextHandler, bool variableIsGlobal) : base(operationalScope, contextHandler, null)
+        {
+            this.variableIsGlobal = variableIsGlobal;
+        }
 
         protected override void CheckComponents()
         {
@@ -19,5 +24,8 @@ namespace Deltin.Deltinteger.Parse
 
             _varInfo.Type = type;
         }
+
+        protected override VariableSetKind GetVariableSetKind() =>
+            variableIsGlobal ? VariableSetKind.Global : VariableSetKind.Player;
     }
 }

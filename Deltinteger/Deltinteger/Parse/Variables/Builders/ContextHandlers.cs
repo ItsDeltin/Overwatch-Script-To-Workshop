@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
         Location GetDefineLocation();
         string GetName();
         DocRange GetNameRange();
-        void GetComponents(VariableComponentCollection componentCollection);
+        void GetComponents(VariableComponentCollection componentCollection, VariableSetKind variableSetKind);
         IParseType GetCodeType();
         DocRange GetTypeRange();
         MarkupBuilder Documentation() => null;
@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
         public DocRange GetTypeRange() => _defineContext.Type.Range;
         public MarkupBuilder Documentation() => _documentation;
 
-        public void GetComponents(VariableComponentCollection componentCollection)
+        public void GetComponents(VariableComponentCollection componentCollection, VariableSetKind variableSetKind)
         {
             // Add attribute components.
             AttributesGetter.GetAttributes(ParseInfo.Script.Diagnostics, _defineContext.Attributes, componentCollection);
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Target workshop variable
             if (_defineContext.Target.HasValue)
-                componentCollection.AddComponent(new TargetWorkshopComponent(_defineContext.Target.Value));
+                componentCollection.AddComponent(new TargetWorkshopComponent(_defineContext.Target.Value, variableSetKind));
         }
     }
 }
