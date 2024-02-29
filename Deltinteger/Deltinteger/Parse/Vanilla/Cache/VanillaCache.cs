@@ -21,7 +21,7 @@ record struct CacheInput(VanillaScope Scope)
 /// <summary>Cached vanilla data.</summary>
 /// <param name="Analysis">The analyzed rule.</param>
 /// <param name="IdeItems">Completion and signature help that this rule adds to the file.</param>
-record struct CacheItem(VanillaRuleAnalysis Analysis, IdeItems IdeItems);
+record struct CacheItem(VanillaRuleAnalysis Analysis, CacheItems IdeItems);
 
 /// <summary>Caches analyzed vanilla rules so that they can be reused in multiple parses.</summary>
 class VanillaCache

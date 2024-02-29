@@ -15,10 +15,10 @@ class VanillaContext
     public RuleEvent? EventType { get; init; }
     public BalancedActions? ActionBalancer { get; init; }
     readonly ScriptFile script;
-    readonly IdeItems ideItems;
+    readonly CacheItems ideItems;
     ActiveParameterData activeParameterData;
 
-    public VanillaContext(ScriptFile script, VanillaScope scopedVanillaVariables, IdeItems ideItems)
+    public VanillaContext(ScriptFile script, VanillaScope scopedVanillaVariables, CacheItems ideItems)
     {
         this.script = script;
         this.ideItems = ideItems;
@@ -46,6 +46,9 @@ class VanillaContext
     public void AddHover(DocRange range, MarkupBuilder content) => ideItems.Hovers.Add((range, content));
     public void AddSignatureInfo(ISignatureHelp signatureHelp) => ideItems.SignatureHelps.Add(signatureHelp);
     public void AddDocumentSymbol(DocumentSymbolNode symbol) => ideItems.DocumentSymbols.Add(symbol);
+
+    // Cache
+    public void AddDefaultVariable(VanillaVariable defaultVariable) => ideItems.DefaultVariables.Add(defaultVariable);
 
     // Context
     public ActiveParameterData GetActiveParameterData() => activeParameterData;
@@ -90,17 +93,20 @@ enum ExpectingVariable
     Player
 }
 
-readonly struct IdeItems
+readonly struct CacheItems
 {
+    // IDE
     public readonly List<Diagnostic> Diagnostics = [];
     public readonly List<ICompletionRange> Completions = [];
     public readonly List<(DocRange, MarkupBuilder)> Hovers = [];
     public readonly List<ISignatureHelp> SignatureHelps = [];
     public readonly List<DocumentSymbolNode> DocumentSymbols = [];
+    // Default variables
+    public readonly List<VanillaVariable> DefaultVariables = [];
 
-    public IdeItems() { }
+    public CacheItems() { }
 
-    public readonly void AddToScript(ScriptFile script)
+    public readonly void AddToScript(ScriptFile script, DefaultVariableReport defaultVariableReport)
     {
         foreach (var item in Diagnostics)
             script.Diagnostics.AddDiagnostic(item);
@@ -116,5 +122,8 @@ readonly struct IdeItems
 
         foreach (var symbol in DocumentSymbols)
             script.AddDocumentSymbol(symbol.ToLsp());
+
+        foreach (var defaultVariable in DefaultVariables)
+            defaultVariableReport.Notify(defaultVariable);
     }
 }

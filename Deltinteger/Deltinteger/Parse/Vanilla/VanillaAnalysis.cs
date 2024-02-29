@@ -22,7 +22,7 @@ static class VanillaAnalysis
             VanillaVariableAnalysis.Analyze(script, syntax);
     }
 
-    public static VanillaRuleAnalysis AnalyzeRule(ScriptFile script, VanillaRule rule, VanillaScope scopedVanillaVariables, IdeItems ideItems)
+    public static VanillaRuleAnalysis AnalyzeRule(ScriptFile script, VanillaRule rule, VanillaScope scopedVanillaVariables, CacheItems ideItems)
     {
         return AnalyzeRule(new VanillaContext(script, scopedVanillaVariables, ideItems), rule);
     }

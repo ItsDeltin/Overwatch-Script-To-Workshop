@@ -34,8 +34,6 @@ public class DefaultVariableReport
             linkVanillaVariables.Add(Name, IsGlobal, ir);
         }
     }
-
-    public IEnumerable<VanillaVariable> GetUsedDefaults() => defaults;
 }
 
 /// <summary>
@@ -49,16 +47,10 @@ public class VanillaScope
         "W", "X", "Y", "Z"
     };
 
-    readonly DefaultVariableReport report;
     readonly List<VanillaVariable> scopedVariables = new();
     readonly List<VanillaSubroutine> scopedSubroutines = new();
     readonly List<(string, int)> defaultGlobal = new(DefaultVariableNames.Select((d, i) => (d, i)));
     readonly List<(string, int)> defaultPlayer = new(DefaultVariableNames.Select((d, i) => (d, i)));
-
-    public VanillaScope(DefaultVariableReport report)
-    {
-        this.report = report;
-    }
 
     /// <summary>Adds a vanilla variable to the scope.</summary>
     public void AddScopedVariable(VanillaVariable variable)
@@ -89,7 +81,6 @@ public class VanillaScope
             if (defaultIndex != -1 && scopedVariables.All(v => v.IsGlobal != isGlobal || v.Id != defaultIndex))
             {
                 result = new VanillaVariable(defaultIndex, name, isGlobal);
-                report.Notify(result.Value);
                 return (result, true);
             }
         }

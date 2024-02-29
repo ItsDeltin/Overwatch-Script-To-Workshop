@@ -160,6 +160,10 @@ static class VanillaExpressions
             {
                 // Add link and hover information
                 context.AddHover(syntax.Range, VanillaCompletion.GetVariableHover(declaredVariable.Value, isImplicit));
+
+                // Register the default A-Z variables
+                if (isImplicit)
+                    context.AddDefaultVariable(declaredVariable.Value);
             }
         }
         // Subroutine
