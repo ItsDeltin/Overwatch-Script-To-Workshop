@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using SubroutineCatalog = Deltin.Deltinteger.Parse.Functions.Builder.SubroutineCatalog;
 using LambdaBuilder = Deltin.Deltinteger.Parse.Lambda.Workshop.LambdaBuilder;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse.Workshop
 {
@@ -14,6 +15,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
         public SubroutineCatalog SubroutineCatalog { get; } = new SubroutineCatalog();
         public LambdaBuilder LambdaBuilder { get; }
         public PersistentVariables PersistentVariables { get; }
+        public LinkableVanillaVariables LinkableVanillaVariables { get; } = new();
 
         public ToWorkshop(DeltinScript deltinScript)
         {

@@ -264,7 +264,7 @@ namespace Deltin.Deltinteger.Parse
                 VariableElements elements = VariableResolve.ParseElements(actionSet);
                 gettable = elements.IndexReference;
 
-                target = gettable.GetWorkshopVariablePosition()?.Target ?? elements.Target;
+                target = gettable.GetWorkshopVariablePosition()?.Target ?? elements.Target ?? Element.EventPlayer();
                 start = (Element)InitialResolveValue?.Parse(actionSet) ?? Element.Num(0);
             }
             // New variable being use in for.
@@ -406,7 +406,7 @@ namespace Deltin.Deltinteger.Parse
                 _foreachContext = foreachContext;
             }
 
-            public void GetComponents(VariableComponentCollection componentCollection) { }
+            public void GetComponents(VariableComponentCollection componentCollection, VariableSetKind variableSetKind) { }
             public IParseType GetCodeType() => _foreachContext.Type;
             public Location GetDefineLocation() => _foreachContext.Identifier ? new Location(ParseInfo.Script.Uri, GetNameRange()) : null;
             public string GetName() => _foreachContext.Identifier?.Text;

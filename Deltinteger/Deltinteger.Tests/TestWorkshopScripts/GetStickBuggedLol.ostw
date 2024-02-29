@@ -1,0 +1,1244 @@
+settings
+{
+	main
+	{
+		Description: "SR Tick Abuse Bug by @andygmb1"
+	}
+
+	lobby
+	{
+		Allow Players Who Are In Queue: Yes
+		Match Voice Chat: Enabled
+		Max Team 2 Players: 0
+		Return To Lobby: Never
+	}
+
+	modes
+	{
+		Skirmish
+		{
+			enabled maps
+			{
+				Paris
+			}
+		}
+
+		General
+		{
+			Game Mode Start: Manual
+			Hero Limit: Off
+			Respawn Time Scalar: 30%
+		}
+	}
+
+	heroes
+	{
+		General
+		{
+			Ability Cooldown Time: 0%
+			No Ammunition Requirement: On
+			Ultimate Generation: 250%
+		}
+	}
+}
+
+variables
+{
+	global:
+		0: notePositions
+		1: botSpawn
+		2: bots
+		3: speedPercent
+		4: songPlayingState
+		5: timeArrayIndex
+		6: playerSpawn
+		7: i
+		8: pitchArrayIndex
+		10: maxArraySize
+		11: banTpLocation
+		12: currentBotIndex
+		13: waitTime
+		14: timeArrays
+		15: pitchArrays
+		16: chordArrays
+		17: maxBots
+		18: defaultHorizontalFacingAngle
+		28: hasDecompressionFinished
+		29: decompressionPercentages
+		30: isCompressionEnabled
+		31: numberArray
+		32: decompressedValue
+		33: compressedArrayLength
+		34: decompressedArray
+		35: compressedElementLength
+		36: songDataElementLength
+		37: compressedArray
+		38: compressionInfo
+		39: finalCompressedElementLength
+		40: I
+		41: J
+		42: K
+		45: location
+		46: cubeEffects
+		47: currentFrame
+		48: Vertex
+		49: Vertex_0
+		50: Vertex_1
+		51: Vertex_2
+		52: Vertex_3
+		53: Vertex_4
+		54: Vertex_5
+		55: Vertex_6
+		56: Vertex_7
+		57: Vertex_8
+		58: Vertex_9
+		59: Vertex_10
+		60: Vertex_11
+		61: Vertex_12
+		62: hi_andy
+
+	player:
+		1: playNote
+		2: currentPitchIndex
+		4: currentKeyPos
+}
+
+subroutines
+{
+	0: endSong
+	1: decompressArray
+}
+
+rule("GET STICK BUGGED LOL")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+}
+
+rule("STICK BUG MADE IN BLENDER 2.8 BY @ANDYGMB1")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+}
+
+rule("ANIMATION IMPORTED USING DELTIN'S OSTW")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+}
+
+rule("PIANO MIDI PLAYER BY ScroogeD#5147")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+}
+
+rule("Global init")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Disable Inspector Recording;
+		Disable Built-In Game Mode Music;
+		"Global.botScalar = 0.100;"
+		Global.bots = Empty Array;
+		Global.speedPercent = 150;
+		Global.hasDecompressionFinished = False;
+		Global.decompressionPercentages = Array(0, 0, 0);
+	}
+}
+
+rule("Player init")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Dummy Bot(Event Player) != True;
+		Has Spawned(Event Player) == True;
+		Is Alive(Event Player) == True;
+	}
+
+	actions
+	{
+		Teleport(Event Player, Vector(-83.908, 16.264, -108.989));
+		Disable Movement Collision With Players(Event Player);
+		Wait(0.016, Ignore Condition);
+		Set Facing(Event Player, Direction From Angles(Global.defaultHorizontalFacingAngle, Vertical Facing Angle Of(Event Player)),
+			To World);
+		Preload Hero(Event Player, Hero(Symmetra));
+	}
+}
+
+rule("Dummy init")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Dummy Bot(Event Player) == True;
+	}
+
+	actions
+	{
+		Teleport(Event Player, Global.botSpawn);
+		Disable Movement Collision With Environment(Event Player, False);
+		Disable Movement Collision With Players(Event Player);
+		"Start Scaling Player(Event Player, Global.botScalar, True);"
+		Set Invisible(Event Player, All);
+		Wait(0.016, Ignore Condition);
+		Set Facing(Event Player, Direction From Angles(Global.defaultHorizontalFacingAngle, 89), To World);
+	}
+}
+
+rule("Interact: create dummy bots, start playing")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		disabled Is Button Held(Host Player, Interact) == True;
+		Global.songPlayingState == 0;
+		(!Global.isCompressionEnabled || Global.hasDecompressionFinished) == True;
+	}
+
+	actions
+	{
+		"States:\n0: song not playing\n1: Preparing to play, creating bots\n2: song playing"
+		Global.songPlayingState = 1;
+		Global.i = 11;
+		While(Count Of(Global.bots) < Global.maxBots && Global.i > 0);
+			If(!Entity Exists(Players In Slot(Global.i, All Teams)));
+				Create Dummy Bot(Hero(Symmetra), Team 1, Global.i, Global.botSpawn, Vector(0, 0, 0));
+				Modify Global Variable(bots, Append To Array, Last Created Entity);
+			End;
+			Global.i -= 1;
+			Wait(0.016, Ignore Condition);
+		End;
+		disabled Wait(0.016, Ignore Condition);
+		Global.songPlayingState = 2;
+	}
+}
+
+rule("Play loop")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.songPlayingState == 2;
+	}
+
+	actions
+	{
+		"Because the maximum size of overwatch arrays is 1000 per dimension, the song data arrays are split to several indexes of a 2d array. To get the correct index of the required value in these arrays, modulo and division are used instead of a second index:"
+		disabled Continue;
+		"value = songArray[math.floor(index / maxArraySize)][index % maxArraySize]"
+		disabled Continue;
+		"While((index < 2dArrayLength) && songPlayingState)"
+		While(Global.timeArrayIndex < Global.maxArraySize * (Count Of(Global.timeArrays) - 1) + Count Of(Last Of(Global.timeArrays))
+			&& Global.songPlayingState);
+			"Get the time interval (milliseconds) between chords from timeArrays, multiply by 1000 to get seconds, modify based on speed"
+			Global.waitTime += Global.timeArrays[Round To Integer(Global.timeArrayIndex / Global.maxArraySize, Down)
+				][Global.timeArrayIndex % Global.maxArraySize] / 1000 * (100 / Global.speedPercent);
+			While(Global.waitTime >= 0.016);
+				Wait(0.016, Ignore Condition);
+				Global.waitTime -= 0.016;
+			End;
+			"Loop as many times as there are pitches in the current chord, as indicated by the value in chordArrays. Assign the pitches to the bots."
+			For Global Variable(i, 0, Global.chordArrays[Round To Integer(Global.timeArrayIndex / Global.maxArraySize, Down)
+				][Global.timeArrayIndex % Global.maxArraySize], 1);
+				Global.bots[Global.currentBotIndex].currentPitchIndex = Global.pitchArrayIndex;
+				Global.bots[Global.currentBotIndex].playNote = True;
+				Global.currentBotIndex = (Global.currentBotIndex + 1) % Count Of(Global.bots);
+				Global.pitchArrayIndex += 1;
+			End;
+			Global.timeArrayIndex += 1;
+		End;
+		Wait(0.250, Ignore Condition);
+		Call Subroutine(endSong);
+	}
+}
+
+rule("Stop playing")
+{
+	event
+	{
+		Subroutine;
+		endSong;
+	}
+
+	actions
+	{
+		For Global Variable(i, 0, 12, 1);
+			Destroy Dummy Bot(Team 1, Global.i);
+		End;
+		Global.bots = Empty Array;
+		Wait(0.300, Ignore Condition);
+		Global.songPlayingState = 0;
+		Global.timeArrayIndex = 0;
+		Global.pitchArrayIndex = 0;
+		Global.waitTime = 0;
+	}
+}
+
+rule("Play note")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Dummy Bot(Event Player) == True;
+		Event Player.playNote == True;
+	}
+
+	actions
+	{
+		Event Player.currentKeyPos = Global.notePositions[Global.pitchArrays[Round To Integer(
+			Event Player.currentPitchIndex / Global.maxArraySize, Down)][Event Player.currentPitchIndex % Global.maxArraySize]];
+		Teleport(Event Player, Event Player.currentKeyPos);
+		Wait(0.016, Ignore Condition);
+		Start Holding Button(Event Player, Primary Fire);
+		Wait(0.032, Ignore Condition);
+		Stop Holding Button(Event Player, Primary Fire);
+		Event Player.playNote = False;
+	}
+}
+
+rule("Race condition workaround for very high playing speeds")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.playNote == True;
+	}
+
+	actions
+	{
+		Wait(0.200, Abort When False);
+		Event Player.playNote = False;
+		Loop;
+	}
+}
+
+rule("Decompress all arrays")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Wait(0.250, Ignore Condition);
+		Abort If(!Global.isCompressionEnabled);
+		"Decompress pitch arrays, time arrays and chord arrays"
+		For Global Variable(i, 0, 3, 1);
+			Global.compressedArray = Empty Array;
+			For Global Variable(I, 0, Count Of(Array(Global.pitchArrays, Global.timeArrays, Global.chordArrays)[Global.i]), 1);
+				Global.compressedArray[Global.I] = Array(Global.pitchArrays, Global.timeArrays, Global.chordArrays)[Global.i][Global.I];
+			End;
+			Global.finalCompressedElementLength = Global.compressionInfo[0][Global.i];
+			Global.songDataElementLength = Global.compressionInfo[1][Global.i];
+			Call Subroutine(decompressArray);
+			For Global Variable(I, 0, Count Of(Global.decompressedArray), 1);
+				If(Global.i == 0);
+					Global.pitchArrays[Global.I] = Global.decompressedArray[Global.I];
+				Else If(Global.i == 1);
+					Global.timeArrays[Global.I] = Global.decompressedArray[Global.I];
+				Else If(Global.i == 2);
+					Global.chordArrays[Global.I] = Global.decompressedArray[Global.I];
+				End;
+			End;
+			Global.compressedArray = Empty Array;
+			Global.decompressionPercentages[Global.i] = 100;
+		End;
+		Global.decompressedArray = Empty Array;
+		Global.hasDecompressionFinished = True;
+	}
+}
+
+rule("Decompress array")
+{
+	event
+	{
+		Subroutine;
+		decompressArray;
+	}
+
+	actions
+	{
+		"Target array for the decompressed data"
+		Global.decompressedArray = Empty Array;
+		Global.decompressedArray[0] = Empty Array;
+		"Current decompressedArray index being written to (max of 1000 elements per index)"
+		Global.K = 0;
+		"Array for saving individual digits of the element being decompressed"
+		Global.numberArray = Empty Array;
+		Global.compressedArrayLength = Global.maxArraySize * (Count Of(Global.compressedArray) - 1) + Count Of(Last Of(
+			Global.compressedArray));
+		For Global Variable(I, 0, Global.compressedArrayLength, 1);
+			"Read the compressed element from left to right, append individual digits to numberArray. If this is the last array value, use a different variable to check its length."
+			For Global Variable(J, 0,
+				Global.I == Global.compressedArrayLength - 1 ? Global.finalCompressedElementLength : Global.compressedElementLength, 1);
+				Modify Global Variable(numberArray, Append To Array, Round To Integer(Global.compressedArray[Round To Integer(
+					Global.I / Global.maxArraySize, Down)][Global.I % Global.maxArraySize] / 10 ^ ((
+					Global.I == Global.compressedArrayLength - 1 ? Global.finalCompressedElementLength : Global.compressedElementLength)
+					- 1 - Global.J), Down) % 10);
+			End;
+			While(Count Of(Global.numberArray) >= Global.songDataElementLength);
+				Global.decompressedValue = 0;
+				"Construct the original numbers by reading numberArray x elements at a time"
+				For Global Variable(J, 0, Global.songDataElementLength, 1);
+					Global.decompressedValue += First Of(Global.numberArray) * 10 ^ (Global.songDataElementLength - 1 - Global.J);
+					Modify Global Variable(numberArray, Remove From Array By Index, 0);
+				End;
+				Modify Global Variable At Index(decompressedArray, Global.K, Append To Array, Global.decompressedValue);
+				If(Count Of(Global.decompressedArray[Global.K]) >= Global.maxArraySize);
+					Global.K += 1;
+					Global.decompressedArray[Global.K] = Empty Array;
+				End;
+			End;
+			"Wait a frame every 25th element to avoid high server load"
+			If(Global.I % 25 == 0);
+				Wait(0.016, Ignore Condition);
+				"Update decomrpession progress HUD"
+				Global.decompressionPercentages[Global.i] = 100 * Global.I / Global.compressedArrayLength;
+			End;
+		End;
+	}
+}
+
+rule("Note positions array init, Point B")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.notePositions = Array(Vector(-85.410, 13.884, -108.012), Vector(-85.364, 13.896, -108.079), Vector(-85.368, 13.886,
+			-108.007), Vector(-85.328, 13.897, -108.078), Vector(-85.325, 13.888, -108.008), Vector(-85.290, 13.887, -107.989), Vector(
+			-85.247, 13.897, -108.050), Vector(-85.256, 13.885, -107.965), Vector(-85.217, 13.895, -108.021), Vector(-85.210, 13.888,
+			-107.968), Vector(-85.180, 13.895, -108.007), Vector(-85.184, 13.883, -107.928), Vector(-85.147, 13.883, -107.916), Vector(
+			-85.095, 13.895, -107.977), Vector(-85.107, 13.883, -107.910), Vector(-85.063, 13.896, -107.973), Vector(-85.066, 13.884,
+			-107.902), Vector(-85.017, 13.886, -107.891), Vector(-84.979, 13.896, -107.954), Vector(-84.987, 13.884, -107.866), Vector(
+			-84.943, 13.896, -107.938), Vector(-84.952, 13.884, -107.854), Vector(-84.908, 13.896, -107.922), Vector(-84.902, 13.886,
+			-107.851), Vector(-84.871, 13.885, -107.836), Vector(-84.826, 13.895, -107.887), Vector(-84.832, 13.885, -107.822), Vector(
+			-84.787, 13.897, -107.894), Vector(-84.795, 13.886, -107.812), Vector(-84.751, 13.888, -107.815), Vector(-84.711, 13.895,
+			-107.857), Vector(-84.720, 13.883, -107.769), Vector(-84.681, 13.895, -107.835), Vector(-84.683, 13.882, -107.759), Vector(
+			-84.643, 13.895, -107.822), Vector(-84.637, 13.887, -107.770), Vector(-84.604, 13.885, -107.745), Vector(-84.563, 13.894,
+			-107.793), Vector(-84.561, 13.888, -107.750), Vector(-84.523, 13.896, -107.791), Vector(-84.524, 13.887, -107.729), Vector(
+			-84.485, 13.884, -107.697), Vector(-84.444, 13.895, -107.759), Vector(-84.445, 13.888, -107.711), Vector(-84.415, 13.894,
+			-107.750), Vector(-84.403, 13.888, -107.694), Vector(-84.373, 13.896, -107.742), Vector(-84.375, 13.885, -107.661), Vector(
+			-84.339, 13.885, -107.649), Vector(-84.292, 13.896, -107.713), Vector(-84.298, 13.886, -107.644), Vector(-84.256, 13.897,
+			-107.715), Vector(-84.262, 13.883, -107.613), Vector(-84.227, 13.883, -107.603), Vector(-84.172, 13.897, -107.684), Vector(
+			-84.183, 13.886, -107.606), Vector(-84.146, 13.895, -107.657), Vector(-84.144, 13.886, -107.592), Vector(-84.103, 13.896,
+			-107.652), Vector(-84.104, 13.885, -107.571), Vector(-84.068, 13.885, -107.560), Vector(-84.021, 13.896, -107.626), Vector(
+			-84.023, 13.886, -107.553), Vector(-83.985, 13.895, -107.598), Vector(-83.987, 13.886, -107.539));
+		Global.botSpawn = Vector(-84.693, 13.873, -107.681);
+		Global.playerSpawn = Vector(-85.624, 14.349, -104.397);
+		Global.banTpLocation = Vector(-83.340, 13.248, -58.608);
+		Global.defaultHorizontalFacingAngle = 161.200;
+	}
+}
+
+rule("Create Cube")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.location = Vector(-73.310, 11, -113.760);
+		Global.hi_andy = Empty Array;
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_1[Global.currentFrame],
+			Global.location + Global.Vertex_0[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_6[Global.currentFrame],
+			Global.location + Vector(2.429, 3.257, -2.712), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_2[Global.currentFrame],
+			Global.location + Global.Vertex_1[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_10[Global.currentFrame],
+			Global.location + Global.Vertex_2[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_5[Global.currentFrame],
+			Global.location + Vector(2.717, 3.261, -0.454), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_4[Global.currentFrame],
+			Global.location + Vector(-1.812, 3.264, -0.141), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_3[Global.currentFrame],
+			Global.location + Vector(-1.163, 3.267, -2.548), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_1[Global.currentFrame],
+			Global.location + Global.Vertex_3[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_2[Global.currentFrame],
+			Global.location + Global.Vertex_4[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_2[Global.currentFrame],
+			Global.location + Global.Vertex_5[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_1[Global.currentFrame],
+			Global.location + Global.Vertex_6[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex[Global.currentFrame],
+			Global.location + Global.Vertex_7[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_7[Global.currentFrame],
+			Global.location + Global.Vertex_8[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_7[Global.currentFrame],
+			Global.location + Global.Vertex_9[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_7[Global.currentFrame],
+			Global.location + Global.Vertex_10[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_10[Global.currentFrame],
+			Global.location + Global.Vertex_11[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_11[Global.currentFrame],
+			Global.location + Vector(2.679, 3.092, 2.723), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_10[Global.currentFrame],
+			Global.location + Global.Vertex_12[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_12[Global.currentFrame],
+			Global.location + Vector(-1.666, 2.899, 3.015), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		While(True);
+			Global.currentFrame = 0;
+			For Global Variable(currentFrame, 0, 47, 1);
+				Wait(0.042, Ignore Condition);
+			End;
+			Wait(0.042, Ignore Condition);
+		End;
+		Global.cubeEffects = Global.hi_andy;
+	}
+}
+
+rule("General song data")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.maxBots = 8;
+		Global.maxArraySize = 1000;
+		Global.isCompressionEnabled = True;
+		Global.compressedElementLength = 7;
+		Global.compressionInfo = Array(Array(2, 4, 2), Array(2, 4, 2));
+	}
+}
+
+rule("pitchArrays")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.pitchArrays[0] = Array(5452494, 7464351, 4749505, 1544951, 4946443, 9464947.000, 4443423, 7545249, 4746435, 1474950,
+			5154495, 1494644, 3946494, 7444342, 37);
+	}
+}
+
+rule("timeArrays")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.timeArrays[0] = Array(11, 5011601, 1501160, 2300923, 231011, 6011501, 1501161, 1540230, 116011, 5011501, 1611540, 2300116,
+			115011, 6011502, 3111540, 1150115, 116011, 5023109, 2302310, 1150116, 115011, 5115402, 3101150, 1160115, 115115, 4023101,
+			1501160, 1150116, 230);
+	}
+}
+
+rule("chordArrays")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.chordArrays[0] = Array(101010, 1010101, 101010, 1010101, 101010, 1010101, 101010, 1010101, 101010, 1010101, 101010, 1010101,
+			101010, 1010101, 1);
+	}
+}
+
+rule("Initial Global")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.cubeEffects = Null;
+	}
+}
+
+rule("init_animation_0-5")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.Vertex = Array(Vector(0.036, 5.528, 4.270), Vector(-0.027, 5.520, 4.303), Vector(-0.176, 5.496, 4.383), Vector(-0.355,
+			5.458, 4.479), Vector(-0.504, 5.407, 4.563), Vector(-0.567, 5.344, 4.605), Vector(-0.427, 5.271, 4.615), Vector(-0.079, 5.196,
+			4.622), Vector(0.374, 5.125, 4.626), Vector(0.827, 5.065, 4.628), Vector(1.175, 5.024, 4.629), Vector(1.315, 5.008, 4.629),
+			Vector(1.156, 5.057, 4.590), Vector(0.760, 5.182, 4.494), Vector(0.245, 5.349, 4.369), Vector(-0.270, 5.525, 4.244), Vector(
+			-0.666, 5.677, 4.148), Vector(-0.825, 5.772, 4.109), Vector(-0.714, 5.819, 4.132), Vector(-0.428, 5.853, 4.191), Vector(-0.036,
+			5.876, 4.272), Vector(0.390, 5.890, 4.360), Vector(0.781, 5.897, 4.440), Vector(1.067, 5.900, 4.499), Vector(1.178, 5.900,
+			4.522), Vector(1.069, 5.819, 4.506), Vector(0.796, 5.614, 4.466), Vector(0.440, 5.348, 4.414), Vector(0.085, 5.083, 4.362),
+			Vector(-0.188, 4.878, 4.322), Vector(-0.298, 4.796, 4.306), Vector(-0.192, 4.809, 4.327), Vector(0.072, 4.840, 4.380), Vector(
+			0.415, 4.881, 4.449), Vector(0.758, 4.922, 4.518), Vector(1.022, 4.954, 4.572), Vector(1.128, 4.966, 4.593), Vector(1.022,
+			4.954, 4.574), Vector(0.758, 4.922, 4.528), Vector(0.415, 4.881, 4.465), Vector(0.072, 4.840, 4.399), Vector(-0.192, 4.809,
+			4.342), Vector(-0.298, 4.796, 4.306), Vector(-0.263, 4.840, 4.289), Vector(-0.180, 4.957, 4.278), Vector(-0.081, 5.125, 4.273),
+			Vector(0.001, 5.323, 4.271), Vector(0.036, 5.528, 4.270), Vector(-0.005, 5.721, 4.272), Vector(-0.105, 5.890, 4.275), Vector(
+			-0.227, 6.023, 4.280), Vector(-0.336, 6.111, 4.285), Vector(-0.395, 6.143, 4.291), Vector(-0.412, 6.053, 4.298), Vector(-0.423,
+			5.840, 4.307), Vector(-0.428, 5.586, 4.321), Vector(-0.430, 5.373, 4.343), Vector(-0.431, 5.283, 4.377), Vector(-0.399, 5.452,
+			4.423), Vector(-0.299, 5.855, 4.475), Vector(-0.125, 6.336, 4.523), Vector(0.128, 6.738, 4.558), Vector(0.465, 6.907, 4.571),
+			Vector(0.881, 6.836, 4.560), Vector(1.321, 6.647, 4.529), Vector(1.718, 6.373, 4.487), Vector(2.005, 6.050, 4.440), Vector(
+			2.116, 5.711, 4.394), Vector(2.008, 5.391, 4.357), Vector(1.721, 5.123, 4.329), Vector(1.309, 4.939, 4.312), Vector(0.826,
+			4.870, 4.306), Vector(0.329, 4.923, 4.323), Vector(-0.114, 5.069, 4.360), Vector(-0.432, 5.286, 4.397), Vector(-0.554, 5.556,
+			4.414), Vector(-0.358, 5.853, 4.413), Vector(0.115, 6.129, 4.405), Vector(0.695, 6.333, 4.388), Vector(1.210, 6.413, 4.356),
+			Vector(1.557, 6.354, 4.307), Vector(1.768, 6.199, 4.245), Vector(1.876, 5.976, 4.176), Vector(1.916, 5.716, 4.106), Vector(
+			1.921, 5.450, 4.040), Vector(1.801, 5.205, 3.985), Vector(1.497, 5.004, 3.942), Vector(1.100, 4.869, 3.915), Vector(0.699,
+			4.819, 3.906), Vector(0.367, 4.949, 3.911), Vector(0.123, 5.249, 3.923), Vector(-0.026, 5.586, 3.935), Vector(-0.077, 5.825,
+			3.940), Vector(-0.028, 5.943, 3.939), Vector(0.110, 6.015, 3.934), Vector(0.323, 6.052, 3.930), Vector(0.596, 6.065, 3.925),
+			Vector(0.914, 6.067, 3.924), Vector(1.255, 5.942, 3.928), Vector(1.571, 5.660, 3.938), Vector(1.802, 5.358, 3.948), Vector(
+			1.891, 5.175, 3.955), Vector(1.602, 5.113, 3.959), Vector(0.911, 5.075, 3.961), Vector(0.086, 5.056, 3.962), Vector(-0.605,
+			5.049, 3.962), Vector(-0.895, 5.048, 3.962), Vector(-0.894, 5.152, 3.958), Vector(-0.884, 5.401, 3.949), Vector(-0.857, 5.699,
+			3.938), Vector(-0.804, 5.948, 3.929), Vector(-0.717, 6.052, 3.925), Vector(-0.351, 5.989, 3.927), Vector(0.368, 5.820, 3.933),
+			Vector(1.190, 5.581, 3.941), Vector(1.865, 5.305, 3.950), Vector(2.146, 5.026, 3.961), Vector(1.398, 4.778, 3.970), Vector(
+			0.010, 4.601, 3.978), Vector(-0.737, 4.533, 3.980));
+		Global.Vertex_0 = Array(Vector(-0.252, 5.196, -5.591), Vector(-0.315, 5.188, -5.558), Vector(-0.465, 5.164, -5.479), Vector(-0.643,
+			5.126, -5.382), Vector(-0.793, 5.074, -5.298), Vector(-0.855, 5.011, -5.256), Vector(-0.716, 4.939, -5.246), Vector(-0.368,
+			4.864, -5.239), Vector(0.085, 4.792, -5.235), Vector(0.538, 4.732, -5.233), Vector(0.887, 4.691, -5.233), Vector(1.026, 4.676,
+			-5.233), Vector(0.868, 4.725, -5.271), Vector(0.471, 4.849, -5.367), Vector(-0.044, 5.016, -5.492), Vector(-0.559, 5.192,
+			-5.617), Vector(-0.955, 5.345, -5.713), Vector(-1.113, 5.439, -5.752), Vector(-1.002, 5.487, -5.729), Vector(-0.716, 5.521,
+			-5.670), Vector(-0.325, 5.544, -5.590), Vector(0.101, 5.558, -5.502), Vector(0.493, 5.565, -5.421), Vector(0.779, 5.568,
+			-5.362), Vector(0.890, 5.568, -5.339), Vector(0.780, 5.486, -5.355), Vector(0.507, 5.282, -5.395), Vector(0.152, 5.016,
+			-5.447), Vector(-0.204, 4.750, -5.499), Vector(-0.477, 4.546, -5.539), Vector(-0.586, 4.464, -5.555), Vector(-0.481, 4.477,
+			-5.534), Vector(-0.217, 4.508, -5.481), Vector(0.126, 4.549, -5.412), Vector(0.470, 4.590, -5.343), Vector(0.734, 4.621,
+			-5.290), Vector(0.839, 4.634, -5.269), Vector(0.734, 4.621, -5.287), Vector(0.470, 4.590, -5.333), Vector(0.126, 4.549,
+			-5.396), Vector(-0.217, 4.508, -5.462), Vector(-0.481, 4.477, -5.519), Vector(-0.586, 4.464, -5.555), Vector(-0.552, 4.508,
+			-5.573), Vector(-0.469, 4.625, -5.583), Vector(-0.370, 4.793, -5.589), Vector(-0.287, 4.991, -5.591), Vector(-0.252, 5.196,
+			-5.591), Vector(-0.294, 5.389, -5.590), Vector(-0.394, 5.558, -5.586), Vector(-0.516, 5.691, -5.581), Vector(-0.624, 5.779,
+			-5.576), Vector(-0.683, 5.810, -5.570), Vector(-0.701, 5.721, -5.564), Vector(-0.711, 5.508, -5.555), Vector(-0.717, 5.254,
+			-5.541), Vector(-0.719, 5.040, -5.518), Vector(-0.719, 4.951, -5.484), Vector(-0.687, 5.120, -5.438), Vector(-0.587, 5.523,
+			-5.387), Vector(-0.414, 6.003, -5.339), Vector(-0.161, 6.406, -5.304), Vector(0.177, 6.575, -5.290), Vector(0.593, 6.504,
+			-5.302), Vector(1.033, 6.314, -5.332), Vector(1.430, 6.041, -5.374), Vector(1.717, 5.717, -5.422), Vector(1.827, 5.379,
+			-5.467), Vector(1.720, 5.059, -5.504), Vector(1.433, 4.791, -5.532), Vector(1.020, 4.606, -5.549), Vector(0.537, 4.538,
+			-5.555), Vector(0.040, 4.591, -5.538), Vector(-0.403, 4.736, -5.501), Vector(-0.721, 4.954, -5.464), Vector(-0.843, 5.224,
+			-5.447), Vector(-0.647, 5.521, -5.449), Vector(-0.174, 5.797, -5.456), Vector(0.406, 6.001, -5.473), Vector(0.922, 6.080,
+			-5.505), Vector(1.269, 6.022, -5.554), Vector(1.479, 5.866, -5.616), Vector(1.587, 5.644, -5.685), Vector(1.627, 5.384,
+			-5.755), Vector(1.633, 5.118, -5.821), Vector(1.512, 4.873, -5.876), Vector(1.209, 4.672, -5.919), Vector(0.812, 4.536,
+			-5.946), Vector(0.410, 4.486, -5.956), Vector(0.078, 4.616, -5.950), Vector(-0.165, 4.917, -5.938), Vector(-0.315, 5.254,
+			-5.926), Vector(-0.366, 5.493, -5.921), Vector(-0.316, 5.611, -5.923), Vector(-0.178, 5.683, -5.927), Vector(0.035, 5.719,
+			-5.932), Vector(0.307, 5.733, -5.936), Vector(0.625, 5.735, -5.938), Vector(0.967, 5.610, -5.933), Vector(1.282, 5.327,
+			-5.924), Vector(1.513, 5.025, -5.913), Vector(1.603, 4.843, -5.906), Vector(1.313, 4.781, -5.903), Vector(0.622, 4.743,
+			-5.901), Vector(-0.203, 4.724, -5.900), Vector(-0.894, 4.716, -5.899), Vector(-1.184, 4.715, -5.899), Vector(-1.182, 4.820,
+			-5.903), Vector(-1.172, 5.069, -5.912), Vector(-1.145, 5.366, -5.923), Vector(-1.092, 5.615, -5.932), Vector(-1.005, 5.720,
+			-5.936), Vector(-0.639, 5.656, -5.934), Vector(0.079, 5.488, -5.928), Vector(0.901, 5.249, -5.920), Vector(1.577, 4.972,
+			-5.911), Vector(1.857, 4.693, -5.901), Vector(1.110, 4.446, -5.891), Vector(-0.278, 4.268, -5.884), Vector(-1.026, 4.201,
+			-5.881));
+		Global.Vertex_1 = Array(Vector(-0.252, 5.196, -3.091), Vector(-0.315, 5.188, -3.058), Vector(-0.465, 5.164, -2.979), Vector(-0.643,
+			5.126, -2.882), Vector(-0.793, 5.074, -2.798), Vector(-0.855, 5.011, -2.756), Vector(-0.716, 4.939, -2.746), Vector(-0.368,
+			4.864, -2.739), Vector(0.085, 4.792, -2.735), Vector(0.538, 4.732, -2.733), Vector(0.887, 4.691, -2.733), Vector(1.026, 4.676,
+			-2.733), Vector(0.868, 4.725, -2.771), Vector(0.471, 4.849, -2.867), Vector(-0.044, 5.016, -2.992), Vector(-0.559, 5.192,
+			-3.117), Vector(-0.955, 5.345, -3.213), Vector(-1.113, 5.439, -3.252), Vector(-1.002, 5.487, -3.229), Vector(-0.716, 5.521,
+			-3.170), Vector(-0.325, 5.544, -3.090), Vector(0.101, 5.558, -3.002), Vector(0.493, 5.565, -2.921), Vector(0.779, 5.568,
+			-2.862), Vector(0.890, 5.568, -2.839), Vector(0.780, 5.486, -2.855), Vector(0.507, 5.282, -2.895), Vector(0.152, 5.016,
+			-2.947), Vector(-0.204, 4.750, -2.999), Vector(-0.477, 4.546, -3.039), Vector(-0.586, 4.464, -3.055), Vector(-0.481, 4.477,
+			-3.034), Vector(-0.217, 4.508, -2.981), Vector(0.126, 4.549, -2.912), Vector(0.470, 4.590, -2.843), Vector(0.734, 4.621,
+			-2.790), Vector(0.839, 4.634, -2.769), Vector(0.734, 4.621, -2.787), Vector(0.470, 4.590, -2.833), Vector(0.126, 4.549,
+			-2.896), Vector(-0.217, 4.508, -2.962), Vector(-0.481, 4.477, -3.019), Vector(-0.586, 4.464, -3.055), Vector(-0.552, 4.508,
+			-3.073), Vector(-0.469, 4.625, -3.083), Vector(-0.370, 4.793, -3.089), Vector(-0.287, 4.991, -3.091), Vector(-0.252, 5.196,
+			-3.091), Vector(-0.294, 5.389, -3.090), Vector(-0.394, 5.558, -3.086), Vector(-0.516, 5.691, -3.081), Vector(-0.624, 5.779,
+			-3.076), Vector(-0.683, 5.810, -3.070), Vector(-0.701, 5.721, -3.064), Vector(-0.711, 5.508, -3.055), Vector(-0.717, 5.254,
+			-3.041), Vector(-0.719, 5.040, -3.018), Vector(-0.719, 4.951, -2.984), Vector(-0.687, 5.120, -2.938), Vector(-0.587, 5.523,
+			-2.887), Vector(-0.414, 6.003, -2.839), Vector(-0.161, 6.406, -2.804), Vector(0.177, 6.575, -2.790), Vector(0.593, 6.504,
+			-2.802), Vector(1.033, 6.314, -2.832), Vector(1.430, 6.041, -2.874), Vector(1.717, 5.717, -2.922), Vector(1.827, 5.379,
+			-2.967), Vector(1.720, 5.059, -3.004), Vector(1.433, 4.791, -3.032), Vector(1.020, 4.606, -3.049), Vector(0.537, 4.538,
+			-3.055), Vector(0.040, 4.591, -3.038), Vector(-0.403, 4.736, -3.001), Vector(-0.721, 4.954, -2.964), Vector(-0.843, 5.224,
+			-2.947), Vector(-0.647, 5.521, -2.949), Vector(-0.174, 5.797, -2.956), Vector(0.406, 6.001, -2.973), Vector(0.922, 6.080,
+			-3.005), Vector(1.269, 6.022, -3.054), Vector(1.479, 5.866, -3.116), Vector(1.587, 5.644, -3.185), Vector(1.627, 5.384,
+			-3.255), Vector(1.633, 5.118, -3.321), Vector(1.512, 4.873, -3.376), Vector(1.209, 4.672, -3.419), Vector(0.812, 4.536,
+			-3.446), Vector(0.410, 4.486, -3.456), Vector(0.078, 4.616, -3.450), Vector(-0.165, 4.917, -3.438), Vector(-0.315, 5.254,
+			-3.426), Vector(-0.366, 5.493, -3.421), Vector(-0.316, 5.611, -3.423), Vector(-0.178, 5.683, -3.427), Vector(0.035, 5.719,
+			-3.432), Vector(0.307, 5.733, -3.436), Vector(0.625, 5.735, -3.438), Vector(0.967, 5.610, -3.433), Vector(1.282, 5.327,
+			-3.424), Vector(1.513, 5.025, -3.413), Vector(1.603, 4.843, -3.406), Vector(1.313, 4.781, -3.403), Vector(0.622, 4.743,
+			-3.401), Vector(-0.203, 4.724, -3.400), Vector(-0.894, 4.716, -3.399), Vector(-1.184, 4.715, -3.399), Vector(-1.182, 4.820,
+			-3.403), Vector(-1.172, 5.069, -3.412), Vector(-1.145, 5.366, -3.423), Vector(-1.092, 5.615, -3.432), Vector(-1.005, 5.720,
+			-3.436), Vector(-0.639, 5.656, -3.434), Vector(0.079, 5.488, -3.428), Vector(0.901, 5.249, -3.420), Vector(1.577, 4.972,
+			-3.411), Vector(1.857, 4.693, -3.401), Vector(1.110, 4.446, -3.391), Vector(-0.278, 4.268, -3.384), Vector(-1.026, 4.201,
+			-3.381));
+		Global.Vertex_2 = Array(Vector(-0.252, 5.196, -0.638), Vector(-0.315, 5.188, -0.605), Vector(-0.465, 5.164, -0.525), Vector(-0.643,
+			5.126, -0.429), Vector(-0.793, 5.074, -0.345), Vector(-0.855, 5.011, -0.303), Vector(-0.716, 4.939, -0.293), Vector(-0.368,
+			4.864, -0.286), Vector(0.085, 4.792, -0.282), Vector(0.538, 4.732, -0.280), Vector(0.887, 4.691, -0.280), Vector(1.026, 4.676,
+			-0.279), Vector(0.868, 4.725, -0.318), Vector(0.471, 4.849, -0.414), Vector(-0.044, 5.016, -0.539), Vector(-0.559, 5.192,
+			-0.664), Vector(-0.955, 5.345, -0.760), Vector(-1.113, 5.439, -0.799), Vector(-1.002, 5.487, -0.776), Vector(-0.716, 5.521,
+			-0.717), Vector(-0.325, 5.544, -0.636), Vector(0.101, 5.558, -0.549), Vector(0.493, 5.565, -0.468), Vector(0.779, 5.568,
+			-0.409), Vector(0.890, 5.568, -0.386), Vector(0.780, 5.486, -0.402), Vector(0.507, 5.282, -0.442), Vector(0.152, 5.016,
+			-0.494), Vector(-0.204, 4.750, -0.546), Vector(-0.477, 4.546, -0.586), Vector(-0.586, 4.464, -0.602), Vector(-0.481, 4.477,
+			-0.581), Vector(-0.217, 4.508, -0.528), Vector(0.126, 4.549, -0.459), Vector(0.470, 4.590, -0.390), Vector(0.734, 4.621,
+			-0.337), Vector(0.839, 4.634, -0.315), Vector(0.734, 4.621, -0.334), Vector(0.470, 4.590, -0.380), Vector(0.126, 4.549,
+			-0.443), Vector(-0.217, 4.508, -0.509), Vector(-0.481, 4.477, -0.566), Vector(-0.586, 4.464, -0.602), Vector(-0.552, 4.508,
+			-0.620), Vector(-0.469, 4.625, -0.630), Vector(-0.370, 4.793, -0.636), Vector(-0.287, 4.991, -0.637), Vector(-0.252, 5.196,
+			-0.638), Vector(-0.294, 5.389, -0.637), Vector(-0.394, 5.558, -0.633), Vector(-0.516, 5.691, -0.628), Vector(-0.624, 5.779,
+			-0.623), Vector(-0.683, 5.810, -0.617), Vector(-0.701, 5.721, -0.610), Vector(-0.711, 5.508, -0.602), Vector(-0.717, 5.254,
+			-0.587), Vector(-0.719, 5.040, -0.565), Vector(-0.719, 4.951, -0.531), Vector(-0.687, 5.120, -0.485), Vector(-0.587, 5.523,
+			-0.433), Vector(-0.414, 6.003, -0.386), Vector(-0.161, 6.406, -0.350), Vector(0.177, 6.575, -0.337), Vector(0.593, 6.504,
+			-0.348), Vector(1.033, 6.314, -0.379), Vector(1.430, 6.041, -0.421), Vector(1.717, 5.717, -0.468), Vector(1.827, 5.379,
+			-0.514), Vector(1.720, 5.059, -0.551), Vector(1.433, 4.791, -0.579), Vector(1.020, 4.606, -0.596), Vector(0.537, 4.538,
+			-0.602), Vector(0.040, 4.591, -0.585), Vector(-0.403, 4.736, -0.548), Vector(-0.721, 4.954, -0.511), Vector(-0.843, 5.224,
+			-0.494), Vector(-0.647, 5.521, -0.496), Vector(-0.174, 5.797, -0.503), Vector(0.406, 6.001, -0.520), Vector(0.922, 6.080,
+			-0.552), Vector(1.269, 6.022, -0.601), Vector(1.479, 5.866, -0.663), Vector(1.587, 5.644, -0.732), Vector(1.627, 5.384,
+			-0.802), Vector(1.633, 5.118, -0.868), Vector(1.512, 4.873, -0.923), Vector(1.209, 4.672, -0.966), Vector(0.812, 4.536,
+			-0.993), Vector(0.410, 4.486, -1.003), Vector(0.078, 4.616, -0.997), Vector(-0.165, 4.917, -0.985), Vector(-0.315, 5.254,
+			-0.973), Vector(-0.366, 5.493, -0.968), Vector(-0.316, 5.611, -0.970), Vector(-0.178, 5.683, -0.974), Vector(0.035, 5.719,
+			-0.979), Vector(0.307, 5.733, -0.983), Vector(0.625, 5.735, -0.984), Vector(0.967, 5.610, -0.980), Vector(1.282, 5.327,
+			-0.971), Vector(1.513, 5.025, -0.960), Vector(1.603, 4.843, -0.953), Vector(1.313, 4.781, -0.950), Vector(0.622, 4.743,
+			-0.948), Vector(-0.203, 4.724, -0.947), Vector(-0.894, 4.716, -0.946), Vector(-1.184, 4.715, -0.946), Vector(-1.182, 4.820,
+			-0.950), Vector(-1.172, 5.069, -0.959), Vector(-1.145, 5.366, -0.970), Vector(-1.092, 5.615, -0.979), Vector(-1.005, 5.720,
+			-0.983), Vector(-0.639, 5.656, -0.981), Vector(0.079, 5.488, -0.975), Vector(0.901, 5.249, -0.967), Vector(1.577, 4.972,
+			-0.958), Vector(1.857, 4.693, -0.948), Vector(1.110, 4.446, -0.938), Vector(-0.278, 4.268, -0.931), Vector(-1.026, 4.201,
+			-0.928));
+		Global.Vertex_3 = Array(Vector(-1.369, 4.379, -3.092), Vector(-1.431, 4.371, -3.059), Vector(-1.581, 4.347, -2.979), Vector(-1.759,
+			4.308, -2.883), Vector(-1.909, 4.257, -2.799), Vector(-1.972, 4.194, -2.757), Vector(-1.832, 4.122, -2.747), Vector(-1.484,
+			4.047, -2.740), Vector(-1.031, 3.975, -2.736), Vector(-0.578, 3.915, -2.734), Vector(-0.230, 3.874, -2.733), Vector(-0.090,
+			3.859, -2.733), Vector(-0.249, 3.908, -2.772), Vector(-0.645, 4.032, -2.868), Vector(-1.160, 4.199, -2.993), Vector(-1.675,
+			4.375, -3.118), Vector(-2.071, 4.528, -3.214), Vector(-2.230, 4.622, -3.253), Vector(-2.119, 4.670, -3.230), Vector(-1.833,
+			4.704, -3.171), Vector(-1.441, 4.727, -3.090), Vector(-1.015, 4.741, -3.002), Vector(-0.624, 4.748, -2.922), Vector(-0.338,
+			4.751, -2.863), Vector(-0.227, 4.751, -2.840), Vector(-0.336, 4.669, -2.856), Vector(-0.609, 4.465, -2.896), Vector(-0.965,
+			4.199, -2.948), Vector(-1.320, 3.933, -3.000), Vector(-1.593, 3.729, -3.040), Vector(-1.703, 3.647, -3.056), Vector(-1.597,
+			3.660, -3.035), Vector(-1.333, 3.691, -2.982), Vector(-0.990, 3.732, -2.913), Vector(-0.647, 3.773, -2.844), Vector(-0.383,
+			3.804, -2.790), Vector(-0.277, 3.817, -2.769), Vector(-0.383, 3.804, -2.788), Vector(-0.647, 3.773, -2.834), Vector(-0.990,
+			3.732, -2.897), Vector(-1.333, 3.691, -2.963), Vector(-1.597, 3.660, -3.020), Vector(-1.703, 3.647, -3.056), Vector(-1.668,
+			3.691, -3.073), Vector(-1.585, 3.808, -3.084), Vector(-1.486, 3.976, -3.089), Vector(-1.403, 4.173, -3.091), Vector(-1.369,
+			4.379, -3.092), Vector(-1.410, 4.572, -3.090), Vector(-1.510, 4.741, -3.087), Vector(-1.632, 4.874, -3.082), Vector(-1.741,
+			4.962, -3.077), Vector(-1.799, 4.993, -3.071), Vector(-1.817, 4.904, -3.064), Vector(-1.828, 4.691, -3.056), Vector(-1.833,
+			4.437, -3.041), Vector(-1.835, 4.223, -3.019), Vector(-1.836, 4.134, -2.985), Vector(-1.803, 4.303, -2.939), Vector(-1.703,
+			4.706, -2.887), Vector(-1.530, 5.186, -2.840), Vector(-1.277, 5.589, -2.804), Vector(-0.940, 5.758, -2.791), Vector(-0.523,
+			5.687, -2.802), Vector(-0.084, 5.497, -2.833), Vector(0.313, 5.224, -2.875), Vector(0.600, 4.900, -2.922), Vector(0.711, 4.562,
+			-2.968), Vector(0.603, 4.242, -3.005), Vector(0.316, 3.974, -3.033), Vector(-0.096, 3.789, -3.050), Vector(-0.579, 3.721,
+			-3.056), Vector(-1.076, 3.774, -3.039), Vector(-1.519, 3.919, -3.002), Vector(-1.837, 4.137, -2.965), Vector(-1.959, 4.407,
+			-2.948), Vector(-1.763, 4.703, -2.950), Vector(-1.290, 4.980, -2.957), Vector(-0.710, 5.184, -2.974), Vector(-0.195, 5.263,
+			-3.006), Vector(0.152, 5.205, -3.055), Vector(0.363, 5.049, -3.117), Vector(0.471, 4.827, -3.186), Vector(0.511, 4.567,
+			-3.256), Vector(0.517, 4.301, -3.322), Vector(0.396, 4.056, -3.377), Vector(0.093, 3.855, -3.420), Vector(-0.304, 3.719,
+			-3.447), Vector(-0.706, 3.669, -3.456), Vector(-1.038, 3.799, -3.451), Vector(-1.282, 4.100, -3.439), Vector(-1.431, 4.437,
+			-3.427), Vector(-1.482, 4.676, -3.422), Vector(-1.433, 4.794, -3.423), Vector(-1.294, 4.866, -3.428), Vector(-1.082, 4.902,
+			-3.432), Vector(-0.809, 4.916, -3.437), Vector(-0.491, 4.918, -3.438), Vector(-0.149, 4.793, -3.434), Vector(0.166, 4.510,
+			-3.425), Vector(0.397, 4.208, -3.414), Vector(0.486, 4.026, -3.407), Vector(0.197, 3.964, -3.403), Vector(-0.494, 3.926,
+			-3.401), Vector(-1.319, 3.906, -3.400), Vector(-2.010, 3.899, -3.400), Vector(-2.300, 3.898, -3.400), Vector(-2.299, 4.003,
+			-3.404), Vector(-2.289, 4.252, -3.413), Vector(-2.261, 4.549, -3.424), Vector(-2.209, 4.798, -3.433), Vector(-2.122, 4.903,
+			-3.437), Vector(-1.756, 4.839, -3.435), Vector(-1.037, 4.671, -3.429), Vector(-0.215, 4.432, -3.421), Vector(0.460, 4.155,
+			-3.412), Vector(0.741, 3.876, -3.401), Vector(-0.006, 3.629, -3.392), Vector(-1.395, 3.451, -3.384), Vector(-2.142, 3.384,
+			-3.382));
+		Global.Vertex_4 = Array(Vector(-1.570, 4.684, -0.516), Vector(-1.632, 4.676, -0.483), Vector(-1.782, 4.652, -0.404), Vector(-1.961,
+			4.614, -0.307), Vector(-2.110, 4.563, -0.223), Vector(-2.173, 4.500, -0.181), Vector(-2.033, 4.428, -0.171), Vector(-1.685,
+			4.352, -0.165), Vector(-1.232, 4.281, -0.161), Vector(-0.779, 4.221, -0.158), Vector(-0.431, 4.180, -0.158), Vector(-0.291,
+			4.164, -0.158), Vector(-0.450, 4.213, -0.196), Vector(-0.846, 4.338, -0.292), Vector(-1.361, 4.505, -0.417), Vector(-1.876,
+			4.681, -0.542), Vector(-2.272, 4.833, -0.639), Vector(-2.431, 4.928, -0.677), Vector(-2.320, 4.975, -0.654), Vector(-2.034,
+			5.010, -0.595), Vector(-1.642, 5.032, -0.515), Vector(-1.216, 5.046, -0.427), Vector(-0.825, 5.053, -0.346), Vector(-0.539,
+			5.056, -0.287), Vector(-0.428, 5.056, -0.264), Vector(-0.537, 4.975, -0.280), Vector(-0.810, 4.770, -0.320), Vector(-1.166,
+			4.504, -0.372), Vector(-1.521, 4.239, -0.424), Vector(-1.794, 4.034, -0.464), Vector(-1.904, 3.953, -0.480), Vector(-1.798,
+			3.965, -0.459), Vector(-1.534, 3.997, -0.406), Vector(-1.191, 4.037, -0.337), Vector(-0.848, 4.078, -0.268), Vector(-0.584,
+			4.110, -0.215), Vector(-0.478, 4.122, -0.194), Vector(-0.584, 4.110, -0.212), Vector(-0.848, 4.078, -0.258), Vector(-1.191,
+			4.037, -0.321), Vector(-1.534, 3.997, -0.387), Vector(-1.798, 3.965, -0.444), Vector(-1.904, 3.953, -0.480), Vector(-1.869,
+			3.996, -0.498), Vector(-1.786, 4.113, -0.508), Vector(-1.687, 4.281, -0.514), Vector(-1.604, 4.479, -0.516), Vector(-1.570,
+			4.684, -0.516), Vector(-1.611, 4.878, -0.515), Vector(-1.711, 5.046, -0.511), Vector(-1.833, 5.180, -0.507), Vector(-1.942,
+			5.267, -0.501), Vector(-2.001, 5.299, -0.495), Vector(-2.018, 5.210, -0.489), Vector(-2.029, 4.996, -0.480), Vector(-2.034,
+			4.742, -0.466), Vector(-2.036, 4.529, -0.443), Vector(-2.037, 4.440, -0.409), Vector(-2.005, 4.608, -0.363), Vector(-1.905,
+			5.011, -0.312), Vector(-1.731, 5.492, -0.264), Vector(-1.478, 5.894, -0.229), Vector(-1.141, 6.063, -0.215), Vector(-0.725,
+			5.992, -0.227), Vector(-0.285, 5.803, -0.257), Vector(0.112, 5.529, -0.299), Vector(0.399, 5.206, -0.347), Vector(0.510, 4.867,
+			-0.392), Vector(0.402, 4.548, -0.429), Vector(0.115, 4.279, -0.457), Vector(-0.297, 4.095, -0.474), Vector(-0.780, 4.026,
+			-0.480), Vector(-1.277, 4.079, -0.463), Vector(-1.720, 4.225, -0.426), Vector(-2.038, 4.443, -0.389), Vector(-2.160, 4.712,
+			-0.372), Vector(-1.964, 5.009, -0.374), Vector(-1.491, 5.285, -0.381), Vector(-0.911, 5.489, -0.398), Vector(-0.396, 5.569,
+			-0.430), Vector(-0.049, 5.510, -0.479), Vector(0.162, 5.355, -0.541), Vector(0.270, 5.132, -0.610), Vector(0.310, 4.873,
+			-0.681), Vector(0.315, 4.606, -0.746), Vector(0.195, 4.361, -0.801), Vector(-0.109, 4.161, -0.844), Vector(-0.505, 4.025,
+			-0.871), Vector(-0.907, 3.975, -0.881), Vector(-1.239, 4.105, -0.875), Vector(-1.483, 4.405, -0.863), Vector(-1.632, 4.742,
+			-0.851), Vector(-1.683, 4.981, -0.846), Vector(-1.634, 5.099, -0.848), Vector(-1.495, 5.171, -0.852), Vector(-1.283, 5.208,
+			-0.857), Vector(-1.010, 5.221, -0.861), Vector(-0.692, 5.223, -0.863), Vector(-0.350, 5.098, -0.858), Vector(-0.035, 4.816,
+			-0.849), Vector(0.196, 4.514, -0.838), Vector(0.285, 4.332, -0.831), Vector(-0.004, 4.269, -0.828), Vector(-0.695, 4.231,
+			-0.826), Vector(-1.520, 4.212, -0.825), Vector(-2.211, 4.205, -0.824), Vector(-2.501, 4.204, -0.824), Vector(-2.500, 4.308,
+			-0.828), Vector(-2.490, 4.557, -0.837), Vector(-2.463, 4.855, -0.848), Vector(-2.410, 5.104, -0.857), Vector(-2.323, 5.208,
+			-0.861), Vector(-1.957, 5.145, -0.859), Vector(-1.238, 4.976, -0.853), Vector(-0.416, 4.737, -0.845), Vector(0.259, 4.461,
+			-0.836), Vector(0.540, 4.182, -0.826), Vector(-0.208, 3.934, -0.816), Vector(-1.596, 3.757, -0.809), Vector(-2.343, 3.689,
+			-0.806));
+	}
+}
+
+rule("init_animation_10-15")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.Vertex_5 = Array(Vector(1.125, 4.610, -0.772), Vector(1.062, 4.602, -0.739), Vector(0.912, 4.578, -0.660), Vector(0.734,
+			4.540, -0.563), Vector(0.584, 4.489, -0.479), Vector(0.522, 4.426, -0.437), Vector(0.661, 4.354, -0.427), Vector(1.009, 4.278,
+			-0.420), Vector(1.462, 4.207, -0.416), Vector(1.915, 4.147, -0.414), Vector(2.264, 4.106, -0.414), Vector(2.403, 4.090,
+			-0.414), Vector(2.245, 4.139, -0.452), Vector(1.848, 4.264, -0.548), Vector(1.333, 4.431, -0.673), Vector(0.818, 4.607,
+			-0.798), Vector(0.422, 4.759, -0.894), Vector(0.264, 4.854, -0.933), Vector(0.375, 4.901, -0.910), Vector(0.661, 4.936,
+			-0.851), Vector(1.052, 4.958, -0.770), Vector(1.478, 4.972, -0.683), Vector(1.870, 4.979, -0.602), Vector(2.156, 4.982,
+			-0.543), Vector(2.267, 4.982, -0.520), Vector(2.157, 4.901, -0.536), Vector(1.884, 4.696, -0.576), Vector(1.529, 4.430,
+			-0.628), Vector(1.173, 4.165, -0.680), Vector(0.900, 3.960, -0.720), Vector(0.791, 3.879, -0.736), Vector(0.896, 3.891,
+			-0.715), Vector(1.160, 3.923, -0.662), Vector(1.503, 3.963, -0.593), Vector(1.847, 4.004, -0.524), Vector(2.111, 4.036,
+			-0.471), Vector(2.216, 4.048, -0.449), Vector(2.111, 4.036, -0.468), Vector(1.847, 4.004, -0.514), Vector(1.503, 3.963,
+			-0.577), Vector(1.160, 3.923, -0.643), Vector(0.896, 3.891, -0.700), Vector(0.791, 3.879, -0.736), Vector(0.826, 3.922,
+			-0.754), Vector(0.908, 4.039, -0.764), Vector(1.007, 4.207, -0.770), Vector(1.090, 4.405, -0.772), Vector(1.125, 4.610,
+			-0.772), Vector(1.083, 4.804, -0.771), Vector(0.983, 4.972, -0.767), Vector(0.861, 5.106, -0.762), Vector(0.753, 5.193,
+			-0.757), Vector(0.694, 5.225, -0.751), Vector(0.676, 5.136, -0.745), Vector(0.666, 4.922, -0.736), Vector(0.660, 4.668,
+			-0.721), Vector(0.658, 4.455, -0.699), Vector(0.658, 4.365, -0.665), Vector(0.690, 4.534, -0.619), Vector(0.790, 4.937,
+			-0.567), Vector(0.963, 5.418, -0.520), Vector(1.216, 5.820, -0.485), Vector(1.554, 5.989, -0.471), Vector(1.970, 5.918,
+			-0.483), Vector(2.410, 5.729, -0.513), Vector(2.807, 5.455, -0.555), Vector(3.094, 5.132, -0.603), Vector(3.204, 4.793,
+			-0.648), Vector(3.097, 4.474, -0.685), Vector(2.810, 4.205, -0.713), Vector(2.397, 4.021, -0.730), Vector(1.914, 3.952,
+			-0.736), Vector(1.417, 4.005, -0.719), Vector(0.974, 4.151, -0.682), Vector(0.656, 4.369, -0.645), Vector(0.534, 4.638,
+			-0.628), Vector(0.730, 4.935, -0.630), Vector(1.203, 5.211, -0.637), Vector(1.783, 5.415, -0.654), Vector(2.299, 5.495,
+			-0.686), Vector(2.646, 5.436, -0.735), Vector(2.856, 5.281, -0.797), Vector(2.964, 5.058, -0.866), Vector(3.004, 4.799,
+			-0.936), Vector(3.010, 4.532, -1.002), Vector(2.889, 4.287, -1.057), Vector(2.586, 4.087, -1.100), Vector(2.189, 3.951,
+			-1.127), Vector(1.787, 3.901, -1.137), Vector(1.455, 4.031, -1.131), Vector(1.212, 4.331, -1.119), Vector(1.062, 4.668,
+			-1.107), Vector(1.011, 4.907, -1.102), Vector(1.061, 5.025, -1.104), Vector(1.199, 5.097, -1.108), Vector(1.412, 5.134,
+			-1.113), Vector(1.684, 5.147, -1.117), Vector(2.002, 5.149, -1.119), Vector(2.344, 5.024, -1.114), Vector(2.659, 4.742,
+			-1.105), Vector(2.890, 4.440, -1.094), Vector(2.980, 4.257, -1.087), Vector(2.690, 4.195, -1.084), Vector(1.999, 4.157,
+			-1.082), Vector(1.174, 4.138, -1.081), Vector(0.483, 4.131, -1.080), Vector(0.193, 4.130, -1.080), Vector(0.195, 4.234,
+			-1.084), Vector(0.205, 4.483, -1.093), Vector(0.232, 4.781, -1.104), Vector(0.285, 5.030, -1.113), Vector(0.372, 5.134,
+			-1.117), Vector(0.738, 5.071, -1.115), Vector(1.456, 4.902, -1.109), Vector(2.278, 4.663, -1.101), Vector(2.954, 4.387,
+			-1.092), Vector(3.234, 4.108, -1.082), Vector(2.487, 3.860, -1.072), Vector(1.099, 3.683, -1.065), Vector(0.351, 3.615,
+			-1.062));
+		Global.Vertex_6 = Array(Vector(1.121, 4.540, -3.181), Vector(1.059, 4.532, -3.148), Vector(0.909, 4.508, -3.069), Vector(0.731,
+			4.470, -2.972), Vector(0.581, 4.419, -2.888), Vector(0.518, 4.356, -2.846), Vector(0.658, 4.284, -2.836), Vector(1.006, 4.208,
+			-2.830), Vector(1.459, 4.137, -2.826), Vector(1.912, 4.077, -2.824), Vector(2.261, 4.036, -2.823), Vector(2.400, 4.020,
+			-2.823), Vector(2.241, 4.069, -2.861), Vector(1.845, 4.194, -2.958), Vector(1.330, 4.361, -3.083), Vector(0.815, 4.537,
+			-3.208), Vector(0.419, 4.689, -3.304), Vector(0.260, 4.784, -3.342), Vector(0.371, 4.832, -3.319), Vector(0.658, 4.866,
+			-3.260), Vector(1.049, 4.889, -3.180), Vector(1.475, 4.902, -3.092), Vector(1.866, 4.910, -3.011), Vector(2.153, 4.912,
+			-2.952), Vector(2.264, 4.913, -2.930), Vector(2.154, 4.831, -2.946), Vector(1.881, 4.626, -2.986), Vector(1.526, 4.361,
+			-3.038), Vector(1.170, 4.095, -3.090), Vector(0.897, 3.890, -3.130), Vector(0.788, 3.809, -3.146), Vector(0.893, 3.821,
+			-3.124), Vector(1.157, 3.853, -3.071), Vector(1.500, 3.894, -3.002), Vector(1.843, 3.934, -2.933), Vector(2.107, 3.966,
+			-2.880), Vector(2.213, 3.978, -2.859), Vector(2.107, 3.966, -2.877), Vector(1.843, 3.934, -2.924), Vector(1.500, 3.894,
+			-2.986), Vector(1.157, 3.853, -3.052), Vector(0.893, 3.821, -3.110), Vector(0.788, 3.809, -3.146), Vector(0.822, 3.852,
+			-3.163), Vector(0.905, 3.969, -3.174), Vector(1.004, 4.137, -3.179), Vector(1.087, 4.335, -3.181), Vector(1.121, 4.540,
+			-3.181), Vector(1.080, 4.734, -3.180), Vector(0.980, 4.902, -3.177), Vector(0.858, 5.036, -3.172), Vector(0.749, 5.123,
+			-3.166), Vector(0.691, 5.155, -3.160), Vector(0.673, 5.066, -3.154), Vector(0.662, 4.853, -3.145), Vector(0.657, 4.598,
+			-3.131), Vector(0.655, 4.385, -3.108), Vector(0.655, 4.296, -3.074), Vector(0.687, 4.464, -3.028), Vector(0.787, 4.867,
+			-2.977), Vector(0.960, 5.348, -2.929), Vector(1.213, 5.750, -2.894), Vector(1.551, 5.919, -2.880), Vector(1.967, 5.848,
+			-2.892), Vector(2.407, 5.659, -2.922), Vector(2.803, 5.385, -2.965), Vector(3.091, 5.062, -3.012), Vector(3.201, 4.723,
+			-3.057), Vector(3.093, 4.404, -3.095), Vector(2.806, 4.136, -3.122), Vector(2.394, 3.951, -3.140), Vector(1.911, 3.882,
+			-3.146), Vector(1.414, 3.935, -3.129), Vector(0.971, 4.081, -3.092), Vector(0.653, 4.299, -3.054), Vector(0.531, 4.569,
+			-3.038), Vector(0.727, 4.865, -3.039), Vector(1.200, 5.141, -3.046), Vector(1.780, 5.345, -3.064), Vector(2.296, 5.425,
+			-3.096), Vector(2.643, 5.367, -3.145), Vector(2.853, 5.211, -3.207), Vector(2.961, 4.988, -3.276), Vector(3.001, 4.729,
+			-3.346), Vector(3.007, 4.462, -3.411), Vector(2.886, 4.217, -3.467), Vector(2.583, 4.017, -3.509), Vector(2.186, 3.881,
+			-3.536), Vector(1.784, 3.831, -3.546), Vector(1.452, 3.961, -3.541), Vector(1.209, 4.262, -3.529), Vector(1.059, 4.598,
+			-3.517), Vector(1.008, 4.837, -3.511), Vector(1.057, 4.955, -3.513), Vector(1.196, 5.027, -3.517), Vector(1.409, 5.064,
+			-3.522), Vector(1.681, 5.078, -3.526), Vector(1.999, 5.079, -3.528), Vector(2.341, 4.954, -3.524), Vector(2.656, 4.672,
+			-3.514), Vector(2.887, 4.370, -3.503), Vector(2.977, 4.188, -3.496), Vector(2.687, 4.125, -3.493), Vector(1.996, 4.088,
+			-3.491), Vector(1.171, 4.068, -3.490), Vector(0.480, 4.061, -3.490), Vector(0.190, 4.060, -3.490), Vector(0.192, 4.164,
+			-3.493), Vector(0.202, 4.414, -3.502), Vector(0.229, 4.711, -3.513), Vector(0.281, 4.960, -3.522), Vector(0.368, 5.065,
+			-3.526), Vector(0.735, 5.001, -3.524), Vector(1.453, 4.832, -3.519), Vector(2.275, 4.593, -3.511), Vector(2.951, 4.317,
+			-3.501), Vector(3.231, 4.038, -3.491), Vector(2.484, 3.790, -3.481), Vector(1.096, 3.613, -3.474), Vector(0.348, 3.545,
+			-3.471));
+		Global.Vertex_7 = Array(Vector(-0.252, 5.196, 3.128), Vector(-0.315, 5.188, 3.161), Vector(-0.465, 5.164, 3.241), Vector(-0.643,
+			5.126, 3.337), Vector(-0.793, 5.074, 3.421), Vector(-0.855, 5.011, 3.463), Vector(-0.716, 4.939, 3.473), Vector(-0.368, 4.864,
+			3.480), Vector(0.085, 4.792, 3.484), Vector(0.538, 4.732, 3.486), Vector(0.887, 4.691, 3.487), Vector(1.026, 4.676, 3.487),
+			Vector(0.868, 4.725, 3.448), Vector(0.471, 4.849, 3.352), Vector(-0.044, 5.016, 3.227), Vector(-0.559, 5.192, 3.102), Vector(
+			-0.955, 5.345, 3.006), Vector(-1.113, 5.439, 2.967), Vector(-1.002, 5.487, 2.990), Vector(-0.716, 5.521, 3.049), Vector(-0.325,
+			5.544, 3.130), Vector(0.101, 5.558, 3.218), Vector(0.493, 5.565, 3.298), Vector(0.779, 5.568, 3.357), Vector(0.890, 5.568,
+			3.380), Vector(0.780, 5.486, 3.364), Vector(0.507, 5.282, 3.324), Vector(0.152, 5.016, 3.272), Vector(-0.204, 4.750, 3.220),
+			Vector(-0.477, 4.546, 3.180), Vector(-0.586, 4.464, 3.164), Vector(-0.481, 4.477, 3.185), Vector(-0.217, 4.508, 3.238), Vector(
+			0.126, 4.549, 3.307), Vector(0.470, 4.590, 3.376), Vector(0.734, 4.621, 3.429), Vector(0.839, 4.634, 3.451), Vector(0.734,
+			4.621, 3.432), Vector(0.470, 4.590, 3.386), Vector(0.126, 4.549, 3.323), Vector(-0.217, 4.508, 3.257), Vector(-0.481, 4.477,
+			3.200), Vector(-0.586, 4.464, 3.164), Vector(-0.552, 4.508, 3.146), Vector(-0.469, 4.625, 3.136), Vector(-0.370, 4.793, 3.131),
+			Vector(-0.287, 4.991, 3.129), Vector(-0.252, 5.196, 3.128), Vector(-0.294, 5.389, 3.130), Vector(-0.394, 5.558, 3.133), Vector(
+			-0.516, 5.691, 3.138), Vector(-0.624, 5.779, 3.143), Vector(-0.683, 5.810, 3.149), Vector(-0.701, 5.721, 3.156), Vector(-0.711,
+			5.508, 3.164), Vector(-0.717, 5.254, 3.179), Vector(-0.719, 5.040, 3.201), Vector(-0.719, 4.951, 3.235), Vector(-0.687, 5.120,
+			3.281), Vector(-0.587, 5.523, 3.333), Vector(-0.414, 6.003, 3.380), Vector(-0.161, 6.406, 3.416), Vector(0.177, 6.575, 3.429),
+			Vector(0.593, 6.504, 3.418), Vector(1.033, 6.314, 3.387), Vector(1.430, 6.041, 3.345), Vector(1.717, 5.717, 3.298), Vector(
+			1.827, 5.379, 3.252), Vector(1.720, 5.059, 3.215), Vector(1.433, 4.791, 3.187), Vector(1.020, 4.606, 3.170), Vector(0.537,
+			4.538, 3.164), Vector(0.040, 4.591, 3.181), Vector(-0.403, 4.736, 3.218), Vector(-0.721, 4.954, 3.255), Vector(-0.843, 5.224,
+			3.272), Vector(-0.647, 5.521, 3.270), Vector(-0.174, 5.797, 3.263), Vector(0.406, 6.001, 3.246), Vector(0.922, 6.080, 3.214),
+			Vector(1.269, 6.022, 3.165), Vector(1.479, 5.866, 3.103), Vector(1.587, 5.644, 3.034), Vector(1.627, 5.384, 2.964), Vector(
+			1.633, 5.118, 2.898), Vector(1.512, 4.873, 2.843), Vector(1.209, 4.672, 2.800), Vector(0.812, 4.536, 2.773), Vector(0.410,
+			4.486, 2.764), Vector(0.078, 4.616, 2.769), Vector(-0.165, 4.917, 2.781), Vector(-0.315, 5.254, 2.793), Vector(-0.366, 5.493,
+			2.798), Vector(-0.316, 5.611, 2.796), Vector(-0.178, 5.683, 2.792), Vector(0.035, 5.719, 2.787), Vector(0.307, 5.733, 2.783),
+			Vector(0.625, 5.735, 2.782), Vector(0.967, 5.610, 2.786), Vector(1.282, 5.327, 2.795), Vector(1.513, 5.025, 2.806), Vector(
+			1.603, 4.843, 2.813), Vector(1.313, 4.781, 2.816), Vector(0.622, 4.743, 2.818), Vector(-0.203, 4.724, 2.819), Vector(-0.894,
+			4.716, 2.820), Vector(-1.184, 4.715, 2.820), Vector(-1.182, 4.820, 2.816), Vector(-1.172, 5.069, 2.807), Vector(-1.145, 5.366,
+			2.796), Vector(-1.092, 5.615, 2.787), Vector(-1.005, 5.720, 2.783), Vector(-0.639, 5.656, 2.785), Vector(0.079, 5.488, 2.791),
+			Vector(0.901, 5.249, 2.799), Vector(1.577, 4.972, 2.808), Vector(1.857, 4.693, 2.818), Vector(1.110, 4.446, 2.828), Vector(
+			-0.278, 4.268, 2.835), Vector(-1.026, 4.201, 2.838));
+		Global.Vertex_8 = Array(Vector(-0.720, 5.312, 3.556), Vector(-0.783, 5.304, 3.589), Vector(-0.933, 5.280, 3.669), Vector(-1.111,
+			5.242, 3.765), Vector(-1.261, 5.190, 3.849), Vector(-1.323, 5.127, 3.891), Vector(-1.184, 5.055, 3.901), Vector(-0.836, 4.980,
+			3.908), Vector(-0.383, 4.908, 3.912), Vector(0.070, 4.849, 3.914), Vector(0.419, 4.807, 3.914), Vector(0.558, 4.792, 3.914),
+			Vector(0.399, 4.841, 3.876), Vector(0.003, 4.965, 3.780), Vector(-0.512, 5.132, 3.655), Vector(-1.027, 5.309, 3.530), Vector(
+			-1.423, 5.461, 3.434), Vector(-1.581, 5.556, 3.395), Vector(-1.470, 5.603, 3.418), Vector(-1.184, 5.637, 3.477), Vector(-0.793,
+			5.660, 3.558), Vector(-0.367, 5.674, 3.645), Vector(0.024, 5.681, 3.726), Vector(0.311, 5.684, 3.785), Vector(0.422, 5.684,
+			3.808), Vector(0.312, 5.602, 3.792), Vector(0.039, 5.398, 3.752), Vector(-0.316, 5.132, 3.700), Vector(-0.672, 4.866, 3.648),
+			Vector(-0.945, 4.662, 3.608), Vector(-1.054, 4.580, 3.592), Vector(-0.949, 4.593, 3.613), Vector(-0.685, 4.624, 3.666), Vector(
+			-0.342, 4.665, 3.735), Vector(0.001, 4.706, 3.804), Vector(0.265, 4.737, 3.857), Vector(0.371, 4.750, 3.879), Vector(0.265,
+			4.737, 3.860), Vector(0.001, 4.706, 3.814), Vector(-0.342, 4.665, 3.751), Vector(-0.685, 4.624, 3.685), Vector(-0.949, 4.593,
+			3.628), Vector(-1.054, 4.580, 3.592), Vector(-1.020, 4.624, 3.574), Vector(-0.937, 4.741, 3.564), Vector(-0.838, 4.909, 3.558),
+			Vector(-0.755, 5.107, 3.556), Vector(-0.720, 5.312, 3.556), Vector(-0.762, 5.505, 3.557), Vector(-0.862, 5.674, 3.561), Vector(
+			-0.984, 5.807, 3.566), Vector(-1.093, 5.895, 3.571), Vector(-1.151, 5.927, 3.577), Vector(-1.169, 5.837, 3.583), Vector(-1.180,
+			5.624, 3.592), Vector(-1.185, 5.370, 3.607), Vector(-1.187, 5.156, 3.629), Vector(-1.187, 5.067, 3.663), Vector(-1.155, 5.236,
+			3.709), Vector(-1.055, 5.639, 3.761), Vector(-0.882, 6.119, 3.808), Vector(-0.629, 6.522, 3.843), Vector(-0.291, 6.691, 3.857),
+			Vector(0.125, 6.620, 3.845), Vector(0.565, 6.430, 3.815), Vector(0.962, 6.157, 3.773), Vector(1.249, 5.833, 3.725), Vector(
+			1.359, 5.495, 3.680), Vector(1.251, 5.175, 3.643), Vector(0.964, 4.907, 3.615), Vector(0.552, 4.723, 3.598), Vector(0.069,
+			4.654, 3.592), Vector(-0.428, 4.707, 3.609), Vector(-0.871, 4.852, 3.646), Vector(-1.189, 5.070, 3.683), Vector(-1.311, 5.340,
+			3.700), Vector(-1.115, 5.637, 3.698), Vector(-0.642, 5.913, 3.691), Vector(-0.062, 6.117, 3.674), Vector(0.454, 6.197, 3.642),
+			Vector(0.801, 6.138, 3.593), Vector(1.011, 5.982, 3.531), Vector(1.119, 5.760, 3.462), Vector(1.159, 5.500, 3.392), Vector(
+			1.165, 5.234, 3.326), Vector(1.044, 4.989, 3.271), Vector(0.741, 4.788, 3.228), Vector(0.344, 4.652, 3.201), Vector(-0.058,
+			4.602, 3.191), Vector(-0.390, 4.732, 3.197), Vector(-0.633, 5.033, 3.209), Vector(-0.783, 5.370, 3.221), Vector(-0.834, 5.609,
+			3.226), Vector(-0.785, 5.727, 3.224), Vector(-0.646, 5.799, 3.220), Vector(-0.433, 5.835, 3.215), Vector(-0.161, 5.849, 3.211),
+			Vector(0.157, 5.851, 3.210), Vector(0.499, 5.726, 3.214), Vector(0.814, 5.443, 3.223), Vector(1.045, 5.142, 3.234), Vector(
+			1.135, 4.959, 3.241), Vector(0.845, 4.897, 3.244), Vector(0.154, 4.859, 3.246), Vector(-0.671, 4.840, 3.247), Vector(-1.362,
+			4.832, 3.248), Vector(-1.652, 4.831, 3.248), Vector(-1.650, 4.936, 3.244), Vector(-1.640, 5.185, 3.235), Vector(-1.613, 5.482,
+			3.224), Vector(-1.560, 5.732, 3.215), Vector(-1.474, 5.836, 3.211), Vector(-1.107, 5.772, 3.213), Vector(-0.389, 5.604, 3.219),
+			Vector(0.433, 5.365, 3.227), Vector(1.109, 5.088, 3.236), Vector(1.389, 4.809, 3.246), Vector(0.642, 4.562, 3.256), Vector(
+			-0.746, 4.385, 3.263), Vector(-1.494, 4.317, 3.266));
+		Global.Vertex_9 = Array(Vector(0.396, 5.082, 3.746), Vector(0.334, 5.074, 3.779), Vector(0.184, 5.050, 3.859), Vector(0.006, 5.012,
+			3.955), Vector(-0.144, 4.960, 4.039), Vector(-0.207, 4.898, 4.081), Vector(-0.067, 4.825, 4.091), Vector(0.281, 4.750, 4.098),
+			Vector(0.734, 4.679, 4.102), Vector(1.187, 4.619, 4.104), Vector(1.535, 4.577, 4.105), Vector(1.675, 4.562, 4.105), Vector(
+			1.516, 4.611, 4.066), Vector(1.120, 4.735, 3.970), Vector(0.605, 4.903, 3.845), Vector(0.090, 5.079, 3.720), Vector(-0.306,
+			5.231, 3.624), Vector(-0.465, 5.326, 3.585), Vector(-0.354, 5.373, 3.608), Vector(-0.067, 5.407, 3.667), Vector(0.324, 5.430,
+			3.748), Vector(0.750, 5.444, 3.836), Vector(1.141, 5.451, 3.916), Vector(1.428, 5.454, 3.975), Vector(1.538, 5.454, 3.998),
+			Vector(1.429, 5.372, 3.982), Vector(1.156, 5.168, 3.942), Vector(0.801, 4.902, 3.890), Vector(0.445, 4.636, 3.838), Vector(
+			0.172, 4.432, 3.798), Vector(0.063, 4.350, 3.782), Vector(0.168, 4.363, 3.803), Vector(0.432, 4.394, 3.856), Vector(0.775,
+			4.435, 3.925), Vector(1.118, 4.476, 3.994), Vector(1.382, 4.507, 4.048), Vector(1.488, 4.520, 4.069), Vector(1.382, 4.507,
+			4.050), Vector(1.118, 4.476, 4.004), Vector(0.775, 4.435, 3.941), Vector(0.432, 4.394, 3.875), Vector(0.168, 4.363, 3.818),
+			Vector(0.063, 4.350, 3.782), Vector(0.097, 4.394, 3.765), Vector(0.180, 4.511, 3.754), Vector(0.279, 4.679, 3.749), Vector(
+			0.362, 4.877, 3.747), Vector(0.396, 5.082, 3.746), Vector(0.355, 5.275, 3.748), Vector(0.255, 5.444, 3.751), Vector(0.133,
+			5.577, 3.756), Vector(0.024, 5.665, 3.761), Vector(-0.034, 5.697, 3.767), Vector(-0.052, 5.607, 3.774), Vector(-0.063, 5.394,
+			3.782), Vector(-0.068, 5.140, 3.797), Vector(-0.070, 4.927, 3.819), Vector(-0.070, 4.837, 3.853), Vector(-0.038, 5.006, 3.899),
+			Vector(0.062, 5.409, 3.951), Vector(0.235, 5.889, 3.998), Vector(0.488, 6.292, 4.034), Vector(0.825, 6.461, 4.047), Vector(
+			1.242, 6.390, 4.036), Vector(1.682, 6.200, 4.005), Vector(2.078, 5.927, 3.963), Vector(2.366, 5.603, 3.916), Vector(2.476,
+			5.265, 3.870), Vector(2.368, 4.945, 3.833), Vector(2.081, 4.677, 3.805), Vector(1.669, 4.493, 3.788), Vector(1.186, 4.424,
+			3.782), Vector(0.689, 4.477, 3.799), Vector(0.246, 4.622, 3.836), Vector(-0.072, 4.840, 3.873), Vector(-0.194, 5.110, 3.890),
+			Vector(0.002, 5.407, 3.889), Vector(0.475, 5.683, 3.881), Vector(1.055, 5.887, 3.864), Vector(1.570, 5.967, 3.832), Vector(
+			1.918, 5.908, 3.783), Vector(2.128, 5.752, 3.721), Vector(2.236, 5.530, 3.652), Vector(2.276, 5.270, 3.582), Vector(2.282,
+			5.004, 3.516), Vector(2.161, 4.759, 3.461), Vector(1.858, 4.558, 3.418), Vector(1.461, 4.423, 3.391), Vector(1.059, 4.373,
+			3.382), Vector(0.727, 4.503, 3.387), Vector(0.484, 4.803, 3.399), Vector(0.334, 5.140, 3.411), Vector(0.283, 5.379, 3.416),
+			Vector(0.332, 5.497, 3.415), Vector(0.471, 5.569, 3.410), Vector(0.684, 5.606, 3.406), Vector(0.956, 5.619, 3.401), Vector(
+			1.274, 5.621, 3.400), Vector(1.616, 5.496, 3.404), Vector(1.931, 5.213, 3.414), Vector(2.162, 4.912, 3.424), Vector(2.252,
+			4.729, 3.431), Vector(1.962, 4.667, 3.435), Vector(1.271, 4.629, 3.437), Vector(0.446, 4.610, 3.438), Vector(-0.245, 4.603,
+			3.438), Vector(-0.535, 4.602, 3.438), Vector(-0.533, 4.706, 3.434), Vector(-0.523, 4.955, 3.425), Vector(-0.496, 5.253, 3.414),
+			Vector(-0.444, 5.502, 3.405), Vector(-0.357, 5.606, 3.401), Vector(0.010, 5.542, 3.403), Vector(0.728, 5.374, 3.409), Vector(
+			1.550, 5.135, 3.417), Vector(2.225, 4.859, 3.426), Vector(2.506, 4.579, 3.437), Vector(1.759, 4.332, 3.446), Vector(0.371,
+			4.155, 3.454), Vector(-0.377, 4.087, 3.456));
+	}
+}
+
+rule("init_animation_15-20")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.Vertex_10 = Array(Vector(-0.252, 5.196, 2.311), Vector(-0.315, 5.188, 2.344), Vector(-0.465, 5.164, 2.423), Vector(-0.643,
+			5.126, 2.520), Vector(-0.793, 5.074, 2.604), Vector(-0.855, 5.011, 2.646), Vector(-0.716, 4.939, 2.656), Vector(-0.368, 4.864,
+			2.662), Vector(0.085, 4.792, 2.666), Vector(0.538, 4.732, 2.668), Vector(0.887, 4.691, 2.669), Vector(1.026, 4.676, 2.669),
+			Vector(0.868, 4.725, 2.631), Vector(0.471, 4.849, 2.535), Vector(-0.044, 5.016, 2.410), Vector(-0.559, 5.192, 2.284), Vector(
+			-0.955, 5.345, 2.188), Vector(-1.113, 5.439, 2.150), Vector(-1.002, 5.487, 2.173), Vector(-0.716, 5.521, 2.232), Vector(-0.325,
+			5.544, 2.312), Vector(0.101, 5.558, 2.400), Vector(0.493, 5.565, 2.481), Vector(0.779, 5.568, 2.540), Vector(0.890, 5.568,
+			2.563), Vector(0.780, 5.486, 2.547), Vector(0.507, 5.282, 2.507), Vector(0.152, 5.016, 2.455), Vector(-0.204, 4.750, 2.402),
+			Vector(-0.477, 4.546, 2.362), Vector(-0.586, 4.464, 2.346), Vector(-0.481, 4.477, 2.368), Vector(-0.217, 4.508, 2.421), Vector(
+			0.126, 4.549, 2.490), Vector(0.470, 4.590, 2.559), Vector(0.734, 4.621, 2.612), Vector(0.839, 4.634, 2.633), Vector(0.734,
+			4.621, 2.615), Vector(0.470, 4.590, 2.568), Vector(0.126, 4.549, 2.506), Vector(-0.217, 4.508, 2.440), Vector(-0.481, 4.477,
+			2.382), Vector(-0.586, 4.464, 2.346), Vector(-0.552, 4.508, 2.329), Vector(-0.469, 4.625, 2.319), Vector(-0.370, 4.793, 2.313),
+			Vector(-0.287, 4.991, 2.311), Vector(-0.252, 5.196, 2.311), Vector(-0.294, 5.389, 2.312), Vector(-0.394, 5.558, 2.315), Vector(
+			-0.516, 5.691, 2.320), Vector(-0.624, 5.779, 2.326), Vector(-0.683, 5.810, 2.332), Vector(-0.701, 5.721, 2.338), Vector(-0.711,
+			5.508, 2.347), Vector(-0.717, 5.254, 2.361), Vector(-0.719, 5.040, 2.384), Vector(-0.719, 4.951, 2.418), Vector(-0.687, 5.120,
+			2.464), Vector(-0.587, 5.523, 2.515), Vector(-0.414, 6.003, 2.563), Vector(-0.161, 6.406, 2.598), Vector(0.177, 6.575, 2.612),
+			Vector(0.593, 6.504, 2.600), Vector(1.033, 6.314, 2.570), Vector(1.430, 6.041, 2.527), Vector(1.717, 5.717, 2.480), Vector(
+			1.827, 5.379, 2.435), Vector(1.720, 5.059, 2.398), Vector(1.433, 4.791, 2.370), Vector(1.020, 4.606, 2.353), Vector(0.537,
+			4.538, 2.347), Vector(0.040, 4.591, 2.363), Vector(-0.403, 4.736, 2.401), Vector(-0.721, 4.954, 2.438), Vector(-0.843, 5.224,
+			2.454), Vector(-0.647, 5.521, 2.453), Vector(-0.174, 5.797, 2.446), Vector(0.406, 6.001, 2.428), Vector(0.922, 6.080, 2.396),
+			Vector(1.269, 6.022, 2.347), Vector(1.479, 5.866, 2.286), Vector(1.587, 5.644, 2.217), Vector(1.627, 5.384, 2.146), Vector(
+			1.633, 5.118, 2.081), Vector(1.512, 4.873, 2.025), Vector(1.209, 4.672, 1.983), Vector(0.812, 4.536, 1.956), Vector(0.410,
+			4.486, 1.946), Vector(0.078, 4.616, 1.952), Vector(-0.165, 4.917, 1.963), Vector(-0.315, 5.254, 1.975), Vector(-0.366, 5.493,
+			1.981), Vector(-0.316, 5.611, 1.979), Vector(-0.178, 5.683, 1.975), Vector(0.035, 5.719, 1.970), Vector(0.307, 5.733, 1.966),
+			Vector(0.625, 5.735, 1.964), Vector(0.967, 5.610, 1.968), Vector(1.282, 5.327, 1.978), Vector(1.513, 5.025, 1.989), Vector(
+			1.603, 4.843, 1.996), Vector(1.313, 4.781, 1.999), Vector(0.622, 4.743, 2.001), Vector(-0.203, 4.724, 2.002), Vector(-0.894,
+			4.716, 2.002), Vector(-1.184, 4.715, 2.002), Vector(-1.182, 4.820, 1.999), Vector(-1.172, 5.069, 1.990), Vector(-1.145, 5.366,
+			1.979), Vector(-1.092, 5.615, 1.970), Vector(-1.005, 5.720, 1.966), Vector(-0.639, 5.656, 1.968), Vector(0.079, 5.488, 1.973),
+			Vector(0.901, 5.249, 1.981), Vector(1.577, 4.972, 1.991), Vector(1.857, 4.693, 2.001), Vector(1.110, 4.446, 2.011), Vector(
+			-0.278, 4.268, 2.018), Vector(-1.026, 4.201, 2.021));
+		Global.Vertex_11 = Array(Vector(1.132, 4.748, 2.209), Vector(1.069, 4.740, 2.242), Vector(0.920, 4.716, 2.321), Vector(0.741,
+			4.678, 2.418), Vector(0.592, 4.626, 2.502), Vector(0.529, 4.564, 2.544), Vector(0.668, 4.491, 2.554), Vector(1.017, 4.416,
+			2.561), Vector(1.470, 4.345, 2.565), Vector(1.922, 4.285, 2.567), Vector(2.271, 4.243, 2.567), Vector(2.410, 4.228, 2.567),
+			Vector(2.252, 4.277, 2.529), Vector(1.856, 4.401, 2.433), Vector(1.341, 4.568, 2.308), Vector(0.826, 4.745, 2.183), Vector(
+			0.429, 4.897, 2.087), Vector(0.271, 4.992, 2.048), Vector(0.382, 5.039, 2.071), Vector(0.668, 5.073, 2.130), Vector(1.059,
+			5.096, 2.210), Vector(1.486, 5.110, 2.298), Vector(1.877, 5.117, 2.379), Vector(2.163, 5.120, 2.438), Vector(2.274, 5.120,
+			2.461), Vector(2.165, 5.038, 2.445), Vector(1.891, 4.834, 2.405), Vector(1.536, 4.568, 2.353), Vector(1.181, 4.302, 2.301),
+			Vector(0.907, 4.098, 2.261), Vector(0.798, 4.016, 2.245), Vector(0.904, 4.029, 2.266), Vector(1.167, 4.060, 2.319), Vector(
+			1.511, 4.101, 2.388), Vector(1.854, 4.142, 2.457), Vector(2.118, 4.173, 2.510), Vector(2.223, 4.186, 2.531), Vector(2.118,
+			4.173, 2.513), Vector(1.854, 4.142, 2.467), Vector(1.511, 4.101, 2.404), Vector(1.167, 4.060, 2.338), Vector(0.904, 4.029,
+			2.281), Vector(0.798, 4.016, 2.245), Vector(0.833, 4.060, 2.227), Vector(0.915, 4.177, 2.217), Vector(1.014, 4.345, 2.211),
+			Vector(1.097, 4.543, 2.209), Vector(1.132, 4.748, 2.209), Vector(1.090, 4.941, 2.210), Vector(0.991, 5.110, 2.214), Vector(
+			0.868, 5.243, 2.219), Vector(0.760, 5.331, 2.224), Vector(0.701, 5.363, 2.230), Vector(0.683, 5.273, 2.236), Vector(0.673,
+			5.060, 2.245), Vector(0.667, 4.806, 2.259), Vector(0.665, 4.593, 2.282), Vector(0.665, 4.503, 2.316), Vector(0.697, 4.672,
+			2.362), Vector(0.797, 5.075, 2.414), Vector(0.971, 5.555, 2.461), Vector(1.223, 5.958, 2.496), Vector(1.561, 6.127, 2.510),
+			Vector(1.977, 6.056, 2.498), Vector(2.417, 5.866, 2.468), Vector(2.814, 5.593, 2.426), Vector(3.101, 5.269, 2.378), Vector(
+			3.211, 4.931, 2.333), Vector(3.104, 4.611, 2.296), Vector(2.817, 4.343, 2.268), Vector(2.405, 4.159, 2.251), Vector(1.921,
+			4.090, 2.245), Vector(1.424, 4.143, 2.262), Vector(0.981, 4.288, 2.299), Vector(0.663, 4.506, 2.336), Vector(0.541, 4.776,
+			2.353), Vector(0.737, 5.073, 2.351), Vector(1.210, 5.349, 2.344), Vector(1.790, 5.553, 2.327), Vector(2.306, 5.633, 2.295),
+			Vector(2.653, 5.574, 2.246), Vector(2.863, 5.418, 2.184), Vector(2.972, 5.196, 2.115), Vector(3.011, 4.936, 2.045), Vector(
+			3.017, 4.670, 1.979), Vector(2.896, 4.425, 1.924), Vector(2.593, 4.224, 1.881), Vector(2.196, 4.088, 1.854), Vector(1.794,
+			4.039, 1.844), Vector(1.462, 4.169, 1.850), Vector(1.219, 4.469, 1.862), Vector(1.069, 4.806, 1.874), Vector(1.018, 5.045,
+			1.879), Vector(1.068, 5.163, 1.877), Vector(1.206, 5.235, 1.873), Vector(1.419, 5.272, 1.868), Vector(1.692, 5.285, 1.864),
+			Vector(2.010, 5.287, 1.862), Vector(2.351, 5.162, 1.867), Vector(2.666, 4.879, 1.876), Vector(2.897, 4.578, 1.887), Vector(
+			2.987, 4.395, 1.894), Vector(2.697, 4.333, 1.897), Vector(2.006, 4.295, 1.899), Vector(1.181, 4.276, 1.900), Vector(0.490,
+			4.269, 1.901), Vector(0.201, 4.268, 1.901), Vector(0.202, 4.372, 1.897), Vector(0.212, 4.621, 1.888), Vector(0.239, 4.919,
+			1.877), Vector(0.292, 5.168, 1.868), Vector(0.379, 5.272, 1.864), Vector(0.745, 5.208, 1.866), Vector(1.463, 5.040, 1.872),
+			Vector(2.285, 4.801, 1.880), Vector(2.961, 4.525, 1.889), Vector(3.241, 4.245, 1.899), Vector(2.494, 3.998, 1.909), Vector(
+			1.106, 3.821, 1.916), Vector(0.359, 3.753, 1.919));
+		Global.Vertex_12 = Array(Vector(-1.113, 4.772, 2.423), Vector(-1.176, 4.763, 2.456), Vector(-1.326, 4.739, 2.536), Vector(-1.504,
+			4.701, 2.632), Vector(-1.654, 4.650, 2.716), Vector(-1.716, 4.587, 2.758), Vector(-1.577, 4.515, 2.768), Vector(-1.228, 4.439,
+			2.775), Vector(-0.776, 4.368, 2.779), Vector(-0.323, 4.308, 2.781), Vector(0.026, 4.267, 2.782), Vector(0.165, 4.251, 2.782),
+			Vector(0.007, 4.300, 2.743), Vector(-0.389, 4.425, 2.647), Vector(-0.905, 4.592, 2.522), Vector(-1.420, 4.768, 2.397), Vector(
+			-1.816, 4.920, 2.301), Vector(-1.974, 5.015, 2.262), Vector(-1.863, 5.063, 2.285), Vector(-1.577, 5.097, 2.344), Vector(-1.186,
+			5.120, 2.425), Vector(-0.760, 5.133, 2.513), Vector(-0.368, 5.141, 2.593), Vector(-0.082, 5.143, 2.652), Vector(0.029, 5.144,
+			2.675), Vector(-0.081, 5.062, 2.659), Vector(-0.354, 4.857, 2.619), Vector(-0.709, 4.592, 2.567), Vector(-1.065, 4.326, 2.515),
+			Vector(-1.338, 4.122, 2.475), Vector(-1.447, 4.040, 2.459), Vector(-1.342, 4.052, 2.480), Vector(-1.078, 4.084, 2.533), Vector(
+			-0.734, 4.125, 2.602), Vector(-0.391, 4.166, 2.671), Vector(-0.127, 4.197, 2.724), Vector(-0.022, 4.210, 2.746), Vector(-0.127,
+			4.197, 2.727), Vector(-0.391, 4.166, 2.681), Vector(-0.734, 4.125, 2.618), Vector(-1.078, 4.084, 2.552), Vector(-1.342, 4.052,
+			2.495), Vector(-1.447, 4.040, 2.459), Vector(-1.412, 4.084, 2.442), Vector(-1.330, 4.200, 2.431), Vector(-1.231, 4.369, 2.426),
+			Vector(-1.148, 4.566, 2.424), Vector(-1.113, 4.772, 2.423), Vector(-1.155, 4.965, 2.425), Vector(-1.255, 5.133, 2.428), Vector(
+			-1.377, 5.267, 2.433), Vector(-1.485, 5.355, 2.438), Vector(-1.544, 5.386, 2.444), Vector(-1.562, 5.297, 2.451), Vector(-1.572,
+			5.084, 2.459), Vector(-1.578, 4.829, 2.474), Vector(-1.580, 4.616, 2.496), Vector(-1.580, 4.527, 2.530), Vector(-1.548, 4.696,
+			2.576), Vector(-1.448, 5.098, 2.628), Vector(-1.275, 5.579, 2.675), Vector(-1.022, 5.981, 2.711), Vector(-0.684, 6.150, 2.724),
+			Vector(-0.268, 6.079, 2.713), Vector(0.172, 5.890, 2.682), Vector(0.569, 5.616, 2.640), Vector(0.856, 5.293, 2.593), Vector(
+			0.966, 4.954, 2.547), Vector(0.859, 4.635, 2.510), Vector(0.572, 4.367, 2.482), Vector(0.160, 4.182, 2.465), Vector(-0.324,
+			4.113, 2.459), Vector(-0.821, 4.166, 2.476), Vector(-1.264, 4.312, 2.513), Vector(-1.582, 4.530, 2.550), Vector(-1.704, 4.800,
+			2.567), Vector(-1.508, 5.096, 2.565), Vector(-1.035, 5.373, 2.558), Vector(-0.455, 5.577, 2.541), Vector(0.061, 5.656, 2.509),
+			Vector(0.408, 5.598, 2.460), Vector(0.618, 5.442, 2.398), Vector(0.726, 5.219, 2.329), Vector(0.766, 4.960, 2.259), Vector(
+			0.772, 4.693, 2.193), Vector(0.651, 4.448, 2.138), Vector(0.348, 4.248, 2.095), Vector(-0.049, 4.112, 2.068), Vector(-0.451,
+			4.062, 2.059), Vector(-0.783, 4.192, 2.064), Vector(-1.026, 4.493, 2.076), Vector(-1.176, 4.829, 2.088), Vector(-1.227, 5.068,
+			2.093), Vector(-1.177, 5.187, 2.092), Vector(-1.039, 5.258, 2.087), Vector(-0.826, 5.295, 2.082), Vector(-0.554, 5.309, 2.078),
+			Vector(-0.236, 5.311, 2.077), Vector(0.106, 5.186, 2.081), Vector(0.421, 4.903, 2.090), Vector(0.652, 4.601, 2.101), Vector(
+			0.742, 4.419, 2.108), Vector(0.452, 4.356, 2.111), Vector(-0.239, 4.319, 2.113), Vector(-1.064, 4.299, 2.114), Vector(-1.755,
+			4.292, 2.115), Vector(-2.045, 4.291, 2.115), Vector(-2.043, 4.396, 2.111), Vector(-2.033, 4.645, 2.102), Vector(-2.006, 4.942,
+			2.091), Vector(-1.953, 5.191, 2.082), Vector(-1.866, 5.296, 2.078), Vector(-1.500, 5.232, 2.080), Vector(-0.782, 5.064, 2.086),
+			Vector(0.040, 4.824, 2.094), Vector(0.716, 4.548, 2.103), Vector(0.996, 4.269, 2.113), Vector(0.249, 4.021, 2.123), Vector(
+			-1.139, 3.844, 2.131), Vector(-1.887, 3.776, 2.133));
+	}
+}
+
+rule("Create Cube")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.location = Vector(-84.901, 9.700, -102.493);
+		Global.hi_andy = Empty Array;
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_1[Global.currentFrame],
+			Global.location + Global.Vertex_0[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_6[Global.currentFrame],
+			Global.location + Vector(2.429, 3.257, -2.712), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_2[Global.currentFrame],
+			Global.location + Global.Vertex_1[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_10[Global.currentFrame],
+			Global.location + Global.Vertex_2[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_5[Global.currentFrame],
+			Global.location + Vector(2.717, 3.261, -0.454), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_4[Global.currentFrame],
+			Global.location + Vector(-1.812, 3.264, -0.141), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_3[Global.currentFrame],
+			Global.location + Vector(-1.163, 3.267, -2.548), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_1[Global.currentFrame],
+			Global.location + Global.Vertex_3[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_2[Global.currentFrame],
+			Global.location + Global.Vertex_4[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_2[Global.currentFrame],
+			Global.location + Global.Vertex_5[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_1[Global.currentFrame],
+			Global.location + Global.Vertex_6[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex[Global.currentFrame],
+			Global.location + Global.Vertex_7[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_7[Global.currentFrame],
+			Global.location + Global.Vertex_8[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_7[Global.currentFrame],
+			Global.location + Global.Vertex_9[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_7[Global.currentFrame],
+			Global.location + Global.Vertex_10[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_10[Global.currentFrame],
+			Global.location + Global.Vertex_11[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_11[Global.currentFrame],
+			Global.location + Vector(2.679, 3.092, 2.723), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_10[Global.currentFrame],
+			Global.location + Global.Vertex_12[Global.currentFrame], Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		Create Beam Effect(All Players(All Teams), Good Beam, Global.location + Global.Vertex_12[Global.currentFrame],
+			Global.location + Vector(-1.666, 2.899, 3.015), Green, Visible To Position and Radius);
+		Modify Global Variable(hi_andy, Append To Array, Last Created Entity);
+		Wait(0.016, Ignore Condition);
+		While(True);
+			Global.currentFrame = 0;
+			For Global Variable(currentFrame, 0, 119, 1);
+				Wait(0.042, Ignore Condition);
+			End;
+			Wait(0.042, Ignore Condition);
+		End;
+		Global.cubeEffects = Global.hi_andy;
+	}
+}
+
+rule("Rule 23")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Create In-World Text(All Players(All Teams), Custom String("GET STICK BUGGED LOL"), Vector(-84.831, 18, -95.596), 4, Do Not Clip,
+			Visible To Position and String, White, Default Visibility);
+	}
+}
+
+rule("Rule 24")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Distance Between(Position Of(Event Player), Vector(-83.993, 16.119, -109.522)) > 15;
+		Is Dummy Bot(Event Player) == False;
+	}
+
+	actions
+	{
+		Kill(Event Player, Null);
+	}
+}

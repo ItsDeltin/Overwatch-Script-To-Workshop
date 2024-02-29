@@ -11,6 +11,7 @@ using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Newtonsoft.Json.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using Deltin.Deltinteger.Lobby2.Legacy;
 
 namespace Deltin.Deltinteger.Parse;
 
@@ -18,7 +19,6 @@ public class Importer
 {
     public List<Uri> ImportedFiles { get; } = new List<Uri>();
     public List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
-    public JObject MergedLobbySettings { get; private set; }
     public IFileGetter FileGetter { get; }
     private readonly Diagnostics _diagnostics;
     private readonly DeltinScript _deltinScript;
@@ -38,13 +38,15 @@ public class Importer
         FileImporter importer = new(scriptFile.Diagnostics, this);
 
         // Get the imported files.
-        foreach (var importFileContext in scriptFile.Context.Imports)
+        RootElement.Iter(scriptFile.Context.RootItems, import: importFileContext =>
+        {
             if (importFileContext.File)
             {
                 string directory = GetImportedFile(deltinScript, scriptFile, importer, importFileContext);
                 if (Directory.Exists(directory))
                     AddImportCompletion(deltinScript, scriptFile, directory, importFileContext.File.Range);
             }
+        });
     }
 
     public static void AddImportCompletion(DeltinScript deltinScript, ScriptFile script, string directory, DocRange range)
@@ -118,41 +120,10 @@ public class Importer
                     // Get lobby settings.
                     case ".json":
                     case ".lobby":
-                        JObject lobbySettings = null;
-
-                        // Make sure the json is in the correct format.
-                        try
-                        {
-                            string json = FileGetter.GetContent(importResult.Uri);
-
-                            // Convert the json to a jobject.
-                            lobbySettings = JObject.Parse(json);
-
-                            // An exception will be thrown if the jobject cannot be converted to a Ruleset.
-                            lobbySettings.ToObject(typeof(Ruleset));
-
-                            if (!Ruleset.Validate(lobbySettings, script.Diagnostics, stringRange)) break;
-                        }
-                        catch
-                        {
-                            // Error if the json failed to parse.
-                            script.Diagnostics.Error("Failed to parse the settings file.", stringRange);
-                            break;
-                        }
-
-                        // If no lobby settings were imported yet, set MergedLobbySettings to the jobject.
-                        if (MergedLobbySettings == null) MergedLobbySettings = lobbySettings;
-                        else
-                        {
-                            // Otherwise, merge current lobby settings.
-                            lobbySettings.Merge(MergedLobbySettings, new JsonMergeSettings
-                            {
-                                MergeArrayHandling = MergeArrayHandling.Union,
-                                MergeNullValueHandling = MergeNullValueHandling.Ignore
-                            });
-                            MergedLobbySettings = lobbySettings;
-                        }
+                        var json = FileGetter.GetContent(importResult.Uri);
+                        deltinScript.WorkshopSettings.Merge(ParseLegacySettingsJson.ParseJson(json, script, stringRange));
                         break;
+
                 }
             else
                 switch (importResult.FileType)

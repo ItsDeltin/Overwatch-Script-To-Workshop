@@ -181,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Value = parseInfo.GetExpression(scope, expression.Value);
 
-            string op = expression.Operator.Operator.Operator;
+            string op = expression.Operator.Text;
             _operation = Value?.Type()?.Operations.GetOperation(UnaryTypeOperation.OperatorFromString(op)) ?? GetDefaultOperation(op, parseInfo.TranslateInfo.Types);
             _type = _operation.ReturnType ?? parseInfo.TranslateInfo.Types.Unknown();
         }

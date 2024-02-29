@@ -88,6 +88,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 _typeArgLinker == null ? null : _toWorkshop.TypeArgGlob.ComboFromKeyAndArgs(_function.Provider, providedTypeArgs)
             );
 
+            Subroutine targetSubroutine = null;
+            if (_function.Provider.TargetVanillaSubroutine is not null)
+                targetSubroutine = _toWorkshop.LinkableVanillaVariables.GetSubroutine(_function.Provider.TargetVanillaSubroutine.Value.Name);
+
             // Get or create the subroutine.
             return _toWorkshop.SubroutineCatalog.GetSubroutine(identifier, () =>
                 // Create the subroutine.
@@ -99,7 +103,8 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                     ObjectStackName = _function.Name + "Stack",
                     VariableGlobalDefault = _function.Provider.SubroutineDefaultGlobal,
                     ContainingType = _function.DefinedInType,
-                    TypeLinker = _typeArgLinker
+                    TypeLinker = _typeArgLinker,
+                    TargetSubroutine = targetSubroutine
                 }))
             );
         }

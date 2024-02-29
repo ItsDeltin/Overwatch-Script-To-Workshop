@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             CallRange = callRange;
             _fullRange = fullRange;
             _errorMessages = errorMessages;
-            parseInfo.Script.AddOverloadData(this);
+            parseInfo.Script.AddSignatureInfo(ISignatureHelp.New(callRange, param => GetSignatureHelp(param.CaretPos)));
         }
 
         public void Apply(List<ParameterValue> context, bool genericsProvided, CodeType[] generics)
@@ -323,7 +323,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                 _parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(_parseInfo.TranslateInfo, LabelInfo.OverloadError)), _targetRange);
         }
 
-        public SignatureHelp GetSignatureHelp(DocPos caretPos)
+        private SignatureHelp GetSignatureHelp(DocPos caretPos)
         {
             // Get the active parameter.
             int activeParameter = -1;

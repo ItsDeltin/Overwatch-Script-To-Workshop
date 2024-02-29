@@ -2,6 +2,7 @@ using System;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Variables.Build;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -36,6 +37,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly bool _inferType;
         private readonly VariableTypeHandler _variableTypeHandler;
         public MarkupBuilder Documentation { get; }
+        public VariableLinkExpressionCollection LinkTargetVanilla { get; }
 
         /// <summary>The scope the variable and initial value will use.</summary>
         private readonly Scope _operationalScope;
@@ -75,6 +77,7 @@ namespace Deltin.Deltinteger.Parse
             _handleRestrictedCalls = varInfo.HandleRestrictedCalls;
             _inferType = varInfo.InferType;
             Documentation = varInfo.Documentation;
+            LinkTargetVanilla = varInfo.LinkTargetVanilla;
             _initialValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.Scope;

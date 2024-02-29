@@ -70,6 +70,21 @@
     "action": {
       "patterns": [
         {
+          "begin": "disabled\\b",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.control.flow.disabled"
+            }
+          },
+          "end": "(?<=;)",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "include": "#action"
+            }
+          ]
+        },
+        {
           "begin": "(Abort If|Skip If|Skip|While|If|Else If)\\s*(\\()",
           "beginCaptures": {
             "1": {
@@ -168,7 +183,7 @@
           }
         },
         {
-          "match": "(\\b(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.#`]+\\b)\\s*;",
+          "match": "(\\b(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';:<>=(),\\{\\}\\[\\]\\.#`]+\\b)\\s*;",
           "captures": {
             "1": {
               "name": "entity.name.function"
@@ -398,6 +413,9 @@
           "endCaptures": {},
           "patterns": [
             {
+              "include": "#comment"
+            },
+            {
               "include": "#action"
             }
           ]
@@ -428,6 +446,24 @@
           "end": "(?=})",
           "endCaptures": {},
           "patterns": [
+            {
+              "include": "#comment"
+            },
+            {
+              "begin": "disabled\\b",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.control.flow.disabled"
+                }
+              },
+              "end": "(?=;|})",
+              "endCaptures": {},
+              "patterns": [
+                {
+                  "include": "#expression"
+                }
+              ]
+            },
             {
               "include": "#expression"
             }
@@ -586,7 +622,7 @@
         },
         {
           "name": "support.constant",
-          "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.#`]+",
+          "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';:<>=(),\\{\\}\\[\\]\\.#`]+",
           "captures": {}
         }
       ]
@@ -595,7 +631,7 @@
       "patterns": [
         {
           "contentName": "meta.parameter-list",
-          "begin": "((?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.#`]+)(\\()",
+          "begin": "((?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';:<>=(),\\{\\}\\[\\]\\.#`]+)(\\()",
           "beginCaptures": {
             "1": {
               "name": "entity.name.function"
@@ -618,7 +654,7 @@
         },
         {
           "name": "variable.other.constant",
-          "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.#`]+",
+          "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';:<>=(),\\{\\}\\[\\]\\.#`]+",
           "captures": {}
         }
       ]
@@ -664,6 +700,9 @@
           "endCaptures": {},
           "patterns": [
             {
+              "include": "#comment"
+            },
+            {
               "begin": "\\blobby\\b",
               "beginCaptures": {
                 "0": {
@@ -686,7 +725,14 @@
                   },
                   "end": "(?=})",
                   "endCaptures": {},
-                  "patterns": []
+                  "patterns": [
+                    {
+                      "include": "#comment"
+                    },
+                    {
+                      "include": "#lobby-settings-group"
+                    }
+                  ]
                 }
               ]
             },
@@ -713,7 +759,48 @@
                   },
                   "end": "(?=})",
                   "endCaptures": {},
-                  "patterns": []
+                  "patterns": [
+                    {
+                      "include": "#comment"
+                    },
+                    {
+                      "include": "#lobby-settings-group"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "begin": "\\bheroes\\b",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.control"
+                }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": {
+                  "name": "punctuation.definition.dictionary.end"
+                }
+              },
+              "patterns": [
+                {
+                  "begin": "\\{",
+                  "beginCaptures": {
+                    "0": {
+                      "name": "punctuation.definition.dictionary.begin"
+                    }
+                  },
+                  "end": "(?=})",
+                  "endCaptures": {},
+                  "patterns": [
+                    {
+                      "include": "#comment"
+                    },
+                    {
+                      "include": "#lobby-settings-group"
+                    }
+                  ]
                 }
               ]
             },
@@ -742,8 +829,45 @@
                   "endCaptures": {},
                   "patterns": [
                     {
-                      "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.#`]+",
+                      "include": "#comment"
+                    },
+                    {
+                      "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';:<>=(),\\{\\}\\[\\]\\.#`]+",
                       "captures": {}
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "begin": "\\bmain\\b",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.control"
+                }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": {
+                  "name": "punctuation.definition.dictionary.end"
+                }
+              },
+              "patterns": [
+                {
+                  "begin": "\\{",
+                  "beginCaptures": {
+                    "0": {
+                      "name": "punctuation.definition.dictionary.begin"
+                    }
+                  },
+                  "end": "(?=})",
+                  "endCaptures": {},
+                  "patterns": [
+                    {
+                      "include": "#comment"
+                    },
+                    {
+                      "include": "#lobby-settings-group"
                     }
                   ]
                 }
@@ -777,6 +901,9 @@
           "end": "(?=})",
           "endCaptures": {},
           "patterns": [
+            {
+              "include": "#comment"
+            },
             {
               "name": "keyword.control",
               "begin": "\\bglobal\\s*:",
@@ -852,6 +979,9 @@
           "endCaptures": {},
           "patterns": [
             {
+              "include": "#comment"
+            },
+            {
               "match": "([0-9]+)\\s*(:)\\s*([a-zA-Z0-9_]+)",
               "captures": {
                 "1": {
@@ -870,7 +1000,7 @@
       ]
     },
     "rule": {
-      "begin": "rule",
+      "begin": "(disabled\\s+)?rule(?=\\s*\\()",
       "beginCaptures": {
         "0": {
           "name": "keyword.control"
@@ -929,6 +1059,9 @@
                   "endCaptures": {},
                   "patterns": [
                     {
+                      "include": "#comment"
+                    },
+                    {
                       "begin": "(Subroutine)\\s*;",
                       "beginCaptures": {
                         "1": {
@@ -944,7 +1077,7 @@
                     },
                     {
                       "name": "meta.trait",
-                      "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';<>=(),\\{\\}\\[\\]\\.#`]+",
+                      "match": "(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';:<>=(),\\{\\}\\[\\]\\.#`]+",
                       "captures": {}
                     },
                     {
@@ -965,6 +1098,70 @@
               "include": "#comment"
             }
           ]
+        }
+      ]
+    },
+    "lobby-settings-group": {
+      "patterns": [
+        {
+          "name": "meta.ostw.settings-group",
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.dictionary.begin"
+            }
+          },
+          "end": "\\}",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.dictionary.end"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#lobby-settings-group"
+            }
+          ]
+        },
+        {
+          "begin": "((?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';:<>=(),\\{\\}\\[\\]\\.#`]+)\\s*(:)",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.tag.yaml"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value.mapping"
+            }
+          },
+          "end": "(?=$)",
+          "endCaptures": {},
+          "patterns": [
+            {
+              "include": "#string-literal"
+            },
+            {
+              "match": "(-?[0-9]+(\\.[0-9]+)?%?)",
+              "captures": {
+                "1": {
+                  "name": "constant.numeric"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "match": "((disabled)\\s*)?(?![\\s(),;0-9])[^/\\\\\\+\\*\\\"\\';:<>=(),\\{\\}\\[\\]\\.#`]+",
+          "captures": {
+            "0": {
+              "name": "keyword.control"
+            },
+            "2": {
+              "name": "keyword.control.flow.disabled"
+            }
+          }
+        },
+        {
+          "include": "#comment"
         }
       ]
     }

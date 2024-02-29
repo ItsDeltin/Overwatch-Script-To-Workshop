@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Compiler.Parse.Lexing;
+using Deltin.Deltinteger.Compiler.Parse.Vanilla;
 using Newtonsoft.Json;
 using LSPos = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
 using LSRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
@@ -120,6 +122,11 @@ namespace Deltin.Deltinteger.Compiler
             throw new Exception();
         }
 
+        public DocRange Inset() => new(
+            new(Start.Line, Start.Character + 1),
+            new(End.Line, End.Character - 1)
+        );
+
         public int LineSpan() => End.Line - Start.Line;
         public int ColumnSpan()
         {
@@ -136,6 +143,21 @@ namespace Deltin.Deltinteger.Compiler
             EqualityComparer<DocPos>.Default.Equals(End, range.End);
 
         public override int GetHashCode() => HashCode.Combine(Start, End);
+
+        public static bool operator ==(DocRange r1, DocRange r2)
+        {
+            if (r1 is null)
+                return r2 is null;
+
+            return r1.Equals(r2);
+        }
+        public static bool operator !=(DocRange r1, DocRange r2)
+        {
+            if (r1 is null)
+                return r2 is not null;
+
+            return !r1.Equals(r2);
+        }
 
         public static bool operator <(DocRange r1, DocRange r2) => r1.CompareTo(r2) < 0;
         public static bool operator >(DocRange r1, DocRange r2) => r1.CompareTo(r2) > 0;
@@ -167,6 +189,19 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator !(Token x) => x == null;
         public static implicit operator bool(Token x) => x != null;
         public static implicit operator DocRange(Token x) => x.Range;
+    }
+
+    class WorkshopToken : Token
+    {
+        public IReadOnlySet<LanguageLinkedWorkshopItem> WorkshopItems { get; }
+
+        public WorkshopToken(string text,
+            DocRange range,
+            TokenType tokenType,
+            IReadOnlySet<LanguageLinkedWorkshopItem> workshopItems) : base(text, range, tokenType)
+        {
+            WorkshopItems = workshopItems;
+        }
     }
 
     [Flags]
@@ -290,6 +325,9 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.CurlyBracket_Open:
                 case TokenType.Async:
                 case TokenType.Import:
+                case TokenType.WorkshopVariablesEn:
+                case TokenType.WorkshopSubroutinesEn:
+                case TokenType.WorkshopSettingsEn:
                 // Unary
                 case TokenType.Subtract:
                 case TokenType.Exclamation:
@@ -420,6 +458,21 @@ namespace Deltin.Deltinteger.Compiler
             }
         }
 
+        public static bool IsWorkshopExpression(this TokenType tokenType) => tokenType switch
+        {
+            TokenType.WorkshopSymbol or
+            TokenType.WorkshopConstant or
+            TokenType.Exclamation or
+            TokenType.Number or
+            TokenType.Subtract or
+            TokenType.String or
+            TokenType.Parentheses_Open or
+            TokenType.AllTeams or
+            TokenType.Team1 or
+            TokenType.Team2 => true,
+            _ => false,
+        };
+
         public static bool IsDecorative(this TokenType tokenType)
         {
             switch (tokenType)
@@ -549,7 +602,26 @@ namespace Deltin.Deltinteger.Compiler
         GreaterThanOrEqual,
         // Ternary
         QuestionMark,
+        // Workshop
+        WorkshopVariablesEn,
+        WorkshopSubroutinesEn,
+        WorkshopSettingsEn,
+        WorkshopVariables,
+        WorkshopSubroutines,
+        WorkshopSettings,
+        WorkshopRule,
+        WorkshopEvent,
+        WorkshopActions,
+        WorkshopConditions,
+        WorkshopConstant,
+        WorkshopSymbol,
+        DisabledWorkshopItem,
+        AllTeams,
+        Team1,
+        Team2,
         // Other
+        BlockComment,
+        LineComment,
         ActionComment,
         EOF,
     }

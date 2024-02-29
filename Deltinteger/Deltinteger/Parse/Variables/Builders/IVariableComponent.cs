@@ -3,6 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
+using Deltin.Deltinteger.Parse.Vanilla;
 
 namespace Deltin.Deltinteger.Parse.Variables.Build
 {
@@ -322,6 +324,95 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
         public string RejectMessage() => "Macros cannot be declared here.";
         public void Validate(VariableComponentCollection componentCollection) { }
         public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
+    }
+
+    class TargetWorkshopComponent : IVariableComponent
+    {
+        public DocRange Range => _syntax.Range;
+        public bool WasRejected { get; set; }
+        readonly TargetWorkshopVariable _syntax;
+        readonly VariableSetKind _variableSetKind;
+        bool _isGlobal;
+
+        public TargetWorkshopComponent(TargetWorkshopVariable syntax, VariableSetKind variableSetKind)
+        {
+            _syntax = syntax;
+            _variableSetKind = variableSetKind;
+        }
+
+        public string RejectMessage() => "Only rule-level variables can target workshop variables";
+        public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
+        public void Validate(VariableComponentCollection componentCollection)
+        {
+            _isGlobal = _variableSetKind switch
+            {
+                VariableSetKind.Global => true,
+                VariableSetKind.Player => false,
+                VariableSetKind.Unknown or _ => componentCollection.IsAttribute(AttributeType.GlobalVar)
+            };
+        }
+        public void Apply(VarInfo varInfo)
+        {
+            var parseInfo = varInfo.ParseInfo;
+
+            var linkTargets = new List<VariableLinkExpressionTarget>();
+            bool anySpread = false;
+            foreach (var target in _syntax.Targets)
+            {
+                string targetName = Extras.RemoveQuotes(target.Target.Text);
+
+                // Is the vanilla variable in scope?
+                if (parseInfo.ScopedVanillaVariables.GetScopedVariable(targetName, _isGlobal).Variable is null)
+                {
+                    parseInfo.Error($"No {VanillaHelper.GlobalOrPlayerString(_isGlobal)} workshop variable named '{targetName}' is in the current scope", target.Target);
+                }
+
+                bool didSpread = false;
+                var analyzedIndexers = new List<IExpression>();
+                foreach (var indexer in target.Indexer)
+                {
+                    // !'a'[..][0] is not allowed.
+                    if (didSpread)
+                    {
+                        parseInfo.Error("Cannot index further after spread expression", indexer.Spread ?? indexer.Expression.Range);
+                    }
+                    else if (indexer.Spread)
+                    {
+                        // !{'a', 'b'[..]} is not allowed.
+                        if (_syntax.Targets.Count > 1)
+                            parseInfo.Error("Cannot use spread syntax with multiple variable targets", indexer.Spread);
+                        didSpread = true;
+                        anySpread = true;
+                    }
+                    else
+                    {
+                        // Get the expression.
+                        var nextExpr = parseInfo.GetExpression(varInfo.Scope, indexer.Expression);
+                        // Any more indexers after didSpread are invalid.
+                        if (!didSpread)
+                            analyzedIndexers.Add(nextExpr);
+                    }
+                }
+                linkTargets.Add(new(
+                    LinkingTo: targetName,
+                    Indexers: analyzedIndexers.ToArray()
+                ));
+            }
+
+            // Not very nice but required because of some fun struct stuff.
+            varInfo.ParseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.PostContent, () =>
+            {
+                int requiredStackLength = varInfo.Type.Attributes.StackLength;
+                if (!anySpread && _syntax.Targets.Count != requiredStackLength)
+                {
+                    parseInfo.Error($"Type '{varInfo.Type.GetName()}' requires {requiredStackLength} target variables, got {_syntax.Targets.Count}", _syntax.Range);
+                }
+            });
+
+
+            var links = new VariableLinkExpressionCollection(anySpread, linkTargets.ToArray());
+            varInfo.LinkTargetVanilla = links;
+        }
     }
 
     // * Rejectors *

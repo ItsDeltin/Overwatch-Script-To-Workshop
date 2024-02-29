@@ -3,6 +3,7 @@
     public class Condition
     {
         public string Comment { get; set; }
+        public bool Disabled { get; set; }
         readonly Element element;
 
         public Condition(Element element) => this.element = element;
@@ -14,6 +15,8 @@
 
             // Add a comment and newline
             if (Comment != null) builder.AppendLine($"\"{Comment}\"\n");
+
+            if (Disabled) builder.AppendKeyword("disabled").Append(" ");
 
             element.ToWorkshop(builder, ToWorkshopContext.ConditionValue);
 

@@ -7,19 +7,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 {
     public class RootContext
     {
-        public List<Import> Imports { get; } = new List<Import>();
-        public List<RuleContext> Rules { get; } = new List<RuleContext>();
-        public List<ClassContext> Classes { get; } = new List<ClassContext>();
-        public List<EnumContext> Enums { get; } = new List<EnumContext>();
-        public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
+        public List<RootElement> RootItems { get; } = new();
 
-        public List<TypeAliasContext> TypeAliases { get; } = new List<TypeAliasContext>();
+        public List<Token> PlayervarReservations { get; } = new();
+        public List<Token> GlobalvarReservations { get; } = new();
 
-        public List<Token> PlayervarReservations { get; } = new List<Token>();
-        public List<Token> GlobalvarReservations { get; } = new List<Token>();
-
-        public List<Hook> Hooks { get; } = new List<Hook>();
-        public List<TokenCapture> NodeCaptures { get; set; }
+        public List<Hook> Hooks { get; } = new();
     }
 
     public class Node : INodeRange
@@ -271,12 +264,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Block Block { get; }
         public Token GlobalVar { get; }
         public Token PlayerVar { get; }
-        public Token Subroutine { get; }
+        public FunctionSubroutineSyntax Subroutine { get; }
 
         // Macro
         public IParseExpression MacroValue { get; }
 
-        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine, MetaComment metaComment)
+        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, FunctionSubroutineSyntax subroutine, MetaComment metaComment)
         {
             Attributes = attributes;
             Type = type;
@@ -301,6 +294,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             MetaComment = metaComment;
         }
     }
+
+    public record FunctionSubroutineSyntax(Token Name, Token Target);
 
     public class ConstructorContext
     {
@@ -456,7 +451,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => Value.ToString();
     }
 
-    public class NumberExpression : Node, IParseExpression
+    public class NumberExpression : Node, IParseExpression, IVanillaExpression
     {
         public double Value { get; }
 
@@ -957,8 +952,18 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token ID { get; }
         public Token MacroSymbol { get; }
         public MetaComment Comment { get; set; }
+        public TargetWorkshopVariable? Target { get; }
 
-        public VariableDeclaration(AttributeTokens attributes, IParseType type, Token identifier, IParseExpression initialValue, Token ext, Token id, Token macroSymbol, MetaComment metaComment)
+        public VariableDeclaration(
+            AttributeTokens attributes,
+            IParseType type,
+            Token identifier,
+            IParseExpression initialValue,
+            Token ext,
+            Token id,
+            Token macroSymbol,
+            MetaComment metaComment,
+            TargetWorkshopVariable? target)
         {
             Attributes = attributes;
             Type = type;
@@ -968,8 +973,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             ID = id;
             MacroSymbol = macroSymbol;
             Comment = metaComment;
+            Target = target;
         }
     }
+
+    public record struct TargetWorkshopVariable(DocRange Range, List<StackTarget> Targets);
+
+    public record struct StackTarget(Token Target, List<SpreadOrExpression> Indexer);
+
+    public record struct SpreadOrExpression(Token Spread, IParseExpression Expression);
 
     public class MacroVarDeclaration : Node, IDeclaration
     {

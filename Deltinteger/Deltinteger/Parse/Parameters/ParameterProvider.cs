@@ -52,7 +52,13 @@ namespace Deltin.Deltinteger.Parse
                 _restrictedCalls.Add(restrictedCall.CallType);
         }
 
-        public static ParameterProvider[] GetParameterProviders(ParseInfo parseInfo, Scope methodScope, List<VariableDeclaration> context, bool subroutineParameter, ParsedMetaComment metaComment = null)
+        public static ParameterProvider[] GetParameterProviders(
+            ParseInfo parseInfo,
+            Scope methodScope,
+            List<VariableDeclaration> context,
+            bool subroutineParameter,
+            bool subroutineParameterIsGlobal,
+            ParsedMetaComment metaComment = null)
         {
             if (context == null) return new ParameterProvider[0];
 
@@ -73,7 +79,7 @@ namespace Deltin.Deltinteger.Parse
                     newVar = (Var)new ParameterVariable(methodScope, contextHandler, parameter._invoked).GetVar();
                 // Subroutine parameter.
                 else
-                    newVar = (Var)new SubroutineParameterVariable(methodScope, contextHandler).GetVar();
+                    newVar = (Var)new SubroutineParameterVariable(methodScope, contextHandler, subroutineParameterIsGlobal).GetVar();
 
                 parameter.Var = newVar;
                 parameter.Type = newVar.CodeType;

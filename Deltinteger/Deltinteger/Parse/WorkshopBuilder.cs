@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.I18n;
 
 namespace Deltin.Deltinteger
 {
@@ -46,7 +45,7 @@ namespace Deltin.Deltinteger
         public WorkshopBuilder AppendKeyword(string keyword) => Append(Kw(keyword));
         public WorkshopBuilder AppendKeywordLine(string keyword) => AppendLine(Kw(keyword));
 
-        public string Kw(string keyword) => LanguageInfo.Translate(OutputLanguage, keyword);
+        public string Kw(string keyword) => keyword;
 
         public WorkshopBuilder Indent()
         {
@@ -54,13 +53,16 @@ namespace Deltin.Deltinteger
             return this;
         }
 
-        public WorkshopBuilder Outdent()
+        public WorkshopBuilder Outdent(int min = 0)
         {
-            _indentCount--;
+            _indentCount = Math.Max(_indentCount - 1, min);
             return this;
         }
 
-        public string Translate(string keyword) => LanguageInfo.Translate(OutputLanguage, keyword);
+        public int GetCurrentIndent() => _indentCount;
+        public void SetCurrentIndent(int count) => Math.Max(_indentCount = count, 0);
+
+        public string Translate(string keyword) => keyword;
 
         public string GetResult() => _builder.ToString();
     }

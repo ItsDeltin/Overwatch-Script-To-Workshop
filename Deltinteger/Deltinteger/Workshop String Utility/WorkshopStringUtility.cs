@@ -312,9 +312,14 @@ static class WorkshopStringUtility
     readonly record struct DecoratedStub(string Text, bool AddNextStub);
 
     /// <summary>Gets the byte count of a string once it is imported into the workshop.</summary>
-    static int LengthOfStringInWorkshop(string str)
+    public static int LengthOfStringInWorkshop(string str)
     {
         return Encoding.UTF8.GetByteCount(str.Replace("\r", "\\r").Replace("\n", "\\n"));
+    }
+
+    public static int LengthOfStringInWorkshopUnescape(string str)
+    {
+        return Encoding.UTF8.GetByteCount(str.Replace("\\r", "\r").Replace("\\n", "\n"));
     }
 
     /// <summary>Makes an OSTW string more compatible with the workshop.
@@ -322,6 +327,9 @@ static class WorkshopStringUtility
     /// <param name="raw">The OSTW string. First and last character should be ' or ".</param>
     public static string WorkshopStringFromRawText(string raw)
     {
+        if (raw is null)
+            return null;
+
         // Single or double quoted string?
         bool isSingle = raw.StartsWith('\'');
         // Trim starting and ending quotations.

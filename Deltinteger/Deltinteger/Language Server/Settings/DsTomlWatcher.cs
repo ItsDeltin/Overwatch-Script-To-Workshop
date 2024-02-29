@@ -5,9 +5,10 @@ using DsTomlSettings = Deltin.Deltinteger.Parse.Settings.DsTomlSettings;
 
 namespace Deltin.Deltinteger.LanguageServer.Settings
 {
+    using Deltin.Deltinteger.LanguageServer.Model;
     using TomlSettings;
 
-    public class DsTomlWatcher : AbstractSettingsHandler<TomlFile<DsTomlSettings>>
+    public class DsTomlWatcher : AbstractSettingsHandler<TomlFile<DsTomlSettings>>, IDsSettingsProvider
     {
         const string projectFileName = "ds.toml";
 

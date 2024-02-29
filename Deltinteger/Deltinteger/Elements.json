@@ -4233,7 +4233,8 @@
           "defaultValue": "Compare"
         }
       },
-      "hidden": true
+      "hidden": true,
+      "indent": "drop"
     },
     {
       "name": "Else",
@@ -6541,23 +6542,23 @@
           "alias": "OngoingPlayer"
         },
         {
-          "name": "Player earned elimination",
+          "name": "Player Earned Elimination",
           "alias": "OnElimination"
         },
         {
-          "name": "Player dealt final blow",
+          "name": "Player Dealt Final Blow",
           "alias": "OnFinalBlow"
         },
         {
-          "name": "Player dealt damage",
+          "name": "Player Dealt Damage",
           "alias": "OnDamageDealt"
         },
         {
-          "name": "Player took damage",
+          "name": "Player Took Damage",
           "alias": "OnDamageTaken"
         },
         {
-          "name": "Player died",
+          "name": "Player Died",
           "alias": "OnDeath"
         },
         {
@@ -6763,7 +6764,10 @@
       "Melee",
       "Reload"
     ],
-    "Relative": ["To World", "To Player"],
+    "Relative": [
+      "To World",
+      "To Player"
+    ],
     "ContraryMotion": [
       {
         "name": "Cancel Contrary Motion",
@@ -6778,8 +6782,14 @@
         "alias": "Incorporate"
       }
     ],
-    "RateChaseReevaluation": ["Destination And Rate", "None"],
-    "TimeChaseReevaluation": ["Destination And Duration", "None"],
+    "RateChaseReevaluation": [
+      "Destination And Rate",
+      "None"
+    ],
+    "TimeChaseReevaluation": [
+      "Destination And Duration",
+      "None"
+    ],
     "Status": [
       "Hacked",
       "Burning",
@@ -6792,7 +6802,11 @@
       "Rooted",
       "Stunned"
     ],
-    "Team": ["All", "Team1", "Team2"],
+    "Team": [
+      "All",
+      "Team 1",
+      "Team 2"
+    ],
     "WaitBehavior": [
       "Ignore Condition",
       "Abort When False",
@@ -6975,7 +6989,11 @@
       "Spray Right",
       "Spray Down"
     ],
-    "Location": ["Left", "Top", "Right"],
+    "Location": [
+      "Left",
+      "Top",
+      "Right"
+    ],
     "HudTextRev": [
       "Visible To And String",
       "String",
@@ -7174,7 +7192,11 @@
       "Wrecking Ball Minefield Explosion Sound",
       "Zarya Particle Cannon Explosion Sound"
     ],
-    "InvisibleTo": ["All", "Enemies", "None"],
+    "InvisibleTo": [
+      "All",
+      "Enemies",
+      "None"
+    ],
     "AccelerateRev": [
       {
         "name": "Direction Rate and Max Speed",
@@ -7200,9 +7222,15 @@
     ],
     "IfAlreadyExecuting": {
       "hidden": true,
-      "members": ["Restart Rule", "Do Nothing"]
+      "members": [
+        "Restart Rule",
+        "Do Nothing"
+      ]
     },
-    "FacingRev": ["Direction And Turn Rate", "None"],
+    "FacingRev": [
+      "Direction And Turn Rate",
+      "None"
+    ],
     "BarrierLOS": [
       {
         "name": "Barriers Do Not Block LOS",
@@ -7217,15 +7245,24 @@
         "alias": "AllBarriersBlock"
       }
     ],
-    "Transformation": ["Rotation", "Rotation And Translation"],
+    "Transformation": [
+      "Rotation",
+      "Rotation And Translation"
+    ],
     "RadiusLOS": [
       "Off",
       "Surfaces",
       "Surfaces And Enemy Barriers",
       "Surfaces And All Barriers"
     ],
-    "LocalVector": ["Rotation", "Rotation And Translation"],
-    "Clipping": ["Clip Against Surfaces", "Do Not Clip"],
+    "LocalVector": [
+      "Rotation",
+      "Rotation And Translation"
+    ],
+    "Clipping": [
+      "Clip Against Surfaces",
+      "Do Not Clip"
+    ],
     "InworldTextRev": [
       {
         "name": "Visible To, Position, String, and Color",
@@ -7300,7 +7337,10 @@
       "Zarya Graviton",
       "Zarya Particle Cannon"
     ],
-    "ModifyHealthType": ["Damage", "Heal"],
+    "ModifyHealthType": [
+      "Damage",
+      "Heal"
+    ],
     "ProjectileEffectReeval": [
       {
         "name": "Visible To, Position, Direction and Size",
@@ -7326,12 +7366,19 @@
       },
       "Friendly To"
     ],
-    "Spectators": ["Default Visibility", "Visible Always", "Visible Never"],
+    "Spectators": [
+      "Default Visibility",
+      "Visible Always",
+      "Visible Never"
+    ],
     "ThrottleBehavior": [
       "Replace Existing Throttle",
       "Add To Existing Throttle"
     ],
-    "ThrottleRev": ["Direction And Magnitude", "None"],
+    "ThrottleRev": [
+      "Direction And Magnitude",
+      "None"
+    ],
     "Map": [
       "Ayutthaya",
       {
@@ -7604,9 +7651,20 @@
       "Freezethaw Elimination",
       "Bounty Hunter"
     ],
-    "HealthType": ["Health", "Armor", "Shields"],
-    "OutlineType": ["Default", "Occluded", "Always"],
-    "Assist": ["Assisters And Targets", "None"],
+    "HealthType": [
+      "Health",
+      "Armor",
+      "Shields"
+    ],
+    "OutlineType": [
+      "Default",
+      "Occluded",
+      "Always"
+    ],
+    "Assist": [
+      "Assisters And Targets",
+      "None"
+    ],
     "ProgressBarHudEvaluation": [
       "Visible To Values And Color",
       "Visible To And Values",

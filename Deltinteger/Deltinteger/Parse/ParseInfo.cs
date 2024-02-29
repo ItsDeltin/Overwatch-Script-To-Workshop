@@ -4,6 +4,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Lambda;
+using Deltin.Deltinteger.Parse.Vanilla;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -25,6 +26,7 @@ namespace Deltin.Deltinteger.Parse
         public IDefinedTypeInitializer TypeInitializer { get; private set; }
         public VariableModifierGroup ContextualVariableModifiers { get; private set; }
         public ReturnTracker ReturnTracker { get; private set; }
+        public VanillaScope ScopedVanillaVariables { get; init; }
 
         // Target
         public CodeType ExpectingType { get; private set; }
@@ -60,6 +62,7 @@ namespace Deltin.Deltinteger.Parse
             TypeInitializer = other.TypeInitializer;
             ContextualVariableModifiers = other.ContextualVariableModifiers;
             ReturnTracker = other.ReturnTracker;
+            ScopedVanillaVariables = other.ScopedVanillaVariables;
             ExpectingType = other.ExpectingType;
             IsUsedAsValue = other.IsUsedAsValue;
             LocalVariableTracker = other.LocalVariableTracker;
@@ -279,6 +282,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public DiagnosticsToken CreateDiagnosticsToken(DocRange range) => new DiagnosticsToken(Script.Diagnostics, range);
+
+        public void Error(string message, DocRange range) => Script.Diagnostics.Error(message, range);
     }
 
     public class VariableApply

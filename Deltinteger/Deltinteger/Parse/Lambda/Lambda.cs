@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _parameter = parameter;
         }
 
-        public void GetComponents(VariableComponentCollection componentCollection) {}
+        public void GetComponents(VariableComponentCollection componentCollection, VariableSetKind variableSetKind) { }
         public IParseType GetCodeType() => _parameter.Type;
         public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
         public string GetName() => _parameter.Identifier.GetText();

@@ -1,0 +1,2258 @@
+{
+    "repository": [
+        {
+            "id": "hero_list",
+            "template": "base_hero",
+            "$projectile": true,
+            "$projectile_gravity": true,
+            "$healer": true,
+            "$ult_duration": true,
+            "content": [
+                {
+                    "name": "Ability Cooldown Time",
+                    "type": "range_percentage"
+                },
+                {
+                    "name": "Ultimate Ability",
+                    "type": "boolean_onoff"
+                },
+                {
+                    "name": "Ultimate Generation",
+                    "type": "range_percentage"
+                },
+                {
+                    "name": "Ultimate Generation - Passive",
+                    "type": "range_percentage"
+                },
+                {
+                    "name": "Ultimate Generation - Combat",
+                    "type": "range_percentage"
+                },
+                {
+                    "name": "enabled heroes",
+                    "insert_heroes": true
+                },
+                {
+                    "name": "disabled heroes",
+                    "insert_heroes": true
+                },
+                {
+                    "name": "Ana",
+                    "template": "base_hero",
+                    "$ult": "Nano Boost",
+                    "$projectile": "yes",
+                    "$healer": true,
+                    "$scope": true,
+                    "content": [
+                        {
+                            "name": "Biotic Grenade",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Sleep Dart",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ashe",
+                    "template": "base_hero",
+                    "$ult": "B.O.B.",
+                    "$projectile": true,
+                    "$scope": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Coach Gun",
+                            "template": "ability",
+                            "$self_knockback": true
+                        },
+                        {
+                            "name": "Dynamite",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Dynamite Fuse Time Scalar",
+                            "type": "range_percentage"
+                        }
+                    ]
+                },
+                {
+                    "name": "Baptiste",
+                    "template": "base_hero",
+                    "$ult": "Amplification Matrix",
+                    "$ult_duration": true,
+                    "$projectile": true,
+                    "$healer": true,
+                    "$secondary_fire": true,
+                    "content": [
+                        {
+                            "name": "Immortality Field",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Regenerative Burst",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Bastion",
+                    "template": "base_hero",
+                    "$ult": "Configuration: Artillery",
+                    "$ult_duration": true,
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Reconfigure",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "A-36 Tactical Grenade",
+                            "template": "ability",
+                            "$knockback": true
+                        }
+                    ]
+                },
+                {
+                    "name": "Brigitte",
+                    "template": "base_hero",
+                    "$ult": "Rally",
+                    "$ult_duration": true,
+                    "$healer": true,
+                    "$no_ammunition": true,
+                    "content": [
+                        {
+                            "name": "Barrier Shield",
+                            "template": "ability",
+                            "$rechargeable": true
+                        },
+                        {
+                            "name": "Repair Pack",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Shield Bash",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Whip Shot",
+                            "$knockback": true
+                        }
+                    ]
+                },
+                {
+                    "name": "Cassidy",
+                    "template": "base_hero",
+                    "$ult": "Deadeye",
+                    "$secondary_fire": true,
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Combat Roll",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Magnetic Grenade",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "D.va",
+                    "template": "base_hero",
+                    "$ult": "Self-Destruct",
+                    "$ult_duration": true,
+                    "$no_ammunition": true,
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Self Destruct Knockback Scalar",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 200
+                        },
+                        {
+                            "name": "Micro Missiles",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Boosters",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Defense Matrix",
+                            "template": "ability",
+                            "$no_cooldown": true,
+                            "$rechargeable": true
+                        },
+                        {
+                            "name": "Call Mech Knockback Scalar",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 400
+                        },
+                        {
+                            "name": "Spawn Without Mech",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                {
+                    "name": "Doomfist",
+                    "template": "base_hero",
+                    "$ult": "Meteor Strike",
+                    "$ult_duration": true,
+                    "$ult_knockback": true,
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Power Block",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Rocket Punch",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Seismic Slam",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Ammunition Regeneration Time Scalar",
+                            "type": "range_percentage",
+                            "min": 33,
+                            "max": 500
+                        },
+                        {
+                            "name": "Power Block Charge Rate",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                {
+                    "name": "Echo",
+                    "template": "base_hero",
+                    "$ult": "Duplicate",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Flight",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Focusing Beam",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Glide",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
+                            "name": "Sticky Bombs",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Genji",
+                    "template": "base_hero",
+                    "$ult": "Dragonblade",
+                    "$ult_duration": true,
+                    "$projectile": true,
+                    "$secondary_fire": true,
+                    "content": [
+                        {
+                            "name": "Deflect",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Swift Strike",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Hanzo",
+                    "template": "base_hero",
+                    "$ult": "Dragonstrike",
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "$no_ammunition": true,
+                    "content": [
+                        {
+                            "name": "Lunge",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Lunge Distance Scalar",
+                            "type": "range_percentage",
+                            "min": 20,
+                            "max": 300
+                        },
+                        {
+                            "name": "Sonic Arrow",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Storm Arrows",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Storm Arrows Quantity",
+                            "type": "range_int",
+                            "min": 3,
+                            "max": 12,
+                            "default": 5
+                        }
+                    ]
+                },
+                {
+                    "name": "Illari",
+                    "template": "base_hero",
+                    "$ult": "Captive Sun",
+                    "$healer": true,
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "$secondary_fire": true,
+                    "content": [
+                        {
+                            "name": "Solar Energy Maximum",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        },
+                        {
+                            "name": "Solar Energy Recharge Rate",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        },
+                        {
+                            "name": "Outburst",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Healing Pylon",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Junker Queen",
+                    "template": "base_hero",
+                    "$ult": "Rampage",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Commanding Shout",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Carnage",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Jagged Blade",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Jagged Blade Delay Before Automatic Recall",
+                            "type": "range_percentage",
+                            "min": 40,
+                            "max": 400
+                        }
+                    ]
+                },
+                {
+                    "name": "Junkrat",
+                    "template": "base_hero",
+                    "$ult": "Rip-Tire",
+                    "$ult_duration": true,
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Concussion Mine",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Steel Trap",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Frag Launcher Knockback Scalar",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 400
+                        }
+                    ]
+                },
+                {
+                    "name": "Kiriko",
+                    "template": "base_hero",
+                    "$ult": "Kitsune Rush",
+                    "$ult_duration": true,
+                    "$projectile": true,
+                    "$secondary_fire": true,
+                    "$healer": true,
+                    "content": [
+                        {
+                            "name": "Swift Step",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Swift Step Distance Scalar",
+                            "type": "range_percentage",
+                            "min": 20,
+                            "max": 300
+                        },
+                        {
+                            "name": "Protection Suzu",
+                            "template": "ability",
+                            "$knockback": true
+                        }
+                    ]
+                },
+                {
+                    "name": "Lifeweaver",
+                    "template": "base_hero",
+                    "$ult": "Tree of Life",
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "$healer": true,
+                    "content": [
+                        {
+                            "name": "Tree of Life Health",
+                            "type": "range_percentage",
+                            "min": 50,
+                            "max": 300
+                        },
+                        {
+                            "name": "Rejuvenating Dash",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Rejuvenating Dash Healing",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        },
+                        {
+                            "name": "Petal Platform",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Petal Platform Health",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 500
+                        },
+                        {
+                            "name": "Life Grip",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Life Grip and Healing Blossom Range",
+                            "type": "range_percentage",
+                            "min": 20,
+                            "max": 200
+                        },
+                        {
+                            "name": "Weapons Enabled",
+                            "options": [
+                                "All",
+                                "Healing Blossom Only",
+                                "Thorn Volley Only"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Lúcio",
+                    "template": "base_hero",
+                    "$ult": "Sound Barrier",
+                    "$healer": true,
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Amp It Up",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Crossfade",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
+                            "name": "Soundwave",
+                            "template": "ability",
+                            "$knockback": true
+                        }
+                    ]
+                },
+                {
+                    "name": "Mauga",
+                    "template": "base_hero",
+                    "$ult": "Cage Fight",
+                    "content": [
+                        {
+                            "name": "Incendiary Chaingun",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
+                            "name": "Incendiary Chaingun Ignite Damage",
+                            "type": "range_percentage"
+                        },
+                        {
+                            "name": "Incendiary Chaingun Ignite Duration",
+                            "type": "range_percentage"
+                        },
+                        {
+                            "name": "Incendiary Chaingun Ignite Rate",
+                            "type": "range_percentage"
+                        },
+                        {
+                            "name": "Volatile Chaingun",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
+                            "name": "Cardiac Overdrive",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Cardiac Overdrive Healing",
+                            "min": 0,
+                            "max": 400
+                        },
+                        {
+                            "name": "Overrun",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Overrun Knockback",
+                            "min": 0,
+                            "max": 300
+                        }
+                    ]
+                },
+                {
+                    "name": "Mei",
+                    "template": "base_hero",
+                    "$ult": "Blizzard",
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "$secondary_fire": true,
+                    "$healer": true,
+                    "content": [
+                        {
+                            "name": "Cryo-Freeze",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Ice Wall",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Blizzard Freeze Minimum",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 100,
+                            "default": 50
+                        },
+                        {
+                            "name": "Blizzard Freeze Rate Scalar",
+                            "type": "range_percentage"
+                        },
+                        {
+                            "name": "Freeze Stacking",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Weapon Freeze Duration Scalar",
+                            "type": "range_percentage",
+                            "min": 20,
+                            "max": 500
+                        },
+                        {
+                            "name": "Weapon Freeze Minimum",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 100,
+                            "default": 30
+                        },
+                        {
+                            "name": "Weapon Freeze Rate Scalar",
+                            "type": "range_percentage"
+                        }
+                    ]
+                },
+                {
+                    "name": "Mercy",
+                    "template": "base_hero",
+                    "$ult": "Valkyrie",
+                    "$projectile": true,
+                    "$secondary_fire": true,
+                    "$healer": true,
+                    "content": [
+                        {
+                            "name": "Guardian Angel",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Sympathetic Recovery",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
+                            "name": "Resurrect",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Weapons Enabled",
+                            "options": [
+                                "All",
+                                "Caduceus Staff Only",
+                                "Caduceus Blaster Only"
+                            ]
+                        },
+                        {
+                            "name": "Angelic Descent",
+                            "type": "boolean_onoff",
+                            "default": true
+                        }
+                    ]
+                },
+                {
+                    "name": "Moira",
+                    "template": "base_hero",
+                    "$ult": "Coalescence",
+                    "$ult_duration": true,
+                    "$projectile": true,
+                    "$secondary_fire": true,
+                    "$no_ammunition": true,
+                    "$healer": true,
+                    "content": [
+                        {
+                            "name": "Fade",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Biotic Orb",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Biotic Orb Max Damage Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Biotic Orb Max Healing Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Biotic Energy Maximum",
+                            "type": "range_percentage",
+                            "min": 20,
+                            "max": 500
+                        },
+                        {
+                            "name": "Biotic Energy Recharge Rate",
+                            "type": "range_percentage"
+                        }
+                    ]
+                },
+                {
+                    "name": "Orisa",
+                    "template": "base_hero",
+                    "$ult": "Terra Surge",
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Fortify",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Energy Javelin",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Javelin Spin",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Pharah",
+                    "template": "base_hero",
+                    "$ult": "Barrage",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Jet Dash",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Concussive Blast",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Hover Jets",
+                            "template": "ability",
+                            "$no_cooldown": true,
+                            "$rechargeable": true
+                        },
+                        {
+                            "name": "Hover Jets Vertical Speed Scalar",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 300
+                        },
+                        {
+                            "name": "Hover Jets Unlimited Fuel",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Hover Jets Extra Fuel Scalar",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 200
+                        },
+                        {
+                            "name": "Jump Jet",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Jump Jet Acceleration Scalar",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 300
+                        },
+                        {
+                            "name": "Jump Jet Refuel Scalar",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 400
+                        },
+                        {
+                            "name": "Rocket Launcher Knockback Scalar",
+                            "type": "range_percentage"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ramattra",
+                    "template": "base_hero",
+                    "$ult": "Annihilation",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Void Barrier Omnic Form",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Nemesis Form",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Block Nemesis Form",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
+                            "name": "Ravenous Vortex",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Reaper",
+                    "template": "base_hero",
+                    "$ult": "Death Blossom",
+                    "$healer": true,
+                    "content": [
+                        {
+                            "name": "Shadow Step",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Wraith Form",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Reinhardt",
+                    "template": "base_hero",
+                    "$ult": "Earthshatter",
+                    "$projectile": true,
+                    "$no_ammunition": true,
+                    "content": [
+                        {
+                            "name": "Barrier Field",
+                            "template": "ability",
+                            "$rechargeable_no_duration": true
+                        },
+                        {
+                            "name": "Charge",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Fire Strike",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Rocket Hammer Knockback Scalar",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 400
+                        }
+                    ]
+                },
+                {
+                    "name": "Roadhog",
+                    "template": "base_hero",
+                    "$ult": "Whole Hog",
+                    "$healer": true,
+                    "$projectile": true,
+                    "$secondary_fire": true,
+                    "content": [
+                        {
+                            "name": "Take A Breather",
+                            "template": "ability",
+                            "$rechargeable": true
+                        },
+                        {
+                            "name": "Chain Hook",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Pig Pen",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Sigma",
+                    "template": "base_hero",
+                    "$ult": "Gravitic Flux",
+                    "$no_ammunition": true,
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Accretion",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Experimental Barrier",
+                            "template": "ability",
+                            "$rechargeable": true
+                        },
+                        {
+                            "name": "Kinetic Grasp",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Soldier: 76",
+                    "template": "base_hero",
+                    "$ult": "Tactical Visor",
+                    "$ult_duration": true,
+                    "$healer": true,
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Biotic Field",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Helix Rockets",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Sprint",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        }
+                    ]
+                },
+                {
+                    "name": "Sojourn",
+                    "template": "base_hero",
+                    "$ult": "Overclock",
+                    "$ult_duration": true,
+                    "$projectile": true,
+                    "$secondary_fire": true,
+                    "content": [
+                        {
+                            "name": "Disruptor Shot",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Power Slide",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Railgun Alt Fire",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Railgun Alt Fire Energy Charge Rate",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        }
+                    ]
+                },
+                {
+                    "name": "Sombra",
+                    "template": "base_hero",
+                    "$ult": "EMP",
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Hack",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Virus",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Translocator",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Symmetra",
+                    "template": "base_hero",
+                    "$ult": "Photon Barrier",
+                    "$projectile": true,
+                    "$secondary_fire": true,
+                    "content": [
+                        {
+                            "name": "Sentry Turret",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Teleporter",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Torbjörn",
+                    "template": "base_hero",
+                    "$ult": "Molten Core",
+                    "$ult_duration": true,
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "$secondary_fire": true,
+                    "content": [
+                        {
+                            "name": "Deploy Turret",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Overload",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Overload Duration Scalar",
+                            "type": "range_percentage"
+                        },
+                        {
+                            "name": "Weapons Enabled",
+                            "options": [
+                                "All",
+                                "Rivet Gun Only",
+                                "Forge Hammer Only"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Tracer",
+                    "template": "base_hero",
+                    "$ult": "Pulse Bomb",
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Blink",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Recall",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Widowmaker",
+                    "template": "base_hero",
+                    "$ult": "Infra-sight",
+                    "$ult_duration": true,
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "$scope": true,
+                    "content": [
+                        {
+                            "name": "Grappling Hook",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Venom Mine",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Winston",
+                    "template": "base_hero",
+                    "$ult": "Primal Rage",
+                    "$ult_duration": true,
+                    "content": [
+                        {
+                            "name": "Primal Rage Melee Knockback Scalar",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 300
+                        },
+                        {
+                            "name": "Barrier Projector",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Jump Pack",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Jump Pack Acceleration Scalar",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 300
+                        }
+                    ]
+                },
+                {
+                    "name": "Wrecking Ball",
+                    "template": "base_hero",
+                    "$ult": "Minefield",
+                    "$ult_duration": true,
+                    "$ult_knockback": true,
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "content": [
+                        {
+                            "name": "Adaptive Shield",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Grappling Claw",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Piledriver",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Roll",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
+                            "name": "Roll Always Active",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                {
+                    "name": "Zarya",
+                    "template": "base_hero",
+                    "$ult": "Graviton Surge",
+                    "$projectile": true,
+                    "$projectile_gravity": true,
+                    "$secondary_fire": true,
+                    "content": [
+                        {
+                            "name": "Particle Barrier",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Projected Barrier",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Particle Cannon Secondary Knockback Scalar",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 400
+                        }
+                    ]
+                },
+                {
+                    "name": "Zenyatta",
+                    "template": "base_hero",
+                    "$ult": "Transcendence",
+                    "$projectile": true,
+                    "$secondary_fire": true,
+                    "$healer": true,
+                    "content": [
+                        {
+                            "name": "Orb Of Harmony",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
+                            "name": "Orb Of Discord",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "root": [
+        {
+            "name": "main",
+            "content": [
+                {
+                    "name": "Description",
+                    "type": "string"
+                },
+                {
+                    "name": "Mode Name",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "lobby",
+            "content": [
+                {
+                    "name": "Map Rotation",
+                    "options": [
+                        "After A Mirror Match",
+                        "After A Game",
+                        "Paused"
+                    ]
+                },
+                {
+                    "name": "Return To Lobby",
+                    "options": [
+                        "After A Mirror Match",
+                        "After A Game",
+                        "Never"
+                    ]
+                },
+                {
+                    "name": "Team Balancing",
+                    "options": [
+                        "Off",
+                        "After A Mirror Match",
+                        "After A Game"
+                    ]
+                },
+                {
+                    "name": "Swap Teams After Match",
+                    "type": "boolean_yesno",
+                    "default": true
+                },
+                {
+                    "name": "Max Team 1 Players",
+                    "type": "range_int",
+                    "min": 0,
+                    "max": 12,
+                    "default": 6
+                },
+                {
+                    "name": "Max Team 2 Players",
+                    "type": "range_int",
+                    "min": 0,
+                    "max": 12,
+                    "default": 6
+                },
+                {
+                    "name": "Max FFA Players",
+                    "type": "range_int",
+                    "min": 0,
+                    "max": 12,
+                    "default": 0
+                },
+                {
+                    "name": "Max Spectators",
+                    "type": "range_int",
+                    "min": 0,
+                    "max": 12,
+                    "default": 2
+                },
+                {
+                    "name": "Allow Players Who Are In Queue",
+                    "type": "boolean_yesno"
+                },
+                {
+                    "name": "Use Experimental Update If Available",
+                    "type": "boolean_yesno"
+                },
+                {
+                    "name": "Match Voice Chat",
+                    "type": "boolean_enableddisabled"
+                },
+                {
+                    "name": "Pause Game On Player Disconnect",
+                    "type": "boolean_yesno"
+                },
+                {
+                    "name": "Data Center Preference",
+                    "options": [
+                        "Best Available",
+                        "Netherlands",
+                        "France",
+                        "China - Hangzhou",
+                        "China - Hangzhou 2",
+                        "South Korea",
+                        "USA - Southwest",
+                        "USA - West",
+                        "Australia 2",
+                        "Australia 3",
+                        "Taiwan",
+                        "Japan",
+                        "Singapore",
+                        "Australia",
+                        "Brazil",
+                        "South Korea 2",
+                        "Germany",
+                        "Ireland",
+                        "USA - East",
+                        "USA - Northwest",
+                        "China - Beijing",
+                        "Argentina",
+                        "Chile",
+                        "Brazil 2",
+                        "Peru",
+                        "USA - Central",
+                        "Bahrain"
+                    ],
+                    "comment": [
+                        "Sources: https://www.reddit.com/r/Overwatch/comments/aipsn7/data_center_switcher/ and https://us.forums.blizzard.com/en/overwatch/t/information-about-the-global-play-server-selection/618941",
+                        "It's better for this list to be too expansive, since porting modes globally with a valid Data Center set can fail if the datacenter is not available in the importer's region.",
+                        "It's not OSTW's problem if the datacenter can't be reached for whatever reason (taken offline, unavailable, invalid name). People shouldn't set Data Center anyways. Best we can do is let it compile/decompile."
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "modes",
+            "content": [
+                {
+                    "template": "base_mode",
+                    "name": "General"
+                },
+                {
+                    "name": "Assault",
+                    "template": "base_mode",
+                    "$with_maps": "Assault",
+                    "$competitive": true,
+                    "$capture_speed": true
+                },
+                {
+                    "name": "Control",
+                    "template": "base_mode",
+                    "$with_maps": "Control",
+                    "$competitive": true,
+                    "$capture_speed": true,
+                    "$limit_valid_control_points": true,
+                    "$scoring_speed_modifier": true,
+                    "content": [
+                        {
+                            "name": "Score To Win",
+                            "type": "range_percentage",
+                            "min": 1,
+                            "max": 3,
+                            "default": 2
+                        }
+                    ]
+                },
+                {
+                    "name": "Escort",
+                    "$with_maps": "Escort",
+                    "template": "base_mode",
+                    "$competitive": true,
+                    "$payload_speed": true
+                },
+                {
+                    "name": "Hybrid",
+                    "template": "base_mode",
+                    "$with_maps": "Hybrid",
+                    "$competitive": true,
+                    "$capture_speed": true,
+                    "$payload_speed": true
+                },
+                {
+                    "name": "Push",
+                    "template": "base_mode",
+                    "$with_maps": "Push",
+                    "$competitive": true,
+                    "content": [
+                        {
+                            "name": "TS-1 Walk Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "TS-1 Push Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                {
+                    "name": "Flashpoint",
+                    "template": "base_mode",
+                    "$with_maps": "Flashpoint",
+                    "$competitive": true,
+                    "$capture_speed": true,
+                    "$scoring_speed_modifier": true,
+                    "content": [
+                        {
+                            "name": "Control Point A",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point B",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point C",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point D",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point E",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "First Active Control Point",
+                            "options": [
+                                "A",
+                                "B",
+                                "C",
+                                "D",
+                                "E",
+                                "Random"
+                            ]
+                        },
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 10,
+                            "default": 3
+                        }
+                    ]
+                },
+                {
+                    "name": "Capture The Flag",
+                    "template": "base_mode",
+                    "$with_maps": "Capture The Flag",
+                    "content": [
+                        {
+                            "name": "Blitz Flag Locations",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Damage Interrupts Flag Interaction",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Flag Carrier Abilities",
+                            "options": [
+                                "Restricted",
+                                "All",
+                                "None"
+                            ]
+                        },
+                        {
+                            "name": "Flag Dropped Lock Time",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 10,
+                            "default": 5
+                        },
+                        {
+                            "name": "Flag Pickup Time",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 5,
+                            "default": 0
+                        },
+                        {
+                            "name": "Flag Return Time",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 5,
+                            "default": 4
+                        },
+                        {
+                            "name": "Flag Score Respawn Time",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 20,
+                            "default": 15
+                        },
+                        {
+                            "name": "Game Length (Minutes)",
+                            "type": "range_int",
+                            "min": 5,
+                            "max": 15,
+                            "default": 8
+                        },
+                        {
+                            "name": "Respawn Speed Buff Duration",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 60,
+                            "default": 0
+                        },
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 9,
+                            "default": 3
+                        },
+                        {
+                            "name": "Team Needs Flag At Base To Score",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                {
+                    "name": "Deathmatch",
+                    "template": "base_mode",
+                    "$with_maps": "Deathmatch",
+                    "$game_length": true,
+                    "$self_respawn": true,
+                    "content": [
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 5000,
+                            "default": 20
+                        }
+                    ]
+                },
+                {
+                    "name": "Elimination",
+                    "template": "base_mode",
+                    "$with_maps": "Elimination",
+                    "$elimination": true
+                },
+                {
+                    "name": "Team Deathmatch",
+                    "template": "base_mode",
+                    "$with_maps": "Team Deathmatch",
+                    "$game_length": true,
+                    "$self_respawn": true,
+                    "content": [
+                        {
+                            "name": "Mercy Resurrect Counteracts Kills",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 200,
+                            "default": 30
+                        },
+                        {
+                            "name": "Imbalanced Team Score To Win",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Team 1 Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 200,
+                            "default": 30
+                        },
+                        {
+                            "name": "Team 2 Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 200,
+                            "default": 30
+                        }
+                    ]
+                },
+                {
+                    "name": "Skirmish",
+                    "template": "base_mode",
+                    "$with_maps": "Skirmish",
+                    "$limit_valid_control_points": true
+                },
+                {
+                    "name": "Practice Range",
+                    "template": "base_mode",
+                    "$with_maps": "Practice Range",
+                    "content": [
+                        {
+                            "name": "Spawn Training Bots",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Training Bot Respawn Time Scalar",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                {
+                    "name": "Freezethaw Elimination",
+                    "template": "base_mode",
+                    "$with_maps": "Freezethaw Elimination",
+                    "$elimination": true
+                },
+                {
+                    "name": "Bounty Hunter",
+                    "template": "base_mode",
+                    "$with_maps": "Bounty Hunter",
+                    "$game_length": true,
+                    "$self_respawn": true,
+                    "content": [
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 5000,
+                            "default": 20
+                        },
+                        {
+                            "name": "Base Score For Killing A Bounty Target",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 300,
+                            "default": 100
+                        },
+                        {
+                            "name": "Bounty Increase Per Kill As Bounty Target",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 1000,
+                            "default": 0
+                        },
+                        {
+                            "name": "Bounty Target Count",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 1,
+                            "default": 1,
+                            "comment": "what?"
+                        },
+                        {
+                            "name": "Score Per Kill",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 1000,
+                            "default": 100
+                        },
+                        {
+                            "name": "Score Per Kill As Bounty Target",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 1000,
+                            "default": 300
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "heroes",
+            "content": [
+                {
+                    "name": "General",
+                    "ref": "hero_list"
+                },
+                {
+                    "name": "Team 1",
+                    "ref": "hero_list"
+                },
+                {
+                    "name": "Team 2",
+                    "ref": "hero_list"
+                }
+            ]
+        },
+        {
+            "name": "extensions",
+            "content": [
+                {
+                    "name": "Beam Effects",
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Beam Sounds",
+                    "type": "switch",
+                    "cost": 1
+                },
+                {
+                    "name": "Buff Status Effects",
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Debuff Status Effects",
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Buff and Debuff Sounds",
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Energy Explosion Effects",
+                    "type": "switch",
+                    "cost": 4
+                },
+                {
+                    "name": "Kinetic Explosion Effects",
+                    "type": "switch",
+                    "cost": 4
+                },
+                {
+                    "name": "Explosion Sounds",
+                    "type": "switch",
+                    "cost": 2
+                },
+                {
+                    "name": "Play More Effects",
+                    "type": "switch",
+                    "cost": 1
+                },
+                {
+                    "name": "Projectiles",
+                    "type": "switch",
+                    "cost": 4
+                },
+                {
+                    "name": "Spawn More Dummy Bots",
+                    "type": "switch",
+                    "cost": 4
+                }
+            ]
+        },
+        {
+            "name": "workshop",
+            "type": "keyvalue"
+        }
+    ],
+    "templates": {
+        "base_hero": {
+            "params": {
+                "ult": {
+                    "then": [
+                        {
+                            "name": "Ultimate Ability $value",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Ultimate Generation $value",
+                            "type": "range_percentage"
+                        },
+                        {
+                            "name": "Ultimate Generation - Passive $value",
+                            "type": "range_percentage"
+                        },
+                        {
+                            "name": "Ultimate Generation - Combat $value",
+                            "type": "range_percentage"
+                        }
+                    ]
+                },
+                "ult_duration": {
+                    "then": [
+                        {
+                            "name": "Ultimate Duration",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 500
+                        },
+                        {
+                            "name": "Infinite Ultimate Duration",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                "ult_knockback": {
+                    "then": [
+                        {
+                            "name": "$ult Knockback Scalar"
+                        }
+                    ]
+                },
+                "projectile": {
+                    "then": [
+                        {
+                            "name": "Projectile Speed",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        }
+                    ]
+                },
+                "projectile_gravity": {
+                    "then": [
+                        {
+                            "name": "Projectile Gravity",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        }
+                    ]
+                },
+                "healer": {
+                    "then": [
+                        {
+                            "name": "Healing Dealt",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                "scope": {
+                    "then": [
+                        {
+                            "name": "No Automatic Fire",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "No Scope",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                "no_ammunition": {
+                    "else": [
+                        {
+                            "name": "Ammunition Clip Size Scalar",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 500
+                        },
+                        {
+                            "name": "No Ammunition Requirement",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                "secondary_fire": {
+                    "then": [
+                        {
+                            "name": "Secondary Fire",
+                            "type": "boolean_onoff",
+                            "default": true
+                        }
+                    ]
+                }
+            },
+            "content": [
+                {
+                    "name": "Quick Melee",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Spawn With Ultimate Ready",
+                    "type": "boolean_onoff"
+                },
+                {
+                    "name": "Health",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Damage Dealt",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Damage Received",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Healing Received",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Jump Vertical Speed",
+                    "type": "range_percentage",
+                    "min": 25,
+                    "max": 800
+                },
+                {
+                    "name": "Movement Gravity",
+                    "type": "range_percentage",
+                    "min": 25,
+                    "max": 400
+                },
+                {
+                    "name": "Movement Speed",
+                    "type": "range_percentage",
+                    "min": 50,
+                    "max": 300
+                },
+                {
+                    "name": "Receive Headshots Only",
+                    "type": "boolean_onoff"
+                },
+                {
+                    "name": "Primary Fire",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Ammunition Clip Size Scalar",
+                    "type": "range_percentage",
+                    "min": 25,
+                    "max": 500
+                }
+            ]
+        },
+        "ability": {
+            "sibling": true,
+            "base_type": "boolean_onoff",
+            "params": {
+                "no_cooldown": {
+                    "else": [
+                        {
+                            "name": "$name Cooldown Time",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        }
+                    ]
+                },
+                "knockback": {
+                    "then": [
+                        {
+                            "name": "$name Knockback Scalar",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 300
+                        }
+                    ]
+                },
+                "self_knockback": {
+                    "then": [
+                        {
+                            "name": "$name Knockback Scalar Enemy",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 300
+                        },
+                        {
+                            "name": "$name Knockback Scalar Self",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 300
+                        }
+                    ]
+                },
+                "rechargeable": {
+                    "then": [
+                        {
+                            "name": "$name Recharge Rate",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        },
+                        {
+                            "name": "$name Maximum Time",
+                            "type": "range_percentage",
+                            "min": 20,
+                            "max": 500
+                        }
+                    ]
+                },
+                "rechargeable_no_duration": {
+                    "then": [
+                        {
+                            "name": "$name Recharge Rate",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        }
+                    ]
+                }
+            }
+        },
+        "base_mode": {
+            "params": {
+                "competitive": {
+                    "then": [
+                        {
+                            "name": "Competitive Rules",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                "capture_speed": {
+                    "then": [
+                        {
+                            "name": "Capture Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                "payload_speed": {
+                    "then": [
+                        {
+                            "name": "Payload Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                "with_maps": {
+                    "then": [
+                        {
+                            "name": "enabled maps",
+                            "insert_maps": "$value"
+                        },
+                        {
+                            "name": "disabled maps",
+                            "insert_maps": "$value"
+                        }
+                    ]
+                },
+                "limit_valid_control_points": {
+                    "then": [
+                        {
+                            "name": "Limit Valid Control Points",
+                            "options": [
+                                "All",
+                                "First",
+                                "Second",
+                                "Third"
+                            ]
+                        }
+                    ]
+                },
+                "scoring_speed_modifier": {
+                    "then": [
+                        {
+                            "name": "Scoring Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                "game_length": {
+                    "then": [
+                        {
+                            "name": "Game Length In Minutes",
+                            "type": "range_int",
+                            "min": 5,
+                            "max": 15,
+                            "default": 10
+                        }
+                    ]
+                },
+                "self_respawn": {
+                    "then": [
+                        {
+                            "name": "Self Initiated Respawn",
+                            "type": "boolean_onoff",
+                            "default": true
+                        }
+                    ]
+                },
+                "elimination": {
+                    "then": [
+                        {
+                            "name": "Hero Selection Time",
+                            "type": "range_int",
+                            "min": 20,
+                            "max": 60,
+                            "default": 20
+                        },
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 9,
+                            "default": 3
+                        },
+                        {
+                            "name": "Restrict Previously Used Heroes",
+                            "options": [
+                                "Off",
+                                "After Round Won",
+                                "After Round Played"
+                            ]
+                        },
+                        {
+                            "name": "Hero Selection",
+                            "options": [
+                                "Any",
+                                "Limited",
+                                "Random",
+                                "Random (Mirrored)"
+                            ]
+                        },
+                        {
+                            "name": "Limited Choice Pool",
+                            "options": [
+                                "Team Size +2",
+                                "Team Size",
+                                "Team Size +1",
+                                "Team Size +3"
+                            ]
+                        },
+                        {
+                            "name": "Capture Objective Tiebreaker",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Tiebreaker After Match Time Elapsed",
+                            "type": "range_int",
+                            "min": 30,
+                            "max": 300,
+                            "default": 105
+                        },
+                        {
+                            "name": "Time To Capture",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 7,
+                            "default": 3
+                        },
+                        {
+                            "name": "Draw After Match Time Elapsed With No Tiebreaker",
+                            "type": "range_int",
+                            "min": 60,
+                            "max": 300,
+                            "default": 135
+                        },
+                        {
+                            "name": "Reveal Heroes",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Reveal Heroes After Match Time Elapsed",
+                            "type": "range_int",
+                            "min": 0,
+                            "max": 180,
+                            "default": 75
+                        }
+                    ]
+                }
+            },
+            "content": [
+                {
+                    "name": "Enemy Health Bars",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Game Mode Start",
+                    "options": [
+                        "All Slots Filled",
+                        "Immediately",
+                        "Manual"
+                    ]
+                },
+                {
+                    "name": "Health Pack Respawn Time Scalar",
+                    "type": "range_percentage",
+                    "min": 10,
+                    "max": 500
+                },
+                {
+                    "name": "Kill Cam",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Kill Feed",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Skins",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Spawn Health Packs",
+                    "options": [
+                        "Determined By Mode",
+                        "Enabled",
+                        "Disabled"
+                    ]
+                },
+                {
+                    "name": "Allow Hero Switching",
+                    "type": "boolean_onoff",
+                    "default": true
+                },
+                {
+                    "name": "Hero Limit",
+                    "options": [
+                        "1 Per Team",
+                        "2 Per Team",
+                        "1 Per Game",
+                        "2 Per Game",
+                        "Off"
+                    ]
+                },
+                {
+                    "name": "Limit Roles",
+                    "options": [
+                        "1 Tank 2 Offense 2 Support",
+                        "Off",
+                        "2 Of Each Role Per Team"
+                    ]
+                },
+                {
+                    "name": "Respawn As Random Hero",
+                    "type": "boolean_onoff"
+                },
+                {
+                    "name": "Random Hero Role Limit Per Team",
+                    "type": "range_int",
+                    "min": 1,
+                    "max": 6,
+                    "default": 6
+                },
+                {
+                    "name": "Respawn Time Scalar",
+                    "type": "range_percentage",
+                    "min": 0,
+                    "max": 100,
+                    "default": 100
+                },
+                {
+                    "name": "Tank Role Passive Health Bonus",
+                    "options": [
+                        "1 Tank 2 Offense 2 Support",
+                        "Always Enabled",
+                        "Disabled"
+                    ]
+                }
+            ]
+        }
+    },
+    "map_legacy_json": [
+        {
+            "from": "Heroes.$0.General",
+            "to": "heroes.$0"
+        },
+        {
+            "from": "Heroes.$0.Enabled Heroes",
+            "to": "heroes.$0.enabled heroes"
+        },
+        {
+            "from": "Heroes.$0.Disabled Heroes",
+            "to": "heroes.$0.disabled heroes"
+        },
+        {
+            "from": "Heroes",
+            "to": "heroes"
+        },
+        {
+            "from": "Modes.$0.Enabled",
+            "to": null,
+            "link_state": "modes.$0"
+        },
+        {
+            "from": "Modes.$0.Enabled Maps",
+            "to": "modes.$0.enabled maps"
+        },
+        {
+            "from": "Modes.$0.Disabled Maps",
+            "to": "modes.$0.disabled maps"
+        },
+        {
+            "from": "Modes.All",
+            "to": "modes.General"
+        },
+        {
+            "from": "Modes",
+            "to": "modes"
+        },
+        {
+            "from": "Description",
+            "to": "main.Description"
+        },
+        {
+            "from": "Mode Name",
+            "to": "main.Mode Name"
+        },
+        {
+            "from": "Extensions",
+            "to": "extensions"
+        },
+        {
+            "from": "Lobby",
+            "to": "lobby"
+        }
+    ]
+}

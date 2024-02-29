@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Deltin.Deltinteger.I18n;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -88,7 +87,7 @@ namespace Deltin.Deltinteger.Lobby
 
         private string SegmentTranslate(WorkshopBuilder builder, string segmentTitle)
         {
-            if (LanguageInfo.IsKeyword(Title)) return builder.Translate(Title).RemoveStructuralChars();
+            // if (LanguageInfo.IsKeyword(Title)) return builder.Translate(Title).RemoveStructuralChars();
             return builder.Translate(segmentTitle).Replace("%1$s", builder.Translate(AbilityName)).RemoveStructuralChars();
         }
 

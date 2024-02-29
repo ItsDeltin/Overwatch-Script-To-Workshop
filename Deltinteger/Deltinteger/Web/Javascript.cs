@@ -9,11 +9,12 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.LanguageServer.Settings.TomlSettings;
 using Deltin.Deltinteger.LanguageServer.Model;
 using Deltin.Deltinteger;
-using LspSerializer = OmniSharp.Extensions.LanguageServer.Protocol.Serialization.LspSerializer;
 using System.Linq;
 using Deltin.Deltinteger.Decompiler;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Lobby;
+using Deltin.Deltinteger.LanguageServer.Settings;
+using Deltin.Deltinteger.Parse.Settings;
 
 // no namespace
 #pragma warning disable CA1050
@@ -30,7 +31,7 @@ using Deltin.Deltinteger.Lobby;
 public static partial class OstwJavascript
 {
     static OstwLangServer? langServer;
-    static TaskCompletionSource<bool> langServerStatus = new();
+    static readonly TaskCompletionSource<bool> langServerStatus = new();
     static bool isStartingLanguageServer;
 
     // ~ Imported Javascript functions ~
@@ -40,11 +41,20 @@ public static partial class OstwJavascript
     [JSImport("ostwWeb.getWorkshopElements", "main.js")]
     public static partial Task<string> GetWorkshopElements();
 
+    [JSImport("ostwWeb.getLobbySettings", "main.js")]
+    public static partial Task<string> GetLobbySettings();
+
+    [JSImport("ostwWeb.getMaps", "main.js")]
+    public static partial Task<string> GetMaps();
+
     [JSImport("ostwWeb.setDiagnostics", "main.js")]
     public static partial void SetDiagnostics(string publish);
 
     [JSImport("ostwWeb.setCompiledWorkshopCode", "main.js")]
     public static partial void SetCompiledWorkshopCode(string code, int elementCount);
+
+    [JSImport("ostwWeb.onNotification", "main.js")]
+    public static partial void OnNotification(string message);
     // ~ End Imported Javascript functions ~
 
     // ~ Exported functions ~
@@ -159,14 +169,20 @@ public static partial class OstwJavascript
         else
         {
             isStartingLanguageServer = true;
-            LoadData.LoadWith(await GetWorkshopElements());
+            ErrorReport.FlushQueuedMessages(IErrorReporter.New(err =>
+            {
+                ConsoleLog(err);
+                OnNotification(err);
+            }));
+            LoadData.LoadWith(await GetWorkshopElements(), await GetLobbySettings(), await GetMaps());
             HeroSettingCollection.Init();
             ModeSettingCollection.Init();
             langServer = new OstwLangServer(
                 tomlDiagnosticsReporter: new ITomlDiagnosticReporter.None(),
                 documentEventHandler: StaticDocumentEventHandler.Instance,
                 langLogger: ILangLogger.New(ConsoleLog),
-                createFileGetter: (doc, settings) => new WebFileGetter(doc));
+                createFileGetter: (doc, settings) => new WebFileGetter(doc),
+                settingsProvider: IDsSettingsProvider.New(GetDsSettings));
             langServerStatus.SetResult(true);
         }
     }
@@ -176,6 +192,17 @@ public static partial class OstwJavascript
     static TextDocumentIdentifier GetDoc(string uriStr) => new(LspUri.From(uriStr));
 
     static Uri GetSystemUri(string uriStr) => new(uriStr);
+
+    static SourcedSettings<DsTomlSettings> GetDsSettings(Uri uri)
+    {
+        return new(uri, new()
+        {
+            CStyleWorkshopOutput = true,
+            LogDeleteReferenceZero = true,
+            CompileMiscellaneousComments = false,
+            SubroutineStacksAreExtended = false
+        });
+    }
 
     static string ToJson(object input) => JsonConvert.SerializeObject(input);
     static T FromJson<T>(string json) => JsonConvert.DeserializeObject<T>(json)!;

@@ -1,46 +1,58 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Compiler.Parse.Operators;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Compiler.Parse.Lexing;
+using Deltin.Deltinteger.Compiler.File;
+using MediatR;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
     public class Parser
     {
-        public Lexer Lexer { get; }
-        public int Token { get; private set; }
-        public Token Current => Lexer.ScanTokenAt(Token);
-        public Token CurrentOrLast => Lexer.ScanTokenAt(Token) ?? Lexer.Tokens.Last();
-        public Token Previous => Lexer.ScanTokenAt(Token - 1);
-        public TokenType Kind => Current?.TokenType ?? TokenType.EOF;
-        public bool IsFinished => Lexer.IsFinished(Token) || Kind == TokenType.EOF;
+        Lexer Lexer { get; }
+        int Token { get; set; }
+        Token Current => Lexer.ScanTokenAt(Token);
+        Token CurrentOrLast => Lexer.ScanTokenAtOrLast(Token);
+        Token Previous => Lexer.ScanTokenAt(Token - 1);
+        TokenType Kind => Current?.TokenType ?? TokenType.EOF;
+        bool IsFinished => Kind == TokenType.EOF;
 
-        public Stack<IOperatorInfo> Operators { get; } = new Stack<IOperatorInfo>();
-        public Stack<IParseExpression> Operands { get; } = new Stack<IParseExpression>();
         public Stack<TokenCapture> TokenCaptureStack { get; } = new Stack<TokenCapture>();
         public Stack<int> TokenRangeStart { get; } = new Stack<int>();
         public Stack<bool> TernaryCheck { get; } = new Stack<bool>();
         public Stack<bool> StringCheck { get; } = new Stack<bool>();
         public List<TokenCapture> NodeCaptures { get; } = new List<TokenCapture>();
         public List<IParserError> Errors { get; } = new List<IParserError>();
-        private readonly RootContext _last;
+
+        private readonly VersionInstance _content;
         private readonly ParserSettings _parserSettings;
+        private readonly IncrementalParse? _increment;
+
+        readonly OperatorStack<IParseExpression> _operatorStack = new(new OstwOperandFactory());
+        readonly OperatorStack<IVanillaExpression> _vanillaOperatorStack = new(new VanillaOperandFactory());
 
         private int LookaheadDepth = 0;
 
-        public Parser(Lexer lexer, ParserSettings parserSettings, RootContext last = null)
+        public Parser(VersionInstance content, ParserSettings parserSettings, IncrementalParse? increment)
         {
-            Lexer = lexer;
+            Lexer = new(parserSettings, increment?.IncrementalLexer, content);
+            _content = content;
             _parserSettings = parserSettings;
-            _last = last;
+            _increment = increment;
             StringCheck.Push(false);
         }
 
         Token Consume()
         {
-            if (!Lexer.IsFinished(Token))
+            if (!IsFinished)
             {
                 Token++;
+
+                if (LookaheadDepth == 0)
+                    Lexer.ProgressTo(Token);
+
                 return Lexer.ScanTokenAt(Token - 1);
             }
             return null;
@@ -58,10 +70,22 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 var capture = TokenCaptureStack.Pop();
                 capture.Finish(Token, node);
-                node.Range = new DocRange(TokenAtOrEnd(capture.StartToken).Range.Start, Previous.Range.End);
+                node.Range = TokenAtOrEnd(capture.StartToken).Range + Previous.Range;
                 if (capture.IsValid) NodeCaptures.Add(capture);
             }
             return node;
+        }
+
+        void PopEndTokenCapture(object node)
+        {
+            if (LookaheadDepth == 0)
+            {
+                var capture = TokenCaptureStack.Pop();
+                // todo: Shouldn't this be T - 1?
+                capture.Finish(Token, node);
+                if (capture.IsValid)
+                    NodeCaptures.Add(capture);
+            }
         }
 
         void StartNode()
@@ -79,7 +103,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNode<T>(T node) where T : INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(TokenAtOrEnd(TokenRangeStart.Pop()).Range.Start, TokenAtOrEnd(Token - 1).Range.End);
+                node.Range = new DocRange(
+                    Lexer.GetTokenAtOrEnd(TokenRangeStart.Pop()).Range.Start,
+                    Lexer.GetTokenAtOrEnd(Token - 1).Range.End);
             return node;
         }
 
@@ -90,7 +116,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return node;
         }
 
-        T EndNodeFrom<T>(T node, DocPos start) where T : INodeRange
+        public T EndNodeFrom<T>(T node, DocPos start) where T : INodeRange
         {
             if (LookaheadDepth == 0)
                 node.Range = start + TokenAtOrEnd(Token - 1).Range.End;
@@ -103,11 +129,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 TokenRangeStart.Pop();
         }
 
-        T Node<T>(Func<T> func) where T : Node
+        T Node<T>(Func<T> func) where T : INodeRange
         {
             StartNode();
             T r = func();
             return EndNode(r);
+        }
+
+        T CaptureRange<T>(Func<CaptureRangeHelper, T> func) => func(new CaptureRangeHelper(this, Token));
+
+        readonly record struct CaptureRangeHelper(Parser Parser, int StartToken)
+        {
+            public readonly DocRange GetRange() => new(
+                start: Parser.Lexer.GetTokenAtOrEnd(StartToken).Range.Start,
+                end: Parser.Lexer.GetTokenAtOrEnd(Math.Max(Parser.Token - 1, StartToken)).Range.End);
         }
 
         /// <summary>Gets an existing parsing tree at the current position.</summary>
@@ -117,16 +152,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool GetIncrementalNode<T>(out T node)
         {
             // If the last syntax tree was not provided or the current token is inside the change range, return null.
-            if (_last == null || (Token >= Lexer.IncrementalChangeStart && Token <= Lexer.IncrementalChangeEnd))
+            if (_increment is null || (Token >= _increment.Value.ChangeStartToken() && !Lexer.IsLexCompleted()))
             {
-                node = default(T);
+                node = default;
                 return false;
             }
 
             // Iterate through each cached node.
-            foreach (var capture in _last.NodeCaptures)
+            foreach (var capture in _increment.Value.NodeCaptures)
             {
-                bool surpassesIncrementalChange = Token > Lexer.IncrementalChangeStart;
+                bool surpassesIncrementalChange = Token > _increment.Value.ChangeStartToken();
+                int delta = surpassesIncrementalChange ? Lexer.GetTokenDelta() : 0;
 
                 // If the node's type is equal to the expected node type
                 // and the cached node's start token index is equal to the current token's index (adjusted for token difference if the current token is past the change position) 
@@ -136,12 +172,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // the change starts (Lexer.IncrementalChangeStart)
                     //
                     // This makes sure we do not reuse a changed incremental node.
-                    (capture.StartToken + capture.Length < Lexer.IncrementalChangeStart || (Lexer.IsPushCompleted && capture.StartToken > Lexer.IncrementalChangeEnd)) &&
+                    (capture.StartToken + capture.Length < _increment.Value.ChangeStartToken() || (Lexer.IsLexCompleted() && capture.StartToken > Lexer.LexResyncedAt())) &&
                     // If this surpasses the incremental change range, make sure the push is completed.
-                    (!surpassesIncrementalChange || Lexer.IsPushCompleted) &&
+                    (!surpassesIncrementalChange || Lexer.IsLexCompleted()) &&
                     // Make sure the incremental node's position matches the current Token (capture.StartToken + ... = Token).
                     // If Token surpasses the incremental change range (surpassesIncrementalChange), then offset by the change delta.
-                    capture.StartToken + (surpassesIncrementalChange ? Lexer.GetTokenDelta() : 0) == Token)
+                    capture.StartToken + delta == Token)
                 {
                     // Then return the node then advance by the number of tokens in the cached node.
                     node = (T)capture.Node;
@@ -151,8 +187,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             // No matching node was found.
-            node = default(T);
+            node = default;
             return false;
+        }
+
+        T GetIncrementalNode<T>(Func<T> factory)
+        {
+            StartTokenCapture();
+            if (!GetIncrementalNode(out T node))
+                node = factory();
+            PopEndTokenCapture(node);
+            return node;
         }
 
         void AddError(IParserError error)
@@ -172,6 +217,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Error is good to go.
             Errors.Add(error);
         }
+
+        void AddError(string message) => AddError(IParserError.New(CurrentOrLast.Range, message));
 
         void Lookahead(Action action)
         {
@@ -223,7 +270,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
-        Token TokenAtOrEnd(int position) => Lexer.ScanTokenAt(position) ?? Lexer.Tokens.Last();
+        Token TokenAtOrEnd(int position) => Lexer.ScanTokenAtOrLast(position);
 
         /// <summary>If the current token's type is equal to the specified type in the 'type' parameter,
         /// advance then return true. Otherwise, error then return false.</summary>
@@ -332,114 +379,55 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         // Operators
-        void PushOperator(IOperatorInfo op)
+        void PushOperator(IStackOperator<IParseExpression> op) => _operatorStack.PushOperator(op);
+
+        enum BinaryRhsMode
         {
-            while (CompilerOperator.Compare(Operators.Peek().Source, op.Source))
-                PopOperator();
-            Operators.Push(op);
+            Default,
+            Dot,
+            Squiggle
         }
 
-        void PopOperator()
+        bool TryParseBinaryOperator<T>(out IStackOperator<T> stackOperator, out BinaryRhsMode binaryRhsMode)
         {
-            var iop = Operators.Pop();
-            if (iop is OperatorInfo op)
-            {
-                // Binary
-                if (op.Type == OperatorType.Binary)
-                {
-                    var right = Operands.Pop();
-                    var left = Operands.Pop();
-                    Operands.Push(new BinaryOperatorExpression(left, right, op));
-                }
-                // Unary
-                else if (op.Type == OperatorType.Unary)
-                {
-                    var value = Operands.Pop();
-                    Operands.Push(new UnaryOperatorExpression(value, op));
-                }
-                // Extraneous left-hand ternary
-                else if (op.Type == OperatorType.TernaryLeft)
-                {
-                    Operands.Pop();
-                    AddError(new MissingTernaryHand(op.Token, false));
-                }
-                // Ternary
-                else if (op.Type == OperatorType.TernaryRight)
-                {
-                    if (Operators.Peek() is OperatorInfo peek && peek.Type == OperatorType.TernaryLeft)
-                    {
-                        var op2 = Operators.Pop();
-                        var rhs = Operands.Pop();
-                        var middle = Operands.Pop();
-                        var lhs = Operands.Pop();
-                        Operands.Push(new TernaryExpression(lhs, middle, rhs));
-                    }
-                    // Missing left-hand ?
-                    else
-                    {
-                        Operands.Pop();
-                        AddError(new MissingTernaryHand(op.Token, true));
-                    }
-                }
-                else throw new NotImplementedException();
-            }
-            // Type cast operator.
-            else if (iop is TypeCastInfo typeCastOp)
-            {
-                var value = Operands.Pop();
-                Operands.Push(EndNodeFrom(new TypeCast(typeCastOp.CastingTo, value), typeCastOp.StartPosition));
-            }
-            // Array operator
-            else if (iop is ValueInArrayInfo valueInArray)
-            {
-                var value = Operands.Pop();
-                Operands.Push(new ValueInArray(value, valueInArray.Index, valueInArray.EndPosition));
-            }
-            // Invoke
-            else if (iop is InvokeInfo invoke)
-            {
-                var value = Operands.Pop();
-                Operands.Push(new FunctionExpression(value, invoke.LeftParentheses, invoke.RightParentheses, invoke.Values));
-            }
-        }
-
-        bool TryParseBinaryOperator(out OperatorInfo operatorInfo)
-        {
-            foreach (var op in CompilerOperator.BinaryOperators)
+            foreach (var op in CStyleOperator.BinaryOperators)
             {
                 // Do not parse '>' if we are in a formatted string and the following token is not an identifier.
-                if (op.Operator == ">" && StringCheck.Peek() && !Lexer.ScanTokenAt(Token + 1).TokenType.IsStartOfExpression())
+                if (op.Text == ">" && StringCheck.Peek() && !Lexer.ScanTokenAt(Token + 1).TokenType.IsStartOfExpression())
                     continue;
 
                 // Do not parse right-hand ternary if the top operator is not a left-hand ternary operator.
-                if (op.Type == OperatorType.TernaryRight && !TernaryCheck.Peek())
+                if (op.Type == CStyleOperatorType.TernaryRight && !TernaryCheck.Peek())
                     continue;
 
-                if (ParseOptional(op.RelatedToken, out Token token))
+                if (ParseOptional(op.OstwTokenType, out Token token))
                 {
-                    if (op.Type == OperatorType.TernaryLeft)
+                    if (op.Type == CStyleOperatorType.TernaryLeft)
                         TernaryCheck.Push(true);
-                    else if (op.Type == OperatorType.TernaryRight)
+                    else if (op.Type == CStyleOperatorType.TernaryRight)
                         TernaryCheck.Pop();
 
-                    operatorInfo = new OperatorInfo(op, token);
+                    stackOperator = op.AsStackOperator<T>(token);
+                    binaryRhsMode = op == CStyleOperator.Dot ? BinaryRhsMode.Dot :
+                        op == CStyleOperator.Squiggle ? BinaryRhsMode.Squiggle : BinaryRhsMode.Default;
                     return true;
                 }
             }
 
-            operatorInfo = null;
+            stackOperator = null;
+            binaryRhsMode = BinaryRhsMode.Default;
             return false;
         }
 
-        OperatorInfo ParseUnaryOperator()
+        IStackOperator<IParseExpression> ParseUnaryOperator()
         {
             // Operator !expr
             if (ParseOptional(TokenType.Exclamation, out var not))
-                return new OperatorInfo(CompilerOperator.Not, not);
+                return CStyleOperator.Not.AsStackOperator<IParseExpression>(not);
 
             // Operator -expr
             else if (ParseOptional(TokenType.Subtract, out var inverse))
-                return new OperatorInfo(CompilerOperator.Inv, inverse);
+                return CStyleOperator.Inv.AsStackOperator<IParseExpression>(inverse);
 
             // No unary found.
             return null;
@@ -504,7 +492,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     expression = GetSubExpression();
                     break;
             }
-            Operands.Push(expression);
+            _operatorStack.PushOperand(expression);
             GetArrayAndInvokes();
         }
 
@@ -513,13 +501,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
             while (true)
             {
                 // Get the array index.
-                if (ParseOptional(TokenType.SquareBracket_Open))
+                if (ParseOptional(TokenType.SquareBracket_Open, out var open))
                 {
                     IParseExpression index = GetContainExpression();
                     // End the closing square bracket.
-                    var closing = ParseExpected(TokenType.SquareBracket_Close) ?? CurrentOrLast;
+                    var close = ParseExpected(TokenType.SquareBracket_Close);
                     // Push operator
-                    PushOperator(new ValueInArrayInfo(index, closing.Range.End));
+                    PushOperator(new IndexerStackOperator<IParseExpression>(open, index, close));
                 }
                 // Invoke
                 else if (ParseOptional(TokenType.Parentheses_Open, out Token leftParentheses))
@@ -529,7 +517,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // End the parentheses.
                     Token rightParentheses = ParseExpected(TokenType.Parentheses_Close) ?? CurrentOrLast;
                     // Update the expression.
-                    PushOperator(new InvokeInfo(leftParentheses, rightParentheses, values));
+                    PushOperator(new InvokeStackOperator(leftParentheses, rightParentheses, values));
                 }
                 // No more array indices or invocations.
                 else break;
@@ -565,7 +553,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Array
                 case TokenType.SquareBracket_Open: return ParseCreateArray();
                 // Async
-                case TokenType.Async: return ParseAsync();
+                case TokenType.Async: return ParseAsyncExpression();
                 // Struct declaration
                 case TokenType.CurlyBracket_Open: return ParseStructDeclaration();
                 // Formatted string
@@ -606,19 +594,24 @@ namespace Deltin.Deltinteger.Compiler.Parse
             GetExpressionWithArray();
 
             // Binary operator
-            while (TryParseBinaryOperator(out OperatorInfo op))
+            while (TryParseBinaryOperator<IParseExpression>(out var stackOperator, out var rhsMode))
             {
-                PushOperator(op);
-                op.Operator.RhsHandler.Get(op, this);
+                PushOperator(stackOperator);
+                if (rhsMode == BinaryRhsMode.Default)
+                {
+                    GetExpressionWithArray();
+                }
+                else
+                {
+                    _operatorStack.PushOperand(Identifier());
+                    GetArrayAndInvokes();
+
+                    if (rhsMode == BinaryRhsMode.Squiggle)
+                        _operatorStack.PopAllOperators();
+                }
             }
 
-            PopAllOperators();
-        }
-
-        public void PopAllOperators()
-        {
-            while (Operators.Peek().Source.Precedence > 0)
-                PopOperator();
+            _operatorStack.PopAllOperators();
         }
 
         /// <summary>Contains the operator stack and parses an expression.</summary>
@@ -628,14 +621,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StringCheck.Push(stringCheck);
             TernaryCheck.Push(false);
 
-            Operators.Push(OperatorInfo.Sentinel);
-            GetExpressionWithOperators();
-            Operators.Pop();
+            var result = _operatorStack.GetExpression(GetExpressionWithOperators);
 
             StringCheck.Pop();
             TernaryCheck.Pop();
 
-            return Operands.Pop();
+            return result;
         }
 
         /// <summary>Parses an identifier or a function.</summary>
@@ -689,20 +680,29 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         List<T> ParseDelimitedList<T>(TokenType terminator, Func<bool> elementDeterminer, Func<T> parseElement)
         {
+            return ParseDelimitedList(terminator, elementDeterminer, _ => parseElement(), null);
+        }
+
+        List<T> ParseDelimitedList<T>(TokenType terminator, Func<bool> elementDeterminer, Func<Token, T> parseElement, Func<Token, T> onMissing)
+        {
             var values = new List<T>();
 
+            Token lastComma = null;
+            bool requireThisTime = false;
             while (true)
             {
                 if (elementDeterminer())
                 {
+                    requireThisTime = false;
                     int s = Token;
 
-                    T lastElement = parseElement();
+                    T lastElement = parseElement(lastComma);
                     values.Add(lastElement);
 
-                    if (ParseOptional(TokenType.Comma, out Token comma))
+                    if (ParseOptional(TokenType.Comma, out lastComma))
                     {
-                        if (lastElement is IListComma listComma) listComma.NextComma = comma;
+                        requireThisTime = true;
+                        if (lastElement is IListComma listComma) listComma.NextComma = lastComma;
                         continue;
                     }
 
@@ -725,6 +725,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     }
                     continue;
                 }
+                else if (requireThisTime && onMissing is not null)
+                {
+                    values.Add(onMissing(lastComma));
+                }
+                lastComma = null;
+                requireThisTime = false;
 
                 if (Is(terminator))
                     break;
@@ -1251,6 +1257,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 Is(TokenType.Exclamation) || // Extended collection marker.
                 Is(TokenType.Number) ||      // Assigned workshop ID.
                 Is(TokenType.Colon) ||       // Macro variable value.
+                Is(TokenType.CurlyBracket_Open) || // Target vanilla value
                 (functionDeclaration && (Is(TokenType.Parentheses_Open) || Is(TokenType.LessThan))) || // Function parameter start.
                 IsFinished                   // EOF was reached.
             ));
@@ -1453,16 +1460,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 else
                 {
                     // Get optional subroutine attributes.
-                    Token globalvar = null, playervar = null, subroutine = null;
+                    Token globalvar = null, playervar = null;
+                    FunctionSubroutineSyntax subroutine = null;
 
                     // This will parse either the globalvar or playervar tokens.
                     if (ParseOptional(TokenType.GlobalVar, out globalvar) || ParseOptional(TokenType.PlayerVar, out playervar))
                     {
                         // Get the subroutine name.
-                        subroutine = ParseExpected(TokenType.String);
+                        subroutine = ParseSubroutineName(true);
                     }
                     // Get the optional subroutine name.
-                    else subroutine = ParseOptional(TokenType.String);
+                    else subroutine = ParseSubroutineName(false);
 
                     // Get the function's block.
                     Block block = ParseBlock();
@@ -1474,9 +1482,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 // Parse an optional variable ID or extended collection marker.
                 Token id = null, ext = null, macro = null;
+                TargetWorkshopVariable? target = null;
 
                 if (!ParseOptional(TokenType.Number, out id))
-                    ParseOptional(TokenType.Exclamation, out ext);
+                    if (!ParseOptional(TokenType.Exclamation, out ext))
+                        target = ParseOptionalTargetWorkshopVariable();
 
                 // Get the initial value.
                 IParseExpression initialValue = null;
@@ -1484,8 +1494,75 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     initialValue = GetContainExpression(); // Get the initial value.
 
                 ParseSemicolon();
-                return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment));
+                return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment, target));
             }
+        }
+
+        TargetWorkshopVariable? ParseOptionalTargetWorkshopVariable() => CaptureRange<TargetWorkshopVariable?>(r =>
+        {
+            // globalvar and playervar variables can target vanilla workshop variables.
+            // Examples:
+            //    globalvar Number myVar!"a";
+            //    globalvar Number myVar!{"a"};
+            //    globalvar Number myVar!{"a", "b"};
+            //    globalvar Number myVar!"a"[0];
+            //    globalvar Number myVar!{"a"[0]};
+            //    globalvar Number myVar!{"a"[0], "b"[0]};
+
+            // Parses a chain of [..] or [expr] following the target variable string.
+            List<SpreadOrExpression> ParseVanillaTargetIndexer()
+            {
+                var indexer = new List<SpreadOrExpression>();
+
+                while (ParseOptional(TokenType.SquareBracket_Open))
+                {
+                    // [..]
+                    if (ParseOptional(TokenType.Spread, out var spread))
+                    {
+                        indexer.Add(new(spread, null));
+                    }
+                    // [expr]
+                    else
+                    {
+                        indexer.Add(new(spread, GetContainExpression()));
+                    }
+
+                    ParseExpected(TokenType.SquareBracket_Close);
+                }
+
+                return indexer;
+            }
+
+            var targets = new List<StackTarget>();
+
+            if (ParseOptional(TokenType.CurlyBracket_Open))
+            {
+                // Parse targets while there are strings.
+                do
+                {
+                    if (ParseExpected(TokenType.String, out var target))
+                    {
+                        targets.Add(new(target, ParseVanillaTargetIndexer()));
+                    }
+                }
+                while (ParseOptional(TokenType.Comma));
+                ParseExpected(TokenType.CurlyBracket_Close);
+            }
+            else return null;
+            return new TargetWorkshopVariable(r.GetRange(), targets);
+        });
+
+        FunctionSubroutineSyntax ParseSubroutineName(bool required)
+        {
+            Token name = required ? ParseExpected(TokenType.String) : ParseOptional(TokenType.String);
+            Token target = null;
+
+            if (name && ParseOptional(TokenType.Colon))
+            {
+                target = ParseExpected(TokenType.String);
+            }
+
+            return new(name, target);
         }
 
         VariableDeclaration ParseDeclaration(bool parseSemicolon)
@@ -1498,9 +1575,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Parse an optional variable ID or extended collection marker.
             Token id = null, ext = null, macro = null;
-
+            TargetWorkshopVariable? target = null;
             if (!ParseOptional(TokenType.Number, out id))
-                ParseOptional(TokenType.Exclamation, out ext);
+                if (!ParseOptional(TokenType.Exclamation, out ext))
+                    target = ParseOptionalTargetWorkshopVariable();
 
             // Initial value
             IParseExpression initialValue = null;
@@ -1509,7 +1587,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 initialValue = GetContainExpression();
 
             ParseSemicolon(parseSemicolon);
-            return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment));
+            return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment, target));
         }
 
         ConstructorContext ParseConstructor()
@@ -1600,7 +1678,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Parse the closing angled bracket.
             ParseExpected(TokenType.GreaterThan);
 
-            PushOperator(new TypeCastInfo(type, startPosition));
+            PushOperator(new TypeCastStackOperator(this, type, startPosition));
         }
 
         StringExpression ParseFormattedString()
@@ -1658,7 +1736,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return generics;
         }
 
-        AsyncContext ParseAsync()
+        AsyncContext ParseAsyncExpression()
         {
             StartNode();
             var asyncToken = ParseExpected(TokenType.Async);
@@ -1752,16 +1830,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             var parts = new List<InterpolatedStringPart>();
 
-            while (ParseExpected(TokenType.CurlyBracket_Close))
+            // Continue string.
+            Lexer.InContext(single ? LexerContextKind.InterpolatedStringSingle : LexerContextKind.InterpolatedStringDouble, () =>
             {
-                if (Lexer.ScanTokenAt(Token, () => Lexer.CurrentController.MatchString(true, single)))
+                while (true)
                 {
-                    Lexer.CurrentController.PostMatch();
                     // } {
                     if (ParseOptional(TokenType.InterpolatedStringMiddle, out Token middle))
                     {
                         parts.Add(new InterpolatedStringPart(interpolatedValue, middle));
-                        interpolatedValue = GetContainExpression();
+                        interpolatedValue = Lexer.InContext(LexerContextKind.Normal, () => GetContainExpression());
                     }
                     // }"
                     else if (ParseOptional(TokenType.InterpolatedStringHead, out Token head) || ParseOptional(TokenType.String, out head))
@@ -1769,14 +1847,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                         parts.Add(new InterpolatedStringPart(interpolatedValue, head));
                         break;
                     }
-                    else throw new Exception("Resulting match should either be InterpolatedStringMiddle or InterpolatedStringHead.");
+                    else
+                    {
+                        AddError(new InterpolationMissingTerminator(tail.Range));
+                        break;
+                    }
                 }
-                else
-                {
-                    AddError(new InterpolationMissingTerminator(tail.Range));
-                    break;
-                }
-            }
+                return Unit.Value;
+            });
 
             return EndNode(new InterpolatedStringExpression(tail, parts));
         }
@@ -1793,12 +1871,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Parses the root of a file.</summary>
-        public RootContext Parse()
+        public DocumentParseResult Parse()
         {
             var context = new RootContext();
             while (!IsFinished) ParseScriptRootElement(context);
-            context.NodeCaptures = NodeCaptures;
-            return context;
+
+            return new(context, Lexer.CurrentController.GetTokenList(), Errors, NodeCaptures, _content);
         }
 
         /// <summary>Parses a single import, rule, variable, class, etc.</summary>
@@ -1810,8 +1888,30 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Class
                 case TokenType.Class:
                 case TokenType.Struct:
-                    context.Classes.Add(ParseClassOrStruct());
+                    context.RootItems.Add(new(ParseClassOrStruct()));
                     return;
+            }
+
+            // Workshop variable or subroutine collection
+            if (Is(TokenType.WorkshopVariables) || Is(TokenType.WorkshopVariablesEn) ||
+                Is(TokenType.WorkshopSubroutines) || Is(TokenType.WorkshopSubroutinesEn))
+            {
+                context.RootItems.Add(new(ParseVanillaVariableCollection()));
+                return;
+            }
+
+            // Vanilla settings
+            if (Is(TokenType.WorkshopSettings) || Is(TokenType.WorkshopSettingsEn))
+            {
+                context.RootItems.Add(new(ParseVanillaLobbySettings()));
+                return;
+            }
+
+            // Workshop rule
+            if (IsVanillaRule())
+            {
+                context.RootItems.Add(new(ParseVanillaRule()));
+                return;
             }
 
             // Return false if the EOF was reached.
@@ -1820,21 +1920,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Rule
                 case TokenType.Rule:
                 case TokenType.Disabled:
-                    context.Rules.Add(ParseRule());
+                    context.RootItems.Add(new(ParseRule()));
                     break;
 
                 // Enum
                 case TokenType.Enum:
-                    context.Enums.Add(ParseEnum());
+                    context.RootItems.Add(new(ParseEnum()));
                     break;
 
                 // Import
                 case TokenType.Import:
-                    context.Imports.Add(ParseImport());
+                    context.RootItems.Add(new(ParseImport()));
                     break;
 
                 case TokenType.Type:
-                    context.TypeAliases.Add(ParseTypeAlias());
+                    context.RootItems.Add(new(ParseTypeAlias()));
                     break;
 
                 case TokenType.GlobalVar:
@@ -1856,7 +1956,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 default:
                     // Variable declaration
                     if (IsDeclaration(true))
-                        context.Declarations.Add(ParseVariableOrFunctionDeclaration());
+                        context.RootItems.Add(new(ParseVariableOrFunctionDeclaration()));
                     // Hook
                     else if (IsHook())
                         context.Hooks.Add(ParseHook());
@@ -2099,7 +2199,286 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new Hook(variableExpression, variableValue);
         }
 
-        public Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
+        bool IsVanillaRule() => Lookahead(() =>
+        {
+            ParseOptional(TokenType.Disabled);
+            return ParseExpected(TokenType.Rule, TokenType.WorkshopRule) && ParseExpected(TokenType.Parentheses_Open);
+        });
+
+        VanillaRule ParseVanillaRule() => GetIncrementalNode<VanillaRule>(() =>
+        {
+            var disabled = ParseOptional(TokenType.Disabled);
+            var keyword = ParseExpected(TokenType.Rule, TokenType.WorkshopRule);
+
+            // Parentheses containing name.
+            ParseExpected(TokenType.Parentheses_Open);
+            var name = ParseExpected(TokenType.String);
+            ParseExpected(TokenType.Parentheses_Close);
+
+            // Inner data
+            var begin = ParseExpected(TokenType.CurlyBracket_Open);
+
+            var ruleContent = new List<VanillaRuleContent>();
+            while (TryParseVanillaRuleContent(out var nextElement))
+                ruleContent.Add(nextElement);
+
+            ParseExpected(TokenType.CurlyBracket_Close);
+            var end = Previous;
+
+            return new(disabled, keyword, name, begin, ruleContent.ToArray(), end);
+        });
+
+        bool TryParseVanillaRuleContent(out VanillaRuleContent nextElement)
+        {
+            nextElement = Lexer.InVanillaWorkshopContext(() => Kind switch
+            {
+                TokenType.WorkshopEvent => ParseVanillaRuleContent(Kind),
+                TokenType.WorkshopConditions => ParseVanillaRuleContent(Kind),
+                TokenType.WorkshopActions => ParseVanillaRuleContent(Kind),
+                _ => default
+            });
+            return nextElement != null;
+        }
+
+        VanillaRuleContent ParseVanillaRuleContent(TokenType initiatingTokenType) => CaptureRange(r =>
+        {
+            var groupToken = ParseExpected(initiatingTokenType);
+            ParseExpected(TokenType.CurlyBracket_Open);
+
+            List<CommentedVanillaExpression> items = new();
+            while (Kind.IsWorkshopExpression() || Is(TokenType.Semicolon) || Is(TokenType.DisabledWorkshopItem))
+            {
+                var comment = ParseOptional(TokenType.String);
+                var disabled = ParseOptional(TokenType.DisabledWorkshopItem);
+                var expression = ParseVanillaExpression();
+                var semicolon = ParseExpected(TokenType.Semicolon);
+                items.Add(new(comment, disabled, expression, semicolon));
+            }
+
+            ParseExpected(TokenType.CurlyBracket_Close);
+            return new VanillaRuleContent(r.GetRange(), groupToken, items.ToArray());
+        });
+
+        IVanillaExpression ParseVanillaExpression()
+        {
+            var expr = _vanillaOperatorStack.GetExpression(() =>
+            {
+                TernaryCheck.Push(false);
+                ParseVanillaOperandToStack();
+
+                while (true)
+                {
+                    // Binary operators
+                    if (TryParseBinaryOperator<IVanillaExpression>(out var op, out _))
+                    {
+                        _vanillaOperatorStack.PushOperator(op);
+                        ParseVanillaOperandToStack();
+                    }
+                    // Array indexer
+                    else if (ParseOptional(TokenType.SquareBracket_Open, out var open))
+                    {
+                        var indexer = ParseVanillaExpression();
+                        var close = ParseExpected(TokenType.SquareBracket_Close);
+                        _vanillaOperatorStack.PushOperator(
+                            new IndexerStackOperator<IVanillaExpression>(open, indexer, close));
+
+                    }
+                    else break;
+                }
+                TernaryCheck.Pop();
+            });
+            // Assignment operators
+            if (TokenExtensions.Assignment_Tokens.Contains(Kind))
+            {
+                var token = Consume();
+                var rhs = ParseVanillaExpression();
+                expr = new VanillaAssignmentExpression(expr, token, rhs);
+            }
+
+            return expr;
+        }
+
+        void ParseVanillaOperandToStack()
+        {
+            // Check for NOT operator
+            if (ParseOptional(TokenType.Exclamation, out var not))
+            {
+                _vanillaOperatorStack.PushOperator(
+                    CStyleOperator.Not.AsStackOperator<IVanillaExpression>(not)
+                );
+                ParseVanillaOperandToStack();
+            }
+            else
+                _vanillaOperatorStack.PushOperand(ParseVanillaExpressionTerm());
+        }
+
+        IVanillaExpression ParseVanillaExpressionTerm() => CaptureRange(r =>
+        {
+            IVanillaExpression expression;
+            // Numbers
+            if (IsNumber())
+            {
+                expression = ParseNumber();
+            }
+            // Strings
+            else if (Is(TokenType.String))
+            {
+                expression = new VanillaStringExpression(Consume());
+            }
+            // Identifiers, constants, and workshop functions
+            else if (Is(TokenType.WorkshopSymbol) || Is(TokenType.WorkshopConstant))
+            {
+                expression = new VanillaSymbolExpression(Consume());
+            }
+            // Expression contained in parentheses.
+            else if (Is(TokenType.Parentheses_Open))
+            {
+                Consume();
+                var innerExpression = ParseVanillaExpression();
+                var rightParentheses = ParseExpected(TokenType.Parentheses_Close);
+                expression = new ParenthesizedVanillaExpression(r.GetRange(), innerExpression);
+            }
+            // Team sugar
+            else if (Is(TokenType.AllTeams) || Is(TokenType.Team1) || Is(TokenType.Team2))
+            {
+                expression = new VanillaTeamSugarExpression(Consume());
+            }
+            // Unknown
+            else
+            {
+                Consume();
+                AddError(new InvalidExpressionTerm(CurrentOrLast));
+                return new MissingVanillaExpression(r.GetRange());
+            }
+
+            // Invoke
+            if (ParseOptional(TokenType.Parentheses_Open, out var leftParentheses))
+            {
+                var arguments = ParseDelimitedList(
+                    TokenType.Parentheses_Close,
+                    () => Kind.IsWorkshopExpression(),
+                    previousComma => new VanillaInvokeParameter(previousComma, ParseVanillaExpression()),
+                    previousComma =>
+                    {
+                        AddError(new UnexpectedToken(CurrentOrLast));
+                        return new VanillaInvokeParameter(previousComma, new MissingVanillaExpression(CurrentOrLast));
+                    });
+
+                // End parameter list
+                var rightParentheses = ParseExpected(TokenType.Parentheses_Close);
+
+                expression = new VanillaInvokeExpression(r.GetRange(), expression, arguments, leftParentheses, rightParentheses);
+            }
+
+            return expression;
+        });
+
+        VanillaVariableCollection ParseVanillaVariableCollection() => CaptureRange(r =>
+        {
+            var openingToken = ParseExpected(
+                TokenType.WorkshopVariablesEn,
+                TokenType.WorkshopVariables,
+                TokenType.WorkshopSubroutinesEn,
+                TokenType.WorkshopSubroutines
+            );
+            return Lexer.InVanillaWorkshopContext(() =>
+            {
+                ParseExpected(TokenType.CurlyBracket_Open);
+
+                var items = new List<GroupOrName>();
+                while (true)
+                {
+                    // New group
+                    if (ParseOptional(TokenType.WorkshopSymbol, out var groupToken))
+                    {
+                        ParseExpected(TokenType.Colon);
+                        items.Add(new(new VariableGroup(groupToken)));
+                    }
+                    // Assigned variable in current group
+                    else if (ParseOptional(TokenType.Number, out var varId))
+                    {
+                        ParseExpected(TokenType.Colon);
+                        var name = ParseExpected(TokenType.WorkshopSymbol, TokenType.WorkshopConstant);
+                        items.Add(new(new VariableName(varId, name)));
+                    }
+                    else break;
+                }
+
+                ParseExpected(TokenType.CurlyBracket_Close);
+                return new VanillaVariableCollection(openingToken, r.GetRange(), items);
+            });
+        });
+
+        VanillaSettingsSyntax ParseVanillaLobbySettings()
+        {
+            var openingToken = ParseExpected(TokenType.WorkshopSettings, TokenType.WorkshopSettingsEn);
+            return Lexer.InSettingsContext(() =>
+            {
+                var group = ParseListOfSettings();
+                return new VanillaSettingsSyntax(openingToken, group);
+            });
+        }
+
+        VanillaSettingsGroupSyntax ParseListOfSettings() => CaptureRange(r =>
+        {
+            var openingBracket = ParseExpected(TokenType.CurlyBracket_Open);
+
+            var settings = new List<VanillaSettingSyntax>();
+
+            while (Is(TokenType.WorkshopSymbol) || Is(TokenType.WorkshopConstant) || Is(TokenType.DisabledWorkshopItem))
+            {
+                var disabled = ParseOptional(TokenType.DisabledWorkshopItem);
+                var settingToken = Consume();
+
+                // Extensions will not have a value.
+                IVanillaSettingValueSyntax settingValue = null;
+
+                Token tokenAfterColon = null;
+
+                // Key/value pair
+                if (ParseOptional(TokenType.Colon, out var colon))
+                {
+                    tokenAfterColon = Current;
+                    // Keyword
+                    if (Is(TokenType.WorkshopConstant) || Is(TokenType.WorkshopSymbol))
+                    {
+                        settingValue = new SymbolSettingSyntax(Consume());
+                    }
+                    // Number
+                    else if (ParseOptional(TokenType.Number, out var numberToken))
+                    {
+                        // Percent sign
+                        var percentSign = ParseOptional(TokenType.Modulo);
+                        settingValue = new NumberSettingSyntax(numberToken, percentSign);
+                    }
+                    // String
+                    else if (ParseOptional(TokenType.String, out var stringToken))
+                    {
+                        settingValue = new StringSettingSyntax(stringToken);
+                    }
+                    // Error
+                    else AddError("Expected symbol, number, or string");
+                }
+                // Sublist
+                else if (Is(TokenType.CurlyBracket_Open))
+                {
+                    settingValue = ParseListOfSettings();
+                }
+                // Map ID thing (ex: Workshop Island Night 972777519512064579)
+                else if (ParseOptional(TokenType.Number))
+                {
+                    // ...not sure what to do with this
+                }
+
+                settings.Add(new(disabled, settingToken, colon, tokenAfterColon, settingValue));
+            }
+
+            ParseExpected(TokenType.CurlyBracket_Close);
+
+            return new VanillaSettingsGroupSyntax(r.GetRange(), openingBracket, settings.ToArray());
+        });
+
+        Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
         MetaComment ParseMetaComment()
         {
             if (!Is(TokenType.ActionComment))

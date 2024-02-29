@@ -55,6 +55,16 @@ namespace Deltin.Deltinteger
             }}
         };
 
+        public static RestrictedCallType? GetRestrictedCallTypeFromString(string value) => value switch
+        {
+            "Ability" => RestrictedCallType.Ability,
+            "Attacker" => RestrictedCallType.Attacker,
+            "Healer" => RestrictedCallType.Healer,
+            "Knockback" => RestrictedCallType.Knockback,
+            "Event Player" => RestrictedCallType.EventPlayer,
+            _ => null
+        };
+
         public static string Message_Element(RestrictedCallType type) => $"A restricted value of type '{StringFromCallType(type)}' cannot be called in this rule.";
         public static string Message_EventPlayerDefault(string name)
             => $"The variable '{name}' is a player variable and no player was provided in a global rule.";
@@ -98,7 +108,8 @@ namespace Deltin.Deltinteger
         }
 
         public static void BridgeMethodCall(ParseInfo parseInfo, CallInfo callInfo, DocRange range, string name, bool fatal)
-            => parseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.PostContent, () => {
+            => parseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.PostContent, () =>
+            {
                 // Collect the restricted calls.
                 foreach (var restrictedCallType in CallInfoVisitor.CollectRestrictedCalls(callInfo))
                 {

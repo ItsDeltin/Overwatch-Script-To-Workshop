@@ -15,7 +15,7 @@ export function makeDictionaryLike(name: string, patterns: Pattern[]): Pattern {
                 begin: '{',
                 zeroBeginCapture: { name: 'punctuation.definition.dictionary.begin' },
                 end: /(?=})/,
-                patterns
+                patterns: [{ include: Repository.comment }, ...patterns]
             }
         ]
     }

@@ -6,6 +6,7 @@ using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Parse.Functions.Builder.User;
+using Deltin.Deltinteger.Parse.Vanilla;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -24,6 +25,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Recursive { get; }
         public bool Virtual { get; }
         public bool SubroutineDefaultGlobal { get; }
+        public VanillaSubroutine? TargetVanillaSubroutine { get; }
 
         public AnonymousType[] GenericTypes { get; }
         public CodeType ReturnType { get; }
@@ -52,7 +54,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             Context = context;
             ContainingType = containingType;
-            CallInfo = new CallInfo(new RecursiveCallHandler(this, context.Subroutine || context.Attributes.Recursive), parseInfo.Script, ContentReady);
+            CallInfo = new CallInfo(new RecursiveCallHandler(this, context.Subroutine is not null || context.Attributes.Recursive), parseInfo.Script, ContentReady);
 
             DocRange nameRange = context.Identifier.Range;
 
@@ -68,11 +70,27 @@ namespace Deltin.Deltinteger.Parse
             Recursive = attributes.IsRecursive;
 
             // Get subroutine info.
-            if (context.Subroutine)
+            if (context.Subroutine?.Name is not null)
             {
                 IsSubroutine = true;
-                SubroutineName = context.Subroutine.Text.RemoveQuotes();
+                SubroutineName = context.Subroutine.Name.Text.RemoveQuotes();
                 SubroutineDefaultGlobal = !context.PlayerVar;
+
+                if (context.Subroutine.Target)
+                {
+                    // Do not allow targetting a workshop subroutine if there are type arguments.
+                    if (context.TypeArguments.Count != 0)
+                        parseInfo.Error($"Cannot target a workshop subroutine with type arguments", context.Subroutine.Target);
+                    else // Ensure that the subroutine exists.
+                    {
+                        var targetName = context.Subroutine.Target.Text.RemoveQuotes();
+
+                        // Find vanilla subroutine in scope.
+                        TargetVanillaSubroutine = parseInfo.ScopedVanillaVariables?.GetSubroutine(targetName);
+                        if (TargetVanillaSubroutine is null)
+                            parseInfo.Error($"No workshop subroutine named '{targetName}' is in the current scope", context.Subroutine.Target);
+                    }
+                }
             }
 
             // Setup the scope.
@@ -93,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
             MetaComment = ParsedMetaComment.FromMetaComment(context.MetaComment);
 
             // Setup the parameters.
-            ParameterProviders = ParameterProvider.GetParameterProviders(parseInfo, _methodScope, context.Parameters, IsSubroutine, MetaComment);
+            ParameterProviders = ParameterProvider.GetParameterProviders(parseInfo, _methodScope, context.Parameters, IsSubroutine, SubroutineDefaultGlobal, MetaComment);
             ParameterTypes = ParameterProviders.Select(p => p.Type).ToArray();
 
             // Override

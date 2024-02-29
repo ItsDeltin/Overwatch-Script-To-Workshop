@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
         Location GetDefineLocation();
         string GetName();
         DocRange GetNameRange();
-        void GetComponents(VariableComponentCollection componentCollection);
+        void GetComponents(VariableComponentCollection componentCollection, VariableSetKind variableSetKind);
         IParseType GetCodeType();
         DocRange GetTypeRange();
         MarkupBuilder Documentation() => null;
@@ -38,14 +38,14 @@ namespace Deltin.Deltinteger.Parse
         public DocRange GetTypeRange() => _defineContext.Type.Range;
         public MarkupBuilder Documentation() => _documentation;
 
-        public void GetComponents(VariableComponentCollection componentCollection)
+        public void GetComponents(VariableComponentCollection componentCollection, VariableSetKind variableSetKind)
         {
             // Add attribute components.
             AttributesGetter.GetAttributes(ParseInfo.Script.Diagnostics, _defineContext.Attributes, componentCollection);
 
             // Add workshop ID
             if (_defineContext.ID)
-                componentCollection.AddComponent(new WorkshopIndexComponent(int.Parse(_defineContext.ID.Text), _defineContext.ID.Range));
+                componentCollection.AddComponent(new WorkshopIndexComponent((int)double.Parse(_defineContext.ID.Text), _defineContext.ID.Range));
 
             // Extended collection
             if (_defineContext.Extended)
@@ -58,6 +58,10 @@ namespace Deltin.Deltinteger.Parse
             // Macro
             if (_defineContext.MacroSymbol)
                 componentCollection.AddComponent(new MacroComponent(_defineContext.MacroSymbol.Range));
+
+            // Target workshop variable
+            if (_defineContext.Target.HasValue)
+                componentCollection.AddComponent(new TargetWorkshopComponent(_defineContext.Target.Value, variableSetKind));
         }
     }
 }

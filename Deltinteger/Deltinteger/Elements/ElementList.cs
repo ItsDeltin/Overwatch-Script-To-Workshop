@@ -37,13 +37,13 @@ namespace Deltin.Deltinteger.Elements
             Attributes.GetRestrictedCallTypes = this;
 
             if (function.Restricted != null)
-                _restricted = GetRestrictedCallTypeFromString(function.Restricted);
+                _restricted = RestrictedCall.GetRestrictedCallTypeFromString(function.Restricted);
 
             // Get the parameters.
             if (function.Parameters == null) Parameters = new CodeParameter[0];
             else Parameters = new CodeParameter[function.Parameters.Length];
-            
-            for (int i = 0; i < Parameters.Length; i++) 
+
+            for (int i = 0; i < Parameters.Length; i++)
             {
                 // Get the name and documentation.
                 string name = function.Parameters[i].Name.Replace(" ", "");
@@ -74,14 +74,19 @@ namespace Deltin.Deltinteger.Elements
                         defaultValueWorkshop = function.Parameters[i].GetDefaultValue();
                         defaultValue = new ExpressionOrWorkshopValue(defaultValueWorkshop);
                     }
-                    
+
                     // Set the parameter.
                     Parameters[i] = new CodeParameter(name, documentation, new CodeTypeFromStringSolver(type), defaultValue);
 
                     // If the default parameter value is an Element and the Element is restricted,
                     if (defaultValueWorkshop is Element parameterElement && parameterElement.Function.Restricted != null)
+                    {
+                        var restrictedParameterType = RestrictedCall.GetRestrictedCallTypeFromString(parameterElement.Function.Restricted);
+
                         // ...then add the restricted call type to the parameter's list of restricted call types.
-                        Parameters[i].RestrictedCalls.Add(GetRestrictedCallTypeFromString(parameterElement.Function.Restricted));
+                        if (restrictedParameterType is not null)
+                            Parameters[i].RestrictedCalls.Add(restrictedParameterType.Value);
+                    }
                 }
             }
         }
@@ -98,19 +103,6 @@ namespace Deltin.Deltinteger.Elements
                 var returnValue = (ElementJsonValue)ElementRoot.Instance.GetFunction(action.ReturnValue);
                 _actionReturnValue = Element.Part(returnValue);
                 CodeType = new CodeTypeFromStringSolver(returnValue.ReturnType);
-            }
-        }
-
-        private RestrictedCallType GetRestrictedCallTypeFromString(string value)
-        {
-            switch (value)
-            {
-                case "Ability": return RestrictedCallType.Ability;
-                case "Attacker": return RestrictedCallType.Attacker;
-                case "Event Player": return RestrictedCallType.EventPlayer;
-                case "Healer": return RestrictedCallType.Healer;
-                case "Knockback": return RestrictedCallType.Knockback;
-                default: throw new NotImplementedException("No RestrictedCallType for '" + value + "'");
             }
         }
 
@@ -139,7 +131,7 @@ namespace Deltin.Deltinteger.Elements
                     parseInfo.GetLocation(callRange),
                     RestrictedCall.Message_Element((RestrictedCallType)_restricted)
                 ));
-            
+
             return null;
         }
 
@@ -163,7 +155,7 @@ namespace Deltin.Deltinteger.Elements
             foreach (var value in ElementRoot.Instance.Values)
                 if (!value.IsHidden)
                     functions.Add(new ElementList(value));
-            
+
             return functions.ToArray();
         }
 

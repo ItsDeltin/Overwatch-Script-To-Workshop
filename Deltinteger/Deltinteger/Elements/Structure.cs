@@ -101,6 +101,8 @@ namespace Deltin.Deltinteger.Elements
         public override string ToString() => Name + (Parameters == null ? "" : "(" + string.Join(", ", Parameters.Select(v => v.ToString())) + ")");
 
         public string CodeName() => Alias ?? Name.Replace(" ", "").Replace("-", "");
+
+        public bool HasParameters() => Parameters is not null && Parameters.Length > 0;
     }
 
     public class ElementJsonValue : ElementBaseJson
@@ -148,7 +150,14 @@ namespace Deltin.Deltinteger.Elements
             if (!HasDefaultValue) throw new Exception("Parameter has no default value.");
 
             // Enumerator default value
-            if (ElementRoot.Instance.TryGetEnum(Type, out ElementEnum enumerator)) return enumerator.GetMemberFromWorkshop((string)DefaultValue);
+            if (ElementRoot.Instance.TryGetEnum(Type, out ElementEnum enumerator))
+            {
+                // hacky hack hack uwu
+                if (enumerator.Name == "Operators")
+                    return new OperatorElement(Operator.Equal);
+
+                return enumerator.GetMemberFromWorkshop((string)DefaultValue);
+            }
             // Null
             else if (DefaultValue == null) return Element.Null();
             // Boolean

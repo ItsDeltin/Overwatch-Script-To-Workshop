@@ -1,0 +1,3477 @@
+settings
+{
+	main
+	{
+		Description: "Every time you respawn a D20 is rolled to decide your fate."
+		Mode Name: "Roll For Initiative"
+	}
+
+	lobby
+	{
+		Allow Players Who Are In Queue: Yes
+		Map Rotation: After A Game
+		Match Voice Chat: Enabled
+		Max Spectators: 3
+		Return To Lobby: Never
+	}
+
+	modes
+	{
+		disabled Assault
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		disabled Bounty Hunter
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		disabled Capture the Flag
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		disabled Control
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		disabled Deathmatch
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		disabled Escort
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		disabled Flashpoint
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		disabled Hybrid
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		disabled Practice Range
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		disabled Push
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		Skirmish
+		{
+			Tank Role Passive Health Bonus: Disabled
+
+			disabled maps
+			{
+				Workshop Chamber
+				Workshop Expanse
+				Workshop Expanse Night
+				Workshop Green Screen
+				Workshop Island
+				Workshop Island Night
+			}
+		}
+
+		disabled Team Deathmatch
+		{
+			Tank Role Passive Health Bonus: Disabled
+		}
+
+		General
+		{
+			Health Pack Respawn Time Scalar: 25%
+			Respawn As Random Hero: On
+			Respawn Time Scalar: 15%
+		}
+	}
+
+	heroes
+	{
+		General
+		{
+			Movement Speed: 110%
+			Ultimate Generation: 200%
+		}
+	}
+
+	extensions
+	{
+		Buff Status Effects
+		Explosion Sounds
+		Projectiles
+	}
+}
+
+variables
+{
+	global:
+		0: colors
+		1: abils
+		2: kbheroes
+		3: RAexists
+
+	player:
+		0: rollnum
+		2: array
+		5: abiltext
+		6: abilval
+		7: sharethewealth
+		8: moveSpeed
+		10: movelock
+		11: blacklist
+		12: dementia
+		14: CD
+		15: HP
+		16: rando
+		17: trolled
+		18: copy
+		19: propWave
+		22: ultimate_stockpile
+		23: blood_infusion
+		24: ultimates_stocked
+		1: B
+		4: E
+		3: D
+}
+
+subroutines
+{
+	0: ApplicationLogic
+	1: HUD1
+	2: HUD2
+	3: HUD3
+	4: HUD4
+	5: HUD5
+	6: HUD6
+	7: HUD7
+	8: HUD8
+	9: HUD9
+	10: HUD10
+	11: HUD11
+	12: HUD12
+	13: HUD13
+	14: HUD14
+	15: HUD15
+	16: HUD16
+	17: HUD17
+	18: HUD18
+	19: HUD19
+	20: HUD20
+	21: Die_Instantly
+	22: AbilBlacklist
+	23: ActiveHUD
+	24: explode
+	25: AimPunchSFX
+	26: trolled
+	27: copylogic
+	28: General_Nerf
+	29: Glass
+	30: Dementia
+	31: Yowch
+	32: Hackerman
+	33: Tempered_Glass
+	34: Randomizer
+	35: Low_Gravity
+	36: Instant_Ultimate
+	37: Embiggenment
+	38: Ammo_Surplus
+	39: High_Jump
+	40: BUP
+	41: Regeneration
+	42: Health_Bonus
+	43: Faux_Hitscan
+	44: Enshrinkening
+	45: Movement_Buff
+	46: Damage_Boost
+	47: Pasta_Projectiles
+	48: Better_Movement_Buff
+	49: Max_Ammo
+	50: Blood_Infusion
+	51: Double_Healing
+	52: General_Buff
+	53: Flight
+	54: Impervious
+	55: Beefcake
+	56: Healing_Factor
+	57: Perma_Nano
+}
+
+disabled rule("Credits")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		"Made by: Dudeguypal#1527\nVersion: 1.1\nPreset: Skirmish Only"
+		disabled Continue;
+		"Cooldown HUD Inspired by: Spice#11472\nAbility Names Inspired by: Potatogrant#1690"
+		disabled End;
+	}
+}
+
+rule("Roll For Initiative - Animation")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Alive(Event Player) == True;
+		Event Player.rollnum == Null;
+		Total Time Elapsed > 5;
+	}
+
+	actions
+	{
+		Wait(Random Real(0.300, 0.700), Ignore Condition);
+		Destroy HUD Text(Event Player.array[29]);
+		Stop Camera(Event Player);
+		Stop Transforming Throttle(Event Player);
+		Stop Forcing Throttle(Event Player);
+		Set Aim Speed(Event Player, 100);
+		Destroy HUD Text(Event Player.array[3]);
+		Skip If(!Event Player.trolled, 3);
+		Start Rule(trolled, Do Nothing);
+		Event Player.trolled = False;
+		Abort;
+		Disable Hero HUD(Event Player);
+		Event Player.B = 0;
+		Event Player.E = Random Integer(1, 20);
+		Play Effect(Event Player, Good Pickup Effect, Color(Sky Blue), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Good Pickup Effect, Color(Turquoise), Update Every Frame(Eye Position(Event Player)
+			+ Facing Direction Of(Event Player) * 3.500), 1);
+		Play Effect(Event Player, Good Pickup Effect, Color(Sky Blue), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Buff Impact Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 4, 50);
+		Play Effect(Event Player, Tracer Recall Reappear Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 4, 100);
+		Create In-World Text(Event Player, Event Player.E, Update Every Frame(Eye Position(Event Player) + Direction From Angles(
+			Horizontal Facing Angle Of(Event Player), Vertical Facing Angle Of(Event Player) + 1) * 2.700), 2, Do Not Clip,
+			Visible To Position String and Color, Global.colors[Event Player.E], Default Visibility);
+		Event Player.array[1] = Last Text ID;
+		Create Projectile Effect(Event Player, Symmetra Photon Projector, Event Player, Update Every Frame(Eye Position(Event Player)
+			+ Facing Direction Of(Event Player) * 3), Direction From Angles(Horizontal Facing Angle Of(Event Player) + (
+			Event Player.D == 1.800 ? 90 : 0), Event Player.B), 0.020, Position Direction and Size);
+		Event Player.array[0] = Last Created Entity;
+		Wait(1, Ignore Condition);
+		Play Effect(Event Player, Doomfist Rising Uppercut Impact Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500, 40);
+		Chase Player Variable At Rate(Event Player, B, 99999, 1249, Destination and Rate);
+		For Player Variable(Event Player, D, 0, 1.800, 0.100);
+			Play Effect(Event Player, Ring Explosion Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 3,
+				15 + Event Player.D * 35);
+			Event Player.E = Random Integer(1, 20);
+			Wait(0.100, Ignore Condition);
+		End;
+		Stop Chasing Player Variable(Event Player, B);
+		Event Player.E = Random Integer(1, 20);
+		Play Effect(Event Player, Ring Explosion Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 3,
+			70);
+		Wait(0.350, Ignore Condition);
+		Event Player.E = Random Integer(1, 20);
+		Play Effect(Event Player, Ring Explosion Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 3,
+			73);
+		Wait(0.750, Ignore Condition);
+		Play Effect(Event Player, Lúcio Sound Barrier Cast Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3, 95);
+		Play Effect(Event Player, Ring Explosion Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 3,
+			75);
+		Play Effect(Event Player, Doomfist Rising Uppercut Impact Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3, 85);
+		Event Player.E = Random Integer(1, 20);
+		Wait(1.600, Ignore Condition);
+		Call Subroutine(AbilBlacklist);
+		Event Player.abilval = Index Of Array Value(Global.abils, Event Player.abiltext);
+		Event Player.rollnum = Event Player.E;
+		Destroy Effect(Event Player.array[0]);
+		Destroy In-World Text(Event Player.array[1]);
+		Enable Hero HUD(Event Player);
+		Play Effect(Event Player, Good Pickup Effect, Color(Sky Blue), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Good Pickup Effect, Color(Turquoise), Update Every Frame(Eye Position(Event Player)
+			+ Facing Direction Of(Event Player) * 3.500), 1);
+		Play Effect(Event Player, Good Pickup Effect, Color(Sky Blue), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Buff Impact Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 4, 40);
+		Play Effect(Event Player, Tracer Recall Disappear Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 4, 100);
+		Call Subroutine(ApplicationLogic);
+		Big Message(Event Player, Event Player.abiltext);
+		Skip If(Event Player.rollnum != 20, 1);
+		Small Message(All Players(All Teams), Custom String("   {0} Rolled a Natural 20!", Event Player));
+	}
+}
+
+rule("Global Arrays")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Disable Inspector Recording;
+		Global.kbheroes = Array(Hero(Cassidy), Hero(Tracer), Hero(Mercy), Hero(Moira), Hero(Symmetra), Hero(Ashe), Hero(Ana), Hero(Genji),
+			Hero(Hanzo), Hero(Kiriko), Hero(Lifeweaver), Hero(Mei), Hero(Ramattra), Hero(Reaper), Hero(Sojourn), Hero(Torbjörn), Hero(
+			Widowmaker), Hero(Sombra));
+		Global.colors = Empty Array;
+		Global.colors = Append To Array(Global.colors, Null);
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 0, 0, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 40, 40, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 80, 80, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 135, 135, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 175, 175, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 215, 215, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 240, 240, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 250, 250, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 255, 255, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 255, 255, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 255, 255, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(255, 255, 255, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(250, 255, 250, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(240, 255, 240, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(215, 255, 215, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(185, 255, 185, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(135, 255, 135, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(80, 255, 80, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(40, 255, 40, 255));
+		Global.colors = Append To Array(Global.colors, Custom Color(0, 255, 0, 255));
+		Global.abils = Empty Array;
+		Global.abils = Append To Array(Global.abils, Custom String(" 1: Die Instantly"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 3: Reversed Movement"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 1: Cinematic Mode"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 1: General Nerf"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 2: Glass"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 2: Dementia"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 2: Rotated Movement"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 2: Inverse Biotics"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 3: Yowch"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 3: Aim Nerf"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 3: Fixed Movement"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 1: Facecam"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 4: Hackerman"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 4: Quantum Dissonance"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 4: Restricted Movement"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 5: Tempered Glass"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 5: Lag Switch"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 11: BUP"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 5: Share the Wealth"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 6: Random Teleport"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 6: Fall Damage"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 6: Move or Die"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 7: Self-Destruct"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 7: Aim Punch"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 7: Random Stats"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 8: Low Gravity"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 8: Supreme Trolling"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 8: Scuffed Shatter"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 9: Personal Space"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 9: Sneaky Snitch"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 9: Instant Ultimate"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 10: Embiggening"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 10: Ammo Surplus"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 10: Copy Ability"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 10: Copy Hero"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 16: Chernobyl Power"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 11: Snap Kick"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 11: High Jump"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 12: Regeneration"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 12: Ender Blade"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 12: Propulsion Wave"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 13: Double Jump"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 6: Pasta Projectiles"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 13: Health Bonus"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 14: Fierystrike"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 14: Explode"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 14: Burny Stuff"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 13: Faux Hitscan"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 15: Ravenous Aura"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 15: Funny Gun"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 15: Enshrinkening"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 16: Movement Buff"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 16: Jump Pack"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 16: Damage Boost"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 17: Better Movement Buff"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 17: Max Ammo"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 17: Blood Infusion"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 18: Double Healing"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 18: EXTREME JUMP"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 18: Rocket Storm"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 19: Ultimate Stockpile"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 19: Flight"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 19: Impervious"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 19: General Buff"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 20: Instant Cooldowns"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 20: Beefcake"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 20: Touch of Death"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 20: Warp Speed"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 20: Healing Factor"));
+		Global.abils = Append To Array(Global.abils, Custom String(" 20: Permanent Nano"));
+		Create HUD Text(All Players(All Teams), Null, Null, Custom String(" ‍‍‍‍‍‍‍‍‍\n\n\n"), Left, -1, Color(White), Color(White), Color(
+			White), Visible To, Default Visibility);
+		disabled Create HUD Text(Host Player, Server Load Average, Null, Null, Right, 99, Color(White), Color(White), Color(White),
+			Visible To and String, Default Visibility);
+		Wait(0.016, Ignore Condition);
+		Create HUD Text(All Players(All Teams), Null, Null, Custom String(" \r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n"),
+			Top, 1, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
+	}
+}
+
+rule("Spawn Initiation")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Alive(Event Player) == True;
+	}
+
+	actions
+	{
+		If(Is In Spawn Room(Event Player) != True);
+			Wait(0.200, Ignore Condition);
+			Loop If(Is In Spawn Room(Event Player));
+			Call Subroutine(ApplicationLogic);
+			Abort;
+		End;
+		Skip If(Event Player.array[4], 3);
+		Create In-World Text(!Event Player.rollnum || Is Dead(Event Player) || (Hero Of(Event Player) == Hero(Moira) && Is Using Ability 1(
+			Event Player)) ? Null : All Players(All Teams), Event Player.rollnum, Event Player, 1.500, Clip Against Surfaces,
+			Visible To String and Color, Global.colors[Event Player.rollnum], Default Visibility);
+		Create HUD Text(Event Player.rollnum && Is Alive(Event Player) ? Event Player : Null, Null, Null, Event Player.abiltext, Left, 0,
+			Color(White), Color(White), Global.colors[Event Player.rollnum], Visible To String and Color, Default Visibility);
+		Event Player.array[4] = True;
+		Event Player.rollnum = Null;
+		Event Player.abilval = Null;
+	}
+}
+
+rule("HUD Logic:1")
+{
+	event
+	{
+		Subroutine;
+		HUD1;
+	}
+
+	actions
+	{
+		Create HUD Text(Event Player, Null, Custom String("   Good luck."), Null, Left, 1, Color(White), Color(White), Color(White), None,
+			Default Visibility);
+		Event Player.array[3] = Last Text ID;
+		If(Event Player.abilval == 0);
+			Start Rule(Die_Instantly, Do Nothing);
+		Else If(Event Player.abilval == 3);
+			Start Rule(General_Nerf, Do Nothing);
+		Else If(Event Player.abilval == 11);
+			Start Camera(Event Player, Update Every Frame(Ray Cast Hit Position(Eye Position(Event Player), Eye Position(Event Player)
+				+ Facing Direction Of(Event Player) * Evaluate Once(Random Real(2, 6)), Null, Event Player, True)), Update Every Frame(
+				Eye Position(Event Player)), 100);
+		End;
+	}
+}
+
+rule("HUD Logic:2")
+{
+	event
+	{
+		Subroutine;
+		HUD2;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 4);
+			Create HUD Text(Event Player, Null, Custom String("   You have less health."), Null, Left, 1, Color(White), Color(White), Color(
+				White), None, Default Visibility);
+			Start Rule(Glass, Do Nothing);
+		Else If(Event Player.abilval == 5);
+			Create HUD Text(Event Player, Null, Custom String("   Half of your buttons are disabled."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+			Start Rule(Dementia, Do Nothing);
+		Else If(Event Player.abilval == 6);
+			Create HUD Text(Event Player, Null, Custom String("   Your movement is rotated along the X axis."), Null, Left, 1, Color(White),
+				Color(White), Color(White), None, Default Visibility);
+			Start Transforming Throttle(Event Player, 1, 1, Vector(1, 0, 0));
+		Else If(Event Player.abilval == 7);
+			Create HUD Text(Event Player, Null, Custom String("   Instead of healing, you just take more damage."), Null, Left, 1, Color(
+				White), Color(White), Color(White), None, Default Visibility);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:3")
+{
+	event
+	{
+		Subroutine;
+		HUD3;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 8);
+			Create HUD Text(Event Player, Null, Custom String(
+				"   In the desolate abyss of my soul, an eternal \r\n  flame burns with the tortured intensity of \r\n  relentless shadows. {0}",
+				Custom String(
+				"Unyielding torment \r\nintertwines with the bleak purpose of this \r\neverlasting fire, casting a haunting symphony \r\nof isolation. ")),
+				Null, Left, 1, Color(White), Custom Color(128, 18, 18, 255), Null, None, Default Visibility);
+			Start Rule(Yowch, Do Nothing);
+		Else If(Event Player.abilval == 9);
+			Create HUD Text(Event Player, Null, Custom String("   Your sensitivity randomly changes."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 10);
+			Create HUD Text(Event Player, Null, Custom String("   Most of your movement keys are 80% slower."), Null, Left, 1, Color(White),
+				Color(White), Color(White), None, Default Visibility);
+			Event Player.movelock = Random Integer(0, 2);
+			Start Forcing Throttle(Event Player, 0, Event Player.movelock == 0 ? 1 : 0.200, 0, Event Player.movelock == 1 ? 1 : 0.200, 0,
+				Event Player.movelock == 2 ? 1 : 0.200);
+		Else If(Event Player.abilval == 1);
+			Create HUD Text(Event Player, Null, Custom String("   Your movement controls are reversed."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+			Start Transforming Throttle(Event Player, -1, -1, Facing Direction Of(Event Player));
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:4")
+{
+	event
+	{
+		Subroutine;
+		HUD4;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 12);
+			Create HUD Text(Event Player, Null, Custom String("   You are permanently Hacked."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Start Rule(Hackerman, Do Nothing);
+		Else If(Event Player.abilval == 13);
+			Create HUD Text(Event Player, Null, Custom String("   Randomly teleport around."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 14);
+			Create HUD Text(Event Player, Null, Custom String("   You cannot walk forward."), Null, Left, 1, Color(White), Color(White), Color(
+				White), None, Default Visibility);
+			Start Forcing Throttle(Event Player, 0, 0, 0, 1, 0, 1);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:5")
+{
+	event
+	{
+		Subroutine;
+		HUD5;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 15);
+			Create HUD Text(Event Player, Null, Custom String("   Your health is halved."), Null, Left, 1, Color(White), Color(White), Color(
+				White), None, Default Visibility);
+			Start Rule(Tempered_Glass, Do Nothing);
+		Else If(Event Player.abilval == 16);
+			Create HUD Text(Event Player, Null, Custom String("   Your movement constantly stutters."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 18);
+			Create HUD Text(Event Player, Null, Custom String("   When you gain ultimate charge all enemies gain the same amount."), Null,
+				Left, 1, Color(White), Color(White), Color(White), None, Default Visibility);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:6")
+{
+	event
+	{
+		Subroutine;
+		HUD6;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 19);
+			Create HUD Text(Event Player, Null, Custom String("   It's emergent technology."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Play Effect(All Players(All Teams), Tracer Recall Disappear Sound, Team Of(Event Player), Evaluate Once(Eye Position(
+				Event Player)), 100);
+			Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Purple), Evaluate Once(Eye Position(Event Player)), 0.500);
+			Set Status(Event Player, Null, Phased Out, 0.500);
+			Set Player Health(Event Player, 1);
+			Teleport(Event Player, Nearest Walkable Position(Eye Position(Random Value In Array(All Living Players(All Teams)))
+				+ Direction From Angles(Random Real(-180, 180), 0) * Random Integer(8, 40)));
+			Play Effect(All Players(All Teams), Tracer Recall Reappear Sound, Team Of(Event Player), Evaluate Once(Event Player), 100);
+			Play Effect(All Players(All Teams), Sombra Translocating Material Effect, Team Of(Event Player), Event Player, 1);
+		Else If(Event Player.abilval == 20);
+			Create HUD Text(Event Player, Null, Custom String("   You take damage when you fall."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 21);
+			Create HUD Text(Event Player, Null, Custom String("   If you stop you drop."), Null, Left, 1, Color(White), Color(White), Color(
+				White), None, Default Visibility);
+		Else If(Event Player.abilval == 42);
+			Create HUD Text(Event Player, Null, Custom String("   Your projectiles move slower."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Start Rule(Pasta_Projectiles, Do Nothing);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:7")
+{
+	event
+	{
+		Subroutine;
+		HUD7;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 22);
+			Create HUD Text(Event Player, Null, Custom String("   [{0}] to explode.", Input Binding String(Button(Interact))), Null, Left, 1,
+				Color(White), Color(White), Color(White), String, Default Visibility);
+		Else If(Event Player.abilval == 23);
+			Create HUD Text(Event Player, Null, Custom String("   1/5 chance on hit to punch the enemy's aim."), Null, Left, 1, Color(White),
+				Color(White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 24);
+			Create HUD Text(Event Player, Null, Custom String("   Your stats are randomized."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Start Rule(Randomizer, Do Nothing);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:8")
+{
+	event
+	{
+		Subroutine;
+		HUD8;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 25);
+			Create HUD Text(Event Player, Null, Custom String("   Your gravity is low."), Null, Left, 1, Color(White), Color(White), Color(
+				White), None, Default Visibility);
+			Start Rule(Low_Gravity, Do Nothing);
+		Else If(Event Player.abilval == 26);
+			Create HUD Text(Event Player, Null, Custom String("   Enemies you kill will roll a bad ability when they respawn."), Null, Left, 1,
+				Color(White), Color(White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 27);
+			Create HUD Text(Event Player, Null, Custom String("   [{0}] to knock down nearby players, including yourself.",
+				Input Binding String(Button(Interact))), Null, Left, 1, Color(White), Color(White), Color(White), String, Default Visibility);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:9")
+{
+	event
+	{
+		Subroutine;
+		HUD9;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 28);
+			Create HUD Text(Event Player, Null, Custom String("   Nearby enemies are knocked away."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 29);
+			Create HUD Text(Event Player, Null, Custom String("   Your crouch-walking is faster."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 30);
+			Create HUD Text(Event Player, Null, Custom String("   Don't spend it all in one place."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+			Start Rule(Instant_Ultimate, Restart Rule);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:10")
+{
+	event
+	{
+		Subroutine;
+		HUD10;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 31);
+			Create HUD Text(Event Player, Null, Custom String("   You are bigger and take less damage."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+			Start Rule(Embiggenment, Do Nothing);
+		Else If(Event Player.abilval == 32);
+			Create HUD Text(Event Player, Null, Custom String("   Your ammo is doubled."), Null, Left, 1, Color(White), Color(White), Color(
+				White), None, Default Visibility);
+			Start Rule(Ammo_Surplus, Do Nothing);
+		Else If(Event Player.abilval == 33);
+			Create HUD Text(Event Player, Null, Custom String("   Melee an enemy to copy their ability."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 34);
+			Create HUD Text(Event Player, Null, Custom String("   Melee an enemy to copy their hero."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:11")
+{
+	event
+	{
+		Subroutine;
+		HUD11;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 17);
+			Create HUD Text(Event Player, Null, Custom String("   You deal a lot more knockback."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Start Rule(BUP, Do Nothing);
+		Else If(Event Player.abilval == 36);
+			Create HUD Text(Event Player, Null, Custom String("   {0}", Hero Of(Event Player) == Hero(Zenyatta) ? Custom String(
+				"Kicking is stronger and launches enemies farther.") : Custom String("Quick Melee inflicts knockback.")), Null, Left, 1, Color(
+				White), Color(White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 37);
+			Create HUD Text(Event Player, Null, Custom String("   You jump higher."), Null, Left, 1, Color(White), Color(White), Color(White),
+				None, Default Visibility);
+			Start Rule(High_Jump, Do Nothing);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:12")
+{
+	event
+	{
+		Subroutine;
+		HUD12;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 38);
+			Create HUD Text(Event Player, Null, Custom String("   Heal over time."), Null, Left, 1, Color(White), Color(White), Color(White),
+				None, Default Visibility);
+			Start Rule(Regeneration, Do Nothing);
+		Else If(Event Player.abilval == 39);
+			Create HUD Text(Event Player, Null, Custom String("   Quick Melee randomly teleports enemies."), Null, Left, 1, Color(White),
+				Color(White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 40);
+			Create HUD Text(Event Player, Null, Custom String("   [{0}] to knock away enemies in front of you.", Input Binding String(Button(
+				Interact))), Null, Left, 1, Color(White), Color(White), Color(White), String, Default Visibility);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:13")
+{
+	event
+	{
+		Subroutine;
+		HUD13;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 41);
+			Create HUD Text(Event Player, Null, Custom String("   So you can get more jump per jump."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 47);
+			Create HUD Text(Event Player, Null, Custom String("   Your projectiles are faster."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Start Rule(Faux_Hitscan, Do Nothing);
+		Else If(Event Player.abilval == 43);
+			Create HUD Text(Event Player, Null, Custom String("   Your health is increased."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Start Rule(Health_Bonus, Do Nothing);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:14")
+{
+	event
+	{
+		Subroutine;
+		HUD14;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 44);
+			Create HUD Text(Event Player, Null, Custom String("   [{0}] to launch a nondescript fire projectile.", Input Binding String(Button(
+				Interact))), Null, Left, 1, Color(White), Color(White), Color(White), String, Default Visibility);
+		Else If(Event Player.abilval == 45);
+			Create HUD Text(Event Player, Null, Custom String("   [{0}] to explode, but not die.", Input Binding String(Button(Interact))),
+				Null, Left, 1, Color(White), Color(White), Color(White), String, Default Visibility);
+		Else If(Event Player.abilval == 46);
+			Create HUD Text(Event Player, Null, Custom String("   Enemies are set on fire when you hit them."), Null, Left, 1, Color(White),
+				Color(White), Color(White), None, Default Visibility);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:15")
+{
+	event
+	{
+		Subroutine;
+		HUD15;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 48);
+			Create HUD Text(Event Player, Null, Custom String("   Nearby enemies are pulled to the ground and slowed."), Null, Left, 1, Color(
+				White), Color(White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 49);
+			Create HUD Text(Event Player, Null, Custom String("   [{0}] to fire a projectile that deals high knockback.", Input Binding String(
+				Button(Interact))), Null, Left, 1, Color(White), Color(White), Color(White), String, Default Visibility);
+		Else If(Event Player.abilval == 50);
+			Create HUD Text(Event Player, Null, Custom String("   You are smaller."), Null, Left, 1, Color(White), Color(White), Color(White),
+				None, Default Visibility);
+			Start Rule(Enshrinkening, Do Nothing);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:16")
+{
+	event
+	{
+		Subroutine;
+		HUD16;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 51);
+			Create HUD Text(Event Player, Null, Custom String("   Your movement is buffed."), Null, Left, 1, Color(White), Color(White), Color(
+				White), None, Default Visibility);
+			Start Rule(Movement_Buff, Do Nothing);
+		Else If(Event Player.abilval == 52);
+			Create HUD Text(Event Player, Null, Custom String("   [{0}] to boost in the direction you're looking.", Input Binding String(
+				Button(Interact))), Null, Left, 1, Color(White), Color(White), Color(White), String, Default Visibility);
+		Else If(Event Player.abilval == 53);
+			Create HUD Text(Event Player, Null, Custom String("   Your damage is buffed."), Null, Left, 1, Color(White), Color(White), Color(
+				White), None, Default Visibility);
+			Start Rule(Damage_Boost, Do Nothing);
+		Else If(Event Player.abilval == 35);
+			Create HUD Text(Event Player, Null, Custom String("   Enemies within your aura take a lot more damage."), Null, Left, 1, Color(
+				White), Color(White), Color(White), None, Default Visibility);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:17")
+{
+	event
+	{
+		Subroutine;
+		HUD17;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 54);
+			Create HUD Text(Event Player, Null, Custom String("   Your movement is buffed a lot."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Start Rule(Better_Movement_Buff, Do Nothing);
+		Else If(Event Player.abilval == 55);
+			Create HUD Text(Event Player, Null, Custom String("   Don't worry, I'll keep track of your accuracy for you."), Null, Left, 1,
+				Color(White), Color(White), Color(White), None, Default Visibility);
+			Start Rule(Max_Ammo, Do Nothing);
+		Else If(Event Player.abilval == 56);
+			Create HUD Text(Event Player, Null, Custom String("   Killing makes you stronger."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:18")
+{
+	event
+	{
+		Subroutine;
+		HUD18;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 57);
+			Create HUD Text(Event Player, Null, Custom String("   All healing you deal and receive is doubled."), Null, Left, 1, Color(White),
+				Color(White), Color(White), None, Default Visibility);
+			Start Rule(Double_Healing, Do Nothing);
+		Else If(Event Player.abilval == 58);
+			Create HUD Text(Event Player, Null, Custom String("   Just like normal jumping, but EXTREME."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 59);
+			Create HUD Text(Event Player, Null, Custom String("   [{0}] to obliterate whatever's in front of you.", Input Binding String(
+				Button(Interact))), Null, Left, 1, Color(White), Color(White), Color(White), String, Default Visibility);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:19")
+{
+	event
+	{
+		Subroutine;
+		HUD19;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 60);
+			Create HUD Text(Event Player, Null, Custom String("   Your Ultimate charges faster and multiple can be held at once."), Null, Left,
+				1, Color(White), Color(White), Color(White), None, Default Visibility);
+			Event Player.array[3] = Last Text ID;
+			Create HUD Text(Event Player, Null, Custom String(
+				"                                                                Stockpile : {0}", Event Player.ultimates_stocked), Null, Top,
+				99, Color(White), Global.colors[Event Player.rollnum], Color(White), String, Default Visibility);
+			Event Player.array[29] = Last Text ID;
+			Event Player.ultimates_stocked = 0;
+			Event Player.ultimate_stockpile = Ultimate Charge Percent(Event Player);
+			Abort;
+		Else If(Event Player.abilval == 61);
+			Create HUD Text(Event Player, Null, Custom String("   Jump goes up, crouch goes down."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Start Rule(Flight, Do Nothing);
+		Else If(Event Player.abilval == 62);
+			Create HUD Text(Event Player, Null, Custom String("   Frontal attacks deal no damage to you."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+			Start Rule(Impervious, Do Nothing);
+		Else If(Event Player.abilval == 63);
+			Create HUD Text(Event Player, Null, Custom String("   You are wholly superior to others."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+			Start Rule(General_Buff, Do Nothing);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("HUD Logic:20")
+{
+	event
+	{
+		Subroutine;
+		HUD20;
+	}
+
+	actions
+	{
+		If(Event Player.abilval == 64);
+			Create HUD Text(Event Player, Null, Custom String("   {0}", Array Contains(Array(Hero(Moira), Hero(Doomfist), Hero(Genji), Hero(
+				Lifeweaver), Hero(Ramattra)), Hero Of(Event Player)) ? Custom String("ド ド ド YARE YARE DAZE ド ド ド") : Custom String(
+				"Your cooldowns are reduced by 95%.")), Null, Left, 1, Color(White), Array Contains(Array(Hero(Moira), Hero(Genji), Hero(
+				Doomfist), Hero(Lifeweaver), Hero(Ramattra)), Hero Of(Event Player)) ? Custom Color(220, 150, 250, 255) : Color(White), Color(
+				White), None, Default Visibility);
+		Else If(Event Player.abilval == 65);
+			Create HUD Text(Event Player, Null, Custom String("   Your health is quintupled."), Null, Left, 1, Color(White), Color(White),
+				Color(White), None, Default Visibility);
+			Start Rule(Beefcake, Do Nothing);
+		Else If(Event Player.abilval == 66);
+			Create HUD Text(Event Player, Null, Custom String("   Enemies hit by Quick Melee are obliterated."), Null, Left, 1, Color(White),
+				Color(White), Color(White), None, Default Visibility);
+		Else If(Event Player.abilval == 67);
+			Create HUD Text(Event Player, Null, Custom String("   Hold [{0}] to go fast.", Input Binding String(Button(Interact))), Null, Left,
+				1, Color(White), Color(White), Color(White), String, Default Visibility);
+		Else If(Event Player.abilval == 68);
+			Create HUD Text(Event Player, Null, Custom String("   Your healthbar constantly refills itself."), Null, Left, 1, Color(White),
+				Color(White), Color(White), None, Default Visibility);
+			Start Rule(Healing_Factor, Do Nothing);
+		Else If(Event Player.abilval == 69);
+			Create HUD Text(Event Player, Null, Custom String("   This is definitely not regulation."), Null, Left, 1, Color(White), Color(
+				White), Color(White), None, Default Visibility);
+			Start Rule(Perma_Nano, Do Nothing);
+		End;
+		Event Player.array[3] = Last Text ID;
+	}
+}
+
+rule("Ability Application Logic")
+{
+	event
+	{
+		Subroutine;
+		ApplicationLogic;
+	}
+
+	actions
+	{
+		Destroy HUD Text(Event Player.array[29]);
+		Stop Camera(Event Player);
+		Stop Transforming Throttle(Event Player);
+		Stop Forcing Throttle(Event Player);
+		Set Aim Speed(Event Player, 100);
+		Destroy HUD Text(Event Player.array[3]);
+		Skip(Event Player.rollnum * 2);
+		Abort;
+		Abort;
+		Call Subroutine(HUD1);
+		Abort;
+		Call Subroutine(HUD2);
+		Abort;
+		Call Subroutine(HUD3);
+		Abort;
+		Call Subroutine(HUD4);
+		Abort;
+		Call Subroutine(HUD5);
+		Abort;
+		Call Subroutine(HUD6);
+		Abort;
+		Call Subroutine(HUD7);
+		Abort;
+		Call Subroutine(HUD8);
+		Abort;
+		Call Subroutine(HUD9);
+		Abort;
+		Call Subroutine(HUD10);
+		Abort;
+		Call Subroutine(HUD11);
+		Abort;
+		Call Subroutine(HUD12);
+		Abort;
+		Call Subroutine(HUD13);
+		Abort;
+		Call Subroutine(HUD14);
+		Abort;
+		Call Subroutine(HUD15);
+		Abort;
+		Call Subroutine(HUD16);
+		Abort;
+		Call Subroutine(HUD17);
+		Abort;
+		Call Subroutine(HUD18);
+		Abort;
+		Call Subroutine(HUD19);
+		Abort;
+		Call Subroutine(HUD20);
+		Wait(0.050, Ignore Condition);
+		Loop If(Event Player.abilval == 0 && Array Contains(Array(), Hero Of(Event Player)));
+	}
+}
+
+rule("AbilBlacklist")
+{
+	event
+	{
+		Subroutine;
+		AbilBlacklist;
+	}
+
+	actions
+	{
+		Event Player.blacklist = Empty Array;
+		Skip If(Hero Of(Event Player) != Hero(Sombra), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 7: Self-Destruct"), Custom String(
+			" 8: Scuffed Shatter"), Custom String(" 9: Personal Space"), Custom String(" 10: Copy Ability"), Custom String(
+			" 16: Chernobyl Power"), Custom String(" 12: Propulsion Wave"), Custom String(" 14: Fierystrike"), Custom String(
+			" 14: Explode"), Custom String(" 15: Ravenous Aura"), Custom String(" 15: Funny Gun"), Custom String(" 18: Rocket Storm"),
+			Custom String(" 20: Touch of Death")));
+		Skip If(!Array Contains(Array(Hero(D.Va), Hero(Hanzo), Hero(Sigma), Hero(Orisa), Hero(Reinhardt), Hero(Brigitte), Hero(Mercy),
+			Hero(Moira), Hero(Doomfist), Hero(Mauga), Hero(Kiriko)), Hero Of(Event Player)), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 17: Max Ammo"), Custom String(
+			" 10: Ammo Surplus")));
+		Skip If(!Array Contains(Array(Hero(Brigitte), Hero(Winston), Hero(Mauga), Hero(Reaper)), Hero Of(Event Player)), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 13: Faux Hitscan"), Custom String(
+			" 6: Pasta Projectiles")));
+		Skip If(!Array Contains(Array(Hero(Zenyatta), Hero(Kiriko), Hero(Zarya), Hero(Tracer), Hero(Junkrat), Hero(Symmetra)), Hero Of(
+			Event Player)), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 20: Instant Cooldowns")));
+		Skip If(!Array Contains(Array(Hero(D.Va), Hero(Wrecking Ball)), Hero Of(Event Player)), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 9: Sneaky Snitch")));
+		Skip If(!Array Contains(Array(Hero(Reinhardt), Hero(Brigitte)), Hero Of(Event Player)), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 11: Snap Kick"), Custom String(
+			" 12: Ender Blade"), Custom String(" 20: Touch of Death"), Custom String(" 10: Copy Hero"), Custom String(
+			" 10: Copy Ability")));
+		Skip If(!Array Contains(Global.kbheroes, Hero Of(Event Player)), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 11: BUP")));
+		Skip If(!Array Contains(Array(Hero(Pharah), Hero(Genji), Hero(Hanzo)), Hero Of(Event Player)), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 13: Double Jump")));
+		Skip If(!Array Contains(Array(Hero(Pharah), Hero(Echo), Hero(Mercy)), Hero Of(Event Player)), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 19: Flight")));
+		Skip If(!Array Contains(Array(Hero(Lifeweaver), Hero(Mercy)), Hero Of(Event Player)), 1);
+		Event Player.blacklist = Append To Array(Event Player.blacklist, Array(Custom String(" 14: Burny Stuff")));
+		Event Player.abiltext = Global.abils[Index Of Array Value(Global.abils, Random Value In Array(Filtered Array(Global.abils,
+			!Array Contains(Event Player.blacklist, Current Array Element) && String Contains(Current Array Element, Custom String(" {0}:",
+			Event Player.E)))))];
+	}
+}
+
+rule("Player Died")
+{
+	event
+	{
+		Player Died;
+		All;
+		All;
+	}
+
+	actions
+	{
+		Destroy Effect(Event Player.array[30]);
+		Destroy HUD Text(Event Player.array[3]);
+		Skip If(Event Player.abilval != 55, 1);
+		Small Message(All Players(All Teams), Custom String("   {0} had an accuracy of {1}%", Event Player, Player Stat(Event Player,
+			Weapon Accuracy)));
+	}
+}
+
+rule("moveSpeed Logic")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.moveSpeed != 0;
+	}
+
+	actions
+	{
+		Set Move Speed(Event Player, 100 + Event Player.moveSpeed);
+		Wait(0.200, Ignore Condition);
+		Loop If Condition Is True;
+		Set Move Speed(Event Player, 100);
+	}
+}
+
+rule("ActiveHUD")
+{
+	event
+	{
+		Subroutine;
+		ActiveHUD;
+	}
+
+	actions
+	{
+		Create HUD Text(Event Player, Null, Custom String("                                                                {0} : {1}",
+			Event Player.CD, String Slice(Event Player.abiltext, String Contains(String Slice(Event Player.abiltext, 3, 1), Custom String(
+			":")) ? 5 : 4, String Length(Event Player.abiltext) - 4)), Null, Top, 99, Color(White), Global.colors[Event Player.rollnum],
+			Color(White), String, Default Visibility);
+		Event Player.array[8] = Last Text ID;
+		While(Event Player.CD != 0);
+			Wait(1, Ignore Condition);
+			Event Player.CD -= 1;
+		End;
+		Destroy HUD Text(Event Player.array[8]);
+		Play Effect(Event Player, Buff Impact Sound, Color(White), Event Player, 15);
+		Play Effect(Event Player, Brigitte Repair Pack Armor Sound, Color(White), Event Player, 70);
+		Play Effect(Event Player, Widowmaker Venom Mine Explosion Sound, Color(White), Event Player, 50);
+	}
+}
+
+rule("0. Die Instantly")
+{
+	event
+	{
+		Subroutine;
+		Die_Instantly;
+	}
+
+	actions
+	{
+		Wait Until(Event Player.abilval != 0, Random Real(1, 4));
+		Abort If(Event Player.abilval != 0);
+		Kill(Event Player, Null);
+		Play Effect(All Players(All Teams), Sombra Logo Sound, Color(White), Event Player, 150);
+		Play Effect(All Players(All Teams), Moira Fade Disappear Sound, Color(White), Event Player, 180);
+		Play Effect(All Players(All Teams), Lúcio Sound Barrier Cast Sound, Color(White), Event Player, 130);
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Red), Event Player, 2);
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Black), Event Player, 1.500);
+	}
+}
+
+rule("2. Cinematic Mode")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 2;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Start Camera(Event Player, Eye Position(Event Player), Facing Direction Of(Event Player), 0);
+		While(Event Player.abilval == 2);
+			Disable Hero HUD(Event Player);
+			Start Camera(Event Player, Evaluate Once(Ray Cast Hit Position(Eye Position(Event Player), Eye Position(Event Player)
+				+ Direction From Angles(Horizontal Facing Angle Of(Event Player) + Random Real(110, 250), Random Real(-70, 0))
+				* Random Integer(2, 8), Null, Event Player, True)), Update Every Frame(Eye Position(Event Player)), 10);
+			Wait Until(Event Player.abilval != 2, 2.500);
+		End;
+		Stop Camera(Event Player);
+		Skip If(Event Player.rollnum == Null, 1);
+		Enable Hero HUD(Event Player);
+	}
+}
+
+rule("3. General Nerf")
+{
+	event
+	{
+		Subroutine;
+		General_Nerf;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Set Damage Dealt(Event Player, 50);
+		Set Healing Dealt(Event Player, 50);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 50);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Event Player.moveSpeed -= 40;
+		Set Projectile Speed(Event Player, 50);
+		Set Ammo(Event Player, 0, Max Ammo(Event Player, 0) / 2);
+		Set Ammo(Event Player, 1, Max Ammo(Event Player, 1) / 2);
+		Set Max Ammo(Event Player, 0, Max Ammo(Event Player, 0) / 2);
+		Set Max Ammo(Event Player, 1, Max Ammo(Event Player, 1) / 2);
+		Set Jump Vertical Speed(Event Player, 75);
+		"-"
+		Wait Until(Event Player.abilval != 3, 99999);
+		"-"
+		Set Damage Dealt(Event Player, 100);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 100);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Event Player.moveSpeed += 40;
+		Set Projectile Speed(Event Player, 100);
+		Set Jump Vertical Speed(Event Player, 100);
+		Set Healing Dealt(Event Player, 100);
+		Abort If(Is Dead(Event Player));
+		Set Ammo(Event Player, 0, Max Ammo(Event Player, 0) * 2);
+		Set Ammo(Event Player, 1, Max Ammo(Event Player, 1) * 2);
+		Set Max Ammo(Event Player, 0, Max Ammo(Event Player, 0) * 2);
+		Set Max Ammo(Event Player, 1, Max Ammo(Event Player, 1) * 2);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 3);
+	}
+}
+
+rule("4. Glass")
+{
+	event
+	{
+		Subroutine;
+		Glass;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Max Health(Event Player, 1);
+		Wait(0.050, Ignore Condition);
+		Add Health Pool To Player(Event Player, Health, 24.500 - Max Health(Event Player), True, False);
+		Event Player.array[5] = Last Created Health Pool;
+		Wait Until(Event Player.abilval != 4, 99999);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 100);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Remove Health Pool From Player(Event Player.array[5]);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 4);
+	}
+}
+
+rule("5. Dementia")
+{
+	event
+	{
+		Subroutine;
+		Dementia;
+	}
+
+	actions
+	{
+		Event Player.dementia = Array Slice(Randomized Array(Array(Button(Primary Fire), Button(Secondary Fire), Button(Ability 1), Button(
+			Ability 2), Button(Ultimate), Button(Jump), Button(Reload), Button(Crouch))), 0, 4);
+		Skip If(!Array Contains(Event Player.dementia, Button(Primary Fire)), 1);
+		Disallow Button(Event Player, Button(Primary Fire));
+		Skip If(!Array Contains(Event Player.dementia, Button(Secondary Fire)), 1);
+		Disallow Button(Event Player, Button(Secondary Fire));
+		Skip If(!Array Contains(Event Player.dementia, Button(Ability 1)), 1);
+		Set Ability 1 Enabled(Event Player, False);
+		Skip If(!Array Contains(Event Player.dementia, Button(Ability 2)), 1);
+		Set Ability 2 Enabled(Event Player, False);
+		Skip If(!Array Contains(Event Player.dementia, Button(Ultimate)), 1);
+		Set Ultimate Ability Enabled(Event Player, False);
+		Skip If(!Array Contains(Event Player.dementia, Button(Melee)), 1);
+		Disallow Button(Event Player, Button(Melee));
+		Skip If(!Array Contains(Event Player.dementia, Button(Jump)), 1);
+		Set Jump Enabled(Event Player, False);
+		Skip If(!Array Contains(Event Player.dementia, Button(Crouch)), 1);
+		Set Crouch Enabled(Event Player, False);
+		Wait Until(Event Player.abilval != 5, 99999);
+		Allow Button(Event Player, Button(Primary Fire));
+		Allow Button(Event Player, Button(Secondary Fire));
+		Set Ability 1 Enabled(Event Player, True);
+		Set Ability 2 Enabled(Event Player, True);
+		Set Ultimate Ability Enabled(Event Player, True);
+		Set Jump Enabled(Event Player, True);
+		Set Crouch Enabled(Event Player, True);
+		Allow Button(Event Player, Button(Melee));
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 5);
+	}
+}
+
+rule("7. Inverse Biotics")
+{
+	event
+	{
+		Player Received Healing;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 7;
+	}
+
+	actions
+	{
+		Damage(Event Player, Healer, Event Healing * 2);
+		Wait(0.050, Ignore Condition);
+	}
+}
+
+rule("8. Yowch")
+{
+	event
+	{
+		Subroutine;
+		Yowch;
+	}
+
+	actions
+	{
+		Set Status(Event Player, Null, Burning, 9999);
+		Start Damage Over Time(Event Player, Null, 9999, 4 + Max Health(Event Player) / 12);
+		Event Player.array[6] = Last Damage Over Time ID;
+		Wait Until(Event Player.abilval != 8, 99999);
+		Clear Status(Event Player, Burning);
+		Stop Damage Over Time(Event Player.array[6]);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 8);
+	}
+}
+
+rule("9. Godrim Nerf")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 9;
+	}
+
+	actions
+	{
+		Wait(Random Integer(1, Random Integer(1, 10) == 6 ? 12 : 4), Ignore Condition);
+		Set Aim Speed(Event Player, Random Value In Array(Array(Random Real(50, 200), 30, 220)));
+		Loop If Condition Is True;
+		Set Aim Speed(Event Player, 100);
+	}
+}
+
+rule("12. Hackerman")
+{
+	event
+	{
+		Subroutine;
+		Hackerman;
+	}
+
+	actions
+	{
+		Set Status(Event Player, Null, Hacked, 9999);
+		Wait Until(Event Player.abilval != 12, 99999);
+		Clear Status(Event Player, Hacked);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 12);
+	}
+}
+
+rule("13. Quantum Dissonance")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 13;
+		Is Alive(Event Player) == True;
+	}
+
+	actions
+	{
+		Skip If(Random Integer(0, 16) == 4, 1);
+		Wait(Random Integer(2, 14), Abort When False);
+		Play Effect(All Players(All Teams), Tracer Recall Disappear Sound, Team Of(Event Player), Evaluate Once(Eye Position(
+			Event Player)), 100);
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Purple), Evaluate Once(Eye Position(Event Player)), 0.500);
+		Wait(0.050, Ignore Condition);
+		Teleport(Event Player, Nearest Walkable Position(Eye Position(Event Player) + Direction From Angles(Random Real(-180, 180), 0)
+			* Random Integer(5, 30)));
+		Play Effect(All Players(All Teams), Tracer Recall Reappear Sound, Team Of(Event Player), Evaluate Once(Event Player), 100);
+		Play Effect(All Players(All Teams), Sombra Translocating Material Effect, Team Of(Event Player), Event Player, 1);
+		Loop If Condition Is True;
+	}
+}
+
+rule("15. Tempered Glass")
+{
+	event
+	{
+		Subroutine;
+		Tempered_Glass;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 50);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Wait Until(Event Player.abilval != 15, 99999);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 100);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 15);
+	}
+}
+
+rule("16. Lag Switch")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Alive(Event Player) == True;
+		Event Player.abilval == 16;
+	}
+
+	actions
+	{
+		Wait(Random Real(0.400, 1.300), Abort When False);
+		Teleport(Event Player, Position Of(Event Player) + Vector(Random Real(-0.500, 0.500), 0, Random Real(-0.500, 0.500)));
+		Loop If Condition Is True;
+	}
+}
+
+rule("17. BUP")
+{
+	event
+	{
+		Subroutine;
+		BUP;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Set Knockback Dealt(Event Player, 300);
+		Wait Until(Event Player.abilval != 17, 99999);
+		Set Knockback Dealt(Event Player, 100);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 17);
+	}
+}
+
+rule("18. Share the Wealth")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 18;
+		Event Player.sharethewealth != Ultimate Charge Percent(Event Player);
+	}
+
+	actions
+	{
+		Skip If(Ultimate Charge Percent(Event Player) <= 20, 5);
+		Set Ultimate Charge(Players In Slot(0, Opposite Team Of(Team Of(Event Player))), Ultimate Charge Percent(Players In Slot(0,
+			Opposite Team Of(Team Of(Event Player)))) + (Ultimate Charge Percent(Event Player) - Event Player.sharethewealth));
+		Set Ultimate Charge(Players In Slot(1, Opposite Team Of(Team Of(Event Player))), Ultimate Charge Percent(Players In Slot(1,
+			Opposite Team Of(Team Of(Event Player)))) + (Ultimate Charge Percent(Event Player) - Event Player.sharethewealth));
+		Set Ultimate Charge(Players In Slot(2, Opposite Team Of(Team Of(Event Player))), Ultimate Charge Percent(Players In Slot(2,
+			Opposite Team Of(Team Of(Event Player)))) + (Ultimate Charge Percent(Event Player) - Event Player.sharethewealth));
+		Set Ultimate Charge(Players In Slot(3, Opposite Team Of(Team Of(Event Player))), Ultimate Charge Percent(Players In Slot(3,
+			Opposite Team Of(Team Of(Event Player)))) + (Ultimate Charge Percent(Event Player) - Event Player.sharethewealth));
+		Set Ultimate Charge(Players In Slot(4, Opposite Team Of(Team Of(Event Player))), Ultimate Charge Percent(Players In Slot(4,
+			Opposite Team Of(Team Of(Event Player)))) + (Ultimate Charge Percent(Event Player) - Event Player.sharethewealth));
+		Event Player.sharethewealth = Ultimate Charge Percent(Event Player);
+		Wait(0.500, Ignore Condition);
+	}
+}
+
+rule("20. Fall Damage")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 20;
+		Is Alive(Event Player) == True;
+		Altitude Of(Event Player) >= 5;
+	}
+
+	actions
+	{
+		Wait Until(Is True For Any(Array(Is Dead(Event Player), Event Player.abilval != 20, Altitude Of(Event Player) < 1.500),
+			Current Array Element), 99999);
+		Abort If(Is True For Any(Array(Is Dead(Event Player), Event Player.abilval != 20, Speed Of In Direction(Event Player, Down) <= 3),
+			Current Array Element));
+		Set Player Health(Event Player, Health(Event Player) - (3 + Max Health(Event Player) * 0.018) * (Speed Of In Direction(
+			Event Player, Down) - 2.500));
+		Play Effect(All Players(All Teams), Doomfist Rising Uppercut Impact Sound, Color(White), Event Player, (Speed Of In Direction(
+			Event Player, Down) - 3) * 6);
+		Skip If(Health(Event Player) > 1, 2);
+		Apply Impulse(Event Player, Down, 70, To World, Cancel Contrary Motion XYZ);
+		Kill(Event Player, Null);
+	}
+}
+
+rule("21. Move or Die")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 21;
+		Is Alive(Event Player) == True;
+		!Is Moving(Event Player) == True;
+	}
+
+	actions
+	{
+		Wait(0.300, Abort When False);
+		Set Status(Event Player, Null, Burning, 9999);
+		Start Damage Over Time(Event Player, Null, 9999, 15 + Max Health(Event Player) / 3);
+		Event Player.array[6] = Last Damage Over Time ID;
+		Wait Until(Event Player.abilval != 21 || Is Dead(Event Player) || Is Moving(Event Player), 99999);
+		Clear Status(Event Player, Burning);
+		Stop Damage Over Time(Event Player.array[6]);
+	}
+}
+
+rule("22. Self-Destruct")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 22;
+		Is Alive(Event Player) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.CD == 0;
+		Is True For Any(Array(Has Status(Event Player, Stunned), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Asleep)), Current Array Element) == False;
+	}
+
+	actions
+	{
+		Create Effect(All Players(All Teams), Torbjörn Overloading Effect, Team Of(Event Player), Event Player, 1,
+			Visible To Position and Radius);
+		Event Player.array[9] = Last Created Entity;
+		Create Effect(All Players(All Teams), Energy Sound, Color(White), Event Player, 200, None);
+		Event Player.array[10] = Last Created Entity;
+		Call Subroutine(explode);
+		Skip If(Is Dead(Event Player), 2);
+		Kill(Event Player, Null);
+		Apply Impulse(Event Player, Up, 10, To World, Cancel Contrary Motion);
+		Destroy Effect(Event Player.array[9]);
+		Destroy Effect(Event Player.array[10]);
+		Stop Camera(Event Player);
+	}
+}
+
+rule("Explode")
+{
+	event
+	{
+		Subroutine;
+		explode;
+	}
+
+	actions
+	{
+		Start Camera(Event Player, Eye Position(Event Player) + Direction From Angles(Total Time Elapsed * 300, -20) * 4, Eye Position(
+			Event Player), 20);
+		Set Status(Event Player, Null, Stunned, 1.500);
+		Set Status(Event Player, Null, Burning, 3);
+		Wait(0.300, Ignore Condition);
+		Abort If(Is Dead(Event Player));
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Orange), Event Player, 1);
+		Play Effect(All Players(All Teams), Junkrat Frag Launcher Explosion Sound, Color(White), Eye Position(Event Player), 30);
+		Wait(0.300, Ignore Condition);
+		Abort If(Is Dead(Event Player));
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Orange), Event Player, 2);
+		Play Effect(All Players(All Teams), Junkrat Frag Launcher Explosion Sound, Color(White), Eye Position(Event Player), 50);
+		Wait(0.300, Ignore Condition);
+		Abort If(Is Dead(Event Player));
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Orange), Event Player, 3);
+		Play Effect(All Players(All Teams), Junkrat Frag Launcher Explosion Sound, Color(White), Eye Position(Event Player), 70);
+		Wait(0.300, Ignore Condition);
+		Abort If(Is Dead(Event Player));
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Orange), Event Player, 4);
+		Play Effect(All Players(All Teams), Junkrat Frag Launcher Explosion Sound, Color(White), Eye Position(Event Player), 90);
+		Wait(0.300, Ignore Condition);
+		Abort If(Is Dead(Event Player));
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Orange), Event Player, 7);
+		Play Effect(All Players(All Teams), Junkrat RIP Tire Explosion Sound, Color(White), Eye Position(Event Player), 150);
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Orange), Event Player, 6);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Orange), Event Player, 30);
+		Create Projectile(Roadhog Scrap, Event Player, Null, Null, To World, Damage, Opposite Team Of(Team Of(Event Player)), 500, 0.300,
+			8, Ring Explosion, DVa Self Destruct Explosion Sound, 0, 0.100, 0.100, 15, 0, 0);
+	}
+}
+
+rule("AimPunch SFX")
+{
+	event
+	{
+		Subroutine;
+		AimPunchSFX;
+	}
+
+	actions
+	{
+		Play Effect(Array(Event Player, Victim), Doomfist Rising Uppercut Impact Sound, Color(White), Eye Position(Victim), 130);
+		Play Effect(All Players(All Teams), Sombra Translocating Material Effect, Color(White), Victim, 1);
+		Wait(1, Ignore Condition);
+	}
+}
+
+rule("23. Aim Punch")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 23;
+	}
+
+	actions
+	{
+		Abort If(Random Integer(1, 5) != 1);
+		Start Rule(AimPunchSFX, Do Nothing);
+		Set Facing(Victim, Direction From Angles(Horizontal Facing Angle Of(Victim) + Random Real(-8, 8), Vertical Facing Angle Of(Victim)
+			+ Random Real(-8, 8)), To World);
+		Wait(0.200, Ignore Condition);
+	}
+}
+
+rule("24. Random Stats")
+{
+	event
+	{
+		Subroutine;
+		Randomizer;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Event Player.rando = Random Integer(-40, 40);
+		Set Damage Dealt(Event Player, Random Integer(60, 140));
+		Set Healing Dealt(Event Player, Random Integer(60, 150));
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, Random Integer(40, 160));
+		Set Max Ammo(Event Player, 0, Max Ammo(Event Player, 0) * Random Real(0.500, 2));
+		Set Max Ammo(Event Player, 1, Max Ammo(Event Player, 1) * Random Real(0.500, 2));
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Event Player.moveSpeed -= Event Player.rando;
+		Set Projectile Speed(Event Player, Random Integer(50, 200));
+		Set Ammo(Event Player, 0, Max Ammo(Event Player, 0));
+		Set Ammo(Event Player, 1, Max Ammo(Event Player, 1));
+		Set Jump Vertical Speed(Event Player, Random Integer(75, 160));
+		"-"
+		Wait Until(Event Player.abilval != 24, 99999);
+		"-"
+		Set Damage Dealt(Event Player, 100);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 100);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Event Player.moveSpeed += Event Player.rando;
+		Set Projectile Speed(Event Player, 100);
+		Set Jump Vertical Speed(Event Player, 100);
+		Set Healing Dealt(Event Player, 100);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 24);
+	}
+}
+
+rule("25. Low Gravity")
+{
+	event
+	{
+		Subroutine;
+		Low_Gravity;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Set Gravity(Event Player, 30);
+		Set Projectile Gravity(Event Player, 30);
+		Wait Until(Event Player.abilval != 25, 99999);
+		Set Gravity(Event Player, 100);
+		Set Projectile Gravity(Event Player, 100);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 25);
+	}
+}
+
+rule("26. Supreme Trolling")
+{
+	event
+	{
+		Player Earned Elimination;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 26;
+	}
+
+	actions
+	{
+		Victim.trolled = True;
+		Small Message(All Players(All Teams), Custom String("   {0} got TROLLED", Victim));
+	}
+}
+
+rule("Trolled")
+{
+	event
+	{
+		Subroutine;
+		trolled;
+	}
+
+	actions
+	{
+		Big Message(Event Player, Custom String("{0} {0} YOU ARE BEING TROLLED  {0} {0}", Icon String(Happy)));
+		Disable Hero HUD(Event Player);
+		Event Player.B = 0;
+		Event Player.E = Random Integer(1, 10);
+		Play Effect(Event Player, Good Pickup Effect, Color(Red), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Good Pickup Effect, Color(Rose), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Good Pickup Effect, Color(Red), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Buff Impact Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 4, 50);
+		Play Effect(Event Player, Tracer Recall Reappear Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 4, 100);
+		Create In-World Text(Event Player, Event Player.E, Update Every Frame(Eye Position(Event Player) + Direction From Angles(
+			Horizontal Facing Angle Of(Event Player), Vertical Facing Angle Of(Event Player) + 1) * 2.700), 2, Do Not Clip,
+			Visible To Position String and Color, Global.colors[Event Player.E], Default Visibility);
+		Event Player.array[1] = Last Text ID;
+		Create Projectile Effect(Event Player, Symmetra Photon Projector, Null, Update Every Frame(Eye Position(Event Player)
+			+ Facing Direction Of(Event Player) * 3), Direction From Angles(Horizontal Facing Angle Of(Event Player) + (
+			Event Player.D == 1.800 ? 90 : 0), Event Player.B), 0.020, Position Direction and Size);
+		Event Player.array[0] = Last Created Entity;
+		Wait(1, Ignore Condition);
+		Play Effect(Event Player, Doomfist Rising Uppercut Impact Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500, 40);
+		Chase Player Variable At Rate(Event Player, B, 99999, 1249, Destination and Rate);
+		For Player Variable(Event Player, D, 0, 1.800, 0.100);
+			Play Effect(Event Player, Ring Explosion Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 3,
+				15 + Event Player.D * 35);
+			Event Player.E = Random Integer(1, 10);
+			Wait(0.100, Ignore Condition);
+		End;
+		Stop Chasing Player Variable(Event Player, B);
+		Event Player.E = Random Integer(1, 10);
+		Play Effect(Event Player, Ring Explosion Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 3,
+			70);
+		Wait(0.350, Ignore Condition);
+		Event Player.E = Random Integer(1, 10);
+		Play Effect(Event Player, Ring Explosion Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 3,
+			73);
+		Wait(0.750, Ignore Condition);
+		Play Effect(Event Player, Lúcio Sound Barrier Cast Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3, 95);
+		Play Effect(Event Player, Ring Explosion Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 3,
+			75);
+		Play Effect(Event Player, Doomfist Rising Uppercut Impact Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3, 85);
+		Event Player.E = Random Integer(1, 10);
+		Wait(1.600, Ignore Condition);
+		Call Subroutine(AbilBlacklist);
+		Event Player.abilval = Index Of Array Value(Global.abils, Event Player.abiltext);
+		Event Player.rollnum = Event Player.E;
+		Destroy Effect(Event Player.array[0]);
+		Destroy In-World Text(Event Player.array[1]);
+		Enable Hero HUD(Event Player);
+		Play Effect(Event Player, Good Pickup Effect, Color(Red), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Good Pickup Effect, Color(Rose), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Good Pickup Effect, Color(Red), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 3.500), 1);
+		Play Effect(Event Player, Buff Impact Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(Event Player) * 4, 40);
+		Play Effect(Event Player, Tracer Recall Disappear Sound, Color(White), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 4, 100);
+		Call Subroutine(ApplicationLogic);
+		Big Message(Event Player, Event Player.abiltext);
+	}
+}
+
+rule("27. Scuffed Shatter")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 27;
+		Is Alive(Event Player) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.CD == 0;
+		Is True For Any(Array(Has Status(Event Player, Stunned), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Asleep)), Current Array Element) == False;
+	}
+
+	actions
+	{
+		Event Player.CD = 6;
+		Start Rule(ActiveHUD, Do Nothing);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Gray), Position Of(Event Player) + Vector(0, 0.300, 0), 20);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Yellow), Position Of(Event Player) + Vector(0, 0.300, 0), 20);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Orange), Position Of(Event Player) + Vector(0, 0.300, 0), 20);
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Gray), Position Of(Event Player) + Vector(0, 0.300, 0), 2);
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Orange), Position Of(Event Player) + Vector(0, 0.300, 0), 2);
+		Play Effect(All Players(All Teams), Doomfist Meteor Strike Impact Sound, Color(White), Position Of(Event Player) + Vector(0, 0.300,
+			0), 100);
+		Set Status(Append To Array(Players Within Radius(Event Player, 9, Opposite Team Of(Team Of(Event Player)),
+			Surfaces And Enemy Barriers), Event Player), Event Player, Knocked Down, 1.500);
+		Apply Impulse(Append To Array(Players Within Radius(Event Player, 9, Opposite Team Of(Team Of(Event Player)),
+			Surfaces And Enemy Barriers), Event Player), Up, 10, To World, Cancel Contrary Motion);
+		Damage(Append To Array(Players Within Radius(Event Player, 9, Opposite Team Of(Team Of(Event Player)),
+			Surfaces And Enemy Barriers), Event Player), Event Player, 25);
+	}
+}
+
+rule("28. Personal Space")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 28;
+		Is Alive(Event Player) == True;
+		Count Of(Filtered Array(Players Within Radius(Event Player, 10, Opposite Team Of(Team Of(Event Player)),
+			Surfaces And Enemy Barriers), Is Alive(Current Array Element))) == True;
+	}
+
+	actions
+	{
+		Play Effect(All Players(All Teams), Ring Explosion, Color(White), Position Of(Event Player) + Vector(0, 0.300, 0), 20);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Turquoise), Position Of(Event Player) + Vector(0, 0.300, 0), 20);
+		Play Effect(All Players(All Teams), Ring Explosion Sound, Color(Gray), Position Of(Event Player) + Vector(0, 0.300, 0), 70);
+		Create Projectile(Sigma Hypersphere, Event Player, Update Every Frame(Eye Position(Event Player)), Down, To World, Damage,
+			Opposite Team Of(Team Of(Event Player)), 5, 1, 10, Bad Explosion, Winston Jump Pack Landing Sound, 0, 0.100, 0.100, 11, 0, 0);
+		Wait(0.800, Ignore Condition);
+		Loop If Condition Is True;
+	}
+}
+
+rule("29. Sneaky Snitch")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 29;
+		Is Crouching(Event Player) == True;
+	}
+
+	actions
+	{
+		Event Player.moveSpeed += 125;
+		Wait Until(!Is Crouching(Event Player) || Event Player.abilval != 29, 99999);
+		Event Player.moveSpeed -= 125;
+		Wait(0.200, Ignore Condition);
+		Loop If Condition Is True;
+	}
+}
+
+rule("30. Instant Ultimate")
+{
+	event
+	{
+		Subroutine;
+		Instant_Ultimate;
+	}
+
+	actions
+	{
+		Set Ultimate Charge(Event Player, 100);
+		Play Effect(Event Player, Brigitte Repair Pack Armor Sound, Color(White), Eye Position(Event Player), 200);
+		Play Effect(Event Player, Buff Explosion Sound, Color(White), Eye Position(Event Player), 90);
+		Play Effect(Event Player, Sombra Logo Sound, Team Of(Event Player), Eye Position(Event Player), 200);
+		Play Effect(Event Player, Sombra Translocating Material Effect, Color(White), Event Player, 1);
+		Create Effect(All Players(All Teams), Winston Primal Rage Effect, Color(White), Event Player, 1, None);
+		Event Player.array[11] = Last Created Entity;
+		Wait(1.500, Ignore Condition);
+		Destroy Effect(Event Player.array[11]);
+	}
+}
+
+rule("31. Embiggening")
+{
+	event
+	{
+		Subroutine;
+		Embiggenment;
+	}
+
+	actions
+	{
+		Start Scaling Player(Event Player, 1.700, True);
+		Start Modifying Hero Voice Lines(Event Player, 0.600, False);
+		Set Damage Received(Event Player, 70);
+		Wait Until(Event Player.abilval != 31, 99999);
+		Stop Scaling Player(Event Player);
+		Stop Modifying Hero Voice Lines(Event Player);
+		Set Damage Received(Event Player, 100);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 31);
+	}
+}
+
+rule("32. Ammo Surplus")
+{
+	event
+	{
+		Subroutine;
+		Ammo_Surplus;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Set Ammo(Event Player, 0, Max Ammo(Event Player, 0) * 2);
+		Set Ammo(Event Player, 1, Max Ammo(Event Player, 1) * 2);
+		Set Max Ammo(Event Player, 0, Max Ammo(Event Player, 0) * 2);
+		Set Max Ammo(Event Player, 1, Max Ammo(Event Player, 1) * 2);
+		Wait Until(Event Player.abilval != 32, 99999);
+		Abort If(Is Dead(Event Player));
+		Set Ammo(Event Player, 0, Max Ammo(Event Player, 0) / 2);
+		Set Ammo(Event Player, 1, Max Ammo(Event Player, 1) / 2);
+		Set Max Ammo(Event Player, 0, Max Ammo(Event Player, 0) / 2);
+		Set Max Ammo(Event Player, 1, Max Ammo(Event Player, 1) / 2);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 32);
+	}
+}
+
+rule("33. Copy Ability")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 33;
+		Event Ability == Button(Melee);
+	}
+
+	actions
+	{
+		Play Effect(All Players(All Teams), Sombra Translocating Material Effect, Color(White), Victim, 1);
+		Play Effect(All Players(All Teams), Sombra Translocating Material Effect, Color(White), Event Player, 1);
+		Create Effect(All Players(All Teams), Echo Cloning Effect, Team Of(Event Player), Event Player, 1, None);
+		Event Player.array[12] = Last Created Entity;
+		Play Effect(All Players(All Teams), Good Pickup Effect, Team Of(Event Player), Event Player, 1);
+		Play Effect(Array(Event Player, Victim), Sombra Translocator Reappear Sound, Team Of(Event Player), Eye Position(Event Player),
+			150);
+		Play Effect(Array(Event Player, Victim), Sombra Logo Sound, Team Of(Event Player), Eye Position(Event Player), 150);
+		Event Player.rollnum = Victim.rollnum;
+		Event Player.abiltext = Victim.abiltext;
+		Event Player.abilval = Index Of Array Value(Global.abils, Event Player.abiltext);
+		Call Subroutine(ApplicationLogic);
+		Big Message(Event Player, Event Player.abiltext);
+		Small Message(Array(Event Player, Victim), Custom String("   {0} copied{1}", Event Player, String Replace(String Slice(
+			Victim.abiltext, 3, 99), Custom String(": "), Custom String(" ‍‍‍‍‍‍‍‍‍"))));
+		Wait(1.200, Ignore Condition);
+		Destroy Effect(Event Player.array[12]);
+	}
+}
+
+rule("34. Copy Hero")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 34;
+		Event Ability == Button(Melee);
+		Event Player.CD == 0;
+	}
+
+	actions
+	{
+		Start Rule(copylogic, Do Nothing);
+		Event Player.CD = 10;
+		Start Rule(ActiveHUD, Do Nothing);
+		Play Effect(All Players(All Teams), Sombra Translocating Material Effect, Color(White), Victim, 1);
+		Play Effect(All Players(All Teams), Sombra Translocating Material Effect, Color(White), Event Player, 1);
+		Create Effect(All Players(All Teams), Echo Cloning Effect, Team Of(Event Player), Event Player, 1, None);
+		Event Player.array[13] = Last Created Entity;
+		Play Effect(All Players(All Teams), Good Pickup Effect, Team Of(Event Player), Event Player, 1);
+		Play Effect(Array(Event Player, Victim), Sombra Translocator Reappear Sound, Team Of(Event Player), Eye Position(Event Player),
+			150);
+		Play Effect(Array(Event Player, Victim), Sombra Logo Sound, Team Of(Event Player), Eye Position(Event Player), 150);
+		Wait(0.100, Ignore Condition);
+		Event Player.HP = Normalized Health(Event Player);
+		Start Forcing Player To Be Hero(Event Player, Hero Of(Victim));
+		Wait(0.100, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Small Message(Array(Event Player, Victim), Custom String("   {0} copied {1}", Event Player, Hero Of(Victim)));
+		Wait(1.100, Ignore Condition);
+		Destroy Effect(Event Player.array[13]);
+	}
+}
+
+rule("Copy Logic")
+{
+	event
+	{
+		Subroutine;
+		copylogic;
+	}
+
+	actions
+	{
+		Event Player.copy = True;
+		Wait Until(Event Player.abilval != 34, 99999);
+		Event Player.HP = Normalized Health(Event Player);
+		Stop Forcing Player To Be Hero(Event Player);
+		Event Player.array[14] = Position Of(Event Player);
+		Wait(0.100, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Event Player.copy = False;
+		Teleport(Event Player, Event Player.array[14]);
+	}
+}
+
+rule("35. [REDACTED] Power")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 35;
+		Is Alive(Event Player) == True;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Start Damage Modification(Remove From Array(Players Within Radius(Event Player, 10, Opposite Team Of(Team Of(Event Player)),
+			Surfaces), Event Player), All Players(All Teams), 150, Receivers and Damagers);
+		Event Player.array[15] = Last Damage Modification ID;
+		Create Effect(All Players(All Teams), Ring, Color(Green), Update Every Frame(Position Of(Event Player)), 10, Position and Radius);
+		Event Player.array[16] = Last Created Entity;
+		Create Effect(All Players(All Teams), Bad Aura Sound, Color(Red), Event Player, 100, None);
+		Event Player.array[17] = Last Created Entity;
+		While(Event Player.abilval == 35 && Is Alive(Event Player));
+			Create Effect(All Players(All Teams), Lúcio Sound Barrier Protected Effect, Team Of(Event Player), Event Player, 1, None);
+			Event Player.array[18] = Last Created Entity;
+			Wait Until(Event Player.abilval != 35 || Is Dead(Event Player), 4);
+			Destroy Effect(Event Player.array[18]);
+		End;
+		Stop Damage Modification(Event Player.array[15]);
+		Destroy Effect(Event Player.array[16]);
+		Destroy Effect(Event Player.array[17]);
+	}
+}
+
+rule("36. Snap Kick")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 36;
+		Event Ability == Button(Melee);
+	}
+
+	actions
+	{
+		Apply Impulse(Victim, Direction From Angles(Horizontal Angle From Direction(Direction Towards(Event Player, Victim)), Min(-15,
+			Vertical Facing Angle Of(Event Player))), Hero Of(Event Player) == Hero(Zenyatta) ? 36 : 22, To World, Cancel Contrary Motion);
+		Damage(Victim, Event Player, 30);
+	}
+}
+
+rule("37. High Jump")
+{
+	event
+	{
+		Subroutine;
+		High_Jump;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Set Jump Vertical Speed(Event Player, 250);
+		Wait Until(Event Player.abilval != 37, 99999);
+		Set Jump Vertical Speed(Event Player, 100);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 37);
+	}
+}
+
+rule("38. Regeneration")
+{
+	event
+	{
+		Subroutine;
+		Regeneration;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Start Heal Over Time(Event Player, Event Player, 9999, Max Health(Event Player) * 0.080 + 14);
+		Event Player.array[18] = Last Heal Over Time ID;
+		Wait Until(Event Player.abilval != 38, 99999);
+		Stop Heal Over Time(Event Player.array[18]);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 38);
+	}
+}
+
+rule("39. Ender Blade")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 39;
+		Event Ability == Button(Melee);
+	}
+
+	actions
+	{
+		Play Effect(All Players(All Teams), Tracer Recall Disappear Sound, Team Of(Victim), Evaluate Once(Eye Position(Victim)), 100);
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Purple), Evaluate Once(Eye Position(Victim)), 0.500);
+		Teleport(Victim, Nearest Walkable Position(Eye Position(Victim) + Direction From Angles(Random Real(-180, 180), 0)
+			* Random Integer(5, 30)));
+		Play Effect(All Players(All Teams), Tracer Recall Reappear Sound, Team Of(Victim), Evaluate Once(Victim), 100);
+		Play Effect(All Players(All Teams), Sombra Translocating Material Effect, Team Of(Victim), Victim, 1);
+	}
+}
+
+rule("40. Propulsion Wave")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 40;
+		Is Alive(Event Player) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.CD == 0;
+		Is True For Any(Array(Has Status(Event Player, Stunned), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Asleep)), Current Array Element) == False;
+	}
+
+	actions
+	{
+		Event Player.CD = 5;
+		Start Rule(ActiveHUD, Do Nothing);
+		Event Player.array[19] = Eye Position(Event Player) + Vector(0, -0.100, 0);
+		Event Player.array[20] = Facing Direction Of(Event Player);
+		Create Effect(All Players(All Teams), Echo Cloning Effect, Team Of(Event Player),
+			Event Player.array[19] + Event Player.array[20] * 0.800, 1, None);
+		Event Player.array[21] = Last Created Entity;
+		For Player Variable(Event Player, propWave, 1, 8, 2);
+			Play Effect(All Players(All Teams), Hanzo Sonic Arrow Initial Pulse Sound, Null,
+				Event Player.array[19] + Event Player.array[20] * Event Player.propWave, 90);
+			Play Effect(All Players(All Teams), Ring Explosion, Random Value In Array(Array(Color(Aqua), Color(Turquoise), Color(Sky Blue))),
+				Event Player.array[19] + Event Player.array[20] * Event Player.propWave, Event Player.propWave);
+			Apply Impulse(Players Within Radius(Event Player.array[19] + Event Player.array[20] * Event Player.propWave, 4, Opposite Team Of(
+				Team Of(Event Player)), Surfaces), Direction From Angles(Horizontal Angle From Direction(Event Player.array[20]), Min(-20,
+				Vertical Angle From Direction(Event Player.array[20]))), 24, To World, Cancel Contrary Motion);
+			Damage(Players Within Radius(Event Player.array[19] + Event Player.array[20] * Event Player.propWave, 4, Opposite Team Of(Team Of(
+				Event Player)), Surfaces), Event Player, 5);
+			Set Environment Credit Player(Players Within Radius(Event Player.array[19] + Event Player.array[20] * Event Player.propWave, 4,
+				Opposite Team Of(Team Of(Event Player)), Surfaces), Event Player);
+			Wait(0.050, Ignore Condition);
+		End;
+		Destroy Effect(Event Player.array[21]);
+	}
+}
+
+rule("41. Double Jump")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 41;
+		Is In Air(Event Player) == True;
+	}
+
+	actions
+	{
+		Wait Until(Is True For Any(Array(Is Dead(Event Player), Is On Ground(Event Player), !Is Button Held(Event Player, Button(Jump))),
+			Current Array Element), 99999);
+		Wait Until(Is True For Any(Array(Is Dead(Event Player), Is On Ground(Event Player), Is Button Held(Event Player, Button(Jump))),
+			Current Array Element), 99999);
+		Abort If(Is True For Any(Array(Is Dead(Event Player), !Is Button Held(Event Player, Button(Jump)), Is On Ground(Event Player),
+			Is On Wall(Event Player)), Current Array Element));
+		Play Effect(All Players(All Teams), Ring Explosion, Color(White), Position Of(Event Player) + Vector(0, 0.300, 0), 6);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Turquoise), Position Of(Event Player) + Vector(0, 0.300, 0), 6);
+		Play Effect(All Players(All Teams), Ring Explosion Sound, Color(Gray), Position Of(Event Player) + Vector(0, 0.300, 0), 35);
+		Play Effect(Event Player, Doomfist Rising Uppercut Leap Sound, Color(Gray), Position Of(Event Player) + Vector(0, 0.300, 0), 60);
+		Apply Impulse(Event Player, Direction From Angles(Throttle Of(Event Player) == Vector(0, 0, 0) ? Horizontal Facing Angle Of(
+			Event Player) : Horizontal Facing Angle Of(Event Player) + Horizontal Angle From Direction(Throttle Of(Event Player)), -70),
+			15, To World, Cancel Contrary Motion);
+	}
+}
+
+rule("42. Pasta Projectiles")
+{
+	event
+	{
+		Subroutine;
+		Pasta_Projectiles;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Projectile Speed(Event Player, 20);
+		Wait Until(Event Player.abilval != 42, 99999);
+		Set Projectile Speed(Event Player, 100);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 42);
+	}
+}
+
+rule("43. Health Bonus")
+{
+	event
+	{
+		Subroutine;
+		Health_Bonus;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 175);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Wait Until(Event Player.abilval != 43, 99999);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 100);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 43);
+	}
+}
+
+rule("47. Faux Hitscan")
+{
+	event
+	{
+		Subroutine;
+		Faux_Hitscan;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Projectile Speed(Event Player, 500);
+		Wait Until(Event Player.abilval != 47, 99999);
+		Set Projectile Speed(Event Player, 100);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 47);
+	}
+}
+
+rule("44. Fierystrike")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 44;
+		Is Alive(Event Player) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.CD == 0;
+		Is True For Any(Array(Has Status(Event Player, Stunned), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Asleep)), Current Array Element) == False;
+	}
+
+	actions
+	{
+		Event Player.CD = 5;
+		Start Rule(ActiveHUD, Do Nothing);
+		Create Effect(All Players(All Teams), Bad Aura Sound, Color(White), Eye Position(Event Player), 120, None);
+		Event Player.array[22] = Last Created Entity;
+		Create Effect(All Players(All Teams), Good Aura, Color(Orange), Update Every Frame(Eye Position(Event Player)
+			+ Facing Direction Of(Event Player) * 1), Update Every Frame(Total Time Elapsed - Evaluate Once(Total Time Elapsed) + 0.100),
+			Position and Radius);
+		Event Player.array[21] = Last Created Entity;
+		Wait Until(Is True For Any(Array(Is Dead(Event Player), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Stunned), Has Status(Event Player, Asleep)), Current Array Element), 0.700);
+		Destroy Effect(Event Player.array[21]);
+		Destroy Effect(Event Player.array[22]);
+		Abort If(Is True For Any(Array(Is Dead(Event Player), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Stunned), Has Status(Event Player, Asleep)), Current Array Element));
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Yellow), Eye Position(Event Player) + Facing Direction Of(Event Player)
+			* 1, 1);
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Red), Eye Position(Event Player) + Facing Direction Of(Event Player) * 1,
+			1);
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Orange), Eye Position(Event Player) + Facing Direction Of(Event Player)
+			* 1, 1);
+		Play Effect(All Players(All Teams), Junkrat Frag Launcher Explosion Sound, Color(White), Eye Position(Event Player), 100);
+		Create Projectile(Reinhardt Fire Strike, Event Player, Null, Null, To World, Damage, Opposite Team Of(Team Of(Event Player)), 150,
+			0.400, 5, Bad Explosion, Pharah Rocket Launcher Explosion Sound, 0, 25, 5, 6, 0, 0);
+	}
+}
+
+rule("45. Explode")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 45;
+		Is Alive(Event Player) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.CD == 0;
+		Is True For Any(Array(Has Status(Event Player, Stunned), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Asleep)), Current Array Element) == False;
+	}
+
+	actions
+	{
+		Event Player.CD = 8;
+		Start Rule(ActiveHUD, Do Nothing);
+		Create Effect(All Players(All Teams), Torbjörn Overloading Effect, Team Of(Event Player), Event Player, 1,
+			Visible To Position and Radius);
+		Event Player.array[9] = Last Created Entity;
+		Create Effect(All Players(All Teams), Energy Sound, Color(White), Event Player, 200, None);
+		Event Player.array[10] = Last Created Entity;
+		Call Subroutine(explode);
+		Skip If(Is Dead(Event Player), 2);
+		Set Player Health(Event Player, Health(Event Player) / 2);
+		Apply Impulse(Event Player, Up, 5, To World, Cancel Contrary Motion);
+		Destroy Effect(Event Player.array[9]);
+		Destroy Effect(Event Player.array[10]);
+		Stop Camera(Event Player);
+	}
+}
+
+rule("46. Burny Stuff")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 46;
+		Event Ability != Null;
+		Has Status(Victim, Burning) == False;
+	}
+
+	actions
+	{
+		Set Status(Victim, Event Player, Burning, 3);
+		Start Damage Over Time(Victim, Event Player, 3, 13 + Health(Victim) * 0.100);
+	}
+}
+
+rule("48. Ravenous Aura")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 48;
+		Is Alive(Event Player) == True;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Global.RAexists += 1;
+		Create Effect(All Players(All Teams), Ring, Color(Violet), Update Every Frame(Position Of(Event Player)), 8, Position and Radius);
+		Event Player.array[16] = Last Created Entity;
+		Create Effect(All Players(All Teams), Bad Aura Sound, Color(Purple), Event Player, 110, None);
+		Event Player.array[17] = Last Created Entity;
+		Create Projectile Effect(All Players(All Teams), Ramattra Ravenous Vortex Sphere, Event Player, Position Of(Event Player)
+			+ Direction From Angles(Total Time Elapsed * 120, 0) * 7, Direction From Angles(Total Time Elapsed * 120 + 10, 0), 0.090,
+			Position Direction and Size);
+		Event Player.array[18] = Last Created Entity;
+		Create Projectile Effect(All Players(All Teams), Ramattra Ravenous Vortex Sphere, Event Player, Position Of(Event Player)
+			+ Direction From Angles(Total Time Elapsed * 120 - 180, 0) * 7, Direction From Angles(Total Time Elapsed * 120 + -170, 0),
+			0.090, Position Direction and Size);
+		Event Player.array[23] = Last Created Entity;
+		Wait Until(Event Player.abilval != 48 || Is Dead(Event Player), 99999);
+		Destroy Effect(Event Player.array[16]);
+		Destroy Effect(Event Player.array[17]);
+		Destroy Effect(Event Player.array[18]);
+		Destroy Effect(Event Player.array[23]);
+		Global.RAexists -= 1;
+	}
+}
+
+rule("RavenousLogic")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Global.RAexists == True;
+		Is Alive(Event Player) == True;
+		Count Of(Filtered Array(Players Within Radius(Event Player, 8, Opposite Team Of(Team Of(Event Player)), Surfaces),
+			Current Array Element.abilval == 48 && Is Alive(Current Array Element))) == True;
+	}
+
+	actions
+	{
+		Event Player.moveSpeed -= 40;
+		While(Count Of(Filtered Array(Players Within Radius(Event Player, 8, Opposite Team Of(Team Of(Event Player)), Surfaces),
+			Current Array Element.abilval == 48 && Is Alive(Current Array Element))) == True);
+			Apply Impulse(Event Player, Down, 30, To World, Incorporate Contrary Motion);
+			Wait(0.400, Ignore Condition);
+		End;
+		Event Player.moveSpeed += 40;
+	}
+}
+
+rule("49. Funny Gun")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 49;
+		Is Alive(Event Player) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.CD == 0;
+		Is True For Any(Array(Has Status(Event Player, Stunned), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Asleep)), Current Array Element) == False;
+	}
+
+	actions
+	{
+		Event Player.CD = 5;
+		Start Rule(ActiveHUD, Do Nothing);
+		Create Effect(All Players(All Teams), Good Aura Sound, Color(White), Eye Position(Event Player), 120, None);
+		Event Player.array[22] = Last Created Entity;
+		Create Effect(All Players(All Teams), Good Aura, Random Value In Array(Array(Color(Red), Color(Yellow), Color(Blue), Color(
+			Lime Green))), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(Event Player) * 1),
+			Total Time Elapsed - Evaluate Once(Total Time Elapsed) + 0.100, Position and Radius);
+		Event Player.array[21] = Last Created Entity;
+		Wait Until(Is True For Any(Array(Is Dead(Event Player), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Stunned), Has Status(Event Player, Asleep)), Current Array Element), 0.500);
+		Destroy Effect(Event Player.array[21]);
+		Destroy Effect(Event Player.array[22]);
+		Abort If(Is True For Any(Array(Is Dead(Event Player), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Stunned), Has Status(Event Player, Asleep)), Current Array Element));
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Purple), Eye Position(Event Player) + Facing Direction Of(Event Player)
+			* 1, 1);
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Lime Green), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 1, 1);
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Turquoise), Eye Position(Event Player) + Facing Direction Of(Event Player)
+			* 1, 1);
+		Play Effect(All Players(All Teams), Echo Sticky Bomb Explosion Sound, Color(White), Eye Position(Event Player), 110);
+		Create Projectile(Echo Sticky Bomb, Event Player, Null, Null, To World, Damage, Opposite Team Of(Team Of(Event Player)), 5, 1, 2,
+			Bad Explosion, Echo Sticky Bomb Explosion Sound, 0.030, Random Integer(15, 40), 5, 50, 10, Random Integer(1, 10));
+		Skip If(Random Integer(1, 7) != 7, 1);
+		Create Projectile(Echo Sticky Bomb, Event Player, Null, Direction From Angles(Horizontal Facing Angle Of(Event Player)
+			+ Random Integer(-8, 8), Vertical Facing Angle Of(Event Player)), To World, Damage, Opposite Team Of(Team Of(Event Player)), 5,
+			1, 2, Bad Explosion, Echo Sticky Bomb Explosion Sound, 0.030, Random Integer(15, 40), 5, 50, 10, Random Integer(1, 10));
+	}
+}
+
+rule("50. Enshrinkening")
+{
+	event
+	{
+		Subroutine;
+		Enshrinkening;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Start Scaling Player(Event Player, 0.600, True);
+		Start Modifying Hero Voice Lines(Event Player, 1.400, False);
+		Wait Until(Event Player.abilval != 50, 99999);
+		Stop Scaling Player(Event Player);
+		Stop Modifying Hero Voice Lines(Event Player);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 50);
+	}
+}
+
+rule("51. Movement Buff")
+{
+	event
+	{
+		Subroutine;
+		Movement_Buff;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Event Player.moveSpeed += 40;
+		Set Jump Vertical Speed(Event Player, 165);
+		Wait Until(Event Player.abilval != 51, 99999);
+		Event Player.moveSpeed -= 40;
+		Set Jump Vertical Speed(Event Player, 100);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 51);
+	}
+}
+
+rule("52. Jump Pack")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 52;
+		Is Alive(Event Player) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.CD == 0;
+		Is True For Any(Array(Has Status(Event Player, Stunned), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Asleep)), Current Array Element) == False;
+	}
+
+	actions
+	{
+		Event Player.CD = 5;
+		Start Rule(ActiveHUD, Do Nothing);
+		Create Effect(All Players(All Teams), Soldier: 76 Sprinting Effect, Team Of(Event Player), Event Player, 1, None);
+		Event Player.array[21] = Last Created Entity;
+		Play Effect(All Players(All Teams), Winston Jump Pack Landing Sound, Color(White), Event Player, 80);
+		Play Effect(All Players(All Teams), Wrecking Ball Piledriver Impact Sound, Color(White), Event Player, 80);
+		Play Effect(All Players(All Teams), Doomfist Rising Uppercut Leap Sound, Color(White), Event Player, 120);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Gray), Position Of(Event Player), 5);
+		Apply Impulse(Event Player, Direction From Angles(Horizontal Facing Angle Of(Event Player), Min(Vertical Facing Angle Of(
+			Event Player), -10)), 35, To World, Cancel Contrary Motion);
+		Wait(1, Ignore Condition);
+		Destroy Effect(Event Player.array[21]);
+	}
+}
+
+rule("53. Damage Boost")
+{
+	event
+	{
+		Subroutine;
+		Damage_Boost;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Damage Dealt(Event Player, 140);
+		Create Effect(All Players(All Teams), Mercy Damage Boosted Effect, Team Of(Event Player), Event Player, 1, None);
+		Event Player.array[24] = Last Created Entity;
+		Wait Until(Event Player.abilval != 53, 99999);
+		Set Damage Dealt(Event Player, 100);
+		Destroy Effect(Event Player.array[24]);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 53);
+	}
+}
+
+rule("54. Better Movement Buff")
+{
+	event
+	{
+		Subroutine;
+		Better_Movement_Buff;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Event Player.moveSpeed += 65;
+		Set Jump Vertical Speed(Event Player, 200);
+		Wait Until(Event Player.abilval != 54, 99999);
+		Event Player.moveSpeed -= 65;
+		Set Jump Vertical Speed(Event Player, 100);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 54);
+	}
+}
+
+rule("55. Max Ammo")
+{
+	event
+	{
+		Subroutine;
+		Max_Ammo;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Set Ammo(Event Player, 0, Max Ammo(Event Player, 0) * 20);
+		Set Ammo(Event Player, 1, Max Ammo(Event Player, 1) * 20);
+		Set Max Ammo(Event Player, 0, Max Ammo(Event Player, 0) * 20);
+		Set Max Ammo(Event Player, 1, Max Ammo(Event Player, 1) * 20);
+		Wait Until(Event Player.abilval != 55, 99999);
+		Abort If(Is Dead(Event Player));
+		Set Ammo(Event Player, 0, Max Ammo(Event Player, 0) / 20);
+		Set Ammo(Event Player, 1, Max Ammo(Event Player, 1) / 20);
+		Set Max Ammo(Event Player, 0, Max Ammo(Event Player, 0) / 20);
+		Set Max Ammo(Event Player, 1, Max Ammo(Event Player, 1) / 20);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 55);
+	}
+}
+
+rule("56. Blood Infusion")
+{
+	event
+	{
+		Player Earned Elimination;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 56;
+	}
+
+	actions
+	{
+		Start Rule(Blood_Infusion, Restart Rule);
+	}
+}
+
+rule("Blood_Infusion")
+{
+	event
+	{
+		Subroutine;
+		Blood_Infusion;
+	}
+
+	actions
+	{
+		Skip If(Event Player.blood_infusion, 5);
+		Event Player.moveSpeed += 50;
+		Create Effect(All Players(All Teams), Energy Sound, Team Of(Event Player), Event Player, 70, None);
+		Event Player.array[26] = Last Created Entity;
+		Create Effect(All Players(All Teams), Winston Primal Rage Effect, Team Of(Event Player), Event Player, 1, None);
+		Event Player.array[25] = Last Created Entity;
+		Set Damage Dealt(Event Player, 150);
+		Set Jump Vertical Speed(Event Player, 160);
+		Event Player.blood_infusion = True;
+		Play Effect(All Players(All Teams), Heal Target Active Effect, Color(White), Event Player, 1);
+		Heal(Event Player, Null, Max Health(Event Player) / 4);
+		Play Effect(All Players(All Teams), Widowmaker Venom Mine Explosion Sound, Color(White), Event Player, 200);
+		Play Effect(All Players(All Teams), Sigma Accretion Impact Sound, Color(White), Event Player, 100);
+		Play Effect(All Players(All Teams), Good Pickup Effect, Color(Red), Event Player, 1);
+		Wait Until(Event Player.abilval != 56, 8);
+		Destroy Effect(Event Player.array[26]);
+		Destroy Effect(Event Player.array[25]);
+		Event Player.moveSpeed -= 50;
+		Set Damage Dealt(Event Player, 100);
+		Set Jump Vertical Speed(Event Player, 100);
+		Event Player.blood_infusion = False;
+	}
+}
+
+rule("57. Double Healing")
+{
+	event
+	{
+		Subroutine;
+		Double_Healing;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Set Healing Dealt(Event Player, 200);
+		Set Healing Received(Event Player, 200);
+		Create Effect(Remove From Array(All Players(All Teams), Event Player), Ana Biotic Grenade Increased Healing Effect, Team Of(
+			Event Player), Event Player, 1, None);
+		Event Player.array[27] = Last Created Entity;
+		Wait Until(Event Player.abilval != 57, 99999);
+		Set Healing Dealt(Event Player, 100);
+		Set Healing Received(Event Player, 100);
+		Destroy Effect(Event Player.array[27]);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 57);
+	}
+}
+
+rule("58. EXTREME JUMPING")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 58;
+		Is Jumping(Event Player) == True;
+	}
+
+	actions
+	{
+		Play Effect(All Players(All Teams), Ring Explosion, Color(White), Position Of(Event Player) + Vector(0, 0.100, 0), 10);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(White), Position Of(Event Player) + Vector(0, 0.300, 0), 6);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Turquoise), Position Of(Event Player) + Vector(0, 0.300, 0), 6);
+		Play Effect(All Players(All Teams), Doomfist Meteor Strike Impact Sound, Color(Gray), Position Of(Event Player) + Vector(0, 0.300,
+			0), 90);
+		Play Effect(Event Player, Doomfist Rising Uppercut Leap Sound, Color(Gray), Position Of(Event Player) + Vector(0, 0.300, 0), 60);
+		Apply Impulse(Event Player, Direction From Angles(Throttle Of(Event Player) == Vector(0, 0, 0) ? Horizontal Facing Angle Of(
+			Event Player) : Horizontal Facing Angle Of(Event Player) + Horizontal Angle From Direction(Throttle Of(Event Player)), -15),
+			70, To World, Cancel Contrary Motion);
+		Apply Impulse(Event Player, Direction From Angles(Throttle Of(Event Player) == Vector(0, 0, 0) ? Horizontal Facing Angle Of(
+			Event Player) : Horizontal Facing Angle Of(Event Player) + Horizontal Angle From Direction(Throttle Of(Event Player)), -15),
+			70, To World, Incorporate Contrary Motion);
+	}
+}
+
+rule("59. Rocket Storm")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 59;
+		Is Alive(Event Player) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.CD == 0;
+		Is True For Any(Array(Has Status(Event Player, Stunned), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Asleep)), Current Array Element) == False;
+	}
+
+	actions
+	{
+		Event Player.CD = 5;
+		Start Rule(ActiveHUD, Do Nothing);
+		Create Effect(All Players(All Teams), Good Aura Sound, Color(White), Eye Position(Event Player), 120, None);
+		Event Player.array[22] = Last Created Entity;
+		Create Effect(All Players(All Teams), Good Aura, Color(Red), Update Every Frame(Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 1), Total Time Elapsed - Evaluate Once(Total Time Elapsed) + 0.100, Position and Radius);
+		Event Player.array[21] = Last Created Entity;
+		Wait Until(Is True For Any(Array(Is Dead(Event Player), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Stunned), Has Status(Event Player, Asleep)), Current Array Element), 0.700);
+		Destroy Effect(Event Player.array[21]);
+		Destroy Effect(Event Player.array[22]);
+		Abort If(Is True For Any(Array(Is Dead(Event Player), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Stunned), Has Status(Event Player, Asleep)), Current Array Element));
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Red), Eye Position(Event Player) + Facing Direction Of(Event Player) * 1,
+			1);
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Gray), Eye Position(Event Player) + Facing Direction Of(Event Player) * 1,
+			1);
+		Play Effect(All Players(All Teams), Bad Explosion, Color(Orange), Eye Position(Event Player) + Facing Direction Of(Event Player)
+			* 1, 1);
+		Play Effect(All Players(All Teams), Doomfist Meteor Strike Impact Sound, Color(White), Eye Position(Event Player), 110);
+		Create Projectile(Pharah Rocket, Event Player, Null, Direction From Angles(Horizontal Facing Angle Of(Event Player) + -8.500,
+			Vertical Facing Angle Of(Event Player)), To World, Damage, Opposite Team Of(Team Of(Event Player)), 80, 1, 2, Bad Explosion,
+			Pharah Rocket Launcher Explosion Sound, 0.030, 40, 2, 4, 0, 0);
+		Create Projectile(Pharah Rocket, Event Player, Null, Direction From Angles(Horizontal Facing Angle Of(Event Player) + -5,
+			Vertical Facing Angle Of(Event Player)), To World, Damage, Opposite Team Of(Team Of(Event Player)), 80, 1, 2, Bad Explosion,
+			Pharah Rocket Launcher Explosion Sound, 0.030, 40, 2, 4, 0, 0);
+		Create Projectile(Pharah Rocket, Event Player, Null, Direction From Angles(Horizontal Facing Angle Of(Event Player) + -2,
+			Vertical Facing Angle Of(Event Player)), To World, Damage, Opposite Team Of(Team Of(Event Player)), 80, 1, 2, Bad Explosion,
+			Pharah Rocket Launcher Explosion Sound, 0.030, 40, 2, 4, 0, 0);
+		Create Projectile(Pharah Rocket, Event Player, Null, Direction From Angles(Horizontal Facing Angle Of(Event Player) + 2,
+			Vertical Facing Angle Of(Event Player)), To World, Damage, Opposite Team Of(Team Of(Event Player)), 80, 1, 2, Bad Explosion,
+			Pharah Rocket Launcher Explosion Sound, 0.030, 40, 2, 4, 0, 0);
+		Create Projectile(Pharah Rocket, Event Player, Null, Direction From Angles(Horizontal Facing Angle Of(Event Player) + 5,
+			Vertical Facing Angle Of(Event Player)), To World, Damage, Opposite Team Of(Team Of(Event Player)), 80, 1, 2, Bad Explosion,
+			Pharah Rocket Launcher Explosion Sound, 0.030, 40, 2, 4, 0, 0);
+		Create Projectile(Pharah Rocket, Event Player, Null, Direction From Angles(Horizontal Facing Angle Of(Event Player) + 8.500,
+			Vertical Facing Angle Of(Event Player)), To World, Damage, Opposite Team Of(Team Of(Event Player)), 80, 1, 2, Bad Explosion,
+			Pharah Rocket Launcher Explosion Sound, 0.030, 40, 2, 4, 0, 0);
+	}
+}
+
+rule("60. Ultimate Stockpile")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 60;
+		Event Player.ultimate_stockpile != Ultimate Charge Percent(Event Player);
+		Event Player.array[28] == False;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Set Ultimate Charge(Event Player, Event Player.ultimate_stockpile + (Ultimate Charge Percent(Event Player)
+			- Event Player.ultimate_stockpile) * 6);
+		Event Player.ultimate_stockpile = Min(99, Ultimate Charge Percent(Event Player));
+		Skip If(Ultimate Charge Percent(Event Player) != 100, 6);
+		Set Ultimate Charge(Event Player, 0);
+		Event Player.ultimate_stockpile = 0;
+		Event Player.ultimates_stocked += 1;
+		Small Message(Event Player, Custom String("   {0} Ultimate{1}Stocked", Event Player.ultimates_stocked,
+			Event Player.ultimates_stocked > 1 ? Custom String("s ") : Custom String(" ")));
+		Play Effect(Event Player, Brigitte Repair Pack Impact Sound, Color(White), Event Player, 150);
+		Play Effect(Event Player, Buff Impact Sound, Color(White), Event Player, 45);
+		Wait(0.500, Ignore Condition);
+		Loop If Condition Is True;
+	}
+}
+
+rule("Spend Ultimate Voucher")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 60;
+		Is Using Ultimate(Event Player) == False;
+		Event Player.ultimates_stocked == True;
+		Is Button Held(Event Player, Button(Ultimate)) == True;
+	}
+
+	actions
+	{
+		Set Ultimate Charge(Event Player, 100);
+		Event Player.ultimates_stocked -= 1;
+		Event Player.array[28] = True;
+		Wait Until(Ultimate Charge Percent(Event Player) != 100, 0.500);
+		Wait Until(!Is Using Ultimate(Event Player), 99999);
+		Event Player.array[28] = False;
+		Set Ultimate Charge(Event Player, Event Player.ultimate_stockpile);
+		Abort If(Ultimate Charge Percent(Event Player) != 100);
+		Event Player.ultimates_stocked += 1;
+		Wait(1, Ignore Condition);
+	}
+}
+
+rule("61. Flight")
+{
+	event
+	{
+		Subroutine;
+		Flight;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Start Accelerating(Event Player, !Is Button Held(Event Player, Button(Crouch)) ? Up : Down, 100, Is True For Any(Array(Button(
+			Jump), Button(Crouch)), Is Button Held(Event Player, Current Array Element)) ? 3 : 1.400, To World,
+			Direction Rate and Max Speed);
+		Create Effect(All Players(All Teams), Lúcio Sound Barrier Protected Effect, Team Of(Event Player), Update Every Frame(Position Of(
+			Event Player)), 1, Position and Radius);
+		Event Player.array[30] = Last Created Entity;
+		Event Player.moveSpeed += 40;
+		Wait Until(Event Player.abilval != 61, 99999);
+		Event Player.moveSpeed -= 40;
+		Destroy Effect(Event Player.array[30]);
+		Stop Accelerating(Event Player);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 61);
+	}
+}
+
+rule("62. Impervious")
+{
+	event
+	{
+		Subroutine;
+		Impervious;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Start Damage Modification(Event Player, Filtered Array(All Players(Opposite Team Of(Team Of(Event Player))), Is In View Angle(
+			Event Player, Current Array Element, 60)), 0, Receivers Damagers and Damage Percent);
+		Event Player.array[31] = Last Damage Modification ID;
+		Create Effect(Append To Array(Players in View Angle(Event Player, Opposite Team Of(Team Of(Event Player)), 60), Event Player),
+			Baptiste Immortality Field Protected Effect, Team Of(Event Player), Event Player, 1, Visible To);
+		Event Player.array[32] = Last Created Entity;
+		Wait Until(Event Player.abilval != 62, 99999);
+		Stop Damage Modification(Event Player.array[31]);
+		Destroy Effect(Event Player.array[32]);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 62);
+	}
+}
+
+rule("63. General Buff")
+{
+	event
+	{
+		Subroutine;
+		General_Buff;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Set Knockback Dealt(Event Player, 200);
+		Set Damage Dealt(Event Player, 130);
+		Set Healing Dealt(Event Player, 150);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 150);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Event Player.moveSpeed += 40;
+		Set Projectile Speed(Event Player, 200);
+		Set Ammo(Event Player, 0, Max Ammo(Event Player, 0) * 2);
+		Set Ammo(Event Player, 1, Max Ammo(Event Player, 1) * 2);
+		Set Max Ammo(Event Player, 0, Max Ammo(Event Player, 0) * 2);
+		Set Max Ammo(Event Player, 1, Max Ammo(Event Player, 1) * 2);
+		Set Jump Vertical Speed(Event Player, 130);
+		"-"
+		Wait Until(Event Player.abilval != 63, 99999);
+		"-"
+		Set Damage Dealt(Event Player, 100);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 100);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Event Player.moveSpeed -= 40;
+		Set Projectile Speed(Event Player, 100);
+		Set Jump Vertical Speed(Event Player, 100);
+		Set Healing Dealt(Event Player, 100);
+		Set Knockback Dealt(Event Player, 100);
+		Abort If(Is Dead(Event Player));
+		Set Ammo(Event Player, 0, Max Ammo(Event Player, 0) / 2);
+		Set Ammo(Event Player, 1, Max Ammo(Event Player, 1) / 2);
+		Set Max Ammo(Event Player, 0, Max Ammo(Event Player, 0) / 2);
+		Set Max Ammo(Event Player, 1, Max Ammo(Event Player, 1) / 2);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 63);
+	}
+}
+
+rule("64. Instant Cooldowns (primary fire)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Brigitte;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 64;
+		Ability Cooldown(Event Player, Button(Primary Fire)) > 0;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Ability Cooldown(Event Player, Button(Primary Fire), Ability Cooldown(Event Player, Button(Primary Fire)) * 0.050);
+	}
+}
+
+rule("64. Instant Cooldowns (secondary fire)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 64;
+		Ability Cooldown(Event Player, Button(Secondary Fire)) > 0;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Ability Cooldown(Event Player, Button(Secondary Fire), Ability Cooldown(Event Player, Button(Secondary Fire)) * 0.050);
+	}
+}
+
+rule("64. Instant Cooldowns (ability 1)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 64;
+		Ability Cooldown(Event Player, Button(Ability 1)) > 0;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Ability Cooldown(Event Player, Button(Ability 1), Ability Cooldown(Event Player, Button(Ability 1)) * 0.050);
+	}
+}
+
+rule("64. Instant Cooldowns (ability 2)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 64;
+		Ability Cooldown(Event Player, Button(Ability 2)) > 0;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Ability Cooldown(Event Player, Button(Ability 2), Ability Cooldown(Event Player, Button(Ability 2)) * 0.050);
+	}
+}
+
+rule("64. Instant Cooldowns (crouch)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Wrecking Ball;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 64;
+		Ability Cooldown(Event Player, Button(Crouch)) > 0;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Ability Cooldown(Event Player, Button(Crouch), Ability Cooldown(Event Player, Button(Crouch)) * 0.050);
+	}
+}
+
+rule("64. Instant Cooldowns (jump)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Hanzo;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 64;
+		Ability Cooldown(Event Player, Button(Jump)) > 0;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Ability Cooldown(Event Player, Button(Jump), Ability Cooldown(Event Player, Button(Jump)) * 0.050);
+	}
+}
+
+rule("65. Beefcake")
+{
+	event
+	{
+		Subroutine;
+		Beefcake;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 500);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Wait Until(Event Player.abilval != 65, 99999);
+		Event Player.HP = Normalized Health(Event Player);
+		Set Max Health(Event Player, 100);
+		Wait(0.050, Ignore Condition);
+		Set Player Health(Event Player, Max Health(Event Player) * Event Player.HP);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 65);
+	}
+}
+
+rule("66. Touch of Death")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 66;
+		Event Ability == Button(Melee);
+	}
+
+	actions
+	{
+		Play Effect(All Players(All Teams), Sombra Logo Sound, Color(White), Victim, 200);
+		Play Effect(All Players(All Teams), Moira Fade Disappear Sound, Color(White), Victim, 200);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Black), Victim, 200);
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Black), Victim, 2);
+		Play Effect(All Players(All Teams), Bad Pickup Effect, Color(Red), Victim, 0.500);
+		Play Effect(All Players(All Teams), Sombra Translocating Material Effect, Color(White), Victim, 1);
+		Kill(Victim, Event Player);
+	}
+}
+
+rule("67. Warp Speed")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 67;
+		Is Alive(Event Player) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.CD == 0;
+		Is True For Any(Array(Has Status(Event Player, Stunned), Has Status(Event Player, Knocked Down), Has Status(Event Player, Frozen),
+			Has Status(Event Player, Asleep)), Current Array Element) == False;
+	}
+
+	actions
+	{
+		Create Effect(All Players(All Teams), Soldier: 76 Sprinting Effect, Team Of(Event Player), Event Player, 1, None);
+		Event Player.array[21] = Last Created Entity;
+		Play Effect(All Players(All Teams), Winston Jump Pack Landing Sound, Color(White), Event Player, 80);
+		Play Effect(All Players(All Teams), Tracer Recall Disappear Sound, Color(White), Event Player, 150);
+		Play Effect(All Players(All Teams), Doomfist Rising Uppercut Leap Sound, Color(White), Event Player, 120);
+		Play Effect(All Players(All Teams), Ring Explosion, Color(Gray), Position Of(Event Player), 9);
+		Play Effect(All Players(All Teams), Good Pickup Effect, Color(Gray), Position Of(Event Player), 2);
+		Set Gravity(Event Player, 500);
+		Event Player.moveSpeed += 9999;
+		Wait Until(Is True For Any(Array(!Is Button Held(Event Player, Button(Interact)), Is Dead(Event Player),
+			Event Player.abilval != 67), Current Array Element), 99999);
+		Destroy Effect(Event Player.array[21]);
+		Event Player.moveSpeed -= 9999;
+		Set Gravity(Event Player, 100);
+		Event Player.CD = 2;
+		Start Rule(ActiveHUD, Do Nothing);
+	}
+}
+
+rule("Warp Speed Impact")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.abilval == 67;
+		Event Player.moveSpeed > 1000;
+		Is Moving(Event Player) == True;
+		Distance Between(Event Player, Closest Player To(Event Player, Opposite Team Of(Team Of(Event Player)))) < 2;
+		Is Alive(Closest Player To(Event Player, Opposite Team Of(Team Of(Event Player)))) == True;
+	}
+
+	actions
+	{
+		Damage(Players Within Radius(Event Player, 2.500, Opposite Team Of(Team Of(Event Player)), Off), Event Player, Max Health(
+			Event Player));
+	}
+}
+
+rule("68. Healing Factor")
+{
+	event
+	{
+		Subroutine;
+		Healing_Factor;
+	}
+
+	actions
+	{
+		Wait(0.050, Abort When False);
+		Start Heal Over Time(Event Player, Event Player, 9999, 40 + Max Health(Event Player) / 3);
+		Event Player.array[18] = Last Heal Over Time ID;
+		Create Effect(All Players(All Teams), Heal Target Active Effect, Team Of(Event Player), Event Player, 1, None);
+		Event Player.array[24] = Last Created Entity;
+		Wait Until(Event Player.abilval != 68, 99999);
+		Destroy Effect(Event Player.array[24]);
+		Stop Heal Over Time(Event Player.array[18]);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 68);
+	}
+}
+
+rule("69. Permanent Nano")
+{
+	event
+	{
+		Subroutine;
+		Perma_Nano;
+	}
+
+	actions
+	{
+		Wait(0.050, Ignore Condition);
+		Set Damage Received(Event Player, 50);
+		Set Damage Dealt(Event Player, 150);
+		Create Effect(All Players(All Teams), Energy Sound, Team Of(Event Player), Event Player, 60, None);
+		Event Player.array[33] = Last Created Entity;
+		Create Effect(All Players(All Teams), Ana Nano Boosted Effect, Team Of(Event Player), Event Player, 1, None);
+		Event Player.array[24] = Last Created Entity;
+		Wait Until(Event Player.abilval != 69, 99999);
+		Set Damage Dealt(Event Player, 100);
+		Set Damage Received(Event Player, 100);
+		Destroy Effect(Event Player.array[24]);
+		Destroy Effect(Event Player.array[33]);
+		Wait(0.100, Ignore Condition);
+		Loop If(Event Player.abilval == 69);
+	}
+}

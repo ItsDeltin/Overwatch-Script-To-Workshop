@@ -29,19 +29,18 @@ namespace Deltin.Deltinteger.LanguageServer
             var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
 
             // If the script has not been parsed yet, return the default completion.
-            if (compilation == null) return new CompletionList();
-            List<CompletionItem> items = new List<CompletionItem>();
+            if (compilation == null) return new();
 
             // Add snippets.
-            Snippet.AddSnippets(items);
+            var items = Snippet.Snippets;
 
             // Get the script from the uri. If it isn't parsed, return the default completion.
             var script = compilation.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
-            if (script == null) return items;
+            if (script == null) return new(items);
 
             // Get valid completion ranges.
             var completions = script.GetCompletionRanges();
-            List<CompletionRange> inRange = new List<CompletionRange>();
+            List<ICompletionRange> inRange = new List<ICompletionRange>();
             foreach (var completion in completions)
                 if (completion.Range.IsInside(completionParams.Position))
                     inRange.Add(completion);
@@ -57,23 +56,22 @@ namespace Deltin.Deltinteger.LanguageServer
                 {
                     // Additive
                     if (inRange[i].Kind == CompletionRangeKind.Additive)
-                        items.AddRange(inRange[i].GetCompletion(completionParams.Position, false));
+                        items = items.Concat(inRange[i].GetCompletion(completionParams.Position, false));
                     // Catch
                     else if (inRange[i].Kind == CompletionRangeKind.Catch)
                     {
-                        items.AddRange(inRange[i].GetCompletion(completionParams.Position, false));
+                        items = items.Concat(inRange[i].GetCompletion(completionParams.Position, false));
                         break;
                     }
                     // ClearRest
                     else if (inRange[i].Kind == CompletionRangeKind.ClearRest)
                     {
-                        items.Clear();
-                        items.AddRange(inRange[0].GetCompletion(completionParams.Position, true));
+                        items = inRange[0].GetCompletion(completionParams.Position, true);
                         break;
                     }
                 }
             }
-            return items;
+            return new(items);
         }
 
         public CompletionRegistrationOptions GetRegistrationOptions(CompletionCapability capability, OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ClientCapabilities clientCapabilities)

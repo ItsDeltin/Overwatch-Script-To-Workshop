@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Reflection;
-using Deltin.Deltinteger.I18n;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-
-namespace Deltin.Deltinteger.Elements
+﻿namespace Deltin.Deltinteger.Elements
 {
     public enum RuleEvent
     {

@@ -49,7 +49,8 @@ namespace Deltin.Deltinteger.Parse
             StoreType = Var.StoreType,
             VariableType = Var.VariableType,
             DefaultValue = IVariableDefault.FromExpression(Var.InitialValue),
-            Persist = Var.Persist || getAssigner.Persist
+            Persist = Var.Persist || getAssigner.Persist,
+            TargetVariable = getAssigner.TargetVariable ?? Var.LinkTargetVanilla
         });
 
         public IWorkshopTree ToWorkshop(ActionSet actionSet)

@@ -30,6 +30,7 @@ public class OstwLangServer
     public DoRenameHandler RenameHandler { get; private set; }
     public ColorHandler ColorHandler { get; private set; }
     public SemanticTokenHandler SemanticTokenHandler { get; private set; }
+    public DocumentSymbolsHandler DocumentSymbolHandler { get; private set; }
     // ~ End Protocol Handlers
 
     public LanguageServerBuilder Builder { get; }
@@ -46,12 +47,13 @@ public class OstwLangServer
         ITomlDiagnosticReporter tomlDiagnosticsReporter,
         IDocumentEvent documentEventHandler,
         ILangLogger langLogger = null,
-        Func<DocumentHandler, IParserSettingsResolver, IFileGetter> createFileGetter = null)
+        Func<DocumentHandler, IParserSettingsResolver, IFileGetter> createFileGetter = null,
+        IDsSettingsProvider settingsProvider = null)
     {
         // _debugger = new ClipboardListener(this);
         createFileGetter ??= (doc, settings) => new LsFileGetter(doc, settings);
 
-        Builder = new LanguageServerBuilder(this, tomlDiagnosticsReporter, langLogger ?? ILangLogger.Default);
+        Builder = new LanguageServerBuilder(this, tomlDiagnosticsReporter, langLogger ?? ILangLogger.Default, settingsProvider);
 
         var scriptCompiler = new ScriptCompiler(Builder, documentEventHandler);
         ProjectUpdater = new TimedProjectUpdater(scriptCompiler);
@@ -68,6 +70,7 @@ public class OstwLangServer
         RenameHandler = new DoRenameHandler(this);
         ColorHandler = new ColorHandler(this);
         SemanticTokenHandler = new SemanticTokenHandler(this);
+        DocumentSymbolHandler = new(this);
     }
 
     private LanguageServerOptions AddRequests(LanguageServerOptions options)
@@ -143,8 +146,8 @@ public class OstwLangServer
         options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(async () =>
         {
             var compilation = await ProjectUpdater.GetProjectCompilationAsync();
-            SemanticToken[] tokens = compilation?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
-            return tokens ?? new SemanticToken[0];
+            var tokens = compilation?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
+            return tokens.ToArray() ?? [];
         }));
 
         // debugger start

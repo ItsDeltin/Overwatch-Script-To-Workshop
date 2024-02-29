@@ -90,6 +90,9 @@ export async function startLanguageServer() {
 		documentSelector: [selector],
 		synchronize: {
 			configurationSection: 'ostw'
+		},
+		connectionOptions: {
+			maxRestartCount: 0
 		}
 	};
 
@@ -112,8 +115,19 @@ export async function startLanguageServer() {
 	client = new LanguageClient('ostw', 'Overwatch Script To Workshop', serverOptions, clientOptions);
 
 	client.onDidChangeState(s => {
-		if (s.newState == State.Running) {
-			clientReady();
+		switch (s.newState)
+		{
+			case State.Running:
+				clientReady();
+				break;
+			
+			case State.Stopped:
+				versionSelector.ostwNotEnabled();
+				break;
+			
+			case State.Starting:
+				versionSelector.ostwLoading();
+				break;
 		}
 	}, this);
 	await client.start();
@@ -143,6 +157,11 @@ function clientReady() {
 	client.onNotification("elementCount", (count: string) => {
 		setElementCount(count);
 	});
+	
+	// On server error
+	client.onNotification("serverError", (message: string) => {
+		window.showErrorMessage("ostw server error: " + message);
+	}); 
 
 	// Check version.
 	// client.onNotification("version", gotVersion);
@@ -151,13 +170,7 @@ function clientReady() {
 }
 
 /** Stops the OSTW language server. Returns false if it is already stopped. */
-export async function stopLanguageServer(temporary: boolean = false) {
-	if (temporary) {
-		versionSelector.ostwLoading();
-	} else {
-		versionSelector.ostwNotEnabled();
-	}
-
+export async function stopLanguageServer() {
 	if (serverStatus == 'stopped') {
 		return false;
 	}
@@ -168,7 +181,7 @@ export async function stopLanguageServer(temporary: boolean = false) {
 }
 
 export async function restartLanguageServer(timeout: number = 5000) {
-	if (await stopLanguageServer(true)) {
+	if (await stopLanguageServer()) {
 		if (timeout) {
 			await new Promise<void>(resolve => setTimeout(() => resolve(), timeout));
 		}

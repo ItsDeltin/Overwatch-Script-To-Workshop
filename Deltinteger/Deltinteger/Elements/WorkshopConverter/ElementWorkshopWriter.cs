@@ -25,9 +25,6 @@ static class ElementWorkshopWriter
 
     static void FunctionToWorkshop(WorkshopBuilder b, Element element, bool isCondition)
     {
-        // Add the parameters.
-        element.AddMissingParameters();
-
         // Number
         if (element is NumberElement numberElement)
         {
@@ -43,12 +40,12 @@ static class ElementWorkshopWriter
         // Team
         else if (element.Function.Name == "Team")
         {
-            var enumerator = (ElementEnumMember)element.ParameterValues[0];
+            var enumerator = element.ParameterValues.ElementAtOrDefault(0) as ElementEnumMember;
             // Team 1
-            if (enumerator.Name == "Team1")
+            if (enumerator?.Name == "Team 1")
                 b.AppendKeyword("Team 1");
             // Team 2
-            else if (enumerator.Name == "Team2")
+            else if (enumerator?.Name == "Team 2")
                 b.AppendKeyword("Team 2");
             // All teams
             else
@@ -67,7 +64,7 @@ static class ElementWorkshopWriter
         }
 
         var action = element.Function as ElementJsonAction;
-        if (action != null && (action.Indentation == "outdent" || action.Indentation == "drop")) b.Outdent();
+        if (action != null && (action.Indentation == "outdent" || action.Indentation == "drop")) b.Outdent(2);
 
         // Add a comment and newline
         if (element.Comment != null) b.AppendLine($"\"{element.Comment}\"");

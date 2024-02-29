@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Deltin.Deltinteger.I18n;
 using Deltin.Deltinteger.Elements;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using MediatR;
@@ -40,7 +38,6 @@ namespace Deltin.Deltinteger.LanguageServer
                 ImplementsCodeLens = config.codelens.implements;
                 ElementCountCodeLens = config.codelens.elementCount;
                 OutputLanguage = GetOutputLanguage(config.outputLanguage);
-                LanguageInfo.LoadLanguage(OutputLanguage);
                 OptimizeOutput = config.optimizeOutput;
             }
 

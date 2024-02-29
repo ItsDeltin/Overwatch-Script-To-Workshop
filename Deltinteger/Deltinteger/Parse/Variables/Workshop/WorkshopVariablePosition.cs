@@ -1,3 +1,4 @@
+#nullable enable
 namespace Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
 

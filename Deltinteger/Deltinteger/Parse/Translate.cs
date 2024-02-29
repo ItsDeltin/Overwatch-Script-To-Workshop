@@ -4,12 +4,17 @@ using System.Linq;
 using System.IO;
 using Deltin.Deltinteger.Parse.Settings;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Lobby;
-using Deltin.Deltinteger.I18n;
 using Deltin.Deltinteger.Debugger;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Workshop;
+using Deltin.Deltinteger.Parse.Vanilla;
+using Deltin.Deltinteger.Model;
+using Deltin.Deltinteger.Parse.Vanilla.Settings;
+using Deltin.Deltinteger.Lobby2.KeyValues;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
+using Deltin.Deltinteger.Parse.Vanilla.Cache;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -24,7 +29,6 @@ namespace Deltin.Deltinteger.Parse
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; }
         public SubroutineCollection SubroutineCollection { get; } = new SubroutineCollection();
-        private List<Var> rulesetVariables { get; } = new List<Var>();
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
@@ -38,6 +42,14 @@ namespace Deltin.Deltinteger.Parse
 
         // TODO: Move workshopconverter outta here
         public ToWorkshop WorkshopConverter { get; private set; }
+
+        // Vanilla compiling stuff
+        readonly Dictionary<VanillaVariableCollection, IAnalyzedVanillaCollection> analyzedVanillaVariables = new();
+        readonly DefaultVariableReport defaultVanillaVariables = new();
+        public GroupSettingValue WorkshopSettings { get; } = new();
+
+        // Project wide items
+        readonly List<Var> rulesetVariables = new();
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -128,33 +140,52 @@ namespace Deltin.Deltinteger.Parse
                 InitComponent.Add(new InitComponent(typeof(T), component => apply.Invoke((T)component)));
         }
 
-        private List<RuleAction> rules { get; } = new List<RuleAction>();
+        private readonly List<Variant<RuleAction, VanillaRuleAnalysis>> rules = new();
 
         void Translate()
         {
             AddComponent<RecursionCheckComponent>();
 
-            // Get the enums
-            foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var enumContext in script.Context.Enums)
-                {
-                    var newEnum = new GenericCodeTypeInitializer(new DefinedEnum(new ParseInfo(script, this), enumContext));
-                    RulesetScope.AddType(newEnum);
-                    Types.AllTypes.Add(newEnum);
-                    Types.DefinedTypes.Add(newEnum);
-                }
+            CollectVanillaSettings();
+            CollectTypes();
+            CollectVariableReservations();
+            CollectVariableDeclarations();
 
-            // Get the types
-            foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var typeContext in script.Context.Classes)
-                {
-                    var newType = IDefinedTypeInitializer.GetInitializer(new ParseInfo(script, this), RulesetScope, typeContext);
-                    RulesetScope.AddType(newType);
-                    Types.AllTypes.Add(newType);
-                    Types.DefinedTypes.Add(newType);
-                }
+            ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
+            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
 
-            // Get the variable reservations
+            CollectFunctionDeclarations();
+
+            StagedInitiation.Start();
+
+            CollectHooks();
+            CollectRules();
+
+            GetComponent<SymbolLinkComponent>().Collect();
+        }
+
+        void CollectTypes()
+        {
+            foreach (var script in Importer.ScriptFiles)
+                RootElement.Iter(script.Context.RootItems,
+                    classContext: classContext =>
+                    {
+                        var newType = IDefinedTypeInitializer.GetInitializer(new ParseInfo(script, this), RulesetScope, classContext);
+                        RulesetScope.AddType(newType);
+                        Types.AllTypes.Add(newType);
+                        Types.DefinedTypes.Add(newType);
+                    },
+                    enumContext: enumContext =>
+                    {
+                        var newEnum = new GenericCodeTypeInitializer(new DefinedEnum(new ParseInfo(script, this), enumContext));
+                        RulesetScope.AddType(newEnum);
+                        Types.AllTypes.Add(newEnum);
+                        Types.DefinedTypes.Add(newEnum);
+                    });
+        }
+
+        void CollectVariableReservations()
+        {
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 foreach (Token reservation in script.Context.GlobalvarReservations)
@@ -176,48 +207,138 @@ namespace Deltin.Deltinteger.Parse
                         VarCollection.Reserve(text, false);
                 }
             }
-            // Get variable declarations
+        }
+
+        void CollectVariableDeclarations()
+        {
             foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var declaration in script.Context.Declarations)
-                    if (declaration is VariableDeclaration variable)
+            {
+                var scopedVanillaVariables = new VanillaScope();
+                RootElement.Iter(script.Context.RootItems,
+                    declaration: declaration =>
                     {
-                        Var var = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable)).GetVar();
-
-                        if (var.StoreType != StoreType.None)
+                        if (declaration is VariableDeclaration variable)
                         {
-                            rulesetVariables.Add(var);
+                            Var var = new RuleLevelVariable(
+                                RulesetScope,
+                                new DefineContextHandler(new ParseInfo(script, this) { ScopedVanillaVariables = scopedVanillaVariables }, variable)).GetVar();
 
-                            // Add the variable to the player variables scope if it is a player variable.
-                            if (var.VariableType == VariableType.Player)
-                                PlayerVariableScope.CopyVariable(var.GetDefaultInstance(null));
+                            if (var.StoreType != StoreType.None)
+                            {
+                                rulesetVariables.Add(var);
+
+                                // Add the variable to the player variables scope if it is a player variable.
+                                if (var.VariableType == VariableType.Player)
+                                    PlayerVariableScope.CopyVariable(var.GetDefaultInstance(null));
+                            }
                         }
-                    }
+                    },
+                    // Vanilla variable collection. This is collected alongside the OSTW variables
+                    // so that the ostw variables can hook into the vanilla variables.
+                    variables: vanillaVariables =>
+                    {
+                        var analysis = VanillaAnalysis.AnalyzeCollection(script, vanillaVariables);
 
-            ElementList.AddWorkshopFunctionsToScope(GlobalScope, Types); // Add workshop methods to global scope.
-            GlobalFunctions.GlobalFunctions.Add(this, GlobalScope); // Add built-in methods.
+                        // Lets rule-level variables see the vanilla variables in scope.
+                        analysis.AddToScope(scopedVanillaVariables);
 
+                        // Link the syntax to the analysis so that the variables are properly scoped
+                        // when analyzing the vanilla rules.
+                        analyzedVanillaVariables.Add(vanillaVariables, analysis);
+                    });
+            }
+        }
+
+        void CollectFunctionDeclarations()
+        {
             // Get the function declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
-                ParseInfo parseInfo = new ParseInfo(script, this);
-                foreach (var declaration in script.Context.Declarations)
-                    if (declaration is FunctionContext function)
-                        DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, null);
+                var scopedSubroutines = new VanillaScope();
+                ParseInfo parseInfo = new(script, this)
+                {
+                    ScopedVanillaVariables = scopedSubroutines
+                };
+                RootElement.Iter(script.Context.RootItems,
+                    // OSTW function
+                    declaration: declaration =>
+                    {
+                        if (declaration is FunctionContext function)
+                            DefinedMethodProvider.GetDefinedMethod(parseInfo, this, function, null);
+                    },
+                    // Vanilla subroutine
+                    variables: vanillaCollection =>
+                    {
+                        var analyzedSubroutineCollection = analyzedVanillaVariables[vanillaCollection];
+                        analyzedSubroutineCollection.AddToScope(scopedSubroutines);
+                    }
+                );
             }
+        }
 
-            StagedInitiation.Start();
-
-            // Get hooks
+        void CollectHooks()
+        {
             foreach (ScriptFile script in Importer.ScriptFiles)
                 foreach (var hookContext in script.Context.Hooks)
                     HookVar.GetHook(new ParseInfo(script, this), RulesetScope, hookContext);
+        }
 
-            // Get the rules
+        void CollectRules()
+        {
+            VanillaCache.Instance.BeginTracking();
             foreach (ScriptFile script in Importer.ScriptFiles)
-                foreach (var ruleContext in script.Context.Rules)
-                    rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
+            {
+                var analyzeVanillaRules = new List<VanillaRule>();
+                var scopedVanillaVariables = new VanillaScope();
+                RootElement.Iter(script.Context.RootItems,
+                    // ostw
+                    rule: rule =>
+                    {
+                        rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, rule));
+                    },
+                    // vanilla
+                    vanillaRule: analyzeVanillaRules.Add,
+                    // scope vanilla variables
+                    variables: syntax =>
+                    {
+                        if (analyzedVanillaVariables.TryGetValue(syntax, out var analysis))
+                            analysis.AddToScope(scopedVanillaVariables);
+                    });
 
-            GetComponent<SymbolLinkComponent>().Collect();
+                var group = VanillaCache.Instance.GetGroup(script.Uri, new(scopedVanillaVariables));
+                var result = new ConcurrentBag<(long I, VanillaRule, VanillaRuleAnalysis, CacheItems, bool)>();
+                Parallel.ForEach(analyzeVanillaRules, (vanillaRule, s, i) =>
+                {
+                    // Search for rule in the cache.
+                    if (group.TryGetCacheItem(vanillaRule, out var cache))
+                    {
+                        result.Add((i, vanillaRule, cache.Value.Analysis, cache.Value.IdeItems, false));
+                    }
+                    else // Analyze the rule.
+                    {
+                        var ideItems = new CacheItems();
+                        var rule = VanillaAnalysis.AnalyzeRule(script, vanillaRule, scopedVanillaVariables, ideItems);
+                        result.Add((i, vanillaRule, rule, ideItems, true));
+                    }
+                });
+                foreach (var (_, syntax, analysis, ide, cache) in result.OrderBy(r => r.I))
+                {
+                    rules.Add(analysis);
+                    ide.AddToScript(script, defaultVanillaVariables);
+                    if (cache)
+                        group.Cache(syntax, new(analysis, ide));
+                }
+            }
+            VanillaCache.Instance.RemoveUnused();
+        }
+
+        void CollectVanillaSettings()
+        {
+            foreach (var script in Importer.ScriptFiles)
+                RootElement.Iter(script.Context.RootItems, vanillaSettings: vanillaSettings =>
+                {
+                    WorkshopSettings.Merge(AnalyzeSettings.Analyze(script, vanillaSettings));
+                });
         }
 
         public string WorkshopCode { get; private set; }
@@ -240,6 +361,13 @@ namespace Deltin.Deltinteger.Parse
             // Init called types.
             foreach (var workshopInit in _workshopInit) workshopInit.WorkshopInit(this);
 
+            // Assign vanilla variables
+            foreach (var vanillaVariables in analyzedVanillaVariables.Values)
+            {
+                vanillaVariables.AssignWorkshopVariables(WorkshopConverter.LinkableVanillaVariables, VarCollection, SubroutineCollection);
+            }
+            defaultVanillaVariables.Assign(VarCollection, WorkshopConverter.LinkableVanillaVariables);
+
             // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
             {
@@ -260,12 +388,25 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Parse the rules.
-            foreach (var rule in rules)
+            foreach (var ruleVariant in rules)
             {
-                var translate = new TranslateRule(this, rule);
-                Rule newRule = GetRule(translate.GetRule());
-                WorkshopRules.Add(newRule);
-                rule.ElementCountLens.RuleParsed(newRule);
+                ruleVariant.Match(
+                    // OSTW rule
+                    ostwRule =>
+                    {
+                        var translate = new TranslateRule(this, ostwRule);
+                        Rule newRule = GetRule(translate.GetRule());
+                        WorkshopRules.Add(newRule);
+                        ostwRule.ElementCountLens.RuleParsed(newRule);
+                    },
+                    // Vanilla rule
+                    owRule => owRule.ToElement(new(WorkshopConverter.LinkableVanillaVariables)).Match(
+                        WorkshopRules.Add,
+                        err =>
+                        {
+                            throw new Exception(err);
+                        }
+                    ));
             }
 
             GetComponent<AutoCompileSubroutine>().ToWorkshop(WorkshopConverter);
@@ -293,15 +434,9 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the final workshop string.
             WorkshopBuilder result = new WorkshopBuilder(Language, Settings.CStyleWorkshopOutput, Settings.CompileMiscellaneousComments, Settings.UseTabsInWorkshopOutput);
-            LanguageInfo.I18nWarningMessage(result, Language);
 
             // Get the custom game settings.
-            if (Importer.MergedLobbySettings != null)
-            {
-                Ruleset settings = Ruleset.Parse(Importer.MergedLobbySettings);
-                settings.ToWorkshop(result);
-                result.AppendLine();
-            }
+            WorkshopSettings.ToWorkshopTop(result);
 
             // Get the variables.
             VarCollection.ToWorkshop(result);

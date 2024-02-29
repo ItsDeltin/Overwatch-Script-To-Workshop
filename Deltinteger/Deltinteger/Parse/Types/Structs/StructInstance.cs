@@ -68,7 +68,10 @@ namespace Deltin.Deltinteger.Parse
         protected virtual void Content()
         {
             _contentReady = true;
-            Attributes.StackLength = _variables.Select(v => v.GetAssigner(new GetVariablesAssigner(_typeLinker)).StackDelta()).Sum();
+            if (Attributes.IsStruct)
+                Attributes.StackLength = _variables.Select(v => v.GetAssigner(new GetVariablesAssigner(_typeLinker)).StackDelta()).Sum();
+            else
+                Attributes.StackLength = 1;
         }
 
         public override bool CompatibleWith(CodeType type)

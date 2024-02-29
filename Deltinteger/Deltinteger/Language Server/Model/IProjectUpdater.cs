@@ -3,18 +3,22 @@ namespace Deltin.Deltinteger.LanguageServer;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Compiler;
+using System;
 
 public interface IProjectUpdater
 {
     void UpdateProject(Document activeModel);
 
     Task<DeltinScript> GetProjectCompilationAsync();
+
+    void Lock(Action action);
 }
 
 class TimedProjectUpdater : IProjectUpdater
 {
     const int TYPE_DELAY_MILLISECONDS = 50;
     readonly Task compileProjectTask;
+    readonly object locker = new();
     TaskCompletionSource<object> resetTimer = new();
     TaskCompletionSource<object> requestScriptNow = new();
     TaskCompletionSource<DeltinScript> currentCompilation = new();
@@ -56,8 +60,11 @@ class TimedProjectUpdater : IProjectUpdater
                     requestScriptNow = new();
                 }
 
-                compiler.Compile(activeDocument);
-                currentCompilation.SetResult(compiler.Current());
+                Lock(() =>
+                {
+                    compiler.Compile(activeDocument);
+                    currentCompilation.SetResult(compiler.Current());
+                });
             }
         });
     }
@@ -73,6 +80,11 @@ class TimedProjectUpdater : IProjectUpdater
         activeDocument = activeModel;
         resetTimer.TrySetResult(null);
     }
+
+    public void Lock(Action action)
+    {
+        lock (locker) action();
+    }
 }
 
 class ProjectUpdater : IProjectUpdater
@@ -86,4 +98,5 @@ class ProjectUpdater : IProjectUpdater
 
     public Task<DeltinScript> GetProjectCompilationAsync() => Task.FromResult(compiler.Current());
     public void UpdateProject(Document activeModel) => compiler.Compile(activeModel);
+    public void Lock(Action action) => action();
 }

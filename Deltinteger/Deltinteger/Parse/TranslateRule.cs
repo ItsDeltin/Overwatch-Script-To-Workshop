@@ -4,6 +4,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Parse.Workshop;
+using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -98,7 +99,7 @@ namespace Deltin.Deltinteger.Parse
             if (Subroutine == null)
                 rule = new Rule(Name, EventType, Team, Player);
             else
-                rule = new Rule(Name, Subroutine);
+                rule = new Rule(Name, Subroutine.Name);
             rule.Actions = GetActions();
             rule.Conditions = Conditions.ToArray();
             rule.Disabled = Disabled;
@@ -150,6 +151,7 @@ namespace Deltin.Deltinteger.Parse
         public IContinueContainer ContinueHandler { get; private set; }
         public IBreakContainer BreakHandler { get; private set; }
         public ISpreadHelper SpreadHelper { get; private set; }
+        public LinkableVanillaVariables LinkableVanillaVariables => ToWorkshop.LinkableVanillaVariables;
 
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }

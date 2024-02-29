@@ -28,9 +28,9 @@ namespace Deltin.Deltinteger.LanguageServer
             var links = compilation?.ScriptFromUri(definitionParams.TextDocument.Uri.ToUri())?.GetDefinitionLinks();
             if (links == null) return new LocationOrLocationLinks();
 
-            links = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();
-            LocationOrLocationLink[] items = new LocationOrLocationLink[links.Length];
-            for (int i = 0; i < items.Length; i++) items[i] = new LocationOrLocationLink(links[i]);
+            var filtered = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();
+            LocationOrLocationLink[] items = new LocationOrLocationLink[filtered.Length];
+            for (int i = 0; i < items.Length; i++) items[i] = new LocationOrLocationLink(filtered[i]);
 
             return new LocationOrLocationLinks(items);
         }

@@ -222,10 +222,10 @@ namespace Deltin.Deltinteger
             noMarkup.Append("\n");
             return this;
         }
-        public MarkupBuilder StartCodeLine()
+        public MarkupBuilder StartCodeLine(string language = "ostw")
         {
             inCodeLine = true;
-            result.Append("```ostw\n");
+            result.Append($"```{language}\n");
             return this;
         }
         public MarkupBuilder EndCodeLine()
@@ -241,6 +241,11 @@ namespace Deltin.Deltinteger
             return this;
         }
         public MarkupBuilder Indent() => Add("    ");
+        public MarkupBuilder If(bool condition, Action<MarkupBuilder> modify)
+        {
+            if (condition) modify(this);
+            return this;
+        }
 
         public override string ToString() => noMarkup.ToString();
         public string ToString(bool markup) => markup ? result.ToString() : noMarkup.ToString();

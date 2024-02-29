@@ -132,25 +132,37 @@ const variableDeclaration: Pattern = {
         codeType,
         common_nodes.i_variable_field,
         w,
-        tm
-            .Or(
-                [
-                    // Extended collection.
-                    tm.Maybe([
-                        tm.Group({ value: '!', tmName: Names.assignment }),
-                        w,
-                    ]),
-                    // Assignment
-                    tm.Group({ value: '=', tmName: Names.assignment }),
-                ],
-                // Macro
-                tm.Group({ value: ':', tmName: 'punctuation.separator.key-value' })
-            )
-            .Maybe(),
     ],
     end: ';',
     zeroEndCapture: { name: Names.terminator },
-    patterns: [{ include: Repository.expression }],
+    patterns: [
+        // Assignment
+        {
+            begin: tm.Or(
+                tm.Match('=', Names.assignment),
+                tm.Match(':', 'punctuation.separator.key-value'),
+            ),
+            end: /(?=;)/,
+            zeroBeginCapture: { name: Names.assignment },
+            patterns: [{ include: Repository.expression }]
+        },
+        // Extended collection
+        {
+            match: '!',
+            name: Names.assignment
+        },
+        // Target vanilla
+        {
+            begin: '{',
+            end: '}',
+            zeroBeginCapture: { name: 'punctuation.definition.block' },
+            zeroEndCapture: { name: 'punctuation.definition.block' },
+            patterns: [
+                { include: Repository.string_literal },
+                { match: common_nodes.comma }
+            ]
+        }
+    ],
 };
 
 // Constructors
@@ -193,7 +205,7 @@ const functionDeclaration: Pattern = {
         // Macro
         {
             begin: ':',
-            end: ';',
+            end: /;|(?={)/,
             zeroBeginCapture: { name: Names.assignment },
             zeroEndCapture: { name: Names.terminator },
             patterns: [{ include: Repository.expression }],

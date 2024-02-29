@@ -12,4 +12,6 @@ export namespace Repository
     export const variables = "#variables";
     export const subroutines = "#subroutines";
     export const rule = "#rule";
+
+    export const lobby_settings_group = "#lobby-settings-group";
 }

@@ -39,17 +39,17 @@ namespace Deltin.Deltinteger.Parse
             if (index == null || index.Length == 0)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part("Set Global Variable", variable, value) };
+                    return new Element[] { Element.SetGlobalVariable(variable, value) };
                 else
-                    return new Element[] { Element.Part("Set Player Variable", targetPlayer, variable, value) };
+                    return new Element[] { Element.SetPlayerVariable(targetPlayer, variable, value) };
             }
 
             if (index.Length == 1)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part("Set Global Variable At Index", variable, index[0], value) };
+                    return new Element[] { Element.SetGlobalVariableAtIndex(variable, index[0], value) };
                 else
-                    return new Element[] { Element.Part("Set Player Variable At Index", targetPlayer, variable, index[0], value) };
+                    return new Element[] { Element.SetPlayerVariableAtIndex(targetPlayer, variable, index[0], value) };
             }
 
             if (flat2ndDim && index.Length > 2) throw new ArgumentOutOfRangeException("index", "Can't set more than 2 dimensions if flat2ndDim is true.");

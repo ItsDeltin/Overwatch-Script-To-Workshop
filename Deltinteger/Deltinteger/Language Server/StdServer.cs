@@ -22,6 +22,7 @@ class StdServer : ITomlDiagnosticReporter, IDocumentEvent
 {
     public const string SendWorkshopCode = "workshopCode";
     public const string SendElementCount = "elementCount";
+    public const string ServerError = "serverError";
     public const string Version = "version";
 
     public static void Run() => new StdServer().RunAsync().Wait();
@@ -59,12 +60,18 @@ class StdServer : ITomlDiagnosticReporter, IDocumentEvent
             .AddHandler(LangServer.RenameHandler)
             .AddHandler(LangServer.ColorHandler)
             .AddHandler(LangServer.SemanticTokenHandler)
-            .AddHandler(LangServer.Builder.FileHandlerBuilder.GetHandler()))
+            .AddHandler(LangServer.DocumentSymbolHandler))
+            .AddHandler(LangServer.Builder.FileHandlerBuilder.GetHandler())
         );
 
         LangServer.Workspace.SetWorkspaceFolders(ProtocolServer.ClientSettings.WorkspaceFolders);
         LangServer.Builder.ProjectSettings.GetInitialFiles();
         LangServer.Builder.ParserSettingsResolver.GetInitialFiles();
+
+        ErrorReport.FlushQueuedMessages(IErrorReporter.New(msg =>
+        {
+            ProtocolServer.SendNotification(ServerError, msg);
+        }));
 
         // ProtocolServer.SendNotification(Version, Program.VERSION);
 
@@ -78,7 +85,8 @@ class StdServer : ITomlDiagnosticReporter, IDocumentEvent
         [JsonProperty("file")]
         public string File { get; set; }
     }
-    private LanguageServerOptions AddRequests(LanguageServerOptions options) {
+    private LanguageServerOptions AddRequests(LanguageServerOptions options)
+    {
         // Decompile insert
         options.OnRequest<DecompileResult>("decompile.insert", () => Task<DecompileResult>.Run(() =>
         {
