@@ -1,5 +1,6 @@
 using Deltin.Deltinteger;
 using Deltin.Deltinteger.Compiler;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using static Deltinteger.Tests.ParserTestUtil;
 using static Deltinteger.Tests.TestUtils;
 
@@ -150,11 +151,13 @@ public class ParserTest
             {
                 actions {
                     Small Message(Event 
-                        Player);
+                        Player, 0);
                 }
             }
             """);
-        var slidePosition = tester.IndexOf(" \r\n            Player);");
-        Assert.AreNotEqual(-1, slidePosition);
+
+        int trimStart = tester.IndexOf("Event ") + 6;
+        tester.Insert("", trimStart, tester.IndexOf("Player, 0);") - trimStart);
+        tester.AssertOk();
     }
 }
