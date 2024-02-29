@@ -215,7 +215,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
-                var scopedVanillaVariables = new VanillaScope(defaultVanillaVariables);
+                var scopedVanillaVariables = new VanillaScope();
                 RootElement.Iter(script.Context.RootItems,
                     declaration: declaration =>
                     {
@@ -256,7 +256,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the function declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
-                var scopedSubroutines = new VanillaScope(defaultVanillaVariables);
+                var scopedSubroutines = new VanillaScope();
                 ParseInfo parseInfo = new(script, this)
                 {
                     ScopedVanillaVariables = scopedSubroutines
@@ -291,7 +291,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 var analyzeVanillaRules = new List<VanillaRule>();
-                var scopedVanillaVariables = new VanillaScope(defaultVanillaVariables);
+                var scopedVanillaVariables = new VanillaScope();
                 RootElement.Iter(script.Context.RootItems,
                     // ostw
                     rule: rule =>
@@ -308,16 +308,17 @@ namespace Deltin.Deltinteger.Parse
                     });
 
                 var group = VanillaCache.Instance.GetGroup(script.Uri, new(scopedVanillaVariables));
-                var result = new ConcurrentBag<(long I, VanillaRule, VanillaRuleAnalysis, IdeItems, bool)>();
+                var result = new ConcurrentBag<(long I, VanillaRule, VanillaRuleAnalysis, CacheItems, bool)>();
                 Parallel.ForEach(analyzeVanillaRules, (vanillaRule, s, i) =>
                 {
+                    // Search for rule in the cache.
                     if (group.TryGetCacheItem(vanillaRule, out var cache))
                     {
                         result.Add((i, vanillaRule, cache.Value.Analysis, cache.Value.IdeItems, false));
                     }
-                    else
+                    else // Analyze the rule.
                     {
-                        var ideItems = new IdeItems();
+                        var ideItems = new CacheItems();
                         var rule = VanillaAnalysis.AnalyzeRule(script, vanillaRule, scopedVanillaVariables, ideItems);
                         result.Add((i, vanillaRule, rule, ideItems, true));
                     }
@@ -325,7 +326,7 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var (_, syntax, analysis, ide, cache) in result.OrderBy(r => r.I))
                 {
                     rules.Add(analysis);
-                    ide.AddToScript(script);
+                    ide.AddToScript(script, defaultVanillaVariables);
                     if (cache)
                         group.Cache(syntax, new(analysis, ide));
                 }
