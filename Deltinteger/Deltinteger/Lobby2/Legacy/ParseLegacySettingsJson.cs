@@ -66,6 +66,10 @@ static class ParseLegacySettingsJson
         // Recursively check objects.
         if (propValue.Type == JTokenType.Object)
         {
+            // This ensures modes with empty objects are added to the output.
+            // var (_, newPath, _) = MatchLegacyPath(travelParams.Path);
+            // KeyValueFromPath(travelParams.TopGroup!, newPath.ToArray());
+
             CheckObject((JObject)propValue, travelParams);
         }
         // Array of switches
