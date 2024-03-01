@@ -132,7 +132,7 @@ static class ParseLegacySettingsJson
                     // Is expecting literal string value? (Description and Mode name)
                     if (keyValue.Name.A?.Type is EObjectType.String)
                     {
-                        value = new StringSettingValue(WorkshopStringUtility.WorkshopStringFromRawText(propValue.ToString()));
+                        value = new StringSettingValue(propValue.ToString());
                     }
                     else // Otherwise, this is an option type.
                     {

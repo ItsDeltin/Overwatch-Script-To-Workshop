@@ -345,7 +345,7 @@ static class WorkshopStringUtility
         return EscapedDoubleQuotes(withoutQuotes);
     }
 
-    static string EscapedDoubleQuotes(string input)
+    public static string EscapedDoubleQuotes(string input)
     {
         string result = string.Empty;
         bool escaping = false;

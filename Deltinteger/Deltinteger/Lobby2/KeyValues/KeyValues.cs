@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Lobby2.Expand;
 using Deltin.Deltinteger.Model;
+using Deltin.WorkshopString;
 
 namespace Deltin.Deltinteger.Lobby2.KeyValues;
 
@@ -140,6 +141,6 @@ record StringSettingValue(string Text) : ISettingValue
 
     public void ToWorkshop(WorkshopBuilder builder)
     {
-        builder.AppendLine($": \"{Text}\"");
+        builder.AppendLine($": \"{WorkshopStringUtility.EscapedDoubleQuotes(Text)}\"");
     }
 }
