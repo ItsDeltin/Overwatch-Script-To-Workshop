@@ -27,6 +27,8 @@ static class ElementJsonTypeHelper
         "team" => typeSupplier.Team(),
         "gamemode" => typeSupplier.GameMode(),
         "color" => typeSupplier.Color(),
+        "color | team" or
+        "team | color" => typeSupplier.ColorOrTeam(),
         "hero[]" => typeSupplier.Array(typeSupplier.Hero()),
         "string[]" => typeSupplier.Array(typeSupplier.String()),
         "hero | hero[]" => typeSupplier.PipeType(typeSupplier.Hero(), typeSupplier.Array(typeSupplier.Hero())),
@@ -56,6 +58,7 @@ public interface IElementsJsonTypeSupplier<T>
     T Map();
     T GameMode();
     T Team();
+    T ColorOrTeam();
     T Array(T innerType);
     T PipeType(T a, T b);
 }

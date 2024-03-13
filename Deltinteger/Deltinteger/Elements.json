@@ -601,7 +601,7 @@
       "parameters": {
         "Center": {
           "documentation": "The position to which to measure proximity. Can use most Value Syntax related to reporting a position in the map.",
-          "type": "vector",
+          "type": "player | vector",
           "defaultValue": "Vector"
         },
         "Team": {
@@ -795,7 +795,7 @@
         },
         "Position": {
           "documentation": "The position in the world in where the angle ends.",
-          "type": "vector",
+          "type": "player | vector",
           "defaultValue": "Vector"
         }
       }
@@ -1806,7 +1806,7 @@
       "parameters": {
         "Center": {
           "documentation": "The center position from which to measure distance. Can use most Vector based Value Syntax to provide this value.",
-          "type": "vector",
+          "type": "player | vector",
           "defaultValue": "Vector"
         },
         "Radius": {
@@ -3417,7 +3417,7 @@
         },
         "Color": {
           "documentation": "The color of the beam effect to be created. IF a particular team is chosen, the effect will either be red or blue, depending on whether the team is hostile to the viewer. Does not apply to sound effects.",
-          "type": "color",
+          "type": "color | team",
           "defaultValue": "Color"
         },
         "Reevaluation": {
@@ -3476,7 +3476,7 @@
         },
         "Color": {
           "documentation": "The color of the effect to be created. IF a particular team is chosen, the effect will either be red or blue, depending on whether the team is hostile to the viewer. Does not apply to sound effects.",
-          "type": "color",
+          "type": "color | team",
           "defaultValue": "Color"
         },
         "Position": {
@@ -4434,7 +4434,7 @@
         },
         "Color": {
           "documentation": "The color of the effect to be created. IF a particular team is chosen, the effect will either be red or blue, depending on whether the team is hostile to the viewer.",
-          "type": "color",
+          "type": "color | team",
           "defaultValue": "Color"
         },
         "Position": {
@@ -5729,7 +5729,7 @@
           "defaultValue": "Event Player"
         },
         "Position": {
-          "type": "vector",
+          "type": "player | vector",
           "defaultValue": "Vector"
         },
         "Reevaluation": {
