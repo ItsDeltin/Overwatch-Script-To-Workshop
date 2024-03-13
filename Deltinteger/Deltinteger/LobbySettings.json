@@ -162,7 +162,7 @@
                     ]
                 },
                 {
-                    "name": "D.va",
+                    "name": "D.Va",
                     "template": "base_hero",
                     "$ult": "Self-Destruct",
                     "$ult_duration": true,
