@@ -427,6 +427,8 @@
   {
     "Name": "Rialto",
     "GameModes": [
+      "Escort",
+      "Skirmish",
       "Retribution"
     ]
   },

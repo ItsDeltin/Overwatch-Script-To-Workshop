@@ -65,6 +65,7 @@ class VanillaTypeData : IElementsJsonTypeSupplier<VanillaType>
     public VanillaType Map() => MapType;
     public VanillaType GameMode() => GameModeType;
     public VanillaType Team() => TeamType;
+    public VanillaType ColorOrTeam() => PipeType(Color(), Team());
     public VanillaType Array(VanillaType innerType)
     {
         lock (locker)

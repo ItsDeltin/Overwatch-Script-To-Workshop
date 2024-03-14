@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Brigitte", PlayerSelector.Brigitte),
             ("Cassidy", PlayerSelector.Cassidy),
             ("Doomfist", PlayerSelector.Doomfist),
-            ("D.va", PlayerSelector.Dva),
+            ("D.Va", PlayerSelector.Dva),
             ("Echo", PlayerSelector.Echo),
             ("Genji", PlayerSelector.Genji),
             ("Hanzo", PlayerSelector.Hanzo),

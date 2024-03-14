@@ -91,6 +91,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Map() => EnumType("Map");
         public CodeType GameMode() => EnumType("GameMode");
         public CodeType Team() => EnumType("Team");
+        public CodeType ColorOrTeam() => new PipeType(Color(), Team());
         public CodeType Array(CodeType innerType) => new ArrayType(this, innerType);
         public CodeType PipeType(CodeType a, CodeType b) => new PipeType(a, b);
     }
