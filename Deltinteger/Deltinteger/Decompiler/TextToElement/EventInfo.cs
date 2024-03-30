@@ -79,6 +79,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Symmetra", PlayerSelector.Symmetra),
             ("Torbjörn", PlayerSelector.Torbjorn),
             ("Tracer", PlayerSelector.Tracer),
+            ("Venture", PlayerSelector.Venture),
             ("Widowmaker", PlayerSelector.Widowmaker),
             ("Winston", PlayerSelector.Winston),
             ("Wrecking Ball", PlayerSelector.WreckingBall),

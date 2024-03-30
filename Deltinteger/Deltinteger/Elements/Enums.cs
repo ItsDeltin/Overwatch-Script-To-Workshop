@@ -72,6 +72,7 @@
         Lifeweaver,
         Illari,
         Mauga,
+        Venture,
     }
 
     public enum Team

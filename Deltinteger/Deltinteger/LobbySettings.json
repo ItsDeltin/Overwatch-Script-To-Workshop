@@ -1013,6 +1013,28 @@
                     ]
                 },
                 {
+                    "name": "Venture",
+                    "template": "base_hero",
+                    "$ult": "Tectonic Shock",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Burrow",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Burrow Duration Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Drill Dash",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
                     "name": "Widowmaker",
                     "template": "base_hero",
                     "$ult": "Infra-sight",

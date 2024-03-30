@@ -256,6 +256,11 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Symmetra").AddUlt("Photon Barrier").AddProjectile(false).AddSecondaryFire().AddAbility("Sentry Turret").AddAbility("Teleporter"),
                 new HeroSettingCollection("Torbjörn").AddUlt("Molten Core", hasDuration: true).AddProjectile(true).AddSecondaryFire().AddAbility("Deploy Turret").AddAbility("Overload").AddRange("Overload Duration Scalar").AddSelectRef("Weapons Enabled Torbjörn", "Weapons Enabled", "All", "Rivet Gun Only", "Forge Hammer Only"),
                 new HeroSettingCollection("Tracer").AddUlt("Pulse Bomb").AddProjectile(true).AddAbility("Blink").AddAbility("Recall"),
+                new HeroSettingCollection("Venture")
+                    .AddUlt("Tectonic Shock")
+                    .AddProjectile(false)
+                    .AddAbility("Burrow").AddRange("Burrow Duration Slider", 10)
+                    .AddAbility("Drill Dash"),
                 new HeroSettingCollection("Widowmaker").AddUlt("Infra-sight", hasDuration: true).AddProjectile(true).AddScope().AddAbility("Grappling Hook").AddAbility("Venom Mine"),
                 new HeroSettingCollection("Winston").AddUlt("Primal Rage", hasDuration: true).AddRange("Primal Rage Melee Knockback Scalar", 25, 300).AddAbility("Barrier Projector").AddAbility("Jump Pack", hasKnockback: true).AddRange("Jump Pack Acceleration Scalar", 25, 300),
                 new HeroSettingCollection("Wrecking Ball").AddUlt("Minefield", hasDuration: true, hasKnockback: true).AddProjectile(true).AddAbility("Adaptive Shield").AddAbility("Grappling Claw", hasKnockback: true).AddAbility("Piledriver").AddAbility("Roll", hasCooldown: false).AddSwitch("Roll Always Active", false),
