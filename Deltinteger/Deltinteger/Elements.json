@@ -6649,6 +6649,7 @@
         "Lifeweaver",
         "Illari",
         "Mauga",
+        "Venture",
       ]
     },
     "Hero": [
@@ -6698,6 +6699,7 @@
         "alias": "Torbjorn"
       },
       "Tracer",
+      "Venture",
       "Widowmaker",
       "Winston",
       "Wrecking Ball",
