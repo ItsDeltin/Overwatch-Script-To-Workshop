@@ -151,7 +151,7 @@ static class ParseLegacySettingsJson
                     // Is the boolean kind known?
                     if (keyValue.Name.A?.Type is EObjectType.OnOff or EObjectType.EnabledDisabled or EObjectType.YesNo)
                     {
-                        value = new OptionSettingValue(keyValue.Name.A.Options[set ? 1 : 0]);
+                        value = new OptionSettingValue(keyValue.Name.A.Options[set ? 0 : 1]);
                     }
                     // Do nothing if this is a switch.
                     else if (keyValue.Name.A?.Type is not EObjectType.Switch)
