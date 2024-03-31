@@ -33,9 +33,9 @@ public static class LoadData
         }
         IsLoaded = true;
 
+        LobbyMap.LoadFromJson(mapsJson);
         ElementRoot.LoadFromJson(elementsJson);
         LobbySettings.LoadFromJson(settingsJson);
-        LobbyMap.LoadFromJson(mapsJson);
     }
 
     static string FromApplicationFolder(string name)
