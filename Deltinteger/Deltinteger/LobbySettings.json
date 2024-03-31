@@ -1883,12 +1883,6 @@
                     "name": "Primary Fire",
                     "type": "boolean_onoff",
                     "default": true
-                },
-                {
-                    "name": "Ammunition Clip Size Scalar",
-                    "type": "range_percentage",
-                    "min": 25,
-                    "max": 500
                 }
             ]
         },
