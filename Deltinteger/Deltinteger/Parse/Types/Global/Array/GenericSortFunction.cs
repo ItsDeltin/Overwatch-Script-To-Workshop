@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Parse
         readonly ArrayType arrayType; // The array type that this belongs to.
         readonly CodeType funcType; // The type that the lambda parameter returns.
         readonly Func<ArrayFunctionHandler, ISortFunctionExecutor> pointToExecutor; // Gets the respective ISortFunctionExecutor from the ArrayFunctionHandler.
+        readonly string alias; // An extra name for the function.
         readonly IMethodExtensions methodInfo; // Additional function info.
 
         public GenericSortFunction(
@@ -23,6 +24,7 @@ namespace Deltin.Deltinteger.Parse
             ArrayType arrayType,
             CodeType funcType,
             Func<ArrayFunctionHandler, ISortFunctionExecutor> pointToExecutor,
+            string alias = null,
             IMethodExtensions methodInfo = null)
         {
             this.name = name;
@@ -32,24 +34,32 @@ namespace Deltin.Deltinteger.Parse
             this.arrayType = arrayType;
             this.funcType = funcType;
             this.pointToExecutor = pointToExecutor;
+            this.alias = alias;
             this.methodInfo = methodInfo;
         }
 
         public void Add(Scope addToScope, ITypeSupplier supplier)
         {
+            AddWithName(addToScope, supplier, name);
+            if (alias is not null)
+                AddWithName(addToScope, supplier, alias);
+        }
+
+        void AddWithName(Scope addToScope, ITypeSupplier supplier, string withName)
+        {
             // value => ...
-            var noIndex = GetFuncMethod();
-            noIndex.Parameters = new CodeParameter[] {
+            var noIndex = GetFuncMethod(withName);
+            noIndex.Parameters = [
                 new CodeParameter("conditionLambda", parameterDocumentation, PortableLambdaType.CreateConstantType(funcType, arrayType.ArrayOfType))
-            };
+            ];
             noIndex.Action = (actionSet, methodCall) =>
                 GetExecutor(actionSet).GetResult(actionSet, inv => Lambda(methodCall).Invoke(actionSet, inv));
 
             // (value, index) => ...
-            var withIndex = GetFuncMethod();
-            withIndex.Parameters = new CodeParameter[] {
+            var withIndex = GetFuncMethod(withName);
+            withIndex.Parameters = [
                 new CodeParameter("conditionLambda", parameterDocumentation, PortableLambdaType.CreateConstantType(funcType, arrayType.ArrayOfType, supplier.Number()))
-            };
+            ];
             withIndex.Action = (actionSet, methodCall) =>
                 GetExecutor(actionSet).GetResult(actionSet, inv => Lambda(methodCall).Invoke(actionSet, inv, Element.ArrayIndex()));
 
@@ -57,16 +67,16 @@ namespace Deltin.Deltinteger.Parse
             addToScope.AddNativeMethod(new FuncMethod(withIndex.AddArrayCopyNotUsedWarning()));
         }
 
-        ISortFunctionExecutor GetExecutor(ActionSet actionSet) => pointToExecutor(arrayType.GetRealType(actionSet.ThisTypeLinker).ArrayHandler.GetFunctionHandler());
-
-        static ILambdaInvocable Lambda(MethodCall methodCall) => (ILambdaInvocable)methodCall.ParameterValues[0];
-
-        private FuncMethodBuilder GetFuncMethod() => new FuncMethodBuilder()
+        private FuncMethodBuilder GetFuncMethod(string withName) => new FuncMethodBuilder()
         {
-            Name = name,
+            Name = withName,
             Documentation = documentation,
             ReturnType = returnType,
             MethodInfo = methodInfo
         };
+
+        ISortFunctionExecutor GetExecutor(ActionSet actionSet) => pointToExecutor(arrayType.GetRealType(actionSet.ThisTypeLinker).ArrayHandler.GetFunctionHandler());
+
+        static ILambdaInvocable Lambda(MethodCall methodCall) => (ILambdaInvocable)methodCall.ParameterValues[0];
     }
 }

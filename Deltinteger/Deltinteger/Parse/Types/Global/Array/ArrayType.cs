@@ -76,7 +76,8 @@ namespace Deltin.Deltinteger.Parse
                 returnType: this,
                 funcType: _supplier.Boolean(),
                 parameterDocumentation: "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array.",
-                pointToExecutor: h => h.FilteredArray()
+                pointToExecutor: h => h.FilteredArray(),
+                alias: "Filter"
             ).Add(Scope, _supplier);
             // Sorted Array
             MakeGenericSortFunction(
@@ -85,7 +86,8 @@ namespace Deltin.Deltinteger.Parse
                 returnType: this,
                 funcType: _supplier.Number(),
                 parameterDocumentation: "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order.",
-                pointToExecutor: h => h.SortedArray()
+                pointToExecutor: h => h.SortedArray(),
+                alias: "Sort"
             ).Add(Scope, _supplier);
             // Is True For Any
             MakeGenericSortFunction(
@@ -94,7 +96,8 @@ namespace Deltin.Deltinteger.Parse
                 returnType: _supplier.Boolean(),
                 funcType: _supplier.Boolean(),
                 parameterDocumentation: "The condition that is evaluated for each element of the specified array.",
-                pointToExecutor: h => h.Any()
+                pointToExecutor: h => h.Any(),
+                alias: "Any"
             ).Add(Scope, _supplier);
             // Is True For All
             MakeGenericSortFunction(
@@ -103,7 +106,8 @@ namespace Deltin.Deltinteger.Parse
                 returnType: _supplier.Boolean(),
                 funcType: _supplier.Boolean(),
                 parameterDocumentation: "The condition that is evaluated for each element of the specified array.",
-                pointToExecutor: h => h.All()
+                pointToExecutor: h => h.All(),
+                alias: "All"
             ).Add(Scope, _supplier);
             // Mapped
             var mapGenericParameter = new AnonymousType("U", new AnonymousTypeAttributes(false));
@@ -366,9 +370,10 @@ namespace Deltin.Deltinteger.Parse
             string name, string documentation,
             CodeType returnType, CodeType funcType,
             string parameterDocumentation, Func<ArrayFunctionHandler, ISortFunctionExecutor> pointToExecutor,
+            string alias = null,
             IMethodExtensions methodInfo = null)
         {
-            return new GenericSortFunction(name, documentation, parameterDocumentation, returnType, this, funcType, pointToExecutor, methodInfo);
+            return new GenericSortFunction(name, documentation, parameterDocumentation, returnType, this, funcType, pointToExecutor, alias, methodInfo);
         }
 
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
