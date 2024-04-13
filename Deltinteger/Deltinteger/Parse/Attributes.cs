@@ -92,6 +92,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsVirtual { get; private set; }
         public bool IsOverride { get; private set; }
         public bool IsRecursive { get; private set; }
+        public bool Ref { get; private set; }
         private readonly AttributeType[] _disallowedAttributes;
 
         public GenericAttributeAppender(params AttributeType[] disallow)
@@ -126,6 +127,9 @@ namespace Deltin.Deltinteger.Parse
 
                 // Apply Recursive
                 case AttributeType.Recursive: IsRecursive = true; break;
+
+                // Apply Ref
+                case AttributeType.Ref: Ref = true; break;
 
                 // Apply Variables
 

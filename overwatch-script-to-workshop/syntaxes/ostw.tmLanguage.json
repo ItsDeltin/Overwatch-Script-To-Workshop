@@ -966,7 +966,7 @@
     },
     "variable-declaration": {
       "name": "meta.declaration.variable",
-      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist)\\b\\s*)*)(?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)([a-zA-Z0-9_]+\\b)\\s*",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist|ref)\\b\\s*)*)(?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)([a-zA-Z0-9_]+\\b)\\s*",
       "beginCaptures": {
         "1": {
           "name": "storage.modifier"
@@ -1047,7 +1047,7 @@
     },
     "function-declaration": {
       "name": "meta.function",
-      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist)\\b\\s*)*)(?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)([a-zA-Z0-9_]+\\b)\\s*(?=\\(|<)",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist|ref)\\b\\s*)*)(?<type>(const\\s*)?(\\(\\s*(\\g<type>\\s*(,\\s*)?)*\\)|[a-zA-Z0-9_]+\\b\\s*(<\\s*(,?\\s*\\g<type>\\s*)+>)?)\\s*(\\[\\s*\\]\\s*)*(\\|\\s*\\g<type>\\s*)*(=>\\s*\\g<type>\\s*)?)([a-zA-Z0-9_]+\\b)\\s*(?=\\(|<)",
       "beginCaptures": {
         "1": {
           "name": "storage.modifier"
@@ -1109,7 +1109,7 @@
       ]
     },
     "constructor-declaration": {
-      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist)\\b\\s*)*)(constructor)\\s*(?=\\()",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|recursive|globalvar|playervar|persist|ref)\\b\\s*)*)(constructor)\\s*(?=\\()",
       "beginCaptures": {
         "1": {
           "name": "storage.modifier"

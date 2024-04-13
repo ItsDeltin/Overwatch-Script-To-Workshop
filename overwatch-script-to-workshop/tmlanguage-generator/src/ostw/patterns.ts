@@ -116,7 +116,8 @@ const matchAttributes = tm.Group({
             'recursive',
             'globalvar',
             'playervar',
-            'persist'
+            'persist',
+            'ref'
         ),
         b,
         w,

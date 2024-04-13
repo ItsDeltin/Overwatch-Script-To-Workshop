@@ -11,7 +11,7 @@ static class TestUtils
         LoadData.LoadFromFileSystem();
     }
 
-    public static (string, Diagnostics) Compile(string text)
+    public static CompileResult Compile(string text)
     {
         var d = new Diagnostics();
         var ds = new DeltinScript(new(d, new ScriptFile(d, new Uri("inmemory://temp.ostw"), text))
@@ -23,7 +23,7 @@ static class TestUtils
                 OptimizeOutput = false
             })
         });
-        return (ds.WorkshopCode, d);
+        return new(ds.WorkshopCode, d);
     }
 
     /// <summary>Sends OW code through OSTW and determines if it comes out unscathed.</summary>
@@ -56,5 +56,21 @@ static class TestUtils
             }
         }
         Assert.AreEqual(textNoWs.Length, compiledNoWs.Length);
+    }
+}
+
+readonly record struct CompileResult(string Code, Diagnostics Diagnostics)
+{
+    public CompileResult AssertSearchError(string text)
+    {
+        Assert.IsTrue(Diagnostics.Enumerate().Any(diagnostic => diagnostic.message.Contains(text)), $"Failed to find error with text '{text}'");
+        return this;
+    }
+
+    public CompileResult AssertOk()
+    {
+        var error = Diagnostics.FindFirstError();
+        Assert.IsNull(error, $"Unexpected error while compiling: {error?.message}");
+        return this;
     }
 }

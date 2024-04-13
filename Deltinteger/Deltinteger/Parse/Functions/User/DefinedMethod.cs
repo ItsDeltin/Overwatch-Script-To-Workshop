@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; }
         public bool Recursive { get; }
         public bool Virtual { get; }
+        public bool Ref { get; }
         public bool SubroutineDefaultGlobal { get; }
         public VanillaSubroutine? TargetVanillaSubroutine { get; }
 
@@ -59,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             DocRange nameRange = context.Identifier.Range;
 
             // Get the attributes.
-            var attributes = new GenericAttributeAppender(AttributeType.Ref, AttributeType.In, AttributeType.GlobalVar, AttributeType.PlayerVar);
+            var attributes = new GenericAttributeAppender(AttributeType.In, AttributeType.GlobalVar, AttributeType.PlayerVar);
             AttributesGetter.GetAttributes(parseInfo.Script.Diagnostics, context.Attributes, attributes);
 
             // Set the attributes.
@@ -68,6 +69,7 @@ namespace Deltin.Deltinteger.Parse
             Virtual = attributes.IsVirtual;
             AccessLevel = attributes.Accessor;
             Recursive = attributes.IsRecursive;
+            Ref = attributes.Ref;
 
             // Get subroutine info.
             if (context.Subroutine?.Name is not null)
@@ -150,6 +152,10 @@ namespace Deltin.Deltinteger.Parse
                 .SetReturnType(ReturnType)
                 .SetThisType(ContainingType)
                 .SetCallInfo(CallInfo);
+
+            // Ignore struct variable settability errors if this is a Ref method.
+            if (Ref)
+                parseInfo = parseInfo.SetContextualModifierGroup(null);
 
             if (Context.Block != null)
             {
@@ -255,6 +261,11 @@ namespace Deltin.Deltinteger.Parse
 
             // Add method to call tracker.
             parseInfo.CurrentCallInfo.Call(Provider.CallInfo.Function, callRange);
+
+            // If this is a Ref function, ensure the source is a settable variable.
+            if (Provider.Ref)
+                SourceVariableResolver.GetSourceVariable(parseInfo, callRange);
+
             return null;
         }
     }

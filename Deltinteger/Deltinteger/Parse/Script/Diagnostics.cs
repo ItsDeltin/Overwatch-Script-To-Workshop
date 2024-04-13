@@ -30,6 +30,14 @@ namespace Deltin.Deltinteger.Parse
             return diagnosticFiles.Any(d => d.Diagnostics.Any(diag => diag.severity == Diagnostic.Error));
         }
 
+        public Diagnostic FindFirstError()
+        {
+            foreach (var diag in Enumerate())
+                if (diag.severity == Diagnostic.Error)
+                    return diag;
+            return null;
+        }
+
         public FileDiagnostics FromUri(Uri uri)
         {
             ThrowIfFileIsAlreadyAdded(uri);
@@ -76,11 +84,18 @@ namespace Deltin.Deltinteger.Parse
         public Diagnostic[] GetDiagnostics()
         {
             var diagnostics = new List<Diagnostic>();
-            
+
             foreach (var file in diagnosticFiles)
                 diagnostics.AddRange(file.Diagnostics);
-            
+
             return diagnostics.ToArray();
+        }
+
+        public IEnumerable<Diagnostic> Enumerate()
+        {
+            foreach (var file in diagnosticFiles)
+                foreach (var diagnostic in file.Diagnostics)
+                    yield return diagnostic;
         }
 
         public string OutputDiagnostics()
