@@ -328,7 +328,7 @@ namespace Deltin.Deltinteger.Lobby
         public static void Init()
         {
             var all = new ModeSettingCollection("All");
-            AllModeSettings = new ModeSettingCollection[] {
+            AllModeSettings = [
                 all,
                 new ModeSettingCollection("Assault", true).Competitive().AddCaptureSpeed(),
                 new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", false, 1, 3, 2, "Score To Win 1-3").Add(ScoringSpeedModifier),
@@ -354,7 +354,7 @@ namespace Deltin.Deltinteger.Lobby
                 new ModeSettingCollection("Freezethaw Elimination", false).Elimination(),
                 new ModeSettingCollection("Bounty Hunter").Add(Enabled_DefaultOff).AddIntRange("Base Score For Killing A Bounty Target", false, 0, 100, 300).AddIntRange("Bounty Increase Per Kill As Bounty Target", false, 0, 1000, 0).AddIntRange("Bounty Target Count", false, 1, 1, 1).AddIntRange("Score Per Kill", false, 0, 1000, 100).AddIntRange("Score Per Kill As Bounty Target", false, 0, 1000, 300)
                     .Add(GameLengthInMinutes).Add(ScoreToWin_1to5000).Add(SelfInitiatedRespawn)
-            };
+            ];
 
             // Get re-occurring settings.
             var encountered = new HashSet<string>(); // Setting keys that were encountered.
