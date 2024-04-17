@@ -1412,6 +1412,21 @@
                     ]
                 },
                 {
+                    "name": "Clash",
+                    "template": "base_mode",
+                    "$with_maps": "Clash",
+                    "$competitive": true,
+                    "content": [
+                        {
+                            "name": "Capture Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500,
+                            "default": 45
+                        }
+                    ]
+                },
+                {
                     "name": "Capture The Flag",
                     "template": "base_mode",
                     "$with_maps": "Capture The Flag",

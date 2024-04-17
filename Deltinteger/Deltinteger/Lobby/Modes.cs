@@ -25,6 +25,8 @@ namespace Deltin.Deltinteger.Lobby
 
         public ModeSettings Flashpoint { get; set; }
 
+        public ModeSettings Clash { get; set; }
+
         [JsonProperty("Capture The Flag")]
         public ModeSettings CaptureTheFlag { get; set; }
 
@@ -106,6 +108,9 @@ namespace Deltin.Deltinteger.Lobby
                 case "Flashpoint":
                     if (Flashpoint == null) Flashpoint = new ModeSettings();
                     return Flashpoint;
+                case "Clash":
+                    if (Clash == null) Clash = new ModeSettings();
+                    return Clash;
                 case "Hybrid":
                     if (Hybrid == null) Hybrid = new ModeSettings();
                     return Hybrid;
@@ -334,6 +339,8 @@ namespace Deltin.Deltinteger.Lobby
                     .AddSwitch("Control Point A", true).AddSwitch("Control Point B", true).AddSwitch("Control Point C", true).AddSwitch("Control Point D", true).AddSwitch("Control Point E", true)
                     .AddSelect("First Active Control Point", "A", "B", "C", "D", "E", "Random")
                     .AddIntRange("Score To Win", false, 1, 10, 3).Add(ScoringSpeedModifier),
+                new ModeSettingCollection("Clash", true).Competitive()
+                    .AddRange("Capture Speed Modifier", 10, 500, 45),
                 new ModeSettingCollection("Capture The Flag", false).AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
                     .AddSelect("Flag Carrier Abilities", "Restricted", "All", "None").AddRange("Flag Dropped Lock Time", 0, 10, 5).AddRange("Flag Pickup Time", 0, 5, 0).AddRange("Flag Return Time", 0, 5, 4)
                     .AddRange("Flag Score Respawn Time", 0, 20, 15).AddIntRange("Game Length (Minutes)", false, 5, 15, 8).AddRange("Respawn Speed Buff Duration", 0, 60, 0).Add(ScoreToWin_1to9)
