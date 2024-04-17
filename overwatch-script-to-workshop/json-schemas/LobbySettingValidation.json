@@ -357,6 +357,7 @@
           "Dorado",
           "Route 66",
           "Junkertown",
+          "Rialto",
           "Havana",
           "Circuit Royal",
           "Shambali Monastery"
@@ -453,6 +454,22 @@
         "enum": [
           "New Junk City",
           "Suravasa"
+        ]
+      }
+    },
+    "Capture Speed Modifier - Clash Defaults": {
+      "default": 45.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Clash Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Hanaoka"
         ]
       }
     },
@@ -750,6 +767,7 @@
           "Horizon Lunar Colony",
           "Junkertown",
           "Blizzard World",
+          "Rialto",
           "Busan",
           "Eichenwalde (Halloween)",
           "Paris",
@@ -2869,6 +2887,50 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Ultimate Ability (Tectonic Shock)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Tectonic Shock)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Tectonic Shock)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Tectonic Shock)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Burrow": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Burrow Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Burrow Duration Slider": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Drill Dash": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Drill Dash Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Ultimate Ability (Infra-sight)": {
       "default": true,
       "type": "boolean"
@@ -3111,7 +3173,7 @@
           "Bastion",
           "Brigitte",
           "Cassidy",
-          "D.va",
+          "D.Va",
           "Doomfist",
           "Echo",
           "Genji",
@@ -3139,6 +3201,7 @@
           "Symmetra",
           "Torbjörn",
           "Tracer",
+          "Venture",
           "Widowmaker",
           "Winston",
           "Wrecking Ball",
@@ -3743,8 +3806,8 @@
           },
           "additionalProperties": false
         },
-        "D.va": {
-          "description": "'D.va' hero settings.",
+        "D.Va": {
+          "description": "'D.Va' hero settings.",
           "properties": {
             "Quick Melee": {
               "$ref": "#/definitions/Quick Melee"
@@ -6161,6 +6224,81 @@
           },
           "additionalProperties": false
         },
+        "Venture": {
+          "description": "'Venture' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (Tectonic Shock)": {
+              "$ref": "#/definitions/Ultimate Ability (Tectonic Shock)"
+            },
+            "Ultimate Generation (Tectonic Shock)": {
+              "$ref": "#/definitions/Ultimate Generation (Tectonic Shock)"
+            },
+            "Ultimate Generation - Passive (Tectonic Shock)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Tectonic Shock)"
+            },
+            "Ultimate Generation - Combat (Tectonic Shock)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Tectonic Shock)"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Burrow": {
+              "$ref": "#/definitions/Burrow"
+            },
+            "Burrow Cooldown Time": {
+              "$ref": "#/definitions/Burrow Cooldown Time"
+            },
+            "Burrow Duration Slider": {
+              "$ref": "#/definitions/Burrow Duration Slider"
+            },
+            "Drill Dash": {
+              "$ref": "#/definitions/Drill Dash"
+            },
+            "Drill Dash Cooldown Time": {
+              "$ref": "#/definitions/Drill Dash Cooldown Time"
+            }
+          },
+          "additionalProperties": false
+        },
         "Widowmaker": {
           "description": "'Widowmaker' hero settings.",
           "properties": {
@@ -7168,6 +7306,71 @@
             "Disabled Maps": {
               "$ref": "#/definitions/Flashpoint Maps",
               "description": "An array of disabled maps for the 'Flashpoint' mode."
+            }
+          },
+          "additionalProperties": false
+        },
+        "Clash": {
+          "description": "Clash settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled On"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Capture Speed Modifier": {
+              "$ref": "#/definitions/Capture Speed Modifier - Clash Defaults"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Clash Maps",
+              "description": "An array of enabled maps for the 'Clash' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Clash Maps",
+              "description": "An array of disabled maps for the 'Clash' mode."
             }
           },
           "additionalProperties": false

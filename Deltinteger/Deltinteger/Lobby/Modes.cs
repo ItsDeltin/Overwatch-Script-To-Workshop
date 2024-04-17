@@ -212,6 +212,7 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Tank Role Passive Health Bonus", "1 Tank 2 Offense 2 Support", "Always Enabled", "Disabled")
         };
         private static readonly LobbySetting CaptureSpeed = new RangeValue(false, true, "Capture Speed Modifier", 10, 500);
+        private static readonly LobbySetting CaptureSpeedClash = new RangeValue(false, true, "Capture Speed Modifier", 10, 500, 45) { ReferenceName = "Capture Speed Modifier - Clash Defaults" };
         private static readonly LobbySetting PayloadSpeed = new RangeValue(false, true, "Payload Speed Modifier", 10, 500);
         private static readonly LobbySetting TS1WalkSpeed = new RangeValue(false, true, "TS-1 Walk Speed Modifier", 10, 500);
         private static readonly LobbySetting TS1PushSpeed = new RangeValue(false, true, "TS-1 Push Speed Modifier", 10, 500);
@@ -340,7 +341,7 @@ namespace Deltin.Deltinteger.Lobby
                     .AddSelect("First Active Control Point", "A", "B", "C", "D", "E", "Random")
                     .AddIntRange("Score To Win", false, 1, 10, 3).Add(ScoringSpeedModifier),
                 new ModeSettingCollection("Clash", true).Competitive()
-                    .AddRange("Capture Speed Modifier", 10, 500, 45),
+                    .Add(CaptureSpeedClash),
                 new ModeSettingCollection("Capture The Flag", false).AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
                     .AddSelect("Flag Carrier Abilities", "Restricted", "All", "None").AddRange("Flag Dropped Lock Time", 0, 10, 5).AddRange("Flag Pickup Time", 0, 5, 0).AddRange("Flag Return Time", 0, 5, 4)
                     .AddRange("Flag Score Respawn Time", 0, 20, 15).AddIntRange("Game Length (Minutes)", false, 5, 15, 8).AddRange("Respawn Speed Buff Duration", 0, 60, 0).Add(ScoreToWin_1to9)
