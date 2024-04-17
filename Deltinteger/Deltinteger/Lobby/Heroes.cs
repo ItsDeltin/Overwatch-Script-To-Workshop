@@ -257,7 +257,7 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Torbjörn").AddUlt("Molten Core", hasDuration: true).AddProjectile(true).AddSecondaryFire().AddAbility("Deploy Turret").AddAbility("Overload").AddRange("Overload Duration Scalar").AddSelectRef("Weapons Enabled Torbjörn", "Weapons Enabled", "All", "Rivet Gun Only", "Forge Hammer Only"),
                 new HeroSettingCollection("Tracer").AddUlt("Pulse Bomb").AddProjectile(true).AddAbility("Blink").AddAbility("Recall"),
                 new HeroSettingCollection("Venture")
-                    .AddUlt("Tectonic Shock")
+                    .AddUlt("Tectonic Shock", hasDuration: true)
                     .AddProjectile(false)
                     .AddAbility("Burrow").AddRange("Burrow Duration Slider", 10)
                     .AddAbility("Drill Dash"),

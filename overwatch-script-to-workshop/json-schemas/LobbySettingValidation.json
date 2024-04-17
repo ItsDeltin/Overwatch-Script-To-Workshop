@@ -6278,6 +6278,12 @@
             "Ultimate Generation - Combat (Tectonic Shock)": {
               "$ref": "#/definitions/Ultimate Generation - Combat (Tectonic Shock)"
             },
+            "Ultimate Duration": {
+              "$ref": "#/definitions/Ultimate Duration"
+            },
+            "Infinite Ultimate Duration": {
+              "$ref": "#/definitions/Infinite Ultimate Duration"
+            },
             "Projectile Speed": {
               "$ref": "#/definitions/Projectile Speed"
             },
