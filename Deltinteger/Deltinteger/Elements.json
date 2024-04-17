@@ -7457,6 +7457,7 @@
         "name": "Hanamura (Winter)",
         "alias": "Hanamura_Winter"
       },
+      "Hanaoka",
       "Havana",
       "Hollywood",
       {
@@ -7626,6 +7627,7 @@
     "GameMode": [
       "Assault",
       "Capture The Flag",
+      "Clash",
       "Control",
       "Deathmatch",
       "Elimination",

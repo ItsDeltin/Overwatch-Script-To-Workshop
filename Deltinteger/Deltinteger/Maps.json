@@ -715,5 +715,11 @@
       "Control",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "Hanaoka",
+    "GameModes": [
+      "Clash"
+    ]
   }
 ]

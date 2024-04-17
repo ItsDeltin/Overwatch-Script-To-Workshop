@@ -25,6 +25,8 @@ namespace Deltin.Deltinteger.Lobby
 
         public ModeSettings Flashpoint { get; set; }
 
+        public ModeSettings Clash { get; set; }
+
         [JsonProperty("Capture The Flag")]
         public ModeSettings CaptureTheFlag { get; set; }
 
@@ -106,6 +108,9 @@ namespace Deltin.Deltinteger.Lobby
                 case "Flashpoint":
                     if (Flashpoint == null) Flashpoint = new ModeSettings();
                     return Flashpoint;
+                case "Clash":
+                    if (Clash == null) Clash = new ModeSettings();
+                    return Clash;
                 case "Hybrid":
                     if (Hybrid == null) Hybrid = new ModeSettings();
                     return Hybrid;
@@ -207,6 +212,7 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Tank Role Passive Health Bonus", "1 Tank 2 Offense 2 Support", "Always Enabled", "Disabled")
         };
         private static readonly LobbySetting CaptureSpeed = new RangeValue(false, true, "Capture Speed Modifier", 10, 500);
+        private static readonly LobbySetting CaptureSpeedClash = new RangeValue(false, true, "Capture Speed Modifier", 10, 500, 45) { ReferenceName = "Capture Speed Modifier - Clash Defaults" };
         private static readonly LobbySetting PayloadSpeed = new RangeValue(false, true, "Payload Speed Modifier", 10, 500);
         private static readonly LobbySetting TS1WalkSpeed = new RangeValue(false, true, "TS-1 Walk Speed Modifier", 10, 500);
         private static readonly LobbySetting TS1PushSpeed = new RangeValue(false, true, "TS-1 Push Speed Modifier", 10, 500);
@@ -323,7 +329,7 @@ namespace Deltin.Deltinteger.Lobby
         public static void Init()
         {
             var all = new ModeSettingCollection("All");
-            AllModeSettings = new ModeSettingCollection[] {
+            AllModeSettings = [
                 all,
                 new ModeSettingCollection("Assault", true).Competitive().AddCaptureSpeed(),
                 new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", false, 1, 3, 2, "Score To Win 1-3").Add(ScoringSpeedModifier),
@@ -334,6 +340,8 @@ namespace Deltin.Deltinteger.Lobby
                     .AddSwitch("Control Point A", true).AddSwitch("Control Point B", true).AddSwitch("Control Point C", true).AddSwitch("Control Point D", true).AddSwitch("Control Point E", true)
                     .AddSelect("First Active Control Point", "A", "B", "C", "D", "E", "Random")
                     .AddIntRange("Score To Win", false, 1, 10, 3).Add(ScoringSpeedModifier),
+                new ModeSettingCollection("Clash", true).Competitive()
+                    .Add(CaptureSpeedClash),
                 new ModeSettingCollection("Capture The Flag", false).AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
                     .AddSelect("Flag Carrier Abilities", "Restricted", "All", "None").AddRange("Flag Dropped Lock Time", 0, 10, 5).AddRange("Flag Pickup Time", 0, 5, 0).AddRange("Flag Return Time", 0, 5, 4)
                     .AddRange("Flag Score Respawn Time", 0, 20, 15).AddIntRange("Game Length (Minutes)", false, 5, 15, 8).AddRange("Respawn Speed Buff Duration", 0, 60, 0).Add(ScoreToWin_1to9)
@@ -347,7 +355,7 @@ namespace Deltin.Deltinteger.Lobby
                 new ModeSettingCollection("Freezethaw Elimination", false).Elimination(),
                 new ModeSettingCollection("Bounty Hunter").Add(Enabled_DefaultOff).AddIntRange("Base Score For Killing A Bounty Target", false, 0, 100, 300).AddIntRange("Bounty Increase Per Kill As Bounty Target", false, 0, 1000, 0).AddIntRange("Bounty Target Count", false, 1, 1, 1).AddIntRange("Score Per Kill", false, 0, 1000, 100).AddIntRange("Score Per Kill As Bounty Target", false, 0, 1000, 300)
                     .Add(GameLengthInMinutes).Add(ScoreToWin_1to5000).Add(SelfInitiatedRespawn)
-            };
+            ];
 
             // Get re-occurring settings.
             var encountered = new HashSet<string>(); // Setting keys that were encountered.

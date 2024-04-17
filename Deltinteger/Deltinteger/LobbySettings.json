@@ -1016,6 +1016,7 @@
                     "name": "Venture",
                     "template": "base_hero",
                     "$ult": "Tectonic Shock",
+                    "$ult_duration": true,
                     "$projectile": true,
                     "content": [
                         {
@@ -1408,6 +1409,21 @@
                             "min": 1,
                             "max": 10,
                             "default": 3
+                        }
+                    ]
+                },
+                {
+                    "name": "Clash",
+                    "template": "base_mode",
+                    "$with_maps": "Clash",
+                    "$competitive": true,
+                    "content": [
+                        {
+                            "name": "Capture Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500,
+                            "default": 45
                         }
                     ]
                 },
