@@ -130,6 +130,13 @@ namespace Deltin.Deltinteger.Parse
             if (!ComponentCollection.IsAttribute(AttributeType.Override)) return;
 
             var overriding = _scopeHandler.GetOverridenVariable(_name);
+
+            if (overriding is null)
+            {
+                _parseInfo.Script.Diagnostics.Error($"No overridable variable named {_name} was found in the parent classes", _nameRange);
+                return;
+            }
+
             var overridingType = overriding.CodeType.GetCodeType(_parseInfo.TranslateInfo);
 
             // Make sure the overriden variable's type matches.
