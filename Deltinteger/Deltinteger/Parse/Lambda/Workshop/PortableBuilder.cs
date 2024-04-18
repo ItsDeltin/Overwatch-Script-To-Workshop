@@ -157,7 +157,8 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                 ElementName = "func group",
                 ObjectStackName = "func group",
                 RuleName = "lambda",
-                VariableGlobalDefault = true
+                VariableGlobalDefault = true,
+                GenerateObjectStackStrategy = GenerateObjectStackStrategy.OneRegister
             });
 
             return new SetupSubroutine(_subroutineBuilder.Initiate(), () => { });

@@ -39,10 +39,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                 {
                     // Normal
                     if (!Controller.Attributes.IsRecursive)
-                        ActionSet.AddAction(_subroutine.ObjectStack.SetVariable((Element)ActionSet.CurrentObject));
+                        _subroutine.ObjectStack.Set(ActionSet, ActionSet.CurrentObject);
                     // Recursive: Stack
                     else
-                        ActionSet.AddAction(_subroutine.ObjectStack.ModifyVariable(Operation.AppendToArray, Element.CreateArray(ActionSet.CurrentObject)));
+                        _subroutine.ObjectStack.Modify(ActionSet, Operation.AppendToArray, StructHelper.BridgeIfRequired(ActionSet.CurrentObject, v => Element.CreateArray(v)), Element.EventPlayer());
                 }
 
                 call.ExecuteSubroutine(ActionSet, _subroutine.Subroutine);

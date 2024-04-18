@@ -93,6 +93,11 @@ namespace Deltin.Deltinteger.Parse
                             parseInfo.Error($"No workshop subroutine named '{targetName}' is in the current scope", context.Subroutine.Target);
                     }
                 }
+
+                if (Ref)
+                {
+                    parseInfo.Error("Ref functions cannot be subroutines", nameRange);
+                }
             }
 
             // Setup the scope.
@@ -212,18 +217,19 @@ namespace Deltin.Deltinteger.Parse
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public DefinedMethodProvider Provider { get; }
         public InstanceAnonymousTypeLinker InstanceInfo { get; }
-        public CodeType DefinedInType { get; }
         public bool WholeContext => true;
         public LanguageServer.Location DefinedAt => Provider.DefinedAt;
         public AccessLevel AccessLevel => Provider.AccessLevel;
         IMethodExtensions IMethod.MethodInfo => Provider;
+
+        readonly CodeType definedInType;
 
         public DefinedMethodInstance(DefinedMethodProvider provider, InstanceAnonymousTypeLinker instanceInfo, CodeType definedIn)
         {
             Provider = provider;
             CodeType = provider.ReturnType?.GetRealType(instanceInfo);
             InstanceInfo = instanceInfo;
-            DefinedInType = Attributes.ContainingType = definedIn;
+            definedInType = Attributes.ContainingType = definedIn;
             Attributes.Parallelable = provider.IsSubroutine;
             Attributes.Recursive = provider.Recursive;
 
@@ -243,14 +249,17 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
+            // Used to GetRealType on the method's type.
+            var calleeThisTypeLinker = actionSet.ThisTypeLinker;
+
             actionSet = actionSet
-                .SetThisTypeLinker(methodCall.TypeArgs)
+                .MergeTypeLinker(methodCall.TypeArgs)
                 .MergeTypeLinker(InstanceInfo);
 
             if (Provider.Block != null)
-                return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.ToWorkshop, this, methodCall.TypeArgs));
+                return WorkshopFunctionBuilder.Call(actionSet, methodCall, new UserFunctionController(actionSet.ToWorkshop, this, actionSet.ThisTypeLinker, calleeThisTypeLinker));
             else
-                return MacroBuilder.CallMacroFunction(actionSet, this, methodCall);
+                return MacroBuilder.CallMacroFunction(actionSet, this, methodCall, calleeThisTypeLinker);
         }
 
         public object Call(ParseInfo parseInfo, DocRange callRange)
@@ -268,5 +277,8 @@ namespace Deltin.Deltinteger.Parse
 
             return null;
         }
+
+        public CodeType GetContainingType(InstanceAnonymousTypeLinker typeLinker) => definedInType?.GetRealType(typeLinker);
+        public bool HasContainingType() => definedInType is not null;
     }
 }

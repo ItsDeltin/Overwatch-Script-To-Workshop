@@ -16,24 +16,26 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         readonly ToWorkshop _toWorkshop;
         readonly DefinedMethodInstance _function;
         readonly InstanceAnonymousTypeLinker _typeArgLinker;
+        readonly InstanceAnonymousTypeLinker _calleeThisTypeLinker;
         readonly ClassWorkshopRelation _classRelation;
         readonly List<DefinedMethodInstance> _allVirtualOptions = new List<DefinedMethodInstance>();
 
-        public UserFunctionController(ToWorkshop toWorkshop, DefinedMethodInstance function, InstanceAnonymousTypeLinker typeArgs)
+        public UserFunctionController(ToWorkshop toWorkshop, DefinedMethodInstance function, InstanceAnonymousTypeLinker typeArgs, InstanceAnonymousTypeLinker calleeThisTypeLinker)
         {
             _toWorkshop = toWorkshop;
             _function = function;
             _typeArgLinker = typeArgs;
+            _calleeThisTypeLinker = calleeThisTypeLinker;
             _allVirtualOptions.Add(function);
 
             Attributes.IsRecursive = function.Attributes.Recursive;
 
             // If the function is defined in a type.
-            if (function.DefinedInType != null)
+            if (function.HasContainingType())
             {
                 Attributes.IsInstance = true;
 
-                var relations = new MethodClassRelations(toWorkshop, function);
+                var relations = new MethodClassRelations(toWorkshop, function, calleeThisTypeLinker);
 
                 // Get the class relation.
                 _classRelation = relations.ClassRelation;
@@ -102,7 +104,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                     RuleName = _function.Provider.SubroutineName,
                     ObjectStackName = _function.Name + "Stack",
                     VariableGlobalDefault = _function.Provider.SubroutineDefaultGlobal,
-                    ContainingType = _function.DefinedInType,
+                    ContainingType = _function.GetContainingType(_calleeThisTypeLinker),
                     TypeLinker = _typeArgLinker,
                     TargetSubroutine = targetSubroutine
                 }))
@@ -113,20 +115,22 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
 
         public void Build(ActionSet actionSet) => new MethodContentBuilder(
             actionSet: actionSet,
-            functions: from virtualOption in _allVirtualOptions select new UserFunctionBuilder(virtualOption)
+            functions: from virtualOption in _allVirtualOptions select new UserFunctionBuilder(virtualOption, _calleeThisTypeLinker)
         );
 
         class UserFunctionBuilder : IVirtualMethodHandler
         {
             readonly DefinedMethodInstance _method;
+            readonly ClassType _containingType;
 
-            public UserFunctionBuilder(DefinedMethodInstance method)
+            public UserFunctionBuilder(DefinedMethodInstance method, InstanceAnonymousTypeLinker calleeThisTypeLinker)
             {
                 _method = method;
+                _containingType = method.GetContainingType(calleeThisTypeLinker) as ClassType;
             }
 
             public void Build(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet);
-            public ClassType ContainingType() => (ClassType)_method.DefinedInType;
+            public ClassType ContainingType() => _containingType;
         }
 
         // This class is used as the key for identifying existing compatible subroutines.

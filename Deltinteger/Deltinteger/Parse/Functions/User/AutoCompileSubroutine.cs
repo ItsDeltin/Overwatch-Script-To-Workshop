@@ -23,7 +23,7 @@ class AutoCompileSubroutine : IComponent
                 userSubroutine.ContainingType.WorkingInstance is not ClassType classType ||
                 toWorkshop.ClassInitializer.IsRegistered(classType))
             {
-                var controller = new UserFunctionController(toWorkshop, (DefinedMethodInstance)userSubroutine.GetDefaultInstance(null), InstanceAnonymousTypeLinker.Empty);
+                var controller = new UserFunctionController(toWorkshop, (DefinedMethodInstance)userSubroutine.GetDefaultInstance(null), InstanceAnonymousTypeLinker.Empty, InstanceAnonymousTypeLinker.Empty);
                 controller.GetSubroutine();
             }
         }

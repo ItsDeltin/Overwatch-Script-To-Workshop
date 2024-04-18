@@ -7,19 +7,19 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
     static class MacroBuilder
     {
         /// <summary>Gets the workshop value of a macro.</summary>
-        public static IWorkshopTree CallMacroFunction(ActionSet actionSet, DefinedMethodInstance macro, MethodCall methodCall)
+        public static IWorkshopTree CallMacroFunction(ActionSet actionSet, DefinedMethodInstance macro, MethodCall methodCall, InstanceAnonymousTypeLinker calleeThisTypeLinker)
         {
             actionSet = actionSet.ContainVariableAssigner().PackThis();
 
             // The list containing the macro and all of its overriders, recursively.
             var allOptions = new List<MacroOption>();
-            allOptions.Add(new MacroOption(macro));
+            allOptions.Add(new MacroOption(macro, calleeThisTypeLinker));
 
             // Add overriders to the list.
-            var relations = new MethodClassRelations(actionSet.ToWorkshop, macro);
+            var relations = new MethodClassRelations(actionSet.ToWorkshop, macro, calleeThisTypeLinker);
             if (relations.Overriders != null)
-                allOptions.AddRange(relations.Overriders.Select(overrider => new MacroOption(overrider)));
-            
+                allOptions.AddRange(relations.Overriders.Select(overrider => new MacroOption(overrider, calleeThisTypeLinker)));
+
             // Add parameters to the assigner.
             for (int i = 0; i < macro.ParameterVars.Length; i++)
             {
@@ -40,10 +40,16 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         class MacroOption : IMacroOption
         {
             public DefinedMethodInstance Macro { get; }
-            public MacroOption(DefinedMethodInstance macro) => Macro = macro;
-            
+            readonly ClassType containingType;
+
+            public MacroOption(DefinedMethodInstance macro, InstanceAnonymousTypeLinker calleeThisTypeLinker)
+            {
+                Macro = macro;
+                containingType = macro.GetContainingType(calleeThisTypeLinker) as ClassType;
+            }
+
             // The type that the macro was defined inside.
-            public ClassType ContainingType() => (ClassType)Macro.DefinedInType;
+            public ClassType ContainingType() => containingType;
 
             // Get the workshop value of the macro.
             public IWorkshopTree GetValue(ActionSet actionSet) => Macro.Provider.MacroValue.Parse(actionSet);

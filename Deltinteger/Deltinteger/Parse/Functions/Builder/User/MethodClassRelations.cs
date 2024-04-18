@@ -14,11 +14,11 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
         /// <summary>The relation of the class that Method was defined in.</summary>
         public ClassWorkshopRelation ClassRelation { get; }
 
-        public MethodClassRelations(ToWorkshop toWorkshop, DefinedMethodInstance method)
+        public MethodClassRelations(ToWorkshop toWorkshop, DefinedMethodInstance method, InstanceAnonymousTypeLinker calleeThisTypeLinker)
         {
             Method = method;
-            
-            if (method.DefinedInType is ClassType classType)
+
+            if (method.GetContainingType(calleeThisTypeLinker) is ClassType classType)
             {
                 // Get the class relation.
                 ClassRelation = toWorkshop.ClassInitializer.RelationFromClassType(classType);

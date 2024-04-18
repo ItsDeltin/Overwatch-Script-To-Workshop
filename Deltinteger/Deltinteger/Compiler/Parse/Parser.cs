@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNodeWithoutPopping<T>(T node) where T : INodeRange
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(Lexer.ScanTokenAt(TokenRangeStart.Peek()).Range.Start, Previous.Range.End);
+                node.Range = new DocRange(Lexer.ScanTokenAtOrLast(TokenRangeStart.Peek()).Range.Start, Previous.Range.End);
             return node;
         }
 

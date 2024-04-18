@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         ActionSet _actionSet;
         IParameterHandler _parameterHandler;
         WorkshopFunctionBuilder _functionBuilder;
-        IndexReference _objectStore;
+        IGettable _objectStore;
 
         public SubroutineBuilder(DeltinScript deltinScript, SubroutineContext context)
         {
@@ -45,22 +45,41 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             if (controller.Attributes.IsInstance)
             {
-                _objectStore = _actionSet.VarCollection.Assign(
-                    name: _context.ObjectStackName,
-                    isGlobal: _context.VariableGlobalDefault,
-                    extended: !controller.Attributes.IsRecursive && _deltinScript.Settings.SubroutineStacksAreExtended);
+                _objectStore = _context.GenerateObjectStackStrategy switch
+                {
+                    // This is required if the object store is meant to be a struct.
+                    GenerateObjectStackStrategy.UseContainingType => _context.ContainingType.GetGettableAssigner(new()
+                    {
+                        Name = _context.ObjectStackName,
+                        Extended = !controller.Attributes.IsRecursive && _deltinScript.Settings.SubroutineStacksAreExtended,
+                        IsGlobal = _context.VariableGlobalDefault,
+                        StoreType = StoreType.FullVariable,
+                        VariableType = VariableType.Dynamic
+                    }).GetValue(new GettableAssignerValueInfo(_actionSet)
+                    {
+                        SetInitialValue = SetInitialValue.DoNotSet,
+                        IsRecursive = false
+                    }),
+                    // Simply one register. Used by lambdas which are instances but have no containing type.
+                    GenerateObjectStackStrategy.OneRegister or _ => _actionSet.VarCollection.Assign(
+                        name: _context.ObjectStackName,
+                        isGlobal: _context.VariableGlobalDefault,
+                        extended: !controller.Attributes.IsRecursive && _deltinScript.Settings.SubroutineStacksAreExtended),
+                };
 
                 // Set the objectStore as an empty array if the subroutine is recursive.
                 if (controller.Attributes.IsRecursive)
                 {
                     // Initialize as empty array.
-                    _actionSet.InitialSet().AddAction(_objectStore.SetVariable(Element.EmptyArray()));
+                    _objectStore.Set(_actionSet.InitialSet(), Element.EmptyArray());
 
                     // Add to assigner with the last of the objectStore stack being the object instance.
                     _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, new(Element.LastOf(_objectStore.GetVariable())), _actionSet.IndexAssigner);
 
                     // Set the actionSet.
-                    _actionSet = _actionSet.New(Element.LastOf(_objectStore.Get())).PackThis().New(new SourceIndexReference(_objectStore.CreateChild(Element.CountOf(_objectStore.Get()) - 1)));
+                    var selfReference = StructHelper.BridgeIfRequired(_objectStore.GetVariable(), Element.LastOf);
+                    var selfSource = new SourceIndexReference(_objectStore.ChildFromClassReference(Element.CountOf(StructHelper.ExtractArbritraryValue(_objectStore.GetVariable())) - 1));
+                    _actionSet = _actionSet.New(selfReference).PackThis().New(selfSource);
                 }
                 else
                 {
@@ -68,7 +87,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                     _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, new(_objectStore), _actionSet.IndexAssigner);
 
                     // Set the actionSet.
-                    _actionSet = _actionSet.New(_objectStore.Get()).PackThis().New(new SourceIndexReference(_objectStore));
+                    _actionSet = _actionSet.New(_objectStore.GetVariable()).PackThis().New(new SourceIndexReference(_objectStore));
                 }
             }
 
@@ -96,7 +115,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
                 // Pop object array.
                 if (_context.Controller.Attributes.IsInstance)
-                    _actionSet.AddAction(_objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(_objectStore.GetVariable()) - 1));
+                    _objectStore.Modify(_actionSet, Operation.RemoveFromArrayByIndex, Element.CountOf(_objectStore.GetVariable()) - 1, Element.EventPlayer());
             }
 
             // Add the subroutine.
@@ -115,5 +134,12 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
         public IWorkshopFunctionController Controller;
         public InstanceAnonymousTypeLinker TypeLinker;
         public Subroutine TargetSubroutine;
+        public GenerateObjectStackStrategy GenerateObjectStackStrategy;
+    }
+
+    public enum GenerateObjectStackStrategy
+    {
+        UseContainingType,
+        OneRegister
     }
 }

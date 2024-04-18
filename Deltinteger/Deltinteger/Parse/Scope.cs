@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         readonly List<IVariableInstance> _variables = new List<IVariableInstance>();
         readonly List<IMethod> _methods = new List<IMethod>();
         readonly List<ICodeTypeInitializer> _types = new List<ICodeTypeInitializer>();
-        
+
         public Scope Parent { get; }
         public string ErrorName { get; set; } = "current scope";
         public bool PrivateCatch { get; set; }
@@ -180,7 +180,7 @@ namespace Deltin.Deltinteger.Parse
             // If there were any functions that share the variable name, return the method group.
             return new[] { new MethodGroup(name, functions.ToArray()) };
         }
-        
+
         public bool Conflicts(IScopeable scopeable, bool variables = true, bool functions = true)
         {
             bool conflicts = false;
@@ -250,7 +250,8 @@ namespace Deltin.Deltinteger.Parse
                     if (variable is MethodGroup == false && scope.WasScopedAtPosition(variable, pos, getter))
                         // If TagPlayerVariables is true and the variable is a player variable, use a new completion item that highlights the variable.
                         if (TagPlayerVariables && variable.Provider.VariableType == VariableType.Player)
-                            completions.Add(new CompletionItem() {
+                            completions.Add(new CompletionItem()
+                            {
                                 Label = "★ " + variable.Name,
                                 SortText = "!" + variable.Name, // Prepend '!' to the variable name so it shows up at the top of the completion list.
                                 InsertText = variable.Name, // Override InsertText so that the star is not inserted with the variable name.
@@ -321,7 +322,7 @@ namespace Deltin.Deltinteger.Parse
         Scope IScopeProvider.GetObjectBasedScope() => this;
         Scope IScopeProvider.GetStaticBasedScope() => this;
         IMethod IScopeProvider.GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo functionOverrideInfo) => throw new NotImplementedException();
-        IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => throw new NotImplementedException();
+        IVariableInstance IScopeProvider.GetOverridenVariable(string variableName) => null;
         void IScopeAppender.AddObjectBasedScope(IMethod function) => AddNativeMethod(function);
         void IScopeAppender.AddStaticBasedScope(IMethod function) => AddNativeMethod(function);
         void IScopeAppender.AddObjectBasedScope(IVariableInstance variable) => AddNativeVariable(variable);
