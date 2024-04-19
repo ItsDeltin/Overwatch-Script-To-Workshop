@@ -23,9 +23,10 @@ namespace Deltin.Deltinteger.Parse
         public bool Parallel { get; private set; }
 
         // We do not need to worry about these values.
-        public AnonymousType[] GenericTypes { get; } = new AnonymousType[0];
-        public IMethodProvider[] Methods { get; } = new IMethodProvider[0]; // The methods of the struct declaration. This is currently unused.
-        public IVariable[] StaticVariables { get; } = new IVariable[0];
+        public AnonymousType[] GenericTypes { get; } = [];
+        public IMethodProvider[] Methods { get; } = []; // The methods of the struct declaration. This is currently unused.
+        public IVariable[] StaticVariables { get; } = [];
+        public IEnumerable<IVariable> InstanceInlineVariables { get; } = [];
 
         private readonly ParseInfo _parseInfo;
         private readonly Scope _scope;

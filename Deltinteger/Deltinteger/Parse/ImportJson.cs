@@ -242,6 +242,7 @@ class ImportJson : IExpression
     {
         string structName = "{ ";
         readonly List<IVariable> variables = new();
+        readonly List<IVariable> inlineVariables = new();
         readonly List<IVariable> staticVariables = new();
         readonly List<IMethodProvider> methods = new();
         readonly List<AnonymousType> genericTypes = new();
@@ -263,12 +264,13 @@ class ImportJson : IExpression
         // public void AddMethod(IMethodProvider method) => methods.Add(method);
         // public void AddGenericType(AnonymousType type) => genericTypes.Add(type);
 
-        public IStructProvider GetProvider() => new StructProvider(structName + " }", variables.ToArray(), staticVariables.ToArray(), methods.ToArray(), genericTypes.ToArray());
+        public IStructProvider GetProvider() => new StructProvider(structName + " }", variables.ToArray(), staticVariables.ToArray(), inlineVariables, methods.ToArray(), genericTypes.ToArray());
 
         record StructProvider(
             string Name,
             IVariable[] Variables,
             IVariable[] StaticVariables,
+            IEnumerable<IVariable> InstanceInlineVariables,
             IMethodProvider[] Methods,
             AnonymousType[] GenericTypes) : IStructProvider
         {

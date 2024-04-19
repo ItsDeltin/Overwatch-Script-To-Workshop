@@ -56,6 +56,10 @@ namespace Deltin.Deltinteger.Parse
                 ObjectScope.AddNativeVariable(_variables[i]);
             }
 
+            // Inline variables
+            foreach (var inlineVariable in _provider.InstanceInlineVariables)
+                inlineVariable.AddInstance(this, _typeLinker);
+
             // Static variables
             foreach (var variable in _provider.StaticVariables)
                 variable.AddInstance(this, _typeLinker);

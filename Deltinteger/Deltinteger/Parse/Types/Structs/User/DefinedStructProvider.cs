@@ -127,6 +127,7 @@ namespace Deltin.Deltinteger.Parse
 
                 _variablesCallTypeAssigners.Add(structCalls);
             }
+            else InstanceInlineVariables.Add(variable.Provider);
         }
         public void AddStaticBasedScope(IVariableInstance variable)
         {

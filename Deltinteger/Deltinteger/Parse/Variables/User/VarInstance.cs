@@ -72,9 +72,9 @@ namespace Deltin.Deltinteger.Parse
             allMacros.Add(new VariableInstanceOption(this));
 
             // Get the class relation.
-            if (_definedIn != null)
+            if (_definedIn is not null && _definedIn.GetRealType(actionSet.ThisTypeLinker) is ClassType definedInClassType)
             {
-                var relation = actionSet.ToWorkshop.ClassInitializer.RelationFromClassType((ClassType)_definedIn.GetRealType(actionSet.ThisTypeLinker));
+                var relation = actionSet.ToWorkshop.ClassInitializer.RelationFromClassType(definedInClassType);
 
                 // Extract the virtual functions.
                 allMacros.AddRange(relation.ExtractOverridenElements<VariableInstance>(extender => extender.Name == Name)
