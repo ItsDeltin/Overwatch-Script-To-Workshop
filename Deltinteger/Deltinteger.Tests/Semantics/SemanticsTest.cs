@@ -69,4 +69,40 @@ public class SemanticsTest
         }
         """).AssertSearchError("Functions that directly modify arrays requires a variable as the source");
     }
+
+    [TestMethod("Call ref function from another local function")]
+    public void CallRefFunctionFromAnotherLocalFunction()
+    {
+        Setup();
+
+        // Calling ref from non-ref function: Error
+        Compile("""
+        struct TestStruct {
+            public Number Local;
+
+            public void FuncA() {
+                FuncB();
+            }
+
+            public ref void FuncB() {
+                Local = 3;
+            }
+        }
+        """).AssertSearchError("Cannot call ref function in a non-ref function");
+
+        // Calling ref from ref function: Ok
+        Compile("""
+        struct TestStruct {
+            public Number Local;
+
+            public ref void FuncA() {
+                FuncB();
+            }
+
+            public ref void FuncB() {
+                Local = 3;
+            }
+        }
+        """).AssertOk();
+    }
 }

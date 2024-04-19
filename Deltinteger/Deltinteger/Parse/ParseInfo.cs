@@ -27,6 +27,7 @@ namespace Deltin.Deltinteger.Parse
         public VariableModifierGroup ContextualVariableModifiers { get; private set; }
         public ReturnTracker ReturnTracker { get; private set; }
         public VanillaScope ScopedVanillaVariables { get; init; }
+        public bool IsInRefFunction { get; init; }
 
         // Target
         public CodeType ExpectingType { get; private set; }
@@ -63,6 +64,7 @@ namespace Deltin.Deltinteger.Parse
             ContextualVariableModifiers = other.ContextualVariableModifiers;
             ReturnTracker = other.ReturnTracker;
             ScopedVanillaVariables = other.ScopedVanillaVariables;
+            IsInRefFunction = other.IsInRefFunction;
             ExpectingType = other.ExpectingType;
             IsUsedAsValue = other.IsUsedAsValue;
             LocalVariableTracker = other.LocalVariableTracker;
@@ -101,6 +103,7 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetThisType(IDefinedTypeInitializer typeInitializer) => new ParseInfo(this) { TypeInitializer = typeInitializer };
         public ParseInfo SetContextualModifierGroup(VariableModifierGroup modifierGroup) => new ParseInfo(this) { ContextualVariableModifiers = modifierGroup };
         public ParseInfo SetReturnTracker(ReturnTracker returnTracker) => new ParseInfo(this) { ReturnTracker = returnTracker };
+        public ParseInfo SetIsInRefFunction(bool isInRefFunction) => new(this) { IsInRefFunction = isInRefFunction };
         public ParseInfo ClearExpectations() => new ParseInfo(this)
         {
             ExpectingType = null,

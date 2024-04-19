@@ -156,7 +156,8 @@ namespace Deltin.Deltinteger.Parse
             var parseInfo = _parseInfo
                 .SetReturnType(ReturnType)
                 .SetThisType(ContainingType)
-                .SetCallInfo(CallInfo);
+                .SetCallInfo(CallInfo)
+                .SetIsInRefFunction(Ref);
 
             // Ignore struct variable settability errors if this is a Ref method.
             if (Ref)
@@ -273,7 +274,14 @@ namespace Deltin.Deltinteger.Parse
 
             // If this is a Ref function, ensure the source is a settable variable.
             if (Provider.Ref)
-                SourceVariableResolver.GetSourceVariable(parseInfo, callRange);
+            {
+                // Calling function from another value.
+                if (parseInfo.SourceExpression is not null)
+                    SourceVariableResolver.GetSourceVariable(parseInfo, callRange);
+                // Calling function from the current this object.
+                else if (!parseInfo.IsInRefFunction)
+                    parseInfo.Error("Cannot call ref function in a non-ref function", callRange);
+            }
 
             return null;
         }
