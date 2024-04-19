@@ -162,7 +162,7 @@ namespace Deltin.Deltinteger.Parse
         public override CodeType GetInstance() => new DefinedClass(_parseInfo, this, GenericTypes);
         public override CodeType GetInstance(GetInstanceInfo instanceInfo) => new DefinedClass(_parseInfo, this, instanceInfo.Generics);
         public IMethod GetOverridenFunction(DeltinScript deltinScript, FunctionOverrideInfo overrideInfo) => Extends.Elements.GetVirtualFunction(deltinScript, overrideInfo.Name, overrideInfo.ParameterTypes);
-        public IVariableInstance GetOverridenVariable(string variableName) => Extends.Elements.GetVirtualVariable(variableName);
+        public IVariableInstance GetOverridenVariable(string variableName) => Extends?.Elements.GetVirtualVariable(variableName);
         Scope IScopeProvider.GetObjectBasedScope() => _operationalObjectScope;
         Scope IScopeProvider.GetStaticBasedScope() => _operationalStaticScope;
         void IScopeAppender.AddObjectBasedScope(IMethod function)
