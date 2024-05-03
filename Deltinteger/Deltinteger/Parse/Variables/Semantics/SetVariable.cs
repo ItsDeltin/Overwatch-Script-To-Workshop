@@ -50,7 +50,11 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public void Translate(ActionSet actionSet) => _operation.Resolve(new AssignmentOperationInfo(_comment, actionSet, _variableResolve.ParseElements(actionSet), _value.Parse(actionSet)));
+        public void Translate(ActionSet actionSet)
+        {
+            var elements = _variableResolve.ParseElements(actionSet);
+            _operation.Resolve(new AssignmentOperationInfo(_comment, actionSet, elements, _value.Parse(actionSet.SetTempAssign(new(elements.IndexReference)))));
+        }
 
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => _comment = comment;
 

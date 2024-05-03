@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Variables.VanillaLink;
 
@@ -17,23 +18,12 @@ namespace Deltin.Deltinteger.Parse
         {
             var inline = _attributes.StoreType == StoreType.None || info.Inline;
 
-            // Get the initial value.
-            IWorkshopTree initialValue = Element.Num(0);
-            bool hasDefaultValue = true;
-
-            // Set the initial value to the override if it exists.
-            if (info.InitialValueOverride != null)
-                initialValue = info.InitialValueOverride;
-
-            // Otherwise, use the var's initial value.
-            else if (_attributes.DefaultValue != null)
-                initialValue = _attributes.DefaultValue.GetDefaultValue(info.ActionSet);
-
-            // No default value
-            else hasDefaultValue = false;
-
             // Inline
-            if (inline) return new GettableAssignerResult(new WorkshopElementReference(initialValue), initialValue);
+            if (inline)
+            {
+                var (inlineValue, _) = GetInitialValue(info, null);
+                return new GettableAssignerResult(new WorkshopElementReference(inlineValue), inlineValue);
+            }
 
             // Create the index reference
             IndexReference value;
@@ -56,6 +46,8 @@ namespace Deltin.Deltinteger.Parse
             var persistantVariables = info.ActionSet?.ToWorkshop.PersistentVariables;
             var resetNonpersistent = persistantVariables?.Enabled ?? false;
 
+            var (initialValue, hasDefaultValue) = GetInitialValue(info, value);
+
             // Set persistent.
             if (_attributes.Persist && resetNonpersistent)
             {
@@ -72,7 +64,7 @@ namespace Deltin.Deltinteger.Parse
                         info.ActionSet.AddAction(recursive.Push((Element)initialValue));
                     }
                     else
-                        info.ActionSet.AddAction(value.SetVariable((Element)initialValue));
+                        value.Set(info.ActionSet, initialValue, null, null);
                 }
                 else if (resetNonpersistent && (info.SetInitialValue != SetInitialValue.DoNotSet || info.ForceNonpersistentClear))
                 {
@@ -83,6 +75,25 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return new GettableAssignerResult(value, initialValue);
+        }
+
+        (IWorkshopTree Value, bool HasDefault) GetInitialValue(GettableAssignerValueInfo info, IGettable bonusRegister)
+        {
+            // Set the initial value to the override if it exists.
+            if (info.InitialValueOverride != null)
+                return (info.InitialValueOverride, true);
+
+            // Otherwise, use the var's initial value.
+            else if (_attributes.DefaultValue != null)
+            {
+                var actionSet = info.ActionSet;
+                if (bonusRegister is not null && info.ActionSet.DeltinScript.Settings.NewClassRegisterOptimization)
+                    actionSet = actionSet.SetTempAssign(new(bonusRegister));
+
+                return (_attributes.DefaultValue.GetDefaultValue(actionSet), true);
+            }
+
+            return (Element.Num(0), false);
         }
 
         public IGettable AssignClassStacks(GetClassStacks info)

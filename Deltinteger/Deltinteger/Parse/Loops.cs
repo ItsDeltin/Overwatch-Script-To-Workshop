@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Translate the block.
                 var loopHelper = new LoopFlowHelper(actionSet);
-                Block.Translate(actionSet.SetLoop(loopHelper));
+                actionSet.SetLoop(loopHelper).CompileStatement(Block);
 
                 // Resolve continues.
                 loopHelper.ContinueToHere();
@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Translate the block.
                 var loopHelper = new LoopFlowHelper(actionSet);
-                Block.Translate(actionSet.SetLoop(loopHelper));
+                actionSet.SetLoop(loopHelper).CompileStatement(Block);
 
                 // Resolve continues.
                 loopHelper.ContinueToHere();
@@ -227,7 +227,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.IndexAssigner.Add(DefinedVariable, gettable);
             }
             else if (Initializer != null)
-                Initializer.Translate(actionSet);
+                actionSet.CompileStatement(Initializer);
 
             // Get the condition.
             Element condition;
@@ -237,13 +237,13 @@ namespace Deltin.Deltinteger.Parse
 
             // Only use workshop continues if there is no iterator statement.
             var loopHelper = new LoopFlowHelper(actionSet, Iterator == null);
-            Block.Translate(actionSet.SetLoop(loopHelper));
+            actionSet.SetLoop(loopHelper).CompileStatement(Block);
 
             // Resolve continues.
             loopHelper.ContinueToHere();
 
             if (Iterator != null)
-                Iterator.Translate(actionSet);
+                actionSet.CompileStatement(Iterator);
 
             actionSet.AddAction(Element.End());
 
@@ -317,7 +317,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Translate the block.
             var loopHelper = new LoopFlowHelper(actionSet, canAutoFor);
-            Block.Translate(actionSet.SetLoop(loopHelper));
+            actionSet.SetLoop(loopHelper).CompileStatement(Block);
 
             // Resolve continues.
             loopHelper.ContinueToHere();
@@ -383,7 +383,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Translate the block.
             var loopHelper = new LoopFlowHelper(actionSet, false);
-            block.Translate(actionSet.SetLoop(loopHelper));
+            actionSet.SetLoop(loopHelper).CompileStatement(block);
 
             // Resolve continues.
             loopHelper.ContinueToHere();

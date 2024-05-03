@@ -1,5 +1,6 @@
 namespace Deltin.Deltinteger.Parse;
 
+using Deltin.Deltinteger.Compiler;
 using Elements;
 
 static class ToWorkshopHelper
@@ -33,5 +34,10 @@ static class ToWorkshopHelper
             });
         }
         return value;
+    }
+
+    public static string LogScriptLocation(ScriptFile script, DocRange range)
+    {
+        return " in " + script.GetFileName() + " at line " + (range.Start.Line + 1);
     }
 }

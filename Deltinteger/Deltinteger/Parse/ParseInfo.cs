@@ -278,12 +278,6 @@ namespace Deltin.Deltinteger.Parse
 
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
 
-        public string WorkshopLogRange(DocRange range)
-        {
-            var fileName = System.IO.Path.GetFileName(this.Script.Document.Uri.LocalPath);
-            return " in '" + fileName + "' at line " + range.Start.Line;
-        }
-
         public DiagnosticsToken CreateDiagnosticsToken(DocRange range) => new DiagnosticsToken(Script.Diagnostics, range);
 
         public void Error(string message, DocRange range) => Script.Diagnostics.Error(message, range);

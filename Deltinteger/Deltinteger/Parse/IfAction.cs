@@ -72,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet.AddAction(ifStart);
 
             // Translate the if block.
-            Block.Translate(actionSet);
+            actionSet.CompileStatement(Block);
 
             // 'block caps' are skips that are added to the end of the if block and each else-if block.
             // The skips skip to the end of the entire if/else-if/else.
@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(elseIfStart);
 
                 // Translate the else-if block.
-                ElseIfs[i].Block.Translate(actionSet);
+                actionSet.CompileStatement(ElseIfs[i].Block);
 
                 // If this is not the last block in the entire if/else-if/else list, add the 'block cap'.
                 if (!isLast)
@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // If there is an else block, translate it.
-            if (ElseBlock != null) ElseBlock.Translate(actionSet);
+            if (ElseBlock != null) actionSet.CompileStatement(ElseBlock);
 
             // contextCap marks the end of the entire if/else-if/list.
             SkipEndMarker contextCap = new SkipEndMarker();
@@ -140,7 +140,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet.AddAction(newIf);
 
             // Translate the if block.
-            Block.Translate(actionSet);
+            actionSet.CompileStatement(Block);
 
             // Add the else-ifs.
             for (int i = 0; i < ElseIfs.Length; i++)
@@ -149,14 +149,14 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(Element.ElseIf(ElseIfs[i].Expression.Parse(actionSet)).AddComment(ElseIfs[i].Comment));
 
                 // Translate the else-if block.
-                ElseIfs[i].Block.Translate(actionSet);
+                actionSet.CompileStatement(ElseIfs[i].Block);
             }
 
             // If there is an else block, translate it.
             if (ElseBlock != null)
             {
                 actionSet.AddAction(Element.Else().AddComment(ElseComment));
-                ElseBlock.Translate(actionSet);
+                actionSet.CompileStatement(ElseBlock);
             }
 
             // Add the end of the if.

@@ -226,6 +226,9 @@ namespace Deltin.Deltinteger.Parse
 
                     SourceIndexReference source = new SourceIndexReference(currentObjectReference, currentObject);
                     type.AddObjectVariablesToAssigner(actionSet.ToWorkshop, source, currentAssigner);
+
+                    if (type is ClassType && currentObject is Element currentObjectAsElement && actionSet.ValidateReferences is not null)
+                        actionSet.ValidateReferences.Add(currentObjectAsElement, ExprContextTree[i].ReferenceErrorName(), _parseInfo.Script, ExprContextTree[i].GetRange());
                 }
 
                 // If this isn't the last in the tree, set it as the target.
@@ -286,6 +289,7 @@ namespace Deltin.Deltinteger.Parse
         DocRange GetRange();
         bool CanBeSetDirectly();
         bool CanBeSetReference();
+        string ReferenceErrorName();
     }
 
     /// <summary>Expressions in the tree.</summary>
@@ -309,6 +313,7 @@ namespace Deltin.Deltinteger.Parse
         public DocRange GetRange() => _expressionContext.Range;
         public bool CanBeSetDirectly() => false;
         public bool CanBeSetReference() => _expression.Type()?.AsReferenceResetSettability ?? true;
+        public string ReferenceErrorName() => null;
     }
 
     /// <summary>Functions in the expression tree.</summary>
@@ -335,6 +340,7 @@ namespace Deltin.Deltinteger.Parse
         public DocRange GetRange() => _methodContext.Target.Range;
         public bool CanBeSetDirectly() => false;
         public bool CanBeSetReference() => _methodCall.Type().AsReferenceResetSettability;
+        public string ReferenceErrorName() => null;
     }
 
     /// <summary>Variables or types in the expression tree.</summary>
@@ -497,6 +503,7 @@ namespace Deltin.Deltinteger.Parse
 
         public bool CanBeSetDirectly() => _chosenPath == null ? false : _chosenPath.CanBeSetDirectly();
         public bool CanBeSetReference() => _chosenPath == null ? false : _chosenPath.CanBeSetReference();
+        public string ReferenceErrorName() => _name;
 
         interface IPotentialPathOption
         {

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse.Workshop;
+using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -17,10 +18,12 @@ namespace Deltin.Deltinteger.Parse
         readonly List<ClassProviderComboCollection> _providerComboCollections = new List<ClassProviderComboCollection>();
         readonly List<ClassWorkshopRelation> _relations = new List<ClassWorkshopRelation>();
         public IndexReference[] Stacks { get; private set; } // The object variables.
+        public bool UseClassGenerations { get; }
 
         public ClassWorkshopInitializerComponent(ToWorkshop toWorkshop)
         {
             _toWorkshop = toWorkshop;
+            UseClassGenerations = _toWorkshop.DeltinScript.Settings.TrackClassGenerations;
 
             // Init classes then assign stacks.
             InitClasses();
@@ -200,6 +203,9 @@ namespace Deltin.Deltinteger.Parse
 
         public IReadOnlyDictionary<IVariableInstance, IGettable> GetVariableGettables(IVariableInstance[] variables, IWorkshopTree reference)
         {
+            if (_initializer.UseClassGenerations)
+                reference = Element.XOf(reference);
+
             var variablesToGettables = new Dictionary<IVariableInstance, IGettable>();
 
             // 'stack' represents an index in the list of class variables.

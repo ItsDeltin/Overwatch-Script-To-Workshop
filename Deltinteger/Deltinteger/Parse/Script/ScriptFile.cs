@@ -46,6 +46,8 @@ namespace Deltin.Deltinteger.Parse
 
         public Location GetLocation(DocRange range) => new Location(Uri, range);
 
+        public string GetFileName() => System.IO.Path.GetFileName(Document.Uri.LocalPath);
+
         public void AddCompletionRange(ICompletionRange completionRange) => _completionRanges.Add(completionRange);
         public List<ICompletionRange> GetCompletionRanges() => _completionRanges;
 

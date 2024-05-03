@@ -269,6 +269,18 @@ namespace Deltin.Deltinteger.Elements
         public static Element SetPlayerVariable(IWorkshopTree targetPlayer, IWorkshopTree variable, IWorkshopTree value) => Part("Set Player Variable", targetPlayer, variable, value);
         public static Element SetGlobalVariableAtIndex(IWorkshopTree variable, IWorkshopTree index, IWorkshopTree value) => Part("Set Global Variable At Index", variable, index, value);
         public static Element SetPlayerVariableAtIndex(IWorkshopTree targetPlayer, IWorkshopTree variable, IWorkshopTree index, IWorkshopTree value) => Part("Set Player Variable At Index", targetPlayer, variable, index, value);
+        public static Element Aggregate(IEnumerable<Element> elements, Func<IWorkshopTree, IWorkshopTree, Element> function)
+        {
+            Element result = null;
+            foreach (var value in elements)
+            {
+                if (result is null)
+                    result = value;
+                else
+                    result = function(result, value);
+            }
+            return result ?? Null();
+        }
 
         public static Element Hud(
             IWorkshopTree players = null,

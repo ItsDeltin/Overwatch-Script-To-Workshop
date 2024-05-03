@@ -100,14 +100,17 @@ class EmulateStack(EmulateState state, Rule rule)
     {
         while (action < rule.Actions.Length)
         {
-            var callRule = ExecuteAction();
+            var (callRule, abort) = ExecuteAction();
+
             if (callRule is not null)
                 return new ExecutedAction.CallRule(callRule);
+            else if (abort)
+                break;
         }
         return new ExecutedAction.Completed();
     }
 
-    string? ExecuteAction()
+    (string? CallRule, bool Abort) ExecuteAction()
     {
         var act = ConsumeAction();
 
@@ -127,7 +130,7 @@ class EmulateStack(EmulateState state, Rule rule)
                     loopStack.Pop();
                     break;
             }
-            return null;
+            return (null, false);
         }
 
         switch (act.Function.Name)
@@ -158,6 +161,17 @@ class EmulateStack(EmulateState state, Rule rule)
                     var value = Evaluate(P(act, 2));
                     var variable = state.GetGlobalVariable(name);
                     variable.Modify(var => var.Modify(operation, value));
+                    break;
+                }
+
+            case "Modify Global Variable At Index":
+                {
+                    var name = EmulateHelper.ExtractVariableName(P(act, 0)).Unwrap();
+                    var index = Evaluate(P(act, 1));
+                    var operation = EmulateHelper.ExtractOperation(P(act, 2)).Unwrap();
+                    var value = Evaluate(P(act, 3));
+                    var variable = state.GetGlobalVariable(name);
+                    variable.Modify(var => var.ModifyAtIndex(index, operation, value));
                     break;
                 }
 
@@ -234,13 +248,16 @@ class EmulateStack(EmulateState state, Rule rule)
 
             case "Call Subroutine":
                 var subroutineName = EmulateHelper.ExtractSubroutineName(P(act, 0)).Unwrap();
-                return subroutineName;
+                return (subroutineName, false);
+
+            case "Abort":
+                return (null, true);
 
             default:
                 throw new Exception("Unhandled action: " + act.Function.Name);
         }
 
-        return null;
+        return (null, false);
     }
 
     void ExecuteIf(Element ifAction)

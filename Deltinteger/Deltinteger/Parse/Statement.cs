@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
         public DeleteAction(ParseInfo parseInfo, Scope scope, Delete deleteContext)
         {
             _deleteValue = parseInfo.GetExpression(scope, deleteContext.Deleting);
-            _errorMessage = parseInfo.WorkshopLogRange(deleteContext.DeleteToken.Range);
+            _errorMessage = ToWorkshopHelper.LogScriptLocation(parseInfo.Script, deleteContext.DeleteToken.Range);
 
             if (!_deleteValue.Type().CanBeDeleted)
                 parseInfo.Script.Diagnostics.Error($"Type '{_deleteValue.Type().Name}' cannot be deleted", deleteContext.Deleting.Range);
@@ -102,10 +102,14 @@ namespace Deltin.Deltinteger.Parse
             var classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // Ensure the value is not zero.
-            var builder = IfBuilder.If(actionSet, delete, () =>
+            var builder = IfBuilder.If(actionSet, classData.IsReferenceValid(delete), () =>
             {
+                // Increment generation
+                if (classData.UseClassGenerations)
+                    classData.ClassGenerations.Modify(actionSet, Operation.Add, Element.Num(1), null, [classData.GetPointer(delete)]);
+
                 // Remove the variable from the list of classes.
-                classData.ClassIndexes.Set(actionSet, value: 0, index: delete);
+                classData.ClassIndexes.Set(actionSet, value: 0, index: classData.GetPointer(delete));
 
                 // Delete the object.
                 _deleteValue.Type().Delete(actionSet, delete);
@@ -114,7 +118,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 builder.Else(() =>
                 {
-                    actionSet.Log("[Error] Attempted to delete reference of zero" + _errorMessage);
+                    actionSet.Log("[Error] Attempted to delete invalid reference" + _errorMessage);
                 });
             }
             builder.Ok();

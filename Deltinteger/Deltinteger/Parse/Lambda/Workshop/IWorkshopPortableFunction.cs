@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
     {
         /// <summary>The unique key of the lambda.</summary>
         ILambdaApplier Key { get; }
-        
+
         /// <summary>The return type of the lambda.</summary>
         CodeType ReturnType { get; }
 
@@ -50,12 +50,14 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
             public AnonymousRunner(LambdaAction lambda, RecycleWorkshopVariableAssigner parameterAssigner)
             {
                 _lambda = lambda;
-                _parameters = (from parameter in _lambda.Parameters select new AssignedPortableParameter(
+                _parameters = (from parameter in _lambda.Parameters
+                               select new AssignedPortableParameter(
                     parameter,
                     // Create the gettable.
                     parameter.CodeType
                         .GetGettableAssigner(new AssigningAttributes(parameter.Name, true, false))
-                        .GetValue(new GettableAssignerValueInfo(parameterAssigner) {
+                        .GetValue(new GettableAssignerValueInfo(parameterAssigner)
+                        {
                             SetInitialValue = SetInitialValue.DoNotSet
                         }))).ToArray();
             }
@@ -79,7 +81,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                         returnHandler.ReturnValue(expr);
                 }
                 else
-                    _lambda.Statement.Translate(actionSet);
+                    actionSet.CompileStatement(_lambda.Statement);
             }
 
             ILambdaApplier IWorkshopPortableFunctionRunner.Key => _lambda;
@@ -112,7 +114,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
         {
             _deltinScript = deltinScript;
             _methodGroup = methodGroup;
-        } 
+        }
 
         public IWorkshopPortableFunctionRunner CreateRunner(RecycleWorkshopVariableAssigner parameterAssigner) =>
             new MethodGroupRunner(_deltinScript, _methodGroup, parameterAssigner);
@@ -130,16 +132,18 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
 
                 // Create gettables for the method's parameters.
                 _parameterGettables = (from parameter in Method.Parameters
-                    select parameter.GetCodeType(deltinScript)
-                        .GetGettableAssigner(new AssigningAttributes(parameter.Name, true, false))
-                        .GetValue(new GettableAssignerValueInfo(parameterAssigner) {
-                            SetInitialValue = SetInitialValue.DoNotSet
-                        })).ToArray();
+                                       select parameter.GetCodeType(deltinScript)
+                                           .GetGettableAssigner(new AssigningAttributes(parameter.Name, true, false))
+                                           .GetValue(new GettableAssignerValueInfo(parameterAssigner)
+                                           {
+                                               SetInitialValue = SetInitialValue.DoNotSet
+                                           })).ToArray();
             }
 
             public void Build(ActionSet actionSet, ReturnHandler returnHandler) => Method.Parse(
                 actionSet,
-                new MethodCall(_parameterGettables.Select(gettable => gettable.GetVariable()).ToArray()) {
+                new MethodCall(_parameterGettables.Select(gettable => gettable.GetVariable()).ToArray())
+                {
                     ProvidedReturnHandler = returnHandler
                 }
             );

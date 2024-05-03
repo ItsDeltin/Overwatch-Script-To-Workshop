@@ -138,7 +138,7 @@ namespace Deltin.Deltinteger.Parse
                     switchBuilder.NextCase((Element)caseExpression.Parse(actionSet));
 
                 if (section.IsDefault) switchBuilder.AddDefault();
-                section.Block.Translate(actionSet.SetBreakHandler(switchBuilder));
+                actionSet.SetBreakHandler(switchBuilder).CompileStatement(section.Block);
             }
 
             switchBuilder.Finish((Element)expression);

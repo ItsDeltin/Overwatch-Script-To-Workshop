@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Parse.Types.Constructors
             }
 
             // Build the constructor's block.
-            public void Build(ActionSet actionSet) => _instance.Provider.Block.Translate(actionSet.SetThisTypeLinker(_instance._typeLinker));
+            public void Build(ActionSet actionSet) => actionSet.SetThisTypeLinker(_instance._typeLinker).CompileStatement(_instance.Provider.Block);
 
             // Create the parameter handler for the constructor.
             public IParameterHandler CreateParameterHandler(ActionSet actionSet, WorkshopParameter[] providedParameters)

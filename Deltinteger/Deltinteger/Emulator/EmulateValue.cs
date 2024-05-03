@@ -12,9 +12,11 @@ namespace Deltin.Deltinteger.Emulator;
 public abstract record EmulateValue
 {
     public static readonly EmulateValue Default = 0;
+    static readonly Vector ZeroVector = new(0, 0, 0);
 
     public abstract double AsNumber();
     public abstract bool AsBoolean();
+    Vector AsVector() => this as Vector ?? ZeroVector;
     public virtual int CountOf() => 0;
     public virtual EmulateValue FirstOf() => 0;
     public virtual EmulateValue LastOf() => 0;
@@ -23,7 +25,15 @@ public abstract record EmulateValue
     public EmulateValue ValueInArray(double index)
     {
         var items = Spread();
-        return index < items.Length ? items[(int)index] : Default;
+        return index < items.Length ? items[Math.Max((int)index, 0)] : Default;
+    }
+    public EmulateValue IndexOf(EmulateValue value)
+    {
+        var array = Spread();
+        for (int i = 0; i < array.Length; i++)
+            if (array[i] == value)
+                return i;
+        return -1;
     }
     public EmulateValue Append(EmulateValue value) => From([.. Spread(), .. value.Spread()]);
     public EmulateValue RemoveByValue(EmulateValue value)
@@ -70,6 +80,8 @@ public abstract record EmulateValue
         Operation.RemoveFromArrayByIndex => RemoveAtIndex(operand.AsNumber()),
         _ => throw new NotImplementedException(),
     };
+    public EmulateValue ModifyAtIndex(double index, Operation operation, EmulateValue operand) =>
+        SetAtIndex(index, ValueInArray(index).Modify(operation, operand));
 
     sealed record Number(double Value) : EmulateValue
     {
@@ -98,6 +110,12 @@ public abstract record EmulateValue
         public override double AsNumber() => 0;
         public override string ToString() => Value;
     }
+    sealed record Vector(double X, double Y, double Z) : EmulateValue
+    {
+        public override bool AsBoolean() => X + Y + Z != 0;
+        public override double AsNumber() => 0;
+        public override string ToString() => $"Vector({X}, {Y}, {Z})";
+    }
 
     public static implicit operator EmulateValue(double value) => new Number(value);
     public static implicit operator EmulateValue(int value) => new Number(value);
@@ -114,6 +132,7 @@ public abstract record EmulateValue
     public static EmulateValue From(string value) => value;
     public static EmulateValue From(EmulateValue[] values) => values;
     public static EmulateValue From(IEnumerable<EmulateValue> values) => values.ToArray();
+    public static EmulateValue From(double X, double Y, double Z) => new Vector(X, Y, Z);
 
     public static EmulateValue operator +(EmulateValue left, EmulateValue right) => Add(left, right);
     public static EmulateValue operator -(EmulateValue left, EmulateValue right) => Subtract(left, right);
@@ -174,36 +193,45 @@ public abstract record EmulateValue
             return From(number.Value);
         else if (value is Element element)
         {
-            Result<EmulateValue, string> arithmetic(IWorkshopTree[] parameters, Func<EmulateValue, EmulateValue, EmulateValue> function)
-            {
-                return Evaluate(parameters[0], state).And(Evaluate(parameters[1], state)).MapValue(v => function(v.a, v.b));
-            }
-
-            Result<EmulateValue, string> evaluateAll(IWorkshopTree[] parameters, Func<EmulateValue[], EmulateValue> then)
-            {
-                return parameters.SelectResult(p => Evaluate(p, state)).MapValue(v => then([.. v]));
-            }
-
             var name = element.Function.Name;
             var p = element.ParameterValues;
+
+            Result<EmulateValue, string> arithmetic(Func<EmulateValue, EmulateValue, EmulateValue> function)
+            {
+                return Evaluate(p[0], state).And(Evaluate(p[1], state)).MapValue(v => function(v.a, v.b));
+            }
+
+            Result<EmulateValue, string> eval(IWorkshopTree value) => Evaluate(value, state);
+
+            Result<EmulateValue, string> one(Func<EmulateValue, EmulateValue> then) => eval(p[0]).MapValue(then);
+
             return (name, p.Length) switch
             {
                 ("True", _) => From(true),
                 ("False", _) => From(false),
-                ("Add", 2) => arithmetic(p, Add),
-                ("Subtract", 2) => arithmetic(p, Subtract),
-                ("Multiply", 2) => arithmetic(p, Multiply),
-                ("Divide", 2) => arithmetic(p, Divide),
-                ("Modulo", 2) => arithmetic(p, Modulo),
+                ("Add", 2) => arithmetic(Add),
+                ("Subtract", 2) => arithmetic(Subtract),
+                ("Multiply", 2) => arithmetic(Multiply),
+                ("Divide", 2) => arithmetic(Divide),
+                ("Modulo", 2) => arithmetic(Modulo),
                 ("Compare", 3) => Evaluate(p[0], state).And(EmulateHelper.ExtractOperator(p[1])).And(Evaluate(p[2], state)).MapValue(ab_c => Compare(ab_c.a.a, ab_c.a.b, ab_c.b)),
+                ("And", 2) => arithmetic((a, b) => a.AsBoolean() && b.AsBoolean()),
+                ("Or", 2) => arithmetic((a, b) => a.AsBoolean() || b.AsBoolean()),
+                ("Not", 1) => one(value => !value.AsBoolean()),
+                ("If-Then-Else", 3) => eval(p[0]).And(eval(p[1])).And(eval(p[2])).MapValue(ab_c => ab_c.a.a.AsBoolean() ? ab_c.a.b : ab_c.b),
                 ("Count Of", 1) => Evaluate(p[0], state).MapValue(v => From(v.CountOf())),
                 ("Array", _) => p.SelectResult(v => Evaluate(v, state)).MapValue(arrayValues => From(arrayValues.ToArray())),
                 ("Empty Array", _) => From(values: []),
                 ("First Of", 1) => Evaluate(p[0], state).MapValue(v => v.FirstOf()),
                 ("Last Of", 1) => Evaluate(p[0], state).MapValue(v => v.LastOf()),
                 ("Global Variable", 1) => EmulateHelper.ExtractVariableName(p[0]).MapValue(name => state.GetGlobalVariable(name).Value),
-                ("Value In Array", 2) => arithmetic(p, (array, index) => array.ValueInArray(index)),
+                ("Value In Array", 2) => arithmetic((array, index) => array.ValueInArray(index)),
+                ("Index Of Array Value", 2) => arithmetic((array, value) => array.IndexOf(value)),
                 ("String" or "Custom String", _) => EvaluateString(element, state),
+                ("Vector", 3) => eval(p[0]).And(eval(p[1])).And(eval(p[2])).MapValue(xy_z => From(xy_z.a.a, xy_z.a.b, xy_z.b)),
+                ("X Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().X)),
+                ("Y Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().Y)),
+                ("Z Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().Z)),
                 ("Null", _) => Default, // Do we need a dedicated null value? probably not
                 (_, _) => $"Emulation for workshop function '{name}' (with {p.Length} parameters) is not supported"
             };

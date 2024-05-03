@@ -21,6 +21,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
             ClassMemoryUsed(deltinScript),
             TruncateClassData(deltinScript),
             DeleteAllClasses(deltinScript),
+            IsClassReferenceValid(deltinScript),
             CompareMap(deltinScript),
             CustomColor(deltinScript),
             Destination(deltinScript),

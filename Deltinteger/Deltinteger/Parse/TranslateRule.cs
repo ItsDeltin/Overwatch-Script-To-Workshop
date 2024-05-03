@@ -5,6 +5,7 @@ using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Parse.Functions.Builder;
 using Deltin.Deltinteger.Parse.Workshop;
 using Deltin.Deltinteger.Parse.Variables.VanillaLink;
+using System.Linq;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -42,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
             GetConditions(ruleAction);
 
             RuleReturnHandler returnHandler = new RuleReturnHandler(ActionSet);
-            ruleAction.Block.Translate(ActionSet.New(returnHandler).ContainVariableAssigner());
+            ActionSet.New(returnHandler).ContainVariableAssigner().CompileStatement(ruleAction.Block);
         }
         public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType, Team team, PlayerSelector player, bool disabled = false)
         {
@@ -151,6 +152,8 @@ namespace Deltin.Deltinteger.Parse
         public IContinueContainer ContinueHandler { get; private set; }
         public IBreakContainer BreakHandler { get; private set; }
         public ISpreadHelper SpreadHelper { get; private set; }
+        public ValidateReferences ValidateReferences { get; private set; }
+        public TempAssign TempAssign { get; private set; }
         public LinkableVanillaVariables LinkableVanillaVariables => ToWorkshop.LinkableVanillaVariables;
 
         public bool IsGlobal { get; }
@@ -159,6 +162,9 @@ namespace Deltin.Deltinteger.Parse
         public ToWorkshop ToWorkshop { get => Translate.DeltinScript.WorkshopConverter; }
 
         public int ActionCount => ActionList.Count;
+
+        int? insertActionsAt = null;
+        (ScriptFile File, DocRange Range)? location;
 
         public ActionSet(TranslateRule translate, DocRange genericErrorRange, List<IActionList> actions)
         {
@@ -188,6 +194,10 @@ namespace Deltin.Deltinteger.Parse
             ContinueHandler = other.ContinueHandler;
             BreakHandler = other.BreakHandler;
             SpreadHelper = other.SpreadHelper;
+            ValidateReferences = other.ValidateReferences;
+            TempAssign = other.TempAssign;
+            insertActionsAt = other.insertActionsAt;
+            location = other.location;
         }
 
         public ActionSet New(VarIndexAssigner indexAssigner) => new ActionSet(this)
@@ -231,6 +241,16 @@ namespace Deltin.Deltinteger.Parse
             BreakHandler = continueAndBreakHandler
         };
         public ActionSet SetSpreadHelper(ISpreadHelper spreadHelper) => new(this) { SpreadHelper = spreadHelper };
+        public ActionSet SetReferenceValidator(ValidateReferences validateReferences) => new(this) { ValidateReferences = validateReferences };
+        public ActionSet SetTempAssign(TempAssign tempAssign) => new(this) { TempAssign = tempAssign };
+        public ActionSet InsertActionsAt(int? insertActionsAt) => new(this) { insertActionsAt = insertActionsAt };
+        public ActionSet SetLocation(ScriptFile File, DocRange Range) => new(this) { location = new(File, Range) };
+
+        public void AbortOnError()
+        {
+            if (DeltinScript.Settings.AbortOnError)
+                AddAction(Element.Part("Abort"));
+        }
 
         public void AddAction(string comment, params IWorkshopTree[] actions)
         {
@@ -255,7 +275,15 @@ namespace Deltin.Deltinteger.Parse
         public void AddAction(params IWorkshopTree[] actions) => AddAction(null, actions);
         public void AddAction(params IActionList[] actions)
         {
-            ActionList.AddRange(actions);
+            if (insertActionsAt is null)
+                ActionList.AddRange(actions);
+            else
+                foreach (var add in actions)
+                {
+                    ActionList.Insert(insertActionsAt.Value, add);
+                    insertActionsAt++;
+                }
+
             if (CommentNext != null && !CommentNext.Used && actions[0] is ALAction alaction && alaction.Calling is Element element)
             {
                 element.Comment = CommentNext.GetValue();
@@ -267,6 +295,45 @@ namespace Deltin.Deltinteger.Parse
         {
             if (IsGlobal) return Translate.DeltinScript.InitialGlobal.ActionSet;
             else return Translate.DeltinScript.InitialPlayer.ActionSet;
+        }
+
+        public void CompileStatement(IStatement statement)
+        {
+            int currentAction = ActionCount;
+            var statementSet = this;
+
+            // Create ValidateReferences if class generations is enabled.
+            bool doValidateReferences = DeltinScript.Settings.TrackClassGenerations &&
+                DeltinScript.Settings.GlobalReferenceValidation;
+
+            ValidateReferences validateReferences = null;
+            if (doValidateReferences)
+            {
+                validateReferences = new();
+                statementSet = statementSet.SetReferenceValidator(validateReferences);
+            }
+
+            // Compile the statement.
+            statement.Translate(statementSet);
+
+            if (doValidateReferences && validateReferences.Any())
+            {
+                var classData = DeltinScript.GetComponent<ClassData>();
+
+                var validateSet = InsertActionsAt(currentAction);
+                IfBuilder.If(validateSet, Element.Not(
+                    Element.Aggregate(
+                        validateReferences.Collect().Select(v => classData.IsReferenceValid(v.Pointer)),
+                        Element.And
+                    )), () =>
+                    {
+                        string trace = "";
+                        if (location is not null)
+                            trace = ToWorkshopHelper.LogScriptLocation(location.Value.File, location.Value.Range);
+                        validateSet.Log($"[Error] Accessed invalid reference" + trace);
+                        validateSet.AbortOnError();
+                    }).Ok();
+            }
         }
 
         public void Log(Element content) => AddAction(Element.Part("Log To Inspector", content));

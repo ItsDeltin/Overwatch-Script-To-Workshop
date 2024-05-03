@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
         protected override void Completed()
         {
             ClassData classData = ActionSet.Translate.DeltinScript.GetComponent<ClassData>();
-            _selector.Finish(Element.ValueInArray(classData.ClassIndexes.GetVariable(), ActionSet.CurrentObject));
+            _selector.Finish(Element.ValueInArray(classData.ClassIndexes.GetVariable(), classData.GetPointer((Element)ActionSet.CurrentObject)));
         }
     }
 

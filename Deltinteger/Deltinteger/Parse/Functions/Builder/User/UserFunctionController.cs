@@ -129,7 +129,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
                 _containingType = method.GetContainingType(calleeThisTypeLinker) as ClassType;
             }
 
-            public void Build(ActionSet actionSet) => _method.Provider.Block.Translate(actionSet);
+            public void Build(ActionSet actionSet) => actionSet.CompileStatement(_method.Provider.Block);
             public ClassType ContainingType() => _containingType;
         }
 

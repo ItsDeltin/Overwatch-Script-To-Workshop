@@ -14,7 +14,7 @@ static class TestUtils
         LoadData.LoadFromFileSystem();
     }
 
-    public static CompileResult Compile(string text)
+    public static CompileResult Compile(string text, bool classGenerations = false)
     {
         Setup();
         var d = new Diagnostics();
@@ -24,7 +24,11 @@ static class TestUtils
             {
                 CompileMiscellaneousComments = false,
                 CStyleWorkshopOutput = true,
-                OptimizeOutput = false
+                OptimizeOutput = false,
+                AbortOnError = true,
+                TrackClassGenerations = classGenerations,
+                LogDeleteReferenceZero = classGenerations,
+                GlobalReferenceValidation = classGenerations
             })
         });
         return new(ds.WorkshopCode, d, ds.WorkshopRules);
@@ -95,23 +99,38 @@ readonly record struct CompileResult(string Code, Diagnostics Diagnostics, List<
 
     public readonly TickEmulationResult EmulateTick()
     {
+        string output = string.Empty;
         var emulation = new EmulateScript(Rules, IEmulateLogger.New(log =>
         {
             Debug.WriteLine(log);
             if (log.Contains("[BREAK]"))
                 Debugger.Break();
+            output += log;
         }));
         emulation.TickOne();
-        return new(emulation);
+        return new(emulation, output);
     }
 }
 
-readonly record struct TickEmulationResult(EmulateScript Emulation)
+readonly record struct TickEmulationResult(EmulateScript Emulation, string Log)
 {
     public readonly TickEmulationResult AssertVariable(string name, double value)
     {
         var actual = Emulation.GetGlobalVariableValue(name).AsNumber();
         Assert.AreEqual(value, actual, $"'{name}' has incorrect value");
+        return this;
+    }
+
+    public readonly TickEmulationResult AssertVariable(string name, bool value)
+    {
+        var actual = Emulation.GetGlobalVariableValue(name).AsBoolean();
+        Assert.AreEqual(value, actual, $"'{name}' has incorrect value");
+        return this;
+    }
+
+    public readonly TickEmulationResult AssertSearchLog(string text)
+    {
+        Assert.IsTrue(Log.Contains(text), $"Missing text '{text}' in output log");
         return this;
     }
 }

@@ -83,7 +83,9 @@ namespace Deltin.Deltinteger.Parse
         {
             // Classes are stored in the class array (`classData.ClassArray`),
             // this stores the index where the new class is created at.
-            var classReference = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
+            var classReference =
+                actionSet.TempAssign?.TryTakeNonIndexedReference() ??
+                actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
 
             int classID = actionSet.ToWorkshop.ClassInitializer.ComboFromClassType(this).ID;
             classData.GetClassIndex(classID, classReference, actionSet);

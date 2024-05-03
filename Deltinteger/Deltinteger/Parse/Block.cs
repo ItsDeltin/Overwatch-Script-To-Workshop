@@ -8,11 +8,16 @@ namespace Deltin.Deltinteger.Parse
     {
         public IStatement[] Statements { get; }
         public Scope BlockScope { get; }
-        public string EndComment {get; private set;}
+        public string EndComment { get; private set; }
+
+        readonly ParseInfo parseInfo;
+        readonly Block context;
 
 
         public BlockAction(ParseInfo parseInfo, Scope scope, Block blockContext)
         {
+            this.parseInfo = parseInfo;
+            context = blockContext;
             BlockScope = scope.Child();
 
             Statements = new IStatement[blockContext.Statements.Count];
@@ -33,8 +38,8 @@ namespace Deltin.Deltinteger.Parse
         {
             actionSet = actionSet.ContainVariableAssigner().AddRecursiveVariableTracker();
 
-            foreach (var statement in Statements)
-                statement.Translate(actionSet);
+            for (int i = 0; i < Statements.Length; i++)
+                actionSet.SetLocation(parseInfo.Script, context.Statements[i].Range).CompileStatement(Statements[i]);
 
             actionSet.RecursiveVariableTracker.PopLocal();
         }

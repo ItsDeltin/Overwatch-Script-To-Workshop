@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 namespace Deltin.Deltinteger.Parse.Settings
@@ -7,24 +6,46 @@ namespace Deltin.Deltinteger.Parse.Settings
     {
         [JsonPropertyName("entry_point")]
         public string EntryPoint { get; set; } = null;
+
         [JsonPropertyName("reset_nonpersistent")]
         public bool ResetNonpersistent { get; set; } = false;
+
         [JsonPropertyName("paste_check_is_extended")]
         public bool PasteCheckIsExtended { get; set; } = false;
+
         [JsonPropertyName("log_delete_reference_zero")]
         public bool LogDeleteReferenceZero { get; set; } = true;
+
+        [JsonPropertyName("track_class_generations")]
+        public bool TrackClassGenerations { get; set; } = false;
+
+        [JsonPropertyName("global_reference_validation")]
+        public bool GlobalReferenceValidation { get; set; } = false;
+
+        [JsonPropertyName("new_class_register_optimization")]
+        public bool NewClassRegisterOptimization { get; set; } = true;
+
+        [JsonPropertyName("abort_on_error")]
+        public bool AbortOnError { get; set; } = true;
+
         [JsonPropertyName("c_style_workshop_output")]
         public bool CStyleWorkshopOutput { get; set; } = false;
+
         [JsonPropertyName("compile_miscellaneous_comments")]
         public bool CompileMiscellaneousComments { get; set; } = true;
+
         [JsonPropertyName("out_file")]
         public string OutFile { get; set; } = null;
+
         [JsonPropertyName("variable_template")]
         public bool VariableTemplate { get; set; } = false;
+
         [JsonPropertyName("optimize_output")]
         public bool OptimizeOutput { get; set; } = true;
+
         [JsonPropertyName("use_tabs_in_workshop_output")]
         public bool UseTabsInWorkshopOutput { get; set; } = false;
+
         [JsonPropertyName("subroutine_stacks_are_extended")]
         public bool SubroutineStacksAreExtended { get; set; } = false;
 

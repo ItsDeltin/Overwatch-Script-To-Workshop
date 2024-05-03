@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
         protected override void OnlyOne() => Value = Functions.First().GetValue(ActionSet);
 
         // Nothing additional is required to instantiate the selector.
-        protected override void InitiateSelector() {}
+        protected override void InitiateSelector() { }
 
         // Prepares a new virtual value.
         protected override void InitiateNewOption(ActionSet optionSet, int classIdentifier)
@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
         private void LinkClassToValue(int classIdentifier) => _valueMaps.Add(new VirtualValueMap(_currentIndex, classIdentifier));
 
         // Nothing additional is required after finishing a macro.
-        protected override void FinalizeCurrentOption(ActionSet optionSet) {}
+        protected override void FinalizeCurrentOption(ActionSet optionSet) { }
 
         protected override void Completed()
         {
@@ -66,16 +66,17 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
                 // Use the first value as the template.
                 var template = (IStructValue)_virtualValues[0];
 
-                Value = template.Bridge(bridgeArgs => {
+                Value = template.Bridge(bridgeArgs =>
+                {
                     // Get the workshop values.
                     var steppedValues = _virtualValues
                         // Do not need to calculate GetValueWithPath, already known via bridgeArgs.Value
-                        .Skip(1) 
+                        .Skip(1)
                         // Step into the overrider values with the path provided by bridgeArgs.
                         .Select(value => IStructValue.GetValueWithPath((IStructValue)value, bridgeArgs.Path))
                         // Prepend the template value.
                         .Prepend(bridgeArgs.Value);
-                    
+
                     return CreateVirtualMap(steppedValues);
                 });
             }
@@ -94,7 +95,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.Virtual
             ClassData classData = ActionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // The class identifier, extracted from the Action Set's current object.
-            Element classIdentifier = classData.ClassIndexes.Get()[ActionSet.CurrentObject];
+            Element classIdentifier = classData.ClassIndexes.Get()[classData.GetPointer((Element)ActionSet.CurrentObject)];
 
             if (!_mappingArrayCanBeOptimizedOut)
             {

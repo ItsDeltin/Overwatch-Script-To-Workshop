@@ -10,7 +10,11 @@ namespace Deltin.Deltinteger.Parse
     {
         public const string ObjectVariableTag = "_objectVariable_";
         public const string ClassIndexesTag = "_classIndexes";
+        public const string ClassGenerationTag = "_classGenerations";
         public IndexReference ClassIndexes { get; private set; }
+        public IndexReference ClassGenerations { get; private set; }
+
+        public bool UseClassGenerations { get; private set; }
 
         public void Init(DeltinScript deltinScript)
         {
@@ -18,6 +22,10 @@ namespace Deltin.Deltinteger.Parse
             // Prematurely extends indexes array
             // deltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
             deltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(-1, index: 0));
+
+            UseClassGenerations = deltinScript.Settings.TrackClassGenerations;
+            if (UseClassGenerations)
+                ClassGenerations = deltinScript.VarCollection.Assign(ClassGenerationTag, true, false);
         }
 
         public IndexReference CreateObject(int classIdentifier, ActionSet actionSet, string internalName)
@@ -39,6 +47,31 @@ namespace Deltin.Deltinteger.Parse
             ));
             // Register the class.
             ClassIndexes.Set(actionSet, classIdentifier, index: classReference.Get());
+
+            // Increment generation
+            if (UseClassGenerations)
+                classReference.Set(actionSet, Vector(classReference.Get(), ClassGenerations.Get()[classReference.Get()], 0));
+        }
+
+        public Element IsReferenceValid(Element vectorPointer)
+        {
+            if (UseClassGenerations)
+                return And(vectorPointer, Compare(GetGeneration(vectorPointer), Operator.Equal, ClassGenerations.Get()[GetPointer(vectorPointer)]));
+            return vectorPointer;
+        }
+
+        public Element GetPointer(Element vectorPointer)
+        {
+            if (UseClassGenerations)
+                return XOf(vectorPointer);
+            return vectorPointer;
+        }
+
+        public Element GetGeneration(Element vectorPointer)
+        {
+            if (!UseClassGenerations)
+                throw new Exception("Can't get generation of pointer when UseClassGenerations is off");
+            return YOf(vectorPointer);
         }
     }
 }

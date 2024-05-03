@@ -219,7 +219,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             if (Expression != null)
                 returnHandler.ReturnValue(Expression.Parse(actionSet));
             else
-                Statement.Translate(actionSet);
+                actionSet.CompileStatement(Statement);
 
             returnHandler.ApplyReturnSkips();
 

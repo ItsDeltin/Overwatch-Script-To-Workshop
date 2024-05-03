@@ -80,6 +80,22 @@ namespace Deltin.Deltinteger.GlobalFunctions
             }
         };
 
+        public static FuncMethod IsClassReferenceValid(DeltinScript deltinScript) => new FuncMethodBuilder()
+        {
+            Name = "IsClassReferenceValid",
+            Documentation = "Returns true if the input value is not null. If class_generations is enabled, this will additionally check if the class reference is valid.",
+            ReturnType = deltinScript.Types.Boolean(),
+            Parameters = [
+                new CodeParameter("classReference", deltinScript.Types.Any())
+            ],
+            Action = (actionSet, methodCall) =>
+            {
+                if (actionSet.DeltinScript.Settings.TrackClassGenerations)
+                    return actionSet.DeltinScript.GetComponent<ClassData>().IsReferenceValid(methodCall.Get(0));
+                return methodCall.Get(0);
+            }
+        };
+
         static Element NumberOfClasses(ActionSet actionSet)
         {
             return Element.CountOf(Element.Filter(
