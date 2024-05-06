@@ -321,18 +321,11 @@ namespace Deltin.Deltinteger.Parse
                 var classData = DeltinScript.GetComponent<ClassData>();
 
                 var validateSet = InsertActionsAt(currentAction);
-                IfBuilder.If(validateSet, Element.Not(
-                    Element.Aggregate(
-                        validateReferences.Collect().Select(v => classData.IsReferenceValid(v.Pointer)),
-                        Element.And
-                    )), () =>
-                    {
-                        string trace = "";
-                        if (location is not null)
-                            trace = ToWorkshopHelper.LogScriptLocation(location.Value.File, location.Value.Range);
-                        validateSet.Log($"[Error] Accessed invalid reference" + trace);
-                        validateSet.AbortOnError();
-                    }).Ok();
+                validateSet.ToWorkshop.ValidateReferences.Validate(
+                    inserterSet: validateSet,
+                    references: [.. validateReferences.Collect().Select(reference => reference.Pointer)],
+                    file: location?.File.GetFileName(),
+                    line: (location?.Range.Start.Line ?? -1) + 1);
             }
         }
 

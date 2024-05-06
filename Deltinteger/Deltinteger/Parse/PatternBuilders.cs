@@ -76,12 +76,22 @@ namespace Deltin.Deltinteger.Parse
         public Element Value => Variable.Get();
         private readonly ActionSet _actionSet;
         private readonly Element _end;
+        private readonly Element _start;
 
         public ForBuilder(ActionSet actionSet, string variableName, Element end)
         {
             Variable = actionSet.VarCollection.Assign(variableName, actionSet.IsGlobal, false);
             _actionSet = actionSet;
             _end = end;
+            _start = 0;
+        }
+
+        public ForBuilder(ActionSet actionSet, IndexReference variable, Element end, Element start = null)
+        {
+            Variable = variable;
+            _actionSet = actionSet;
+            _end = end;
+            _start = start ?? 0;
         }
 
         public void Init()
@@ -89,9 +99,9 @@ namespace Deltin.Deltinteger.Parse
             var var = Variable.WorkshopVariable;
 
             if (var.IsGlobal)
-                _actionSet.AddAction(Element.ForGlobalVariable(var, (Element)0, _end, (Element)1));
+                _actionSet.AddAction(Element.ForGlobalVariable(var, _start, _end, (Element)1));
             else
-                _actionSet.AddAction(Element.ForPlayerVariable(Element.EventPlayer(), var, (Element)0, _end, (Element)1));
+                _actionSet.AddAction(Element.ForPlayerVariable(Element.EventPlayer(), var, _start, _end, (Element)1));
         }
 
         public void End() => _actionSet.AddAction(Element.End());

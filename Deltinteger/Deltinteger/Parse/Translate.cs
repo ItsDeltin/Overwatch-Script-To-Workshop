@@ -415,6 +415,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Complete portable functions
             WorkshopConverter.LambdaBuilder.Complete();
+            // Complete validation
+            WorkshopConverter.ValidateReferences.Complete();
 
             // Add built-in rules.
             // Initial player

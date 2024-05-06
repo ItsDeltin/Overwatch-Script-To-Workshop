@@ -22,6 +22,9 @@ namespace Deltin.Deltinteger.Parse.Settings
         [JsonPropertyName("global_reference_validation")]
         public bool GlobalReferenceValidation { get; set; } = false;
 
+        [JsonPropertyName("reference_validation_type")]
+        public ReferenceValidationType ReferenceValidationType { get; set; } = ReferenceValidationType.Subroutine;
+
         [JsonPropertyName("new_class_register_optimization")]
         public bool NewClassRegisterOptimization { get; set; } = true;
 
@@ -50,5 +53,13 @@ namespace Deltin.Deltinteger.Parse.Settings
         public bool SubroutineStacksAreExtended { get; set; } = false;
 
         public static readonly DsTomlSettings Default = new DsTomlSettings();
+    }
+
+    public enum ReferenceValidationType
+    {
+        [JsonPropertyName("inline")]
+        Inline,
+        [JsonPropertyName("subroutine")]
+        Subroutine
     }
 }

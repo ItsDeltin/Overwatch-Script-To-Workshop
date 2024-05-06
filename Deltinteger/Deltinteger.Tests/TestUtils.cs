@@ -4,6 +4,7 @@ using Deltin.Deltinteger;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Emulator;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Parse.Settings;
 
 namespace Deltinteger.Tests;
 
@@ -14,7 +15,9 @@ static class TestUtils
         LoadData.LoadFromFileSystem();
     }
 
-    public static CompileResult Compile(string text, bool classGenerations = false)
+    public static CompileResult Compile(string text,
+        bool classGenerations = false,
+        ReferenceValidationType referenceValidationStrategy = ReferenceValidationType.Subroutine)
     {
         Setup();
         var d = new Diagnostics();
@@ -28,7 +31,8 @@ static class TestUtils
                 AbortOnError = true,
                 TrackClassGenerations = classGenerations,
                 LogDeleteReferenceZero = classGenerations,
-                GlobalReferenceValidation = classGenerations
+                GlobalReferenceValidation = classGenerations,
+                ReferenceValidationType = referenceValidationStrategy
             })
         });
         return new(ds.WorkshopCode, d, ds.WorkshopRules);

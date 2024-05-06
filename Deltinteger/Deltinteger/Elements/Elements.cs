@@ -260,10 +260,15 @@ namespace Deltin.Deltinteger.Elements
             => Part("Ray Cast Hit Position", start ?? throw new ArgumentNullException(nameof(start)), end ?? throw new ArgumentNullException(nameof(end)), playersToInclude ?? Null(), playersToExclude ?? Null(), includePlayerOwnedObjects ?? False());
         public static Element CallSubroutine(Subroutine subroutine) => Element.Part("Call Subroutine", subroutine);
         public static Element StartRule(Subroutine subroutine, bool restartRule) => Element.Part("Start Rule", subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyExecuting", restartRule ? "RestartRule" : "DoNothing"));
+        public static Element Skip(Element count) => Part("Skip", count);
         public static Element SkipIf(Element condition, Element count) => Element.Part("Skip If", condition, count);
+        public static Element Abort() => Element.Part("Abort");
+        public static Element AbortIf(Element condition) => Element.Part("Abort If", condition);
         public static Element ForGlobalVariable(WorkshopVariable variable, Element start, Element end, Element step) => Element.Part("For Global Variable", variable, start, end, step);
         public static Element ForPlayerVariable(Element player, WorkshopVariable variable, Element start, Element end, Element step) => Element.Part("For Player Variable", player, variable, start, end, step);
         public static Element LogToInspector(IWorkshopTree value) => Element.Part("Log To Inspector", value);
+        public static Element DisableInspectorRecording() => Element.Part("Disable Inspector Recording");
+        public static Element EnableInspectorRecording() => Element.Part("Enable Inspector Recording");
         public static Element CustomColor(IWorkshopTree r, IWorkshopTree g, IWorkshopTree b, IWorkshopTree a) => Element.Part("Custom Color", r, g, b, a);
         public static Element SetGlobalVariable(IWorkshopTree variable, IWorkshopTree value) => Part("Set Global Variable", variable, value);
         public static Element SetPlayerVariable(IWorkshopTree targetPlayer, IWorkshopTree variable, IWorkshopTree value) => Part("Set Player Variable", targetPlayer, variable, value);

@@ -16,6 +16,7 @@ namespace Deltin.Deltinteger.Parse.Workshop
         public LambdaBuilder LambdaBuilder { get; }
         public PersistentVariables PersistentVariables { get; }
         public LinkableVanillaVariables LinkableVanillaVariables { get; } = new();
+        public ValidateReferencesWorkshop ValidateReferences { get; } = new();
 
         public ToWorkshop(DeltinScript deltinScript)
         {

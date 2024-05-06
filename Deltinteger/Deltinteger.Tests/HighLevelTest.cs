@@ -1,4 +1,5 @@
 namespace Deltinteger.Tests;
+using Deltin.Deltinteger.Parse.Settings;
 using static TestUtils;
 
 [TestClass]
@@ -194,6 +195,7 @@ public class HighLevelTest
     [TestMethod("HL test: Simple reference validation")]
     public void SimpleReferenceValidation()
     {
+        TestWithBothReferenceValidationStrategies(s =>
         Compile("""
         class A {
             public void Exec() {}
@@ -205,16 +207,17 @@ public class HighLevelTest
             (<A>0).Exec(); // Error and abort here
             STEP = 1;      // This should not be reached 
         }
-        """, classGenerations: true)
+        """, classGenerations: true, referenceValidationStrategy: s)
         .AssertOk()
         .EmulateTick()
         .AssertVariable("STEP", 0)
-        .AssertSearchLog("[Error] Accessed invalid reference");
+        .AssertSearchLog("[Error] Accessed invalid reference"));
     }
 
     [TestMethod("HL test: Reference validation")]
     public void ReferenceValidation()
     {
+        TestWithBothReferenceValidationStrategies(s =>
         Compile("""
         class A {
             public void Exec() {}
@@ -232,16 +235,17 @@ public class HighLevelTest
             a.Exec(); // Error and abort here
             STEP = 2; // This should not be reached
         }
-        """, classGenerations: true)
+        """, classGenerations: true, referenceValidationStrategy: s)
         .AssertOk()
         .EmulateTick()
         .AssertVariable("STEP", 1)
-        .AssertSearchLog("[Error] Accessed invalid reference");
+        .AssertSearchLog("[Error] Accessed invalid reference"));
     }
 
     [TestMethod("HL test: Generation validation")]
     public void GenerationValidation()
     {
+        TestWithBothReferenceValidationStrategies(s =>
         Compile("""
         class A {
             public void Exec() {}
@@ -267,17 +271,18 @@ public class HighLevelTest
             a1.Exec(); // Error and abort here
             STEP = 2;  // This should not be reached
         }
-        """, classGenerations: true)
+        """, classGenerations: true, referenceValidationStrategy: s)
         .AssertOk()
         .EmulateTick()
         .AssertVariable("POINTERS_ARE_EQUAL", true)
         .AssertVariable("STEP", 1)
-        .AssertSearchLog("[Error] Accessed invalid reference");
+        .AssertSearchLog("[Error] Accessed invalid reference"));
     }
 
     [TestMethod("HL test: Class array validation")]
     public void ClassArrayValidation()
     {
+        TestWithBothReferenceValidationStrategies(s =>
         Compile("""
         class A {
             public void Exec() {}
@@ -295,10 +300,16 @@ public class HighLevelTest
             for (STEP = 0; a.Length; 1)
                 a[STEP].Exec();
         }
-        """, classGenerations: true)
+        """, classGenerations: true, referenceValidationStrategy: s)
         .AssertOk()
         .EmulateTick()
         .AssertVariable("STEP", 8)
-        .AssertSearchLog("[Error] Accessed invalid reference");
+        .AssertSearchLog("[Error] Accessed invalid reference"));
+    }
+
+    void TestWithBothReferenceValidationStrategies(Action<ReferenceValidationType> action)
+    {
+        action(ReferenceValidationType.Inline);
+        action(ReferenceValidationType.Subroutine);
     }
 }

@@ -40,11 +40,10 @@ public class EmulateState(IEmulateLogger logger, IList<Rule> rules)
 
 class EmulateRule(EmulateState state, Rule rule)
 {
-    readonly EmulateState state = state;
-    readonly Rule rule = rule;
     readonly Stack<EmulateStack> stack = [];
     bool isExecuting = false;
 
+    /// <summary>This is executed every tick.</summary>
     public void Tick()
     {
         if (!isExecuting && ConditionsOk())
@@ -79,7 +78,11 @@ class EmulateRule(EmulateState state, Rule rule)
         }
     }
 
-    public bool ConditionsOk() => true;
+    public bool ConditionsOk()
+    {
+        // Subroutines cannot be triggered by conditions.
+        return rule.RuleEvent != RuleEvent.Subroutine;
+    }
 }
 
 class EmulateStack(EmulateState state, Rule rule)
@@ -89,6 +92,7 @@ class EmulateStack(EmulateState state, Rule rule)
     readonly Stack<IBlockStack> loopStack = [];
     int action = 0;
     int skipCount = 0;
+    bool breaking;
 
     Element ConsumeAction() => rule.Actions[action++];
 
@@ -110,31 +114,58 @@ class EmulateStack(EmulateState state, Rule rule)
         return new ExecutedAction.Completed();
     }
 
-    (string? CallRule, bool Abort) ExecuteAction()
+    StackAction ExecuteAction()
     {
         var act = ConsumeAction();
 
-        if (skipCount > 0)
+        // 'Break' was executed.
+        if (breaking)
+        {
+            // Was end of block found?
+            if (act.Function.Name == "End" && loopStack.TryPeek(out var nextStackItem) && nextStackItem.UseBreakAndContinue())
+            {
+                loopStack.Pop();
+                breaking = false;
+                return StackAction.None;
+            }
+            else return ExecuteSkippedAction(act);
+        }
+        // 'Skip' or 'Skip If' was executed.
+        else if (skipCount > 0)
         {
             skipCount--;
-            switch (act.Function.Name)
-            {
-                case "If":
-                case "While":
-                case "For Global Variable":
-                case "For Player Variable":
-                    loopStack.Push(new SkippedBlockStack());
-                    break;
-
-                case "End":
-                    loopStack.Pop();
-                    break;
-            }
-            return (null, false);
+            return ExecuteSkippedAction(act);
         }
 
+        return ExecuteActionBehaviour(act);
+    }
+
+    StackAction ExecuteSkippedAction(Element act)
+    {
         switch (act.Function.Name)
         {
+            case "If":
+            case "While":
+            case "For Global Variable":
+            case "For Player Variable":
+                loopStack.Push(new SkippedBlockStack());
+                break;
+
+            case "End":
+                loopStack.Pop();
+                break;
+        }
+        return new(null, false);
+    }
+
+    StackAction ExecuteActionBehaviour(Element act)
+    {
+        switch (act.Function.Name)
+        {
+            case "Disable Inspector Recording":
+            case "Enable Inspector Recording":
+                break;
+
             case "Set Global Variable":
                 {
                     var name = EmulateHelper.ExtractVariableName(P(act, 0)).Unwrap();
@@ -220,10 +251,14 @@ class EmulateStack(EmulateState state, Rule rule)
 
             case "End":
                 {
-                    if (loopStack.TryPeek(out var stack) && stack.ReachedEnd())
+                    if (loopStack.TryPeek(out var stack) && stack.OnEndReached())
                         loopStack.Pop();
                     break;
                 }
+
+            case "Break":
+                breaking = true;
+                break;
 
             case "Skip":
                 {
@@ -248,16 +283,21 @@ class EmulateStack(EmulateState state, Rule rule)
 
             case "Call Subroutine":
                 var subroutineName = EmulateHelper.ExtractSubroutineName(P(act, 0)).Unwrap();
-                return (subroutineName, false);
+                return new(subroutineName, false);
 
             case "Abort":
-                return (null, true);
+                return StackAction.AbortRule;
+
+            case "Abort If":
+                if (Evaluate(P(act, 0)))
+                    return StackAction.AbortRule;
+                break;
 
             default:
                 throw new Exception("Unhandled action: " + act.Function.Name);
         }
 
-        return (null, false);
+        return StackAction.None;
     }
 
     void ExecuteIf(Element ifAction)
@@ -304,12 +344,17 @@ class EmulateStack(EmulateState state, Rule rule)
 
     interface IBlockStack
     {
-        bool ReachedEnd();
+        /// <summary>Executed when the End action associated with this block is reached.</summary>
+        /// <returns>`true` if the loop stack should be popped, or false if it needs to loop.</returns>
+        bool OnEndReached();
+        /// <summary>Determines if this block can use Break and Continue.</summary>
+        bool UseBreakAndContinue();
     }
 
     record IfBlockStack(bool RunElseBlock) : IBlockStack
     {
-        public bool ReachedEnd() => true;
+        public bool OnEndReached() => true;
+        public bool UseBreakAndContinue() => false;
     }
 
     class ForBlockStack(
@@ -327,12 +372,12 @@ class EmulateStack(EmulateState state, Rule rule)
                 stack.ProgressToEndOfBlock(BlockType.Simple);
         }
 
-        public bool ReachedEnd()
+        public bool OnEndReached()
         {
+            variable.Value += step;
             if (CheckCondition())
             {
                 stack.action = forActionIndex;
-                variable.Value += step;
                 return false;
             }
             return true;
@@ -340,6 +385,8 @@ class EmulateStack(EmulateState state, Rule rule)
 
         // Todo: how does the workshop handle negative steps?
         bool CheckCondition() => variable.Value.AsNumber() < end;
+
+        public bool UseBreakAndContinue() => true;
     }
 
     class WhileBlockStack(EmulateStack stack, int whileActionIndex, Func<bool> tryCondition) : IBlockStack
@@ -352,7 +399,7 @@ class EmulateStack(EmulateState state, Rule rule)
             }
         }
 
-        public bool ReachedEnd()
+        public bool OnEndReached()
         {
             if (tryCondition())
             {
@@ -361,11 +408,14 @@ class EmulateStack(EmulateState state, Rule rule)
             }
             return true;
         }
+
+        public bool UseBreakAndContinue() => true;
     }
 
     class SkippedBlockStack : IBlockStack
     {
-        public bool ReachedEnd() => true;
+        public bool OnEndReached() => true;
+        public bool UseBreakAndContinue() => true;
     }
 
     public enum BlockType
@@ -387,11 +437,22 @@ class EmulateStack(EmulateState state, Rule rule)
         {BlockType.IfChain, ["Else If", "Else", "End"]},
         {BlockType.Simple, ["End"]},
     };
+
+    readonly record struct StackAction(string? CallRule, bool Abort)
+    {
+        public static readonly StackAction None = new(null, false);
+        public static readonly StackAction AbortRule = new(null, true);
+    }
 }
 
+/// <summary>The action an item on the rule stack takes after it executes some actions.</summary>
 abstract record ExecutedAction
 {
+    /// <summary>The stack item completed its actions or was aborted.</summary>
     public sealed record Completed : ExecutedAction;
+    /// <summary>Rule should be paused for a set duration.</summary>
     public sealed record Wait : ExecutedAction;
+    /// <summary>A subroutine was executed and its rule should be added to the stack.</summary>
+    /// <param name="SubroutineName">The name of the subroutine that will be added to the stack.</param>
     public sealed record CallRule(string SubroutineName) : ExecutedAction;
 }
