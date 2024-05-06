@@ -21,15 +21,49 @@ public interface IFileGetter
     bool Exists(Uri uri);
 }
 
+class MultiSourceFileGetter(IFileGetter[] sources) : IFileGetter
+{
+    public bool Exists(Uri uri) => sources.Any(s => s.Exists(uri));
+    public string? GetContent(Uri uri)
+    {
+        foreach (var source in sources)
+        {
+            var content = source.GetContent(uri);
+            if (content is not null)
+                return content;
+        }
+        return null;
+    }
+    public Document? GetScript(Uri uri)
+    {
+        foreach (var source in sources)
+        {
+            var script = source.GetScript(uri);
+            if (script is not null)
+                return script;
+        }
+        return null;
+    }
+}
+
+class StaticFileGetter : IFileGetter
+{
+    readonly Dictionary<Uri, Document> items = [];
+    public StaticFileGetter(Uri uri, string content) => items.Add(uri, new Document(uri, content));
+    public bool Exists(Uri uri) => items.ContainsKey(uri);
+    public string? GetContent(Uri uri) => null;
+    public Document? GetScript(Uri uri) => items.GetValueOrDefault(uri);
+}
+
 
 class LsFileGetter : IFileGetter
 {
-    readonly DocumentHandler _documentHandler;
+    readonly DocumentHandler? _documentHandler;
     readonly IParserSettingsResolver _settingsResolver;
     // Importing scripts not being edited.
     readonly List<ImportedScript> _importedFiles = new List<ImportedScript>();
 
-    public LsFileGetter(DocumentHandler documentHandler, IParserSettingsResolver settingsResolver)
+    public LsFileGetter(DocumentHandler? documentHandler, IParserSettingsResolver settingsResolver)
     {
         _documentHandler = documentHandler;
         _settingsResolver = settingsResolver;
@@ -41,16 +75,16 @@ class LsFileGetter : IFileGetter
         var doc = _documentHandler?.GetDocuments().FirstOrDefault(td => td.Uri.Compare(uri));
         if (doc != null) return doc;
 
-        ImportedScript importedFile = GetImportedFile(uri);
-        importedFile.Update();
-        return importedFile.Document;
+        var importedFile = GetImportedFile(uri);
+        importedFile?.Update();
+        return importedFile?.Document;
     }
 
     public string? GetContent(Uri uri)
     {
         var file = GetImportedFile(uri);
-        file.Update();
-        return file.Content;
+        file?.Update();
+        return file?.Content;
     }
 
     public bool Exists(Uri uri)
@@ -58,14 +92,21 @@ class LsFileGetter : IFileGetter
         return _importedFiles.Any(f => f.Uri.Compare(uri)) || File.Exists(uri.LocalPath);
     }
 
-    private ImportedScript GetImportedFile(Uri uri)
+    private ImportedScript? GetImportedFile(Uri uri)
     {
         foreach (ImportedScript importedFile in _importedFiles)
             if (importedFile.Uri == uri)
                 return importedFile;
-        var newImportedFile = new ImportedScript(uri, _settingsResolver);
-        _importedFiles.Add(newImportedFile);
-        return newImportedFile;
+        try
+        {
+            var newImportedFile = new ImportedScript(uri, _settingsResolver);
+            _importedFiles.Add(newImportedFile);
+            return newImportedFile;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
     }
 }
 

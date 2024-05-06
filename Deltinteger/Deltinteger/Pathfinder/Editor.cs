@@ -36,8 +36,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public static DeltinScript Generate(string fileName, Pathmap map, OutputLanguage language)
         {
             string baseEditorFile = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
-
-            return new DeltinScript(new TranslateSettings(baseEditorFile)
+            return new DeltinScript(new TranslateSettings(new Uri(baseEditorFile))
             {
                 AdditionalRules = (varCollection) =>
                 {

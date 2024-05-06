@@ -23,14 +23,26 @@ public class Importer
     private readonly Diagnostics _diagnostics;
     private readonly DeltinScript _deltinScript;
 
-    public Importer(DeltinScript deltinScript, IFileGetter fileGetter, Uri initial)
+    public Importer(DeltinScript deltinScript, IFileGetter fileGetter)
     {
         _deltinScript = deltinScript;
         _diagnostics = deltinScript.Diagnostics;
         FileGetter = fileGetter;
-        ImportedFiles.Add(initial);
     }
 
+    /// <summary>Begin importing from the entry point.</summary>
+    public void FromEntryPoint(DeltinScript deltinScript, Uri entryPoint)
+    {
+        var rootDocument = FileGetter.GetScript(entryPoint);
+        if (rootDocument is not null)
+        {
+            var rootScript = new ScriptFile(_diagnostics, rootDocument);
+            ImportedFiles.Add(rootScript.Uri);
+            CollectScriptFiles(deltinScript, rootScript);
+        }
+    }
+
+    /// <summary>Includes all import statements in the project.</summary>
     public void CollectScriptFiles(DeltinScript deltinScript, ScriptFile scriptFile)
     {
         ScriptFiles.Add(scriptFile);
@@ -145,6 +157,8 @@ public class Importer
         }
         return importResult.Directory;
     }
+
+    public bool DidImport(Uri uri) => ImportedFiles.Contains(uri);
 }
 
 class FileImporter

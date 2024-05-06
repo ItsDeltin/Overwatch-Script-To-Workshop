@@ -21,7 +21,7 @@ static class TestUtils
     {
         Setup();
         var d = new Diagnostics();
-        var ds = new DeltinScript(new(d, new ScriptFile(d, new Uri("inmemory://temp.ostw"), text))
+        var ds = new DeltinScript(new(d, text)
         {
             SourcedSettings = new(null, new()
             {

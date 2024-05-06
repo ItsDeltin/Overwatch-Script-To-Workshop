@@ -121,7 +121,7 @@ public class OstwLangServer
                 if (editFileToken.Text == null)
                 {
                     string editor = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
-                    compile = new DeltinScript(new TranslateSettings(editor)
+                    compile = new DeltinScript(new TranslateSettings(new Uri(editor))
                     {
                         OutputLanguage = ConfigurationHandler.OutputLanguage
                     });

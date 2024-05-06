@@ -4,7 +4,6 @@ using System;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.LanguageServer.Model;
-using Deltin.Deltinteger.LanguageServer.Settings;
 
 interface IScriptCompiler
 {
@@ -33,12 +32,14 @@ class ScriptCompiler : IScriptCompiler
             var settings = projectSettings.GetProjectSettings(triggerDocument.Uri);
 
             Diagnostics diagnostics = new Diagnostics();
-            ScriptFile root = new ScriptFile(diagnostics, triggerDocument);
-            deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, languageServer.FileGetter)
+            deltinScript = new DeltinScript(new TranslateSettings(triggerDocument.Uri, diagnostics, languageServer.FileGetter)
             {
                 OutputLanguage = languageServer.ConfigurationHandler.OutputLanguage,
                 SourcedSettings = settings
             });
+
+            if (!deltinScript.Importer.DidImport(triggerDocument.Uri))
+                diagnostics.FromUri(triggerDocument.Uri).Warning($"{triggerDocument.Uri.LocalPath} is not compiled from any path to the entry_point", DocRange.Zero);
 
             // Publish result.
             var publishDiagnostics = diagnostics.GetPublishDiagnostics();

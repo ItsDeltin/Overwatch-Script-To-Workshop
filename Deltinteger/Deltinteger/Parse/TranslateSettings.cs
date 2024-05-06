@@ -1,43 +1,40 @@
 using System;
-using System.IO;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse.Settings;
 using Deltin.Deltinteger.LanguageServer.Settings;
 
-namespace Deltin.Deltinteger.Parse
+#nullable enable
+
+namespace Deltin.Deltinteger.Parse;
+
+public class TranslateSettings
 {
-    public class TranslateSettings
+    public Diagnostics Diagnostics { get; }
+    public IFileGetter FileGetter { get; }
+    public Func<VarCollection, Rule[]>? AdditionalRules { get; set; }
+    public SourcedSettings<DsTomlSettings> SourcedSettings { get; set; }
+    public OutputLanguage OutputLanguage { get; set; } = OutputLanguage.enUS;
+    public Uri EntryPoint { get; set; }
+
+    public TranslateSettings(Uri entryPoint, Diagnostics diagnostics, IFileGetter fileGetter)
     {
-        public Diagnostics Diagnostics { get; }
-        public ScriptFile Root { get; }
-        public IFileGetter FileGetter { get; } = new LsFileGetter(null, new DefaultSettingsResolver());
-        public Func<VarCollection, Rule[]> AdditionalRules { get; set; }
+        EntryPoint = entryPoint;
+        Diagnostics = diagnostics;
+        FileGetter = fileGetter;
+    }
 
-        public SourcedSettings<DsTomlSettings> SourcedSettings { get; set; }
+    public TranslateSettings(Uri entryPoint) : this(entryPoint, new Diagnostics(), new LsFileGetter(null, new DefaultSettingsResolver()))
+    {
+    }
 
-        public OutputLanguage OutputLanguage { get; set; } = OutputLanguage.enUS;
-
-        public TranslateSettings(Diagnostics diagnostics, ScriptFile root)
-        {
-            Diagnostics = diagnostics;
-            Root = root;
-        }
-
-        public TranslateSettings(Diagnostics diagnostics, ScriptFile root, IFileGetter fileGetter) : this(diagnostics, root)
-        {
-            FileGetter = fileGetter;
-        }
-
-        public TranslateSettings(Diagnostics diagnostics, Uri root, string content) : this(diagnostics, new ScriptFile(diagnostics, root, content)) { }
-
-        public TranslateSettings(Diagnostics diagnostics, string file)
-        {
-            Diagnostics = diagnostics;
-            Uri uri = new Uri(file);
-            string content = File.ReadAllText(file);
-            Root = new ScriptFile(diagnostics, uri, content);
-        }
-
-        public TranslateSettings(string file) : this(new Diagnostics(), file) { }
+    public TranslateSettings(Diagnostics diagnostics, string content)
+    {
+        var uri = new Uri("inmemory://temp.ostw");
+        EntryPoint = uri;
+        Diagnostics = diagnostics;
+        FileGetter = new MultiSourceFileGetter([
+            new StaticFileGetter(uri, content),
+            new LsFileGetter(null, new DefaultSettingsResolver())
+        ]);
     }
 }

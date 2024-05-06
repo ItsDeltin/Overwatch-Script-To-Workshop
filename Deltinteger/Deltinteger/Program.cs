@@ -119,8 +119,7 @@ namespace Deltin.Deltinteger
         {
             string text = File.ReadAllText(parseFile);
             Diagnostics diagnostics = new Diagnostics();
-            ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
-            DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root));
+            DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, text));
             diagnostics.PrintDiagnostics(Log);
             if (deltinScript.WorkshopCode != null)
                 WorkshopCodeResult(deltinScript.WorkshopCode);

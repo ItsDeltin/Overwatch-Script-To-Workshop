@@ -40,25 +40,13 @@ namespace Deltin.Deltinteger.Parse
 
         public FileDiagnostics FromUri(Uri uri)
         {
-            ThrowIfFileIsAlreadyAdded(uri);
-
-            FileDiagnostics fileDiagnostics = new FileDiagnostics(uri);
-            diagnosticFiles.Add(fileDiagnostics);
+            var fileDiagnostics = diagnosticFiles.FirstOrDefault(file => file.Uri == uri);
+            if (fileDiagnostics is null)
+            {
+                fileDiagnostics = new FileDiagnostics(uri);
+                diagnosticFiles.Add(fileDiagnostics);
+            }
             return fileDiagnostics;
-        }
-
-        public void Add(FileDiagnostics fileDiagnostics)
-        {
-            ThrowIfFileIsAlreadyAdded(fileDiagnostics.Uri);
-
-            diagnosticFiles.Add(fileDiagnostics);
-        }
-
-        private void ThrowIfFileIsAlreadyAdded(Uri uri)
-        {
-            // TODO-URI: Should use Uri.Compare?
-            if (diagnosticFiles.Any(diag => diag.Uri == uri))
-                throw new Exception("A diagnostic tree for the file '" + uri + "' was already created.");
         }
 
         public void PrintDiagnostics(Log log)

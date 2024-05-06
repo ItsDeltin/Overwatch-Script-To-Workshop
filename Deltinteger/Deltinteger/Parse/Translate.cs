@@ -69,8 +69,15 @@ namespace Deltin.Deltinteger.Parse
             RulesetScope.PrivateCatch = true;
             Types.AddTypesToScope(GlobalScope);
 
-            Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(this, translateSettings.Root);
+            var entryPoint = translateSettings.EntryPoint;
+            if (SettingsSource is not null && Settings.EntryPoint is not null)
+            {
+                string path = Extras.CombinePathWithDotNotation(SettingsSource.LocalPath, Settings.EntryPoint);
+                if (path is not null)
+                    entryPoint = new Uri(path);
+            }
+            Importer = new Importer(this, FileGetter);
+            Importer.FromEntryPoint(this, entryPoint);
 
             Translate();
             if (!Diagnostics.ContainsErrors())
