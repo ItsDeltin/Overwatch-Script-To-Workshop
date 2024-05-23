@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Parse
     {
         AssignmentOperator Operator { get; }
         CodeType ValueType { get; }
+        bool IsModification { get; }
         void Validate(ParseInfo parseInfo, DocRange range, IExpression value);
         void Resolve(AssignmentOperationInfo assignmentOperationInfo);
     }
@@ -18,6 +19,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public AssignmentOperator Operator { get; }
         public CodeType ValueType { get; }
+        public bool IsModification => Operator is not AssignmentOperator.Equal;
         private readonly Action<ValidateOperationParams>? _validate;
         private readonly Action<AssignmentOperationInfo> _action;
 

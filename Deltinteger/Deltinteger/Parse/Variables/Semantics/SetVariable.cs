@@ -53,7 +53,12 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet)
         {
             var elements = _variableResolve.ParseElements(actionSet);
-            _operation.Resolve(new AssignmentOperationInfo(_comment, actionSet, elements, _value.Parse(actionSet.SetTempAssign(new(elements.IndexReference)))));
+
+            // Do not use TempAssign if the operation is a modification and not an overwrite. (#485)
+            var valueActionSet = _operation.IsModification ? actionSet : actionSet.SetTempAssign(new(elements.IndexReference));
+
+            var value = _value.Parse(valueActionSet);
+            _operation.Resolve(new AssignmentOperationInfo(_comment, actionSet, elements, value));
         }
 
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => _comment = comment;
