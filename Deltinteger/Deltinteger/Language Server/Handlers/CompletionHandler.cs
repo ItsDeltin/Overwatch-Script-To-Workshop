@@ -1,17 +1,15 @@
-using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
 using ICompletionHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.ICompletionHandler;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionParams = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionParams;
 using CompletionRegistrationOptions = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionRegistrationOptions;
 using Container = OmniSharp.Extensions.LanguageServer.Protocol.Models.Container<string>;
 using CompletionCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.CompletionCapability;
+using Deltin.Deltinteger.Parse.Settings;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -26,6 +24,10 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
         {
+            // ds.toml completion
+            if (System.IO.Path.GetFileName(completionParams.TextDocument.Uri.Path) is "ds.toml" or "ostw.toml")
+                return DsTomlSettings.SettingsCompletionList;
+
             var compilation = await _languageServer.ProjectUpdater.GetProjectCompilationAsync();
 
             // If the script has not been parsed yet, return the default completion.
@@ -78,7 +80,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new CompletionRegistrationOptions()
             {
-                DocumentSelector = OstwLangServer.DocumentSelector,
+                DocumentSelector = OstwLangServer.CompletionDocumentSelector,
                 // Most tools trigger completion request automatically without explicitly requesting
                 // it using a keyboard shortcut (e.g. Ctrl+Space). Typically they do so when the user
                 // starts to type an identifier. For example if the user types `c` in a JavaScript file

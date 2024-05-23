@@ -43,6 +43,16 @@ static class StandardExtensions
         return default;
     }
 
+    public static IEnumerable<U> SelectWithoutNull<T, U>(this IEnumerable<T> enumerable, Func<T, U?> selector) where T : class
+    {
+        foreach (var item in enumerable)
+        {
+            var selected = selector(item);
+            if (selected is not null)
+                yield return selected;
+        }
+    }
+
     public static T? Or<T>(this T? maybe, T? otherwise)
     {
         return maybe is not null ? maybe : otherwise;

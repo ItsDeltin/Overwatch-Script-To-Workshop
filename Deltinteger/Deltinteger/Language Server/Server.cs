@@ -277,27 +277,37 @@ public class OstwLangServer
         public string File { get; set; }
     }
 
-    public static readonly DocumentSelector DocumentSelector = new DocumentSelector(
-        new DocumentFilter()
-        {
-            Language = "ostw",
-            Pattern = "**/*.del"
-        },
-        new DocumentFilter()
-        {
-            Language = "ostw",
-            Pattern = "**/*.ostw"
-        },
-        new DocumentFilter()
-        {
-            Language = "ostw",
-            Pattern = "**/*.workshop"
-        },
-        new DocumentFilter()
-        {
-            Language = "ostw",
-            Pattern = "ds.toml"
-        }
+    static readonly DocumentFilter DelDocumentFilter = new()
+    {
+        Language = "ostw",
+        Pattern = "**/*.del"
+    };
+    static readonly DocumentFilter OstwDocumentFilter = new()
+    {
+        Language = "ostw",
+        Pattern = "**/*.ostw"
+    };
+    static readonly DocumentFilter WorkshopDocumentFilter = new()
+    {
+        Language = "ostw",
+        Pattern = "**/*.workshop"
+    };
+    static readonly DocumentFilter DsTomlDocumentFilter = new()
+    {
+        Language = "toml",
+        Pattern = "**/ds.toml"
+    };
+
+    public static readonly DocumentSelector DocumentSelector = new(
+        DelDocumentFilter,
+        OstwDocumentFilter,
+        WorkshopDocumentFilter
+    );
+    public static readonly DocumentSelector CompletionDocumentSelector = new(
+        DelDocumentFilter,
+        OstwDocumentFilter,
+        WorkshopDocumentFilter,
+        DsTomlDocumentFilter
     );
 }
 
