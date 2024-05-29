@@ -616,6 +616,11 @@
                             "$no_cooldown": true
                         },
                         {
+                            "name": "Angelic Descent",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
                             "name": "Resurrect",
                             "template": "ability"
                         },

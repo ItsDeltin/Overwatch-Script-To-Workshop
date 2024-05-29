@@ -2121,6 +2121,10 @@
       "default": true,
       "type": "boolean"
     },
+    "Angelic Descent": {
+      "default": true,
+      "type": "boolean"
+    },
     "Resurrect": {
       "default": true,
       "type": "boolean"
@@ -5029,6 +5033,9 @@
             },
             "Sympathetic Recovery": {
               "$ref": "#/definitions/Sympathetic Recovery"
+            },
+            "Angelic Descent": {
+              "$ref": "#/definitions/Angelic Descent"
             },
             "Resurrect": {
               "$ref": "#/definitions/Resurrect"
