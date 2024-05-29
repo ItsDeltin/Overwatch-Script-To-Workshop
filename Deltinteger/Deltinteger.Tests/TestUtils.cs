@@ -88,19 +88,26 @@ static class TestUtils
 
 readonly record struct CompileResult(string Code, Diagnostics Diagnostics, List<Rule> Rules)
 {
-    public CompileResult AssertOk()
+    /// <summary>Ensures that the compilation was successful and without errors.</summary>
+    /// <returns>Self</returns>
+    public readonly CompileResult AssertOk()
     {
         var error = Diagnostics.FindFirstError();
         Assert.IsNull(error, $"Unexpected error while compiling: {error?.message}");
         return this;
     }
 
-    public CompileResult AssertSearchError(string text)
+    /// <summary>Tests if the provided text is within any of the diagnostics resulting from the compilation.</summary>
+    /// <param name="text">The substring that is searched within every diagnostic.</param>
+    /// <returns>Self</returns>
+    public readonly CompileResult AssertSearchError(string text)
     {
         Assert.IsTrue(Diagnostics.Enumerate().Any(diagnostic => diagnostic.message.Contains(text)), $"Failed to find error with text '{text}'");
         return this;
     }
 
+    /// <summary>Begins an emulation session and executes a single tick.</summary>
+    /// <returns>Self</returns>
     public readonly TickEmulationResult EmulateTick()
     {
         string output = string.Empty;

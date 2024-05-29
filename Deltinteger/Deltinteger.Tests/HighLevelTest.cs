@@ -312,4 +312,58 @@ public class HighLevelTest
         action(ReferenceValidationType.Inline);
         action(ReferenceValidationType.Subroutine);
     }
+
+    [TestMethod("HL test: Switches")]
+    public void Switch()
+    {
+        Compile(
+            """
+            globalvar Number TEST_0;
+            globalvar Number TEST_1;
+            globalvar Number TEST_2;
+            globalvar Number TEST_3;
+            globalvar Number TEST_4;
+
+            void ExecuteSwitch(in Number value, ref Number out)
+            {
+                switch (value)
+                {
+                    case 0:
+                        out = 1;
+                        break;
+
+                    case 1:
+                        out = 2;
+                        // Fallthrough to case 2
+                    case 2:
+                        out += 3;
+                        break;
+                    
+                    default:
+                        out = -1;
+                        break;
+                    
+                    case 3:
+                        out = -2;
+                }
+            }
+
+            rule: "Test switches"
+            {
+                ExecuteSwitch(0, TEST_0);
+                ExecuteSwitch(1, TEST_1);
+                ExecuteSwitch(2, TEST_2);
+                ExecuteSwitch(3, TEST_3);
+                ExecuteSwitch(4, TEST_4);
+            }
+            """
+        )
+        .AssertOk()
+        .EmulateTick()
+        .AssertVariable("TEST_0", 1)
+        .AssertVariable("TEST_1", 5)
+        .AssertVariable("TEST_2", 3)
+        .AssertVariable("TEST_3", -2)
+        .AssertVariable("TEST_4", -1);
+    }
 }
