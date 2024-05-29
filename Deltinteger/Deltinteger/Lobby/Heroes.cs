@@ -227,7 +227,14 @@ namespace Deltin.Deltinteger.Lobby
                     .AddAbility("Cardiac Overdrive").AddRange("Cardiac Overdrive Healing", 0, 400)
                     .AddAbility("Overrun").AddRange("Overrun Knockback", 0, 300),
                 new HeroSettingCollection("Mei").AddUlt("Blizzard").AddProjectile(true).AddSecondaryFire().AddHealer().AddAbility("Cryo-Freeze").AddAbility("Ice Wall").AddRange("Blizzard Freeze Minimum", 0, 100, 50).AddRange("Blizzard Freeze Rate Scalar").AddSwitch("Freeze Stacking", false).AddRange("Weapon Freeze Duration Scalar", 20).AddRange("Weapon Freeze Minimum", 0, 100, 30).AddRange("Weapon Freeze Rate Scalar"),
-                new HeroSettingCollection("Mercy").AddUlt("Valkyrie").AddProjectile(false).AddSecondaryFire().AddHealer().AddAbility("Guardian Angel").AddAbility("Sympathetic Recovery", hasCooldown: false).AddAbility("Resurrect").AddSelectRef("Weapons Enabled Mercy", "Weapons Enabled", "All", "Caduceus Staff Only", "Caduceus Blaster Only"),
+                new HeroSettingCollection("Mercy")
+                    .AddUlt("Valkyrie")
+                    .AddProjectile(false).AddSecondaryFire().AddHealer()
+                    .AddAbility("Guardian Angel")
+                    .AddAbility("Sympathetic Recovery", hasCooldown: false)
+                    .AddAbility("Angelic Descent", hasCooldown: false)
+                    .AddAbility("Resurrect")
+                    .AddSelectRef("Weapons Enabled Mercy", "Weapons Enabled", "All", "Caduceus Staff Only", "Caduceus Blaster Only"),
                 new HeroSettingCollection("Moira").AddUlt("Coalescence", hasDuration: true).AddProjectile(false).AddSecondaryFire().RemoveAmmunition().AddHealer().AddAbility("Fade").AddAbility("Biotic Orb").AddRange("Biotic Orb Max Damage Scalar", 10).AddRange("Biotic Orb Max Healing Scalar", 10).AddRange("Biotic Energy Maximum", 20).AddRange("Biotic Energy Recharge Rate"),
                 new HeroSettingCollection("Orisa").AddUlt("Terra Surge").AddAbility("Fortify").AddAbility("Energy Javelin").AddProjectile(true).AddAbility("Javelin Spin"),
                 new HeroSettingCollection("Pharah")
