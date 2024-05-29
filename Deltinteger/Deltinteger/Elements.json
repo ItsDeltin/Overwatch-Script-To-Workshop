@@ -6586,18 +6586,54 @@
       "hidden": true,
       "members": [
         "All",
-        "Slot0",
-        "Slot1",
-        "Slot2",
-        "Slot3",
-        "Slot4",
-        "Slot5",
-        "Slot6",
-        "Slot7",
-        "Slot8",
-        "Slot9",
-        "Slot10",
-        "Slot11",
+        {
+          "name": "Slot 0",
+          "alias": "Slot0"
+        },
+        {
+          "name": "Slot 1",
+          "alias": "Slot1"
+        },
+        {
+          "name": "Slot 2",
+          "alias": "Slot2"
+        },
+        {
+          "name": "Slot 3",
+          "alias": "Slot3"
+        },
+        {
+          "name": "Slot 4",
+          "alias": "Slot4"
+        },
+        {
+          "name": "Slot 5",
+          "alias": "Slot5"
+        },
+        {
+          "name": "Slot 6",
+          "alias": "Slot6"
+        },
+        {
+          "name": "Slot 7",
+          "alias": "Slot7"
+        },
+        {
+          "name": "Slot 8",
+          "alias": "Slot8"
+        },
+        {
+          "name": "Slot 9",
+          "alias": "Slot9"
+        },
+        {
+          "name": "Slot 10",
+          "alias": "Slot10"
+        },
+        {
+          "name": "Slot 11",
+          "alias": "Slot11"
+        },
         "Reaper",
         "Tracer",
         "Mercy",
