@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IncludedTypes = types;
             Operations = new PipeTypeOperatorInfo(this);
+            AsReferenceResetSettability = types.All(t => t.AsReferenceResetSettability);
 
             _scope = new Lazy<Scope>(() =>
             {

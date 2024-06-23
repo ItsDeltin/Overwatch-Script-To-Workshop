@@ -15,6 +15,8 @@ namespace Deltin.Deltinteger.Parse
             CanBeDeleted = true;
             Unknown = unknown;
             _deltinScript = deltinScript;
+            AsReferenceResetSettability = true;
+            ArrayHandler = new AnyArrayHandler(deltinScript);
 
             deltinScript.StagedInitiation.On(InitiationStage.Meta, ResolveElements);
         }
@@ -51,5 +53,14 @@ namespace Deltin.Deltinteger.Parse
         public override CompletionItem GetCompletion() => GetTypeCompletion(this);
         public override Scope GetObjectScope() => _deltinScript.PlayerVariableScope;
         public override Scope ReturningScope() => null;
+
+        class AnyArrayHandler(DeltinScript DeltinScript) : DefaultArrayHandler
+        {
+            public override void OverrideArray(ArrayType array)
+            {
+                array.Scope.TagPlayerVariables = true;
+                array.Scope.CopyAll(DeltinScript.PlayerVariableScope);
+            }
+        }
     }
 }

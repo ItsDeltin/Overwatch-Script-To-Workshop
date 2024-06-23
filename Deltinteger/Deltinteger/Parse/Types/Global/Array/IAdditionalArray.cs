@@ -9,8 +9,8 @@ namespace Deltin.Deltinteger.Parse
 
     class DefaultArrayHandler : ITypeArrayHandler
     {
-        public IGettableAssigner GetArrayAssigner(AssigningAttributes attributes) => new DataTypeAssigner(attributes);
-        public ArrayFunctionHandler GetFunctionHandler() => new ArrayFunctionHandler();
-        public void OverrideArray(ArrayType array) {}
+        public virtual IGettableAssigner GetArrayAssigner(AssigningAttributes attributes) => new DataTypeAssigner(attributes);
+        public virtual ArrayFunctionHandler GetFunctionHandler() => new ArrayFunctionHandler();
+        public virtual void OverrideArray(ArrayType array) { }
     }
 }
