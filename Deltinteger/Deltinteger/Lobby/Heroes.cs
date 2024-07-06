@@ -197,7 +197,7 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Baptiste").AddUlt("Amplification Matrix", true).AddProjectile(false).AddHealer().AddAbility("Immortality Field").AddAbility("Regenerative Burst").AddSecondaryFire(),
                 new HeroSettingCollection("Bastion").AddUlt("Configuration: Artillery", true).AddProjectile(true).AddAbility("Reconfigure").AddAbility("A-36 Tactical Grenade", hasKnockback: true),
                 new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Barrier Shield", rechargeable: true).AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
-                new HeroSettingCollection("Cassidy").AddUlt("Deadeye").AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Magnetic Grenade").AddProjectile(true),
+                new HeroSettingCollection("Cassidy").AddUlt("Deadeye").AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Flashbang").AddProjectile(true),
                 new HeroSettingCollection("D.Va").AddUlt("Self-Destruct", true).AddRange("Self Destruct Knockback Scalar", 0, 200).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", hasCooldown: false, rechargeable: true).AddRange("Call Mech Knockback Scalar", 0, 400).AddSwitch("Spawn Without Mech", false).RemoveAmmunition(),
                 new HeroSettingCollection("Doomfist")
                     .AddUlt("Meteor Strike", hasKnockback: true, hasDuration: true)
