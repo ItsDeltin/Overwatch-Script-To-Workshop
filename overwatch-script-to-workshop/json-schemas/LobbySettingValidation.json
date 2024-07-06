@@ -404,7 +404,8 @@
         "enum": [
           "Colloseo",
           "New Queen Street",
-          "Esperança"
+          "Esperança",
+          "Runasapi"
         ]
       }
     },
@@ -790,7 +791,8 @@
           "Talantis",
           "New Junk City",
           "Suravasa",
-          "Samoa"
+          "Samoa",
+          "Runasapi"
         ]
       }
     },
@@ -1322,11 +1324,11 @@
       "type": "number",
       "maximum": 500.0
     },
-    "Magnetic Grenade": {
+    "Flashbang": {
       "default": true,
       "type": "boolean"
     },
-    "Magnetic Grenade Cooldown Time": {
+    "Flashbang Cooldown Time": {
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
@@ -3795,11 +3797,11 @@
             "Combat Roll Cooldown Time": {
               "$ref": "#/definitions/Combat Roll Cooldown Time"
             },
-            "Magnetic Grenade": {
-              "$ref": "#/definitions/Magnetic Grenade"
+            "Flashbang": {
+              "$ref": "#/definitions/Flashbang"
             },
-            "Magnetic Grenade Cooldown Time": {
-              "$ref": "#/definitions/Magnetic Grenade Cooldown Time"
+            "Flashbang Cooldown Time": {
+              "$ref": "#/definitions/Flashbang Cooldown Time"
             },
             "Projectile Speed": {
               "$ref": "#/definitions/Projectile Speed"

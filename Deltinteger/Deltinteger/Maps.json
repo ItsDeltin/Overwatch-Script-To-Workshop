@@ -721,5 +721,12 @@
     "GameModes": [
       "Clash"
     ]
+  },
+  {
+    "Name": "Runasapi",
+    "GameModes": [
+      "Push",
+      "Skirmish"
+    ]
   }
 ]
