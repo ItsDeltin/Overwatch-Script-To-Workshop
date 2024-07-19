@@ -402,7 +402,7 @@
       "items": {
         "type": "string",
         "enum": [
-          "Colloseo",
+          "Colosseo",
           "New Queen Street",
           "Esperança",
           "Runasapi"
@@ -783,7 +783,7 @@
           "Circuit Royal",
           "Midtown",
           "Paraíso",
-          "Colloseo",
+          "Colosseo",
           "New Queen Street",
           "Esperança",
           "Shambali Monastery",
