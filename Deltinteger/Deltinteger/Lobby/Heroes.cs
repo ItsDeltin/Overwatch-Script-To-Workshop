@@ -194,7 +194,12 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("General").AddUlt(null, true).AddProjectile(true).AddHealer().AddRange("Ability Cooldown Time"),
                 new HeroSettingCollection("Ana").AddUlt("Nano Boost").AddProjectile(false).AddHealer().AddScope().AddAbility("Biotic Grenade").AddAbility("Sleep Dart"),
                 new HeroSettingCollection("Ashe").AddUlt("B.O.B.", true).AddProjectile(true).AddScope().AddAbility("Coach Gun", hasKnockback: true, selfKnockback: true).AddAbility("Dynamite").AddRange("Dynamite Fuse Time Scalar", 1),
-                new HeroSettingCollection("Baptiste").AddUlt("Amplification Matrix", true).AddProjectile(false).AddHealer().AddAbility("Immortality Field").AddAbility("Regenerative Burst").AddSecondaryFire(),
+                new HeroSettingCollection("Baptiste")
+                    .AddUlt("Amplification Matrix", true)
+                    .AddProjectile(true).AddHealer()
+                    .AddAbility("Immortality Field")
+                    .AddAbility("Regenerative Burst")
+                    .AddSecondaryFire(),
                 new HeroSettingCollection("Bastion").AddUlt("Configuration: Artillery", true).AddProjectile(true).AddAbility("Reconfigure").AddAbility("A-36 Tactical Grenade", hasKnockback: true),
                 new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Barrier Shield", rechargeable: true).AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
                 new HeroSettingCollection("Cassidy").AddUlt("Deadeye").AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Flashbang").AddProjectile(true),
