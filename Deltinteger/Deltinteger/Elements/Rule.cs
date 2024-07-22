@@ -115,7 +115,7 @@ namespace Deltin.Deltinteger.Elements
 
                 foreach (var action in Actions)
                     action.ToWorkshop(builder, ToWorkshopContext.Action);
-
+                
                 builder.SetCurrentIndent(resetIndentInCaseOfUnbalance);
                 builder.Outdent().AppendLine("}");
             }
