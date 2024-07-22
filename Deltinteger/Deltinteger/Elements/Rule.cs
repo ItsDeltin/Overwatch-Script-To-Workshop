@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace Deltin.Deltinteger.Elements
 {
     public class Rule
@@ -43,6 +45,11 @@ namespace Deltin.Deltinteger.Elements
 
         public void ToWorkshop(WorkshopBuilder builder)
         {
+            
+            // Element count comment.
+            if (builder.IncludeComments)
+                builder.AppendLine("// Rule Total Element Count: " + ElementCount());
+
             if (Disabled)
             {
                 builder.AppendKeyword("disabled")
@@ -56,7 +63,7 @@ namespace Deltin.Deltinteger.Elements
                 .AppendKeywordLine("event")
                 .AppendLine("{")
                 .Indent();
-
+            
             ElementRoot.Instance.GetEnumValue("Event", RuleEvent.ToString()).ToWorkshop(builder, ToWorkshopContext.Other);
             builder.Append(";").AppendLine();
 
@@ -78,10 +85,13 @@ namespace Deltin.Deltinteger.Elements
             builder.Outdent()
                 .AppendLine("}");
 
-            if (Conditions?.Length > 0)
-            {
-                builder.AppendLine()
-                    .AppendKeywordLine("conditions")
+            if (Conditions?.Length > 0) {
+                builder.AppendLine();
+                    
+                if (builder.IncludeComments)
+                    builder.AppendLine("// Element Count: " + Conditions.Sum(x => x.ElementCount()) + ", Condition Count: " + Conditions.Length);
+                
+                builder.AppendKeywordLine("conditions")
                     .AppendLine("{")
                     .Indent();
 
@@ -98,7 +108,7 @@ namespace Deltin.Deltinteger.Elements
 
                 // Action count comment.
                 if (builder.IncludeComments)
-                    builder.AppendLine("// Action count: " + Actions.Length);
+                    builder.AppendLine("// Element Count: " + Actions.Sum(x => x.ElementCount()) + ", Action Count: " + Actions.Length);
 
                 builder.AppendKeywordLine("actions").AppendLine("{").Indent();
                 int resetIndentInCaseOfUnbalance = builder.GetCurrentIndent();
