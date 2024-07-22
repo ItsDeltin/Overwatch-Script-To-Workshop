@@ -62,7 +62,8 @@ namespace Deltin.Deltinteger.Elements
                 .Indent()
                 .AppendKeywordLine("event")
                 .AppendLine("{")
-                .Indent();
+                .Indent()
+                .AppendKeywordLine("type");
             
             ElementRoot.Instance.GetEnumValue("Event", RuleEvent.ToString()).ToWorkshop(builder, ToWorkshopContext.Other);
             builder.Append(";").AppendLine();
