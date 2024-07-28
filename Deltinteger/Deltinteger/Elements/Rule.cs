@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+
 namespace Deltin.Deltinteger.Elements
 {
     public class Rule
@@ -43,6 +46,11 @@ namespace Deltin.Deltinteger.Elements
 
         public void ToWorkshop(WorkshopBuilder builder)
         {
+            
+            // Element count comment.
+            if (builder.IncludeComments)
+                builder.AppendLine("// Rule Element Count: " + ElementCount());
+
             if (Disabled)
             {
                 builder.AppendKeyword("disabled")
@@ -51,12 +59,11 @@ namespace Deltin.Deltinteger.Elements
             builder.AppendKeyword("rule")
                 .AppendLine("(\"" + Name + "\")")
                 .AppendLine("{")
-                .AppendLine()
                 .Indent()
                 .AppendKeywordLine("event")
                 .AppendLine("{")
                 .Indent();
-
+            
             ElementRoot.Instance.GetEnumValue("Event", RuleEvent.ToString()).ToWorkshop(builder, ToWorkshopContext.Other);
             builder.Append(";").AppendLine();
 
@@ -78,10 +85,13 @@ namespace Deltin.Deltinteger.Elements
             builder.Outdent()
                 .AppendLine("}");
 
-            if (Conditions?.Length > 0)
-            {
-                builder.AppendLine()
-                    .AppendKeywordLine("conditions")
+            if (Conditions?.Length > 0) {
+                builder.AppendLine();
+                    
+                if (builder.IncludeComments)
+                    builder.AppendLine("// Element Count: " + Conditions.Sum(x => x.ElementCount()) + ", Condition Count: " + Conditions.Length);
+                
+                builder.AppendKeywordLine("conditions")
                     .AppendLine("{")
                     .Indent();
 
@@ -96,16 +106,26 @@ namespace Deltin.Deltinteger.Elements
             {
                 builder.AppendLine();
 
-                // Action count comment.
+                // Action and element count comment.
                 if (builder.IncludeComments)
-                    builder.AppendLine("// Action count: " + Actions.Length);
+                {
+                    int largestCount = Actions.Max(x => x.ElementCount());
+                    Element largestAction = Array.FindIndex(Actions, x => x.ElementCount() == largestCount);
+                    int totalElementCount = Actions.Sum(x => x.ElementCount());
 
+                    builder.AppendLine($"// Element Count: {totalElementCount}, Action Count: {Actions.Length}");
+                    if (Actions.Length > 1) {
+                        builder.AppendLine($"// Largest Action Index: {largestAction} using {largestCount} Elements");
+                    }
+                       
+                }
+                
                 builder.AppendKeywordLine("actions").AppendLine("{").Indent();
                 int resetIndentInCaseOfUnbalance = builder.GetCurrentIndent();
 
                 foreach (var action in Actions)
                     action.ToWorkshop(builder, ToWorkshopContext.Action);
-
+                
                 builder.SetCurrentIndent(resetIndentInCaseOfUnbalance);
                 builder.Outdent().AppendLine("}");
             }
