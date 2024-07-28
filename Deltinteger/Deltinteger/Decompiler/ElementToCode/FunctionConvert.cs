@@ -284,17 +284,13 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 }).OnInterupt(() => Cap(decompiler, withBlock)).Get();
             }},
             {"Wait", (decompiler, function) => {
-                // Convert the Wait to a MinWait if the wait duration is less than or equal to the minimum.
-                if ((function.Values[0] is NumberExpression number && number.Value <= Constants.MINIMUM_WAIT) || (function.Values[0] is FunctionExpression durationFunc && durationFunc.Function.Name == "False"))
+                // Convert the Wait to a MinWait if the wait duration is less than or equal to the minimum and the behavior is set to Ignore Condition.
+                if (function.Values[1] is ConstantEnumeratorExpression enumerator &&
+                    enumerator.Member == ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition") &&
+                    ((function.Values[0] is NumberExpression number && number.Value <= Constants.MINIMUM_WAIT) ||
+     (function.Values[0] is FunctionExpression durationFunc && durationFunc.Function.Name == "False")))
                 {
-                    decompiler.Append("MinWait(");
-
-                    // Add wait behavior if it is not the default.
-                    if (function.Values[1] is ConstantEnumeratorExpression enumerator && enumerator.Member != ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"))
-                        enumerator.Decompile(decompiler);
-                    
-                    // End function
-                    decompiler.Append(")");
+                    decompiler.Append("MinWait()");
 
                     // Finished
                     decompiler.EndAction();
