@@ -719,13 +719,21 @@
   {
     "Name": "Hanaoka",
     "GameModes": [
-      "Clash"
+      "Clash",
+      "Skirmish"
     ]
   },
   {
     "Name": "Runasapi",
     "GameModes": [
       "Push",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Throne of Anubis",
+    "GameModes": [
+      "Clash",
       "Skirmish"
     ]
   }

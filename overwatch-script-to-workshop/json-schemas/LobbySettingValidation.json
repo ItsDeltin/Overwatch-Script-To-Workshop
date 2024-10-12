@@ -470,7 +470,8 @@
       "items": {
         "type": "string",
         "enum": [
-          "Hanaoka"
+          "Hanaoka",
+          "Throne of Anubis"
         ]
       }
     },
@@ -792,7 +793,9 @@
           "New Junk City",
           "Suravasa",
           "Samoa",
-          "Runasapi"
+          "Hanaoka",
+          "Runasapi",
+          "Throne of Anubis"
         ]
       }
     },
