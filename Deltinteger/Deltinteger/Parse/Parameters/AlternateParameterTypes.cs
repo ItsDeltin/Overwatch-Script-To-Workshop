@@ -106,9 +106,23 @@ namespace Deltin.Deltinteger.Parse
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
         {
-            StringAction str = value as StringAction;
-            if (str == null && valueRange != null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
-            return str?.Value;
+            // ConstantExpressionResolver.Resolve's callback will be called after this function runs,
+            // so we store the value in an object reference whose value will be set later.
+            var promise = new ConstStringResolver();
+
+            // Resolve the expression.
+            ConstantExpressionResolver.Resolve(value, expr =>
+            {
+                // If the resulting expression is a string,
+                if (expr is StringAction stringAction)
+                    // Resolve the value.
+                    promise.Resolve(stringAction.Value);
+                // Otherwise, add an error.
+                else if (valueRange != null)
+                    parseInfo.Script.Diagnostics.Error("Expected string constant", valueRange);
+            });
+
+            return promise?.Value;
         }
 
         public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
@@ -140,6 +154,12 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
+    }
+
+    class ConstStringResolver
+    {
+        public string Value { get; private set; }
+        public void Resolve(string value) => Value = value;
     }
 
     class ConstHeroValueResolver
