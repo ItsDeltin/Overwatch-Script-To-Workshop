@@ -43,6 +43,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             ("Echo", PlayerSelector.Echo),
             ("Genji", PlayerSelector.Genji),
             ("Hanzo", PlayerSelector.Hanzo),
+            ("Juno", PlayerSelector.Juno),
             ("Junker Queen", PlayerSelector.JunkerQueen),
             ("Junkrat", PlayerSelector.Junkrat),
             ("Kiriko", PlayerSelector.Kiriko),

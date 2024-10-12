@@ -6686,6 +6686,7 @@
         "Illari",
         "Mauga",
         "Venture",
+        "Juno",
       ]
     },
     "Hero": [
@@ -6706,6 +6707,7 @@
       "Illari",
       "Junker Queen",
       "Junkrat",
+      "Juno",
       "Kiriko",
       "Lifeweaver",
       {
@@ -7624,6 +7626,10 @@
       {
         "name": "Temple of Anubis",
         "alias": "Temple_of_Anubis"
+      },
+      {
+        "name": "Throne of Anubis",
+        "alias": "Throne_of_Anubis"
       },
       {
         "name": "Volskaya Industries",

@@ -346,6 +346,38 @@
                     ]
                 },
                 {
+                    "name": "Juno",
+                    "template": "base_hero",
+                    "$ult": "Orbital Ray",
+                    "$healer": true,
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Glide Boost",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Glide Boost Duration Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Hyper Ring",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Martian Overboots",
+                            "template": "ability",
+                            "$no_cooldown": true
+                        },
+                        {
+                            "name": "Pulsar Torpedoes",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
                     "name": "Junker Queen",
                     "template": "base_hero",
                     "$ult": "Rampage",

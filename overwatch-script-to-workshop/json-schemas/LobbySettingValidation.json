@@ -470,7 +470,8 @@
       "items": {
         "type": "string",
         "enum": [
-          "Hanaoka"
+          "Hanaoka",
+          "Throne of Anubis"
         ]
       }
     },
@@ -792,7 +793,9 @@
           "New Junk City",
           "Suravasa",
           "Samoa",
-          "Runasapi"
+          "Hanaoka",
+          "Runasapi",
+          "Throne of Anubis"
         ]
       }
     },
@@ -1666,6 +1669,63 @@
       "type": "boolean"
     },
     "Healing Pylon Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Ability (Orbital Ray)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Orbital Ray)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Orbital Ray)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Orbital Ray)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Glide Boost": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Glide Boost Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Glide Boost Duration Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Hyper Ring": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Hyper Ring Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Martian Overboots": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Pulsar Torpedoes": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Pulsar Torpedoes Cooldown Time": {
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
@@ -3185,6 +3245,7 @@
           "Genji",
           "Hanzo",
           "Illari",
+          "Juno",
           "Junker Queen",
           "Junkrat",
           "Kiriko",
@@ -3532,6 +3593,9 @@
             },
             "Projectile Speed": {
               "$ref": "#/definitions/Projectile Speed"
+            },
+            "Projectile Gravity": {
+              "$ref": "#/definitions/Projectile Gravity"
             },
             "Healing Dealt": {
               "$ref": "#/definitions/Healing Dealt"
@@ -4324,6 +4388,93 @@
             },
             "Healing Pylon Cooldown Time": {
               "$ref": "#/definitions/Healing Pylon Cooldown Time"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Juno": {
+          "description": "'Juno' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Ultimate Ability (Orbital Ray)": {
+              "$ref": "#/definitions/Ultimate Ability (Orbital Ray)"
+            },
+            "Ultimate Generation (Orbital Ray)": {
+              "$ref": "#/definitions/Ultimate Generation (Orbital Ray)"
+            },
+            "Ultimate Generation - Passive (Orbital Ray)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Orbital Ray)"
+            },
+            "Ultimate Generation - Combat (Orbital Ray)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Orbital Ray)"
+            },
+            "Glide Boost": {
+              "$ref": "#/definitions/Glide Boost"
+            },
+            "Glide Boost Cooldown Time": {
+              "$ref": "#/definitions/Glide Boost Cooldown Time"
+            },
+            "Glide Boost Duration Scalar": {
+              "$ref": "#/definitions/Glide Boost Duration Scalar"
+            },
+            "Hyper Ring": {
+              "$ref": "#/definitions/Hyper Ring"
+            },
+            "Hyper Ring Cooldown Time": {
+              "$ref": "#/definitions/Hyper Ring Cooldown Time"
+            },
+            "Martian Overboots": {
+              "$ref": "#/definitions/Martian Overboots"
+            },
+            "Pulsar Torpedoes": {
+              "$ref": "#/definitions/Pulsar Torpedoes"
+            },
+            "Pulsar Torpedoes Cooldown Time": {
+              "$ref": "#/definitions/Pulsar Torpedoes Cooldown Time"
             }
           },
           "additionalProperties": false

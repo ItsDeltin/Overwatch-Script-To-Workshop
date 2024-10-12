@@ -73,6 +73,7 @@
         Illari,
         Mauga,
         Venture,
+        Juno,
     }
 
     public enum Team
