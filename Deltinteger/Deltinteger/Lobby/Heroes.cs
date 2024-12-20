@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting MovementGravity = RangeValue.NewPercentage("Movement Gravity", 25, 400);
         private static readonly LobbySetting MovementSpeed = RangeValue.NewPercentage("Movement Speed", 50, 300);
         private static readonly LobbySetting ReceiveHeadshotsOnly = new SwitchValue("Receive Headshots Only", false);
+        private static readonly LobbySetting PassiveHealthRegeneration = new SwitchValue("Passive Health Regeneration", true);
         private static readonly LobbySetting PrimaryFire = new SwitchValue("Primary Fire", true);
         // * Generic Ammunition Info (Add to global) *
         private static readonly LobbySetting AmmunitionClipSizeScalar = RangeValue.NewPercentage("Ammunition Clip Size Scalar", 25, 500);
@@ -71,6 +72,7 @@ namespace Deltin.Deltinteger.Lobby
             Add(PrimaryFire);
             Add(AmmunitionClipSizeScalar);
             Add(NoAmmunitionRequirement);
+            Add(PassiveHealthRegeneration);
             return this;
         }
 

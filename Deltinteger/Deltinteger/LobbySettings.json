@@ -1936,6 +1936,11 @@
                     "name": "Primary Fire",
                     "type": "boolean_onoff",
                     "default": true
+                },
+                {
+                    "name": "Passive Health Regeneration",
+                    "type": "boolean_onoff",
+                    "default": true
                 }
             ]
         },
