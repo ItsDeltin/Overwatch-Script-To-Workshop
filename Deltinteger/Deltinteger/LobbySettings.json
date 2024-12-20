@@ -315,6 +315,30 @@
                     ]
                 },
                 {
+                    "name": "Hazard",
+                    "template": "base_hero",
+                    "$ult": "Downpour",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Jagged Wall",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Jagged Wall Health Scalar",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 400
+                        },
+                        {
+                            "name": "Spike Guard",
+                            "template": "ability"
+
+                        }
+                    ]
+                },
+                {
                     "name": "Illari",
                     "template": "base_hero",
                     "$ult": "Captive Sun",
