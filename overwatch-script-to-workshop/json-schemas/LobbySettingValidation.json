@@ -194,6 +194,10 @@
       "default": false,
       "type": "boolean"
     },
+    "Enable Perks On": {
+      "default": true,
+      "type": "boolean"
+    },
     "Capture Speed Modifier": {
       "default": 100.0,
       "type": "number",
@@ -476,6 +480,10 @@
       }
     },
     "Enabled Off": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Enable Perks Off": {
       "default": false,
       "type": "boolean"
     },
@@ -7284,6 +7292,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
             },
@@ -7389,6 +7400,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
             },
@@ -7453,6 +7467,9 @@
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
@@ -7528,6 +7545,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "Payload Speed Modifier": {
               "$ref": "#/definitions/Payload Speed Modifier"
             },
@@ -7592,6 +7612,9 @@
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
@@ -7661,6 +7684,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "TS-1 Walk Speed Modifier": {
               "$ref": "#/definitions/TS-1 Walk Speed Modifier"
             },
@@ -7728,6 +7754,9 @@
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
@@ -7818,6 +7847,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier - Clash Defaults"
             },
@@ -7879,6 +7911,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
             },
             "Blitz Flag Locations": {
               "$ref": "#/definitions/Blitz Flag Locations"
@@ -7972,6 +8007,9 @@
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
+            },
             "Game Length In Minutes": {
               "$ref": "#/definitions/Game Length In Minutes"
             },
@@ -8039,6 +8077,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
             },
             "Hero Selection Time": {
               "$ref": "#/definitions/Hero Selection Time"
@@ -8132,6 +8173,9 @@
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
+            },
             "Game Length In Minutes": {
               "$ref": "#/definitions/Game Length In Minutes"
             },
@@ -8212,6 +8256,9 @@
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
+            },
             "Limit Valid Control Points": {
               "$ref": "#/definitions/Limit Valid Control Points"
             },
@@ -8273,6 +8320,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Spawn Training Bots": {
               "$ref": "#/definitions/Spawn Training Bots"
@@ -8338,6 +8388,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
             },
             "Hero Selection Time": {
               "$ref": "#/definitions/Hero Selection Time"
@@ -8427,6 +8480,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Enabled": {
               "$ref": "#/definitions/Enabled Off"

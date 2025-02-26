@@ -217,6 +217,8 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting TS1WalkSpeed = new RangeValue(false, true, "TS-1 Walk Speed Modifier", 10, 500);
         private static readonly LobbySetting TS1PushSpeed = new RangeValue(false, true, "TS-1 Push Speed Modifier", 10, 500);
         private static readonly LobbySetting CompetitiveRules = new SwitchValue("Competitive Rules", false);
+        private static readonly LobbySetting EnablePerks_DefaultOn = new SwitchValue("Enable Perks", true) { ReferenceName = "Enable Perks On" };
+        private static readonly LobbySetting EnablePerks_DefaultOff = new SwitchValue("Enable Perks", false) { ReferenceName = "Enable Perks Off" };
         private static readonly LobbySetting Enabled_DefaultOn = new SwitchValue("Enabled", true) { ReferenceName = "Enabled On" };
         private static readonly LobbySetting Enabled_DefaultOff = new SwitchValue("Enabled", false) { ReferenceName = "Enabled Off" };
         private static readonly LobbySetting GameLengthInMinutes = new RangeValue(true, false, "Game Length In Minutes", 5, 15, 10);
@@ -288,6 +290,18 @@ namespace Deltin.Deltinteger.Lobby
             return this;
         }
 
+        public ModeSettingCollection PerksEnabled()
+        {
+            Add(EnablePerks_DefaultOn);
+            return this;
+        }
+
+        public ModeSettingCollection PerksDisabled()
+        {
+            Add(EnablePerks_DefaultOff);
+            return this;
+        }
+
         public ModeSettingCollection Elimination() => Add(HeroSelectionTime).Add(ScoreToWin_1to9).Add(RestrictPreviouslyUsedHeroes).Add(HeroSelection).Add(LimitedChoicePool)
             .Add(CaptureObjectiveTiebreaker).Add(TiebreakerAfterTimeElapsed).Add(TimeToCapture).Add(DrawAfterMatchTimeElaspedWithNoTiebreaker).Add(RevealHeroes).Add(RevealHeroesAfterMatchTimeElapsed);
 
@@ -331,29 +345,29 @@ namespace Deltin.Deltinteger.Lobby
             var all = new ModeSettingCollection("All");
             AllModeSettings = [
                 all,
-                new ModeSettingCollection("Assault", true).Competitive().AddCaptureSpeed(),
-                new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", false, 1, 3, 2, "Score To Win 1-3").Add(ScoringSpeedModifier),
-                new ModeSettingCollection("Escort", true).Competitive().AddPayloadSpeed(),
-                new ModeSettingCollection("Hybrid", true).Competitive().AddCaptureSpeed().AddPayloadSpeed(),
-                new ModeSettingCollection("Push", true).Competitive().AddTS1WalkSpeed().AddTS1PushSpeed(),
-                new ModeSettingCollection("Flashpoint", true).Competitive().AddCaptureSpeed()
+                new ModeSettingCollection("Assault", true).Competitive().PerksEnabled().AddCaptureSpeed(),
+                new ModeSettingCollection("Control", true).Competitive().PerksEnabled().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", false, 1, 3, 2, "Score To Win 1-3").Add(ScoringSpeedModifier),
+                new ModeSettingCollection("Escort", true).Competitive().PerksEnabled().AddPayloadSpeed(),
+                new ModeSettingCollection("Hybrid", true).Competitive().PerksEnabled().AddCaptureSpeed().AddPayloadSpeed(),
+                new ModeSettingCollection("Push", true).Competitive().PerksEnabled().AddTS1WalkSpeed().AddTS1PushSpeed(),
+                new ModeSettingCollection("Flashpoint", true).Competitive().PerksEnabled().AddCaptureSpeed()
                     .AddSwitch("Control Point A", true).AddSwitch("Control Point B", true).AddSwitch("Control Point C", true).AddSwitch("Control Point D", true).AddSwitch("Control Point E", true)
                     .AddSelect("First Active Control Point", "A", "B", "C", "D", "E", "Random")
                     .AddIntRange("Score To Win", false, 1, 10, 3).Add(ScoringSpeedModifier),
-                new ModeSettingCollection("Clash", true).Competitive()
+                new ModeSettingCollection("Clash", true).Competitive().PerksEnabled()
                     .Add(CaptureSpeedClash),
-                new ModeSettingCollection("Capture The Flag", false).AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
+                new ModeSettingCollection("Capture The Flag", false).PerksDisabled().AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
                     .AddSelect("Flag Carrier Abilities", "Restricted", "All", "None").AddRange("Flag Dropped Lock Time", 0, 10, 5).AddRange("Flag Pickup Time", 0, 5, 0).AddRange("Flag Return Time", 0, 5, 4)
                     .AddRange("Flag Score Respawn Time", 0, 20, 15).AddIntRange("Game Length (Minutes)", false, 5, 15, 8).AddRange("Respawn Speed Buff Duration", 0, 60, 0).Add(ScoreToWin_1to9)
                     .AddSwitch("Team Needs Flag At Base To Score", false),
-                new ModeSettingCollection("Deathmatch", false).Add(GameLengthInMinutes).Add(SelfInitiatedRespawn).Add(ScoreToWin_1to5000),
-                new ModeSettingCollection("Elimination", false).Elimination(),
-                new ModeSettingCollection("Team Deathmatch", false).Add(GameLengthInMinutes).AddSwitch("Mercy Resurrect Counteracts Kills", true).AddIntRange("Score To Win", false, 1, 200, 30, "Score To Win 1-200").Add(SelfInitiatedRespawn).AddSwitch("Imbalanced Team Score To Win", false)
+                new ModeSettingCollection("Deathmatch", false).PerksDisabled().Add(GameLengthInMinutes).Add(SelfInitiatedRespawn).Add(ScoreToWin_1to5000),
+                new ModeSettingCollection("Elimination", false).PerksDisabled().Elimination(),
+                new ModeSettingCollection("Team Deathmatch", false).PerksDisabled().Add(GameLengthInMinutes).AddSwitch("Mercy Resurrect Counteracts Kills", true).AddIntRange("Score To Win", false, 1, 200, 30, "Score To Win 1-200").Add(SelfInitiatedRespawn).AddSwitch("Imbalanced Team Score To Win", false)
                     .AddIntRange("Team 1 Score To Win", false, 1, 200, 30).AddIntRange("Team 2 Score To Win", false, 1, 200, 30),
-                new ModeSettingCollection("Skirmish", false).Add(LimitValidControlPoints),
-                new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500),
-                new ModeSettingCollection("Freezethaw Elimination", false).Elimination(),
-                new ModeSettingCollection("Bounty Hunter").Add(Enabled_DefaultOff).AddIntRange("Base Score For Killing A Bounty Target", false, 0, 100, 300).AddIntRange("Bounty Increase Per Kill As Bounty Target", false, 0, 1000, 0).AddIntRange("Bounty Target Count", false, 1, 1, 1).AddIntRange("Score Per Kill", false, 0, 1000, 100).AddIntRange("Score Per Kill As Bounty Target", false, 0, 1000, 300)
+                new ModeSettingCollection("Skirmish", false).PerksDisabled().Add(LimitValidControlPoints),
+                new ModeSettingCollection("Practice Range", false).PerksEnabled().AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500),
+                new ModeSettingCollection("Freezethaw Elimination", false).PerksDisabled().Elimination(),
+                new ModeSettingCollection("Bounty Hunter").PerksEnabled().Add(Enabled_DefaultOff).AddIntRange("Base Score For Killing A Bounty Target", false, 0, 100, 300).AddIntRange("Bounty Increase Per Kill As Bounty Target", false, 0, 1000, 0).AddIntRange("Bounty Target Count", false, 1, 1, 1).AddIntRange("Score Per Kill", false, 0, 1000, 100).AddIntRange("Score Per Kill As Bounty Target", false, 0, 1000, 300)
                     .Add(GameLengthInMinutes).Add(ScoreToWin_1to5000).Add(SelfInitiatedRespawn)
             ];
 
