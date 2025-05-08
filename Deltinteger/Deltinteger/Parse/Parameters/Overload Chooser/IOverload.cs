@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public bool RestrictedValuesAreFatal => _function.RestrictedValuesAreFatal;
         public CodeType ContainingType => _function.Attributes.ContainingType;
         public AccessLevel AccessLevel => _function.AccessLevel;
-        public CodeType ReturnType => _function.CodeType.GetCodeType(_deltinScript);
+        public CodeType ReturnType => _function.CodeType?.GetCodeType(_deltinScript);
         private readonly IMethod _function;
         private readonly DeltinScript _deltinScript;
 
