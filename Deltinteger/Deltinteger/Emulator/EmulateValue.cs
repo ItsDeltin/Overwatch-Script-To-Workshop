@@ -25,7 +25,7 @@ public abstract record EmulateValue
     public EmulateValue ValueInArray(double index)
     {
         var items = Spread();
-        return index < items.Length ? items[Math.Max((int)index, 0)] : Default;
+        return index >= 0 && index < items.Length ? items[Math.Max((int)index, 0)] : Default;
     }
     public EmulateValue IndexOf(EmulateValue value)
     {
@@ -103,6 +103,7 @@ public abstract record EmulateValue
         public override EmulateValue FirstOf() => Values.Length == 0 ? Default : Values[0];
         public override EmulateValue LastOf() => Values.Length == 0 ? Default : Values[^1];
         public override EmulateValue[] Spread() => Values;
+        public override string ToString() => $"[{string.Join<EmulateValue>(", ", Values)}]";
     }
     sealed record String(string Value) : EmulateValue
     {
@@ -178,14 +179,27 @@ public abstract record EmulateValue
 
     public static EmulateValue Compare(EmulateValue left, Operator op, EmulateValue right) => op switch
     {
-        Operator.Equal => left == right,
-        Operator.NotEqual => left != right,
+        Operator.Equal => AreEqual(left, right),
+        Operator.NotEqual => !AreEqual(left, right),
         Operator.LessThan => left.AsNumber() < right.AsNumber(),
         Operator.LessThanOrEqual => left.AsNumber() <= right.AsNumber(),
         Operator.GreaterThan => left.AsNumber() > right.AsNumber(),
         Operator.GreaterThanOrEqual => left.AsNumber() >= right.AsNumber(),
         _ => throw new NotImplementedException(),
     };
+
+    public static bool AreEqual(EmulateValue a, EmulateValue b)
+    {
+        if (a is Array arrayA && b is Array arrayB && arrayA.Values.Length == arrayB.Values.Length)
+        {
+            for (int i = 0; i < arrayA.Values.Length; i++)
+                if (!AreEqual(arrayA.Values[i], arrayB.Values[i]))
+                    return false;
+            return true;
+        }
+        // Record equality
+        return a == b;
+    }
 
     public static Result<EmulateValue, string> Evaluate(IWorkshopTree value, EmulateState state)
     {
@@ -227,6 +241,7 @@ public abstract record EmulateValue
                 ("Global Variable", 1) => EmulateHelper.ExtractVariableName(p[0]).MapValue(name => state.GetGlobalVariable(name).Value),
                 ("Value In Array", 2) => arithmetic((array, index) => array.ValueInArray(index)),
                 ("Index Of Array Value", 2) => arithmetic((array, value) => array.IndexOf(value)),
+                ("Append To Array", 2) => arithmetic((array, value) => array.Append(value)),
                 ("String" or "Custom String", _) => EvaluateString(element, state),
                 ("Vector", 3) => eval(p[0]).And(eval(p[1])).And(eval(p[2])).MapValue(xy_z => From(xy_z.a.a, xy_z.a.b, xy_z.b)),
                 ("X Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().X)),

@@ -18,10 +18,15 @@ public class EmulateScript
         this.rules = rules.Select(rule => new EmulateRule(state, rule)).ToArray();
     }
 
-    public void TickOne()
+    public RuleTickResult TickOne()
     {
         foreach (var rule in rules)
-            rule.Tick();
+        {
+            var ruleTickResult = rule.Tick();
+            if (ruleTickResult is not RuleTickResult.Ok)
+                return ruleTickResult;
+        }
+        return RuleTickResult.Ok;
     }
 
     public EmulateValue GetGlobalVariableValue(string name) => state.GetGlobalVariable(name).Value;
@@ -44,7 +49,7 @@ class EmulateRule(EmulateState state, Rule rule)
     bool isExecuting = false;
 
     /// <summary>This is executed every tick.</summary>
-    public void Tick()
+    public RuleTickResult Tick()
     {
         if (!isExecuting && ConditionsOk())
         {
@@ -65,6 +70,9 @@ class EmulateRule(EmulateState state, Rule rule)
                         break;
                     case ExecutedAction.Wait: throw new NotImplementedException();
                     case ExecutedAction.CallRule call:
+                        if (stack.Count >= 1000)
+                            return RuleTickResult.MaxStackLengthExceeded;
+
                         var rule = state.RuleFromSubroutineName(call.SubroutineName).Unwrap($"Failed to find rule with subroutine named '{call.SubroutineName}'");
                         stack.Push(new(state, rule));
                         break;
@@ -76,6 +84,7 @@ class EmulateRule(EmulateState state, Rule rule)
                 break;
             }
         }
+        return RuleTickResult.Ok;
     }
 
     public bool ConditionsOk()
@@ -455,4 +464,10 @@ abstract record ExecutedAction
     /// <summary>A subroutine was executed and its rule should be added to the stack.</summary>
     /// <param name="SubroutineName">The name of the subroutine that will be added to the stack.</param>
     public sealed record CallRule(string SubroutineName) : ExecutedAction;
+}
+
+public enum RuleTickResult
+{
+    Ok,
+    MaxStackLengthExceeded
 }

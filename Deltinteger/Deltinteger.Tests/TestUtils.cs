@@ -118,12 +118,12 @@ readonly record struct CompileResult(string Code, Diagnostics Diagnostics, List<
                 Debugger.Break();
             output += log;
         }));
-        emulation.TickOne();
-        return new(emulation, output);
+        var result = emulation.TickOne();
+        return new(emulation, output, result);
     }
 }
 
-readonly record struct TickEmulationResult(EmulateScript Emulation, string Log)
+readonly record struct TickEmulationResult(EmulateScript Emulation, string Log, RuleTickResult Result)
 {
     public readonly TickEmulationResult AssertVariable(string name, double value)
     {
@@ -136,6 +136,14 @@ readonly record struct TickEmulationResult(EmulateScript Emulation, string Log)
     {
         var actual = Emulation.GetGlobalVariableValue(name).AsBoolean();
         Assert.AreEqual(value, actual, $"'{name}' has incorrect value");
+        return this;
+    }
+
+    public readonly TickEmulationResult AssertVariable(string name, EmulateValue[] values)
+    {
+        var value = EmulateValue.From(values);
+        var actual = Emulation.GetGlobalVariableValue(name);
+        Assert.IsTrue(EmulateValue.AreEqual(value, actual), $"'{name}' has incorrect value");
         return this;
     }
 

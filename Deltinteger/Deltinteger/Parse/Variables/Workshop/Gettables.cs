@@ -53,10 +53,9 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Pop(ActionSet actionSet) => throw new Exception("Cannot pop IndexReference");
         public virtual void Push(ActionSet actionSet, IWorkshopTree value) => throw new Exception("Cannot push IndexReference");
 
-        public IndexReference CreateChild(params Element[] index)
+        public virtual IndexReference CreateChild(params Element[] index)
         {
-            // Note: `ArrayBuilder` and `ArrayBuilder<Element>` are 2 very different things.
-            return new IndexReference(ArrayBuilder, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
+            return new IndexReference(ArrayBuilder, WorkshopVariable, [.. Index ?? [], .. index ?? []]);
         }
 
         IGettable IGettable.ChildFromClassReference(IWorkshopTree reference) => CreateChild((Element)reference);
@@ -85,12 +84,12 @@ namespace Deltin.Deltinteger.Parse
 
         public override Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
         {
-            return base.SetVariable(value, targetPlayer, CurrentIndex(targetPlayer, index));
+            return base.SetVariable(value, targetPlayer, CurrentIndex(index));
         }
 
         public override Element[] ModifyVariable(Operation operation, IWorkshopTree value, Element targetPlayer = null, params Element[] index)
         {
-            return base.ModifyVariable(operation, value, targetPlayer, CurrentIndex(targetPlayer, index));
+            return base.ModifyVariable(operation, value, targetPlayer, CurrentIndex(index));
         }
 
         public override void Pop(ActionSet actionSet) => actionSet.AddAction(Pop());
@@ -103,7 +102,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Element[] Push(Element value)
         {
-            return base.ModifyVariable(Operation.AppendToArray, value);
+            return base.ModifyVariable(Operation.AppendToArray, Element.CreateArray(value));
         }
 
         public Element[] Pop()
@@ -111,17 +110,22 @@ namespace Deltin.Deltinteger.Parse
             return base.ModifyVariable(Operation.RemoveFromArrayByIndex, StackLength() - 1);
         }
 
-        private Element[] CurrentIndex(Element targetPlayer, params Element[] setAtIndex)
+        private Element[] CurrentIndex(params Element[] setAtIndex)
         {
-            return ArrayBuilder<Element>.Build(
+            return [
                 StackLength() - 1,
-                setAtIndex
-            );
+                ..setAtIndex ?? []
+            ];
         }
 
         private Element StackLength()
         {
             return Element.CountOf(base.GetVariable());
+        }
+
+        public override IndexReference CreateChild(params Element[] index)
+        {
+            return base.CreateChild(CurrentIndex(index));
         }
     }
 
