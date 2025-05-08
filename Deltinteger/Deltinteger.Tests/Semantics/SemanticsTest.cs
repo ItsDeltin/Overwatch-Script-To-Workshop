@@ -105,4 +105,86 @@ public class SemanticsTest
         }
         """).AssertOk();
     }
+
+    [TestMethod("Parallel struct indexers (#351)")]
+    public void ParallelStructIndexers()
+    {
+        // Not ok: index into struct
+        Compile("""
+        struct Str {
+            Number a;
+        }
+
+        rule: ''
+        {
+            Str a;
+            a[0] = 1;
+        }
+        """).AssertSearchError("This struct cannot be indexed");
+
+        // Ok: index into struct array
+        Compile("""
+        struct Str {
+            Number a;
+        }
+
+        rule: ''
+        {
+            Str[] a;
+            a[0] = { a: 0 };
+        }
+        """).AssertOk();
+
+        // Not ok: index into struct
+        Compile("""
+        struct Str {
+            Number a;
+        }
+        Str str(): { a: 0 };
+
+        rule: ''
+        {
+            Any a = str()[0];
+        }
+        """).AssertSearchError("This struct cannot be indexed");
+
+        // Ok: index into struct array
+        Compile("""
+        struct Str {
+            Number a;
+        }
+        Str[] str(): [{ a: 0 }];
+
+        rule: ''
+        {
+            Str a = str()[0];
+        }
+        """).AssertOk();
+
+        // Ok: index into single struct
+        Compile("""
+        single struct Str {
+            Number a;
+        }
+
+        rule: ''
+        {
+            Str a;
+            a[0] = 1;
+        }
+        """).AssertOk();
+
+        // Ok: index into single struct
+        Compile("""
+        single struct Str {
+            Number a;
+        }
+        Str str(): { a: 0 };
+
+        rule: ''
+        {
+            Any a = str()[0];
+        }
+        """).AssertOk();
+    }
 }

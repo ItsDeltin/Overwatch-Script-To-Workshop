@@ -314,11 +314,21 @@ namespace Deltin.Deltinteger.Parse
             // Get the index.
             if (variableContext.Index != null)
             {
+                // Confirm that variable may be indexed.
+                if (variableContext.Index.Count > 0)
+                {
+                    var variableType = variable.CodeType?.GetCodeType(parseInfo.TranslateInfo);
+                    if (variableType is not null && CodeTypeHelpers.IsParallel(variableType) && !CodeTypeHelpers.IsArray(variableType))
+                    {
+                        parseInfo.Error("This struct cannot be indexed", CallRange);
+                    }
+                }
+
                 _index = new IExpression[variableContext.Index.Count];
                 for (int i = 0; i < _index.Length; i++)
                 {
                     _index[i] = parseInfo.GetExpression(scope, variableContext.Index[i].Expression, getter: getter);
-                    if (_index[i].Type().Attributes.IsStruct)
+                    if (CodeTypeHelpers.IsParallel(_index[i].Type()))
                     {
                         parseInfo.Script.Diagnostics.Error("Structs cannot be used as an indexer", variableContext.Index[i].Expression.Range);
                     }

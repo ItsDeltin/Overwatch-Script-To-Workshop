@@ -63,6 +63,12 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if the input type is narrowed down to an explicit type.</summary>
         public static bool IsTypeConfident(CodeType type) => !IsAny(type) && !IsPipeType(type);
 
+        /// <summary>Determines if a type is parallel.</summary>
+        public static bool IsParallel(CodeType type) => type.Attributes.IsStruct;
+
+        /// <summary>Determines if a type is an array.</summary>
+        public static bool IsArray(CodeType type) => type is ArrayType;
+
         /// <summary>Determines if a type is valid for a parameter.</summary>
         public static bool IsParameterInputValid(CodeType? parameterType, CodeType? valueType) =>
             parameterType != null && valueType != null && DoesTypeImplement(parameterType, valueType);
