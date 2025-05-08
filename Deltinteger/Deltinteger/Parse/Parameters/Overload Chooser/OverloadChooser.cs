@@ -7,6 +7,7 @@ using Deltin.Deltinteger.Parse.Lambda;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
 using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
 using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ParameterInformation;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse.Overload
 {
@@ -76,6 +77,8 @@ namespace Deltin.Deltinteger.Parse.Overload
                     refResolvedVariable: pickyParameterInfo.RefVariable,
                     parameterRange: pickyParameterInfo.ExpressionRange);
             }
+
+            AddNamedArgumentCompletion();
         }
 
         private PickyParameter[] ParametersFromContext(List<ParameterValue> context)
@@ -386,6 +389,43 @@ namespace Deltin.Deltinteger.Parse.Overload
                 ActiveSignature = activeSignature,
                 Signatures = signatureInformations
             };
+        }
+
+        private void AddNamedArgumentCompletion()
+        {
+            DocRange nextParameterRange;
+            if (_extraneousParameterRange is not null)
+            {
+                nextParameterRange = _extraneousParameterRange.End + CallRange.End;
+            }
+            else if (_providedParameterCount == 0)
+            {
+                nextParameterRange = CallRange.Start + CallRange.End;
+            }
+            else
+            {
+                return;
+            }
+
+            _parseInfo.Script.AddCompletionRange(ICompletionRange.New(
+                range: nextParameterRange,
+                kind: CompletionRangeKind.Additive,
+                (a) =>
+                {
+                    var missingArguments = new List<(int Index, CodeParameter Param)>();
+                    for (int i = 0; i < Match.OrderedParameters.Length; i++)
+                        if (Match.OrderedParameters[i].Prefilled)
+                            missingArguments.Add((i, Match.Option.Parameters[i]));
+
+                    return missingArguments.Select(missing => new CompletionItem()
+                    {
+                        Label = $"{missing.Param.Name}:",
+                        InsertText = $"{missing.Param.Name}: ",
+                        SortText = $"!{missing.Index}{missing.Param.Name}",
+                        Kind = CompletionItemKind.Variable,
+                        Documentation = missing.Param.Documentation
+                    });
+                }));
         }
     }
 
