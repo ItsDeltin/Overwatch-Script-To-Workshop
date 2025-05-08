@@ -1407,7 +1407,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             else
             {
                 parameters = new List<LambdaParameter>();
-                parameters.Add(new LambdaParameter(null, ParseExpected(TokenType.Identifier)));
+                if (ParseExpected(TokenType.Identifier, out var name))
+                    parameters.Add(new LambdaParameter(null, name));
             }
 
             // Arrow.
