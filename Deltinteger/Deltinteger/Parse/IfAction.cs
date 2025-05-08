@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
         public IfAction(ParseInfo parseInfo, Scope scope, If ifContext)
         {
             // Get the if condition.
-            Expression = parseInfo.GetExpression(scope, ifContext.Expression);
+            Expression = parseInfo.SetIsUsedAsValue(true).GetExpression(scope, ifContext.Expression);
 
             SemanticsHelper.ExpectNonConstant(parseInfo, ifContext.Expression.Range, Expression.Type());
 
@@ -175,7 +175,7 @@ namespace Deltin.Deltinteger.Parse
         public ElseIfAction(ParseInfo parseInfo, Scope scope, ElseIf elseIfContext)
         {
             // Get the else-if's expression.
-            Expression = parseInfo.GetExpression(scope, elseIfContext.Expression);
+            Expression = parseInfo.SetIsUsedAsValue(true).GetExpression(scope, elseIfContext.Expression);
 
             SemanticsHelper.ExpectNonConstant(parseInfo, elseIfContext.Expression.Range, Expression.Type());
 

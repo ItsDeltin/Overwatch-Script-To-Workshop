@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
 
         public WhileAction(ParseInfo parseInfo, Scope scope, While whileContext)
         {
-            Condition = parseInfo.GetExpression(scope, whileContext.Condition);
+            Condition = parseInfo.SetIsUsedAsValue(true).GetExpression(scope, whileContext.Condition);
 
             SemanticsHelper.ExpectNonConstant(parseInfo, whileContext.Condition.Range, Condition.Type());
 
@@ -159,7 +159,7 @@ namespace Deltin.Deltinteger.Parse
                         FullVariable = true
                     }, parseInfo.GetExpression(varScope, assignment.VariableExpression), assignment.VariableExpression.Range);
 
-                    InitialResolveValue = parseInfo.GetExpression(scope, assignment.Value);
+                    InitialResolveValue = parseInfo.SetIsUsedAsValue(true).GetExpression(scope, assignment.Value);
                 }
                 // Variable
                 else if (forContext.Initializer is ExpressionStatement exprStatement && exprStatement.Expression is Identifier identifier)
@@ -183,7 +183,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the condition.
             if (forContext.Condition != null)
             {
-                Condition = parseInfo.GetExpression(varScope, forContext.Condition);
+                Condition = parseInfo.SetIsUsedAsValue(true).GetExpression(varScope, forContext.Condition);
                 SemanticsHelper.ExpectNonConstant(parseInfo, forContext.Condition.Range, Condition.Type());
             }
 
@@ -193,7 +193,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the auto-for
                 if (IsAutoFor)
                 {
-                    Step = parseInfo.GetExpression(varScope, ((ExpressionStatement)forContext.Iterator).Expression);
+                    Step = parseInfo.SetIsUsedAsValue(true).GetExpression(varScope, ((ExpressionStatement)forContext.Iterator).Expression);
                 }
                 // Get the for assignment.
                 else
@@ -347,7 +347,7 @@ namespace Deltin.Deltinteger.Parse
             foreachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext)).GetVar();
 
             // Get the array that will be iterated on.
-            array = parseInfo.GetExpression(scope, foreachContext.Expression);
+            array = parseInfo.SetIsUsedAsValue(true).GetExpression(scope, foreachContext.Expression);
 
             // Strict when struct
             if (array.Type().Attributes.IsStruct)
