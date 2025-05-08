@@ -315,6 +315,30 @@
                     ]
                 },
                 {
+                    "name": "Hazard",
+                    "template": "base_hero",
+                    "$ult": "Downpour",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Jagged Wall",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Jagged Wall Health Scalar",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 400
+                        },
+                        {
+                            "name": "Spike Guard",
+                            "template": "ability"
+
+                        }
+                    ]
+                },
+                {
                     "name": "Illari",
                     "template": "base_hero",
                     "$ult": "Captive Sun",
@@ -1341,6 +1365,7 @@
                     "template": "base_mode",
                     "$with_maps": "Assault",
                     "$competitive": true,
+                    "$enable_perks": true,
                     "$capture_speed": true
                 },
                 {
@@ -1348,13 +1373,14 @@
                     "template": "base_mode",
                     "$with_maps": "Control",
                     "$competitive": true,
+                    "$enable_perks": true,
                     "$capture_speed": true,
                     "$limit_valid_control_points": true,
                     "$scoring_speed_modifier": true,
                     "content": [
                         {
                             "name": "Score To Win",
-                            "type": "range_percentage",
+                            "type": "range_int",
                             "min": 1,
                             "max": 3,
                             "default": 2
@@ -1366,6 +1392,7 @@
                     "$with_maps": "Escort",
                     "template": "base_mode",
                     "$competitive": true,
+                    "$enable_perks": true,
                     "$payload_speed": true
                 },
                 {
@@ -1373,6 +1400,7 @@
                     "template": "base_mode",
                     "$with_maps": "Hybrid",
                     "$competitive": true,
+                    "$enable_perks": true,
                     "$capture_speed": true,
                     "$payload_speed": true
                 },
@@ -1381,6 +1409,7 @@
                     "template": "base_mode",
                     "$with_maps": "Push",
                     "$competitive": true,
+                    "$enable_perks": true,
                     "content": [
                         {
                             "name": "TS-1 Walk Speed Modifier",
@@ -1401,6 +1430,7 @@
                     "template": "base_mode",
                     "$with_maps": "Flashpoint",
                     "$competitive": true,
+                    "$enable_perks": true,
                     "$capture_speed": true,
                     "$scoring_speed_modifier": true,
                     "content": [
@@ -1454,6 +1484,7 @@
                     "template": "base_mode",
                     "$with_maps": "Clash",
                     "$competitive": true,
+                    "$enable_perks": true,
                     "content": [
                         {
                             "name": "Capture Speed Modifier",
@@ -1468,6 +1499,7 @@
                     "name": "Capture The Flag",
                     "template": "base_mode",
                     "$with_maps": "Capture The Flag",
+                    "$enable_perks": true,
                     "content": [
                         {
                             "name": "Blitz Flag Locations",
@@ -1546,6 +1578,7 @@
                     "$with_maps": "Deathmatch",
                     "$game_length": true,
                     "$self_respawn": true,
+                    "$enable_perks": true,
                     "content": [
                         {
                             "name": "Score To Win",
@@ -1560,6 +1593,7 @@
                     "name": "Elimination",
                     "template": "base_mode",
                     "$with_maps": "Elimination",
+                    "$enable_perks": true,
                     "$elimination": true
                 },
                 {
@@ -1568,6 +1602,7 @@
                     "$with_maps": "Team Deathmatch",
                     "$game_length": true,
                     "$self_respawn": true,
+                    "$enable_perks": true,
                     "content": [
                         {
                             "name": "Mercy Resurrect Counteracts Kills",
@@ -1605,12 +1640,14 @@
                     "name": "Skirmish",
                     "template": "base_mode",
                     "$with_maps": "Skirmish",
+                    "$enable_perks": true,
                     "$limit_valid_control_points": true
                 },
                 {
                     "name": "Practice Range",
                     "template": "base_mode",
                     "$with_maps": "Practice Range",
+                    "$enable_perks": true,
                     "content": [
                         {
                             "name": "Spawn Training Bots",
@@ -1636,6 +1673,7 @@
                     "$with_maps": "Bounty Hunter",
                     "$game_length": true,
                     "$self_respawn": true,
+                    "$enable_perks": true,
                     "content": [
                         {
                             "name": "Score To Win",
@@ -1936,6 +1974,11 @@
                     "name": "Primary Fire",
                     "type": "boolean_onoff",
                     "default": true
+                },
+                {
+                    "name": "Passive Health Regeneration",
+                    "type": "boolean_onoff",
+                    "default": true
                 }
             ]
         },
@@ -2009,6 +2052,14 @@
         },
         "base_mode": {
             "params": {
+                "enable_perks": {
+                    "then": [
+                        {
+                            "name": "Enable Perks",
+                            "type": "boolean_onoff"
+                        }
+                    ]
+                },
                 "competitive": {
                     "then": [
                         {

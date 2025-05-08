@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting MovementGravity = RangeValue.NewPercentage("Movement Gravity", 25, 400);
         private static readonly LobbySetting MovementSpeed = RangeValue.NewPercentage("Movement Speed", 50, 300);
         private static readonly LobbySetting ReceiveHeadshotsOnly = new SwitchValue("Receive Headshots Only", false);
+        private static readonly LobbySetting PassiveHealthRegeneration = new SwitchValue("Passive Health Regeneration", true);
         private static readonly LobbySetting PrimaryFire = new SwitchValue("Primary Fire", true);
         // * Generic Ammunition Info (Add to global) *
         private static readonly LobbySetting AmmunitionClipSizeScalar = RangeValue.NewPercentage("Ammunition Clip Size Scalar", 25, 500);
@@ -71,6 +72,7 @@ namespace Deltin.Deltinteger.Lobby
             Add(PrimaryFire);
             Add(AmmunitionClipSizeScalar);
             Add(NoAmmunitionRequirement);
+            Add(PassiveHealthRegeneration);
             return this;
         }
 
@@ -213,6 +215,11 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Echo").AddUlt("Duplicate").AddProjectile(false).AddAbility("Flight").AddAbility("Focusing Beam").AddAbility("Glide", hasCooldown: false).AddAbility("Sticky Bombs"),
                 new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Swift Strike"),
                 new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrows").AddIntRange("Storm Arrows Quantity", false, 3, 12, 5),
+                new HeroSettingCollection("Hazard")
+                    .AddUlt("Downpour")
+                    .AddAbility("Jagged Wall", hasKnockback: true).AddRange("Jagged Wall Health Scalar", 25, 400)
+                    .AddAbility("Spike Guard", hasCooldown: false).AddRange("Spike Guard Resource Cost Scalar", 0, 200).AddRange("Spike Guard Resource Regeneration Scalar", 25, 200)
+                    .AddAbility("Violent Leap").AddRange("Violent Leap Distance Scalar", 100, 200),
                 new HeroSettingCollection("Illari")
                     .AddHealer().AddProjectile(true)
                     .AddUlt("Captive Sun")

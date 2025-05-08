@@ -74,6 +74,7 @@
         Mauga,
         Venture,
         Juno,
+        Hazard,
     }
 
     public enum Team

@@ -194,6 +194,10 @@
       "default": false,
       "type": "boolean"
     },
+    "Enable Perks On": {
+      "default": true,
+      "type": "boolean"
+    },
     "Capture Speed Modifier": {
       "default": 100.0,
       "type": "number",
@@ -476,6 +480,10 @@
       }
     },
     "Enabled Off": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Enable Perks Off": {
       "default": false,
       "type": "boolean"
     },
@@ -983,6 +991,10 @@
     },
     "No Ammunition Requirement": {
       "default": false,
+      "type": "boolean"
+    },
+    "Passive Health Regeneration": {
+      "default": true,
       "type": "boolean"
     },
     "Ultimate Ability": {
@@ -1624,6 +1636,76 @@
       "type": "integer",
       "minimum": 3.0,
       "maximum": 12.0
+    },
+    "Ultimate Ability (Downpour)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Downpour)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Downpour)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Downpour)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Jagged Wall": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Jagged Wall Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Jagged Wall Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Jagged Wall Health Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 25.0,
+      "maximum": 400.0
+    },
+    "Spike Guard": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Spike Guard Resource Cost Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 200.0
+    },
+    "Spike Guard Resource Regeneration Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 25.0,
+      "maximum": 200.0
+    },
+    "Violent Leap": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Violent Leap Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Violent Leap Distance Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 100.0,
+      "maximum": 200.0
     },
     "Ultimate Ability (Captive Sun)": {
       "default": true,
@@ -3244,6 +3326,7 @@
           "Echo",
           "Genji",
           "Hanzo",
+          "Hazard",
           "Illari",
           "Juno",
           "Junker Queen",
@@ -3321,6 +3404,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability": {
               "$ref": "#/definitions/Ultimate Ability"
             },
@@ -3395,6 +3481,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Nano Boost)": {
               "$ref": "#/definitions/Ultimate Ability (Nano Boost)"
@@ -3476,6 +3565,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (B.O.B.)": {
               "$ref": "#/definitions/Ultimate Ability (B.O.B.)"
@@ -3573,6 +3665,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Amplification Matrix)": {
               "$ref": "#/definitions/Ultimate Ability (Amplification Matrix)"
             },
@@ -3660,6 +3755,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Configuration: Artillery)": {
               "$ref": "#/definitions/Ultimate Ability (Configuration: Artillery)"
             },
@@ -3737,6 +3835,9 @@
             },
             "Primary Fire": {
               "$ref": "#/definitions/Primary Fire"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Rally)": {
               "$ref": "#/definitions/Ultimate Ability (Rally)"
@@ -3840,6 +3941,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Deadeye)": {
               "$ref": "#/definitions/Ultimate Ability (Deadeye)"
             },
@@ -3911,6 +4015,9 @@
             },
             "Primary Fire": {
               "$ref": "#/definitions/Primary Fire"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Self-Destruct)": {
               "$ref": "#/definitions/Ultimate Ability (Self-Destruct)"
@@ -4008,6 +4115,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Meteor Strike)": {
               "$ref": "#/definitions/Ultimate Ability (Meteor Strike)"
             },
@@ -4104,6 +4214,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Duplicate)": {
               "$ref": "#/definitions/Ultimate Ability (Duplicate)"
             },
@@ -4185,6 +4298,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Dragonblade)": {
               "$ref": "#/definitions/Ultimate Ability (Dragonblade)"
             },
@@ -4260,6 +4376,9 @@
             "Primary Fire": {
               "$ref": "#/definitions/Primary Fire"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Dragonstrike)": {
               "$ref": "#/definitions/Ultimate Ability (Dragonstrike)"
             },
@@ -4305,6 +4424,96 @@
           },
           "additionalProperties": false
         },
+        "Hazard": {
+          "description": "'Hazard' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Ultimate Ability (Downpour)": {
+              "$ref": "#/definitions/Ultimate Ability (Downpour)"
+            },
+            "Ultimate Generation (Downpour)": {
+              "$ref": "#/definitions/Ultimate Generation (Downpour)"
+            },
+            "Ultimate Generation - Passive (Downpour)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Downpour)"
+            },
+            "Ultimate Generation - Combat (Downpour)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Downpour)"
+            },
+            "Jagged Wall": {
+              "$ref": "#/definitions/Jagged Wall"
+            },
+            "Jagged Wall Cooldown Time": {
+              "$ref": "#/definitions/Jagged Wall Cooldown Time"
+            },
+            "Jagged Wall Knockback Scalar": {
+              "$ref": "#/definitions/Jagged Wall Knockback Scalar"
+            },
+            "Jagged Wall Health Scalar": {
+              "$ref": "#/definitions/Jagged Wall Health Scalar"
+            },
+            "Spike Guard": {
+              "$ref": "#/definitions/Spike Guard"
+            },
+            "Spike Guard Resource Cost Scalar": {
+              "$ref": "#/definitions/Spike Guard Resource Cost Scalar"
+            },
+            "Spike Guard Resource Regeneration Scalar": {
+              "$ref": "#/definitions/Spike Guard Resource Regeneration Scalar"
+            },
+            "Violent Leap": {
+              "$ref": "#/definitions/Violent Leap"
+            },
+            "Violent Leap Cooldown Time": {
+              "$ref": "#/definitions/Violent Leap Cooldown Time"
+            },
+            "Violent Leap Distance Scalar": {
+              "$ref": "#/definitions/Violent Leap Distance Scalar"
+            }
+          },
+          "additionalProperties": false
+        },
         "Illari": {
           "description": "'Illari' hero settings.",
           "properties": {
@@ -4346,6 +4555,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Healing Dealt": {
               "$ref": "#/definitions/Healing Dealt"
@@ -4434,6 +4646,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Healing Dealt": {
               "$ref": "#/definitions/Healing Dealt"
             },
@@ -4520,6 +4735,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Rampage)": {
               "$ref": "#/definitions/Ultimate Ability (Rampage)"
@@ -4608,6 +4826,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Rip-Tire)": {
               "$ref": "#/definitions/Ultimate Ability (Rip-Tire)"
             },
@@ -4694,6 +4915,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Kitsune Rush)": {
               "$ref": "#/definitions/Ultimate Ability (Kitsune Rush)"
@@ -4784,6 +5008,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Tree of Life)": {
               "$ref": "#/definitions/Ultimate Ability (Tree of Life)"
@@ -4884,6 +5111,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Sound Barrier)": {
               "$ref": "#/definitions/Ultimate Ability (Sound Barrier)"
             },
@@ -4964,6 +5194,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Projectile Speed": {
               "$ref": "#/definitions/Projectile Speed"
@@ -5057,6 +5290,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Blizzard)": {
               "$ref": "#/definitions/Ultimate Ability (Blizzard)"
@@ -5157,6 +5393,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Valkyrie)": {
               "$ref": "#/definitions/Ultimate Ability (Valkyrie)"
             },
@@ -5237,6 +5476,9 @@
             },
             "Primary Fire": {
               "$ref": "#/definitions/Primary Fire"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Coalescence)": {
               "$ref": "#/definitions/Ultimate Ability (Coalescence)"
@@ -5334,6 +5576,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Terra Surge)": {
               "$ref": "#/definitions/Ultimate Ability (Terra Surge)"
             },
@@ -5414,6 +5659,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Barrage)": {
               "$ref": "#/definitions/Ultimate Ability (Barrage)"
@@ -5523,6 +5771,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Annihilation)": {
               "$ref": "#/definitions/Ultimate Ability (Annihilation)"
             },
@@ -5604,6 +5855,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Death Blossom)": {
               "$ref": "#/definitions/Ultimate Ability (Death Blossom)"
             },
@@ -5669,6 +5923,9 @@
             },
             "Primary Fire": {
               "$ref": "#/definitions/Primary Fire"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Earthshatter)": {
               "$ref": "#/definitions/Ultimate Ability (Earthshatter)"
@@ -5757,6 +6014,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Whole Hog)": {
               "$ref": "#/definitions/Ultimate Ability (Whole Hog)"
             },
@@ -5843,6 +6103,9 @@
             },
             "Primary Fire": {
               "$ref": "#/definitions/Primary Fire"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Gravitic Flux)": {
               "$ref": "#/definitions/Ultimate Ability (Gravitic Flux)"
@@ -5934,6 +6197,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Tactical Visor)": {
               "$ref": "#/definitions/Ultimate Ability (Tactical Visor)"
             },
@@ -6021,6 +6287,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Overclock)": {
               "$ref": "#/definitions/Ultimate Ability (Overclock)"
             },
@@ -6105,6 +6374,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (EMP)": {
               "$ref": "#/definitions/Ultimate Ability (EMP)"
             },
@@ -6186,6 +6458,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Photon Barrier)": {
               "$ref": "#/definitions/Ultimate Ability (Photon Barrier)"
             },
@@ -6260,6 +6535,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Molten Core)": {
               "$ref": "#/definitions/Ultimate Ability (Molten Core)"
@@ -6351,6 +6629,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Pulse Bomb)": {
               "$ref": "#/definitions/Ultimate Ability (Pulse Bomb)"
             },
@@ -6425,6 +6706,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Tectonic Shock)": {
               "$ref": "#/definitions/Ultimate Ability (Tectonic Shock)"
@@ -6506,6 +6790,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Infra-sight)": {
               "$ref": "#/definitions/Ultimate Ability (Infra-sight)"
@@ -6594,6 +6881,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Primal Rage)": {
               "$ref": "#/definitions/Ultimate Ability (Primal Rage)"
             },
@@ -6677,6 +6967,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Minefield)": {
               "$ref": "#/definitions/Ultimate Ability (Minefield)"
@@ -6777,6 +7070,9 @@
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
             },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
             "Ultimate Ability (Graviton Surge)": {
               "$ref": "#/definitions/Ultimate Ability (Graviton Surge)"
             },
@@ -6857,6 +7153,9 @@
             },
             "No Ammunition Requirement": {
               "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
             },
             "Ultimate Ability (Transcendence)": {
               "$ref": "#/definitions/Ultimate Ability (Transcendence)"
@@ -6993,6 +7292,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
             },
@@ -7098,6 +7400,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
             },
@@ -7162,6 +7467,9 @@
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
@@ -7237,6 +7545,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "Payload Speed Modifier": {
               "$ref": "#/definitions/Payload Speed Modifier"
             },
@@ -7301,6 +7612,9 @@
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
@@ -7370,6 +7684,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "TS-1 Walk Speed Modifier": {
               "$ref": "#/definitions/TS-1 Walk Speed Modifier"
             },
@@ -7437,6 +7754,9 @@
             },
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
@@ -7527,6 +7847,9 @@
             "Competitive Rules": {
               "$ref": "#/definitions/Competitive Rules"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier - Clash Defaults"
             },
@@ -7588,6 +7911,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
             },
             "Blitz Flag Locations": {
               "$ref": "#/definitions/Blitz Flag Locations"
@@ -7681,6 +8007,9 @@
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
+            },
             "Game Length In Minutes": {
               "$ref": "#/definitions/Game Length In Minutes"
             },
@@ -7748,6 +8077,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
             },
             "Hero Selection Time": {
               "$ref": "#/definitions/Hero Selection Time"
@@ -7841,6 +8173,9 @@
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
+            },
             "Game Length In Minutes": {
               "$ref": "#/definitions/Game Length In Minutes"
             },
@@ -7921,6 +8256,9 @@
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
             },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
+            },
             "Limit Valid Control Points": {
               "$ref": "#/definitions/Limit Valid Control Points"
             },
@@ -7982,6 +8320,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Spawn Training Bots": {
               "$ref": "#/definitions/Spawn Training Bots"
@@ -8047,6 +8388,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks Off"
             },
             "Hero Selection Time": {
               "$ref": "#/definitions/Hero Selection Time"
@@ -8136,6 +8480,9 @@
             },
             "Tank Role Passive Health Bonus": {
               "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
             },
             "Enabled": {
               "$ref": "#/definitions/Enabled Off"
