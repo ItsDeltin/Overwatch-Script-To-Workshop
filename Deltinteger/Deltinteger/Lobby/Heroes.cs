@@ -257,7 +257,7 @@ namespace Deltin.Deltinteger.Lobby
                     .AddAbility("Hover Jets", hasCooldown: false, rechargeable: true).AddRange("Hover Jets Vertical Speed Scalar", 25, 300).AddSwitch("Hover Jets Unlimited Fuel", false).AddRange("Hover Jets Extra Fuel Scalar", 0, 200)
                     .AddAbility("Jump Jet").AddRange("Jump Jet Acceleration Scalar", 25, 300).AddRange("Jump Jet Refuel Scalar", 0, 400)
                     .AddRange("Rocket Launcher Knockback Scalar", 0, 400),
-                new HeroSettingCollection("Ramattra").AddUlt("Annihilation").AddProjectile(false).AddAbility("Void Barrier Omnic Form").AddAbility("Nemisis Form").AddAbility("Block Nemesis Form", hasCooldown: false).AddAbility("Ravenous Vortex"),
+                new HeroSettingCollection("Ramattra").AddUlt("Annihilation").AddProjectile(false).AddAbility("Void Barrier Omnic Form").AddAbility("Nemesis Form").AddAbility("Block Nemesis Form", hasCooldown: false).AddAbility("Ravenous Vortex"),
                 new HeroSettingCollection("Reaper").AddUlt("Death Blossom").AddHealer().AddAbility("Shadow Step").AddAbility("Wraith Form"),
                 new HeroSettingCollection("Reinhardt").AddUlt("Earthshatter").AddProjectile(false).RemoveAmmunition().AddAbility("Barrier Field", rechargeable: true, noMaximumTime: true).AddAbility("Charge", hasKnockback: true).AddAbility("Fire Strike").AddRange("Rocket Hammer Knockback Scalar", 0, 400),
                 new HeroSettingCollection("Roadhog")

@@ -2440,11 +2440,11 @@
       "type": "number",
       "maximum": 500.0
     },
-    "Nemisis Form": {
+    "Nemesis Form": {
       "default": true,
       "type": "boolean"
     },
-    "Nemisis Form Cooldown Time": {
+    "Nemesis Form Cooldown Time": {
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
@@ -5544,11 +5544,11 @@
             "Void Barrier Omnic Form Cooldown Time": {
               "$ref": "#/definitions/Void Barrier Omnic Form Cooldown Time"
             },
-            "Nemisis Form": {
-              "$ref": "#/definitions/Nemisis Form"
+            "Nemesis Form": {
+              "$ref": "#/definitions/Nemesis Form"
             },
-            "Nemisis Form Cooldown Time": {
-              "$ref": "#/definitions/Nemisis Form Cooldown Time"
+            "Nemesis Form Cooldown Time": {
+              "$ref": "#/definitions/Nemesis Form Cooldown Time"
             },
             "Block Nemesis Form": {
               "$ref": "#/definitions/Block Nemesis Form"
