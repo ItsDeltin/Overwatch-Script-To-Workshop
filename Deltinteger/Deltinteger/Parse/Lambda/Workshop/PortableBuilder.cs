@@ -131,7 +131,8 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                 .GetValue(new GettableAssignerValueInfo(actionSet)
                 {
                     IndexReferenceCreator = _returnRecycler,
-                    SetInitialValue = SetInitialValue.DoNotSet
+                    SetInitialValue = SetInitialValue.DoNotSet,
+                    IsRecursive = false
                 })
                 .GetVariable();
         }
