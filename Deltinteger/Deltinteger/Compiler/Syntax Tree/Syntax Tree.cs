@@ -267,6 +267,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public FunctionSubroutineSyntax Subroutine { get; }
 
         // Macro
+        public Token Colon { get; }
+        public Token EndToken { get; }
         public IParseExpression MacroValue { get; }
 
         public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Block block, Token globalvar, Token playervar, FunctionSubroutineSyntax subroutine, MetaComment metaComment)
@@ -283,13 +285,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             MetaComment = metaComment;
         }
 
-        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, IParseExpression macroValue, MetaComment metaComment)
+        public FunctionContext(AttributeTokens attributes, IParseType type, Token identifier, List<TypeArgContext> typeArgs, List<VariableDeclaration> parameters, Token colon, IParseExpression macroValue, Token endToken, MetaComment metaComment)
         {
             Attributes = attributes;
             Type = type;
             Identifier = identifier;
             TypeArguments = typeArgs;
             Parameters = parameters;
+            Colon = colon;
+            EndToken = endToken;
             MacroValue = macroValue;
             MetaComment = metaComment;
         }
@@ -951,6 +955,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Extended { get; }
         public Token ID { get; }
         public Token MacroSymbol { get; }
+        public Token StartToken { get; }
+        public Token EndToken { get; }
         public MetaComment Comment { get; set; }
         public TargetWorkshopVariable? Target { get; }
 
@@ -962,6 +968,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Token ext,
             Token id,
             Token macroSymbol,
+            Token startToken,
+            Token endToken,
             MetaComment metaComment,
             TargetWorkshopVariable? target)
         {
@@ -972,6 +980,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Extended = ext;
             ID = id;
             MacroSymbol = macroSymbol;
+            StartToken = startToken;
+            EndToken = endToken;
             Comment = metaComment;
             Target = target;
         }

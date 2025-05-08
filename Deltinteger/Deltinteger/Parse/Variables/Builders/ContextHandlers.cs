@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Initial value
             if (_defineContext.InitialValue != null)
-                componentCollection.AddComponent(new InitialValueComponent(_defineContext.InitialValue));
+                componentCollection.AddComponent(new InitialValueComponent(_defineContext.InitialValue, _defineContext.StartToken, _defineContext.EndToken));
 
             // Macro
             if (_defineContext.MacroSymbol)

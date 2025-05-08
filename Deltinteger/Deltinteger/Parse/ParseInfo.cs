@@ -276,6 +276,16 @@ namespace Deltin.Deltinteger.Parse
             SourceExpression = null
         }.ClearTail().ClearHead().ClearTargetted();
 
+        public void CreateExpressionCompletion(Scope scope, DocRange range)
+        {
+            Script.AddCompletionRange(new CompletionRange(
+                TranslateInfo,
+                scope,
+                range,
+                CompletionRangeKind.Catch
+            ));
+        }
+
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
 
         public DiagnosticsToken CreateDiagnosticsToken(DocRange range) => new DiagnosticsToken(Script.Diagnostics, range);

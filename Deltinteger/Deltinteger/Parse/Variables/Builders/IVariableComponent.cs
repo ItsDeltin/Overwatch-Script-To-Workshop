@@ -257,14 +257,23 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
         public IParseExpression Expression { get; }
         public DocRange Range => Expression.Range;
         public bool WasRejected { get; set; }
+        readonly Token _completionStartToken;
+        readonly Token _completionEndToken;
 
-        public InitialValueComponent(IParseExpression expression)
+        public InitialValueComponent(IParseExpression expression, Token completionStartToken = null, Token completionEndToken = null)
         {
             Expression = expression;
+            _completionStartToken = completionStartToken;
+            _completionEndToken = completionEndToken;
         }
 
         public string RejectMessage() => "Variable cannot have an initial value.";
-        public void Apply(VarInfo varInfo) => varInfo.InitialValueContext = Expression;
+        public void Apply(VarInfo varInfo)
+        {
+            if (_completionStartToken is not null && _completionEndToken is not null)
+                varInfo.ParseInfo.CreateExpressionCompletion(varInfo.Scope, _completionStartToken.Range.End + _completionEndToken.Range.Start);
+            varInfo.InitialValueContext = Expression;
+        }
         public void Validate(VariableComponentCollection componentCollection) { }
         public bool CheckConflicts(VariableComponentCollection componentCollection) => true;
     }

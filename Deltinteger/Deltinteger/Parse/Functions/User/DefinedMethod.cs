@@ -181,6 +181,7 @@ namespace Deltin.Deltinteger.Parse
             else if (Context.MacroValue != null)
             {
                 MacroValue = SingleReturnValue = parseInfo.SetExpectType(ReturnType).GetExpression(_methodScope, Context.MacroValue);
+                parseInfo.CreateExpressionCompletion(_methodScope, Context.Colon.Range.End + Context.EndToken.Range.Start);
 
                 SemanticsHelper.ExpectValueType(parseInfo, MacroValue, ReturnType, Context.MacroValue.Range);
             }

@@ -41,12 +41,10 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Make sure both left and right parentheses exists.
                 if (ruleContext.Conditions[i].LeftParen && ruleContext.Conditions[i].RightParen)
-                    parseInfo.Script.AddCompletionRange(new CompletionRange(
-                        parseInfo.TranslateInfo,
+                    parseInfo.CreateExpressionCompletion(
                         scope,
-                        ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range,
-                        CompletionRangeKind.Catch
-                    ));
+                        ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range
+                    );
 
                 Conditions[i] = new ConditionAction(
                     parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression),

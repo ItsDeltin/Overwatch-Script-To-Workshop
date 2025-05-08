@@ -1449,12 +1449,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 ParseExpected(TokenType.Parentheses_Close);
 
                 // Macro
-                if (ParseOptional(TokenType.Colon))
+                if (ParseOptional(TokenType.Colon, out var colon))
                 {
                     // Get the macro's value.
                     var value = GetContainExpression();
+                    var endToken = CurrentOrLast;
                     ParseSemicolon();
-                    return EndNode(new FunctionContext(attributes, type, identifier, typeArgs, parameters, value, metaComment));
+                    return EndNode(new FunctionContext(attributes, type, identifier, typeArgs, parameters, colon, value, endToken, metaComment));
                 }
                 // Normal function
                 else
@@ -1480,21 +1481,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Variable
             else
             {
-                // Parse an optional variable ID or extended collection marker.
-                Token id = null, ext = null, macro = null;
-                TargetWorkshopVariable? target = null;
-
-                if (!ParseOptional(TokenType.Number, out id))
-                    if (!ParseOptional(TokenType.Exclamation, out ext))
-                        target = ParseOptionalTargetWorkshopVariable();
-
-                // Get the initial value.
-                IParseExpression initialValue = null;
-                if (ParseOptional(TokenType.Equal) || ParseOptional(TokenType.Colon, out macro))
-                    initialValue = GetContainExpression(); // Get the initial value.
-
-                ParseSemicolon();
-                return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment, target));
+                var (InitialValue, Ext, Id, Macro, StartToken, EndToken, Target) = ParseVariableElements();
+                return EndNode(new VariableDeclaration(attributes, type, identifier, InitialValue, Ext, Id, Macro, StartToken, EndToken, metaComment, Target));
             }
         }
 
@@ -1573,6 +1561,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var type = ParseType();
             var identifier = ParseExpected(TokenType.Identifier);
 
+            var (InitialValue, Ext, Id, Macro, StartToken, EndToken, Target) = ParseVariableElements(parseSemicolon);
+            return EndNode(new VariableDeclaration(attributes, type, identifier, InitialValue, Ext, Id, Macro, StartToken, EndToken, metaComment, Target));
+        }
+
+        (IParseExpression InitialValue, Token Ext, Token Id, Token Macro, Token StartToken, Token EndToken, TargetWorkshopVariable? Target) ParseVariableElements(bool parseSemicolon = true)
+        {
             // Parse an optional variable ID or extended collection marker.
             Token id = null, ext = null, macro = null;
             TargetWorkshopVariable? target = null;
@@ -1582,12 +1576,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Initial value
             IParseExpression initialValue = null;
-            if (ParseOptional(TokenType.Equal) || ParseOptional(TokenType.Colon, out macro))
+            if (ParseOptional(TokenType.Equal, out var equals) || ParseOptional(TokenType.Colon, out macro))
                 // Get the value.
                 initialValue = GetContainExpression();
 
+            Token endToken = CurrentOrLast;
             ParseSemicolon(parseSemicolon);
-            return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id, macro, metaComment, target));
+
+            return (
+                InitialValue: initialValue,
+                Ext: ext,
+                Id: id,
+                Macro: macro,
+                StartToken: equals ?? macro,
+                EndToken: endToken,
+                Target: target);
         }
 
         ConstructorContext ParseConstructor()
