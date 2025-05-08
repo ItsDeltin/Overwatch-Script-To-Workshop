@@ -1343,22 +1343,50 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             if (Kind != TokenType.LessThan) return false;
 
-            int genericLevel = 0;
+            // Brackets must be balanced to be considered type arguments.
+            // See #384
+            var bracketBalance = new Stack<BracketBalance>();
             while (Kind.IsPartOfTypeArgs())
             {
-                if (Kind == TokenType.LessThan)
-                    genericLevel++;
-                else if (Kind == TokenType.GreaterThan)
+                (BracketBalance type, bool open)? balanceResult = Kind switch
                 {
-                    genericLevel--;
-                    if (genericLevel == 0) return true;
+                    TokenType.LessThan => (BracketBalance.TypeArgs, true),
+                    TokenType.GreaterThan => (BracketBalance.TypeArgs, false),
+                    TokenType.Parentheses_Open => (BracketBalance.Parentheses, true),
+                    TokenType.Parentheses_Close => (BracketBalance.Parentheses, false),
+                    _ => null
+                };
+                if (balanceResult is not null)
+                {
+                    var (type, open) = balanceResult.Value;
+                    if (open)
+                    {
+                        bracketBalance.Push(type);
+                    }
+                    // closing
+                    // On a wrong closing like `(x < y) > z` the `)` will make this return false.
+                    else if (bracketBalance.Peek() != type)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        bracketBalance.Pop();
+                        if (bracketBalance.Count == 0)
+                            return true;
+                    }
                 }
-                if (genericLevel < 0) return false;
                 Consume();
             }
 
             return false;
         });
+
+        enum BracketBalance
+        {
+            Parentheses,
+            TypeArgs,
+        }
 
         LambdaExpression ParseLambda()
         {

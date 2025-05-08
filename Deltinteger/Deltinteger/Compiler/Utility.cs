@@ -397,10 +397,13 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Define:
                 case TokenType.Identifier:
                 case TokenType.Comma:
+                case TokenType.Arrow:
+                case TokenType.Void:
+                case TokenType.Const:
                     return true;
 
                 default:
-                    return false;
+                    return IsIdentifier(tokenType);
             }
         }
 
