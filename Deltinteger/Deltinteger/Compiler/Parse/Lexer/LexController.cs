@@ -307,6 +307,7 @@ public class LexMatcher
             () => One(MatchVanillaKeyword(_vanillaSymbols.Actions, TokenType.WorkshopActions)),
             () => One(MatchVanillaKeyword(_vanillaSymbols.Conditions, TokenType.WorkshopConditions)),
             () => One(MatchVanillaKeyword(_vanillaSymbols.Event, TokenType.WorkshopEvent)),
+            () => One(MatchVanillaKeyword(VanillaInfo.LowercaseDisabled, TokenType.DisabledWorkshopItem)),
             () => One(MatchVanillaSymbol()));
 
     Match[]? MatchLobbySettingsContext()
