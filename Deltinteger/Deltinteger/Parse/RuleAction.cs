@@ -48,7 +48,8 @@ namespace Deltin.Deltinteger.Parse
 
                 Conditions[i] = new ConditionAction(
                     parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression),
-                    ruleContext.Conditions[i].Comment
+                    ruleContext.Conditions[i].Comment,
+                    ruleContext.Conditions[i].Disabled
                 );
             }
 
@@ -179,11 +180,13 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Expression { get; }
         public MetaComment Comment { get; }
+        public bool Disabled { get; }
 
-        public ConditionAction(IExpression expression, MetaComment comment)
+        public ConditionAction(IExpression expression, MetaComment comment, bool disabled)
         {
             Expression = expression;
             Comment = comment;
+            Disabled = disabled;
         }
     }
 }

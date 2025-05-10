@@ -334,18 +334,16 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token In { get; set; }
         public Token Persist { get; set; }
         public List<Token> AllAttributes { get; } = new List<Token>();
-        public Deltin.Deltinteger.Parse.AccessLevel GetAccessLevel() =>
-            Public != null ? Deltin.Deltinteger.Parse.AccessLevel.Public :
-                Protected != null ? Deltin.Deltinteger.Parse.AccessLevel.Protected : Deltin.Deltinteger.Parse.AccessLevel.Private;
     }
 
-    public class IfCondition
+    public class IfCondition(Token disabled, Token ifToken, Token leftParen, IParseExpression expression, Token rightParen, MetaComment comment)
     {
-        public Token If;
-        public Token LeftParen;
-        public IParseExpression Expression;
-        public Token RightParen;
-        public MetaComment Comment;
+        public Token Disabled { get; } = disabled;
+        public Token If { get; } = ifToken;
+        public Token LeftParen { get; } = leftParen;
+        public IParseExpression Expression { get; } = expression;
+        public Token RightParen { get; } = rightParen;
+        public MetaComment Comment { get; } = comment;
 
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }

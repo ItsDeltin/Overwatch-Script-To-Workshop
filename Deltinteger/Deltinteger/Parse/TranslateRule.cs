@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
                     value2 = Element.True();
                 }
 
-                Conditions.Add(new Condition(value1, compareOperator, value2) { Comment = condition.Comment?.GetContents() });
+                Conditions.Add(new Condition(value1, compareOperator, value2) { Comment = condition.Comment?.GetContents(), Disabled = condition.Disabled });
             }
         }
 

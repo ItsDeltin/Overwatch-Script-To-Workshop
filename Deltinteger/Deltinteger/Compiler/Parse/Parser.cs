@@ -350,12 +350,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return false;
         }
 
-        bool Parse(TokenType type, bool isExpected, out Token result)
+        bool ParseToken(TokenType type, bool isExpected, out Token result)
         {
-            if (isExpected)
-                return result = ParseExpected(type);
-            else
-                return ParseOptional(type, out result);
+            result = ParseToken(type, isExpected);
+            return result;
+        }
+
+        Token ParseToken(TokenType type, bool isExpected)
+        {
+            return isExpected ? ParseExpected(type) : ParseOptional(type);
         }
 
         void Unexpected(bool root)
@@ -1178,7 +1181,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
 
                 // If we parse an arrow, this is a lambda type with a single parameter.
-                if (!Parse(TokenType.Arrow, const_, out Token arrow))
+                if (!ParseToken(TokenType.Arrow, const_, out Token arrow))
                 {
                     PopNodeStack();
                     return result;
@@ -2038,7 +2041,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Get the rule options.
             var settings = new List<RuleSetting>();
-            while (ParseOptional(TokenType.Identifier, out Token settingIdentifier))
+            // The 'disabled' token is accepted as an identifier, so do another check
+            // to make sure we do not handle a disabled condition as a rule setting.
+            while (!Is(TokenType.Disabled) && ParseOptional(TokenType.Identifier, out Token settingIdentifier))
             {
                 StartNodeAtLast();
                 settings.Add(EndNode(new RuleSetting(settingIdentifier, ParseExpected(TokenType.Dot), ParseExpected(TokenType.Identifier))));
@@ -2046,7 +2051,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Get the conditions
             List<IfCondition> conditions = new List<IfCondition>();
-            while (TryGetIfStatement(out var condition)) conditions.Add(condition);
+            while (TryGetRuleCondition(out var condition)) conditions.Add(condition);
 
             // Get the block.
             var statement = ParseStatement();
@@ -2183,28 +2188,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
         /// <summary>Parses an if condition. The block is not included.</summary>
         /// <param name="condition">The resulting condition.</param>
         /// <returns>Returns true if 'Kind' is 'TokenType.If'.</returns>
-        bool TryGetIfStatement(out IfCondition condition)
+        bool TryGetRuleCondition(out IfCondition condition)
         {
-            condition = new IfCondition();
-            condition.Comment = ParseMetaComment();
+            var metaComment = ParseMetaComment();
+            var disabled = ParseOptional(TokenType.Disabled);
+            var ifToken = ParseToken(TokenType.If, isExpected: disabled || metaComment is not null);
 
-            if (condition.Comment != null)
-            {
-                if (!ParseExpected(TokenType.If, out condition.If))
-                {
-                    condition = null;
-                    return false;
-                }
-            }
-            else if (!ParseOptional(TokenType.If, out condition.If))
+            if (!ifToken)
             {
                 condition = null;
                 return false;
             }
 
-            condition.LeftParen = ParseExpected(TokenType.Parentheses_Open);
-            condition.Expression = GetContainExpression();
-            condition.RightParen = ParseExpected(TokenType.Parentheses_Close);
+            var leftParen = ParseExpected(TokenType.Parentheses_Open);
+            var expression = GetContainExpression();
+            var rightParen = ParseExpected(TokenType.Parentheses_Close);
+
+            condition = new IfCondition(disabled, ifToken, leftParen, expression, rightParen, metaComment);
             return true;
         }
 

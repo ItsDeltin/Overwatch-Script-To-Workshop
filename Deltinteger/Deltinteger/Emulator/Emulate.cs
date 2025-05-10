@@ -51,7 +51,7 @@ class EmulateRule(EmulateState state, Rule rule)
     /// <summary>This is executed every tick.</summary>
     public RuleTickResult Tick()
     {
-        if (!isExecuting && ConditionsOk())
+        if (!rule.Disabled && !isExecuting && ConditionsOk())
         {
             // Start rule.
             stack.Push(new EmulateStack(state, rule));
@@ -90,7 +90,9 @@ class EmulateRule(EmulateState state, Rule rule)
     public bool ConditionsOk()
     {
         // Subroutines cannot be triggered by conditions.
-        return rule.RuleEvent != RuleEvent.Subroutine;
+        return
+            rule.RuleEvent != RuleEvent.Subroutine &&
+            rule.Conditions.All(r => r.Disabled || EmulateValue.Evaluate(r.Element, state).Unwrap().AsBoolean());
     }
 }
 
