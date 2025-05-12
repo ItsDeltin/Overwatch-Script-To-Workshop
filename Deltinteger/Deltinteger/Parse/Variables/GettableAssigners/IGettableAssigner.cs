@@ -90,6 +90,8 @@ namespace Deltin.Deltinteger.Parse
         IGettable Unfold(IUnfoldGettable unfolder);
         /// <summary>Gets the number of variables required to store this value type.</summary>
         int StackDelta();
+        /// <summary>Gets the initial value of the variable.</summary>
+        public (IWorkshopTree Value, bool HasDefault) GetInitialValue(GettableAssignerValueInfo info, IGettable bonusRegister);
     }
 
     /// <summary>Returned by IGettableAssigner.GetResult.</summary>

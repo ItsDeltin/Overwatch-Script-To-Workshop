@@ -241,6 +241,85 @@ public class HighLevelTest
         .AssertSearchLog("[Error] Accessed invalid reference"));
     }
 
+    [TestMethod("HL test: Initial class values (#355)")]
+    public void InitialClassValues()
+    {
+        TestWithBothReferenceValidationStrategies(s =>
+        Compile("""
+        class Class {
+            public Number num;
+            public Str str = { x: 1, y: 2 };
+        }
+
+        struct Str {
+            public Number x;
+            public Number y;
+        }
+
+        rule: "" {
+            Class instance = new Class();
+            define a = instance.num;
+            define b = instance.str.x;
+            define c = instance.str.y;
+        }
+        """, referenceValidationStrategy: s)
+        .AssertOk()
+        .EmulateTick()
+        .AssertVariable("a", 0)
+        .AssertVariable("b", 1)
+        .AssertVariable("c", 2));
+    }
+
+    [TestMethod("HL test: Initial class values with inheritance (#355)")]
+    public void InitialClassValuesWithInheritance()
+    {
+        TestWithBothReferenceValidationStrategies(s =>
+        Compile("""
+        class A {
+            public Number num;
+            public Str str = { x: 1, y: 2 };
+        }
+        class B : A {
+            public Boolean bool = true;
+        }
+        class C : B {
+            public String text = "Hello";
+        }
+
+        struct Str {
+            public Number x;
+            public Number y;
+        }
+
+        rule: "" {
+            A instance1 = new B();
+            C instance2 = new C();
+
+            define a = instance1.num;
+            define b = instance1.str.x;
+            define c = instance1.str.y;
+            define d = (<B>instance1).bool;
+
+            define e = instance2.num;
+            define f = instance2.str.x;
+            define g = instance2.str.y;
+            define h = instance2.bool;
+            define i = instance2.text;
+        }
+        """, referenceValidationStrategy: s)
+        .AssertOk()
+        .EmulateTick()
+        .AssertVariable("a", 0)
+        .AssertVariable("b", 1)
+        .AssertVariable("c", 2)
+        .AssertVariable("d", true)
+        .AssertVariable("e", 0)
+        .AssertVariable("f", 1)
+        .AssertVariable("g", 2)
+        .AssertVariable("h", true)
+        .AssertVariable("i", "Hello"));
+    }
+
     void TestWithBothReferenceValidationStrategies(Action<ReferenceValidationType> action)
     {
         action(ReferenceValidationType.Inline);

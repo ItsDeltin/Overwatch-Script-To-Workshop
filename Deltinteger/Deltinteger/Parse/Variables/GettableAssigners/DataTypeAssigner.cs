@@ -47,6 +47,7 @@ namespace Deltin.Deltinteger.Parse
             var resetNonpersistent = persistantVariables?.Enabled ?? false;
 
             var (initialValue, hasDefaultValue) = GetInitialValue(info, value);
+            initialValue ??= Element.Num(0);
 
             // Set persistent.
             if (_attributes.Persist && resetNonpersistent)
@@ -77,7 +78,7 @@ namespace Deltin.Deltinteger.Parse
             return new GettableAssignerResult(value, initialValue);
         }
 
-        (IWorkshopTree Value, bool HasDefault) GetInitialValue(GettableAssignerValueInfo info, IGettable bonusRegister)
+        public (IWorkshopTree Value, bool HasDefault) GetInitialValue(GettableAssignerValueInfo info, IGettable bonusRegister)
         {
             // Set the initial value to the override if it exists.
             if (info.InitialValueOverride != null)
@@ -93,7 +94,7 @@ namespace Deltin.Deltinteger.Parse
                 return (_attributes.DefaultValue.GetDefaultValue(actionSet), true);
             }
 
-            return (Element.Num(0), false);
+            return (null, false);
         }
 
         public IGettable AssignClassStacks(GetClassStacks info)

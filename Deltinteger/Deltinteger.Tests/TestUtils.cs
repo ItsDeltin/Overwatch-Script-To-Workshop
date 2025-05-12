@@ -139,6 +139,13 @@ readonly record struct TickEmulationResult(EmulateScript Emulation, string Log, 
         return this;
     }
 
+    public readonly TickEmulationResult AssertVariable(string name, string value)
+    {
+        var actual = Emulation.GetGlobalVariableValue(name).ToString();
+        Assert.AreEqual(value, actual, $"'{name}' has incorrect value");
+        return this;
+    }
+
     public readonly TickEmulationResult AssertVariable(string name, EmulateValue[] values)
     {
         var value = EmulateValue.From(values);

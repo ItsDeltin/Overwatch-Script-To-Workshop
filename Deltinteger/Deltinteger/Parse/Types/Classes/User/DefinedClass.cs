@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Parse.Variables;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -61,9 +62,23 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
-            // Run the constructor.
             AddObjectVariablesToAssigner(actionSet.ToWorkshop, new(newClassInfo.ObjectReference), actionSet.IndexAssigner);
+
+            // Set initial variable values.
+            SetInitialVariableValues(actionSet, this);
+
+            // Run the constructor.
             newClassInfo.Constructor.Parse(actionSet.New((Element)newClassInfo.ObjectReference.GetVariable()), newClassInfo.Parameters);
+        }
+
+        private static void SetInitialVariableValues(ActionSet actionSet, ClassType classType)
+        {
+            while (classType is not null)
+            {
+                foreach (var variable in classType.Variables)
+                    VariableHelper.SetToInitialValue(actionSet, variable);
+                classType = classType.Extends as ClassType;
+            }
         }
 
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)

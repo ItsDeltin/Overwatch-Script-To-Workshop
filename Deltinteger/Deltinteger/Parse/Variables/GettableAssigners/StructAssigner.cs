@@ -53,7 +53,8 @@ namespace Deltin.Deltinteger.Parse
                             isRecursive: info.IsRecursive,
                             forceNonpersistentClear: info.ForceNonpersistentClear)));
 
-            return new GettableAssignerResult(new StructAssignerValue(values), null);
+            var result = new StructAssignerValue(values);
+            return new GettableAssignerResult(result, result);
         }
 
         public LinkedStructValue GetValues(ActionSet actionSet)
@@ -107,6 +108,18 @@ namespace Deltin.Deltinteger.Parse
                 values.Add(var.Name, var.GetAssigner().Unfold(unfolder));
 
             return new StructAssignerValue(values);
+        }
+
+        public (IWorkshopTree Value, bool HasDefault) GetInitialValue(GettableAssignerValueInfo info, IGettable bonusRegister)
+        {
+            // If an initial value is provided, use that.
+            if (info.InitialValueOverride != null)
+                return (StructHelper.ExtractStructValue(info.InitialValueOverride), true);
+            // Otherwise, use the default initial value if it exists.
+            else if (_attributes.DefaultValue != null)
+                return (StructHelper.ExtractStructValue(_attributes.DefaultValue.GetDefaultValue(info.ActionSet)), true);
+
+            return (null, false);
         }
     }
 
