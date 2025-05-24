@@ -18,6 +18,11 @@ namespace Deltin.Deltinteger.Parse
 
             if (id is null)
             {
+                while (Subroutines.Any(subroutine => subroutine.ID == CurrentID))
+                {
+                    CurrentID++;
+                }
+
                 id = CurrentID;
                 CurrentID++;
             }
