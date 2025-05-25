@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             NeedsArrayProtection = !provider.Parallel;
 
             Operations.AddAssignmentOperator();
-            Operations.DefaultAssignment = false;
+            Operations.DefaultAssignment = !provider.Parallel;
         }
 
         protected virtual void Setup()
