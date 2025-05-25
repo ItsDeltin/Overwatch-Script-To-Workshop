@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
+using Deltin.WorkshopString;
 
 namespace Deltin.Deltinteger.Parse.Strings
 {
@@ -42,25 +43,29 @@ namespace Deltin.Deltinteger.Parse.Strings
 
         static string GetPartText(Token token, bool isStart)
         {
-            switch (token.TokenType)
+            string Extract(Token token, bool isStart)
             {
-                // Trim a string beginning with $
-                case TokenType.InterpolatedStringTail:
-                    string reduce = token.Text.Substring(1).TrimStart(); // Remove the $ and the whitespace between the $ and ".
-                    return reduce[1..^1]; // Remove the quotes.
+                switch (token.TokenType)
+                {
+                    // Trim a string beginning with $
+                    case TokenType.InterpolatedStringTail:
+                        string reduce = token.Text.Substring(1).TrimStart(); // Remove the $ and the whitespace between the $ and ".
+                        return reduce[1..^1]; // Remove the quotes.
 
-                // Remove the quotes.
-                case TokenType.InterpolatedStringMiddle:
-                    return token.Text.TrimStart()[1..^1];
+                    // Remove the quotes.
+                    case TokenType.InterpolatedStringMiddle:
+                        return token.Text.TrimStart()[1..^1];
 
-                // 'Head' will begin with $ if 'isStart' is true.
-                case TokenType.InterpolatedStringHead:
-                    if (isStart) goto case TokenType.InterpolatedStringTail;
-                    else goto case TokenType.InterpolatedStringMiddle;
+                    // 'Head' will begin with $ if 'isStart' is true.
+                    case TokenType.InterpolatedStringHead:
+                        if (isStart) goto case TokenType.InterpolatedStringTail;
+                        else goto case TokenType.InterpolatedStringMiddle;
 
-                default:
-                    return token.Text.RemoveQuotes();
+                    default:
+                        return token.Text.RemoveQuotes();
+                }
             }
+            return WorkshopStringUtility.EscapedDoubleQuotes(Extract(token, isStart));
         }
 
         struct InterpolatedStringActionPart
