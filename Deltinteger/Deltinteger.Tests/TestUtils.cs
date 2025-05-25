@@ -125,33 +125,17 @@ readonly record struct CompileResult(string Code, Diagnostics Diagnostics, List<
 
 readonly record struct TickEmulationResult(EmulateScript Emulation, string Log, RuleTickResult Result)
 {
-    public readonly TickEmulationResult AssertVariable(string name, double value)
+    public readonly TickEmulationResult AssertVariable(string name, EmulateValue value)
     {
-        var actual = Emulation.GetGlobalVariableValue(name).AsNumber();
-        Assert.AreEqual(value, actual, $"'{name}' has incorrect value");
-        return this;
-    }
-
-    public readonly TickEmulationResult AssertVariable(string name, bool value)
-    {
-        var actual = Emulation.GetGlobalVariableValue(name).AsBoolean();
-        Assert.AreEqual(value, actual, $"'{name}' has incorrect value");
-        return this;
-    }
-
-    public readonly TickEmulationResult AssertVariable(string name, string value)
-    {
-        var actual = Emulation.GetGlobalVariableValue(name).ToString();
-        Assert.AreEqual(value, actual, $"'{name}' has incorrect value");
+        var actual = Emulation.GetGlobalVariableValue(name);
+        Assert.IsTrue(EmulateValue.AreEqual(actual, value), $"'{name}' has incorrect value. Got {actual}, expected {value}");
         return this;
     }
 
     public readonly TickEmulationResult AssertVariable(string name, EmulateValue[] values)
     {
         var value = EmulateValue.From(values);
-        var actual = Emulation.GetGlobalVariableValue(name);
-        Assert.IsTrue(EmulateValue.AreEqual(value, actual), $"'{name}' has incorrect value");
-        return this;
+        return AssertVariable(name, value);
     }
 
     public readonly TickEmulationResult AssertSearchLog(string text)

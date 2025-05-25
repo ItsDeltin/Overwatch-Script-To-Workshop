@@ -117,6 +117,12 @@ public abstract record EmulateValue
         public override double AsNumber() => 0;
         public override string ToString() => $"Vector({X}, {Y}, {Z})";
     }
+    sealed record CustomColor(double R, double G, double B, double A) : EmulateValue
+    {
+        public override bool AsBoolean() => false;
+        public override double AsNumber() => 0;
+        public override string ToString() => $"Custom Color({R}, {G}, {B}, {A})";
+    }
 
     public static implicit operator EmulateValue(double value) => new Number(value);
     public static implicit operator EmulateValue(int value) => new Number(value);
@@ -134,6 +140,7 @@ public abstract record EmulateValue
     public static EmulateValue From(EmulateValue[] values) => values;
     public static EmulateValue From(IEnumerable<EmulateValue> values) => values.ToArray();
     public static EmulateValue From(double X, double Y, double Z) => new Vector(X, Y, Z);
+    public static EmulateValue From(double R, double G, double B, double A) => new CustomColor(R, G, B, A);
 
     public static EmulateValue operator +(EmulateValue left, EmulateValue right) => Add(left, right);
     public static EmulateValue operator -(EmulateValue left, EmulateValue right) => Subtract(left, right);
@@ -219,6 +226,8 @@ public abstract record EmulateValue
 
             Result<EmulateValue, string> one(Func<EmulateValue, EmulateValue> then) => eval(p[0]).MapValue(then);
 
+            Result<EmulateValue, string> evalAll(Func<EmulateValue[], EmulateValue> then) => p.SelectResult(p => eval(p)).AndThen<EmulateValue>(values => then([.. values]));
+
             return (name, p.Length) switch
             {
                 ("True", _) => From(true),
@@ -247,6 +256,7 @@ public abstract record EmulateValue
                 ("X Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().X)),
                 ("Y Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().Y)),
                 ("Z Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().Z)),
+                ("Custom Color", 4) => evalAll(values => From(values[0].AsNumber(), values[1].AsNumber(), values[2].AsNumber(), values[3].AsNumber())),
                 ("Null", _) => Default, // Do we need a dedicated null value? probably not
                 (_, _) => $"Emulation for workshop function '{name}' (with {p.Length} parameters) is not supported"
             };

@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger
             try
             {
                 string directory = Path.GetDirectoryName(referenceDirectory);
-                string combined = Path.Combine(directory, file);
+                string combined = Path.Combine(directory ?? String.Empty, file);
                 return Path.GetFullPath(combined);
             }
             catch (Exception)

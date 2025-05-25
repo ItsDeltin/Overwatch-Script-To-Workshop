@@ -1,11 +1,12 @@
 namespace Deltin.Deltinteger.Parse;
+
 using JsonSyntax = Deltin.Deltinteger.Compiler.SyntaxTree.ImportJsonSyntax;
 using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Deltin.Deltinteger.Model;
 using Deltin.Deltinteger.Elements;
 using static Deltin.Deltinteger.Elements.Element;
@@ -24,14 +25,14 @@ class ImportJson : IExpression
             return;
 
         GetFileContent(parseInfo.Script.Uri, syntax.File.Text.RemoveQuotes())
-            .AndThen(rootJobject => ProcessJobject(parseInfo, rootJobject))
+            .AndThen(rootJtoken => ProcessJtoken(parseInfo, rootJtoken))
             .Match(
                 ok => root = ok,
                 err => parseInfo.Script.Diagnostics.Error(err, syntax.File.Range)
             );
     }
 
-    Result<JObject, string> GetFileContent(Uri uri, string fileName)
+    Result<JsonElement, string> GetFileContent(Uri uri, string fileName)
     {
         // Get the path.
         string path = Extras.CombinePathWithDotNotation(uri.LocalPath, fileName);
@@ -44,43 +45,52 @@ class ImportJson : IExpression
             // Get JSON
             try
             {
-                return Result<JObject, string>.Ok(JObject.Parse(jsonText));
+                var document = JsonDocument.Parse(jsonText, new()
+                {
+                    AllowTrailingCommas = true,
+                    CommentHandling = JsonCommentHandling.Skip
+                });
+                return Result<JsonElement, string>.Ok(document.RootElement);
             }
-            catch (JsonReaderException jsonException)
+            catch (Exception jsonException)
             {
-                return Result<JObject, string>.Error(jsonException.Message);
+                return Result<JsonElement, string>.Error(jsonException.Message);
             }
         }
         catch (Exception ex)
         {
-            return Result<JObject, string>.Error(ex.Message);
+            return Result<JsonElement, string>.Error(ex.Message);
         }
     }
 
-    static Result<JsonItem, string> ProcessJtoken(ParseInfo parseInfo, JToken jtoken)
+    static Result<JsonItem, string> ProcessJtoken(ParseInfo parseInfo, JsonElement jtoken)
     {
-        switch (jtoken)
+        switch (jtoken.ValueKind)
         {
             // Structs and vectors.
-            case JObject jobject:
-                return ProcessJobject(parseInfo, jobject);
+            case JsonValueKind.Object:
+                return ProcessJobject(parseInfo, jtoken);
+
             // Arrays
-            case JArray jarray:
-                return ProcessJarray(parseInfo, jarray);
-        }
-        switch (jtoken.Type)
-        {
-            // Number
-            case JTokenType.Float:
-            case JTokenType.Integer:
-                return Ok(new JsonItem(parseInfo.Types.Number(), JsonItemKind.Number, actionSet => Num(jtoken.ToObject<double>())));
+            case JsonValueKind.Array:
+                return ProcessJarray(parseInfo, jtoken);
+
+            // Numbers
+            case JsonValueKind.Number:
+                return Ok(new JsonItem(parseInfo.Types.Number(), JsonItemKind.Number, actionSet => Num(jtoken.GetDouble())));
+
+            // Booleans
+            case JsonValueKind.True:
+            case JsonValueKind.False:
+                return Ok(new JsonItem(parseInfo.Types.Boolean(), JsonItemKind.Boolean, actionSet => jtoken.GetBoolean() ? True() : False()));
+
             // Everything else is a string.
             default:
-                return Ok(new JsonItem(parseInfo.Types.String(), JsonItemKind.String, actionSet => new StringElement(jtoken.ToObject<string>())));
+                return Ok(new JsonItem(parseInfo.Types.String(), JsonItemKind.String, actionSet => new StringElement(jtoken.GetString())));
         }
     }
 
-    static Result<JsonItem, string> ProcessJobject(ParseInfo parseInfo, JObject jobject)
+    static Result<JsonItem, string> ProcessJobject(ParseInfo parseInfo, JsonElement jobject)
     {
         // Object is vector?
         if (ComponentObject(parseInfo, jobject, out var vector, X, Y, Z))
@@ -106,7 +116,7 @@ class ImportJson : IExpression
 
         // Create struct from object.
         var structMaker = new StructMaker(parseInfo.TranslateInfo);
-        foreach (var property in jobject.Properties())
+        foreach (var property in jobject.EnumerateObject())
         {
             var item = ProcessJtoken(parseInfo, property.Value);
 
@@ -130,11 +140,12 @@ class ImportJson : IExpression
         }));
     }
 
-    static bool ComponentObject(ParseInfo parseInfo, JObject jobject, out JsonItem[] items, params string[] properties)
+    static bool ComponentObject(ParseInfo parseInfo, JsonElement jobject, out JsonItem[] items, params string[] properties)
     {
-        if (jobject.Count == properties.Length && jobject.Properties().All(p => properties.Contains(p.Name)))
+        var objectProperties = jobject.EnumerateObject().ToArray();
+        if (objectProperties.Length == properties.Length && objectProperties.All(p => properties.Contains(p.Name)))
         {
-            var processed = properties.Select(p => ProcessJtoken(parseInfo, jobject[p]));
+            var processed = properties.Select(p => ProcessJtoken(parseInfo, jobject.GetProperty(p)));
 
             // Any process tokens have an error?
             // Make sure all values are numbers.
@@ -148,7 +159,7 @@ class ImportJson : IExpression
         return false;
     }
 
-    static Result<JsonItem, string>? CheckAllWorkshopConstantObjects(ParseInfo parseInfo, JObject jobject)
+    static Result<JsonItem, string>? CheckAllWorkshopConstantObjects(ParseInfo parseInfo, JsonElement jobject)
     {
         // Check every storable workshop constant
         foreach (var storableEnum in ElementEnum.Storable)
@@ -160,14 +171,15 @@ class ImportJson : IExpression
         return null;
     }
 
-    static Result<JsonItem, string>? WorkshopConstantObject(ParseInfo parseInfo, JObject jobject, string enumIdentifier)
+    static Result<JsonItem, string>? WorkshopConstantObject(ParseInfo parseInfo, JsonElement jobject, string enumIdentifier)
     {
         // Only try to return a workshop constant if there is only one property with the correct name with a string value.
         string keyName = enumIdentifier.ToLower();
-        if (jobject.Count != 1 || !jobject.ContainsKey(keyName) || jobject[keyName].Type != JTokenType.String)
+        var objectProperties = jobject.EnumerateObject().ToArray();
+        if (objectProperties.Length != 1 || !jobject.TryGetProperty(keyName, out var prop) || prop.ValueKind != JsonValueKind.String)
             return null;
 
-        var value = jobject[keyName].Value<string>();
+        var value = jobject.GetProperty(keyName).GetString();
         var workshopEnum = ElementRoot.Instance.GetEnum(enumIdentifier);
         var workshopValue = workshopEnum.Members.FirstOrDefault(m => m.Name == value)?.ToElement();
 
@@ -179,13 +191,14 @@ class ImportJson : IExpression
         return Ok(new(type, JsonItemKind.Constant, actionSet => workshopValue));
     }
 
-    static Result<JsonItem, string> ProcessJarray(ParseInfo parseInfo, JArray jarray)
+    static Result<JsonItem, string> ProcessJarray(ParseInfo parseInfo, JsonElement jarray)
     {
         CodeType arrayOfType = null;
-        var arrayItems = new JsonItem[jarray.Count];
-        for (int i = 0; i < jarray.Count; i++)
+        var input = jarray.EnumerateArray().ToArray();
+        var arrayItems = new JsonItem[input.Length];
+        for (int i = 0; i < input.Length; i++)
         {
-            var result = ProcessJtoken(parseInfo, jarray[i]);
+            var result = ProcessJtoken(parseInfo, input[i]);
 
             if (!result.IsOk)
                 return result;
@@ -208,8 +221,7 @@ class ImportJson : IExpression
         }
 
         // No elements, array is any type.
-        if (arrayOfType == null)
-            arrayOfType = parseInfo.Types.Any();
+        arrayOfType ??= parseInfo.Types.Any();
 
         return Ok(new JsonItem(new ArrayType(parseInfo.Types, arrayOfType), JsonItemKind.Array, actionSet =>
         {
@@ -232,6 +244,7 @@ class ImportJson : IExpression
         Struct,
         Array,
         Number,
+        Boolean,
         Vector,
         Color,
         Constant,

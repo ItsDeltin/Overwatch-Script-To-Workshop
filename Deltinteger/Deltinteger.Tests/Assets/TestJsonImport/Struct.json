@@ -1,0 +1,14 @@
+{
+    "number": 1,
+    "string": "b",
+    "true": true,
+    "false": false,
+    "array": [1, 2, 3],
+    "struct": {
+        "one": 1,
+        "two": 2,
+        "three": 3
+    },
+    "vector": { "x": 50, "y": 50, "z": 50 },
+    "color": { "r": 1, "g": 2, "b": 3, "a": 4 }
+}

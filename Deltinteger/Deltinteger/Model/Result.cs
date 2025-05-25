@@ -106,6 +106,7 @@ public readonly struct Result<T, E>
         return new(default, error, false);
     }
 
+    [DebuggerStepThrough]
     public void Match(Action<T> onValue, Action<E> onError)
     {
         if (_isOk)
@@ -114,6 +115,7 @@ public readonly struct Result<T, E>
             onError(_error!);
     }
 
+    [DebuggerStepThrough]
     public R Match<R>(Func<T, R> onValue, Func<E, R> onError)
     {
         if (_isOk)
@@ -122,12 +124,14 @@ public readonly struct Result<T, E>
             return onError(_error!);
     }
 
+    [DebuggerStepThrough]
     public bool TryGetValue([NotNullWhen(true)] out T? value)
     {
         value = _value;
         return _isOk;
     }
 
+    [DebuggerStepThrough]
     public bool Get([NotNullWhen(true)] out T? value, [NotNullWhen(false)] out E? error)
     {
         if (_isOk)
@@ -144,6 +148,7 @@ public readonly struct Result<T, E>
         }
     }
 
+    [DebuggerStepThrough]
     public Result<U, E> MapValue<U>(Func<T, U> map)
     {
         if (_isOk)
@@ -152,6 +157,7 @@ public readonly struct Result<T, E>
             return Result<U, E>.Error(_error!);
     }
 
+    [DebuggerStepThrough]
     public Result<U, V> Map<U, V>(Func<T, U> mapValue, Func<E, V> mapError)
     {
         if (_isOk)
@@ -160,6 +166,7 @@ public readonly struct Result<T, E>
             return Result<U, V>.Error(mapError(_error!));
     }
 
+    [DebuggerStepThrough]
     public Result<U, E> AndThen<U>(Func<T, Result<U, E>> then)
     {
         if (_isOk)
@@ -168,6 +175,7 @@ public readonly struct Result<T, E>
             return Result<U, E>.Error(_error!);
     }
 
+    [DebuggerStepThrough]
     public Result<(T a, U b), E> And<U>(Result<U, E> other)
     {
         if (_isOk)
@@ -180,6 +188,7 @@ public readonly struct Result<T, E>
             return _error!;
     }
 
+    [DebuggerStepThrough]
     public void Then(Action<T> onValue)
     {
         if (_isOk)
