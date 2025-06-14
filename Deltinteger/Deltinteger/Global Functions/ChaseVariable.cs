@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
             Action = (actionSet, methodCall) =>
             {
                 VariableElements elements = ((VariableResolve)methodCall.AdditionalParameterData[0]).ParseElements(actionSet);
-                var variableSpot = elements.IndexReference.GetWorkshopVariablePosition().Value;
+                var variableSpot = elements.GetWorkshopVariablePosition();
 
                 Element destination = methodCall.Get(1);
                 Element rate = methodCall.Get(2);
@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
             Action = (actionSet, methodCall) =>
             {
                 VariableElements elements = ((VariableResolve)methodCall.AdditionalParameterData[0]).ParseElements(actionSet);
-                var variableSpot = elements.IndexReference.GetWorkshopVariablePosition().Value;
+                var variableSpot = elements.GetWorkshopVariablePosition();
 
                 Element destination = methodCall.Get(1);
                 Element duration = methodCall.Get(2);
@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
             Action = (actionSet, methodCall) =>
             {
                 VariableElements elements = ((VariableResolve)methodCall.AdditionalParameterData[0]).ParseElements(actionSet);
-                var variableSpot = elements.IndexReference.GetWorkshopVariablePosition().Value;
+                var variableSpot = elements.GetWorkshopVariablePosition();
 
                 if (variableSpot.WorkshopVariable.IsGlobal)
                     actionSet.AddAction(Element.Part("Stop Chasing Global Variable", variableSpot.WorkshopVariable));

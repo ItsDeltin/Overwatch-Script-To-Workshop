@@ -162,7 +162,7 @@ namespace Deltin.Deltinteger.Parse
                     InitialResolveValue = parseInfo.SetIsUsedAsValue(true).GetExpression(scope, assignment.Value);
                 }
                 // Variable
-                else if (forContext.Initializer is ExpressionStatement exprStatement && exprStatement.Expression is Identifier identifier)
+                else if (forContext.Initializer is ExpressionStatement exprStatement)
                 {
                     // The variable is defined but no start value was given. In this case, just start at 0.
                     // Get the variable.
@@ -171,12 +171,12 @@ namespace Deltin.Deltinteger.Parse
                         // The for cannot be indexed and should be on the rule-level.
                         CanBeIndexed = false,
                         FullVariable = true
-                    }, parseInfo.GetExpression(varScope, identifier), identifier.Range);
+                    }, parseInfo.GetExpression(varScope, exprStatement.Expression), exprStatement.Range);
                 }
                 // Incorrect initializer.
                 else
                 {
-                    // TODO: throw error on incorrect expression type.
+                    parseInfo.Error("Expression in for loop must be a variable declaration, assignment, or variable identifier", forContext.Initializer.Range);
                 }
             }
 

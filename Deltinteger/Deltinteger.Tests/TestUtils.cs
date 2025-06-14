@@ -106,6 +106,15 @@ readonly record struct CompileResult(string Code, Diagnostics Diagnostics, List<
         return this;
     }
 
+    /// <summary>Searches the compiled code for the provided text.</summary>
+    /// <param name="text">The substring that is searched within the compiled code.</param>
+    /// <returns>Self</returns>
+    public readonly CompileResult AssertText(string text)
+    {
+        Assert.IsTrue(Code.Contains(text), $"Compiled code does not contain \"${text}\"");
+        return this;
+    }
+
     /// <summary>Begins an emulation session and executes a single tick.</summary>
     /// <returns>Self</returns>
     public readonly TickEmulationResult EmulateTick()
