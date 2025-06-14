@@ -59,6 +59,12 @@ namespace Deltin.Deltinteger.Parse.Settings
         [JsonPropertyName("subroutine_stacks_are_extended")]
         public bool SubroutineStacksAreExtended { get; set; } = false;
 
+        [JsonPropertyName("variable_prefix")]
+        public string? VariablePrefix { get; set; } = null;
+
+        [JsonPropertyName("subroutine_prefix")]
+        public string? SubroutinePrefix { get; set; } = null;
+
         public static readonly DsTomlSettings Default = new DsTomlSettings();
 
         public static readonly CompletionList SettingsCompletionList = GetCompletionList();

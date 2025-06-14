@@ -1,19 +1,20 @@
-using System;
+#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class VarCollection
     {
-        public WorkshopArrayBuilder ArrayBuilder { get; private set; }
+        public WorkshopArrayBuilder? ArrayBuilder { get; private set; }
 
         // Indicates the workshop variables to store the extended collections at.
-        private WorkshopVariable _global;
-        private WorkshopVariable _player;
+        private WorkshopVariable? _global;
+        private WorkshopVariable? _player;
 
         // Reserved IDs and names.
         private readonly List<int> reservedGlobalIDs = new List<int>();
@@ -38,9 +39,11 @@ namespace Deltin.Deltinteger.Parse
         private bool extPlayerLimitReached = false;
 
         private readonly bool useTemplate;
+        private readonly MetaElementSettings metaElementSettings;
 
-        public VarCollection(bool useTemplate = false)
+        public VarCollection(MetaElementSettings metaElementSettings, bool useTemplate = false)
         {
+            this.metaElementSettings = metaElementSettings;
             this.useTemplate = useTemplate;
         }
 
@@ -70,16 +73,13 @@ namespace Deltin.Deltinteger.Parse
 
         private string[] NamesTaken(bool isGlobal)
         {
-            List<string> names = new List<string>();
-            names.AddRange(variableList(isGlobal).Where(v => v != null).Select(v => v.Name));
-            names.AddRange(reservedNames(isGlobal));
-            return names.ToArray();
+            return [.. variableList(isGlobal).Where(v => v != null).Select(v => v.Name), .. reservedNames(isGlobal)];
         }
 
         private WorkshopVariable AssignWorkshopVariable(string name, bool isGlobal)
         {
             int id = NextFreeID(isGlobal);
-            WorkshopVariable workshopVariable = new WorkshopVariable(isGlobal, id, MetaElement.WorkshopNameFromCodeName(name, NamesTaken(isGlobal)));
+            WorkshopVariable workshopVariable = new WorkshopVariable(isGlobal, id, CompileIndexedElements.WorkshopNameFromCodeName(name, NamesTaken(isGlobal), metaElementSettings));
             variableList(isGlobal).Add(workshopVariable);
             return workshopVariable;
         }
@@ -155,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
                     return new IndexReference(ArrayBuilder, AssignWorkshopVariable(name, variableIsGlobal));
                 else
                 {
-                    WorkshopVariable workshopVariable = new WorkshopVariable(variableIsGlobal, id, MetaElement.WorkshopNameFromCodeName(name, NamesTaken(variableIsGlobal)));
+                    WorkshopVariable workshopVariable = new WorkshopVariable(variableIsGlobal, id, CompileIndexedElements.WorkshopNameFromCodeName(name, NamesTaken(variableIsGlobal), metaElementSettings));
                     variableList(variableIsGlobal).Add(workshopVariable);
                     return new IndexReference(ArrayBuilder, workshopVariable);
                 }

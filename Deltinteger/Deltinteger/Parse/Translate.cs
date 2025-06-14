@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; }
-        public SubroutineCollection SubroutineCollection { get; } = new SubroutineCollection();
+        public SubroutineCollection SubroutineCollection { get; }
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
@@ -59,7 +59,8 @@ namespace Deltin.Deltinteger.Parse
             Settings = translateSettings.SourcedSettings.Settings ?? DsTomlSettings.Default;
             Language = translateSettings.OutputLanguage;
 
-            VarCollection = new VarCollection(Settings.VariableTemplate);
+            VarCollection = new(new(Settings.VariablePrefix), Settings.VariableTemplate);
+            SubroutineCollection = new(new(Settings.SubroutinePrefix));
 
             Types = new ScriptTypes(this);
             Types.GetDefaults();

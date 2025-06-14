@@ -17,7 +17,8 @@ static class TestUtils
 
     public static CompileResult Compile(string text,
         bool classGenerations = false,
-        ReferenceValidationType referenceValidationStrategy = ReferenceValidationType.Subroutine)
+        ReferenceValidationType referenceValidationStrategy = ReferenceValidationType.Subroutine,
+        string? variablePrefix = null)
     {
         Setup();
         var d = new Diagnostics();
@@ -32,7 +33,8 @@ static class TestUtils
                 TrackClassGenerations = classGenerations,
                 LogDeleteReferenceZero = classGenerations,
                 GlobalReferenceValidation = classGenerations,
-                ReferenceValidationType = referenceValidationStrategy
+                ReferenceValidationType = referenceValidationStrategy,
+                VariablePrefix = variablePrefix
             })
         });
         return new(ds.WorkshopCode, d, ds.WorkshopRules);

@@ -1,12 +1,13 @@
-using System;
+#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Parse.Workshop;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class SubroutineCollection
+    public class SubroutineCollection(MetaElementSettings settings)
     {
         private List<Subroutine> Subroutines { get; } = new List<Subroutine>();
         private int CurrentID = 0;
@@ -14,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public Subroutine NewSubroutine(string name, int? id = null)
         {
             // Get the next available name.
-            name = MetaElement.WorkshopNameFromCodeName(name, Subroutines.Select(sr => sr.Name).ToArray());
+            name = CompileIndexedElements.WorkshopNameFromCodeName(name, Subroutines.Select(sr => sr.Name).ToArray(), settings);
 
             if (id is null)
             {
