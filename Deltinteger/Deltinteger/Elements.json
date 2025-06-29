@@ -6687,7 +6687,8 @@
         "Mauga",
         "Venture",
         "Juno",
-        "Hazard"
+        "Hazard",
+        "Freja"
       ]
     },
     "Hero": [
@@ -6703,6 +6704,7 @@
       },
       "Doomfist",
       "Echo",
+      "Freja",
       "Genji",
       "Hanzo",
       "Hazard",
