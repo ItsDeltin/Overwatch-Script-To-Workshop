@@ -458,7 +458,8 @@
         "type": "string",
         "enum": [
           "New Junk City",
-          "Suravasa"
+          "Suravasa",
+          "Aatlis"
         ]
       }
     },
