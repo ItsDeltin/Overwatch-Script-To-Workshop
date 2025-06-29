@@ -736,5 +736,11 @@
       "Clash",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "Aatlis",
+    "GameModes": [
+      "Flashpoint"
+    ]
   }
 ]

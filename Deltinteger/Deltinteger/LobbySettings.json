@@ -262,6 +262,44 @@
                     ]
                 },
                 {
+                    "name": "Freja",
+                    "template": "base_hero",
+                    "$ult": "Bola Shot",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Quick Dash",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Quick Dash Cooldown Time",
+                            "type": "range_percentage",
+                            "min": 50,
+                            "max": 200
+                        },
+                        {
+                            "name": "Take Aim",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Take Aim Duration",
+                            "type": "range_percentage",
+                            "min": 50,
+                            "max": 300
+                        },
+                        {
+                            "name": "Updraft",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Updraft Height",
+                            "type": "range_percentage",
+                            "min": 75,
+                            "max": 150
+                        }
+                    ]
+                },
+                {
                     "name": "Genji",
                     "template": "base_hero",
                     "$ult": "Dragonblade",

@@ -458,7 +458,8 @@
         "type": "string",
         "enum": [
           "New Junk City",
-          "Suravasa"
+          "Suravasa",
+          "Aatlis"
         ]
       }
     },
@@ -1539,6 +1540,65 @@
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
+    },
+    "Ultimate Ability (Bola Shot)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Bola Shot)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Bola Shot)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Bola Shot)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Quick Dash": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Quick Dash Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Take Aim": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Take Aim Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Take Aim Duration": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 50.0,
+      "maximum": 300.0
+    },
+    "Updraft": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Updraft Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Updraft Height": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 75.0,
+      "maximum": 150.0
     },
     "Ultimate Ability (Dragonblade)": {
       "default": true,
@@ -3324,6 +3384,7 @@
           "D.Va",
           "Doomfist",
           "Echo",
+          "Freja",
           "Genji",
           "Hanzo",
           "Hazard",
@@ -4252,6 +4313,93 @@
             },
             "Sticky Bombs Cooldown Time": {
               "$ref": "#/definitions/Sticky Bombs Cooldown Time"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Freja": {
+          "description": "'Freja' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Ultimate Ability (Bola Shot)": {
+              "$ref": "#/definitions/Ultimate Ability (Bola Shot)"
+            },
+            "Ultimate Generation (Bola Shot)": {
+              "$ref": "#/definitions/Ultimate Generation (Bola Shot)"
+            },
+            "Ultimate Generation - Passive (Bola Shot)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Bola Shot)"
+            },
+            "Ultimate Generation - Combat (Bola Shot)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Bola Shot)"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Quick Dash": {
+              "$ref": "#/definitions/Quick Dash"
+            },
+            "Quick Dash Cooldown Time": {
+              "$ref": "#/definitions/Quick Dash Cooldown Time"
+            },
+            "Take Aim": {
+              "$ref": "#/definitions/Take Aim"
+            },
+            "Take Aim Cooldown Time": {
+              "$ref": "#/definitions/Take Aim Cooldown Time"
+            },
+            "Take Aim Duration": {
+              "$ref": "#/definitions/Take Aim Duration"
+            },
+            "Updraft": {
+              "$ref": "#/definitions/Updraft"
+            },
+            "Updraft Cooldown Time": {
+              "$ref": "#/definitions/Updraft Cooldown Time"
+            },
+            "Updraft Height": {
+              "$ref": "#/definitions/Updraft Height"
             }
           },
           "additionalProperties": false

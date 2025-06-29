@@ -213,6 +213,12 @@ namespace Deltin.Deltinteger.Lobby
                     .AddAbility("Rocket Punch", hasKnockback: true)
                     .AddAbility("Seismic Slam"),
                 new HeroSettingCollection("Echo").AddUlt("Duplicate").AddProjectile(false).AddAbility("Flight").AddAbility("Focusing Beam").AddAbility("Glide", hasCooldown: false).AddAbility("Sticky Bombs"),
+                new HeroSettingCollection("Freja")
+                    .AddUlt("Bola Shot")
+                    .AddProjectile(false)
+                    .AddAbility("Quick Dash").AddRange("Quick Dash Cooldown Time", 50, 200, 100)
+                    .AddAbility("Take Aim").AddRange("Take Aim Duration", 50, 300, 100)
+                    .AddAbility("Updraft").AddRange("Updraft Height", 75, 150, 100),
                 new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Swift Strike"),
                 new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrows").AddIntRange("Storm Arrows Quantity", false, 3, 12, 5),
                 new HeroSettingCollection("Hazard")
