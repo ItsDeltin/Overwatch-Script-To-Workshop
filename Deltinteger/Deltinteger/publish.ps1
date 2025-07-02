@@ -1,6 +1,6 @@
 $configuration = 'Release'
 $framework = 'net8.0'
-$ostw_version = 'v3.2.1'
+$ostw_version = 'v3.2.3'
 
 # Cross platform, no runtime included.
 '* Publishing self-contained'
