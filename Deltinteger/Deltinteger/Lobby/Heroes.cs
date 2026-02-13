@@ -323,6 +323,13 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Symmetra").AddUlt("Photon Barrier").AddProjectile(false).AddSecondaryFire().AddAbility("Sentry Turret").AddAbility("Teleporter"),
                 new HeroSettingCollection("Torbjörn").AddUlt("Molten Core", hasDuration: true).AddProjectile(true).AddSecondaryFire().AddAbility("Deploy Turret").AddAbility("Overload").AddRange("Overload Duration Scalar").AddSelectRef("Weapons Enabled Torbjörn", "Weapons Enabled", "All", "Rivet Gun Only", "Forge Hammer Only"),
                 new HeroSettingCollection("Tracer").AddUlt("Pulse Bomb").AddProjectile(true).AddAbility("Blink").AddAbility("Recall"),
+                new HeroSettingCollection("Vendetta")
+                    .AddProjectile(false).RemoveAmmunition()
+                    .AddUlt("Sundering Blade")
+                    .AddAbility("Projected Edge", hasCooldown: false)
+                    .AddAbility("Soaring Slice").AddRange("Soaring Slice Distance", 10, 500)
+                    .AddAbility("Warding Stance", hasCooldown: false).AddRange("Warding Stance Regen Scalar", 10, 500)
+                    .AddAbility("Whirlwind Dash").AddRange("Whirlwind Dash Distance", 10, 500),
                 new HeroSettingCollection("Venture")
                     .AddUlt("Tectonic Shock", hasDuration: true)
                     .AddProjectile(false)

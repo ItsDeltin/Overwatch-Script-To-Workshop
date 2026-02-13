@@ -1256,6 +1256,49 @@
                     ]
                 },
                 {
+                    "name": "Vendetta",
+                    "template": "base_hero",
+                    "$ult": "Sundering Blade",
+                    "$projectile": true,
+                    "$no_ammunition": true,
+                    "content": [
+                        {
+                            "name": "Projected Edge",
+                            "type": "boolean_enableddisabled"
+                        },
+                        {
+                            "name": "Soaring Slice",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Soaring Slice Distance",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Warding Stance",
+                            "type": "boolean_enableddisabled"
+                        },
+                        {
+                            "name": "Warding Stance Regen Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Whirlwind Dash",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Whirlwind Dash Distance",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                {
                     "name": "Venture",
                     "template": "base_hero",
                     "$ult": "Tectonic Shock",

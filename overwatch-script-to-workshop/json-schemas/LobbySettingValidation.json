@@ -3381,6 +3381,70 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Ultimate Ability (Sundering Blade)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Sundering Blade)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Sundering Blade)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Sundering Blade)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Projected Edge": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Soaring Slice": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Soaring Slice Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Soaring Slice Distance": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Warding Stance": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Warding Stance Regen Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Whirlwind Dash": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Whirlwind Dash Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Whirlwind Dash Distance": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
     "Ultimate Ability (Tectonic Shock)": {
       "default": true,
       "type": "boolean"
@@ -3778,6 +3842,7 @@
           "Symmetra",
           "Torbjörn",
           "Tracer",
+          "Vendetta",
           "Venture",
           "Widowmaker",
           "Winston",
@@ -7749,6 +7814,93 @@
             },
             "Recall Cooldown Time": {
               "$ref": "#/definitions/Recall Cooldown Time"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Vendetta": {
+          "description": "'Vendetta' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Ultimate Ability (Sundering Blade)": {
+              "$ref": "#/definitions/Ultimate Ability (Sundering Blade)"
+            },
+            "Ultimate Generation (Sundering Blade)": {
+              "$ref": "#/definitions/Ultimate Generation (Sundering Blade)"
+            },
+            "Ultimate Generation - Passive (Sundering Blade)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Sundering Blade)"
+            },
+            "Ultimate Generation - Combat (Sundering Blade)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Sundering Blade)"
+            },
+            "Projected Edge": {
+              "$ref": "#/definitions/Projected Edge"
+            },
+            "Soaring Slice": {
+              "$ref": "#/definitions/Soaring Slice"
+            },
+            "Soaring Slice Cooldown Time": {
+              "$ref": "#/definitions/Soaring Slice Cooldown Time"
+            },
+            "Soaring Slice Distance": {
+              "$ref": "#/definitions/Soaring Slice Distance"
+            },
+            "Warding Stance": {
+              "$ref": "#/definitions/Warding Stance"
+            },
+            "Warding Stance Regen Scalar": {
+              "$ref": "#/definitions/Warding Stance Regen Scalar"
+            },
+            "Whirlwind Dash": {
+              "$ref": "#/definitions/Whirlwind Dash"
+            },
+            "Whirlwind Dash Cooldown Time": {
+              "$ref": "#/definitions/Whirlwind Dash Cooldown Time"
+            },
+            "Whirlwind Dash Distance": {
+              "$ref": "#/definitions/Whirlwind Dash Distance"
             }
           },
           "additionalProperties": false
