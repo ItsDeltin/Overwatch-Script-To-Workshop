@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting ReceiveHeadshotsOnly = new SwitchValue("Receive Headshots Only", false);
         private static readonly LobbySetting PassiveHealthRegeneration = new SwitchValue("Passive Health Regeneration", true);
         private static readonly LobbySetting PrimaryFire = new SwitchValue("Primary Fire", true);
+        private static readonly LobbySetting RolePassives = new SwitchValue("Role Passives", true);
         // * Generic Ammunition Info (Add to global) *
         private static readonly LobbySetting AmmunitionClipSizeScalar = RangeValue.NewPercentage("Ammunition Clip Size Scalar", 25, 500);
         private static readonly LobbySetting NoAmmunitionRequirement = new SwitchValue("No Ammunition Requirement", false);
@@ -61,6 +62,7 @@ namespace Deltin.Deltinteger.Lobby
         {
             Add(QuickMelee);
             Add(SpawnWithUlt);
+            Add(RolePassives);
             Add(Health);
             Add(DamageDealt);
             Add(DamageReceived);
@@ -195,6 +197,12 @@ namespace Deltin.Deltinteger.Lobby
             AllHeroSettings = new HeroSettingCollection[] {
                 new HeroSettingCollection("General").AddUlt(null, true).AddProjectile(true).AddHealer().AddRange("Ability Cooldown Time"),
                 new HeroSettingCollection("Ana").AddUlt("Nano Boost").AddProjectile(false).AddHealer().AddScope().AddAbility("Biotic Grenade").AddAbility("Sleep Dart"),
+                new HeroSettingCollection("Anran")
+                    .AddUlt("Vermillion Ascent")
+                    .AddProjectile(false)
+                    .AddSecondaryFire()
+                    .AddAbility("Inferno Rush")
+                    .AddAbility("Dancing Blaze"),
                 new HeroSettingCollection("Ashe").AddUlt("B.O.B.", true).AddProjectile(true).AddScope().AddAbility("Coach Gun", hasKnockback: true, selfKnockback: true).AddAbility("Dynamite").AddRange("Dynamite Fuse Time Scalar", 1),
                 new HeroSettingCollection("Baptiste")
                     .AddUlt("Amplification Matrix", true)
@@ -206,6 +214,12 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Barrier Shield", rechargeable: true).AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
                 new HeroSettingCollection("Cassidy").AddUlt("Deadeye").AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Flashbang").AddProjectile(true),
                 new HeroSettingCollection("D.Va").AddUlt("Self-Destruct", true).AddRange("Self Destruct Knockback Scalar", 0, 200).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", hasCooldown: false, rechargeable: true).AddRange("Call Mech Knockback Scalar", 0, 400).AddSwitch("Spawn Without Mech", false).RemoveAmmunition(),
+                new HeroSettingCollection("Domina")
+                    .AddProjectile(false)
+                    .AddUlt("Panopticon").AddRange("Ultimate Barrier Health Scalar (Panopticon)", 50, 300, 100)
+                    .AddAbility("Barrier Array")
+                    .AddAbility("Crystal Charge").AddRange("Reconstruction Heal Scalar", 50, 300, 100)
+                    .AddAbility("Sonic Repulsors", hasKnockback: true),
                 new HeroSettingCollection("Doomfist")
                     .AddUlt("Meteor Strike", hasKnockback: true, hasDuration: true)
                     .AddProjectile(false).AddRange("Ammunition Regeneration Time Scalar", 33, 500)
@@ -213,6 +227,14 @@ namespace Deltin.Deltinteger.Lobby
                     .AddAbility("Rocket Punch", hasKnockback: true)
                     .AddAbility("Seismic Slam"),
                 new HeroSettingCollection("Echo").AddUlt("Duplicate").AddProjectile(false).AddAbility("Flight").AddAbility("Focusing Beam").AddAbility("Glide", hasCooldown: false).AddAbility("Sticky Bombs"),
+                new HeroSettingCollection("Emre")
+                    .AddProjectile(false) // This should be true, but as of 2.21.0, it's missing
+                    .AddScope().AddSwitch("No Unscoped Fire", false)
+                    .AddUlt("Override Protocol", true, true)
+                    .AddAbility("Cyber Frag", true)
+                    .AddAbility("Siphon Blaster")
+                        .AddRange("Siphon Blaster Duration Scalar", 10, 500, 100)
+                        .AddRange("Siphon Blaster Heat Scalar", 10, 500, 100),
                 new HeroSettingCollection("Freja")
                     .AddUlt("Bola Shot")
                     .AddProjectile(false)
@@ -232,6 +254,13 @@ namespace Deltin.Deltinteger.Lobby
                     .AddSecondaryFire().AddRange("Solar Energy Maximum", 0, 500).AddRange("Solar Energy Recharge Rate", 0, 500)
                     .AddAbility("Outburst")
                     .AddAbility("Healing Pylon"),
+                new HeroSettingCollection("Jetpack Cat")
+                    .AddHealer().AddProjectile(false).RemoveAmmunition()
+                    .AddUlt("Catnapper")
+                    .AddAbility("Frenetic Flight", rechargeable: true).AddSwitch("Frenetic Flight Unlimited Fuel", false)
+                    .AddAbility("Lifeline")
+                    .AddAbility("Purr")
+                    .AddRange("Biotic Pawjectile Range", 25, 500, 100),
                 new HeroSettingCollection("Juno")
                     .AddHealer().AddProjectile(false)
                     .AddUlt("Orbital Ray")
@@ -260,6 +289,12 @@ namespace Deltin.Deltinteger.Lobby
                     .AddAbility("Angelic Descent", hasCooldown: false)
                     .AddAbility("Resurrect")
                     .AddSelectRef("Weapons Enabled Mercy", "Weapons Enabled", "All", "Caduceus Staff Only", "Caduceus Blaster Only"),
+                new HeroSettingCollection("Mizuki")
+                    .AddUlt("Kekkai Sanctuary")
+                    .AddHealer().AddProjectile(false)
+                    .AddAbility("Binding Chain")
+                    .AddAbility("Healing Kasa")
+                    .AddAbility("Katashiro Return").AddRange("Katashiro Return Duration Scalar", 20, 500, 100),
                 new HeroSettingCollection("Moira").AddUlt("Coalescence", hasDuration: true).AddProjectile(false).AddSecondaryFire().RemoveAmmunition().AddHealer().AddAbility("Fade").AddAbility("Biotic Orb").AddRange("Biotic Orb Max Damage Scalar", 10).AddRange("Biotic Orb Max Healing Scalar", 10).AddRange("Biotic Energy Maximum", 20).AddRange("Biotic Energy Recharge Rate"),
                 new HeroSettingCollection("Orisa").AddUlt("Terra Surge").AddAbility("Fortify").AddAbility("Energy Javelin").AddProjectile(true).AddAbility("Javelin Spin"),
                 new HeroSettingCollection("Pharah")

@@ -6688,11 +6688,17 @@
         "Venture",
         "Juno",
         "Hazard",
-        "Freja"
+        "Freja",
+        "Anran",
+        "Domina",
+        "Emre",
+        "Mizuki",
+        "Jetpack Cat"
       ]
     },
     "Hero": [
       "Ana",
+      "Anran",
       "Ashe",
       "Baptiste",
       "Bastion",
@@ -6702,13 +6708,16 @@
         "name": "D.Va",
         "alias": "Dva"
       },
+      "Domina",
       "Doomfist",
       "Echo",
+      "Emre",
       "Freja",
       "Genji",
       "Hanzo",
       "Hazard",
       "Illari",
+      "Jetpack Cat",
       "Junker Queen",
       "Junkrat",
       "Juno",
@@ -6721,6 +6730,7 @@
       "Mauga",
       "Mei",
       "Mercy",
+      "Mizuki",
       "Moira",
       "Orisa",
       "Pharah",

@@ -934,6 +934,10 @@
       "default": false,
       "type": "boolean"
     },
+    "Role Passives": {
+      "default": true,
+      "type": "boolean"
+    },
     "Health": {
       "default": 100.0,
       "type": "number",
@@ -1095,6 +1099,48 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Ultimate Ability (Vermillion Ascent)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Vermillion Ascent)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Vermillion Ascent)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Vermillion Ascent)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Secondary Fire": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Inferno Rush": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Inferno Rush Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Dancing Blaze": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Dancing Blaze Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Ultimate Ability (B.O.B.)": {
       "default": true,
       "type": "boolean"
@@ -1186,10 +1232,6 @@
       "default": 100.0,
       "type": "number",
       "maximum": 500.0
-    },
-    "Secondary Fire": {
-      "default": true,
-      "type": "boolean"
     },
     "Ultimate Ability (Configuration: Artillery)": {
       "default": true,
@@ -1421,6 +1463,70 @@
       "default": false,
       "type": "boolean"
     },
+    "Ultimate Ability (Panopticon)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Panopticon)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Panopticon)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Panopticon)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Barrier Health Scalar (Panopticon)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 50.0,
+      "maximum": 300.0
+    },
+    "Barrier Array": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Barrier Array Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Crystal Charge": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Crystal Charge Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Reconstruction Heal Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 50.0,
+      "maximum": 300.0
+    },
+    "Sonic Repulsors": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Sonic Repulsors Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Sonic Repulsors Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Ultimate Ability (Meteor Strike)": {
       "default": true,
       "type": "boolean"
@@ -1539,6 +1645,65 @@
     "Sticky Bombs Cooldown Time": {
       "default": 100.0,
       "type": "number",
+      "maximum": 500.0
+    },
+    "No Unscoped Fire": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Ultimate Ability (Override Protocol)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Override Protocol)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Override Protocol)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Override Protocol)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Override Protocol Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Cyber Frag": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Cyber Frag Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Siphon Blaster": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Siphon Blaster Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Siphon Blaster Duration Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Siphon Blaster Heat Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
       "maximum": 500.0
     },
     "Ultimate Ability (Bola Shot)": {
@@ -1813,6 +1978,74 @@
     "Healing Pylon Cooldown Time": {
       "default": 100.0,
       "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Ability (Catnapper)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Catnapper)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Catnapper)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Catnapper)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Frenetic Flight": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Frenetic Flight Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Frenetic Flight Recharge Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Frenetic Flight Maximum Time": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 20.0,
+      "maximum": 500.0
+    },
+    "Frenetic Flight Unlimited Fuel": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Lifeline": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Lifeline Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Purr": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Purr Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Biotic Pawjectile Range": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 25.0,
       "maximum": 500.0
     },
     "Ultimate Ability (Orbital Ray)": {
@@ -2346,6 +2579,59 @@
         "Caduceus Staff Only",
         "Caduceus Blaster Only"
       ]
+    },
+    "Ultimate Ability (Kekkai Sanctuary)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Kekkai Sanctuary)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Kekkai Sanctuary)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Kekkai Sanctuary)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Binding Chain": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Binding Chain Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Healing Kasa": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Healing Kasa Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Katashiro Return": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Katashiro Return Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Katashiro Return Duration Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 20.0,
+      "maximum": 500.0
     },
     "Ultimate Ability (Coalescence)": {
       "default": true,
@@ -3376,19 +3662,23 @@
         "enum": [
           "General",
           "Ana",
+          "Anran",
           "Ashe",
           "Baptiste",
           "Bastion",
           "Brigitte",
           "Cassidy",
           "D.Va",
+          "Domina",
           "Doomfist",
           "Echo",
+          "Emre",
           "Freja",
           "Genji",
           "Hanzo",
           "Hazard",
           "Illari",
+          "Jetpack Cat",
           "Juno",
           "Junker Queen",
           "Junkrat",
@@ -3398,6 +3688,7 @@
           "Mauga",
           "Mei",
           "Mercy",
+          "Mizuki",
           "Moira",
           "Orisa",
           "Pharah",
@@ -3431,6 +3722,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -3510,6 +3804,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -3585,6 +3882,87 @@
           },
           "additionalProperties": false
         },
+        "Anran": {
+          "description": "'Anran' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Ultimate Ability (Vermillion Ascent)": {
+              "$ref": "#/definitions/Ultimate Ability (Vermillion Ascent)"
+            },
+            "Ultimate Generation (Vermillion Ascent)": {
+              "$ref": "#/definitions/Ultimate Generation (Vermillion Ascent)"
+            },
+            "Ultimate Generation - Passive (Vermillion Ascent)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Vermillion Ascent)"
+            },
+            "Ultimate Generation - Combat (Vermillion Ascent)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Vermillion Ascent)"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Secondary Fire": {
+              "$ref": "#/definitions/Secondary Fire"
+            },
+            "Inferno Rush": {
+              "$ref": "#/definitions/Inferno Rush"
+            },
+            "Inferno Rush Cooldown Time": {
+              "$ref": "#/definitions/Inferno Rush Cooldown Time"
+            },
+            "Dancing Blaze": {
+              "$ref": "#/definitions/Dancing Blaze"
+            },
+            "Dancing Blaze Cooldown Time": {
+              "$ref": "#/definitions/Dancing Blaze Cooldown Time"
+            }
+          },
+          "additionalProperties": false
+        },
         "Ashe": {
           "description": "'Ashe' hero settings.",
           "properties": {
@@ -3593,6 +3971,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -3693,6 +4074,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -3783,6 +4167,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -3869,6 +4256,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -3969,6 +4359,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -4049,6 +4442,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -4134,6 +4530,99 @@
           },
           "additionalProperties": false
         },
+        "Domina": {
+          "description": "'Domina' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Ultimate Ability (Panopticon)": {
+              "$ref": "#/definitions/Ultimate Ability (Panopticon)"
+            },
+            "Ultimate Generation (Panopticon)": {
+              "$ref": "#/definitions/Ultimate Generation (Panopticon)"
+            },
+            "Ultimate Generation - Passive (Panopticon)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Panopticon)"
+            },
+            "Ultimate Generation - Combat (Panopticon)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Panopticon)"
+            },
+            "Ultimate Barrier Health Scalar (Panopticon)": {
+              "$ref": "#/definitions/Ultimate Barrier Health Scalar (Panopticon)"
+            },
+            "Barrier Array": {
+              "$ref": "#/definitions/Barrier Array"
+            },
+            "Barrier Array Cooldown Time": {
+              "$ref": "#/definitions/Barrier Array Cooldown Time"
+            },
+            "Crystal Charge": {
+              "$ref": "#/definitions/Crystal Charge"
+            },
+            "Crystal Charge Cooldown Time": {
+              "$ref": "#/definitions/Crystal Charge Cooldown Time"
+            },
+            "Reconstruction Heal Scalar": {
+              "$ref": "#/definitions/Reconstruction Heal Scalar"
+            },
+            "Sonic Repulsors": {
+              "$ref": "#/definitions/Sonic Repulsors"
+            },
+            "Sonic Repulsors Cooldown Time": {
+              "$ref": "#/definitions/Sonic Repulsors Cooldown Time"
+            },
+            "Sonic Repulsors Knockback Scalar": {
+              "$ref": "#/definitions/Sonic Repulsors Knockback Scalar"
+            }
+          },
+          "additionalProperties": false
+        },
         "Doomfist": {
           "description": "'Doomfist' hero settings.",
           "properties": {
@@ -4142,6 +4631,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -4242,6 +4734,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -4317,6 +4812,108 @@
           },
           "additionalProperties": false
         },
+        "Emre": {
+          "description": "'Emre' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "No Automatic Fire": {
+              "$ref": "#/definitions/No Automatic Fire"
+            },
+            "No Scope": {
+              "$ref": "#/definitions/No Scope"
+            },
+            "No Unscoped Fire": {
+              "$ref": "#/definitions/No Unscoped Fire"
+            },
+            "Ultimate Ability (Override Protocol)": {
+              "$ref": "#/definitions/Ultimate Ability (Override Protocol)"
+            },
+            "Ultimate Generation (Override Protocol)": {
+              "$ref": "#/definitions/Ultimate Generation (Override Protocol)"
+            },
+            "Ultimate Generation - Passive (Override Protocol)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Override Protocol)"
+            },
+            "Ultimate Generation - Combat (Override Protocol)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Override Protocol)"
+            },
+            "Ultimate Duration": {
+              "$ref": "#/definitions/Ultimate Duration"
+            },
+            "Infinite Ultimate Duration": {
+              "$ref": "#/definitions/Infinite Ultimate Duration"
+            },
+            "Override Protocol Knockback Scalar": {
+              "$ref": "#/definitions/Override Protocol Knockback Scalar"
+            },
+            "Cyber Frag": {
+              "$ref": "#/definitions/Cyber Frag"
+            },
+            "Cyber Frag Cooldown Time": {
+              "$ref": "#/definitions/Cyber Frag Cooldown Time"
+            },
+            "Siphon Blaster": {
+              "$ref": "#/definitions/Siphon Blaster"
+            },
+            "Siphon Blaster Cooldown Time": {
+              "$ref": "#/definitions/Siphon Blaster Cooldown Time"
+            },
+            "Siphon Blaster Duration Scalar": {
+              "$ref": "#/definitions/Siphon Blaster Duration Scalar"
+            },
+            "Siphon Blaster Heat Scalar": {
+              "$ref": "#/definitions/Siphon Blaster Heat Scalar"
+            }
+          },
+          "additionalProperties": false
+        },
         "Freja": {
           "description": "'Freja' hero settings.",
           "properties": {
@@ -4325,6 +4922,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -4413,6 +5013,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -4497,6 +5100,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -4580,6 +5186,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -4671,6 +5280,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -4752,6 +5364,99 @@
           },
           "additionalProperties": false
         },
+        "Jetpack Cat": {
+          "description": "'Jetpack Cat' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Ultimate Ability (Catnapper)": {
+              "$ref": "#/definitions/Ultimate Ability (Catnapper)"
+            },
+            "Ultimate Generation (Catnapper)": {
+              "$ref": "#/definitions/Ultimate Generation (Catnapper)"
+            },
+            "Ultimate Generation - Passive (Catnapper)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Catnapper)"
+            },
+            "Ultimate Generation - Combat (Catnapper)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Catnapper)"
+            },
+            "Frenetic Flight": {
+              "$ref": "#/definitions/Frenetic Flight"
+            },
+            "Frenetic Flight Cooldown Time": {
+              "$ref": "#/definitions/Frenetic Flight Cooldown Time"
+            },
+            "Frenetic Flight Recharge Rate": {
+              "$ref": "#/definitions/Frenetic Flight Recharge Rate"
+            },
+            "Frenetic Flight Maximum Time": {
+              "$ref": "#/definitions/Frenetic Flight Maximum Time"
+            },
+            "Frenetic Flight Unlimited Fuel": {
+              "$ref": "#/definitions/Frenetic Flight Unlimited Fuel"
+            },
+            "Lifeline": {
+              "$ref": "#/definitions/Lifeline"
+            },
+            "Lifeline Cooldown Time": {
+              "$ref": "#/definitions/Lifeline Cooldown Time"
+            },
+            "Purr": {
+              "$ref": "#/definitions/Purr"
+            },
+            "Purr Cooldown Time": {
+              "$ref": "#/definitions/Purr Cooldown Time"
+            },
+            "Biotic Pawjectile Range": {
+              "$ref": "#/definitions/Biotic Pawjectile Range"
+            }
+          },
+          "additionalProperties": false
+        },
         "Juno": {
           "description": "'Juno' hero settings.",
           "properties": {
@@ -4760,6 +5465,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -4851,6 +5559,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -4941,6 +5652,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -5030,6 +5744,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -5123,6 +5840,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -5226,6 +5946,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -5309,6 +6032,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -5405,6 +6131,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -5508,6 +6237,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -5589,6 +6321,96 @@
           },
           "additionalProperties": false
         },
+        "Mizuki": {
+          "description": "'Mizuki' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Ultimate Ability (Kekkai Sanctuary)": {
+              "$ref": "#/definitions/Ultimate Ability (Kekkai Sanctuary)"
+            },
+            "Ultimate Generation (Kekkai Sanctuary)": {
+              "$ref": "#/definitions/Ultimate Generation (Kekkai Sanctuary)"
+            },
+            "Ultimate Generation - Passive (Kekkai Sanctuary)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Kekkai Sanctuary)"
+            },
+            "Ultimate Generation - Combat (Kekkai Sanctuary)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Kekkai Sanctuary)"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Binding Chain": {
+              "$ref": "#/definitions/Binding Chain"
+            },
+            "Binding Chain Cooldown Time": {
+              "$ref": "#/definitions/Binding Chain Cooldown Time"
+            },
+            "Healing Kasa": {
+              "$ref": "#/definitions/Healing Kasa"
+            },
+            "Healing Kasa Cooldown Time": {
+              "$ref": "#/definitions/Healing Kasa Cooldown Time"
+            },
+            "Katashiro Return": {
+              "$ref": "#/definitions/Katashiro Return"
+            },
+            "Katashiro Return Cooldown Time": {
+              "$ref": "#/definitions/Katashiro Return Cooldown Time"
+            },
+            "Katashiro Return Duration Scalar": {
+              "$ref": "#/definitions/Katashiro Return Duration Scalar"
+            }
+          },
+          "additionalProperties": false
+        },
         "Moira": {
           "description": "'Moira' hero settings.",
           "properties": {
@@ -5597,6 +6419,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -5691,6 +6516,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -5774,6 +6602,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -5886,6 +6717,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -5970,6 +6804,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -6044,6 +6881,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -6128,6 +6968,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -6225,6 +7068,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -6311,6 +7157,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -6402,6 +7251,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -6489,6 +7341,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -6573,6 +7428,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -6650,6 +7508,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -6744,6 +7605,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -6821,6 +7685,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -6905,6 +7772,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -6996,6 +7866,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -7082,6 +7955,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
@@ -7185,6 +8061,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
             "Health": {
               "$ref": "#/definitions/Health"
             },
@@ -7268,6 +8147,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
             },
             "Health": {
               "$ref": "#/definitions/Health"
