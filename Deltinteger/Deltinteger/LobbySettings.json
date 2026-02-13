@@ -1360,6 +1360,58 @@
                     ]
                 },
                 {
+                    "name": "Wuyang",
+                    "template": "base_hero",
+                    "$ult": "Tidal Blast",
+                    "$healer": true,
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Guardian Wave",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Rushing Torrent",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Rushing Torrent Duration Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Water Staff Orb Maximum Control Time",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Water Staff Orb Turn Rate",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Restorative Stream",
+                            "type": "boolean_enableddisabled"
+                        },
+                        {
+                            "name": "Restorative Stream Drain Rate",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        },
+                        {
+                            "name": "Restorative Stream Recharge Rate",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        }
+                    ]
+                },
+                {
                     "name": "Zarya",
                     "template": "base_hero",
                     "$ult": "Graviton Surge",

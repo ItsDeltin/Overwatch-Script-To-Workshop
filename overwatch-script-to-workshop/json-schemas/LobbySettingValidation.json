@@ -3583,6 +3583,81 @@
       "default": false,
       "type": "boolean"
     },
+    "Ultimate Ability (Tidal Blast)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Tidal Blast)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Tidal Blast)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Tidal Blast)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Guardian Wave": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Guardian Wave Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Guardian Wave Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Rushing Torrent": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Rushing Torrent Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Rushing Torrent Duration Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Water Staff Orb Maximum Control Time": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Water Staff Orb Turn Rate": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Restorative Stream": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Restorative Stream Drain Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Restorative Stream Recharge Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Ultimate Ability (Graviton Surge)": {
       "default": true,
       "type": "boolean"
@@ -3707,6 +3782,7 @@
           "Widowmaker",
           "Winston",
           "Wrecking Ball",
+          "Wuyang",
           "Zarya",
           "Zenyatta"
         ]
@@ -8048,6 +8124,108 @@
             },
             "Roll Always Active": {
               "$ref": "#/definitions/Roll Always Active"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Wuyang": {
+          "description": "'Wuyang' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Ultimate Ability (Tidal Blast)": {
+              "$ref": "#/definitions/Ultimate Ability (Tidal Blast)"
+            },
+            "Ultimate Generation (Tidal Blast)": {
+              "$ref": "#/definitions/Ultimate Generation (Tidal Blast)"
+            },
+            "Ultimate Generation - Passive (Tidal Blast)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Tidal Blast)"
+            },
+            "Ultimate Generation - Combat (Tidal Blast)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Tidal Blast)"
+            },
+            "Guardian Wave": {
+              "$ref": "#/definitions/Guardian Wave"
+            },
+            "Guardian Wave Cooldown Time": {
+              "$ref": "#/definitions/Guardian Wave Cooldown Time"
+            },
+            "Guardian Wave Knockback Scalar": {
+              "$ref": "#/definitions/Guardian Wave Knockback Scalar"
+            },
+            "Rushing Torrent": {
+              "$ref": "#/definitions/Rushing Torrent"
+            },
+            "Rushing Torrent Cooldown Time": {
+              "$ref": "#/definitions/Rushing Torrent Cooldown Time"
+            },
+            "Rushing Torrent Duration Scalar": {
+              "$ref": "#/definitions/Rushing Torrent Duration Scalar"
+            },
+            "Water Staff Orb Maximum Control Time": {
+              "$ref": "#/definitions/Water Staff Orb Maximum Control Time"
+            },
+            "Water Staff Orb Turn Rate": {
+              "$ref": "#/definitions/Water Staff Orb Turn Rate"
+            },
+            "Restorative Stream": {
+              "$ref": "#/definitions/Restorative Stream"
+            },
+            "Restorative Stream Drain Rate": {
+              "$ref": "#/definitions/Restorative Stream Drain Rate"
+            },
+            "Restorative Stream Recharge Rate": {
+              "$ref": "#/definitions/Restorative Stream Recharge Rate"
             }
           },
           "additionalProperties": false

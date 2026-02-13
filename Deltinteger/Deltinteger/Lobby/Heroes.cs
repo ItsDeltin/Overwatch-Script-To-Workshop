@@ -331,6 +331,16 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Widowmaker").AddUlt("Infra-sight", hasDuration: true).AddProjectile(true).AddScope().AddAbility("Grappling Hook").AddAbility("Venom Mine"),
                 new HeroSettingCollection("Winston").AddUlt("Primal Rage", hasDuration: true).AddRange("Primal Rage Melee Knockback Scalar", 25, 300).AddAbility("Barrier Projector").AddAbility("Jump Pack", hasKnockback: true).AddRange("Jump Pack Acceleration Scalar", 25, 300),
                 new HeroSettingCollection("Wrecking Ball").AddUlt("Minefield", hasDuration: true, hasKnockback: true).AddProjectile(true).AddAbility("Adaptive Shield").AddAbility("Grappling Claw", hasKnockback: true).AddAbility("Piledriver").AddAbility("Roll", hasCooldown: false).AddSwitch("Roll Always Active", false),
+                new HeroSettingCollection("Wuyang")
+                    .AddHealer().AddProjectile(false) // This should be true, but it doesn't exist
+                    .AddUlt("Tidal Blast")
+                    .AddAbility("Guardian Wave", hasKnockback: true)
+                    .AddAbility("Rushing Torrent").AddRange("Rushing Torrent Duration Scalar", 10, 500)
+                    .AddRange("Water Staff Orb Maximum Control Time", 10, 500)
+                    .AddRange("Water Staff Orb Turn Rate", 10, 500)
+                    .AddSwitch("Restorative Stream", true)
+                    .AddRange("Restorative Stream Drain Rate", 0, 500)
+                    .AddRange("Restorative Stream Recharge Rate", 0, 500),
                 new HeroSettingCollection("Zarya").AddUlt("Graviton Surge").AddProjectile(true).AddSecondaryFire().AddAbility("Particle Barrier").AddAbility("Projected Barrier").AddRange("Particle Cannon Secondary Knockback Scalar", 0, 400),
                 new HeroSettingCollection("Zenyatta").AddUlt("Transcendence").AddProjectile(false).AddSecondaryFire().AddHealer().AddAbility("Orb Of Harmony", hasCooldown: false).AddAbility("Orb Of Discord", hasCooldown: false)
             };
