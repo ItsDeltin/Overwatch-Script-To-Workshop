@@ -55,6 +55,23 @@
                     ]
                 },
                 {
+                    "name": "Anran",
+                    "template": "base_hero",
+                    "$ult": "Vermillion Ascent",
+                    "$projectile": true,
+                    "$secondary_fire": true,
+                    "content": [
+                        {
+                            "name": "Inferno Rush",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Dancing Blaze",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
                     "name": "Ashe",
                     "template": "base_hero",
                     "$ult": "B.O.B.",
@@ -203,6 +220,38 @@
                     ]
                 },
                 {
+                    "name": "Domina",
+                    "template": "base_hero",
+                    "$ult": "Panopticon",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Ultimate Barrier Health Scalar (Panopticon)",
+                            "type": "range_percentage",
+                            "min": 50,
+                            "max": 300
+                        },
+                        {
+                            "name": "Barrier Array",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Crystal Charge",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Reconstruction Heal Scalar",
+                            "min": 50,
+                            "max": 300
+                        },
+                        {
+                            "name": "Sonic Repulsors",
+                            "template": "ability",
+                            "$knockback": true
+                        }
+                    ]
+                },
+                {
                     "name": "Doomfist",
                     "template": "base_hero",
                     "$ult": "Meteor Strike",
@@ -258,6 +307,48 @@
                         {
                             "name": "Sticky Bombs",
                             "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Emre",
+                    "template": "base_hero",
+                    "$ult": "Override Protocol",
+                    "$ult_duration": true,
+                    "$ult_knockback": true,
+                    "$projectile": true,
+                    "$scope": true,
+                    "content": [
+                        {
+                            "name": "No Unscoped Fire",
+                            "type": "boolean_onoff"
+                        },
+                        {
+                            "name": "Cyber Frag",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Siphon Blaster",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Siphon Blaster Duration Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Siphon Blaster Duration Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Siphon Blaster Heat Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
                         }
                     ]
                 },
@@ -372,7 +463,6 @@
                         {
                             "name": "Spike Guard",
                             "template": "ability"
-
                         }
                     ]
                 },
@@ -404,6 +494,39 @@
                         {
                             "name": "Healing Pylon",
                             "template": "ability"
+                        }
+                    ]
+                },
+                {
+                    "name": "Jetpack Cat",
+                    "template": "ability",
+                    "$ult": "Catnapper",
+                    "$projectile": true,
+                    "$healer": true,
+                    "$no_ammunition": true,
+                    "content": [
+                        {
+                            "name": "Frenetic Flight",
+                            "template": "ability",
+                            "$rechargeable": true
+                        },
+                        {
+                            "name": "Frenetic Flight Unlimited Fuel",
+                            "type": "boolean_enableddisabled"
+                        },
+                        {
+                            "name": "Lifeline",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Purr",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Biotic Pawjectile Range",
+                            "type": "range_percentage",
+                            "min": 25,
+                            "max": 500
                         }
                     ]
                 },
@@ -730,6 +853,27 @@
                             "name": "Angelic Descent",
                             "type": "boolean_onoff",
                             "default": true
+                        }
+                    ]
+                },
+                {
+                    "name": "Mizuki",
+                    "template": "base_hero",
+                    "$ult": "Kekkai Sanctuary",
+                    "$healer": true,
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Binding Chain",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Healing Kasa",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Katashiro Return",
+                            "template": "ability"
                         }
                     ]
                 },
@@ -1212,6 +1356,58 @@
                         {
                             "name": "Roll Always Active",
                             "type": "boolean_onoff"
+                        }
+                    ]
+                },
+                {
+                    "name": "Wuyang",
+                    "template": "base_hero",
+                    "$ult": "Tidal Blast",
+                    "$healer": true,
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Guardian Wave",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Rushing Torrent",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Rushing Torrent Duration Scalar",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Water Staff Orb Maximum Control Time",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Water Staff Orb Turn Rate",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "Restorative Stream",
+                            "type": "boolean_enableddisabled"
+                        },
+                        {
+                            "name": "Restorative Stream Drain Rate",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
+                        },
+                        {
+                            "name": "Restorative Stream Recharge Rate",
+                            "type": "range_percentage",
+                            "min": 0,
+                            "max": 500
                         }
                     ]
                 },
@@ -1961,6 +2157,10 @@
                 {
                     "name": "Spawn With Ultimate Ready",
                     "type": "boolean_onoff"
+                },
+                {
+                    "name": "Role Passives",
+                    "type": "boolean_enableddisabled"
                 },
                 {
                     "name": "Health",
