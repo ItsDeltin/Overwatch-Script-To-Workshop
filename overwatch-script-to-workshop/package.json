@@ -356,6 +356,6 @@
     "vscode-debugadapter": "^1.41.1",
     "vscode-debugprotocol": "^1.41.0",
     "vscode-languageclient": "^8.0.2",
-    "yauzl": "^2.10.0"
+    "yauzl": "^3.2.1"
   }
 }
