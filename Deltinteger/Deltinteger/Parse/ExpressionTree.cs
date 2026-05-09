@@ -591,7 +591,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             public bool CanBeSetDirectly() => _variable.Attributes.CanBeSet;
-            public bool CanBeSetReference() => _variable.CodeType.GetCodeType(_parseInfo.TranslateInfo).AsReferenceResetSettability;
+            public bool CanBeSetReference() => _variable.CodeType.GetCodeType(_parseInfo.TranslateInfo)?.AsReferenceResetSettability ?? true;
         }
     }
 
