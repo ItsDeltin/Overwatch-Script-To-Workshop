@@ -75,6 +75,15 @@
         Venture,
         Juno,
         Hazard,
+        Freja,
+        Wuyang,
+        Vendetta,
+        Anran,
+        Domina,
+        Emre,
+        Mizuki,
+        JetpackCat,
+        Sierra,
     }
 
     public enum Team
