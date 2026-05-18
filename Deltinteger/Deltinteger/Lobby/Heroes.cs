@@ -316,6 +316,12 @@ namespace Deltin.Deltinteger.Lobby
                     .AddAbility("Take A Breather", hasCooldown: true, rechargeable: true)
                     .AddAbility("Chain Hook")
                     .AddAbility("Pig Pen"),
+                new HeroSettingCollection("Sierra")
+                    .AddUlt("Trailblazer")
+                    .AddProjectile(false)
+                    .AddAbility("Tracking Shot")
+                    .AddAbility("Anchor Drone")
+                    .AddAbility("Tremor Charge", hasKnockback: true),
                 new HeroSettingCollection("Sigma").AddUlt("Gravitic Flux").RemoveAmmunition().AddProjectile(true).AddAbility("Accretion", hasKnockback: true).AddAbility("Experimental Barrier", rechargeable: true).AddAbility("Kinetic Grasp"),
                 new HeroSettingCollection("Soldier: 76").AddUlt("Tactical Visor", hasDuration: true).AddHealer().AddProjectile(false).AddAbility("Biotic Field").AddAbility("Helix Rockets", hasKnockback: true).AddAbility("Sprint", hasCooldown: false),
                 new HeroSettingCollection("Sojourn").AddUlt("Overclock", hasDuration: true).AddAbility("Disruptor Shot").AddProjectile(false).AddAbility("Power Slide").AddSecondaryFire().AddRange("Railgun Alt Fire Energy Charge Rate", 0, 500),
