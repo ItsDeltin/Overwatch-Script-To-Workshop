@@ -3053,6 +3053,58 @@
       "type": "number",
       "maximum": 500.0
     },
+    "Ultimate Ability (Trailblazer)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Trailblazer)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Trailblazer)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Trailblazer)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Tracking Shot": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Tracking Shot Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Anchor Drone": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Anchor Drone Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Tremor Charge": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Tremor Charge Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Tremor Charge Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
     "Ultimate Ability (Gravitic Flux)": {
       "default": true,
       "type": "boolean"
@@ -3835,6 +3887,7 @@
           "Reaper",
           "Reinhardt",
           "Roadhog",
+          "Sierra",
           "Sigma",
           "Soldier: 76",
           "Sojourn",
@@ -7196,6 +7249,93 @@
             },
             "Pig Pen Cooldown Time": {
               "$ref": "#/definitions/Pig Pen Cooldown Time"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Sierra": {
+          "description": "'Sierra' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Role Passives": {
+              "$ref": "#/definitions/Role Passives"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Passive Health Regeneration": {
+              "$ref": "#/definitions/Passive Health Regeneration"
+            },
+            "Ultimate Ability (Trailblazer)": {
+              "$ref": "#/definitions/Ultimate Ability (Trailblazer)"
+            },
+            "Ultimate Generation (Trailblazer)": {
+              "$ref": "#/definitions/Ultimate Generation (Trailblazer)"
+            },
+            "Ultimate Generation - Passive (Trailblazer)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Trailblazer)"
+            },
+            "Ultimate Generation - Combat (Trailblazer)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Trailblazer)"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Tracking Shot": {
+              "$ref": "#/definitions/Tracking Shot"
+            },
+            "Tracking Shot Cooldown Time": {
+              "$ref": "#/definitions/Tracking Shot Cooldown Time"
+            },
+            "Anchor Drone": {
+              "$ref": "#/definitions/Anchor Drone"
+            },
+            "Anchor Drone Cooldown Time": {
+              "$ref": "#/definitions/Anchor Drone Cooldown Time"
+            },
+            "Tremor Charge": {
+              "$ref": "#/definitions/Tremor Charge"
+            },
+            "Tremor Charge Cooldown Time": {
+              "$ref": "#/definitions/Tremor Charge Cooldown Time"
+            },
+            "Tremor Charge Knockback Scalar": {
+              "$ref": "#/definitions/Tremor Charge Knockback Scalar"
             }
           },
           "additionalProperties": false

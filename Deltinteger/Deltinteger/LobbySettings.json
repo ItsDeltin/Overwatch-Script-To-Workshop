@@ -1093,6 +1093,27 @@
                     ]
                 },
                 {
+                    "name": "Sierra",
+                    "template": "base_hero",
+                    "$ult": "Trailblazer",
+                    "$projectile": true,
+                    "content": [
+                        {
+                            "name": "Anchor Drone",
+                            "template": "ability"
+                        },
+                        {
+                            "name": "Tremor Charge",
+                            "template": "ability",
+                            "$knockback": true
+                        },
+                        {
+                            "name": "Tracking Shot",
+                            "template": "ability"
+                        }
+                    ]
+                },
+                {
                     "name": "Sigma",
                     "template": "base_hero",
                     "$ult": "Gravitic Flux",
