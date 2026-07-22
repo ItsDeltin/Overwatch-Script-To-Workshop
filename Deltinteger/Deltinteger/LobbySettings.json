@@ -1686,6 +1686,25 @@
                     ]
                 },
                 {
+                    "name": "Control 6v6",
+                    "template": "base_mode",
+                    "$with_maps": "Control",
+                    "$competitive": true,
+                    "$enable_perks": true,
+                    "$capture_speed": true,
+                    "$limit_valid_control_points": true,
+                    "$scoring_speed_modifier": true,
+                    "content": [
+                        {
+                            "name": "Score To Win",
+                            "type": "range_int",
+                            "min": 1,
+                            "max": 3,
+                            "default": 2
+                        }
+                    ]
+                },
+                {
                     "name": "Escort",
                     "$with_maps": "Escort",
                     "template": "base_mode",
@@ -1694,7 +1713,24 @@
                     "$payload_speed": true
                 },
                 {
+                    "name": "Escort 6v6",
+                    "$with_maps": "Escort",
+                    "template": "base_mode",
+                    "$competitive": true,
+                    "$enable_perks": true,
+                    "$payload_speed": true
+                },
+                {
                     "name": "Hybrid",
+                    "template": "base_mode",
+                    "$with_maps": "Hybrid",
+                    "$competitive": true,
+                    "$enable_perks": true,
+                    "$capture_speed": true,
+                    "$payload_speed": true
+                },
+                {
+                    "name": "Hybrid 6v6",
                     "template": "base_mode",
                     "$with_maps": "Hybrid",
                     "$competitive": true,
@@ -1724,6 +1760,27 @@
                     ]
                 },
                 {
+                    "name": "Push 6v6",
+                    "template": "base_mode",
+                    "$with_maps": "Push",
+                    "$competitive": true,
+                    "$enable_perks": true,
+                    "content": [
+                        {
+                            "name": "TS-1 Walk Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        },
+                        {
+                            "name": "TS-1 Push Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500
+                        }
+                    ]
+                },
+                {
                     "name": "Flashpoint",
                     "template": "base_mode",
                     "$with_maps": "Flashpoint",
@@ -1731,49 +1788,31 @@
                     "$enable_perks": true,
                     "$capture_speed": true,
                     "$scoring_speed_modifier": true,
+                    "$flashpoint": true
+                },
+                {
+                    "name": "Flashpoint 6v6",
+                    "template": "base_mode",
+                    "$with_maps": "Flashpoint",
+                    "$competitive": true,
+                    "$enable_perks": true,
+                    "$capture_speed": true,
+                    "$scoring_speed_modifier": true,
+                    "$flashpoint": true
+                },
+                {
+                    "name": "Clash 6v6",
+                    "template": "base_mode",
+                    "$with_maps": "Clash",
+                    "$competitive": true,
+                    "$enable_perks": true,
                     "content": [
                         {
-                            "name": "Control Point A",
-                            "type": "boolean_onoff",
-                            "default": true
-                        },
-                        {
-                            "name": "Control Point B",
-                            "type": "boolean_onoff",
-                            "default": true
-                        },
-                        {
-                            "name": "Control Point C",
-                            "type": "boolean_onoff",
-                            "default": true
-                        },
-                        {
-                            "name": "Control Point D",
-                            "type": "boolean_onoff",
-                            "default": true
-                        },
-                        {
-                            "name": "Control Point E",
-                            "type": "boolean_onoff",
-                            "default": true
-                        },
-                        {
-                            "name": "First Active Control Point",
-                            "options": [
-                                "A",
-                                "B",
-                                "C",
-                                "D",
-                                "E",
-                                "Random"
-                            ]
-                        },
-                        {
-                            "name": "Score To Win",
-                            "type": "range_int",
-                            "min": 1,
-                            "max": 10,
-                            "default": 3
+                            "name": "Capture Speed Modifier",
+                            "type": "range_percentage",
+                            "min": 10,
+                            "max": 500,
+                            "default": 45
                         }
                     ]
                 },
@@ -2442,6 +2481,46 @@
                             "name": "Self Initiated Respawn",
                             "type": "boolean_onoff",
                             "default": true
+                        }
+                    ]
+                },
+                "flashpoint": {
+                    "then": [
+                        {
+                            "name": "Control Point A",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point B",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point C",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point D",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "Control Point E",
+                            "type": "boolean_onoff",
+                            "default": true
+                        },
+                        {
+                            "name": "First Active Control Point",
+                            "options": [
+                                "A",
+                                "B",
+                                "C",
+                                "D",
+                                "E",
+                                "Random"
+                            ]
                         }
                     ]
                 },

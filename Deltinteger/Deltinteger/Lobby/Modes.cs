@@ -15,15 +15,33 @@ namespace Deltin.Deltinteger.Lobby
 
         public ModeSettings Assault { get; set; }
 
+        [JsonProperty("Control 6v6")]
+        public ModeSettings Control_6v6 { get; set; }
+
         public ModeSettings Control { get; set; }
+
+        [JsonProperty("Escort 6v6")]
+        public ModeSettings Escort_6v6 { get; set; }
 
         public ModeSettings Escort { get; set; }
 
+        [JsonProperty("Hybrid 6v6")]
+        public ModeSettings Hybrid_6v6 { get; set; }
+
         public ModeSettings Hybrid { get; set; }
+
+        [JsonProperty("Push 6v6")]
+        public ModeSettings Push_6v6 { get; set; }
 
         public ModeSettings Push { get; set; }
 
+        [JsonProperty("Flashpoint 6v6")]
+        public ModeSettings Flashpoint_6v6 { get; set; }
+
         public ModeSettings Flashpoint { get; set; }
+
+        [JsonProperty("Clash 6v6")]
+        public ModeSettings Clash_6v6 { get; set; }
 
         public ModeSettings Clash { get; set; }
 
@@ -93,6 +111,9 @@ namespace Deltin.Deltinteger.Lobby
                 case "Capture The Flag":
                     if (CaptureTheFlag == null) CaptureTheFlag = new ModeSettings();
                     return CaptureTheFlag;
+                case "Control 6v6":
+                    if (Control_6v6 == null) Control_6v6 = new ModeSettings();
+                    return Control_6v6;
                 case "Control":
                     if (Control == null) Control = new ModeSettings();
                     return Control;
@@ -102,18 +123,33 @@ namespace Deltin.Deltinteger.Lobby
                 case "Elimination":
                     if (Elimination == null) Elimination = new ModeSettings();
                     return Elimination;
+                case "Escort 6v6":
+                    if (Escort_6v6 == null) Escort_6v6 = new ModeSettings();
+                    return Escort_6v6;
                 case "Escort":
                     if (Escort == null) Escort = new ModeSettings();
                     return Escort;
+                case "Flashpoint 6v6":
+                    if (Flashpoint_6v6 == null) Flashpoint_6v6 = new ModeSettings();
+                    return Flashpoint_6v6;
                 case "Flashpoint":
                     if (Flashpoint == null) Flashpoint = new ModeSettings();
                     return Flashpoint;
+                case "Clash 6v6":
+                    if (Clash_6v6 == null) Clash_6v6 = new ModeSettings();
+                    return Clash_6v6;
                 case "Clash":
                     if (Clash == null) Clash = new ModeSettings();
                     return Clash;
+                case "Hybrid 6v6":
+                    if (Hybrid_6v6 == null) Hybrid_6v6 = new ModeSettings();
+                    return Hybrid_6v6;
                 case "Hybrid":
                     if (Hybrid == null) Hybrid = new ModeSettings();
                     return Hybrid;
+                case "Push 6v6":
+                    if (Push_6v6 == null) Push_6v6 = new ModeSettings();
+                    return Push_6v6;
                 case "Push":
                     if (Push == null) Push = new ModeSettings();
                     return Push;
@@ -224,9 +260,17 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting GameLengthInMinutes = new RangeValue(true, false, "Game Length In Minutes", 5, 15, 10);
         private static readonly LobbySetting SelfInitiatedRespawn = new SwitchValue("Self Initiated Respawn", true);
         private static readonly LobbySetting ScoringSpeedModifier = new RangeValue(false, true, "Scoring Speed Modifier", 10, 500);
-        private static readonly LobbySetting ScoreToWin_1to9 = new RangeValue(false, false, "Score To Win", 1, 9, 3) { ReferenceName = "Score To Win 1-9" };
-        private static readonly LobbySetting ScoreToWin_1to5000 = new RangeValue(false, false, "Score To Win", 1, 5000, 20) { ReferenceName = "Score To Win 1-5000" };
+        private static readonly LobbySetting ScoreToWin_1to3 = new RangeValue(true, false, "Score to Win", 1, 3, 2) { ReferenceName = "Score To Win 1-3" };
+        private static readonly LobbySetting ScoreToWin_1to9 = new RangeValue(true, false, "Score To Win", 1, 9, 3) { ReferenceName = "Score To Win 1-9" };
+        private static readonly LobbySetting ScoreToWin_1to10 = new RangeValue(true, false, "Score To Win", 1, 10, 3) { ReferenceName = "Score To Win 1-10" };
+        private static readonly LobbySetting ScoreToWin_1to5000 = new RangeValue(true, false, "Score To Win", 1, 5000, 20) { ReferenceName = "Score To Win 1-5000" };
         private static readonly LobbySetting LimitValidControlPoints = new SelectValue("Limit Valid Control Points", "All", "First", "Second", "Third");
+        private static readonly LobbySetting ControlPointA = new SwitchValue("Control Point A", true);
+        private static readonly LobbySetting ControlPointB = new SwitchValue("Control Point B", true);
+        private static readonly LobbySetting ControlPointC = new SwitchValue("Control Point C", true);
+        private static readonly LobbySetting ControlPointD = new SwitchValue("Control Point D", true);
+        private static readonly LobbySetting ControlPointE = new SwitchValue("Control Point E", true);
+        private static readonly LobbySetting FirstActiveControlPoint = new SelectValue("First Active Control Point", "A", "B", "C", "D", "E", "Random");
         private static readonly LobbySetting HeroSelectionTime = new RangeValue(true, false, "Hero Selection Time", 20, 60, 20);
         private static readonly LobbySetting RestrictPreviouslyUsedHeroes = new SelectValue("Restrict Previously Used Heroes", "Off", "After Round Won", "After Round Played");
         private static readonly LobbySetting HeroSelection = new SelectValue("Hero Selection", "Any", "Limited", "Random", "Random (Mirrored)");
@@ -302,6 +346,7 @@ namespace Deltin.Deltinteger.Lobby
             return this;
         }
 
+        public ModeSettingCollection Flashpoint() => Add(CaptureSpeed).Add(ControlPointA).Add(ControlPointB).Add(ControlPointC).Add(ControlPointD).Add(ControlPointE).Add(FirstActiveControlPoint).Add(ScoreToWin_1to10).Add(ScoringSpeedModifier);
         public ModeSettingCollection Elimination() => Add(HeroSelectionTime).Add(ScoreToWin_1to9).Add(RestrictPreviouslyUsedHeroes).Add(HeroSelection).Add(LimitedChoicePool)
             .Add(CaptureObjectiveTiebreaker).Add(TiebreakerAfterTimeElapsed).Add(TimeToCapture).Add(DrawAfterMatchTimeElaspedWithNoTiebreaker).Add(RevealHeroes).Add(RevealHeroesAfterMatchTimeElapsed);
 
@@ -345,15 +390,19 @@ namespace Deltin.Deltinteger.Lobby
             var all = new ModeSettingCollection("All");
             AllModeSettings = [
                 all,
-                new ModeSettingCollection("Assault", true).Competitive().PerksEnabled().AddCaptureSpeed(),
-                new ModeSettingCollection("Control", true).Competitive().PerksEnabled().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", false, 1, 3, 2, "Score To Win 1-3").Add(ScoringSpeedModifier),
+                new ModeSettingCollection("Assault", false).Competitive().PerksEnabled().AddCaptureSpeed(),
+                new ModeSettingCollection("Control 6v6", false).Competitive().PerksEnabled().AddCaptureSpeed().Add(LimitValidControlPoints).Add(ScoreToWin_1to3).Add(ScoringSpeedModifier),
+                new ModeSettingCollection("Control", true).Competitive().PerksEnabled().AddCaptureSpeed().Add(LimitValidControlPoints).Add(ScoreToWin_1to3).Add(ScoringSpeedModifier),
+                new ModeSettingCollection("Escort 6v6", false).Competitive().PerksEnabled().AddPayloadSpeed(),
                 new ModeSettingCollection("Escort", true).Competitive().PerksEnabled().AddPayloadSpeed(),
+                new ModeSettingCollection("Hybrid 6v6", false).Competitive().PerksEnabled().AddCaptureSpeed().AddPayloadSpeed(),
                 new ModeSettingCollection("Hybrid", true).Competitive().PerksEnabled().AddCaptureSpeed().AddPayloadSpeed(),
+                new ModeSettingCollection("Push 6v6", false).Competitive().PerksEnabled().AddTS1WalkSpeed().AddTS1PushSpeed(),
                 new ModeSettingCollection("Push", true).Competitive().PerksEnabled().AddTS1WalkSpeed().AddTS1PushSpeed(),
-                new ModeSettingCollection("Flashpoint", true).Competitive().PerksEnabled().AddCaptureSpeed()
-                    .AddSwitch("Control Point A", true).AddSwitch("Control Point B", true).AddSwitch("Control Point C", true).AddSwitch("Control Point D", true).AddSwitch("Control Point E", true)
-                    .AddSelect("First Active Control Point", "A", "B", "C", "D", "E", "Random")
-                    .AddIntRange("Score To Win", false, 1, 10, 3).Add(ScoringSpeedModifier),
+                new ModeSettingCollection("Flashpoint 6v6", false).Competitive().PerksEnabled().Flashpoint(),
+                new ModeSettingCollection("Flashpoint", true).Competitive().PerksEnabled().Flashpoint(),
+                new ModeSettingCollection("Clash 6v6", false).Competitive().PerksEnabled()
+                    .Add(CaptureSpeedClash),
                 new ModeSettingCollection("Clash", true).Competitive().PerksEnabled()
                     .Add(CaptureSpeedClash),
                 new ModeSettingCollection("Capture The Flag", false).PerksDisabled().AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
