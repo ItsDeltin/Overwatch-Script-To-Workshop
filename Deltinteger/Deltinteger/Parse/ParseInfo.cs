@@ -192,6 +192,8 @@ namespace Deltin.Deltinteger.Parse
                 case BinaryOperatorExpression op:
                     if (op.IsDotExpression())
                         return new ExpressionTree(this, scope, op, usedAsValue);
+                    else if (op.Operator.Text == "is")
+                        return new IsPatternMatchingExpression(this, scope, op);
                     else
                         return new OperatorAction(this, scope, op);
                 case UnaryOperatorExpression op: return new UnaryOperatorAction(this, scope, op);

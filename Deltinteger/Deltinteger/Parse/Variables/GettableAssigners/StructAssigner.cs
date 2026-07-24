@@ -8,13 +8,20 @@ namespace Deltin.Deltinteger.Parse
 {
     public class StructAssigner : IGettableAssigner
     {
-        readonly IVariableInstance[] _variables;
+        readonly StructSlot[] _structSlots;
         readonly StructAssigningAttributes _attributes;
         readonly bool _isArray;
 
         public StructAssigner(StructInstance structInstance, StructAssigningAttributes attributes, bool isArray)
         {
-            _variables = structInstance.Variables;
+            _structSlots = [.. structInstance.Variables.Select(var => new StructSlot(var.Name, var.GetAssigner))];
+            _attributes = attributes;
+            _isArray = isArray;
+        }
+
+        public StructAssigner(StructSlot[] slots, StructAssigningAttributes attributes, bool isArray)
+        {
+            _structSlots = slots;
             _attributes = attributes;
             _isArray = isArray;
         }
@@ -38,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
             bool inline = info.Inline || _attributes.StoreType == StoreType.None;
 
             var values = new Dictionary<string, IGettable>();
-            foreach (var var in _variables)
+            foreach (var var in _structSlots)
                 // Get the child gettable.
                 values.Add(
                     var.Name,
@@ -63,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
             var values = new Dictionary<string, IWorkshopTree>();
 
             // Link the variable values to their names.
-            foreach (var variable in _variables)
+            foreach (var variable in _structSlots)
                 values.Add(variable.Name, variable.GetAssigner(new(actionSet)).GetValue(new GettableAssignerValueInfo(actionSet) { Inline = true }).GetVariable());
 
             return new LinkedStructValue(values);
@@ -76,9 +83,9 @@ namespace Deltin.Deltinteger.Parse
 
             int offset = info.StackOffset;
             var values = new Dictionary<string, IGettable>();
-            foreach (var var in _variables)
+            foreach (var var in _structSlots)
             {
-                var assigner = var.GetAssigner();
+                var assigner = var.GetAssigner(default);
                 var stack = assigner.AssignClassStacks(new GetClassStacks(info.StackData, offset));
                 if (stack != null)
                 {
@@ -96,16 +103,16 @@ namespace Deltin.Deltinteger.Parse
                 return 0;
 
             int delta = 0;
-            for (int i = 0; i < _variables.Length; i++)
-                delta += _variables[i].GetAssigner().StackDelta();
+            for (int i = 0; i < _structSlots.Length; i++)
+                delta += _structSlots[i].GetAssigner(default).StackDelta();
             return delta;
         }
 
         public IGettable Unfold(IUnfoldGettable unfolder)
         {
             var values = new Dictionary<string, IGettable>();
-            foreach (var var in _variables)
-                values.Add(var.Name, var.GetAssigner().Unfold(unfolder));
+            foreach (var var in _structSlots)
+                values.Add(var.Name, var.GetAssigner(default).Unfold(unfolder));
 
             return new StructAssignerValue(values);
         }
@@ -122,6 +129,8 @@ namespace Deltin.Deltinteger.Parse
             return (null, false);
         }
     }
+
+    public readonly record struct StructSlot(string Name, Func<GetVariablesAssigner, IGettableAssigner> GetAssigner);
 
     public struct StructAssigningAttributes
     {

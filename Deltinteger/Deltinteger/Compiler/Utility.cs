@@ -605,6 +605,8 @@ namespace Deltin.Deltinteger.Compiler
         GreaterThanOrEqual,
         // Ternary
         QuestionMark,
+        // Pattern matching
+        Is,
         // Workshop
         WorkshopVariablesEn,
         WorkshopSubroutinesEn,

@@ -146,5 +146,12 @@ namespace Deltin.Deltinteger.Parse
             IsGlobal = isGlobal;
             Extended = extended;
         }
+
+        public readonly AssigningAttributes StepName(string text)
+        {
+            var copy = this;
+            copy.Name = $"{copy.Name}_{text}";
+            return copy;
+        }
     }
 }

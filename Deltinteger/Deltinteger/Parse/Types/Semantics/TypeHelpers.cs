@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse.Lambda;
+using Deltin.Deltinteger.Parse.Types;
 
 #nullable enable
 
@@ -126,7 +127,8 @@ namespace Deltin.Deltinteger.Parse
                 a is DefinedClass ^ b is DefinedClass ||
                 a is ArrayType ^ b is ArrayType ||
                 a is PortableLambdaType ^ b is PortableLambdaType ||
-                a is PipeType ^ b is PipeType)
+                a is PipeType ^ b is PipeType ||
+                a is TypeProvider.TypeInstance ^ b is TypeProvider.TypeInstance)
                 return false;
 
             // Struct comparison
@@ -175,6 +177,11 @@ namespace Deltin.Deltinteger.Parse
             else if (a is PipeType aPipe && b is PipeType bPipe)
             {
                 return SpreadPipeType(aPipe).All(at => SpreadPipeType(bPipe).Any(bt => Compare(at, bt, equalitySettings)));
+            }
+            // Generic type factory comparison
+            else if (a is TypeProvider.TypeInstance aTypeInstance && b is TypeProvider.TypeInstance bTypeInstance)
+            {
+                return aTypeInstance.Provider == bTypeInstance.Provider;
             }
 
             // Default

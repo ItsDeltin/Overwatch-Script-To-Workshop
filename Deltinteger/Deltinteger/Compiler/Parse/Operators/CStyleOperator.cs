@@ -84,20 +84,20 @@ record CStyleOperator(int Precedence, string Text, CStyleOperatorType Type, Toke
     }
 
     public static CStyleOperator Squiggle { get; } = DotOp(1, "~", TokenType.Squiggle);
-    // Compare
+    // Ternary
     public static CStyleOperator Ternary { get; } = new(2, "?", CStyleOperatorType.TernaryLeft, TokenType.QuestionMark);
     public static CStyleOperator RhsTernary { get; } = new(3, ":", CStyleOperatorType.TernaryRight, TokenType.Colon);
-
+    // Boolean
     public static CStyleOperator Or { get; } = Binary(4, "||", TokenType.Or);
     public static CStyleOperator And { get; } = Binary(5, "&&", TokenType.And);
-
+    // Comparison
     public static CStyleOperator Equal { get; } = Binary(6, "==", TokenType.EqualEqual);
     public static CStyleOperator NotEqual { get; } = Binary(6, "!=", TokenType.NotEqual);
     public static CStyleOperator GreaterThan { get; } = Binary(7, ">", TokenType.GreaterThan);
     public static CStyleOperator LessThan { get; } = Binary(7, "<", TokenType.LessThan);
     public static CStyleOperator GreaterThanOrEqual { get; } = Binary(7, ">=", TokenType.GreaterThanOrEqual);
     public static CStyleOperator LessThanOrEqual { get; } = Binary(7, "<=", TokenType.LessThanOrEqual);
-    // Boolean
+    public static CStyleOperator Is { get; } = Binary(7, "is", TokenType.Is);
     // Math
     public static CStyleOperator Subtract { get; } = Binary(8, "-", TokenType.Subtract);
     public static CStyleOperator Add { get; } = Binary(8, "+", TokenType.Add);
@@ -121,7 +121,7 @@ record CStyleOperator(int Precedence, string Text, CStyleOperatorType Type, Toke
 
     public static CStyleOperator[] BinaryOperators { get; } = new[] {
         Squiggle, Dot, Equal, NotEqual, GreaterThan, LessThan, GreaterThanOrEqual, LessThanOrEqual, And, Or, Subtract, Add, Modulo, Divide, Multiply, Power,
-        Ternary, RhsTernary
+        Ternary, RhsTernary, Is
     };
     public static CStyleOperator[] UnaryOperators { get; } = new[] { Not, Inv };
 

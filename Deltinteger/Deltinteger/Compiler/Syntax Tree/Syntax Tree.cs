@@ -229,13 +229,19 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class EnumContext : Node
     {
+        public MetaComment Doc { get; }
+        public Token Single { get; }
         public Token Identifier { get; }
         public List<EnumValue> Values { get; }
+        public List<TypeArgContext> Generics { get; }
 
-        public EnumContext(Token identifier, List<EnumValue> values)
+        public EnumContext(MetaComment doc, Token single, Token identifier, List<EnumValue> values, List<TypeArgContext> generics)
         {
+            Doc = doc;
+            Single = single;
             Identifier = identifier;
             Values = values;
+            Generics = generics;
         }
     }
 
@@ -243,13 +249,17 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     {
         public Token Identifier { get; }
         public IParseExpression Value { get; }
+        public EnumValueTypeContext ValueType { get; }
 
-        public EnumValue(Token identifier, IParseExpression value)
+        public EnumValue(Token identifier, IParseExpression value, EnumValueTypeContext valueType)
         {
             Identifier = identifier;
             Value = value;
+            ValueType = valueType;
         }
     }
+
+    public record class EnumValueTypeContext(List<IParseType> Items);
 
     public class FunctionContext : Node, IDeclaration
     {

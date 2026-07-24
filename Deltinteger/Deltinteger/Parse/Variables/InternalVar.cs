@@ -14,8 +14,11 @@ namespace Deltin.Deltinteger.Parse
         public static IVariable NewStatic(string name, CodeType type) =>
             new GenericVariableProvider(name, type, VariableType.Dynamic, true);
 
-        public static IVariable NewPropertyLike(string name, CodeType type) =>
-            new GenericVariableProvider(name, type, VariableType.ElementReference, false);
+        public static IVariable NewPropertyLike(string name, CodeType type, IVariableDefault defaultValue = null) =>
+            new GenericVariableProvider(name, type, VariableType.ElementReference, false)
+            {
+                DefaultValue = defaultValue
+            };
 
         public static IVariable NewUnambiguousPropertyLike(string name, CodeType type, IVariableDefault defaultValue = null) =>
             new GenericVariableProvider(name, type, VariableType.ElementReference, false)
@@ -69,6 +72,7 @@ namespace Deltin.Deltinteger.Parse
 
                 readonly GenericVariableProvider provider;
                 readonly CodeType type;
+                readonly StoreType storeType;
 
                 public GenericVariableInstance(GenericVariableProvider provider, CodeType definedIn, CodeType type)
                 {
@@ -78,13 +82,15 @@ namespace Deltin.Deltinteger.Parse
                     var attributes = new VariableInstanceAttributes();
                     attributes.ContainingType = definedIn;
                     Attributes = attributes;
+
+                    storeType = provider.VariableType == VariableType.ElementReference ? StoreType.None : StoreType.FullVariable;
                 }
 
                 public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner = default) => type.GetGettableAssigner(new AssigningAttributes()
                 {
                     DefaultValue = provider.DefaultValue,
                     VariableType = provider.VariableType,
-                    StoreType = StoreType.FullVariable,
+                    StoreType = storeType,
                     Name = (getAssigner.Tag ?? string.Empty) + Name,
                     IsGlobal = getAssigner.IsGlobal
                 });

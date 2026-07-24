@@ -2126,8 +2126,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StartTokenCapture();
             if (GetIncrementalNode(out EnumContext @enum)) return EndTokenCapture(@enum);
 
+            var doc = ParseMetaComment();
+
+            var single = ParseOptional(TokenType.Single);
+
             ParseExpected(TokenType.Enum);
             var identifier = ParseExpected(TokenType.Identifier);
+
+            // Get the type parameters.
+            var generics = ParseOptionalTypeArguments(out _);
 
             // Start the value group.
             ParseExpected(TokenType.CurlyBracket_Open);
@@ -2140,21 +2147,50 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Get the value identifier.
                     StartNode();
                     var valueIdentifier = ParseExpected(TokenType.Identifier);
-                    IParseExpression value = null;
 
+                    // Get the enum value's type.
+                    var valueType = TryParseEnumValueType();
+
+                    IParseExpression value = null;
                     // Get the enum's value.
                     if (ParseOptional(TokenType.Equal))
                         value = GetContainExpression();
 
                     // Add the value to the list.
-                    values.Add(EndNode(new EnumValue(valueIdentifier, value)));
+                    values.Add(EndNode(new EnumValue(valueIdentifier, value, valueType)));
                 }
                 while (ParseOptional(TokenType.Comma));
 
             // End the value group.
             ParseExpected(TokenType.CurlyBracket_Close);
 
-            return new EnumContext(identifier, values);
+            return new EnumContext(doc, single, identifier, values, generics);
+        }
+
+        EnumValueTypeContext TryParseEnumValueType()
+        {
+            // Parentheses syntax.
+            if (ParseOptional(TokenType.Parentheses_Open))
+            {
+                var parameterTypes = ParseDelimitedList(TokenType.Parentheses_Close, () => Kind.IsStartOfType(), ParseType);
+                ParseExpected(TokenType.Parentheses_Close);
+                return new(parameterTypes);
+            }
+            // Curly bracket syntax.
+            // if (ParseOptional(TokenType.CurlyBracket_Open))
+            // {
+            //     var list = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Lookahead(() => ParseType().LookaheadValid), () =>
+            //     {
+            //         var type = ParseType();
+            //         var identifier = ParseExpected(TokenType.Identifier);
+
+            //         return new EnumValueTypeItemContext(type, identifier);
+            //     });
+
+            //     ParseExpected(TokenType.CurlyBracket_Close);
+            //     return new(list);
+            // }
+            return null;
         }
 
         /// <summary>Parses a list of attributes.</summary>
