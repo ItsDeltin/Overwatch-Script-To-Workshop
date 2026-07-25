@@ -3,10 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Model;
 
 namespace Deltin.Deltinteger.Parse.Types;
 
@@ -15,8 +14,7 @@ class CreateEnum
     public static TypeProvider CreateEnumFromContext(ParseInfo parseInfo, EnumContext enumContext)
     {
         string name = enumContext.Identifier.Text;
-        var scope = parseInfo.TranslateInfo.RulesetScope;
-        var enumScope = new Scope("enum " + name);
+        var scope = parseInfo.TranslateInfo.RulesetScope.Child();
         var staticVariableCollection = parseInfo.TranslateInfo.GetComponent<StaticVariableCollection>();
 
         // Todo: Move this into creator
@@ -32,9 +30,14 @@ class CreateEnum
             // Function to get inner type information,
             creator.AddMetaFunction(parseInfo, metaInitialization =>
             {
+                // Add type arguments to the working scope.
+                metaInitialization.AddTypeArgumentsToScope(scope);
+
+                // Working instance.
                 var defaultInstance = metaInitialization.GetDefaultInstance();
 
                 CodeType[][] slots = new CodeType[enumContext.Values.Count][];
+                EnumMember[] enumMembers = new EnumMember[enumContext.Values.Count];
 
                 // Get the enum members.
                 for (int i = 0; i < enumContext.Values.Count; i++)
@@ -58,19 +61,21 @@ class CreateEnum
                         {
                             slots[i] = valueTypeInformation.Items;
 
-                            FuncMethod method = new FuncMethodBuilder()
-                            {
-                                Name = valueName,
-                                Parameters = [..valueTypeInformation.Items.Select((type, i) =>
-                                    new CodeParameter($"value_{i}", type))],
-                                ReturnType = defaultInstance,
-                                Action = (actionSet, call) =>
+                            // The method factory stuff mimics the behaviour of a method provider
+                            // without all the boilerplate.
+                            metaInitialization.AddStaticMethod(typeLinker =>
+                                new FuncMethodBuilder()
                                 {
-                                    return GetValueOfSlot(slots, variantValue.GetDefaultValue(actionSet), call.ParameterValues);
-                                },
-                                Documentation = ""
-                            };
-                            metaInitialization.AddMethodToStaticScope(method);
+                                    Name = valueName,
+                                    Parameters = [..valueTypeInformation.Items.Select((type, i) =>
+                                        new CodeParameter($"value_{i}", type.GetRealType(typeLinker)))],
+                                    ReturnType = defaultInstance.GetRealType(typeLinker),
+                                    Action = (actionSet, call) =>
+                                    {
+                                        return GetValueOfSlot(slots, variantValue.GetDefaultValue(actionSet), call.ParameterValues);
+                                    },
+                                    Documentation = ""
+                                }.GetMethod());
                         }
                         else
                         {
@@ -81,16 +86,33 @@ class CreateEnum
 
                             // Create the enum member.
                             var enumMemberVariable = VariableMaker.NewPropertyLike(valueName, defaultInstance, wrappedMemberValue);
-                            metaInitialization.AddVariableToStaticScope(enumMemberVariable);
+                            metaInitialization.AddStaticVariable(enumMemberVariable);
                             staticVariableCollection.AddVariable(enumMemberVariable);
                         }
+                        enumMembers[i] = new(
+                            valueName,
+                            slots[i],
+                            GetKey: variantValue.GetDefaultValue);
                     }
 
-                return new(GetAssignerFunction: (type, attributes) => CreateAssignerForSlots(slots, attributes));
+                return new(
+                    // todo: 'slots' is using the original types in the definition.
+                    // will not work properly for type arguments.
+                    GetAssignerFunction: (type, attributes) => CreateAssignerForSlots(slots, attributes),
+                    OnInstanceReady: (type, typeLinker) =>
+                    {
+                        ((EnumType)type).EnumMembers = [.. enumMembers.Select(
+                            em => new EnumMember(
+                                em.Name,
+                                [.. em.Items.Select(item => item.GetRealType(typeLinker))],
+                                em.GetKey)
+                        )];
+                    }
+                );
             });
 
             return new(anonymousTypes);
-        });
+        }, (provider, linker) => new EnumType(provider, linker));
         return type;
     }
 
@@ -146,3 +168,19 @@ class CreateEnum
         }
     }
 }
+
+class EnumType(TypeProvider provider, InstanceAnonymousTypeLinker typeLinker) : TypeProvider.TypeInstance(provider, typeLinker)
+{
+    public EnumMember[] EnumMembers { get; set; } = [];
+
+    public IWorkshopTree KeyOf(IWorkshopTree value)
+    {
+        if (value is IStructValue asStructValue)
+        {
+            return asStructValue.GetValue("variant");
+        }
+        throw new NotImplementedException();
+    }
+}
+
+readonly record struct EnumMember(string Name, CodeType[] Items, Func<ActionSet, IWorkshopTree> GetKey);
