@@ -134,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
             // Struct comparison
             if (a is StructInstance aStr && b is StructInstance bStr)
             {
-                return aStr.Variables.All(var =>
+                return aStr.Variables.Length == bStr.Variables.Length && aStr.Variables.All(var =>
                 {
                     var matchingVariable = bStr.Variables.FirstOrDefault(otherVar => var.Name == otherVar.Name);
                     return matchingVariable != null && Compare((CodeType)var.CodeType, (CodeType)matchingVariable.CodeType, equalitySettings);
@@ -234,6 +234,30 @@ namespace Deltin.Deltinteger.Parse
             Strict,
             /// <summary>Type matching with any and inheritance is ok.</summary>
             AnyAndInheritanceOk
+        }
+
+        /// <summary>
+        /// Can these two types share the same storage?
+        /// </summary>
+        public static bool AreTypesCompatible(CodeType a, CodeType b)
+        {
+            // Constant values must be equal.
+            if (a.IsConstant() || b.IsConstant())
+                return AreEqual(a, b);
+
+            // If neither values are structs, they are compatible.
+            if (!a.Attributes.IsStruct && !b.Attributes.IsStruct)
+                return true;
+
+            // If a or b are arrays, get the type that they are an array of.
+            return AreEqual(a, b);
+        }
+
+        static CodeType GetRootTypeOf(CodeType type)
+        {
+            while (type is ArrayType arrayType)
+                type = arrayType.ArrayOfType;
+            return type;
         }
     }
 }

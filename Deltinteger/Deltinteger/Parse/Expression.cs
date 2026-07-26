@@ -217,10 +217,17 @@ namespace Deltin.Deltinteger.Parse
             Consequent = parseInfo.GetExpression(scope, ternaryContext.Consequent);
             Alternative = parseInfo.GetExpression(scope, ternaryContext.Alternative);
 
-            if (Consequent.Type() != null && Consequent.Type().IsConstant())
-                parseInfo.Script.Diagnostics.Error($"Cannot use constant types in a ternary expression.", ternaryContext.Consequent.Range);
-            if (Alternative.Type() != null && Alternative.Type().IsConstant())
-                parseInfo.Script.Diagnostics.Error($"Cannot use constant types in a ternary expression.", ternaryContext.Alternative.Range);
+            var consequentType = Consequent.Type();
+            var alternativeType = Alternative.Type();
+
+            if (consequentType != null && consequentType.IsConstant())
+                parseInfo.Error($"Cannot use constant types in a ternary expression.", ternaryContext.Consequent.Range);
+            if (alternativeType != null && alternativeType.IsConstant())
+                parseInfo.Error($"Cannot use constant types in a ternary expression.", ternaryContext.Alternative.Range);
+
+            if (consequentType is not null && alternativeType is not null &&
+                !CodeTypeHelpers.AreTypesCompatible(Consequent.Type(), Alternative.Type()))
+                parseInfo.Error($"The type '{alternativeType.GetName()}' is not compatible with the ternary consequent type '{consequentType.GetName()}'", ternaryContext.Alternative.Range);
         }
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
