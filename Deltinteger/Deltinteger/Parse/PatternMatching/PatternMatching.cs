@@ -9,13 +9,16 @@ using Deltin.Deltinteger.Model;
 using Deltin.Deltinteger.Parse.Types;
 using Deltin.Deltinteger.Parse.Variables.Build;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Compiler.Parse;
 
 namespace Deltin.Deltinteger.Parse;
 
 class PatternMatching
 {
-    public static MatchedEnumPattern? GetPattern(ParseInfo parseInfo, Scope scope, IParseExpression patternExpression)
+    public static MatchedEnumPattern? GetPattern(
+        ParseInfo parseInfo,
+        Scope scope,
+        IParseExpression patternExpression,
+        PatternOperand operand)
     {
         // Expands the expression from a dot chain into a list of expressions.
         List<IParseExpression>? GetRhsPath()
@@ -144,6 +147,10 @@ class PatternMatching
             }
         }
 
+        // If the operand can be modified, then the binded variables can as well.
+        bool operandIsMutable = operand.LinkedVariable is not null &&
+            operand.LinkedVariable.SetVariable.Calling.Attributes.CanBeSet;
+
         if (targetEnumMember is not null)
         {
             Var[] GetBindingVariables()
@@ -172,27 +179,52 @@ class PatternMatching
 
             Var GetBindingVariable(Identifier identifier, CodeType bindToType)
             {
-                var bindingVariable = new PatternBindingVariable(bindToType, scope, new PatternBindingVariableContextHandler(parseInfo, identifier)).GetVar();
+                var bindingVariable = new PatternBindingVariable(
+                    bindToType,
+                    scope,
+                    new PatternBindingVariableContextHandler(parseInfo, identifier),
+                    operandIsMutable).GetVar();
                 return bindingVariable;
             }
 
-            return new MatchedEnumPattern(GetBindingVariables(), targetEnumMember.Value.Item1, targetEnumMember.Value.Item2);
+            return new MatchedEnumPattern(
+                GetBindingVariables(),
+                targetEnumMember.Value.Item1,
+                targetEnumMember.Value.Item2,
+                operand);
         }
         return null;
     }
 
-    class PatternBindingVariable(CodeType bindingVariableType, IScopeHandler scopeHandler, IVarContextHandler contextHandler) : VarBuilder(scopeHandler, contextHandler)
+    public static PatternOperand GetPatternOperand(ParseInfo parseInfo, IExpression expression)
+    {
+        var variable = new VariableResolve(parseInfo, new(), expression, null, MutedVariableResolveErrorHandler.Instance);
+        return new PatternOperand(expression, variable.DoesResolveToVariable ? variable : null);
+    }
+
+    sealed class PatternBindingVariable(
+        CodeType bindingVariableType,
+        IScopeHandler scopeHandler,
+        IVarContextHandler contextHandler,
+        bool operandIsMutable) : VarBuilder(scopeHandler, contextHandler)
     {
         protected override void Apply()
         {
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
             _varInfo.TokenType = SemanticTokenType.Parameter;
+            _varInfo.TokenModifiers.Add(TokenModifier.Declaration);
+
+            if (!operandIsMutable)
+            {
+                _varInfo.VariableTypeHandler.SetWorkshopReference();
+                _varInfo.TokenModifiers.Add(TokenModifier.Readonly);
+            }
         }
         protected override void CheckComponents() { }
         protected override void GetCodeType() => ApplyCodeType(bindingVariableType);
     }
 
-    class PatternBindingVariableContextHandler(ParseInfo parseInfo, Identifier identifier) : IVarContextHandler
+    sealed class PatternBindingVariableContextHandler(ParseInfo parseInfo, Identifier identifier) : IVarContextHandler
     {
         public ParseInfo ParseInfo => parseInfo;
         public IParseType? GetCodeType() => null;
@@ -202,13 +234,39 @@ class PatternMatching
         public DocRange GetNameRange() => identifier.Range;
         public DocRange? GetTypeRange() => null;
     }
+
+    sealed class MutedVariableResolveErrorHandler : IVariableResolveErrorHandler
+    {
+        public static MutedVariableResolveErrorHandler Instance = new();
+
+        private MutedVariableResolveErrorHandler() { }
+
+        public void Error(string message, DocRange errorRange) { }
+    }
 }
 
-record MatchedEnumPattern(Var[] BindingVariables, EnumType TargetEnumType, EnumMember TargetEnumMember)
+sealed record MatchedEnumPattern(
+    Var[] BindingVariables,
+    EnumType TargetEnumType,
+    EnumMember TargetEnumMember,
+    PatternOperand Operand)
 {
-    public IWorkshopTree ToWorkshop(ActionSet actionSet, IWorkshopTree operand)
+    public IWorkshopTree ToWorkshop(ActionSet actionSet)
     {
-        var unfolder = new ParallelEnumUnfolder(operand as IStructValue);
+        IStructValue source;
+
+        // Potentially mutable variable was provided.
+        if (Operand.LinkedVariable is not null)
+        {
+            var parsedElements = Operand.LinkedVariable.ParseElements(actionSet);
+            source = (IStructValue)parsedElements.IndexReference;
+        }
+        else
+        {
+            source = (IStructValue)Operand.Expression.Parse(actionSet);
+        }
+
+        var unfolder = new ParallelEnumUnfolder(source);
 
         // Bind pattern variables.
         for (int i = 0; i < BindingVariables.Length; i++)
@@ -221,12 +279,14 @@ record MatchedEnumPattern(Var[] BindingVariables, EnumType TargetEnumType, EnumM
         }
 
 
-        return Element.Compare(TargetEnumType.KeyOf(operand), Operator.Equal, TargetEnumMember.GetKey(actionSet));
+        return Element.Compare(TargetEnumType.KeyOf(source), Operator.Equal, TargetEnumMember.GetKey(actionSet));
     }
 }
 
-class ParallelEnumUnfolder(IStructValue SourceEnum) : IUnfoldGettable
+sealed class ParallelEnumUnfolder(IStructValue SourceEnum) : IUnfoldGettable
 {
     int currentSlot = 0;
-    public IWorkshopTree NextValue() => SourceEnum.GetValue($"slot{currentSlot++}");
+    public IGettable NextValue() => SourceEnum.GetGettable($"slot{currentSlot++}");
 }
+
+readonly record struct PatternOperand(IExpression Expression, VariableResolve? LinkedVariable);

@@ -6,23 +6,20 @@ namespace Deltin.Deltinteger.Parse;
 
 sealed class IsExpression : IExpression
 {
-    readonly IExpression lhs;
     readonly CodeType returnType;
     readonly MatchedEnumPattern? enumPattern;
 
     public IsExpression(ParseInfo parseInfo, Scope scope, BinaryOperatorExpression op)
     {
-        lhs = parseInfo.GetExpression(scope, op.Left);
+        var lhs = parseInfo.GetExpression(scope, op.Left);
         returnType = parseInfo.Types.Boolean();
-        enumPattern = PatternMatching.GetPattern(parseInfo, scope, op.Right);
-
-        new VariableResolve(parseInfo, new(), lhs, op.Left.Range);
+        var operand = PatternMatching.GetPatternOperand(parseInfo, lhs);
+        enumPattern = PatternMatching.GetPattern(parseInfo, scope, op.Right, operand);
     }
 
     public IWorkshopTree Parse(ActionSet actionSet)
     {
-        var operand = lhs.Parse(actionSet);
-        return enumPattern.ToWorkshop(actionSet, operand);
+        return enumPattern.ToWorkshop(actionSet);
     }
 
     public CodeType Type() => returnType;

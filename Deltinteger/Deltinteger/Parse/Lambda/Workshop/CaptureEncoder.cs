@@ -67,7 +67,7 @@ namespace Deltin.Deltinteger.Parse.Lambda.Workshop
                 _index = offset;
             }
 
-            public IWorkshopTree NextValue() => ValueInArray(_source, Num(_index++));
+            public IGettable NextValue() => new WorkshopElementReference(ValueInArray(_source, Num(_index++)));
         }
     }
 }

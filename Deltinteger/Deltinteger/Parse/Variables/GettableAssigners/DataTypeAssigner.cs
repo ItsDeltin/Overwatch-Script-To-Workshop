@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
             return 1;
         }
 
-        public IGettable Unfold(IUnfoldGettable unfolder) => new WorkshopElementReference(unfolder.NextValue());
+        public IGettable Unfold(IUnfoldGettable unfolder) => unfolder.NextValue();
     }
 
     public struct AssigningAttributes
