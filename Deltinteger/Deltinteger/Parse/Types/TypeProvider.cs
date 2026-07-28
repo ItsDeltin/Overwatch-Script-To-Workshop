@@ -217,6 +217,7 @@ class TypeProvider : ICodeTypeInitializer
             objectScope = new Scope(provider.Name);
             staticScope = new Scope(provider.Name);
             Generics = typeLinker.SafeTypeArgsFromAnonymousTypes(Provider.GenericTypes);
+            ArrayHandler = this;
 
             arrayFunctionHandler = new(() =>
             {
