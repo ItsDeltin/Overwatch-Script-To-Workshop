@@ -121,6 +121,8 @@ readonly record struct CompileResult(string Code, Diagnostics Diagnostics, List<
     /// <returns>Self</returns>
     public readonly TickEmulationResult EmulateTick()
     {
+        AssertOk();
+
         string output = string.Empty;
         var emulation = new EmulateScript(Rules, IEmulateLogger.New(log =>
         {
