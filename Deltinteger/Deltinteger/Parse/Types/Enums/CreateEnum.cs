@@ -46,6 +46,10 @@ class CreateEnum
                 // [1] will refer to the types defined for enum member 'B', which will be [Number, String].
                 EnumMember[] enumMembers = new EnumMember[enumContext.Values.Count];
 
+                // The union type of all given keys within the enum members.
+                // Fall back to 'Any' if this remains undecided.
+                CodeType? keyType = null;
+
                 // Get the enum members.
                 for (int i = 0; i < enumContext.Values.Count; i++)
                     if (enumContext.Values[i].Identifier)
@@ -54,9 +58,30 @@ class CreateEnum
                         string valueName = currentItem.Identifier.Text;
 
                         // Get the enum value.
-                        IVariableDefault variantValue = enumContext.Values[i].Value is not null
-                            ? IVariableDefault.FromExpression(parseInfo.GetExpression(scope, enumContext.Values[i].Value))!
-                            : IVariableDefault.FromWorkshopValue(Element.Num(i))!;
+                        IVariableDefault variantValue;
+
+                        // If key is provided.
+                        if (currentItem.Value is not null)
+                        {
+                            var keyExpression = parseInfo.GetExpression(scope, currentItem.Value);
+                            variantValue = IVariableDefault.FromExpression(keyExpression)!;
+
+                            var memberKeyType = keyExpression.Type();
+
+                            // Ensure that the type of the given key value is assignable to Any.
+                            if (!CodeTypeHelpers.IsCompatibleWithAny(memberKeyType))
+                                parseInfo.Error("The key of an enum member cannot be a constant or parallel data type", currentItem.Range);
+                            else
+                                // Unionize with the given key type..
+                                keyType = CodeTypeHelpers.UnionWith(memberKeyType, keyType);
+                        }
+                        else
+                        {
+                            variantValue = IVariableDefault.FromWorkshopValue(Element.Num(i))!;
+                            // At least one enum member uses a number as its key,
+                            // so unionize the accumulative key type with 'Number'.
+                            keyType = CodeTypeHelpers.UnionWith(parseInfo.Types.Number(), keyType);
+                        }
 
                         // Get the value type information if provided.
                         var valueTypeInformation = currentItem.ValueType is not null
@@ -77,7 +102,7 @@ class CreateEnum
                                     ReturnType = defaultInstance.GetRealType(typeLinker),
                                     Action = (actionSet, call) =>
                                     {
-                                        return GetValueOfSlot(enumKind, enumMembers, variantValue.GetDefaultValue(actionSet), call.ParameterValues);
+                                        return CreateValueOfEnumMember(enumKind, enumMembers, variantValue.GetDefaultValue(actionSet), call.ParameterValues);
                                     },
                                     Documentation = ""
                                 }.GetMethod());
@@ -85,7 +110,7 @@ class CreateEnum
                         else
                         {
                             // Proper construction for enum value.
-                            var wrappedMemberValue = IVariableDefault.Create(actionSet => GetValueOfSlot(enumKind, enumMembers, variantValue.GetDefaultValue(actionSet), []));
+                            var wrappedMemberValue = IVariableDefault.Create(actionSet => CreateValueOfEnumMember(enumKind, enumMembers, variantValue.GetDefaultValue(actionSet), []));
 
                             // Create the enum member.
                             var enumMemberVariable = VariableMaker.NewPropertyLike(valueName, defaultInstance, wrappedMemberValue);
@@ -97,6 +122,16 @@ class CreateEnum
                             valueTypeInformation?.Items ?? [],
                             GetKey: variantValue.GetDefaultValue);
                     }
+
+                // Add the 'key' member to instances of this enum if the enum contains inner values.
+                IVariable? keyVariable = null;
+                if (enumKind is not EnumKind.NoInnerValues)
+                {
+                    keyVariable = VariableMaker.NewPropertyLike(
+                        "Key",
+                        keyType ?? parseInfo.Types.Any());
+                    metaInitialization.AddObjectVariable(keyVariable);
+                }
 
                 return new(
                     GetAssignerFunction: (type, attributes, willBeUsedAsArray) => CreateAssignerForEnum(
@@ -121,7 +156,13 @@ class CreateEnum
                             // Is this enum a struct (parallel)?
                             IsStruct: enumKind == EnumKind.Parallel,
                             // Stack length is always 1 if not parallel.
-                            StackLength: enumKind == EnumKind.Parallel ? GetEnumStackDelta(enumType.EnumMembers) : 1
+                            StackLength: enumKind == EnumKind.Parallel ? GetRequiredSlotCount(enumType.EnumMembers) + 1 : 1,
+                            // Function to add items to the index assigner.
+                            AddObjectVariablesToAssigner: (toWorkshop, source, assigner) =>
+                            {
+                                if (keyVariable is not null)
+                                    assigner.Add(keyVariable, KeyOf(enumKind, source.Value));
+                            }
                         );
                     }
                 );
@@ -148,7 +189,7 @@ class CreateEnum
         // Parallel enum.
         else
         {
-            int slotCount = GetEnumStackDelta(type.EnumMembers);
+            int slotCount = GetRequiredSlotCount(type.EnumMembers);
 
             // Create assigner.
             var assigner = new StructAssigner(
@@ -172,7 +213,7 @@ class CreateEnum
     /// <summary>Generates the workshop value of an enum member.</summary>
     /// <param name="variantValue">The key of the enum member.</param>
     /// <param name="itemValues">The provided values for the enum member's inner values.</param>
-    static IWorkshopTree GetValueOfSlot(
+    static IWorkshopTree CreateValueOfEnumMember(
         EnumKind enumKind,
         EnumMember[] enumMembers,
         IWorkshopTree variantValue,
@@ -199,7 +240,7 @@ class CreateEnum
                 ["variant"] = variantValue
             };
 
-            int enumStackDelta = GetEnumStackDelta(enumMembers);
+            int enumStackDelta = GetRequiredSlotCount(enumMembers);
 
             int slot = 0;
             foreach (var slotValue in itemValues.SelectMany(StructHelper.Flatten))
@@ -218,7 +259,7 @@ class CreateEnum
     /// <summary>Gets the number of slots needed to store an enum,
     /// not including the slot required for the key.
     /// Assumes that the enum is parallel.</summary>
-    static int GetEnumStackDelta(EnumMember[] enumMembers)
+    static int GetRequiredSlotCount(EnumMember[] enumMembers)
     {
         return enumMembers.Max(enumMember =>
             enumMember.Items.Sum(item =>
@@ -246,6 +287,16 @@ class CreateEnum
             return new([.. context.Items.Select(item => TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, item))]);
         }
     }
+
+    public static IWorkshopTree KeyOf(EnumKind enumKind, IWorkshopTree value)
+    {
+        return (enumKind, value) switch
+        {
+            (EnumKind.Single, _) => Element.FirstOf(value),
+            (EnumKind.Parallel, IStructValue structValue) => structValue.GetValue("variant"),
+            _ => value,
+        };
+    }
 }
 
 class EnumType(TypeProvider provider, InstanceAnonymousTypeLinker typeLinker, EnumKind enumKind) : TypeProvider.TypeInstance(provider, typeLinker)
@@ -253,15 +304,7 @@ class EnumType(TypeProvider provider, InstanceAnonymousTypeLinker typeLinker, En
     public EnumMember[] EnumMembers { get; set; } = [];
     public EnumKind EnumKind { get; } = enumKind;
 
-    public IWorkshopTree KeyOf(IWorkshopTree value)
-    {
-        return (EnumKind, value) switch
-        {
-            (EnumKind.Single, _) => Element.FirstOf(value),
-            (EnumKind.Parallel, IStructValue structValue) => structValue.GetValue("variant"),
-            _ => value,
-        };
-    }
+    public IWorkshopTree KeyOf(IWorkshopTree value) => CreateEnum.KeyOf(EnumKind, value);
 }
 
 enum EnumKind

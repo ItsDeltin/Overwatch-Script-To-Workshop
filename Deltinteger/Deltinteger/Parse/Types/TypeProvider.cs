@@ -122,7 +122,14 @@ class TypeProvider : ICodeTypeInitializer
     /// </summary>
     public delegate TypeInstanceAttributes OnInstanceReady(CodeType instance, InstanceAnonymousTypeLinker typeLinker);
 
-    public readonly record struct TypeInstanceAttributes(bool IsStruct, int StackLength);
+    /// <summary>A function that is executed to add a type's object variables to the 
+    /// index assigner for compilation.</summary>
+    public delegate void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference source, VarIndexAssigner assigner);
+
+    public readonly record struct TypeInstanceAttributes(
+        bool IsStruct,
+        int StackLength,
+        AddObjectVariablesToAssigner AddObjectVariablesToAssigner);
 
     public delegate IMethod InstanceMethodFactory(InstanceAnonymousTypeLinker typeLinker);
 
@@ -209,6 +216,7 @@ class TypeProvider : ICodeTypeInitializer
 
         bool setupCompleted;
         bool isStruct;
+        AddObjectVariablesToAssigner? addObjectVariablesToAssignerFunction;
 
         public TypeInstance(TypeProvider provider, InstanceAnonymousTypeLinker typeLinker) : base(provider.Name)
         {
@@ -240,7 +248,7 @@ class TypeProvider : ICodeTypeInitializer
 
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference source, VarIndexAssigner assigner)
         {
-
+            addObjectVariablesToAssignerFunction?.Invoke(toWorkshop, source, assigner);
         }
 
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
@@ -279,6 +287,7 @@ class TypeProvider : ICodeTypeInitializer
             };
 
             isStruct = instanceAttributes.IsStruct;
+            addObjectVariablesToAssignerFunction = instanceAttributes.AddObjectVariablesToAssigner;
         }
 
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
@@ -303,7 +312,7 @@ class TypeProvider : ICodeTypeInitializer
         ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler() => arrayFunctionHandler.Value;
         // end `ITypeArrayHandler` implementation
 
-        void ThrowIfSetupNotComplete()
+        protected void ThrowIfSetupNotComplete()
         {
             if (!setupCompleted)
                 throw new Exception("Type information is not ready");

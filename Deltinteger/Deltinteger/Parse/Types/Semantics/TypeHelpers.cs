@@ -259,5 +259,16 @@ namespace Deltin.Deltinteger.Parse
                 type = arrayType.ArrayOfType;
             return type;
         }
+
+        public static CodeType UnionWith(CodeType a, CodeType? b)
+        {
+            if (b is null || AreEqual(a, b) || IsAny(a))
+                return a;
+
+            if (IsAny(b))
+                return b;
+
+            return new PipeType(a, b);
+        }
     }
 }
