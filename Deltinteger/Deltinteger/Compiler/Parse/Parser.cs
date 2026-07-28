@@ -1925,6 +1925,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Struct:
                     context.RootItems.Add(new(ParseClassOrStruct()));
                     return;
+
+                // Enum
+                case TokenType.Enum:
+                    context.RootItems.Add(new(ParseEnum()));
+                    break;
             }
 
             // Workshop variable or subroutine collection
@@ -1956,11 +1961,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Rule:
                 case TokenType.Disabled:
                     context.RootItems.Add(new(ParseRule()));
-                    break;
-
-                // Enum
-                case TokenType.Enum:
-                    context.RootItems.Add(new(ParseEnum()));
                     break;
 
                 // Import
@@ -2164,7 +2164,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // End the value group.
             ParseExpected(TokenType.CurlyBracket_Close);
 
-            return new EnumContext(doc, single, identifier, values, generics);
+            return EndTokenCapture(new EnumContext(doc, single, identifier, values, generics));
         }
 
         EnumValueTypeContext TryParseEnumValueType()

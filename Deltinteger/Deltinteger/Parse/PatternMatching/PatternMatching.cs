@@ -253,20 +253,28 @@ sealed record MatchedEnumPattern(
 {
     public IWorkshopTree ToWorkshop(ActionSet actionSet)
     {
-        IStructValue source;
+        IWorkshopTree sourceValue;
+        IUnfoldGettable unfolder;
+        bool isParallel = TargetEnumType.EnumKind is EnumKind.Parallel;
 
-        // Potentially mutable variable was provided.
+        // Create the unfolder that will be used for this.
         if (Operand.LinkedVariable is not null)
         {
+            // Potentially mutable variable was provided.
             var parsedElements = Operand.LinkedVariable.ParseElements(actionSet);
-            source = (IStructValue)parsedElements.IndexReference;
+            unfolder = isParallel
+                ? new ParallelEnumUnfolder((IStructValue)parsedElements.IndexReference)
+                : new SingleEnumUnfolder(parsedElements.IndexReference);
+
+            sourceValue = parsedElements.IndexReference.GetVariable();
         }
         else
         {
-            source = (IStructValue)Operand.Expression.Parse(actionSet);
+            sourceValue = Operand.Expression.Parse(actionSet);
+            unfolder = isParallel
+                ? new ParallelEnumUnfolder((IStructValue)sourceValue)
+                : new SingleEnumUnfolder(new WorkshopElementReference(sourceValue));
         }
-
-        var unfolder = new ParallelEnumUnfolder(source);
 
         // Bind pattern variables.
         for (int i = 0; i < BindingVariables.Length; i++)
@@ -279,7 +287,10 @@ sealed record MatchedEnumPattern(
         }
 
 
-        return Element.Compare(TargetEnumType.KeyOf(source), Operator.Equal, TargetEnumMember.GetKey(actionSet));
+        return Element.Compare(
+            TargetEnumType.KeyOf(sourceValue),
+            Operator.Equal,
+            TargetEnumMember.GetKey(actionSet));
     }
 }
 
@@ -287,6 +298,12 @@ sealed class ParallelEnumUnfolder(IStructValue SourceEnum) : IUnfoldGettable
 {
     int currentSlot = 0;
     public IGettable NextValue() => SourceEnum.GetGettable($"slot{currentSlot++}");
+}
+
+sealed class SingleEnumUnfolder(IGettable SourceValue) : IUnfoldGettable
+{
+    int currentIndex = 1;
+    public IGettable NextValue() => SourceValue.ChildFromClassReference(Element.Num(currentIndex++));
 }
 
 readonly record struct PatternOperand(IExpression Expression, VariableResolve? LinkedVariable);

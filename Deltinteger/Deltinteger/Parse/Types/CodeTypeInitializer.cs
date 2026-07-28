@@ -39,7 +39,5 @@ namespace Deltin.Deltinteger.Parse
         {
             Generics = generics;
         }
-
-        public static implicit operator GetInstanceInfo(InstanceAnonymousTypeLinker linker) => new GetInstanceInfo(linker.Links.Keys.ToArray());
     }
 }

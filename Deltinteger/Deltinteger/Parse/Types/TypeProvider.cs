@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Parse.Workshop;
@@ -13,13 +14,13 @@ class TypeProvider : ICodeTypeInitializer
 {
     public static TypeProvider Create(
         string name,
-        Func<TypeProviderInitialization, TypeProviderAttributes> typeCreator,
-        TypeInstanceFactory typeInstanceFactory)
+        Func<TypeProviderInitialization, TypeProviderAttributes> typeCreator)
     {
 
-        var typeProvider = new TypeProvider(name, typeInstanceFactory);
+        var typeProvider = new TypeProvider(name);
         var attributes = typeCreator(new(name, typeProvider));
         typeProvider.GenericTypes = attributes.AnonymousTypes;
+        typeProvider.typeInstanceFactory = attributes.TypeInstanceFactory;
         return typeProvider;
     }
 
@@ -97,14 +98,31 @@ class TypeProvider : ICodeTypeInitializer
         }
     }
 
+    /// <summary>Contains information about the declared type.
+    /// This is returned by the `typeCreator` function given to `TypeProvider.Create`</summary>
+    /// <param name="AnonymousTypes">The type arguments declared for this type.</param>
     public readonly record struct TypeProviderAttributes(
-        AnonymousType[] AnonymousTypes);
+        AnonymousType[] AnonymousTypes,
+        TypeInstanceFactory TypeInstanceFactory);
 
-    public readonly record struct TypeMetaAttributes(GetGettableAssigner? GetAssignerFunction, OnInstanceReady? OnInstanceReady);
+    /// <summary>
+    /// Data returned by the type factory after the specifics of the type's content is known.
+    /// </summary>
+    /// <param name="GetAssignerFunction">The function that creates an `IGettableAssigner` used to generate slots for the data type.</param>
+    /// <param name="OnInstanceReady">The function that is executed after a `TypeInstance` has completed initialization.</param>
+    public readonly record struct TypeMetaAttributes(GetGettableAssigner? GetAssignerFunction, OnInstanceReady OnInstanceReady);
 
-    public delegate IGettableAssigner GetGettableAssigner(CodeType type, AssigningAttributes attributes);
+    /// <summary>
+    /// A function that creates an `IGettableAssigner` used to generate slots for the data type.
+    /// </summary>
+    public delegate IGettableAssigner GetGettableAssigner(CodeType type, AssigningAttributes attributes, bool willBeUsedAsArray);
 
-    public delegate void OnInstanceReady(CodeType instance, InstanceAnonymousTypeLinker typeLinker);
+    /// <summary>
+    /// A function that is executed after a `TypeInstance` has completed initialization.
+    /// </summary>
+    public delegate TypeInstanceAttributes OnInstanceReady(CodeType instance, InstanceAnonymousTypeLinker typeLinker);
+
+    public readonly record struct TypeInstanceAttributes(bool IsStruct, int StackLength);
 
     public delegate IMethod InstanceMethodFactory(InstanceAnonymousTypeLinker typeLinker);
 
@@ -119,48 +137,78 @@ class TypeProvider : ICodeTypeInitializer
     public AnonymousType[] GenericTypes { get; private set; } = [];
     public int GenericsCount => GenericTypes.Length;
 
-    readonly TypeInstanceFactory typeInstanceFactory;
     readonly HashSet<TypeInstance> instances = [];
     readonly TypeElements typeElements = new();
     bool isMetaCompleted;
+    TypeInstanceFactory? typeInstanceFactory;
     GetGettableAssigner? getAssignerFunction;
     OnInstanceReady? onInstanceReady;
 
-    TypeProvider(string name, TypeInstanceFactory typeInstanceFactory)
+    TypeProvider(string name)
     {
         Name = name;
-        this.typeInstanceFactory = typeInstanceFactory;
     }
 
     public bool BuiltInTypeMatches(Type type) => false;
     public CompletionItem GetCompletion() => new() { Label = Name };
-    public CodeType GetInstance() => GetInstance(InstanceAnonymousTypeLinker.Empty);
+    public CodeType GetInstance() => GetInstanceFromTypeLinker(InstanceAnonymousTypeLinker.Empty);
     public CodeType GetInstance(GetInstanceInfo instanceInfo)
     {
-        var newInstance = typeInstanceFactory(this, new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));
+        return GetInstanceFromTypeLinker(new InstanceAnonymousTypeLinker(GenericTypes, instanceInfo.Generics));
+    }
+    private TypeInstance GetInstanceFromTypeLinker(InstanceAnonymousTypeLinker typeLinker)
+    {
+        var existing = FindExistingItemMatchingLinker(typeLinker);
+        if (existing is not null) return existing;
 
+        var newInstance = typeInstanceFactory!(this, typeLinker);
+
+        instances.Add(newInstance);
         if (isMetaCompleted)
-            newInstance.OnMetaCompleted();
-        else
-            instances.Add(newInstance);
+            newInstance.OnTypeContentReady();
 
         return newInstance;
     }
 
-    private void OnMetaCompleted()
+    private TypeInstance? FindExistingItemMatchingLinker(InstanceAnonymousTypeLinker typeLinker)
     {
-        isMetaCompleted = true;
-        foreach (var instance in instances)
-            instance.OnMetaCompleted();
-        instances.Clear();
+        foreach (var existingInstance in instances)
+        {
+            var a = existingInstance.Generics;
+            var b = typeLinker.SafeTypeArgsFromAnonymousTypes(GenericTypes);
+
+            bool areCompatible = true;
+
+            for (int i = 0; i < a.Length; i++)
+                if (!CodeTypeHelpers.AreEqual(a[i], b[i]))
+                {
+                    areCompatible = false;
+                    break;
+                }
+
+            if (areCompatible) return existingInstance;
+        }
+        return null;
     }
 
-    public class TypeInstance : CodeType
+    private void OnMetaCompleted()
+    {
+        if (isMetaCompleted) return;
+        isMetaCompleted = true;
+        foreach (var instance in instances)
+            instance.OnTypeContentReady();
+    }
+
+    public class TypeInstance : CodeType, ITypeArrayHandler
     {
         public TypeProvider Provider { get; }
         readonly InstanceAnonymousTypeLinker typeLinker;
         readonly Scope objectScope;
         readonly Scope staticScope;
+        readonly Lazy<ArrayFunctionHandler> arrayFunctionHandler;
+
+        bool setupCompleted;
+        bool isStruct;
 
         public TypeInstance(TypeProvider provider, InstanceAnonymousTypeLinker typeLinker) : base(provider.Name)
         {
@@ -169,6 +217,14 @@ class TypeProvider : ICodeTypeInitializer
             objectScope = new Scope(provider.Name);
             staticScope = new Scope(provider.Name);
             Generics = typeLinker.SafeTypeArgsFromAnonymousTypes(Provider.GenericTypes);
+
+            arrayFunctionHandler = new(() =>
+            {
+                ThrowIfSetupNotComplete();
+                return isStruct ?
+                    new StructInstance.StructArrayFunctionHandler() :
+                    new ArrayFunctionHandler();
+            });
         }
 
         public override Scope GetObjectScope()
@@ -189,13 +245,16 @@ class TypeProvider : ICodeTypeInitializer
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
         {
             if (Provider.getAssignerFunction is not null)
-                return Provider.getAssignerFunction(this, attributes);
+                return Provider.getAssignerFunction(this, attributes, false);
             else
                 return base.GetGettableAssigner(attributes);
         }
 
-        public void OnMetaCompleted()
+        public void OnTypeContentReady()
         {
+            if (setupCompleted) return;
+            setupCompleted = true;
+
             void AddVariablesToScope(Scope scope, List<IVariable> variables)
             {
                 foreach (var variable in variables)
@@ -210,14 +269,43 @@ class TypeProvider : ICodeTypeInitializer
             AddVariablesToScope(staticScope, Provider.typeElements.StaticVariables);
             AddMethodsToScope(staticScope, Provider.typeElements.StaticMethods);
 
-            Provider.onInstanceReady?.Invoke(this, typeLinker);
+            var instanceAttributes = Provider.onInstanceReady!.Invoke(this, typeLinker);
+            Attributes = new()
+            {
+                ContainsGenerics = Generics.Any(typeArg => typeArg.Attributes.ContainsGenerics),
+                IsStruct = instanceAttributes.IsStruct,
+                StackLength = instanceAttributes.StackLength
+            };
+
+            isStruct = instanceAttributes.IsStruct;
         }
 
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
         {
-            return Provider.typeInstanceFactory(
-                Provider,
-                InstanceAnonymousTypeLinker.ApplyToTypeArguments(instanceInfo, Provider.GenericTypes, Generics));
+            var (linker, didChange) = InstanceAnonymousTypeLinker.ApplyToTypeArguments(
+                instanceInfo,
+                Provider.GenericTypes,
+                Generics);
+
+            return didChange ? Provider.GetInstanceFromTypeLinker(linker) : this;
+        }
+
+        // `ITypeArrayHandler` implementation
+        void ITypeArrayHandler.OverrideArray(ArrayType array) { }
+        IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes)
+        {
+            if (Provider.getAssignerFunction is not null)
+                return Provider.getAssignerFunction(this, attributes, true);
+            else
+                return base.GetGettableAssigner(attributes);
+        }
+        ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler() => arrayFunctionHandler.Value;
+        // end `ITypeArrayHandler` implementation
+
+        void ThrowIfSetupNotComplete()
+        {
+            if (!setupCompleted)
+                throw new Exception("Type information is not ready");
         }
     }
 }

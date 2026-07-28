@@ -189,7 +189,7 @@ namespace Deltin.Deltinteger.Parse
         void IScopeAppender.AddStaticBasedScope(IVariableInstance variable) => StaticScope.AddNativeVariable(variable);
 
         // Overrides default array function implementation to support structs, since the default won't work with parallel variables.
-        class StructArrayFunctionHandler : ArrayFunctionHandler
+        public class StructArrayFunctionHandler : ArrayFunctionHandler
         {
             // Since all variables in a struct array will be of the same length, we can use BridgeArbritrary instead.
             public override IWorkshopTree Length(IWorkshopTree reference) => str(reference).BridgeArbritrary(v => Element.CountOf(v)).GetWorkshopValue();

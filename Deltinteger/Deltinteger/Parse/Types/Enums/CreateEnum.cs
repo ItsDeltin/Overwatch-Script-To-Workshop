@@ -25,6 +25,10 @@ class CreateEnum
         {
             creator.AddDeclaration(parseInfo, enumContext.Identifier.Range);
 
+            // Determine the kind of enum that this is.
+            var enumKind = GetEnumKindFromSyntax(enumContext);
+
+            // Get the anonymous types.
             var anonymousTypes = creator.GetAnonymousTypesFromContext(parseInfo, enumContext.Generics);
 
             // Function to get inner type information,
@@ -33,10 +37,13 @@ class CreateEnum
                 // Add type arguments to the working scope.
                 metaInitialization.AddTypeArgumentsToScope(scope);
 
-                // Working instance.
+                // Get an instance of the enum type.
                 var defaultInstance = metaInitialization.GetDefaultInstance();
 
-                CodeType[][] slots = new CodeType[enumContext.Values.Count][];
+                // 'slots' contains the types used for storage for each enum member.
+                // For example, an enum such as `enum { A, B(Number, String) }`:
+                // [0] will refer to the types defined for enum member 'A', which will be an empty array.
+                // [1] will refer to the types defined for enum member 'B', which will be [Number, String].
                 EnumMember[] enumMembers = new EnumMember[enumContext.Values.Count];
 
                 // Get the enum members.
@@ -59,8 +66,6 @@ class CreateEnum
                         // Create a function for the member instead.
                         if (valueTypeInformation is not null)
                         {
-                            slots[i] = valueTypeInformation.Items;
-
                             // The method factory stuff mimics the behaviour of a method provider
                             // without all the boilerplate.
                             metaInitialization.AddStaticMethod(typeLinker =>
@@ -72,17 +77,15 @@ class CreateEnum
                                     ReturnType = defaultInstance.GetRealType(typeLinker),
                                     Action = (actionSet, call) =>
                                     {
-                                        return GetValueOfSlot(slots, variantValue.GetDefaultValue(actionSet), call.ParameterValues);
+                                        return GetValueOfSlot(enumKind, enumMembers, variantValue.GetDefaultValue(actionSet), call.ParameterValues);
                                     },
                                     Documentation = ""
                                 }.GetMethod());
                         }
                         else
                         {
-                            slots[i] = [];
-
                             // Proper construction for enum value.
-                            var wrappedMemberValue = IVariableDefault.Create(actionSet => GetValueOfSlot(slots, variantValue.GetDefaultValue(actionSet), []));
+                            var wrappedMemberValue = IVariableDefault.Create(actionSet => GetValueOfSlot(enumKind, enumMembers, variantValue.GetDefaultValue(actionSet), []));
 
                             // Create the enum member.
                             var enumMemberVariable = VariableMaker.NewPropertyLike(valueName, defaultInstance, wrappedMemberValue);
@@ -91,73 +94,149 @@ class CreateEnum
                         }
                         enumMembers[i] = new(
                             valueName,
-                            slots[i],
+                            valueTypeInformation?.Items ?? [],
                             GetKey: variantValue.GetDefaultValue);
                     }
 
                 return new(
-                    // todo: 'slots' is using the original types in the definition.
-                    // will not work properly for type arguments.
-                    GetAssignerFunction: (type, attributes) => CreateAssignerForSlots(slots, attributes),
+                    GetAssignerFunction: (type, attributes, willBeUsedAsArray) => CreateAssignerForEnum(
+                        enumKind,
+                        (EnumType)type,
+                        attributes,
+                        willBeUsedAsArray),
                     OnInstanceReady: (type, typeLinker) =>
                     {
-                        ((EnumType)type).EnumMembers = [.. enumMembers.Select(
+                        // The provided factory garantees this is an EnumType.
+                        var enumType = (EnumType)type;
+
+                        enumType.EnumMembers = [.. enumMembers.Select(
                             em => new EnumMember(
                                 em.Name,
                                 [.. em.Items.Select(item => item.GetRealType(typeLinker))],
                                 em.GetKey)
                         )];
+
+                        // Return stack information about the enum.
+                        return new(
+                            // Is this enum a struct (parallel)?
+                            IsStruct: enumKind == EnumKind.Parallel,
+                            // Stack length is always 1 if not parallel.
+                            StackLength: enumKind == EnumKind.Parallel ? GetEnumStackDelta(enumType.EnumMembers) : 1
+                        );
                     }
                 );
             });
 
-            return new(anonymousTypes);
-        }, (provider, linker) => new EnumType(provider, linker));
+            return new(
+                anonymousTypes,
+                TypeInstanceFactory: (provider, linker) => new EnumType(provider, linker, enumKind));
+        });
         return type;
     }
 
-    static StructAssigner CreateAssignerForSlots(CodeType[][] slots, AssigningAttributes attributes)
+    static IGettableAssigner CreateAssignerForEnum(
+        EnumKind enumKind,
+        EnumType type,
+        AssigningAttributes attributes,
+        bool willBeUsedAsArray)
     {
-        int slotCount = GetEnumStackDelta(slots);
-
-        // Create assigner.
-        var assigner = new StructAssigner(
-            [
-                new("variant", getAssigner => new DataTypeAssigner(attributes)),
-                ..Enumerable.Range(0, slotCount).Select(slot => new StructSlot($"slot{slot}", getAssigner => new DataTypeAssigner(attributes.StepName($"slot{slot}"))))
-            ],
-            new(attributes),
-            false
-        );
-
-        return assigner;
-    }
-
-    static LinkedStructValue GetValueOfSlot(CodeType[][] slots, IWorkshopTree variantValue, IWorkshopTree[] itemValues)
-    {
-        var parallelValues = new Dictionary<string, IWorkshopTree>()
+        // Not parallel.
+        if (enumKind is EnumKind.NoInnerValues or EnumKind.Single)
         {
-            ["variant"] = variantValue
-        };
-
-        int enumStackDelta = GetEnumStackDelta(slots);
-
-        int slot = 0;
-        foreach (var slotValue in itemValues.SelectMany(StructHelper.Flatten))
-        {
-            parallelValues.Add($"slot{slot}", slotValue);
-            slot++;
+            return new DataTypeAssigner(attributes);
         }
+        // Parallel enum.
+        else
+        {
+            int slotCount = GetEnumStackDelta(type.EnumMembers);
 
-        for (; slot < enumStackDelta; slot++)
-            parallelValues.Add($"slot{slot}", Element.Num(0));
+            // Create assigner.
+            var assigner = new StructAssigner(
+                [
+                    // First slot is the key of the enum member.
+                    new("variant", getAssigner => new DataTypeAssigner(attributes)),
+                // Create enough slots to fit any potential enum member.
+                ..Enumerable.Range(0, slotCount)
+                    .Select(slot =>
+                        new StructSlot($"slot{slot}", getAssigner =>
+                            new DataTypeAssigner(attributes.StepName($"slot{slot}"))))
+                ],
+                new(attributes),
+                willBeUsedAsArray
+            );
 
-        return new LinkedStructValue(parallelValues);
+            return assigner;
+        }
     }
 
-    static int GetEnumStackDelta(CodeType[][] slots)
+    /// <summary>Generates the workshop value of an enum member.</summary>
+    /// <param name="variantValue">The key of the enum member.</param>
+    /// <param name="itemValues">The provided values for the enum member's inner values.</param>
+    static IWorkshopTree GetValueOfSlot(
+        EnumKind enumKind,
+        EnumMember[] enumMembers,
+        IWorkshopTree variantValue,
+        IWorkshopTree[] itemValues)
     {
-        return slots.Max(memberItems => memberItems.Sum(item => item.GetGettableAssigner(new AssigningAttributes() { StoreType = StoreType.FullVariable }).StackDelta()));
+        // Classic enum.
+        if (enumKind is EnumKind.NoInnerValues)
+        {
+            return variantValue;
+        }
+        // Single enum w/ values.
+        else if (enumKind is EnumKind.Single)
+        {
+            return Element.CreateArray([
+                variantValue,
+                ..itemValues.SelectMany(StructHelper.Flatten)
+            ]);
+        }
+        // Parallel enum
+        else
+        {
+            var parallelValues = new Dictionary<string, IWorkshopTree>()
+            {
+                ["variant"] = variantValue
+            };
+
+            int enumStackDelta = GetEnumStackDelta(enumMembers);
+
+            int slot = 0;
+            foreach (var slotValue in itemValues.SelectMany(StructHelper.Flatten))
+            {
+                parallelValues.Add($"slot{slot}", slotValue);
+                slot++;
+            }
+
+            for (; slot < enumStackDelta; slot++)
+                parallelValues.Add($"slot{slot}", Element.Num(0));
+
+            return new LinkedStructValue(parallelValues);
+        }
+    }
+
+    /// <summary>Gets the number of slots needed to store an enum,
+    /// not including the slot required for the key.
+    /// Assumes that the enum is parallel.</summary>
+    static int GetEnumStackDelta(EnumMember[] enumMembers)
+    {
+        return enumMembers.Max(enumMember =>
+            enumMember.Items.Sum(item =>
+                item.GetGettableAssigner(
+                    new AssigningAttributes()
+                    {
+                        StoreType = StoreType.FullVariable
+                    }).StackDelta()));
+    }
+
+    static EnumKind GetEnumKindFromSyntax(EnumContext syntax)
+    {
+        // If all of the enum members do not have any inner values, this is a one-slot enum.
+        if (syntax.Values.All(member => member.ValueType is null || member.ValueType.Items.Count == 0))
+            return EnumKind.NoInnerValues;
+
+        // Otherwise, we use 'single' to determine if this is a 'single' enum or a 'parallel' enum.
+        return syntax.Single ? EnumKind.Single : EnumKind.Parallel;
     }
 
     sealed record EnumValueTypeInformation(CodeType[] Items)
@@ -169,18 +248,27 @@ class CreateEnum
     }
 }
 
-class EnumType(TypeProvider provider, InstanceAnonymousTypeLinker typeLinker) : TypeProvider.TypeInstance(provider, typeLinker)
+class EnumType(TypeProvider provider, InstanceAnonymousTypeLinker typeLinker, EnumKind enumKind) : TypeProvider.TypeInstance(provider, typeLinker)
 {
     public EnumMember[] EnumMembers { get; set; } = [];
+    public EnumKind EnumKind { get; } = enumKind;
 
     public IWorkshopTree KeyOf(IWorkshopTree value)
     {
-        if (value is IStructValue asStructValue)
+        return (EnumKind, value) switch
         {
-            return asStructValue.GetValue("variant");
-        }
-        throw new NotImplementedException();
+            (EnumKind.Single, _) => Element.FirstOf(value),
+            (EnumKind.Parallel, IStructValue structValue) => structValue.GetValue("variant"),
+            _ => value,
+        };
     }
+}
+
+enum EnumKind
+{
+    NoInnerValues,
+    Single,
+    Parallel
 }
 
 readonly record struct EnumMember(string Name, CodeType[] Items, Func<ActionSet, IWorkshopTree> GetKey);
