@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Model;
@@ -32,15 +33,42 @@ public class EmulateScript
     public EmulateValue GetGlobalVariableValue(string name) => state.GetGlobalVariable(name).Value;
 }
 
-public class EmulateState(IEmulateLogger logger, IList<Rule> rules)
+public class EmulateState
 {
-    public IEmulateLogger Logger = logger;
-    readonly IList<Rule> rules = rules;
-    readonly EmulateVariableSet globalVariableSet = new();
+    public IEmulateLogger Logger;
+    readonly IList<Rule> rules;
+    readonly EmulateVariableSet globalVariableSet;
+
+    public EmulateValue? CurrentArrayValue;
+    public EmulateValue? CurrentArrayIndex;
+
+    public EmulateState(IEmulateLogger logger, IList<Rule> rules)
+    {
+        Logger = logger;
+        this.rules = rules;
+        globalVariableSet = new();
+    }
+
+    public EmulateState(EmulateState other)
+    {
+        Logger = other.Logger;
+        rules = other.rules;
+        globalVariableSet = other.globalVariableSet;
+    }
 
     public EmulateVariable GetGlobalVariable(string name) => globalVariableSet.GetVariable(name);
 
     public Rule? RuleFromSubroutineName(string name) => rules.FirstOrDefault(r => r.Subroutine == name);
+
+    public EmulateState WithArrayInformation(EmulateValue currentArrayValue, EmulateValue currentArrayIndex)
+    {
+        var copy = new EmulateState(this)
+        {
+            CurrentArrayValue = currentArrayValue,
+            CurrentArrayIndex = currentArrayIndex
+        };
+        return copy;
+    }
 }
 
 class EmulateRule(EmulateState state, Rule rule)
