@@ -21,6 +21,17 @@ namespace Deltin.Deltinteger.Parse
             return types.ToArray();
         }
 
+        public static IEnumerable<ICodeTypeInitializer> GetAllTypesInScope(Scope scope)
+        {
+            var types = Enumerable.Empty<ICodeTypeInitializer>();
+            scope.IterateParents(scope =>
+            {
+                types = types.Concat(scope.Types);
+                return false;
+            });
+            return types;
+        }
+
         /// <summary>There should be a special CodeType for void rather than it being null.
         /// This is here to make it more clear when we are testing if a type is void.</summary>
         public static bool IsVoid(CodeType type) => type == null;

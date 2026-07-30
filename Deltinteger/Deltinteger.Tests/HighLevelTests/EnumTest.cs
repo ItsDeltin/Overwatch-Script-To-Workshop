@@ -5,7 +5,7 @@ using static TestUtils;
 [TestClass]
 public class EnumTest
 {
-    [TestMethod("Basis usage of enum with no inner values")]
+    [TestMethod("Enum test: Basis usage of enum with no inner values")]
     public void BasicUsageOfEnumWithNoInnerValue()
     {
         Compile("""
@@ -36,7 +36,7 @@ public class EnumTest
         .AssertVariable("used_as_indexer", 7);
     }
 
-    [TestMethod("Single enum basic usage")]
+    [TestMethod("Enum test: Single enum basic usage")]
     public void SingleEnumBasicUsage()
     {
         Compile("""
@@ -62,7 +62,7 @@ public class EnumTest
         .AssertVariable("take_key", "c");
     }
 
-    [TestMethod("Parallel enum basic usage")]
+    [TestMethod("Enum test: Parallel enum basic usage")]
     public void ParallelEnumBasicUsage()
     {
         Compile("""
@@ -87,7 +87,7 @@ public class EnumTest
         .AssertVariable("c_slot1", "two");
     }
 
-    [TestMethod("Parallel enum used as any")]
+    [TestMethod("Enum test: Parallel enum used as any")]
     public void ParallelEnumUsedAsAny()
     {
         Compile("""
@@ -112,7 +112,7 @@ public class EnumTest
         .AssertSearchError("This struct cannot be indexed");
     }
 
-    [TestMethod("Parallel enum array")]
+    [TestMethod("Enum test: Parallel enum array")]
     public void ParallelEnumArray()
     {
         Compile("""
@@ -125,6 +125,7 @@ public class EnumTest
             ];
 
             Number index_of_a = values.IndexOf(EnumTest.A);
+            Number index_of_a_with_key = values.Map(v => v.Key).IndexOf(EnumTest.A.Key);
         }
 
         enum EnumTest {
@@ -138,6 +139,79 @@ public class EnumTest
         .AssertVariable("values", [3, 2, 1, 0])
         .AssertVariable("values_slot0", [0, "one", 67, 0])
         .AssertVariable("values_slot1", [0, "two", 0, 0])
-        .AssertVariable("index_of_a", 3);
+        .AssertVariable("index_of_a", 3)
+        .AssertVariable("index_of_a_with_key", 3);
+    }
+
+    [TestMethod("Enum test: Invalid enum key type")]
+    public void InvalidEnumKeyType()
+    {
+        Compile("""
+        enum EnumTest {
+            A = EffectRev.Color
+        }
+        """)
+        .AssertSearchError("The key of an enum member cannot be a constant or parallel data type");
+
+        Compile("""
+        enum EnumTest {
+            A = { x: "This shouldn't work :)" }
+        }
+        """)
+        .AssertSearchError("The key of an enum member cannot be a constant or parallel data type");
+    }
+
+    [TestMethod("Enum test: Basic enum pattern matching - no inner values")]
+    public void BasicEnumPatternMatchingNoInnerValues()
+    {
+        Compile("""
+        rule: "Enum pattern matching" {
+            if (EnumTest.B is EnumTest.A) {
+                define a = true;
+            }
+
+            if (EnumTest.B is EnumTest.B) {
+                define b = true;
+            }
+
+            if (EnumTest.B is EnumTest.C) {
+                define c = true;
+            }
+        }
+
+        enum EnumTest {
+            A,
+            B,
+            C
+        }
+        """)
+        .EmulateTick()
+        .AssertVariable("a", 0)
+        .AssertVariable("b", true)
+        .AssertVariable("c", 0);
+    }
+
+    [TestMethod("Enum test: Enum Pattern Matching Shorthand")]
+    public void EnumPatternMatchingShorthand()
+    {
+        Compile("""
+        rule: "Enum pattern matching shorthand" {
+            EnumTest shorthand = EnumTest.B(3, 4);
+
+            if (shorthand is B(x, y)) {
+                x = 5;
+                y = 6;
+            }
+        }
+
+        enum EnumTest {
+            A,
+            B(Number, Number)
+        }
+        """)
+        .EmulateTick()
+        .AssertVariable("shorthand", 1)
+        .AssertVariable("shorthand_slot0", 5)
+        .AssertVariable("shorthand_slot1", 6);
     }
 }

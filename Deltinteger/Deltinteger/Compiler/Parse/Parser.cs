@@ -2546,7 +2546,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new VanillaSettingsGroupSyntax(r.GetRange(), openingBracket, settings.ToArray());
         });
 
-        Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
+        Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics, Current);
         MetaComment ParseMetaComment()
         {
             if (!Is(TokenType.ActionComment))

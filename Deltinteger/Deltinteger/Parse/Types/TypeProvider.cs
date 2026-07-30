@@ -14,14 +14,20 @@ class TypeProvider : ICodeTypeInitializer
 {
     public static TypeProvider Create(
         string name,
+        TypeKind typeKind,
         Func<TypeProviderInitialization, TypeProviderAttributes> typeCreator)
     {
 
-        var typeProvider = new TypeProvider(name);
+        var typeProvider = new TypeProvider(name, typeKind);
         var attributes = typeCreator(new(name, typeProvider));
         typeProvider.GenericTypes = attributes.AnonymousTypes;
         typeProvider.typeInstanceFactory = attributes.TypeInstanceFactory;
         return typeProvider;
+    }
+
+    public static bool IsTypeProviderOfKind(ICodeTypeInitializer typeProvider, TypeKind kind)
+    {
+        return typeProvider is TypeProvider tp && tp.Kind == kind;
     }
 
     public delegate TypeInstance TypeInstanceFactory(TypeProvider provider, InstanceAnonymousTypeLinker typeLinker);
@@ -143,6 +149,7 @@ class TypeProvider : ICodeTypeInitializer
     public string Name { get; }
     public AnonymousType[] GenericTypes { get; private set; } = [];
     public int GenericsCount => GenericTypes.Length;
+    public TypeKind Kind { get; }
 
     readonly HashSet<TypeInstance> instances = [];
     readonly TypeElements typeElements = new();
@@ -151,9 +158,10 @@ class TypeProvider : ICodeTypeInitializer
     GetGettableAssigner? getAssignerFunction;
     OnInstanceReady? onInstanceReady;
 
-    TypeProvider(string name)
+    TypeProvider(string name, TypeKind typeKind)
     {
         Name = name;
+        Kind = typeKind;
     }
 
     public bool BuiltInTypeMatches(Type type) => false;
@@ -299,6 +307,8 @@ class TypeProvider : ICodeTypeInitializer
 
             return didChange ? Provider.GetInstanceFromTypeLinker(linker) : this;
         }
+
+        public override CompletionItem GetCompletion() => GetTypeCompletion(this);
 
         // `ITypeArrayHandler` implementation
         void ITypeArrayHandler.OverrideArray(ArrayType array) { }

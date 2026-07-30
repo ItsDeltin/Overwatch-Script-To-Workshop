@@ -526,17 +526,19 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Token { get; }
         public List<ArrayIndex> Index { get; }
         public List<IParseType> TypeArgs { get; }
+        public Token NextToken { get; }
 
         Token ITypeContextHandler.Identifier => Token;
         int ITypeContextHandler.ArrayCount => 0;
         bool ITypeContextHandler.IsDefault => false;
         bool ITypeContextHandler.Infer => false;
 
-        public Identifier(Token token, List<ArrayIndex> index, List<IParseType> generics)
+        public Identifier(Token token, List<ArrayIndex> index, List<IParseType> generics, Token nextToken)
         {
             Token = token;
             Index = index;
             TypeArgs = generics;
+            NextToken = nextToken;
         }
 
         public override string ToString() => Token.Text + string.Concat(Index.Select(i => i.ToString()));

@@ -14,7 +14,7 @@ sealed class IsExpression : IExpression
         var lhs = parseInfo.GetExpression(scope, op.Left);
         returnType = parseInfo.Types.Boolean();
         var operand = PatternMatching.GetPatternOperand(parseInfo, lhs);
-        enumPattern = PatternMatching.GetPattern(parseInfo, scope, op.Right, operand);
+        enumPattern = PatternMatching.GetPattern(parseInfo, scope, op.Operator.Token, op.Right, operand);
     }
 
     public IWorkshopTree Parse(ActionSet actionSet)

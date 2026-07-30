@@ -17,46 +17,88 @@ class PatternMatching
     public static MatchedEnumPattern? GetPattern(
         ParseInfo parseInfo,
         Scope scope,
+        Token patternStartToken,
         IParseExpression patternExpression,
         PatternOperand operand)
     {
         // Expands the expression from a dot chain into a list of expressions.
-        List<IParseExpression>? GetRhsPath()
+        List<(Token LeftHandToken, IParseExpression Expression, Token? RightHandToken)>? GetRhsPath()
         {
-            var path = new List<IParseExpression>();
+            var path = new List<(Token, IParseExpression, Token?)>();
 
             // Ensures that only one error is added if something is wrong with the input pattern.
             bool didError = false;
 
-            void Travel(IParseExpression value)
+            void Travel(IParseExpression value, Token leftHandToken)
             {
                 if (didError) return;
 
                 if (value is BinaryOperatorExpression boe && boe.IsDotExpression())
                 {
-                    Travel(boe.Left);
-                    Travel(boe.Right);
+                    Travel(boe.Left, leftHandToken);
+                    Travel(boe.Right, boe.Operator.Token);
                 }
-                else if (value is Identifier or FunctionExpression)
-                    path.Add(value);
+                else if (value is Identifier identifier)
+                    path.Add((leftHandToken, value, identifier.NextToken));
+                else if (value is FunctionExpression function)
+                    path.Add((leftHandToken, value, function.LeftParentheses));
                 else
                 {
                     parseInfo.Error("This expression cannot be used for pattern matching", value.Range);
                     didError = true;
                 }
             }
-            Travel(patternExpression);
+            Travel(patternExpression, patternStartToken);
             return didError ? null : path;
         }
         var path = GetRhsPath();
+
+        void AddCompletionOfPathItem(
+            DocRange range,
+            CodeType? activeType,
+            bool addTypeCompletion)
+        {
+            parseInfo.Script.AddCompletionRange(ICompletionRange.New(range, p => [
+                // Add enum members to completion if applicable.
+                ..activeType is EnumType enumType
+                    ? enumType.ReturningScope().GetCompletion(parseInfo.TranslateInfo, p.Pos, p.Immediate)
+                    : [],
+
+                // Add types to completion if applicable.
+                .. addTypeCompletion
+                    ? CodeTypeHelpers.GetAllTypesInScope(scope)
+                        .Where(typeProvider => TypeProvider.IsTypeProviderOfKind(typeProvider, TypeKind.Enum))
+                        .Select(typeProvider => typeProvider.GetInstance(new()).GetCompletion())
+                    : []
+            ]));
+        }
+
+        var operandType = operand.Expression.Type();
+
+        // Current type in the path. Will need to be changed for any future pattern parts
+        // that contain non-types in the path (e.g. modules)
+        // This currently defaults to the type of the operand expression
+        // for the matching shorthand feature.
+        CodeType? nextActiveType = operandType is EnumType ? operandType : null;
+        bool nextIsShorthand = true;
+
+        // Ensure that completion is created if no items were added to the path.
+        if (path is null || path.Count == 0)
+        {
+            var completionRange = patternStartToken.Range.End + parseInfo.Script.NextToken(patternStartToken).Range.Start;
+            AddCompletionOfPathItem(completionRange, nextActiveType, true);
+        }
 
         // If path is null, an invalid expression is being used for pattern matching.
         if (path is null)
             return null;
 
-        // Current type in the path. Will need to be changed for any future pattern parts
-        // that contain non-types in the path (e.g. modules)
-        CodeType? nextActiveType = null;
+        DocRange CompletionRangeOfPathItem(int item)
+        {
+            var lhsToken = path[item].LeftHandToken;
+            var rhsToken = path[item].RightHandToken ?? parseInfo.Script.NextToken(lhsToken);
+            return lhsToken.Range.End + rhsToken.Range.Start;
+        }
 
         // Binding variable definitions found within the path.
         Identifier[]? bindingVariableDefinitions = null;
@@ -67,14 +109,21 @@ class PatternMatching
         for (int i = 0; i < path.Count; i++)
         {
             bool isLast = i == path.Count - 1;
+            bool doMatchTypes = i == 0;
 
             // Ensure current path state doesn't carry over to the next loop.
             var activeType = nextActiveType;
             nextActiveType = null;
 
-            var currentPathItem = path[i];
-            Identifier identifier;
+            var isShorthand = nextIsShorthand;
+            nextIsShorthand = false;
 
+            var currentPathItem = path[i].Expression;
+
+            // Add completion data for the current item in the path.
+            AddCompletionOfPathItem(CompletionRangeOfPathItem(i), activeType, doMatchTypes);
+
+            Identifier identifier;
             // Extract the identifier from the current expression in the path.
             if (currentPathItem is Identifier rhsAsIdentifier)
                 identifier = rhsAsIdentifier;
@@ -116,7 +165,29 @@ class PatternMatching
             var partRange = identifier.Range;
             string partName = identifier.Token.Text;
 
-            if (i == 0)
+            if (activeType is EnumType enumType)
+            {
+                // Find item with name.
+                var maybeMember = enumType.EnumMembers.FirstOrNull(member => member.Name == partName);
+
+                // Ensure that the member exists in the enumerator.
+                if (maybeMember is null)
+                {
+                    // Error if soft match is not enabled.
+                    if (!isShorthand)
+                    {
+                        parseInfo.Error($"Enum member '{partName}' does not exist in the enum ${enumType.GetName()}", partRange);
+                        return null;
+                    }
+                }
+                else
+                {
+                    targetEnumMember = (enumType, maybeMember.Value);
+                    continue;
+                }
+            }
+
+            if (doMatchTypes)
             {
                 nextActiveType = TypeFromContext.GetCodeTypeFromContext(parseInfo, scope, identifier);
 
@@ -125,20 +196,6 @@ class PatternMatching
                     parseInfo.Error($"The type '{nextActiveType.GetName()}' cannot be used as a pattern", partRange);
                     return null;
                 }
-            }
-            else if (activeType is EnumType enumType)
-            {
-                // Find item with name.
-                var maybeMember = enumType.EnumMembers.FirstOrNull(member => member.Name == partName);
-
-                // Ensure that the member exists in the enumerator.
-                if (maybeMember is null)
-                {
-                    parseInfo.Error($"Enum member '{partName}' does not exist in the enum ${enumType.GetName()}", partRange);
-                    return null;
-                }
-
-                targetEnumMember = (enumType, maybeMember.Value);
             }
             else
             {

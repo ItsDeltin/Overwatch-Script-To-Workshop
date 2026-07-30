@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
 
@@ -21,7 +20,7 @@ class CreateEnum
         parseInfo.TranslateInfo.CheckConflict(parseInfo, new(name), enumContext.Identifier.Range);
 
         // Create the enum.
-        var type = TypeProvider.Create(name, creator =>
+        var type = TypeProvider.Create(name, TypeKind.Enum, creator =>
         {
             creator.AddDeclaration(parseInfo, enumContext.Identifier.Range);
 
