@@ -54,10 +54,12 @@ class PatternMatching
         var path = GetRhsPath();
 
         void AddCompletionOfPathItem(
-            DocRange range,
+            DocRange? range,
             CodeType? activeType,
             bool addTypeCompletion)
         {
+            if (range is null) return;
+
             parseInfo.Script.AddCompletionRange(ICompletionRange.New(range, p => [
                 // Add enum members to completion if applicable.
                 ..activeType is EnumType enumType
@@ -85,19 +87,23 @@ class PatternMatching
         // Ensure that completion is created if no items were added to the path.
         if (path is null || path.Count == 0)
         {
-            var completionRange = patternStartToken.Range.End + parseInfo.Script.NextToken(patternStartToken).Range.Start;
-            AddCompletionOfPathItem(completionRange, nextActiveType, true);
+            var nextToken = parseInfo.Script.NextToken(patternStartToken);
+            if (nextToken is not null)
+            {
+                var completionRange = patternStartToken.Range.End + nextToken.Range.Start;
+                AddCompletionOfPathItem(completionRange, nextActiveType, true);
+            }
         }
 
         // If path is null, an invalid expression is being used for pattern matching.
         if (path is null)
             return null;
 
-        DocRange CompletionRangeOfPathItem(int item)
+        DocRange? CompletionRangeOfPathItem(int item)
         {
             var lhsToken = path[item].LeftHandToken;
             var rhsToken = path[item].RightHandToken ?? parseInfo.Script.NextToken(lhsToken);
-            return lhsToken.Range.End + rhsToken.Range.Start;
+            return rhsToken is null ? null : lhsToken.Range.End + rhsToken.Range.Start;
         }
 
         // Binding variable definitions found within the path.

@@ -49,6 +49,12 @@ class TypeProvider : ICodeTypeInitializer
             parseInfo.Script.Elements.AddDeclarationCall(new TempDeclarationCall(name), new(range, true));
         }
 
+        /// <summary>Checks for any other definitions with the same name as the type.</summary>
+        public void CheckForConflict(ParseInfo parseInfo, DocRange range)
+        {
+            parseInfo.TranslateInfo.CheckConflict(parseInfo, new(name), range);
+        }
+
         public void AddMetaFunction(ParseInfo parseInfo, Func<TypeMetaInitialization, TypeMetaAttributes> GetTypeMetaInformation)
         {
             parseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.Meta, () =>

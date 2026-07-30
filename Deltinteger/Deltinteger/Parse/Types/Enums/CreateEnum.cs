@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
 
@@ -12,17 +13,18 @@ class CreateEnum
 {
     public static TypeProvider CreateEnumFromContext(ParseInfo parseInfo, EnumContext enumContext)
     {
-        string name = enumContext.Identifier.Text;
+        string name = enumContext.Identifier.GetText();
         var scope = parseInfo.TranslateInfo.RulesetScope.Child();
         var staticVariableCollection = parseInfo.TranslateInfo.GetComponent<StaticVariableCollection>();
-
-        // Todo: Move this into creator
-        parseInfo.TranslateInfo.CheckConflict(parseInfo, new(name), enumContext.Identifier.Range);
 
         // Create the enum.
         var type = TypeProvider.Create(name, TypeKind.Enum, creator =>
         {
-            creator.AddDeclaration(parseInfo, enumContext.Identifier.Range);
+            if (enumContext.Identifier is not null)
+            {
+                creator.CheckForConflict(parseInfo, enumContext.Identifier.Range);
+                creator.AddDeclaration(parseInfo, enumContext.Identifier.Range);
+            }
 
             // Determine the kind of enum that this is.
             var enumKind = GetEnumKindFromSyntax(enumContext);
