@@ -1929,7 +1929,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Enum
                 case TokenType.Enum:
                     context.RootItems.Add(new(ParseEnum()));
-                    break;
+                    return;
             }
 
             // Workshop variable or subroutine collection
@@ -2140,26 +2140,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Open);
 
             // Get the values
-            var values = new List<EnumValue>();
-            if (!Is(TokenType.CurlyBracket_Close))
-                do
-                {
-                    // Get the value identifier.
-                    StartNode();
-                    var valueIdentifier = ParseExpected(TokenType.Identifier);
+            var values = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Is(TokenType.Identifier), () => Node(() =>
+            {
+                var valueIdentifier = ParseExpected(TokenType.Identifier);
 
-                    // Get the enum value's type.
-                    var valueType = TryParseEnumValueType();
+                // Get the enum value's type.
+                var valueType = TryParseEnumValueType();
 
-                    IParseExpression value = null;
-                    // Get the enum's value.
-                    if (ParseOptional(TokenType.Equal))
-                        value = GetContainExpression();
+                IParseExpression value = null;
+                // Get the enum's value.
+                if (ParseOptional(TokenType.Equal))
+                    value = GetContainExpression();
 
-                    // Add the value to the list.
-                    values.Add(EndNode(new EnumValue(valueIdentifier, value, valueType)));
-                }
-                while (ParseOptional(TokenType.Comma));
+                // Add the value to the list.
+                return new EnumValue(valueIdentifier, value, valueType);
+            }));
 
             // End the value group.
             ParseExpected(TokenType.CurlyBracket_Close);
