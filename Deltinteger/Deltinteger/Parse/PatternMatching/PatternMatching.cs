@@ -110,7 +110,7 @@ class PatternMatching
         Identifier[]? bindingVariableDefinitions = null;
 
         // The discovered enum target.
-        (EnumType, EnumMember)? targetEnumMember = null;
+        (EnumType EnumType, EnumMember EnumMember)? targetEnumMember = null;
 
         for (int i = 0; i < path.Count; i++)
         {
@@ -216,19 +216,46 @@ class PatternMatching
 
         if (targetEnumMember is not null)
         {
+            var targetEnumKind = targetEnumMember.Value.EnumType.EnumKind;
+            var isOperandAndTargetEqual = CodeTypeHelpers.DoesTypeImplement(targetEnumMember.Value.EnumType, operandType);
+
+            // Ensure that the target is compatible with the operand.
+            // Parallel enums can't be pattern matched with incompatible data type.
+            bool invalidDueToParallelEnum = targetEnumKind is EnumKind.Parallel && !isOperandAndTargetEqual;
+            if (invalidDueToParallelEnum)
+            {
+                parseInfo.Error(
+                    $"Operand type '{operandType.GetName()}' cannot be used to pattern match with parallel enum type '{targetEnumMember.Value.EnumType.GetName()}'",
+                    patternStartToken.Range
+                );
+                return null;
+            }
+
+            // Check the inverse, make sure a struct is not being pattern matched with
+            // an incompatible target.
+            bool invalidDueToBadOperand = !CodeTypeHelpers.IsCompatibleWithAny(operandType) && !isOperandAndTargetEqual;
+            if (invalidDueToBadOperand)
+            {
+                parseInfo.Error(
+                    $"Constant or parallel operand type '{operandType.GetName()}' cannot be used to pattern match with enum type '{targetEnumMember.Value.EnumType.GetName()}'",
+                    patternStartToken.Range
+                );
+                return null;
+            }
+
             Var[] GetBindingVariables()
             {
                 // No binding definitions provided.
                 if (bindingVariableDefinitions is null)
                     return [];
 
-                var memberItems = targetEnumMember.Value.Item2.Items;
+                var memberItems = targetEnumMember.Value.EnumMember.Items;
 
                 // Add error if there are too many variable bindings.
                 if (bindingVariableDefinitions.Length > memberItems.Length)
                 {
                     parseInfo.Error(
-                        $"Extraneous variable binding for enum member '{targetEnumMember.Value.Item2.Name}'",
+                        $"Extraneous variable binding for enum member '{targetEnumMember.Value.EnumMember.Name}'",
                         bindingVariableDefinitions[memberItems.Length].Range);
                     // No need to return null here.
                 }
@@ -252,8 +279,8 @@ class PatternMatching
 
             return new MatchedEnumPattern(
                 GetBindingVariables(),
-                targetEnumMember.Value.Item1,
-                targetEnumMember.Value.Item2,
+                targetEnumMember.Value.EnumType,
+                targetEnumMember.Value.EnumMember,
                 operand);
         }
         return null;

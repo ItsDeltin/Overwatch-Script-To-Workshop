@@ -214,4 +214,157 @@ public class EnumTest
         .AssertVariable("shorthand_slot0", 5)
         .AssertVariable("shorthand_slot1", 6);
     }
+
+    [TestMethod("Enum test: Incomplete syntax errors")]
+    public void IncompleteEnumErrors()
+    {
+        // Ensure that enums can have incomplete syntax
+        // without exploding ostw :)
+        Compile("""
+        enum 
+        """)
+        .AssertSearchError("identifier expected");
+
+        Compile("""
+        enum TestEnum
+        """)
+        .AssertSearchError("{ expected");
+
+        Compile("""
+        rule: "Incomplete syntax errors" {
+            if (0 is
+        """);
+
+        Compile("""
+        rule: "Incomplete syntax errors" {
+            if (0 is A.
+        """);
+    }
+
+    [TestMethod("Enum test: Incompatible pattern matching errors")]
+    public void IncompatiblePatternMatchingErrors()
+    {
+        // No inner values: OK
+        Compile("""
+        enum EnumTest {
+            A
+        }
+
+        rule: "Incompatible pattern matching errors" {
+            if (0 is EnumTest.A) {}
+        }
+        """)
+        .AssertOk();
+
+        // Single: OK
+        Compile("""
+        single enum EnumTest {
+            A(Number)
+        }
+
+        rule: "Incompatible pattern matching errors" {
+            if (0 is EnumTest.A) {}
+        }
+        """)
+        .AssertOk();
+
+        // Parallel: Not ok
+        Compile("""
+        enum EnumTest {
+            A(Number)
+        }
+
+        rule: "Incompatible pattern matching errors" {
+            if (0 is EnumTest.A) {}
+        }
+        """)
+        .AssertSearchError("Operand type 'Number' cannot be used to pattern match with parallel enum type 'EnumTest'");
+
+        // Constant operand: Not ok
+        Compile("""
+        enum EnumTest {
+            A
+        }
+
+        rule: "Incompatible pattern matching errors" {
+            if ({struct_value: 0} is EnumTest.A) {}
+        }
+        """)
+        .AssertSearchError("Constant or parallel operand type '{Number struct_value}' cannot be used to pattern match with enum type 'EnumTest'");
+    }
+
+    [TestMethod("Enum test: Extraneous variable binding error")]
+    public void ExtraneousVariableBindingError()
+    {
+        Compile("""
+        enum EnumTest {
+            A
+        }
+
+        rule: "Extraneous variable binding error" {
+            if (0 is EnumTest.A(value)) {}
+        }
+        """)
+        .AssertSearchError("Extraneous variable binding for enum member 'A'");
+    }
+
+    [TestMethod("Enum test: Variable binding mutability")]
+    public void VariableBindingMutability()
+    {
+        // Immutable pattern matching operand must have an error
+        // when attempting to set the bound variable.
+        Compile("""
+        enum EnumTest {
+            A(Number),
+            B(String, String)
+        }
+
+        rule: "Variable binding mutability" {
+            if (EnumTest.A(0) is EnumTest.A(value)) {
+                value = 5;
+            }
+        }
+        """)
+        .AssertSearchError("The variable 'value' cannot be set");
+
+        // Operand is mutable, this is okay!
+        Compile("""
+        enum EnumTest {
+            A(Number),
+            B(String, String)
+        }
+
+        rule: "Variable binding mutability" {
+            EnumTest b = EnumTest.B("first", "second");
+            if (b is EnumTest.B(first, second)) {
+                first = "1st";
+                second = "2nd";
+            }
+        }
+        """)
+        .AssertOk()
+        .EmulateTick()
+        .AssertVariable("b", 1)
+        .AssertVariable("b_slot0", "1st")
+        .AssertVariable("b_slot1", "2nd");
+
+        // Same as before, but with single enum.
+        Compile("""
+        single enum EnumTest {
+            A(Number),
+            B(String, String)
+        }
+
+        rule: "Variable binding mutability" {
+            EnumTest b = EnumTest.B("first", "second");
+            if (b is EnumTest.B(first, second)) {
+                first = "1st";
+                second = "2nd";
+            }
+        }
+        """)
+        .AssertOk()
+        .EmulateTick()
+        .AssertVariable("b", [1, "1st", "2nd"]);
+    }
 }
