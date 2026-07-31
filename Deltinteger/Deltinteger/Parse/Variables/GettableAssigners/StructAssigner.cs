@@ -164,7 +164,7 @@ namespace Deltin.Deltinteger.Parse
         // *** IGettable ***
 
         // Encode target player into struct.
-        IWorkshopTree IGettable.GetVariable(Element eventPlayer) => new TargetPlayerStruct(eventPlayer, this);
+        IWorkshopTree IGettable.GetVariable(Element eventPlayer) => eventPlayer is null ? this : new TargetPlayerStruct(eventPlayer, this);
 
         void IGettable.Set(ActionSet actionSet, IWorkshopTree value, Element target, Element[] index)
         {
@@ -231,19 +231,39 @@ namespace Deltin.Deltinteger.Parse
         public string[] GetNames() => _children.Keys.ToArray();
 
         /// <summary>Targets a player struct variable with a known player.</summary>
-        class TargetPlayerStruct : IStructValue
+        public class TargetPlayerStruct(Element target, StructAssignerValue parent) : IStructValue, IGettable
         {
-            readonly StructAssignerValue _parent;
-            readonly Element _target;
-
-            public TargetPlayerStruct(Element target, StructAssignerValue parent) => (_parent, _target) = (parent, target);
+            readonly StructAssignerValue _parent = parent;
+            readonly Element _target = target;
+            readonly IGettable _parentGettable = parent;
 
             // Wrap the parent with the known target.
             public IWorkshopTree[] GetAllValues() => _parent.GetAllValuesWithTarget(this._target);
             public IWorkshopTree GetArbritraryValue() => _parent.GetArbritraryGettable().GetVariable(_target);
-            public IGettable GetGettable(string variableName) => new TargetGettable(_parent._children[variableName], _target);
+            public IGettable GetGettable(string variableName) => StructHelper.AddTargetToGettable(_parent._children[variableName], _target);
             public IWorkshopTree GetValue(string variableName) => _parent._children[variableName].GetVariable(_target);
             public string[] GetNames() => _parent.GetNames();
+
+            bool IGettable.CanBeSet()
+            {
+                throw new NotImplementedException();
+            }
+
+            // Implement IGettable through parent.
+            IWorkshopTree IGettable.GetVariable(Element eventPlayer)
+                => _parentGettable.GetVariable(eventPlayer ?? _target);
+            void IGettable.Set(ActionSet actionSet, IWorkshopTree value, Element target, params Element[] index)
+                => _parentGettable.Set(actionSet, value, target ?? _target, index);
+            void IGettable.Modify(ActionSet actionSet, Operation operation, IWorkshopTree value, Element target, params Element[] index)
+                => _parentGettable.Modify(actionSet, operation, value, target ?? _target, index);
+            void IGettable.Pop(ActionSet actionSet)
+                => _parentGettable.Pop(actionSet);
+            void IGettable.Push(ActionSet actionSet, IWorkshopTree value)
+                => _parentGettable.Push(actionSet, value);
+            IGettable IGettable.ChildFromClassReference(IWorkshopTree reference)
+                => _parentGettable.ChildFromClassReference(reference);
+            WorkshopVariablePosition? IGettable.GetWorkshopVariablePosition()
+                => _parentGettable.GetWorkshopVariablePosition();
         }
     }
 

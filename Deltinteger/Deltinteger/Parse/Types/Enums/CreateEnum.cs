@@ -163,6 +163,8 @@ class CreateEnum
                             IsStruct: enumKind == EnumKind.Parallel,
                             // Stack length is always 1 if not parallel.
                             StackLength: enumKind == EnumKind.Parallel ? GetRequiredSlotCount(enumType.EnumMembers) + 1 : 1,
+                            // If the enum is structured as an array, this will need array protection!
+                            NeedsArrayOperationProtection: enumKind == EnumKind.Single,
                             // Function to add items to the index assigner.
                             AddObjectVariablesToAssigner: (toWorkshop, source, assigner) =>
                             {

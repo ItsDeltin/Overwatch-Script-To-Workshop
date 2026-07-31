@@ -353,16 +353,16 @@ sealed record MatchedEnumPattern(
             // Potentially mutable variable was provided.
             var parsedElements = Operand.LinkedVariable.ParseElements(actionSet);
             unfolder = isParallel
-                ? new ParallelEnumUnfolder((IStructValue)parsedElements.IndexReference)
-                : new SingleEnumUnfolder(parsedElements.IndexReference);
+                ? new ParallelEnumUnfolder((IStructValue)parsedElements.IndexReference, parsedElements.Target)
+                : new SingleEnumUnfolder(parsedElements.AsGettable());
 
-            sourceValue = parsedElements.IndexReference.GetVariable();
+            sourceValue = parsedElements.AsGettable().GetVariable();
         }
         else
         {
             sourceValue = Operand.Expression.Parse(actionSet);
             unfolder = isParallel
-                ? new ParallelEnumUnfolder((IStructValue)sourceValue)
+                ? new ParallelEnumUnfolder((IStructValue)sourceValue, null)
                 : new SingleEnumUnfolder(new WorkshopElementReference(sourceValue));
         }
 
@@ -384,10 +384,16 @@ sealed record MatchedEnumPattern(
     }
 }
 
-sealed class ParallelEnumUnfolder(IStructValue SourceEnum) : IUnfoldGettable
+sealed class ParallelEnumUnfolder(IStructValue SourceEnum, IWorkshopTree? TargetPlayer) : IUnfoldGettable
 {
     int currentSlot = 0;
-    public IGettable NextValue() => SourceEnum.GetGettable($"slot{currentSlot++}");
+    public IGettable NextValue()
+    {
+        var slot = SourceEnum.GetGettable($"slot{currentSlot++}");
+        if (TargetPlayer is not null)
+            return new TargetGettable(slot, (Element)TargetPlayer);
+        return slot;
+    }
 }
 
 sealed class SingleEnumUnfolder(IGettable SourceValue) : IUnfoldGettable

@@ -95,6 +95,15 @@ namespace Deltin.Deltinteger.Parse
                 return new[] { value };
         }
 
+        /// <summary>Binds a target to an IGettable.</summary>
+        public static IGettable AddTargetToGettable(IGettable gettable, IWorkshopTree target)
+        {
+            if (gettable is StructAssignerValue structValue)
+                return new StructAssignerValue.TargetPlayerStruct((Element)target, structValue);
+
+            return new TargetGettable(gettable, (Element)target);
+        }
+
         /// <summary>Extracts all final variable paths in a struct. Useful for knowing the workshop variables
         /// a struct will create.</summary>
         /// <returns>An input value of `{ w: 0, x: { y: 1, z: 2 } }` will return ['w', 'x_y', 'x_z'].</returns>

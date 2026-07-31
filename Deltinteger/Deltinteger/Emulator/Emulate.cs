@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Model;
@@ -19,6 +18,11 @@ public class EmulateScript
         this.rules = rules.Select(rule => new EmulateRule(state, rule)).ToArray();
     }
 
+    public void AddHostPlayer()
+    {
+        state.PlayerList.AddPlayer("host", true);
+    }
+
     public RuleTickResult TickOne()
     {
         foreach (var rule in rules)
@@ -31,22 +35,28 @@ public class EmulateScript
     }
 
     public EmulateValue GetGlobalVariableValue(string name) => state.GetGlobalVariable(name).Value;
+
+    public EmulateValue? GetPlayerVariableValue(string playerName, string variableName)
+        => state.PlayerList.GetPlayerInformationFromName(playerName)
+            ?.Variables.GetVariable(variableName).Value;
 }
 
 public class EmulateState
 {
-    public IEmulateLogger Logger;
     readonly IList<Rule> rules;
     readonly EmulateVariableSet globalVariableSet;
 
-    public EmulateValue? CurrentArrayValue;
-    public EmulateValue? CurrentArrayIndex;
+    public IEmulateLogger Logger { get; }
+    public PlayerList PlayerList { get; }
+    public EmulateValue? CurrentArrayValue { get; init; }
+    public EmulateValue? CurrentArrayIndex { get; init; }
 
     public EmulateState(IEmulateLogger logger, IList<Rule> rules)
     {
         Logger = logger;
         this.rules = rules;
         globalVariableSet = new();
+        PlayerList = new();
     }
 
     public EmulateState(EmulateState other)
@@ -54,9 +64,13 @@ public class EmulateState
         Logger = other.Logger;
         rules = other.rules;
         globalVariableSet = other.globalVariableSet;
+        PlayerList = other.PlayerList;
     }
 
     public EmulateVariable GetGlobalVariable(string name) => globalVariableSet.GetVariable(name);
+
+    public EmulateVariable GetPlayerVariable(EmulateValue player, string name)
+        => PlayerList.GetPlayerInformationFromValue(player)?.Variables.GetVariable(name) ?? new FalseVariable(name);
 
     public Rule? RuleFromSubroutineName(string name) => rules.FirstOrDefault(r => r.Subroutine == name);
 
@@ -214,12 +228,35 @@ class EmulateStack(EmulateState state, Rule rule)
                     break;
                 }
 
+            case "Set Player Variable":
+                {
+                    var target = Evaluate(P(act, 0));
+                    var name = EmulateHelper.ExtractVariableName(P(act, 1)).Unwrap();
+                    var value = Evaluate(P(act, 2));
+
+                    var variable = state.GetPlayerVariable(target, name);
+                    variable.Value = value;
+                    break;
+                }
+
             case "Set Global Variable At Index":
                 {
                     var name = EmulateHelper.ExtractVariableName(P(act, 0)).Unwrap();
                     var variable = state.GetGlobalVariable(name);
                     var index = Evaluate(P(act, 1)).AsNumber();
                     var value = Evaluate(P(act, 2));
+                    variable.Modify(var => var.SetAtIndex(index, value));
+                    break;
+                }
+
+            case "Set Player Variable At Index":
+                {
+                    var target = Evaluate(P(act, 0));
+                    var name = EmulateHelper.ExtractVariableName(P(act, 1)).Unwrap();
+                    var variable = state.GetPlayerVariable(target, name);
+                    var index = Evaluate(P(act, 2)).AsNumber();
+                    var value = Evaluate(P(act, 3));
+
                     variable.Modify(var => var.SetAtIndex(index, value));
                     break;
                 }
@@ -234,6 +271,18 @@ class EmulateStack(EmulateState state, Rule rule)
                     break;
                 }
 
+            case "Modify Player Variable":
+                {
+                    var target = Evaluate(P(act, 0));
+                    var name = EmulateHelper.ExtractVariableName(P(act, 1)).Unwrap();
+                    var operation = EmulateHelper.ExtractOperation(P(act, 2)).Unwrap();
+                    var value = Evaluate(P(act, 3));
+                    var variable = state.GetPlayerVariable(target, name);
+
+                    variable.Modify(var => var.Modify(operation, value));
+                    break;
+                }
+
             case "Modify Global Variable At Index":
                 {
                     var name = EmulateHelper.ExtractVariableName(P(act, 0)).Unwrap();
@@ -241,6 +290,18 @@ class EmulateStack(EmulateState state, Rule rule)
                     var operation = EmulateHelper.ExtractOperation(P(act, 2)).Unwrap();
                     var value = Evaluate(P(act, 3));
                     var variable = state.GetGlobalVariable(name);
+                    variable.Modify(var => var.ModifyAtIndex(index, operation, value));
+                    break;
+                }
+
+            case "Modify Player Variable At Index":
+                {
+                    var target = Evaluate(P(act, 0));
+                    var name = EmulateHelper.ExtractVariableName(P(act, 1)).Unwrap();
+                    var index = Evaluate(P(act, 2));
+                    var operation = EmulateHelper.ExtractOperation(P(act, 3)).Unwrap();
+                    var value = Evaluate(P(act, 4));
+                    var variable = state.GetPlayerVariable(target, name);
                     variable.Modify(var => var.ModifyAtIndex(index, operation, value));
                     break;
                 }
@@ -279,14 +340,29 @@ class EmulateStack(EmulateState state, Rule rule)
                 break;
 
             case "For Global Variable":
-                string varName = EmulateHelper.ExtractVariableName(P(act, 0)).Unwrap();
-                ExecuteFor(
-                    state.GetGlobalVariable(varName),
-                    Evaluate(P(act, 1)),
-                    Evaluate(P(act, 2)),
-                    Evaluate(P(act, 3))
-                );
-                break;
+                {
+                    string varName = EmulateHelper.ExtractVariableName(P(act, 0)).Unwrap();
+                    ExecuteFor(
+                        state.GetGlobalVariable(varName),
+                        Evaluate(P(act, 1)),
+                        Evaluate(P(act, 2)),
+                        Evaluate(P(act, 3))
+                    );
+                    break;
+                }
+
+            case "For Player Variable":
+                {
+                    var target = Evaluate(P(act, 0));
+                    string varName = EmulateHelper.ExtractVariableName(P(act, 1)).Unwrap();
+                    ExecuteFor(
+                        state.GetPlayerVariable(target, varName),
+                        Evaluate(P(act, 2)),
+                        Evaluate(P(act, 3)),
+                        Evaluate(P(act, 4))
+                    );
+                    break;
+                }
 
             case "End":
                 {

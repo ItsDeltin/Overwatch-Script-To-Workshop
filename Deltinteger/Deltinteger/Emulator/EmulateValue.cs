@@ -124,6 +124,12 @@ public abstract record EmulateValue
         public override double AsNumber() => 0;
         public override string ToString() => $"Custom Color({R}, {G}, {B}, {A})";
     }
+    public sealed record Player(string Name) : EmulateValue
+    {
+        public override bool AsBoolean() => true;
+        public override double AsNumber() => 0;
+        public override string ToString() => $"Player('${Name}')";
+    }
 
     public static implicit operator EmulateValue(double value) => new Number(value);
     public static implicit operator EmulateValue(int value) => new Number(value);
@@ -249,6 +255,7 @@ public abstract record EmulateValue
                 ("First Of", 1) => Evaluate(p[0], state).MapValue(v => v.FirstOf()),
                 ("Last Of", 1) => Evaluate(p[0], state).MapValue(v => v.LastOf()),
                 ("Global Variable", 1) => EmulateHelper.ExtractVariableName(p[0]).MapValue(name => state.GetGlobalVariable(name).Value),
+                ("Player Variable", 2) => eval(p[0]).And(EmulateHelper.ExtractVariableName(p[1])).MapValue((target_name) => state.GetPlayerVariable(target_name.a, target_name.b).Value),
                 ("Value In Array", 2) => arithmetic((array, index) => array.ValueInArray(index)),
                 ("Index Of Array Value", 2) => arithmetic((array, value) => array.IndexOf(value)),
                 ("Append To Array", 2) => arithmetic((array, value) => array.Append(value)),
@@ -262,6 +269,7 @@ public abstract record EmulateValue
                 ("Y Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().Y)),
                 ("Z Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().Z)),
                 ("Custom Color", 4) => evalAll(values => From(values[0].AsNumber(), values[1].AsNumber(), values[2].AsNumber(), values[3].AsNumber())),
+                ("Host Player", _) => state.PlayerList.GetHostValue() ?? Default,
                 ("Null", _) => Default, // Do we need a dedicated null value? probably not
                 (_, _) => $"Emulation for workshop function '{name}' (with {p.Length} parameters) is not supported"
             };

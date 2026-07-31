@@ -168,6 +168,7 @@ class TypeProvider : ICodeTypeInitializer
     public readonly record struct TypeInstanceAttributes(
         bool IsStruct,
         int StackLength,
+        bool NeedsArrayOperationProtection,
         AddObjectVariablesToAssigner AddObjectVariablesToAssigner);
 
     public delegate IMethod InstanceMethodFactory(InstanceAnonymousTypeLinker typeLinker);
@@ -333,8 +334,16 @@ class TypeProvider : ICodeTypeInitializer
                 StackLength = instanceAttributes.StackLength
             };
 
+            // Array operation protection
+            // in case of [single Enum].Append(Any)
+            NeedsArrayProtection = instanceAttributes.NeedsArrayOperationProtection;
+
             isStruct = instanceAttributes.IsStruct;
             addObjectVariablesToAssignerFunction = instanceAttributes.AddObjectVariablesToAssigner;
+
+            // Allow default assignment operator if this is not a parallel type.
+            Operations.AddAssignmentOperator();
+            Operations.DefaultAssignment = !isStruct;
         }
 
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)

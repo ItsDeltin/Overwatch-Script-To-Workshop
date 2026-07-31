@@ -6,7 +6,7 @@ using Deltin.Deltinteger.Model;
 
 namespace Deltin.Deltinteger.Emulator;
 
-class EmulateVariableSet
+public class EmulateVariableSet
 {
     readonly List<EmulateVariable> variables = [];
 
@@ -24,7 +24,7 @@ class EmulateVariableSet
 public class EmulateVariable(string name, EmulateValue? value)
 {
     public string Name { get; } = name;
-    public EmulateValue Value { get; set; } = value ?? EmulateValue.Default;
+    public virtual EmulateValue Value { get; set; } = value ?? EmulateValue.Default;
 
     public void Modify(Func<EmulateValue, EmulateValue> modify)
     {
@@ -32,4 +32,14 @@ public class EmulateVariable(string name, EmulateValue? value)
     }
 
     public override string ToString() => $"{Name} = {Value}";
+}
+
+/// <summary>
+/// This is used to represent an invalid variable, obtained with an invalid  player target
+/// in a workshop element.
+/// </summary>
+sealed class FalseVariable(string name) : EmulateVariable(name, EmulateValue.Default)
+{
+    // Do not allow Value to actually be changed.
+    public override EmulateValue Value { get => EmulateValue.Default; set { } }
 }

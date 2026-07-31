@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
             Target = target;
         }
 
-        public IGettable Childify()
+        public IGettable AsGettable()
         {
             return Target == null ? IndexReference : new TargetGettable(IndexReference, Target);
         }

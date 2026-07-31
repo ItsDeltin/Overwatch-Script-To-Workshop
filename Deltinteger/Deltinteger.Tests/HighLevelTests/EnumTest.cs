@@ -367,4 +367,47 @@ public class EnumTest
         .EmulateTick()
         .AssertVariable("b", [1, "1st", "2nd"]);
     }
+
+    [TestMethod("Enum test: Player variable binding")]
+    public void PlayerVariableBinding()
+    {
+        Compile("""
+        enum EnumTest {
+            A(Number),
+            B(String, String)
+        }
+
+        globalvar Player p = HostPlayer();
+        playervar EnumTest value;
+
+        rule: ""
+        {
+            p.value = EnumTest.B("one", "two");
+
+            if (p.value is EnumTest.B(first, second)) {
+                second = "three";
+            }
+        }
+        """)
+        .EmulateTick(new(WithHostPlayer: true))
+        .AssertPlayerVariable(HostName, "value", 1)
+        .AssertPlayerVariable(HostName, "value_slot0", "one")
+        .AssertPlayerVariable(HostName, "value_slot1", "three");
+    }
+
+    [TestMethod("Enum test: Single enum array protection warning")]
+    public void SingleEnumArrayProtectionWarning()
+    {
+        Compile("""
+        single enum EnumTest { A(Number) }
+
+        rule: ""
+        {
+            EnumTest[] values;
+            values += <Any>0;
+        }
+        """)
+        .AssertSearchError("Please narrow down the type of the value you are appending")
+        .AssertOk();
+    }
 }
