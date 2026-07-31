@@ -1,3 +1,5 @@
+#nullable enable
+
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -5,7 +7,7 @@ namespace Deltin.Deltinteger.Parse
 {
     static class VariableMaker
     {
-        public static IVariable New(string name, CodeType type, IVariableDefault defaultValue = null) =>
+        public static IVariable New(string name, CodeType type, IVariableDefault? defaultValue = null) =>
             new GenericVariableProvider(name, type, VariableType.Dynamic, false)
             {
                 DefaultValue = defaultValue
@@ -14,28 +16,37 @@ namespace Deltin.Deltinteger.Parse
         public static IVariable NewStatic(string name, CodeType type) =>
             new GenericVariableProvider(name, type, VariableType.Dynamic, true);
 
-        public static IVariable NewPropertyLike(string name, CodeType type, IVariableDefault defaultValue = null) =>
+        public static IVariable NewPropertyLike(string name, CodeType type, IVariableDefault? defaultValue = null) =>
             new GenericVariableProvider(name, type, VariableType.ElementReference, false)
             {
                 DefaultValue = defaultValue
             };
 
-        public static IVariable NewUnambiguousPropertyLike(string name, CodeType type, IVariableDefault defaultValue = null) =>
+        public static IVariable NewPropertyWithOptions(string name, CodeType type, VariableOptions options) =>
+            new GenericVariableProvider(name, type, VariableType.ElementReference, false)
+            {
+                DefaultValue = options.DefaultValue,
+                Documentation = options.Documentation ?? new()
+            };
+
+        public static IVariable NewUnambiguousPropertyLike(string name, CodeType type, IVariableDefault? defaultValue = null) =>
             new GenericVariableProvider(name, type, VariableType.ElementReference, false)
             {
                 CanBeAmbiguous = false,
                 DefaultValue = defaultValue
             };
 
+        public readonly record struct VariableOptions(IVariableDefault? DefaultValue, MarkupBuilder? Documentation);
+
         class GenericVariableProvider : IVariable
         {
             public string Name { get; }
             public VariableType VariableType { get; }
             public bool CanBeAmbiguous { get; init; }
-            public IVariableDefault DefaultValue { get; init; }
+            public IVariableDefault? DefaultValue { get; init; }
             readonly CodeType type;
             readonly bool isStatic;
-            readonly MarkupBuilder documentation = new MarkupBuilder();
+            public MarkupBuilder Documentation { get; init; } = new MarkupBuilder();
 
             public GenericVariableProvider(string name, CodeType type, VariableType variableType, bool isStatic)
             {
@@ -63,11 +74,11 @@ namespace Deltin.Deltinteger.Parse
             {
                 public string Name => provider.Name;
                 public IVariable Provider => provider;
-                public MarkupBuilder Documentation => provider.documentation;
+                public MarkupBuilder Documentation => provider.Documentation;
                 public IVariableInstanceAttributes Attributes { get; }
                 public ICodeTypeSolver CodeType => type;
                 public bool WholeContext { get; } = true; // ?
-                public Location DefinedAt { get; } = null;
+                public Location? DefinedAt { get; } = null;
                 public AccessLevel AccessLevel { get; } = AccessLevel.Public;
 
                 readonly GenericVariableProvider provider;
@@ -106,9 +117,9 @@ namespace Deltin.Deltinteger.Parse
         public VariableType VariableType { get; set; }
         public bool Static { get; set; }
         public bool WholeContext { get; set; } = true;
-        public LanguageServer.Location DefinedAt { get; set; }
+        public Location? DefinedAt { get; set; }
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
-        public MarkupBuilder Documentation { get; set; }
+        public MarkupBuilder? Documentation { get; set; }
         public bool Ambiguous { get; set; } = true;
         public bool RequiresCapture => false;
         public IVariable Provider => this;

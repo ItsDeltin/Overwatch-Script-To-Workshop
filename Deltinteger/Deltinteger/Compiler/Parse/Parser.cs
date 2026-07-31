@@ -258,6 +258,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
+        static bool Is(TokenType source, TokenType type)
+        {
+            return type switch
+            {
+                TokenType.Identifier => source.IsIdentifier(),
+                _ => source == type,
+            };
+        }
+
         TokenType NextNonDecorativeToken()
         {
             for (int i = 0; ; i++)
@@ -2140,8 +2149,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ParseExpected(TokenType.CurlyBracket_Open);
 
             // Get the values
-            var values = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Is(TokenType.Identifier), () => Node(() =>
+            var values = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Is(NextNonDecorativeToken(), TokenType.Identifier), () => Node(() =>
             {
+                var doc = ParseMetaComment();
+
                 var valueIdentifier = ParseExpected(TokenType.Identifier);
 
                 // Get the enum value's type.
@@ -2153,7 +2164,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     value = GetContainExpression();
 
                 // Add the value to the list.
-                return new EnumValue(valueIdentifier, value, valueType);
+                return new EnumValue(doc, valueIdentifier, value, valueType);
             }));
 
             // End the value group.
@@ -2171,20 +2182,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 ParseExpected(TokenType.Parentheses_Close);
                 return new(parameterTypes);
             }
-            // Curly bracket syntax.
-            // if (ParseOptional(TokenType.CurlyBracket_Open))
-            // {
-            //     var list = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Lookahead(() => ParseType().LookaheadValid), () =>
-            //     {
-            //         var type = ParseType();
-            //         var identifier = ParseExpected(TokenType.Identifier);
-
-            //         return new EnumValueTypeItemContext(type, identifier);
-            //     });
-
-            //     ParseExpected(TokenType.CurlyBracket_Close);
-            //     return new(list);
-            // }
             return null;
         }
 

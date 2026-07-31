@@ -20,6 +20,7 @@ class CreateEnum
         // Create the enum.
         var type = TypeProvider.Create(name, TypeKind.Enum, creator =>
         {
+            creator.AddDocumentationFromMetaComment(enumContext.Doc);
             if (enumContext.Identifier is not null)
             {
                 creator.CheckForConflict(parseInfo, enumContext.Identifier.Range);
@@ -57,6 +58,10 @@ class CreateEnum
                     {
                         var currentItem = enumContext.Values[i];
                         string valueName = currentItem.Identifier.Text;
+
+                        // Get enum member documentation.
+                        var metaComment = ParsedMetaComment.FromMetaComment(currentItem.Doc);
+                        var memberDocumentation = metaComment is not null ? new MarkupBuilder(metaComment.Description) : new();
 
                         // Get the enum value.
                         IVariableDefault variantValue;
@@ -105,7 +110,7 @@ class CreateEnum
                                     {
                                         return CreateValueOfEnumMember(enumKind, enumMembers, variantValue.GetDefaultValue(actionSet), call.ParameterValues);
                                     },
-                                    Documentation = ""
+                                    Documentation = memberDocumentation
                                 }.GetMethod());
                         }
                         else
@@ -114,7 +119,7 @@ class CreateEnum
                             var wrappedMemberValue = IVariableDefault.Create(actionSet => CreateValueOfEnumMember(enumKind, enumMembers, variantValue.GetDefaultValue(actionSet), []));
 
                             // Create the enum member.
-                            var enumMemberVariable = VariableMaker.NewPropertyLike(valueName, defaultInstance, wrappedMemberValue);
+                            var enumMemberVariable = VariableMaker.NewPropertyWithOptions(valueName, defaultInstance, new(wrappedMemberValue, memberDocumentation));
                             metaInitialization.AddStaticVariable(enumMemberVariable);
                             staticVariableCollection.AddVariable(enumMemberVariable);
                         }

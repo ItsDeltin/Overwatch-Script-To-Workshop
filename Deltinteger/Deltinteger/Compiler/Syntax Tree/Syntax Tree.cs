@@ -247,12 +247,14 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class EnumValue : Node
     {
+        public MetaComment Doc { get; }
         public Token Identifier { get; }
         public IParseExpression Value { get; }
         public EnumValueTypeContext ValueType { get; }
 
-        public EnumValue(Token identifier, IParseExpression value, EnumValueTypeContext valueType)
+        public EnumValue(MetaComment doc, Token identifier, IParseExpression value, EnumValueTypeContext valueType)
         {
+            Doc = doc;
             Identifier = identifier;
             Value = value;
             ValueType = valueType;

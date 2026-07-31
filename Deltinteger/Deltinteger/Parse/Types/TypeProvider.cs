@@ -5,8 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse.Workshop;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
 namespace Deltin.Deltinteger.Parse.Types;
 
@@ -35,6 +36,8 @@ class TypeProvider : ICodeTypeInitializer
     /// <summary>Assists in creating TypeProviders.</summary>
     public sealed class TypeProviderInitialization(string name, TypeProvider typeProvider)
     {
+        (ParseInfo parseInfo, DocRange range)? addHoverInformationAt;
+
         /// <summary>Get anonymous types from input syntax.</summary>
         public AnonymousType[] GetAnonymousTypesFromContext(ParseInfo parseInfo, List<TypeArgContext>? typeArgContexts)
         {
@@ -46,7 +49,9 @@ class TypeProvider : ICodeTypeInitializer
         /// <summary>Adds a declaration to the script.</summary>
         public void AddDeclaration(ParseInfo parseInfo, DocRange range)
         {
-            parseInfo.Script.Elements.AddDeclarationCall(new TempDeclarationCall(name), new(range, true));
+            parseInfo.Script.Elements.AddDeclarationCall(typeProvider.declarationKey, new(range, true));
+            typeProvider.declaredAt = new(parseInfo.Script.Uri, range);
+            addHoverInformationAt = (parseInfo, range);
         }
 
         /// <summary>Checks for any other definitions with the same name as the type.</summary>
@@ -55,20 +60,36 @@ class TypeProvider : ICodeTypeInitializer
             parseInfo.TranslateInfo.CheckConflict(parseInfo, new(name), range);
         }
 
+        /// <summary>Create type documentation from user syntax.</summary>
+        public void AddDocumentationFromMetaComment(MetaComment? Doc)
+        {
+            if (Doc is null) return;
+
+            var parsedMetaComment = ParsedMetaComment.FromMetaComment(Doc);
+            typeProvider.documentation = new(parsedMetaComment.Description);
+        }
+
         public void AddMetaFunction(ParseInfo parseInfo, Func<TypeMetaInitialization, TypeMetaAttributes> GetTypeMetaInformation)
         {
             parseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.Meta, () =>
             {
-                var metaInformation = GetTypeMetaInformation(new(typeProvider));
+                // If a definition location exists, create a default instance so that
+                // we can add hover information. A default instance may be created anyway.
+                CodeType? defaultInstance = null;
+                if (addHoverInformationAt is not null)
+                {
+                    defaultInstance = typeProvider.GetInstance();
+                    defaultInstance.Call(addHoverInformationAt.Value.parseInfo, addHoverInformationAt.Value.range);
+                }
+
+                // Execute provided meta function.
+                var metaInformation = GetTypeMetaInformation(new(typeProvider, defaultInstance));
+
+                // Apply received data.
                 typeProvider.getAssignerFunction = metaInformation.GetAssignerFunction;
                 typeProvider.onInstanceReady = metaInformation.OnInstanceReady;
                 typeProvider.OnMetaCompleted();
             });
-        }
-
-        class TempDeclarationCall(string name) : IDeclarationKey
-        {
-            public string Name => name;
         }
     }
 
@@ -76,13 +97,19 @@ class TypeProvider : ICodeTypeInitializer
     public sealed class TypeMetaInitialization
     {
         readonly TypeProvider typeProvider;
+        CodeType? defaultInstance;
 
-        public TypeMetaInitialization(TypeProvider typeProvider)
+        public TypeMetaInitialization(TypeProvider typeProvider, CodeType? defaultInstance)
         {
             this.typeProvider = typeProvider;
+            this.defaultInstance = defaultInstance;
         }
 
-        public CodeType GetDefaultInstance() => typeProvider.GetInstance();
+        public CodeType GetDefaultInstance()
+        {
+            defaultInstance ??= typeProvider.GetInstance();
+            return defaultInstance;
+        }
 
         /// <summary>Adds a static variable to the type.</summary>
         public void AddStaticVariable(IVariable variable)
@@ -157,17 +184,21 @@ class TypeProvider : ICodeTypeInitializer
     public int GenericsCount => GenericTypes.Length;
     public TypeKind Kind { get; }
 
+    readonly TypeProviderDeclarationKey declarationKey;
     readonly HashSet<TypeInstance> instances = [];
     readonly TypeElements typeElements = new();
     bool isMetaCompleted;
     TypeInstanceFactory? typeInstanceFactory;
     GetGettableAssigner? getAssignerFunction;
     OnInstanceReady? onInstanceReady;
+    MarkupBuilder? documentation;
+    Location? declaredAt;
 
     TypeProvider(string name, TypeKind typeKind)
     {
         Name = name;
         Kind = typeKind;
+        declarationKey = new(name);
     }
 
     public bool BuiltInTypeMatches(Type type) => false;
@@ -240,6 +271,8 @@ class TypeProvider : ICodeTypeInitializer
             staticScope = new Scope(provider.Name);
             Generics = typeLinker.SafeTypeArgsFromAnonymousTypes(Provider.GenericTypes);
             ArrayHandler = this;
+            Description = provider.documentation;
+            Kind = provider.Kind;
 
             arrayFunctionHandler = new(() =>
             {
@@ -316,6 +349,15 @@ class TypeProvider : ICodeTypeInitializer
 
         public override CompletionItem GetCompletion() => GetTypeCompletion(this);
 
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            base.Call(parseInfo, callRange);
+            parseInfo.Script.Elements.AddDeclarationCall(Provider.declarationKey, new DeclarationCall(callRange, false));
+
+            if (Provider.declaredAt is not null)
+                parseInfo.Script.AddDefinitionLink(callRange, Provider.declaredAt);
+        }
+
         // `ITypeArrayHandler` implementation
         void ITypeArrayHandler.OverrideArray(ArrayType array) { }
         IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes)
@@ -333,5 +375,10 @@ class TypeProvider : ICodeTypeInitializer
             if (!setupCompleted)
                 throw new Exception("Type information is not ready");
         }
+    }
+
+    class TypeProviderDeclarationKey(string name) : IDeclarationKey
+    {
+        public string Name => name;
     }
 }
