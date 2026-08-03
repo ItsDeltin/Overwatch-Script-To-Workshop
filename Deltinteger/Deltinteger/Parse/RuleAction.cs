@@ -46,8 +46,14 @@ namespace Deltin.Deltinteger.Parse
                         ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range
                     );
 
+                var conditionExpression = parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression);
+
+                // Ensure the conditions is a compatible type.
+                if (!CodeTypeHelpers.IsCompatibleWithAny(conditionExpression.Type()))
+                    parseInfo.Error("The value of a condition cannot be a constant or parallel value", ruleContext.Conditions[i].Expression.Range);
+
                 Conditions[i] = new ConditionAction(
-                    parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression),
+                    conditionExpression,
                     ruleContext.Conditions[i].Comment,
                     ruleContext.Conditions[i].Disabled
                 );
