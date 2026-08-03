@@ -109,6 +109,10 @@ namespace Deltin.Deltinteger.Parse
 
         private static bool AreFunctionallyEqual(CodeType a, CodeType b, EqualitySettings equalitySettings)
         {
+            // 'a' and 'b' point to the same thing.
+            if (ReferenceEquals(a, b))
+                return true;
+
             // Unknown lambda types are compatible with known lambda types.
             if ((a is PortableLambdaType || b is PortableLambdaType) && (a is UnknownLambdaType || b is UnknownLambdaType))
                 return true;
@@ -192,7 +196,7 @@ namespace Deltin.Deltinteger.Parse
             // Generic type factory comparison
             else if (a is TypeProvider.TypeInstance aTypeInstance && b is TypeProvider.TypeInstance bTypeInstance)
             {
-                return aTypeInstance.Provider == bTypeInstance.Provider;
+                return aTypeInstance.Provider == bTypeInstance.Provider && DoGenericsMatch(a, b, equalitySettings);
             }
 
             // Default

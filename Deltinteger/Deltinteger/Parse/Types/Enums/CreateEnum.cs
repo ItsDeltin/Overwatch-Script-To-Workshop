@@ -94,6 +94,11 @@ class CreateEnum
                             ? EnumValueTypeInformation.FromContext(parseInfo, scope, currentItem.ValueType)
                             : null;
 
+                        // Register the inner values of the enum member as a storage item.
+                        if (valueTypeInformation is not null)
+                            foreach (var item in valueTypeInformation.Items)
+                                metaInitialization.AddStorageItem(item);
+
                         // Create a function for the member instead.
                         if (valueTypeInformation is not null)
                         {
@@ -161,8 +166,6 @@ class CreateEnum
                         return new(
                             // Is this enum a struct (parallel)?
                             IsStruct: enumKind == EnumKind.Parallel,
-                            // Stack length is always 1 if not parallel.
-                            StackLength: enumKind == EnumKind.Parallel ? GetRequiredSlotCount(enumType.EnumMembers) + 1 : 1,
                             // If the enum is structured as an array, this will need array protection!
                             NeedsArrayOperationProtection: enumKind == EnumKind.Single,
                             // Function to add items to the index assigner.
@@ -170,7 +173,10 @@ class CreateEnum
                             {
                                 if (keyVariable is not null)
                                     assigner.Add(keyVariable, KeyOf(enumKind, source.Value));
-                            }
+                            },
+                            // Information to retrieve after all types have had a chance to look
+                            // at their contents. Stack length is always 1 if not parallel.
+                            GetPostMetaInformation: () => new(StackLength: enumKind == EnumKind.Parallel ? GetRequiredSlotCount(enumType.EnumMembers) + 1 : 1)
                         );
                     }
                 );

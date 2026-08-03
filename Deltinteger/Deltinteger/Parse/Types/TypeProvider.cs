@@ -36,7 +36,7 @@ class TypeProvider : ICodeTypeInitializer
     /// <summary>Assists in creating TypeProviders.</summary>
     public sealed class TypeProviderInitialization(string name, TypeProvider typeProvider)
     {
-        (ParseInfo parseInfo, DocRange range)? addHoverInformationAt;
+        (ParseInfo parseInfo, DocRange range)? typeDeclarationInformation;
 
         /// <summary>Get anonymous types from input syntax.</summary>
         public AnonymousType[] GetAnonymousTypesFromContext(ParseInfo parseInfo, List<TypeArgContext>? typeArgContexts)
@@ -51,7 +51,7 @@ class TypeProvider : ICodeTypeInitializer
         {
             parseInfo.Script.Elements.AddDeclarationCall(typeProvider.declarationKey, new(range, true));
             typeProvider.declaredAt = new(parseInfo.Script.Uri, range);
-            addHoverInformationAt = (parseInfo, range);
+            typeDeclarationInformation = (parseInfo, range);
         }
 
         /// <summary>Checks for any other definitions with the same name as the type.</summary>
@@ -71,15 +71,54 @@ class TypeProvider : ICodeTypeInitializer
 
         public void AddMetaFunction(ParseInfo parseInfo, Func<TypeMetaInitialization, TypeMetaAttributes> GetTypeMetaInformation)
         {
+            bool DoesRecursiveCall()
+            {
+                List<CodeType> itemsChecked = [];
+                bool IsStorageItemUsingSelf(CodeType type)
+                {
+                    // Was this item already checked?
+                    if (itemsChecked.Any(existing => CodeTypeHelpers.AreEqual(existing, type)))
+                        return false;
+
+                    itemsChecked.Add(type);
+
+                    if (type is TypeInstance typeInstance)
+                    {
+                        // The storage item is referencing this provider.
+                        // This is a recursive call.
+                        if (typeInstance.Provider == typeProvider)
+                            return true;
+
+                        // This is another type, check its storage items to ensure that typeProvider does not appear.
+                        foreach (var storageItem in typeInstance.Provider.storageList)
+                            if (IsStorageItemUsingSelf(storageItem.GetRealType(typeInstance.TypeLinker)))
+                                return true;
+                    }
+                    else if (type is StructInstance structInstance)
+                    {
+                        // This is another type, check its storage items to ensure that typeProvider does not appear.
+                        foreach (var variable in structInstance.Variables)
+                            if (IsStorageItemUsingSelf((CodeType)variable.CodeType))
+                                return true;
+                    }
+                    return false;
+                }
+
+                foreach (var storageItem in typeProvider.storageList)
+                    if (IsStorageItemUsingSelf(storageItem))
+                        return true;
+                return false;
+            }
+
             parseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.Meta, () =>
             {
                 // If a definition location exists, create a default instance so that
                 // we can add hover information. A default instance may be created anyway.
                 CodeType? defaultInstance = null;
-                if (addHoverInformationAt is not null)
+                if (typeDeclarationInformation is not null)
                 {
                     defaultInstance = typeProvider.GetInstance();
-                    defaultInstance.Call(addHoverInformationAt.Value.parseInfo, addHoverInformationAt.Value.range);
+                    defaultInstance.Call(typeDeclarationInformation.Value.parseInfo, typeDeclarationInformation.Value.range);
                 }
 
                 // Execute provided meta function.
@@ -90,21 +129,27 @@ class TypeProvider : ICodeTypeInitializer
                 typeProvider.onInstanceReady = metaInformation.OnInstanceReady;
                 typeProvider.OnMetaCompleted();
             });
+
+            parseInfo.TranslateInfo.StagedInitiation.On(InitiationStage.PostMeta, () =>
+            {
+                if (DoesRecursiveCall())
+                {
+                    typeProvider.recursiveStorage = true;
+
+                    string recursiveError = $"Type '{typeProvider.Name}' calls itself recursively";
+                    if (typeDeclarationInformation is not null)
+                        parseInfo.Error(recursiveError, typeDeclarationInformation.Value.range);
+                    else
+                        throw new Exception(recursiveError);
+                }
+                typeProvider.readyForPostMetaItems = true;
+            });
         }
     }
 
     /// <summary>`TypeProvider.Create` callers use this while resolving members inside the type.</summary>
-    public sealed class TypeMetaInitialization
+    public sealed class TypeMetaInitialization(TypeProvider typeProvider, CodeType? defaultInstance)
     {
-        readonly TypeProvider typeProvider;
-        CodeType? defaultInstance;
-
-        public TypeMetaInitialization(TypeProvider typeProvider, CodeType? defaultInstance)
-        {
-            this.typeProvider = typeProvider;
-            this.defaultInstance = defaultInstance;
-        }
-
         public CodeType GetDefaultInstance()
         {
             defaultInstance ??= typeProvider.GetInstance();
@@ -135,6 +180,9 @@ class TypeProvider : ICodeTypeInitializer
             foreach (var typeArg in typeProvider.GenericTypes)
                 scope.AddType(new GenericCodeTypeInitializer(typeArg));
         }
+
+        /// <summary>Adds a type that influences how storage is created for this type provider.</summary>
+        public void AddStorageItem(CodeType storageType) => typeProvider.storageList.Add(storageType);
     }
 
     /// <summary>Contains information about the declared type.
@@ -165,11 +213,15 @@ class TypeProvider : ICodeTypeInitializer
     /// index assigner for compilation.</summary>
     public delegate void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference source, VarIndexAssigner assigner);
 
+    public delegate PostMetaInformation GetPostMetaInformation();
+
+    public readonly record struct PostMetaInformation(int StackLength);
+
     public readonly record struct TypeInstanceAttributes(
         bool IsStruct,
-        int StackLength,
         bool NeedsArrayOperationProtection,
-        AddObjectVariablesToAssigner AddObjectVariablesToAssigner);
+        AddObjectVariablesToAssigner AddObjectVariablesToAssigner,
+        GetPostMetaInformation GetPostMetaInformation);
 
     public delegate IMethod InstanceMethodFactory(InstanceAnonymousTypeLinker typeLinker);
 
@@ -185,6 +237,7 @@ class TypeProvider : ICodeTypeInitializer
     public int GenericsCount => GenericTypes.Length;
     public TypeKind Kind { get; }
 
+    readonly List<CodeType> storageList = [];
     readonly TypeProviderDeclarationKey declarationKey;
     readonly HashSet<TypeInstance> instances = [];
     readonly TypeElements typeElements = new();
@@ -194,6 +247,8 @@ class TypeProvider : ICodeTypeInitializer
     OnInstanceReady? onInstanceReady;
     MarkupBuilder? documentation;
     Location? declaredAt;
+    bool recursiveStorage;
+    bool readyForPostMetaItems;
 
     TypeProvider(string name, TypeKind typeKind)
     {
@@ -218,7 +273,7 @@ class TypeProvider : ICodeTypeInitializer
 
         instances.Add(newInstance);
         if (isMetaCompleted)
-            newInstance.OnTypeContentReady();
+            newInstance.OnMetaReady();
 
         return newInstance;
     }
@@ -249,25 +304,29 @@ class TypeProvider : ICodeTypeInitializer
         if (isMetaCompleted) return;
         isMetaCompleted = true;
         foreach (var instance in instances)
-            instance.OnTypeContentReady();
+            instance.OnMetaReady();
     }
 
     public class TypeInstance : CodeType, ITypeArrayHandler
     {
         public TypeProvider Provider { get; }
-        readonly InstanceAnonymousTypeLinker typeLinker;
+        public InstanceAnonymousTypeLinker TypeLinker { get; }
         readonly Scope objectScope;
         readonly Scope staticScope;
         readonly Lazy<ArrayFunctionHandler> arrayFunctionHandler;
 
-        bool setupCompleted;
+        bool isMetaInformationReady;
         bool isStruct;
         AddObjectVariablesToAssigner? addObjectVariablesToAssignerFunction;
+
+        GetPostMetaInformation? getPostMetaInformationFunction;
+        bool isPostMetaInformationReady;
+        int postMetaStackLength;
 
         public TypeInstance(TypeProvider provider, InstanceAnonymousTypeLinker typeLinker) : base(provider.Name)
         {
             this.Provider = provider;
-            this.typeLinker = typeLinker;
+            this.TypeLinker = typeLinker;
             objectScope = new Scope(provider.Name);
             staticScope = new Scope(provider.Name);
             Generics = typeLinker.SafeTypeArgsFromAnonymousTypes(Provider.GenericTypes);
@@ -275,9 +334,11 @@ class TypeProvider : ICodeTypeInitializer
             Description = provider.documentation;
             Kind = provider.Kind;
 
+            Attributes = new TypeInstanceAttributes(this);
+
             arrayFunctionHandler = new(() =>
             {
-                ThrowIfSetupNotComplete();
+                ThrowIfMetaInformationNotAvailable();
                 return isStruct ?
                     new StructInstance.StructArrayFunctionHandler() :
                     new ArrayFunctionHandler();
@@ -286,52 +347,55 @@ class TypeProvider : ICodeTypeInitializer
 
         public override Scope GetObjectScope()
         {
+            ThrowIfMetaInformationNotAvailable();
             return objectScope;
         }
 
         public override Scope ReturningScope()
         {
+            ThrowIfMetaInformationNotAvailable();
             return staticScope;
         }
 
         public override void AddObjectVariablesToAssigner(ToWorkshop toWorkshop, SourceIndexReference source, VarIndexAssigner assigner)
         {
+            ThrowIfMetaInformationNotAvailable();
             addObjectVariablesToAssignerFunction?.Invoke(toWorkshop, source, assigner);
         }
 
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
         {
+            ThrowIfMetaInformationNotAvailable();
             if (Provider.getAssignerFunction is not null)
                 return Provider.getAssignerFunction(this, attributes, false);
             else
                 return base.GetGettableAssigner(attributes);
         }
 
-        public void OnTypeContentReady()
+        public void OnMetaReady()
         {
-            if (setupCompleted) return;
-            setupCompleted = true;
+            if (isMetaInformationReady) return;
+            isMetaInformationReady = true;
 
             void AddVariablesToScope(Scope scope, List<IVariable> variables)
             {
                 foreach (var variable in variables)
-                    scope.AddNativeVariable(variable.GetInstance(this, typeLinker));
+                    scope.AddNativeVariable(variable.GetInstance(this, TypeLinker));
             }
             void AddMethodsToScope(Scope scope, List<InstanceMethodFactory> factories)
             {
                 foreach (var factory in factories)
-                    scope.AddNativeMethod(factory(typeLinker));
+                    scope.AddNativeMethod(factory(TypeLinker));
             }
             AddVariablesToScope(objectScope, Provider.typeElements.ObjectVariables);
             AddVariablesToScope(staticScope, Provider.typeElements.StaticVariables);
             AddMethodsToScope(staticScope, Provider.typeElements.StaticMethods);
 
-            var instanceAttributes = Provider.onInstanceReady!.Invoke(this, typeLinker);
-            Attributes = new()
+            var instanceAttributes = Provider.onInstanceReady!.Invoke(this, TypeLinker);
+            Attributes = new TypeAttributes()
             {
                 ContainsGenerics = Generics.Any(typeArg => typeArg.Attributes.ContainsGenerics),
                 IsStruct = instanceAttributes.IsStruct,
-                StackLength = instanceAttributes.StackLength
             };
 
             // Array operation protection
@@ -341,9 +405,38 @@ class TypeProvider : ICodeTypeInitializer
             isStruct = instanceAttributes.IsStruct;
             addObjectVariablesToAssignerFunction = instanceAttributes.AddObjectVariablesToAssigner;
 
+            getPostMetaInformationFunction = instanceAttributes.GetPostMetaInformation;
+
             // Allow default assignment operator if this is not a parallel type.
             Operations.AddAssignmentOperator();
             Operations.DefaultAssignment = !isStruct;
+        }
+
+        private void GetPostMetaInformation()
+        {
+            // Retrieving inner class data preceeds the content stage.
+            ThrowIfMetaInformationNotAvailable();
+
+            // Very unlikely, function would need to be called inbetween the Meta and Content initialization stages.
+            // Still a good idea to ensure that we do not try to find stack lengths when the user defines recursive storage!
+            if (!Provider.readyForPostMetaItems)
+                throw new Exception("Cannot retrieve content information at this stage");
+
+            // At this point, we have ensured that all declared types have had a chance to take a look at their inner content,
+            // and that the compiler has reached a point where stack lengths can be resolved.
+
+            // Do nothing if the content was already retrieved.
+            if (isPostMetaInformationReady) return;
+            isPostMetaInformationReady = true;
+
+            // Check if the user has defined invalid recursive storage.
+            // Eg: `struct A { A value; }`
+            // The stack length is unresolvable.
+            if (Provider.recursiveStorage) return;
+
+            // All protections completed, get the stack length.
+            var postMetaInformation = getPostMetaInformationFunction!();
+            postMetaStackLength = postMetaInformation.StackLength;
         }
 
         public override CodeType GetRealType(InstanceAnonymousTypeLinker instanceInfo)
@@ -371,6 +464,7 @@ class TypeProvider : ICodeTypeInitializer
         void ITypeArrayHandler.OverrideArray(ArrayType array) { }
         IGettableAssigner ITypeArrayHandler.GetArrayAssigner(AssigningAttributes attributes)
         {
+            ThrowIfMetaInformationNotAvailable();
             if (Provider.getAssignerFunction is not null)
                 return Provider.getAssignerFunction(this, attributes, true);
             else
@@ -379,10 +473,38 @@ class TypeProvider : ICodeTypeInitializer
         ArrayFunctionHandler ITypeArrayHandler.GetFunctionHandler() => arrayFunctionHandler.Value;
         // end `ITypeArrayHandler` implementation
 
-        protected void ThrowIfSetupNotComplete()
+        protected void ThrowIfMetaInformationNotAvailable()
         {
-            if (!setupCompleted)
+            if (!isMetaInformationReady)
                 throw new Exception("Type information is not ready");
+        }
+
+        sealed class TypeInstanceAttributes(TypeInstance typeInstance) : TypeAttributes
+        {
+            // Type arguments are known immediately, this value can be resolved right away.
+            public override bool ContainsGenerics { get; set; } = typeInstance.Generics.Any(typeArg => typeArg.Attributes.ContainsGenerics);
+
+            // The meta function given to `TypeProvider.Create` will need to execute before it is known
+            // whether the type is parallel.
+            public override bool IsStruct
+            {
+                get
+                {
+                    typeInstance.ThrowIfMetaInformationNotAvailable();
+                    return typeInstance.isStruct;
+                }
+            }
+
+            // Can be retrieved after completion of Meta initialization stage.
+            // Types must be aware of their content first.
+            public override int StackLength
+            {
+                get
+                {
+                    typeInstance.GetPostMetaInformation();
+                    return typeInstance.postMetaStackLength;
+                }
+            }
         }
     }
 

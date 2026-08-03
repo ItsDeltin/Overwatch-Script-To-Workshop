@@ -280,7 +280,7 @@ public class EnumTest
         """)
         .AssertSearchError("Operand type 'Number' cannot be used to pattern match with parallel enum type 'EnumTest'");
 
-        // Constant operand: Not ok
+        // Constant/parallel operand: Not ok
         Compile("""
         enum EnumTest {
             A
@@ -408,6 +408,83 @@ public class EnumTest
         }
         """)
         .AssertSearchError("Please narrow down the type of the value you are appending")
+        .AssertOk();
+    }
+
+    [TestMethod("Enum test: Single enum array value guarding")]
+    public void SingleEnumArrayValueGuarding()
+    {
+        Compile("""
+        single enum EnumTest { A(String, String) }
+
+        rule: "Behaviour test"
+        {
+            EnumTest[] test1 = [EnumTest.A("first", "1st")];
+            test1 += EnumTest.A("second", "2nd");
+        }
+
+        rule: "Intentionally breaking the rules!"
+        {
+            EnumTest[] test2 = [EnumTest.A("first", "1st")];
+            // This adds a compiler warning.
+            test2 += <Any>EnumTest.A("second", "2nd");
+        }
+        """)
+        .EmulateTick()
+        .AssertVariable("test1", [
+            EmulateValue.From([0, "first", "1st"]),
+            EmulateValue.From([0, "second", "2nd"])])
+        .AssertVariable("test2", [
+            EmulateValue.From([0, "first", "1st"]), 0, "second", "2nd"]);
+    }
+
+    [TestMethod("Enum test: Recursive enum error")]
+    public void RecursiveEnumError()
+    {
+        // Direct recursion
+        Compile("""
+        enum A { value(A) }
+        """)
+        .AssertSearchError("Type 'A' calls itself recursively");
+
+        // Recursion through another type
+        Compile("""
+        enum A { value(B) }
+        enum B { value(A) }
+        """)
+        .AssertSearchError("Type 'A' calls itself recursively")
+        .AssertSearchError("Type 'B' calls itself recursively");
+
+        Compile("""
+        enum A { value(B) }
+        struct B { A value; }
+        """)
+        .AssertSearchError("Type 'A' calls itself recursively");
+
+        // Via type arguments
+        Compile("""
+        enum A { value(B<A>) }
+        enum B<T> { value(T) }
+        """)
+        .AssertSearchError("Type 'A' calls itself recursively");
+
+        Compile("""
+        enum A { value(B<A>) }
+        struct B<T> { T value; }
+        """)
+        .AssertSearchError("Type 'A' calls itself recursively");
+
+        // Okay if 'T' is not used a value.
+        Compile("""
+        enum A { value(B<A>) }
+        enum B<T> { value(Number) }
+        """)
+        .AssertOk();
+
+        Compile("""
+        enum A { value(B<A>) }
+        struct B<T> { Number value; }
+        """)
         .AssertOk();
     }
 }

@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         // Makes local struct variables unsettable in functions.
         readonly VariableModifierGroup _contextualVariableModifiers = new VariableModifierGroup();
         // Tracks the assigning types that the struct variables use. 
-        readonly List<HashSet<DefinedStructInitializer>> _variablesCallTypeAssigners = new List<HashSet<DefinedStructInitializer>>();
+        public readonly List<HashSet<DefinedStructInitializer>> _variablesCallTypeAssigners = new List<HashSet<DefinedStructInitializer>>();
 
         private Scope _staticScope;
         private Scope _objectScope;
