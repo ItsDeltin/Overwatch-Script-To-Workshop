@@ -454,6 +454,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Const:
                 case TokenType.Persist:
                 case TokenType.Json:
+                case TokenType.Is:
                     return true;
 
                 default:
