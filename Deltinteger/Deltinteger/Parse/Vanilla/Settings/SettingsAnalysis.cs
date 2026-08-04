@@ -74,6 +74,9 @@ static class AnalyzeSettings
                 {
                     // Check for invalid option
                     case EObjectType.Option:
+                    case EObjectType.OnOff:
+                    case EObjectType.EnabledDisabled:
+                    case EObjectType.YesNo:
                         isMatch = context.CurrentObject.Options.Contains(symbolSetting.Symbol.Text);
                         break;
                 }
@@ -101,7 +104,7 @@ static class AnalyzeSettings
                     default:
                         isMatch = false;
                         break;
-                };
+                }
                 break;
 
             // String value
@@ -122,6 +125,9 @@ static class AnalyzeSettings
             switch (context.CurrentObject.Type)
             {
                 case EObjectType.Option:
+                case EObjectType.OnOff:
+                case EObjectType.EnabledDisabled:
+                case EObjectType.YesNo:
                     context.Warn(
                         setting.Value.ErrorRange,
                         $"Expected {string.Join(", ", context.CurrentObject.Options.Select(option => $"'{option}'"))}");
@@ -132,6 +138,31 @@ static class AnalyzeSettings
                         setting.Value.ErrorRange,
                         "Switch settings should not be followed by a value"
                     );
+                    break;
+
+                case EObjectType.Range:
+                case EObjectType.Int:
+                    context.Warn(
+                        setting.Value.ErrorRange,
+                        "Expected a number value"
+                    );
+                    break;
+            }
+        }
+        // Missing value
+        else if (!isMatch && setting.Value is null && context.CurrentObject is not null)
+        {
+            switch (context.CurrentObject.Type)
+            {
+                case EObjectType.Option:
+                case EObjectType.OnOff:
+                case EObjectType.EnabledDisabled:
+                case EObjectType.YesNo:
+                case EObjectType.Int:
+                case EObjectType.Range:
+                    context.Warn(
+                        setting.Name,
+                        $"Expecting a value paired with this setting");
                     break;
             }
         }
@@ -145,9 +176,7 @@ static class AnalyzeSettings
 
             context.AddCompletion(context.CurrentObject.Type switch
             {
-                EObjectType.OnOff => VanillaCompletion.CreateKeywords(hintRange, "On", "Off"),
-                EObjectType.EnabledDisabled => VanillaCompletion.CreateKeywords(hintRange, "Enabled", "Disabled"),
-                EObjectType.Option => VanillaCompletion.CreateKeywords(hintRange, context.CurrentObject.Options),
+                EObjectType.Option or EObjectType.OnOff or EObjectType.EnabledDisabled or EObjectType.YesNo => VanillaCompletion.CreateKeywords(hintRange, context.CurrentObject.Options),
                 _ => VanillaCompletion.Clear(hintRange)
             });
         }
