@@ -23,6 +23,8 @@ class TypeProvider : ICodeTypeInitializer
         var attributes = typeCreator(new(name, typeProvider));
         typeProvider.GenericTypes = attributes.AnonymousTypes;
         typeProvider.typeInstanceFactory = attributes.TypeInstanceFactory;
+        typeProvider.isStruct = attributes.IsStruct;
+        typeProvider.needsArrayOperationProtection = attributes.NeedsArrayOperationProtection;
         return typeProvider;
     }
 
@@ -76,6 +78,8 @@ class TypeProvider : ICodeTypeInitializer
                 List<CodeType> itemsChecked = [];
                 bool IsStorageItemUsingSelf(CodeType type)
                 {
+                    type = CodeTypeHelpers.GetRootTypeOf(type);
+
                     // Was this item already checked?
                     if (itemsChecked.Any(existing => CodeTypeHelpers.AreEqual(existing, type)))
                         return false;
@@ -190,6 +194,8 @@ class TypeProvider : ICodeTypeInitializer
     /// <param name="AnonymousTypes">The type arguments declared for this type.</param>
     public readonly record struct TypeProviderAttributes(
         AnonymousType[] AnonymousTypes,
+        bool IsStruct,
+        bool NeedsArrayOperationProtection,
         TypeInstanceFactory TypeInstanceFactory);
 
     /// <summary>
@@ -218,8 +224,6 @@ class TypeProvider : ICodeTypeInitializer
     public readonly record struct PostMetaInformation(int StackLength);
 
     public readonly record struct TypeInstanceAttributes(
-        bool IsStruct,
-        bool NeedsArrayOperationProtection,
         AddObjectVariablesToAssigner AddObjectVariablesToAssigner,
         GetPostMetaInformation GetPostMetaInformation);
 
@@ -241,6 +245,8 @@ class TypeProvider : ICodeTypeInitializer
     readonly TypeProviderDeclarationKey declarationKey;
     readonly HashSet<TypeInstance> instances = [];
     readonly TypeElements typeElements = new();
+    bool isStruct;
+    bool needsArrayOperationProtection;
     bool isMetaCompleted;
     TypeInstanceFactory? typeInstanceFactory;
     GetGettableAssigner? getAssignerFunction;
@@ -316,7 +322,6 @@ class TypeProvider : ICodeTypeInitializer
         readonly Lazy<ArrayFunctionHandler> arrayFunctionHandler;
 
         bool isMetaInformationReady;
-        bool isStruct;
         AddObjectVariablesToAssigner? addObjectVariablesToAssignerFunction;
 
         GetPostMetaInformation? getPostMetaInformationFunction;
@@ -339,10 +344,18 @@ class TypeProvider : ICodeTypeInitializer
             arrayFunctionHandler = new(() =>
             {
                 ThrowIfMetaInformationNotAvailable();
-                return isStruct ?
+                return Provider.isStruct ?
                     new StructInstance.StructArrayFunctionHandler() :
                     new ArrayFunctionHandler();
             });
+
+            // Array operation protection
+            // in case of [single Enum].Append(Any)
+            NeedsArrayProtection = provider.needsArrayOperationProtection;
+
+            // Allow default assignment operator if this is not a parallel type.
+            Operations.AddAssignmentOperator();
+            Operations.DefaultAssignment = !Provider.isStruct;
         }
 
         public override Scope GetObjectScope()
@@ -392,24 +405,9 @@ class TypeProvider : ICodeTypeInitializer
             AddMethodsToScope(staticScope, Provider.typeElements.StaticMethods);
 
             var instanceAttributes = Provider.onInstanceReady!.Invoke(this, TypeLinker);
-            Attributes = new TypeAttributes()
-            {
-                ContainsGenerics = Generics.Any(typeArg => typeArg.Attributes.ContainsGenerics),
-                IsStruct = instanceAttributes.IsStruct,
-            };
 
-            // Array operation protection
-            // in case of [single Enum].Append(Any)
-            NeedsArrayProtection = instanceAttributes.NeedsArrayOperationProtection;
-
-            isStruct = instanceAttributes.IsStruct;
             addObjectVariablesToAssignerFunction = instanceAttributes.AddObjectVariablesToAssigner;
-
             getPostMetaInformationFunction = instanceAttributes.GetPostMetaInformation;
-
-            // Allow default assignment operator if this is not a parallel type.
-            Operations.AddAssignmentOperator();
-            Operations.DefaultAssignment = !isStruct;
         }
 
         private void GetPostMetaInformation()
@@ -486,14 +484,7 @@ class TypeProvider : ICodeTypeInitializer
 
             // The meta function given to `TypeProvider.Create` will need to execute before it is known
             // whether the type is parallel.
-            public override bool IsStruct
-            {
-                get
-                {
-                    typeInstance.ThrowIfMetaInformationNotAvailable();
-                    return typeInstance.isStruct;
-                }
-            }
+            public override bool IsStruct => typeInstance.Provider.isStruct;
 
             // Can be retrieved after completion of Meta initialization stage.
             // Types must be aware of their content first.

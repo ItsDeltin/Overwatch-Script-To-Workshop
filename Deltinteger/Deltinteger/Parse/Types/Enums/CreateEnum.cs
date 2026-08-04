@@ -164,10 +164,6 @@ class CreateEnum
 
                         // Return stack information about the enum.
                         return new(
-                            // Is this enum a struct (parallel)?
-                            IsStruct: enumKind == EnumKind.Parallel,
-                            // If the enum is structured as an array, this will need array protection!
-                            NeedsArrayOperationProtection: enumKind == EnumKind.Single,
                             // Function to add items to the index assigner.
                             AddObjectVariablesToAssigner: (toWorkshop, source, assigner) =>
                             {
@@ -184,6 +180,10 @@ class CreateEnum
 
             return new(
                 anonymousTypes,
+                // Is this enum a struct (parallel)?
+                IsStruct: enumKind == EnumKind.Parallel,
+                // If the enum is structured as an array, this will need array protection!
+                NeedsArrayOperationProtection: enumKind == EnumKind.Single,
                 TypeInstanceFactory: (provider, linker) => new EnumType(provider, linker, enumKind));
         });
         return type;

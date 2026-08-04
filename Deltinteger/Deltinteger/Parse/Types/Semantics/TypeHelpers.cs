@@ -270,7 +270,7 @@ namespace Deltin.Deltinteger.Parse
             return AreEqual(a, b);
         }
 
-        static CodeType GetRootTypeOf(CodeType type)
+        public static CodeType GetRootTypeOf(CodeType type)
         {
             while (type is ArrayType arrayType)
                 type = arrayType.ArrayOfType;

@@ -486,5 +486,11 @@ public class EnumTest
         struct B<T> { Number value; }
         """)
         .AssertOk();
+
+        // Through an array
+        Compile("""
+        enum A { value(A[]) }
+        """)
+        .AssertSearchError("Type 'A' calls itself recursively");
     }
 }
