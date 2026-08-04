@@ -204,11 +204,21 @@
       "minimum": 10.0,
       "maximum": 500.0
     },
-    "Payload Speed Modifier": {
-      "default": 100.0,
-      "type": "number",
-      "minimum": 10.0,
-      "maximum": 500.0
+    "Limit Valid Control Points": {
+      "default": "All",
+      "type": "string",
+      "enum": [
+        "All",
+        "First",
+        "Second",
+        "Third"
+      ]
+    },
+    "Score To Win 1-3": {
+      "default": 2.0,
+      "type": "integer",
+      "minimum": 1.0,
+      "maximum": 3.0
     },
     "Scoring Speed Modifier": {
       "default": 100.0,
@@ -216,11 +226,61 @@
       "minimum": 10.0,
       "maximum": 500.0
     },
-    "Score To Win 1-9": {
-      "default": 3.0,
+    "Payload Speed Modifier": {
+      "default": 100.0,
       "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "TS-1 Walk Speed Modifier": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "TS-1 Push Speed Modifier": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Control Point A": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Control Point B": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Control Point C": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Control Point D": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Control Point E": {
+      "default": true,
+      "type": "boolean"
+    },
+    "First Active Control Point": {
+      "default": "A",
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "Random"
+      ]
+    },
+    "Score To Win 1-10": {
+      "default": 3.0,
+      "type": "integer",
       "minimum": 1.0,
-      "maximum": 9.0
+      "maximum": 10.0
     },
     "Game Length In Minutes": {
       "default": 10.0,
@@ -231,16 +291,6 @@
     "Self Initiated Respawn": {
       "default": true,
       "type": "boolean"
-    },
-    "Limit Valid Control Points": {
-      "default": "All",
-      "type": "string",
-      "enum": [
-        "All",
-        "First",
-        "Second",
-        "Third"
-      ]
     },
     "Hero Selection Time": {
       "default": 20.0,
@@ -308,8 +358,8 @@
       "type": "integer",
       "maximum": 180.0
     },
-    "Enabled On": {
-      "default": true,
+    "Enabled Off": {
+      "default": false,
       "type": "boolean"
     },
     "Assault Maps": {
@@ -327,11 +377,9 @@
         ]
       }
     },
-    "Score To Win 1-3": {
-      "default": 2.0,
-      "type": "integer",
-      "minimum": 1.0,
-      "maximum": 3.0
+    "Enabled On": {
+      "default": true,
+      "type": "boolean"
     },
     "Control Maps": {
       "type": "array",
@@ -388,18 +436,6 @@
         ]
       }
     },
-    "TS-1 Walk Speed Modifier": {
-      "default": 100.0,
-      "type": "number",
-      "minimum": 10.0,
-      "maximum": 500.0
-    },
-    "TS-1 Push Speed Modifier": {
-      "default": 100.0,
-      "type": "number",
-      "minimum": 10.0,
-      "maximum": 500.0
-    },
     "Push Maps": {
       "type": "array",
       "uniqueItems": true,
@@ -412,44 +448,6 @@
           "Runasapi"
         ]
       }
-    },
-    "Control Point A": {
-      "default": true,
-      "type": "boolean"
-    },
-    "Control Point B": {
-      "default": true,
-      "type": "boolean"
-    },
-    "Control Point C": {
-      "default": true,
-      "type": "boolean"
-    },
-    "Control Point D": {
-      "default": true,
-      "type": "boolean"
-    },
-    "Control Point E": {
-      "default": true,
-      "type": "boolean"
-    },
-    "First Active Control Point": {
-      "default": "A",
-      "type": "string",
-      "enum": [
-        "A",
-        "B",
-        "C",
-        "D",
-        "E",
-        "Random"
-      ]
-    },
-    "Score To Win": {
-      "default": 3.0,
-      "type": "integer",
-      "minimum": 1.0,
-      "maximum": 10.0
     },
     "Flashpoint Maps": {
       "type": "array",
@@ -479,10 +477,6 @@
           "Throne of Anubis"
         ]
       }
-    },
-    "Enabled Off": {
-      "default": false,
-      "type": "boolean"
     },
     "Enable Perks Off": {
       "default": false,
@@ -536,6 +530,12 @@
       "type": "number",
       "maximum": 60.0
     },
+    "Score To Win 1-9": {
+      "default": 3.0,
+      "type": "integer",
+      "minimum": 1.0,
+      "maximum": 9.0
+    },
     "Team Needs Flag At Base To Score": {
       "default": false,
       "type": "boolean"
@@ -569,7 +569,7 @@
     },
     "Score To Win 1-5000": {
       "default": 20.0,
-      "type": "number",
+      "type": "integer",
       "minimum": 1.0,
       "maximum": 5000.0
     },
@@ -8798,23 +8798,50 @@
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
             },
-            "Payload Speed Modifier": {
-              "$ref": "#/definitions/Payload Speed Modifier"
+            "Limit Valid Control Points": {
+              "$ref": "#/definitions/Limit Valid Control Points"
+            },
+            "Score to Win": {
+              "$ref": "#/definitions/Score To Win 1-3"
             },
             "Scoring Speed Modifier": {
               "$ref": "#/definitions/Scoring Speed Modifier"
             },
+            "Payload Speed Modifier": {
+              "$ref": "#/definitions/Payload Speed Modifier"
+            },
+            "TS-1 Walk Speed Modifier": {
+              "$ref": "#/definitions/TS-1 Walk Speed Modifier"
+            },
+            "TS-1 Push Speed Modifier": {
+              "$ref": "#/definitions/TS-1 Push Speed Modifier"
+            },
+            "Control Point A": {
+              "$ref": "#/definitions/Control Point A"
+            },
+            "Control Point B": {
+              "$ref": "#/definitions/Control Point B"
+            },
+            "Control Point C": {
+              "$ref": "#/definitions/Control Point C"
+            },
+            "Control Point D": {
+              "$ref": "#/definitions/Control Point D"
+            },
+            "Control Point E": {
+              "$ref": "#/definitions/Control Point E"
+            },
+            "First Active Control Point": {
+              "$ref": "#/definitions/First Active Control Point"
+            },
             "Score To Win": {
-              "$ref": "#/definitions/Score To Win 1-9"
+              "$ref": "#/definitions/Score To Win 1-10"
             },
             "Game Length In Minutes": {
               "$ref": "#/definitions/Game Length In Minutes"
             },
             "Self Initiated Respawn": {
               "$ref": "#/definitions/Self Initiated Respawn"
-            },
-            "Limit Valid Control Points": {
-              "$ref": "#/definitions/Limit Valid Control Points"
             },
             "Hero Selection Time": {
               "$ref": "#/definitions/Hero Selection Time"
@@ -8853,7 +8880,7 @@
           "description": "Assault settings.",
           "properties": {
             "Enabled": {
-              "$ref": "#/definitions/Enabled On"
+              "$ref": "#/definitions/Enabled Off"
             },
             "Enemy Health Bars": {
               "$ref": "#/definitions/Enemy Health Bars"
@@ -8913,6 +8940,75 @@
             "Disabled Maps": {
               "$ref": "#/definitions/Assault Maps",
               "description": "An array of disabled maps for the 'Assault' mode."
+            }
+          },
+          "additionalProperties": false
+        },
+        "Control 6v6": {
+          "description": "Control 6v6 settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled Off"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
+            "Capture Speed Modifier": {
+              "$ref": "#/definitions/Capture Speed Modifier"
+            },
+            "Limit Valid Control Points": {
+              "$ref": "#/definitions/Limit Valid Control Points"
+            },
+            "Score to Win": {
+              "$ref": "#/definitions/Score To Win 1-3"
+            },
+            "Scoring Speed Modifier": {
+              "$ref": "#/definitions/Scoring Speed Modifier"
             }
           },
           "additionalProperties": false
@@ -8977,7 +9073,7 @@
             "Limit Valid Control Points": {
               "$ref": "#/definitions/Limit Valid Control Points"
             },
-            "Score To Win": {
+            "Score to Win": {
               "$ref": "#/definitions/Score To Win 1-3"
             },
             "Scoring Speed Modifier": {
@@ -8990,6 +9086,66 @@
             "Disabled Maps": {
               "$ref": "#/definitions/Control Maps",
               "description": "An array of disabled maps for the 'Control' mode."
+            }
+          },
+          "additionalProperties": false
+        },
+        "Escort 6v6": {
+          "description": "Escort 6v6 settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled Off"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
+            "Payload Speed Modifier": {
+              "$ref": "#/definitions/Payload Speed Modifier"
             }
           },
           "additionalProperties": false
@@ -9058,6 +9214,69 @@
             "Disabled Maps": {
               "$ref": "#/definitions/Escort Maps",
               "description": "An array of disabled maps for the 'Escort' mode."
+            }
+          },
+          "additionalProperties": false
+        },
+        "Hybrid 6v6": {
+          "description": "Hybrid 6v6 settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled Off"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
+            "Capture Speed Modifier": {
+              "$ref": "#/definitions/Capture Speed Modifier"
+            },
+            "Payload Speed Modifier": {
+              "$ref": "#/definitions/Payload Speed Modifier"
             }
           },
           "additionalProperties": false
@@ -9133,6 +9352,69 @@
           },
           "additionalProperties": false
         },
+        "Push 6v6": {
+          "description": "Push 6v6 settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled Off"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
+            "TS-1 Walk Speed Modifier": {
+              "$ref": "#/definitions/TS-1 Walk Speed Modifier"
+            },
+            "TS-1 Push Speed Modifier": {
+              "$ref": "#/definitions/TS-1 Push Speed Modifier"
+            }
+          },
+          "additionalProperties": false
+        },
         "Push": {
           "description": "Push settings.",
           "properties": {
@@ -9200,6 +9482,90 @@
             "Disabled Maps": {
               "$ref": "#/definitions/Push Maps",
               "description": "An array of disabled maps for the 'Push' mode."
+            }
+          },
+          "additionalProperties": false
+        },
+        "Flashpoint 6v6": {
+          "description": "Flashpoint 6v6 settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled Off"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
+            "Capture Speed Modifier": {
+              "$ref": "#/definitions/Capture Speed Modifier"
+            },
+            "Control Point A": {
+              "$ref": "#/definitions/Control Point A"
+            },
+            "Control Point B": {
+              "$ref": "#/definitions/Control Point B"
+            },
+            "Control Point C": {
+              "$ref": "#/definitions/Control Point C"
+            },
+            "Control Point D": {
+              "$ref": "#/definitions/Control Point D"
+            },
+            "Control Point E": {
+              "$ref": "#/definitions/Control Point E"
+            },
+            "First Active Control Point": {
+              "$ref": "#/definitions/First Active Control Point"
+            },
+            "Score To Win": {
+              "$ref": "#/definitions/Score To Win 1-10"
+            },
+            "Scoring Speed Modifier": {
+              "$ref": "#/definitions/Scoring Speed Modifier"
             }
           },
           "additionalProperties": false
@@ -9280,7 +9646,7 @@
               "$ref": "#/definitions/First Active Control Point"
             },
             "Score To Win": {
-              "$ref": "#/definitions/Score To Win"
+              "$ref": "#/definitions/Score To Win 1-10"
             },
             "Scoring Speed Modifier": {
               "$ref": "#/definitions/Scoring Speed Modifier"
@@ -9292,6 +9658,66 @@
             "Disabled Maps": {
               "$ref": "#/definitions/Flashpoint Maps",
               "description": "An array of disabled maps for the 'Flashpoint' mode."
+            }
+          },
+          "additionalProperties": false
+        },
+        "Clash 6v6": {
+          "description": "Clash 6v6 settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled Off"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Random Hero Role Limit Per Team": {
+              "$ref": "#/definitions/Random Hero Role Limit Per Team"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Tank Role Passive Health Bonus": {
+              "$ref": "#/definitions/Tank Role Passive Health Bonus"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Enable Perks": {
+              "$ref": "#/definitions/Enable Perks On"
+            },
+            "Capture Speed Modifier": {
+              "$ref": "#/definitions/Capture Speed Modifier - Clash Defaults"
             }
           },
           "additionalProperties": false
