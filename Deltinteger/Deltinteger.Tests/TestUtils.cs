@@ -10,6 +10,8 @@ namespace Deltinteger.Tests;
 
 static class TestUtils
 {
+    public const string HostName = "host";
+
     public static void Setup()
     {
         LoadData.LoadFromFileSystem();
@@ -119,8 +121,10 @@ readonly record struct CompileResult(string Code, Diagnostics Diagnostics, List<
 
     /// <summary>Begins an emulation session and executes a single tick.</summary>
     /// <returns>Self</returns>
-    public readonly TickEmulationResult EmulateTick()
+    public readonly TickEmulationResult EmulateTick(EmulateTickSettings settings = default)
     {
+        AssertOk();
+
         string output = string.Empty;
         var emulation = new EmulateScript(Rules, IEmulateLogger.New(log =>
         {
@@ -129,10 +133,16 @@ readonly record struct CompileResult(string Code, Diagnostics Diagnostics, List<
                 Debugger.Break();
             output += log;
         }));
+
+        if (settings.WithHostPlayer is true)
+            emulation.AddHostPlayer();
+
         var result = emulation.TickOne();
         return new(emulation, output, result);
     }
 }
+
+readonly record struct EmulateTickSettings(bool? WithHostPlayer);
 
 readonly record struct TickEmulationResult(EmulateScript Emulation, string Log, RuleTickResult Result)
 {
@@ -147,6 +157,16 @@ readonly record struct TickEmulationResult(EmulateScript Emulation, string Log, 
     {
         var value = EmulateValue.From(values);
         return AssertVariable(name, value);
+    }
+
+    public readonly TickEmulationResult AssertPlayerVariable(string playerName, string variableName, EmulateValue value)
+    {
+        var actual = Emulation.GetPlayerVariableValue(playerName, variableName);
+        if (actual is null)
+            Assert.Fail($"There is no player named '${playerName}' in the emulation.");
+
+        Assert.IsTrue(EmulateValue.AreEqual(actual, value), $"'{playerName}.${variableName}' has incorrect value. Got {actual}, expected {value}");
+        return this;
     }
 
     public readonly TickEmulationResult AssertSearchLog(string text)

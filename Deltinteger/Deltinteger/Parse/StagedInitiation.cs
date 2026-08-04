@@ -7,6 +7,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public InitiationCollection<IGetSemantics> Semantics { get; } = new InitiationCollection<IGetSemantics>(getSemantics => getSemantics.GetSemantics());
         public InitiationCollection<IGetMeta> Meta { get; } = new InitiationCollection<IGetMeta>(getMeta => getMeta.GetMeta());
+        public InitiationCollection<IPostMeta> PostMeta { get; } = new InitiationCollection<IPostMeta>(postMeta => postMeta.PostMeta());
         public InitiationCollection<IGetContent> Content { get; } = new InitiationCollection<IGetContent>(getContent => getContent.GetContent());
         public InitiationCollection<IPostContent> PostContent { get; } = new InitiationCollection<IPostContent>(postContent => postContent.PostContent());
 
@@ -14,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Semantics.Set();
             Meta.Set();
+            PostMeta.Set();
             Content.Set();
             PostContent.Set();
         }
@@ -26,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 case InitiationStage.Semantics: Semantics.Execute(executor); break;
                 case InitiationStage.Meta: Meta.Execute(executor); break;
+                case InitiationStage.PostMeta: PostMeta.Execute(executor); break;
                 case InitiationStage.Content: Content.Execute(executor); break;
                 case InitiationStage.PostContent: PostContent.Execute(executor); break;
             }
@@ -57,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (!_isSet)
                     throw new Exception("Cannot depend on key when the InitiationCollection is not yet set.");
-                
+
                 Run(key);
             }
 
@@ -66,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
                 _isSet = true;
                 foreach (var key in _wait)
                     Run(key);
-                
+
                 _wait = null;
             }
 
@@ -77,12 +80,13 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        class GenericExecutor : IGetSemantics, IGetMeta, IGetContent, IPostContent
+        class GenericExecutor : IGetSemantics, IGetMeta, IPostMeta, IGetContent, IPostContent
         {
             readonly Action _action;
             public GenericExecutor(Action action) => _action = action;
             void IGetContent.GetContent() => _action();
-            void IGetMeta.GetMeta()  => _action();
+            void IGetMeta.GetMeta() => _action();
+            void IPostMeta.PostMeta() => _action();
             void IGetSemantics.GetSemantics() => _action();
             void IPostContent.PostContent() => _action();
         }
@@ -92,12 +96,14 @@ namespace Deltin.Deltinteger.Parse
     {
         Semantics,
         Meta,
+        PostMeta,
         Content,
         PostContent
     }
 
     public interface IGetSemantics { void GetSemantics(); }
     public interface IGetMeta { void GetMeta(); }
+    public interface IPostMeta { void PostMeta(); }
     public interface IGetContent { void GetContent(); }
     public interface IPostContent { void PostContent(); }
 }

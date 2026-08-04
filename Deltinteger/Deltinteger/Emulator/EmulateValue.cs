@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Debugger.Protocol;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Model;
 using Deltin.Deltinteger.Parse;
@@ -122,6 +123,12 @@ public abstract record EmulateValue
         public override bool AsBoolean() => false;
         public override double AsNumber() => 0;
         public override string ToString() => $"Custom Color({R}, {G}, {B}, {A})";
+    }
+    public sealed record Player(string Name) : EmulateValue
+    {
+        public override bool AsBoolean() => true;
+        public override double AsNumber() => 0;
+        public override string ToString() => $"Player('${Name}')";
     }
 
     public static implicit operator EmulateValue(double value) => new Number(value);
@@ -248,15 +255,21 @@ public abstract record EmulateValue
                 ("First Of", 1) => Evaluate(p[0], state).MapValue(v => v.FirstOf()),
                 ("Last Of", 1) => Evaluate(p[0], state).MapValue(v => v.LastOf()),
                 ("Global Variable", 1) => EmulateHelper.ExtractVariableName(p[0]).MapValue(name => state.GetGlobalVariable(name).Value),
+                ("Player Variable", 2) => eval(p[0]).And(EmulateHelper.ExtractVariableName(p[1])).MapValue((target_name) => state.GetPlayerVariable(target_name.a, target_name.b).Value),
                 ("Value In Array", 2) => arithmetic((array, index) => array.ValueInArray(index)),
                 ("Index Of Array Value", 2) => arithmetic((array, value) => array.IndexOf(value)),
                 ("Append To Array", 2) => arithmetic((array, value) => array.Append(value)),
+                ("Filtered Array", 2) => EvaluateFilter(p[0], p[1], state),
+                ("Mapped Array", 2) => EvaluateMap(p[0], p[1], state),
+                ("Current Array Value", _) => state.CurrentArrayValue ?? Default,
+                ("Current Array Index", _) => state.CurrentArrayIndex ?? Default,
                 ("String" or "Custom String", _) => EvaluateString(element, state),
                 ("Vector", 3) => eval(p[0]).And(eval(p[1])).And(eval(p[2])).MapValue(xy_z => From(xy_z.a.a, xy_z.a.b, xy_z.b)),
                 ("X Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().X)),
                 ("Y Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().Y)),
                 ("Z Component Of", 1) => eval(p[0]).MapValue(value => From(value.AsVector().Z)),
                 ("Custom Color", 4) => evalAll(values => From(values[0].AsNumber(), values[1].AsNumber(), values[2].AsNumber(), values[3].AsNumber())),
+                ("Host Player", _) => state.PlayerList.GetHostValue() ?? Default,
                 ("Null", _) => Default, // Do we need a dedicated null value? probably not
                 (_, _) => $"Emulation for workshop function '{name}' (with {p.Length} parameters) is not supported"
             };
@@ -281,6 +294,66 @@ public abstract record EmulateValue
                 str = str.Replace($"{{{i}}}", f[i].ToString());
 
             return From(str);
+        });
+    }
+
+    static Result<EmulateValue, string> EvaluateFilter(IWorkshopTree array, IWorkshopTree condition, EmulateState state)
+    {
+        return EvaluateArrayOperation(
+            state, array, condition,
+            array =>
+            {
+                var newArray = new List<EmulateValue>();
+                return (
+                    (value, i) =>
+                    {
+                        if (value)
+                            newArray.Add(array[i]);
+                    },
+                    () => From(newArray));
+            });
+    }
+
+    static Result<EmulateValue, string> EvaluateMap(IWorkshopTree array, IWorkshopTree condition, EmulateState state)
+    {
+        return EvaluateArrayOperation(
+            state, array, condition,
+            array =>
+            {
+                var newArray = new EmulateValue[array.Length];
+                return (
+                    (value, i) => newArray[i] = value,
+                    () => From(newArray));
+            }
+        );
+    }
+
+    static Result<EmulateValue, string> EvaluateArrayOperation(
+        EmulateState state,
+        IWorkshopTree array,
+        IWorkshopTree condition,
+        Func<EmulateValue[],
+            (Action<EmulateValue, int> onValue,
+            Func<EmulateValue> getResult)> factory)
+    {
+        return Evaluate(array, state).AndThen<EmulateValue>(array =>
+        {
+            var spread = array.Spread();
+            var (onValue, getResult) = factory(spread);
+
+            for (int i = 0; i < spread.Length; i++)
+            {
+                var item = spread[i];
+
+                // Evaluate condition using array information of current index.
+                var evaluation = Evaluate(condition, state.WithArrayInformation(item, i));
+                if (evaluation.Get(out var value, out var error))
+                    onValue(value, i);
+                else
+                    return error;
+            }
+
+            return getResult();
         });
     }
 }

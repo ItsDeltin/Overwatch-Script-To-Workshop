@@ -258,6 +258,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         }
 
+        static bool Is(TokenType source, TokenType type)
+        {
+            return type switch
+            {
+                TokenType.Identifier => source.IsIdentifier(),
+                _ => source == type,
+            };
+        }
+
         TokenType NextNonDecorativeToken()
         {
             for (int i = 0; ; i++)
@@ -1925,6 +1934,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Struct:
                     context.RootItems.Add(new(ParseClassOrStruct()));
                     return;
+
+                // Enum
+                case TokenType.Enum:
+                    context.RootItems.Add(new(ParseEnum()));
+                    return;
             }
 
             // Workshop variable or subroutine collection
@@ -1956,11 +1970,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Rule:
                 case TokenType.Disabled:
                     context.RootItems.Add(new(ParseRule()));
-                    break;
-
-                // Enum
-                case TokenType.Enum:
-                    context.RootItems.Add(new(ParseEnum()));
                     break;
 
                 // Import
@@ -2126,35 +2135,54 @@ namespace Deltin.Deltinteger.Compiler.Parse
             StartTokenCapture();
             if (GetIncrementalNode(out EnumContext @enum)) return EndTokenCapture(@enum);
 
+            var doc = ParseMetaComment();
+
+            var single = ParseOptional(TokenType.Single);
+
             ParseExpected(TokenType.Enum);
             var identifier = ParseExpected(TokenType.Identifier);
+
+            // Get the type parameters.
+            var generics = ParseOptionalTypeArguments(out _);
 
             // Start the value group.
             ParseExpected(TokenType.CurlyBracket_Open);
 
             // Get the values
-            var values = new List<EnumValue>();
-            if (!Is(TokenType.CurlyBracket_Close))
-                do
-                {
-                    // Get the value identifier.
-                    StartNode();
-                    var valueIdentifier = ParseExpected(TokenType.Identifier);
-                    IParseExpression value = null;
+            var values = ParseDelimitedList(TokenType.CurlyBracket_Close, () => Is(NextNonDecorativeToken(), TokenType.Identifier), () => Node(() =>
+            {
+                var doc = ParseMetaComment();
 
-                    // Get the enum's value.
-                    if (ParseOptional(TokenType.Equal))
-                        value = GetContainExpression();
+                var valueIdentifier = ParseExpected(TokenType.Identifier);
 
-                    // Add the value to the list.
-                    values.Add(EndNode(new EnumValue(valueIdentifier, value)));
-                }
-                while (ParseOptional(TokenType.Comma));
+                // Get the enum value's type.
+                var valueType = TryParseEnumValueType();
+
+                IParseExpression value = null;
+                // Get the enum's value.
+                if (ParseOptional(TokenType.Equal))
+                    value = GetContainExpression();
+
+                // Add the value to the list.
+                return new EnumValue(doc, valueIdentifier, value, valueType);
+            }));
 
             // End the value group.
             ParseExpected(TokenType.CurlyBracket_Close);
 
-            return new EnumContext(identifier, values);
+            return EndTokenCapture(new EnumContext(doc, single, identifier, values, generics));
+        }
+
+        EnumValueTypeContext TryParseEnumValueType()
+        {
+            // Parentheses syntax.
+            if (ParseOptional(TokenType.Parentheses_Open))
+            {
+                var parameterTypes = ParseDelimitedList(TokenType.Parentheses_Close, () => Kind.IsStartOfType(), ParseType);
+                ParseExpected(TokenType.Parentheses_Close);
+                return new(parameterTypes);
+            }
+            return null;
         }
 
         /// <summary>Parses a list of attributes.</summary>
@@ -2510,7 +2538,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new VanillaSettingsGroupSyntax(r.GetRange(), openingBracket, settings.ToArray());
         });
 
-        Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics);
+        Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices, List<IParseType> generics) => new Identifier(identifier, indices, generics, Current);
         MetaComment ParseMetaComment()
         {
             if (!Is(TokenType.ActionComment))

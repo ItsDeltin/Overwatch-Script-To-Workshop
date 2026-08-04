@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse.Lambda;
+using Deltin.Deltinteger.Parse.Types;
 
 #nullable enable
 
@@ -18,6 +19,17 @@ namespace Deltin.Deltinteger.Parse
                 return false;
             });
             return types.ToArray();
+        }
+
+        public static IEnumerable<ICodeTypeInitializer> GetAllTypesInScope(Scope scope)
+        {
+            var types = Enumerable.Empty<ICodeTypeInitializer>();
+            scope.IterateParents(scope =>
+            {
+                types = types.Concat(scope.Types);
+                return false;
+            });
+            return types;
         }
 
         /// <summary>There should be a special CodeType for void rather than it being null.
@@ -97,6 +109,10 @@ namespace Deltin.Deltinteger.Parse
 
         private static bool AreFunctionallyEqual(CodeType a, CodeType b, EqualitySettings equalitySettings)
         {
+            // 'a' and 'b' point to the same thing.
+            if (ReferenceEquals(a, b))
+                return true;
+
             // Unknown lambda types are compatible with known lambda types.
             if ((a is PortableLambdaType || b is PortableLambdaType) && (a is UnknownLambdaType || b is UnknownLambdaType))
                 return true;
@@ -126,13 +142,14 @@ namespace Deltin.Deltinteger.Parse
                 a is DefinedClass ^ b is DefinedClass ||
                 a is ArrayType ^ b is ArrayType ||
                 a is PortableLambdaType ^ b is PortableLambdaType ||
-                a is PipeType ^ b is PipeType)
+                a is PipeType ^ b is PipeType ||
+                a is TypeProvider.TypeInstance ^ b is TypeProvider.TypeInstance)
                 return false;
 
             // Struct comparison
             if (a is StructInstance aStr && b is StructInstance bStr)
             {
-                return aStr.Variables.All(var =>
+                return aStr.Variables.Length == bStr.Variables.Length && aStr.Variables.All(var =>
                 {
                     var matchingVariable = bStr.Variables.FirstOrDefault(otherVar => var.Name == otherVar.Name);
                     return matchingVariable != null && Compare((CodeType)var.CodeType, (CodeType)matchingVariable.CodeType, equalitySettings);
@@ -175,6 +192,11 @@ namespace Deltin.Deltinteger.Parse
             else if (a is PipeType aPipe && b is PipeType bPipe)
             {
                 return SpreadPipeType(aPipe).All(at => SpreadPipeType(bPipe).Any(bt => Compare(at, bt, equalitySettings)));
+            }
+            // Generic type factory comparison
+            else if (a is TypeProvider.TypeInstance aTypeInstance && b is TypeProvider.TypeInstance bTypeInstance)
+            {
+                return aTypeInstance.Provider == bTypeInstance.Provider && DoGenericsMatch(a, b, equalitySettings);
             }
 
             // Default
@@ -227,6 +249,41 @@ namespace Deltin.Deltinteger.Parse
             Strict,
             /// <summary>Type matching with any and inheritance is ok.</summary>
             AnyAndInheritanceOk
+        }
+
+        /// <summary>
+        /// Can these two types share the same storage?
+        /// </summary>
+        public static bool AreTypesCompatible(CodeType a, CodeType b)
+        {
+            // Constant values must be equal.
+            if (a.IsConstant() || b.IsConstant())
+                return AreEqual(a, b);
+
+            // If neither values are structs, they are compatible.
+            if (!a.Attributes.IsStruct && !b.Attributes.IsStruct)
+                return true;
+
+            // If a or b are arrays, get the type that they are an array of.
+            return AreEqual(a, b);
+        }
+
+        static CodeType GetRootTypeOf(CodeType type)
+        {
+            while (type is ArrayType arrayType)
+                type = arrayType.ArrayOfType;
+            return type;
+        }
+
+        public static CodeType UnionWith(CodeType a, CodeType? b)
+        {
+            if (b is null || AreEqual(a, b) || IsAny(a))
+                return a;
+
+            if (IsAny(b))
+                return b;
+
+            return new PipeType(a, b);
         }
     }
 }

@@ -241,6 +241,7 @@ public class LexMatcher
         () => MatchSymbol('~', TokenType.Squiggle),
         () => MatchSymbol("|", TokenType.Pipe),
         () => MatchSymbol('@', TokenType.At),
+        () => MatchKeyword("is", TokenType.Is),
         () => MatchKeyword("import", TokenType.Import),
         () => MatchKeyword("for", TokenType.For),
         () => MatchKeyword("while", TokenType.While),

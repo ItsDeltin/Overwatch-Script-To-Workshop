@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
             return 1;
         }
 
-        public IGettable Unfold(IUnfoldGettable unfolder) => new WorkshopElementReference(unfolder.NextValue());
+        public IGettable Unfold(IUnfoldGettable unfolder) => unfolder.NextValue();
     }
 
     public struct AssigningAttributes
@@ -145,6 +145,13 @@ namespace Deltin.Deltinteger.Parse
             StoreType = extended ? StoreType.Indexed : StoreType.FullVariable;
             IsGlobal = isGlobal;
             Extended = extended;
+        }
+
+        public readonly AssigningAttributes StepName(string text)
+        {
+            var copy = this;
+            copy.Name = $"{copy.Name}_{text}";
+            return copy;
         }
     }
 }

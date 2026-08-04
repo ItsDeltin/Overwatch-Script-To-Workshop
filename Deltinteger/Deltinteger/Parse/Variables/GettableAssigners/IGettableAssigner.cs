@@ -137,6 +137,6 @@ namespace Deltin.Deltinteger.Parse
 
     public interface IUnfoldGettable
     {
-        IWorkshopTree NextValue();
+        IGettable NextValue();
     }
 }

@@ -15,6 +15,7 @@ using Deltin.Deltinteger.Lobby2.KeyValues;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using Deltin.Deltinteger.Parse.Vanilla.Cache;
+using Deltin.Deltinteger.Parse.Types;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -185,7 +186,7 @@ namespace Deltin.Deltinteger.Parse
                     },
                     enumContext: enumContext =>
                     {
-                        var newEnum = new GenericCodeTypeInitializer(new DefinedEnum(new ParseInfo(script, this), enumContext));
+                        var newEnum = CreateEnum.CreateEnumFromContext(new ParseInfo(script, this), enumContext);
                         RulesetScope.AddType(newEnum);
                         Types.AllTypes.Add(newEnum);
                         Types.DefinedTypes.Add(newEnum);

@@ -229,27 +229,39 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class EnumContext : Node
     {
+        public MetaComment Doc { get; }
+        public Token Single { get; }
         public Token Identifier { get; }
         public List<EnumValue> Values { get; }
+        public List<TypeArgContext> Generics { get; }
 
-        public EnumContext(Token identifier, List<EnumValue> values)
+        public EnumContext(MetaComment doc, Token single, Token identifier, List<EnumValue> values, List<TypeArgContext> generics)
         {
+            Doc = doc;
+            Single = single;
             Identifier = identifier;
             Values = values;
+            Generics = generics;
         }
     }
 
     public class EnumValue : Node
     {
+        public MetaComment Doc { get; }
         public Token Identifier { get; }
         public IParseExpression Value { get; }
+        public EnumValueTypeContext ValueType { get; }
 
-        public EnumValue(Token identifier, IParseExpression value)
+        public EnumValue(MetaComment doc, Token identifier, IParseExpression value, EnumValueTypeContext valueType)
         {
+            Doc = doc;
             Identifier = identifier;
             Value = value;
+            ValueType = valueType;
         }
     }
+
+    public record class EnumValueTypeContext(List<IParseType> Items);
 
     public class FunctionContext : Node, IDeclaration
     {
@@ -516,17 +528,19 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token Token { get; }
         public List<ArrayIndex> Index { get; }
         public List<IParseType> TypeArgs { get; }
+        public Token NextToken { get; }
 
         Token ITypeContextHandler.Identifier => Token;
         int ITypeContextHandler.ArrayCount => 0;
         bool ITypeContextHandler.IsDefault => false;
         bool ITypeContextHandler.Infer => false;
 
-        public Identifier(Token token, List<ArrayIndex> index, List<IParseType> generics)
+        public Identifier(Token token, List<ArrayIndex> index, List<IParseType> generics, Token nextToken)
         {
             Token = token;
             Index = index;
             TypeArgs = generics;
+            NextToken = nextToken;
         }
 
         public override string ToString() => Token.Text + string.Concat(Index.Select(i => i.ToString()));

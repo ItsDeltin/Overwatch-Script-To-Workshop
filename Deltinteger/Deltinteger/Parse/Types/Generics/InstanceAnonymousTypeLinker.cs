@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Collections.Generic;
+using System;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -57,6 +58,37 @@ namespace Deltin.Deltinteger.Parse
             foreach (var pair in b.Links)
                 if (!Links.ContainsKey(pair.Key))
                     Links.Add(pair.Key, pair.Value);
+        }
+
+        public static (InstanceAnonymousTypeLinker, bool) ApplyToTypeArguments(
+            InstanceAnonymousTypeLinker typeLinker,
+            AnonymousType[] originalTypeArguments,
+            CodeType[] currentTypeArguments)
+        {
+            typeLinker ??= Empty;
+
+            if (originalTypeArguments.Length != currentTypeArguments.Length)
+                throw new ArgumentException("Original and current type arguments must be the same length", nameof(currentTypeArguments));
+
+            var newLinker = Empty;
+            bool didChange = false;
+
+            for (int i = 0; i < currentTypeArguments.Length; i++)
+            {
+                if (currentTypeArguments[i] is AnonymousType at && typeLinker.Links.TryGetValue(at, out CodeType value))
+                {
+                    newLinker.Add(originalTypeArguments[i], value);
+                    didChange |= currentTypeArguments[i] != value;
+                }
+                else
+                {
+                    var updatedTypeArgument = currentTypeArguments[i].GetRealType(typeLinker);
+                    newLinker.Add(originalTypeArguments[i], updatedTypeArgument);
+                    didChange |= currentTypeArguments[i] != updatedTypeArgument;
+                }
+            }
+
+            return (newLinker, didChange);
         }
     }
 }

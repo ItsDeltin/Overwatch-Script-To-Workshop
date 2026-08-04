@@ -180,7 +180,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             for (int i = 0; i < _parameters.Length; i++)
             {
                 // Get the gettable provided from the ref parameter.
-                IGettable gettable = providedParameters?[i].RefVariableElements?.Childify();
+                IGettable gettable = providedParameters?[i].RefVariableElements?.AsGettable();
 
                 // Not provided or not a ref parameter.
                 if (gettable == null)
