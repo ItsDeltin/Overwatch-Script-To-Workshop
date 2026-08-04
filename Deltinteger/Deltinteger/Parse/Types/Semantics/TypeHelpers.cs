@@ -149,7 +149,9 @@ namespace Deltin.Deltinteger.Parse
             // Struct comparison
             if (a is StructInstance aStr && b is StructInstance bStr)
             {
-                return aStr.Variables.Length == bStr.Variables.Length && aStr.Variables.All(var =>
+                return aStr.Variables.Length == bStr.Variables.Length
+                    && aStr.Attributes.IsStruct == bStr.Attributes.IsStruct
+                    && aStr.Variables.All(var =>
                 {
                     var matchingVariable = bStr.Variables.FirstOrDefault(otherVar => var.Name == otherVar.Name);
                     return matchingVariable != null && Compare((CodeType)var.CodeType, (CodeType)matchingVariable.CodeType, equalitySettings);
