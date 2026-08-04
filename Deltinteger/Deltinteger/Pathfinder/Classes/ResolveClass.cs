@@ -29,9 +29,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public void Setup(SetupSelfContainedClass setup)
         {
-            ParentArray = setup.AddObjectVariable(new InternalVar("ParentArray", _supplier.Any()));
-            Pathmap = setup.AddObjectVariable(new InternalVar("OriginMap", _pathfinderTypes.Pathmap.Instance));
-            Destination = setup.AddObjectVariable(new InternalVar("Destination", _supplier.Vector()));
+            ParentArray = setup.AddObjectVariable(VariableMaker.New("ParentArray", _supplier.Any()).GetDefaultInstance(Instance));
+            Pathmap = setup.AddObjectVariable(VariableMaker.New("OriginMap", _pathfinderTypes.Pathmap.Instance).GetDefaultInstance(Instance));
+            Destination = setup.AddObjectVariable(VariableMaker.New("Destination", _supplier.Vector()).GetDefaultInstance(Instance));
 
             setup.ObjectScope.AddNativeMethod(PathfindFunction);
             setup.ObjectScope.AddNativeMethod(Next);
@@ -40,7 +40,8 @@ namespace Deltin.Deltinteger.Pathfinder
         public void WorkshopInit(DeltinScript translateInfo) => throw new NotImplementedException();
         public void New(ActionSet actionSet, NewClassInfo newClassInfo) => throw new NotImplementedException();
 
-        private FuncMethod PathfindFunction => new FuncMethodBuilder() {
+        private FuncMethod PathfindFunction => new FuncMethodBuilder()
+        {
             Name = "Pathfind",
             Documentation = "Pathfinds the specified players to the destination.",
             Parameters = new CodeParameter[] {

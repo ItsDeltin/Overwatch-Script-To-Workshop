@@ -13,6 +13,13 @@ namespace Deltin.Deltinteger.Parse
                 DefaultValue = defaultValue
             };
 
+        public static IVariable NewWithOptions(string name, CodeType type, VariableOptions options) =>
+            new GenericVariableProvider(name, type, VariableType.Dynamic, false)
+            {
+                DefaultValue = options.DefaultValue,
+                Documentation = options.Documentation ?? new()
+            };
+
         public static IVariable NewStatic(string name, CodeType type) =>
             new GenericVariableProvider(name, type, VariableType.Dynamic, true);
 
@@ -36,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
                 DefaultValue = defaultValue
             };
 
-        public readonly record struct VariableOptions(IVariableDefault? DefaultValue, MarkupBuilder? Documentation);
+        public readonly record struct VariableOptions(IVariableDefault? DefaultValue = null, MarkupBuilder? Documentation = null);
 
         class GenericVariableProvider : IVariable
         {

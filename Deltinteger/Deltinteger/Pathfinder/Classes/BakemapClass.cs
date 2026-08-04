@@ -26,15 +26,16 @@ namespace Deltin.Deltinteger.Pathfinder
 
         void ISelfContainedClass.Setup(SetupSelfContainedClass setup)
         {
-            NodeBake = setup.AddObjectVariable(new InternalVar("NodeBake", Types.Any()));
-            Pathmap = setup.AddObjectVariable(new InternalVar("Pathmap", _pathfinderTypes.Pathmap.Instance));
+            NodeBake = setup.AddObjectVariable(VariableMaker.New("NodeBake", Types.Any()).GetDefaultInstance(Instance));
+            Pathmap = setup.AddObjectVariable(VariableMaker.New("Pathmap", _pathfinderTypes.Pathmap.Instance).GetDefaultInstance(Instance));
             setup.ObjectScope.AddNativeMethod(Pathfind);
         }
 
-        void ISelfContainedClass.New(ActionSet actionSet, NewClassInfo newClassInfo) {}
+        void ISelfContainedClass.New(ActionSet actionSet, NewClassInfo newClassInfo) { }
         MarkupBuilder ISelfContainedClass.Documentation => throw new System.NotImplementedException();
 
-        private FuncMethod Pathfind => new FuncMethodBuilder() {
+        private FuncMethod Pathfind => new FuncMethodBuilder()
+        {
             Name = "Pathfind",
             Documentation = "Pathfinds specified players to the destination.",
             Parameters = new CodeParameter[] {

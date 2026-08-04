@@ -141,18 +141,15 @@ namespace Deltin.Deltinteger.Pathfinder
             setup.StaticScope.AddNativeVariable(IsNodeReachedDeterminer);
             setup.StaticScope.AddNativeVariable(ApplicableNodeDeterminer);
 
-            Nodes = setup.AddObjectVariable(new InternalVar("Nodes", _supplier.VectorArray())
-            {
-                Documentation = "The nodes of the pathmap."
-            });
-            Segments = setup.AddObjectVariable(new InternalVar("Segments", _supplier.VectorArray())
-            {
-                Documentation = "The segments of the pathmap. These segments connect the nodes together."
-            });
-            Attributes = setup.AddObjectVariable(new InternalVar("Attributes", _supplier.VectorArray())
-            {
-                Documentation = "The attributes of the pathmap. The X of a value in the array is the first node that the attribute is related to. The Y is the second node the attribute is related to. The Z is the attribute's actual value."
-            });
+            Nodes = setup.AddObjectVariable(VariableMaker.NewWithOptions("Nodes", _supplier.VectorArray(), new(
+                Documentation: "The nodes of the pathmap."
+            )).GetDefaultInstance(Instance));
+            Segments = setup.AddObjectVariable(VariableMaker.NewWithOptions("Segments", _supplier.VectorArray(), new(
+                Documentation: "The segments of the pathmap. These segments connect the nodes together."
+            )).GetDefaultInstance(Instance));
+            Attributes = setup.AddObjectVariable(VariableMaker.NewWithOptions("Attributes", _supplier.VectorArray(), new(
+                Documentation: "The attributes of the pathmap. The X of a value in the array is the first node that the attribute is related to. The Y is the second node the attribute is related to. The Z is the attribute's actual value."
+            )).GetDefaultInstance(Instance));
         }
 
         private static MarkupBuilder AddHookInfo(MarkupBuilder markupBuilder) => markupBuilder.NewLine().Add("This is a hook variable, meaning it can only be set at the rule-level.");
