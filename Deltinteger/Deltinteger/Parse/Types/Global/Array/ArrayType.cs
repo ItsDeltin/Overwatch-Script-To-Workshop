@@ -199,9 +199,9 @@ namespace Deltin.Deltinteger.Parse
                     Parameters = new[] {
                         maker.CreateValidationParameter("The value that is pushed to the array.", APPENDED, APPENDING),
                     },
-                    OnCall = SourceVariableResolver.GetSourceVariable,
+                    OnCall = SourceVariableResolver.GetSourceVariableForArrayOperation,
                     ReturnType = _supplier.Number(),
-                    Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, Operation.AppendToArray, maker.Cast(methodCall.ParameterValues[0]))
+                    Action = (actionSet, methodCall) => Modify(actionSet, Operation.AppendToArray, maker.Cast(methodCall.ParameterValues[0]))
                 });
                 // Append
                 Func(new FuncMethodBuilder()
@@ -222,9 +222,9 @@ namespace Deltin.Deltinteger.Parse
                     Parameters = new CodeParameter[] {
                         maker.CreateValidationParameter("The value that is removed from the array.", REMOVED, REMOVING),
                     },
-                    OnCall = SourceVariableResolver.GetSourceVariable,
+                    OnCall = SourceVariableResolver.GetSourceVariableForArrayOperation,
                     ReturnType = _supplier.Number(),
-                    Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, Operation.RemoveFromArrayByValue, maker.Cast(methodCall.ParameterValues[0]))
+                    Action = (actionSet, methodCall) => Modify(actionSet, Operation.RemoveFromArrayByValue, maker.Cast(methodCall.ParameterValues[0]))
                 });
                 // Remove
                 Func(new FuncMethodBuilder()
@@ -267,9 +267,9 @@ namespace Deltin.Deltinteger.Parse
                 Parameters = new CodeParameter[] {
                     new CodeParameter("index", "The index of the element that is removed from the array.", _supplier.Number())
                 },
-                OnCall = SourceVariableResolver.GetSourceVariable,
+                OnCall = SourceVariableResolver.GetSourceVariableForArrayOperation,
                 ReturnType = _supplier.Number(),
-                Action = (actionSet, methodCall) => SourceVariableResolver.Modify(actionSet, Operation.RemoveFromArrayByIndex, methodCall.ParameterValues[0])
+                Action = (actionSet, methodCall) => Modify(actionSet, Operation.RemoveFromArrayByIndex, methodCall.ParameterValues[0])
             });
 
             // Add type operations.
@@ -376,6 +376,12 @@ namespace Deltin.Deltinteger.Parse
             return new GenericSortFunction(name, documentation, parameterDocumentation, returnType, this, funcType, pointToExecutor, alias, methodInfo);
         }
 
+        public static IWorkshopTree Modify(ActionSet actionSet, Operation operation, IWorkshopTree value)
+        {
+            actionSet.CurrentObjectRelatedIndex.Reference.Modify(actionSet, operation, value, target: actionSet.CurrentObjectRelatedIndex.Target);
+            return Element.CountOf(StructHelper.ExtractArbritraryValue(actionSet.CurrentObject));
+        }
+
         public override IGettableAssigner GetGettableAssigner(AssigningAttributes attributes)
         {
             var overrideAssigner = ArrayOfType.ArrayHandler.GetArrayAssigner(attributes);
@@ -420,33 +426,24 @@ namespace Deltin.Deltinteger.Parse
 
     class SourceVariableResolver
     {
-        public IVariableInstance Calling { get; private set; }
-
-        public static object GetSourceVariable(ParseInfo parseInfo, DocRange range)
+        /// <summary>Matches FuncBuilder's OnCall signature for convenience.</summary>
+        public static object GetSourceVariableForArrayOperation(ParseInfo parseInfo, DocRange range)
         {
-            var resolver = new SourceVariableResolver();
-            parseInfo.SourceExpression.OnResolve(expr =>
-            {
-                // Make sure the expression is a variable call.
-                if (expr is CallVariableAction variableCall && variableCall.Calling.Provider.VariableType != VariableType.ElementReference)
-                    resolver.Calling = variableCall.Calling;
-                // Otherwise, add an error.
-                else
-                    parseInfo.Script.Diagnostics.Error("Functions that directly modify arrays requires a variable as the source.", range);
-            });
-            return resolver;
+            GetSourceVariable(parseInfo, range, "Functions that directly modify arrays requires a mutable variable as the source");
+            return null;
         }
 
-        public static IGettable GetIndexReference(ActionSet actionSet, MethodCall methodCall) => actionSet.IndexAssigner[((SourceVariableResolver)methodCall.AdditionalData).Calling.Provider];
+        public static void GetSourceVariableForRefFunction(ParseInfo parseInfo, DocRange range)
+            => GetSourceVariable(parseInfo, range, "Functions that directly modify structs requires a mutable variable as the source");
 
-        public static IWorkshopTree Modify(ActionSet actionSet, Operation operation, IWorkshopTree value)
+        public static void GetSourceVariable(ParseInfo parseInfo, DocRange range, string errorMessage)
         {
-            // var calling = SourceVariableResolver.GetIndexReference(actionSet, methodCall);
-            // calling.Modify(actionSet, operation, value: methodCall.ParameterValues[0], target: actionSet.CurrentObjectRelatedIndex.Target);
-            // return Element.CountOf(calling.GetVariable());
-
-            actionSet.CurrentObjectRelatedIndex.Reference.Modify(actionSet, operation, value, target: actionSet.CurrentObjectRelatedIndex.Target);
-            return (Element)0;
+            parseInfo.SourceExpression.OnResolve(source =>
+            {
+                // Make sure the source expression can be set.
+                if (!source.ItemCanBeSet)
+                    parseInfo.Script.Diagnostics.Error(errorMessage, range);
+            });
         }
     }
 }

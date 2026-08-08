@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
@@ -31,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
 
                 ParseInfo partInfo = parseInfo.SetUsageResolver(usageResolvers[i], i == 0 ? null : usageResolvers[i - 1]);
                 // If this is not the first expression, clear tail data and set the source expression.
-                if (i != 0) partInfo = partInfo.ClearTail().SetSourceExpression(ExprContextTree[i - 1]);
+                if (i != 0) partInfo = partInfo.ClearTail().SetSourceExpression(new(this, ExprContextTree[i - 1]));
                 // If this is not the last expression, clear head data.
                 if (i != ExprContextTree.Length - 1) partInfo = partInfo.ClearHead().SetIsUsedAsValue(true);
 
@@ -216,6 +215,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         current = newCurrent;
                     }
+                    currentObjectReference = null;
                 }
 
                 currentObject = current;
@@ -248,7 +248,7 @@ namespace Deltin.Deltinteger.Parse
 
         public bool IsStatement() => _trailingSeperator || (Result?.IsStatement() ?? true);
 
-        public bool TargetCanBeSet()
+        public bool TargetCanBeSet(ITreeContextPart stopAtItem = null)
         {
             bool settable = true;
 
@@ -259,6 +259,9 @@ namespace Deltin.Deltinteger.Parse
 
                 else if (!settable && ExprContextTree[i - 1].CanBeSetReference())
                     settable = true;
+
+                if (ReferenceEquals(ExprContextTree[i], stopAtItem))
+                    break;
             }
 
             return settable;
@@ -637,5 +640,43 @@ namespace Deltin.Deltinteger.Parse
     {
         Unknown,
         StringFormat
+    }
+
+#nullable enable
+    /// <summary>This type is accessible in ParseInfo. It it used for the parser to get information about
+    /// it's source expression in a call chain.</summary>
+    public class ExpressionSourceInformation(ExpressionTree expressionTree, ITreeContextPart treeContextPart)
+    {
+        readonly ExpressionTree expressionTree = expressionTree;
+        readonly ITreeContextPart treeContextPart = treeContextPart;
+
+        /// <summary>The actual source information can only be obtained once it is resolved.</summary>
+        public void OnResolve(Action<ResolvedTargetInformation> onResolve)
+        {
+            // Wrap the given function in our own to expose only certain things
+            // about the ITreeContextPart.
+            treeContextPart.OnResolve(expr =>
+            {
+                onResolve(new(this));
+            });
+        }
+
+        public class ResolvedTargetInformation(ExpressionSourceInformation sourceInformation)
+        {
+            // Cache set status
+            bool? itemCanBeSet = null;
+
+            public bool ItemCanBeSet
+            {
+                get
+                {
+                    if (!itemCanBeSet.HasValue)
+                        itemCanBeSet = sourceInformation.expressionTree.TargetCanBeSet(sourceInformation.treeContextPart);
+                    return itemCanBeSet.Value;
+                }
+            }
+
+            public IExpression Expression => sourceInformation.treeContextPart.GetExpression();
+        }
     }
 }

@@ -39,10 +39,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public object Call(ParseInfo parseInfo, DocRange callRange)
         {
-            parseInfo.SourceExpression?.OnResolve(expr => CheckRecursionAndRestricted(parseInfo, callRange, expr));
+            parseInfo.SourceExpression?.OnResolve(source => CheckRecursionAndRestricted(parseInfo, callRange, source.Expression));
             return null;
         }
-        
+
         public void CheckRecursionAndRestricted(ParseInfo parseInfo, DocRange callRange, IExpression lambdaSource)
         {
             if (LambdaType.LambdaKind != LambdaKind.Anonymous && LambdaType.LambdaKind != LambdaKind.Portable)
@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             if (source.RecursiveCallHandler != null)
                 parseInfo.CurrentCallInfo.Call(source.RecursiveCallHandler, callRange);
-            
+
             // Add restricted calls.
             foreach (var callType in source.GetRestrictedCallTypes())
                 parseInfo.RestrictedCallHandler.AddRestrictedCall(new RestrictedCall(

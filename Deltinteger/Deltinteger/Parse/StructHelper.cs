@@ -154,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
         public static PatternTemplate Template(IWorkshopTree inputValue, Func<IWorkshopTree, StructPath?> patternMatch)
         {
             var patternOccurrences = new Dictionary<StructPath, StructVariableOccurences>();
-            void RecursiveTemplate(IWorkshopTree currentValue, Action<IWorkshopTree> replaceCurrentValue)
+            void RecursiveTemplate(IWorkshopTree currentValue, Action<IWorkshopTree>? replaceCurrentValue)
             {
                 // Check if the current workshop value matches a pattern.
                 var current = patternMatch(currentValue);

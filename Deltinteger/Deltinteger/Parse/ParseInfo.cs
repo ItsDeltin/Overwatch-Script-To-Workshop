@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public bool ContinuesAllowed { get; private set; }
         public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
         public ExpectingLambdaInfo ExpectingLambda { get; private set; }
-        public ITreeContextPart SourceExpression { get; private set; }
+        public ExpressionSourceInformation SourceExpression { get; private set; }
         public UsageResolver CurrentUsageResolver { get; private set; }
         public UsageResolver SourceUsageResolver { get; private set; }
         public CodeType ReturnType { get; private set; }
@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetLoopAllowed(bool allowed) => new ParseInfo(this) { BreaksAllowed = allowed, ContinuesAllowed = allowed };
         public ParseInfo SetBreaksAllowed(bool allowed) => new ParseInfo(this) { BreaksAllowed = allowed };
         public ParseInfo SetContinuesAllowed(bool allowed) => new ParseInfo(this) { ContinuesAllowed = allowed };
-        public ParseInfo SetSourceExpression(ITreeContextPart treePart) => new ParseInfo(this) { SourceExpression = treePart };
+        public ParseInfo SetSourceExpression(ExpressionSourceInformation sourceExpression) => new ParseInfo(this) { SourceExpression = sourceExpression };
         public ParseInfo SetRestrictedCallHandler(IRestrictedCallHandler callHandler) => new ParseInfo(this) { RestrictedCallHandler = callHandler };
         public ParseInfo AddVariableTracker(IVariableTracker variableTracker)
         {

@@ -61,13 +61,22 @@ public class SemanticsTest
         }
         """).AssertOk();
 
-        // Call ModifyX with an invalid reference (parameterless inline expr function).
+        // Call ModifyX with an invalid reference (inline variable).
         Compile(structWithRef + """
         rule: "Test" {
             TestStruct test: { X: 0 };
             test.ModifyX();
         }
-        """).AssertSearchError("Functions that directly modify arrays requires a variable as the source");
+        """).AssertSearchError("Functions that directly modify structs requires a mutable variable as the source");
+
+        // Call ModifyX with an invalid reference (inline function).
+        Compile(structWithRef + """
+        TestStruct test(): { X: 0 };
+
+        rule: "Test" {
+            test().ModifyX();
+        }
+        """).AssertSearchError("Functions that directly modify structs requires a mutable variable as the source");
     }
 
     [TestMethod("Call ref function from another local function")]

@@ -143,7 +143,7 @@ namespace Deltin.Deltinteger.Parse
                 // The source string will be resolved after this function returns.
                 var sourceResolver = new StringFormatSourceResolver();
 
-                parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr =>
+                parseInfo.SourceExpression.OnResolve(source => ConstantExpressionResolver.Resolve(source.Expression, expr =>
                 {
                     // Make sure the resolved source expression is a string.
                     if (expr is StringAction stringAction)

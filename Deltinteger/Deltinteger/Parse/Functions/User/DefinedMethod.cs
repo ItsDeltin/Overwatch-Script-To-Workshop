@@ -278,7 +278,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Calling function from another value.
                 if (parseInfo.SourceExpression is not null)
-                    SourceVariableResolver.GetSourceVariable(parseInfo, callRange);
+                    SourceVariableResolver.GetSourceVariableForRefFunction(parseInfo, callRange);
                 // Calling function from the current this object.
                 else if (!parseInfo.IsInRefFunction)
                     parseInfo.Error("Cannot call ref function in a non-ref function", callRange);
