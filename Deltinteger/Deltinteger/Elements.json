@@ -5605,7 +5605,7 @@
         "Player": {
           "documentation": "The player or players to teleport. Can use most Player based Value Syntax.",
           "type": "players",
-          "defaultValue": 0.0
+          "defaultValue": "Event Player"
         },
         "Position": {
           "documentation": "The position to which the player or players will teleport. If a player is providedm the position of the player is used. Can use most Vector based Value Syntax.",
