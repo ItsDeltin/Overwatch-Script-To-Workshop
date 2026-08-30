@@ -183,7 +183,10 @@ namespace Deltin.Deltinteger.Parse
                 MacroValue = SingleReturnValue = parseInfo.SetExpectType(ReturnType).GetExpression(_methodScope, Context.MacroValue);
                 parseInfo.CreateExpressionCompletion(_methodScope, Context.Colon.Range.End + Context.EndToken.Range.Start);
 
-                SemanticsHelper.ExpectValueType(parseInfo, MacroValue, ReturnType, Context.MacroValue.Range);
+                if (CodeTypeHelpers.IsVoid(ReturnType))
+                    parseInfo.Error("Inline functions cannot be void", Context.Identifier);
+                else
+                    SemanticsHelper.ExpectValueType(parseInfo, MacroValue, ReturnType, Context.MacroValue.Range);
             }
 
             ContentReady.Set();
