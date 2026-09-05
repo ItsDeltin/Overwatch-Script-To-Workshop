@@ -18,6 +18,14 @@ namespace Deltin.Deltinteger.Parse
             return current;
         }
 
+        /// <summary>Gets the final value in the struct.</summary>
+        public static IWorkshopTree ExtractFinalListedValue(IWorkshopTree workshopValue)
+        {
+            while (workshopValue is IStructValue step)
+                workshopValue = step.GetAllValues().Last();
+            return workshopValue;
+        }
+
         public static IWorkshopTree ValueInArray(IWorkshopTree array, IWorkshopTree index)
         {
             if (array is IStructValue structArray)

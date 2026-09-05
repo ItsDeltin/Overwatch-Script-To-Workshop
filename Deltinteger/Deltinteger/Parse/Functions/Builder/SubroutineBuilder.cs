@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
                     _objectStore.Set(_actionSet.InitialSet(), Element.EmptyArray());
 
                     // Add to assigner with the last of the objectStore stack being the object instance.
-                    _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, new(Element.LastOf(_objectStore.GetVariable())), _actionSet.IndexAssigner);
+                    _context.ContainingType?.AddObjectVariablesToAssigner(_actionSet.ToWorkshop, new(StructHelper.BridgeIfRequired(_objectStore.GetVariable(), Element.LastOf)), _actionSet.IndexAssigner);
 
                     // Set the actionSet.
                     var selfReference = StructHelper.BridgeIfRequired(_objectStore.GetVariable(), Element.LastOf);
@@ -115,7 +115,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder
 
                 // Pop object array.
                 if (_context.Controller.Attributes.IsInstance)
-                    _objectStore.Modify(_actionSet, Operation.RemoveFromArrayByIndex, Element.CountOf(_objectStore.GetVariable()) - 1, Element.EventPlayer());
+                    _objectStore.Modify(_actionSet, Operation.RemoveFromArrayByIndex, Element.CountOf(StructHelper.ExtractFinalListedValue(_objectStore.GetVariable())) - 1, Element.EventPlayer());
             }
 
             // Add the subroutine.

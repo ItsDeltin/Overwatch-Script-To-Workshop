@@ -129,4 +129,62 @@ public class RecursiveTests
         .EmulateTick()
         .AssertVariable("result", [2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7, 6, 7, 8, 7, 8, 9, 8, 9, 10, 9, 10, 11]);
     }
+
+    [TestMethod("HL test: Recursion with object stack")]
+    public void RecursionWithObjectStack()
+    {
+        // 2 listed variables in the struct is important.
+        // The variables in the object stack need to be popped in the right order.
+        Compile("""
+        globalvar Number[] out = [];
+
+        struct MyStruct
+        {
+            public Number A;
+            public Number B;
+
+            public recursive void func(Number input) 'my subroutine' {
+                input = input + 1;
+                out.ModAppend(A * input + B);
+
+                if (input < 10)
+                    func(input + 1);
+            }
+        }
+
+        rule: ''
+        {
+            MyStruct v = { A: 100, B: 10 };
+            v.func(2);
+        }
+        """)
+        .EmulateTick()
+        .AssertVariable("out", [310, 510, 710, 910, 1110]);
+
+        // Similiar test but with a class.
+        Compile("""
+        globalvar Number[] out = [];
+        globalvar MyClass[] classes = [new MyClass(10), new MyClass(20), new MyClass(30), new MyClass(40), new MyClass(50)];
+
+        class MyClass {
+            public Number value;
+
+            constructor(in Number v) { value = v; }
+
+            public recursive void func(Number i) 'my subroutine' {
+                out.ModAppend(value);
+                if (i + 1 < classes.Length)
+                    classes[i].func(i + 1);
+            }
+        }
+
+        rule: '' {
+            classes[0].func(0);
+            LogToInspector("[BREAK]");
+        }
+        """)
+        .EmulateTick()
+        .AssertVariable("classes", [1, 2, 3, 4, 5])
+        .AssertVariable("out", [10, 20, 30, 40, 50]);
+    }
 }

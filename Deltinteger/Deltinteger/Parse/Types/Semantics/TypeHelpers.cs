@@ -287,5 +287,10 @@ namespace Deltin.Deltinteger.Parse
 
             return new PipeType(a, b);
         }
+
+        public static bool IsProviderStruct(IDefinedTypeInitializer provider)
+        {
+            return provider is IStructProvider;
+        }
     }
 }

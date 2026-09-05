@@ -71,7 +71,6 @@ namespace Deltin.Deltinteger.Parse
             Recursive = attributes.IsRecursive;
             Virtual = attributes.IsVirtual;
             AccessLevel = attributes.Accessor;
-            Recursive = attributes.IsRecursive;
             Ref = attributes.Ref;
 
             // Get subroutine info.
@@ -100,6 +99,21 @@ namespace Deltin.Deltinteger.Parse
                 {
                     parseInfo.Error("Ref functions cannot be subroutines", nameRange);
                 }
+            }
+
+            // 'ref' functions can only be defined inside of structs.
+            if (Ref && !CodeTypeHelpers.IsProviderStruct(containingType))
+                parseInfo.Error("Ref functions may only be defined inside structs", nameRange);
+
+            // Recursive function that is not a subroutine.
+            if (Recursive && !IsSubroutine)
+            {
+                // Strictly enforce instance function to be a recursive subroutine.
+                if (containingType is not null)
+                    parseInfo.Error("Recursive functions inside classes or structs must be a subroutine", nameRange);
+                // Add warning if a recursive function is not a subroutine.
+                else
+                    parseInfo.Warning("Consider turning this recursive function into a subroutine", nameRange);
             }
 
             // Setup the scope.

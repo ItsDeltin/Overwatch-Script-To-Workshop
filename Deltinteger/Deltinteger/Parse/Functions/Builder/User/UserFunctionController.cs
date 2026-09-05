@@ -31,9 +31,10 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             Attributes.IsRecursive = function.Attributes.Recursive;
 
             // If the function is defined in a type.
-            if (function.HasContainingType())
+            if (function.HasContainingType() && !function.Provider.Static)
             {
                 Attributes.IsInstance = true;
+                Attributes.RecursiveRequiresObjectStack = true;
 
                 var relations = new MethodClassRelations(toWorkshop, function, calleeThisTypeLinker);
 
@@ -111,7 +112,7 @@ namespace Deltin.Deltinteger.Parse.Functions.Builder.User
             );
         }
 
-        public object StackIdentifier() => _function;
+        public object StackIdentifier() => _function.Provider;
 
         public void Build(ActionSet actionSet) => new MethodContentBuilder(
             actionSet: actionSet,
