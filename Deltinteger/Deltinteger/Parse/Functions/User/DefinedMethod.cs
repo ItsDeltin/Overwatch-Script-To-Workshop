@@ -294,7 +294,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddDefinitionLink(callRange, Provider.DefinedAt);
 
             // Add method to call tracker.
-            parseInfo.CurrentCallInfo.Call(Provider.CallInfo.Function, callRange);
+            parseInfo.CurrentCallInfo?.Call(Provider.CallInfo.Function, callRange);
 
             // If this is a Ref function, ensure the source is a settable variable.
             if (Provider.Ref)
