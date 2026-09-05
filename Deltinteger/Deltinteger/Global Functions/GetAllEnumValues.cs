@@ -1,7 +1,7 @@
 using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Parse.Types;
 
 namespace Deltin.Deltinteger.GlobalFunctions;
 
@@ -11,10 +11,18 @@ partial class GlobalFunctions
     {
         var typeValidator = ICustomTypeArgValidator.New((inputType, errorToken) =>
         {
-            if (inputType is not ValueGroupType && inputType is not DefinedEnum)
+            // 'ValueGroupType' refers to built-in workshop data types,
+            // 'EnumType' refers to user-defined enums.
+            if (inputType is not (ValueGroupType or EnumType))
             {
                 errorToken.Error("Type argument must be an enumerator");
             }
+            // Ensure that the enum has no inner values.
+            else if (inputType is EnumType enumType && enumType.EnumKind is not EnumKind.NoInnerValues)
+            {
+                errorToken.Error("Enumerator type must not have inner values");
+            }
+            // Enum that is a constant type.
             else if (inputType.IsConstant())
             {
                 errorToken.Error("Type argument cannot be constant");

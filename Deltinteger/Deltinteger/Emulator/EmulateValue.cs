@@ -128,7 +128,13 @@ public abstract record EmulateValue
     {
         public override bool AsBoolean() => true;
         public override double AsNumber() => 0;
-        public override string ToString() => $"Player('${Name}')";
+        public override string ToString() => $"Player('{Name}')";
+    }
+    sealed record GroupValue(string Type, string Value) : EmulateValue
+    {
+        public override bool AsBoolean() => true; // Untested in game.
+        public override double AsNumber() => 0;
+        public override string ToString() => $"{Type}({Value})";
     }
 
     public static implicit operator EmulateValue(double value) => new Number(value);
@@ -148,6 +154,7 @@ public abstract record EmulateValue
     public static EmulateValue From(IEnumerable<EmulateValue> values) => values.ToArray();
     public static EmulateValue From(double X, double Y, double Z) => new Vector(X, Y, Z);
     public static EmulateValue From(double R, double G, double B, double A) => new CustomColor(R, G, B, A);
+    public static EmulateValue Team(string value) => new GroupValue("Team", value);
 
     public static EmulateValue operator +(EmulateValue left, EmulateValue right) => Add(left, right);
     public static EmulateValue operator -(EmulateValue left, EmulateValue right) => Subtract(left, right);
@@ -235,6 +242,10 @@ public abstract record EmulateValue
 
             Result<EmulateValue, string> evalAll(Func<EmulateValue[], EmulateValue> then) => p.SelectResult(p => eval(p)).AndThen<EmulateValue>(values => then([.. values]));
 
+            Result<string, string> evalEnumMember(int parameter) => p[0] is ElementEnumMember enumMember ?
+                Result<string, string>.Ok(enumMember.Name) :
+                Result<string, string>.Error("Expected workshop select value or constant");
+
             return (name, p.Length) switch
             {
                 ("True", _) => From(true),
@@ -271,6 +282,7 @@ public abstract record EmulateValue
                 ("Custom Color", 4) => evalAll(values => From(values[0].AsNumber(), values[1].AsNumber(), values[2].AsNumber(), values[3].AsNumber())),
                 ("Host Player", _) => state.PlayerList.GetHostValue() ?? Default,
                 ("Null", _) => Default, // Do we need a dedicated null value? probably not
+                ("Team", 1) => evalEnumMember(0).MapValue(t => Team(t)),
                 (_, _) => $"Emulation for workshop function '{name}' (with {p.Length} parameters) is not supported"
             };
         }
