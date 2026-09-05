@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.GlobalFunctions
         private readonly int _component;
 
         public CustomColorParameter(int component, string name, string documentation, CodeType type)
-            : base(name, documentation, type, new ExpressionOrWorkshopValue(Element.Num(0)))
+            : base(name, documentation, type, IVariableDefault.FromWorkshopValue(Element.Num(0)))
         {
             _component = component;
         }
@@ -98,9 +98,6 @@ namespace Deltin.Deltinteger.GlobalFunctions
                     // If the expression is a number, set the component.
                     if (value is NumberAction numberAction)
                         applier.Set(_component, numberAction.Value);
-                    // Parameter default value.
-                    else if (value is ExpressionOrWorkshopValue expressionOrWorkshop && expressionOrWorkshop.WorkshopValue is NumberElement numberElement)
-                        applier.Set(_component, numberElement.Value);
                     // Otherwise, then number isn't a constant, so we won't show the document color.
                     // Discard the custom color applier.
                     else

@@ -160,7 +160,7 @@ namespace Deltin.Deltinteger.Parse
             Name = "FarthestPlayer",
             Documentation = "The farthest player from the vector, optionally restricted by team.",
             ReturnType = _typeSupplier.Player(),
-            Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the farthest player with.", _typeSupplier.Team(), new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
+            Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the farthest player with.", _typeSupplier.Team(), IVariableDefault.FromWorkshopValue(ElementEnumMember.Team(Team.All))) },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Farthest Player From", actionSet.CurrentObject, call.ParameterValues[0])
         };
 
@@ -169,7 +169,7 @@ namespace Deltin.Deltinteger.Parse
             Name = "ClosestPlayer",
             Documentation = "The closest player to the vector, optionally restricted by team.",
             ReturnType = _typeSupplier.Player(),
-            Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the closest player with.", _typeSupplier.Team(), new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
+            Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the closest player with.", _typeSupplier.Team(), IVariableDefault.FromWorkshopValue(ElementEnumMember.Team(Team.All))) },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Closest Player To", actionSet.CurrentObject, call.ParameterValues[0])
         };
 
@@ -180,7 +180,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnType = _typeSupplier.Boolean(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("other", "The vector to determine line of site.", _typeSupplier.Vector()),
-                new CodeParameter("barriers", "Defines how barriers affect line of sight.", _typeSupplier.EnumType("BarrierLOS"), new ExpressionOrWorkshopValue(ElementRoot.Instance.GetEnumValue("BarrierLOS", "NoBarriersBlock")))
+                new CodeParameter("barriers", "Defines how barriers affect line of sight.", _typeSupplier.EnumType("BarrierLOS"), IVariableDefault.FromWorkshopValue(ElementRoot.Instance.GetEnumValue("BarrierLOS", "NoBarriersBlock")))
             },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Is In Line Of Sight", actionSet.CurrentObject, call.ParameterValues[0], call.ParameterValues[1])
         };

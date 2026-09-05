@@ -49,7 +49,9 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>The resulting intial value. This will be null if there is no initial value.
         /// If _initialValueResolve is Instant, this will be set when the Var object is created.
         /// If it is ApplyBlock, this will be set when SetupBlock runs.</summary>
-        public IExpression InitialValue { get; private set; }
+        public IVariableDefault InitialValue { get; private set; }
+
+        public IExpression InitialValueExpression { get; private set; }
 
         public ValueSolveSource ValueReady { get; } = new ValueSolveSource();
 
@@ -81,6 +83,9 @@ namespace Deltin.Deltinteger.Parse
             _initialValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.Scope;
+
+            if (_initialValueContext is not null)
+                InitialValue = IVariableDefault.Create(actionSet => InitialValueExpression.Parse(actionSet));
 
             _variableTypeHandler = varInfo.VariableTypeHandler;
             if (!_inferType)
@@ -136,22 +141,23 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Parse the initial value.
-                InitialValue = initialValueParseInfo.GetExpression(_operationalScope, _initialValueContext);
+                InitialValueExpression = initialValueParseInfo.GetExpression(_operationalScope, _initialValueContext);
 
                 // Get the inferred type.
                 if (_inferType)
                 {
-                    CodeType = InitialValue.Type();
+                    CodeType = InitialValueExpression.Type();
                     _variableTypeHandler.SetType(CodeType);
                     AddScriptData();
                 }
 
                 // If the initial value's type is constant, make sure the constant type's implements the variable's type.
-                if (InitialValue?.Type() != null && InitialValue.Type().IsConstant() && !InitialValue.Type().Implements(CodeType))
-                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", _initialValueContext.Range);
+                var initialValueType = InitialValueExpression?.Type();
+                if (initialValueType != null && initialValueType.IsConstant() && !initialValueType.Implements(CodeType))
+                    parseInfo.Script.Diagnostics.Error($"The type '{initialValueType.Name}' cannot be stored.", _initialValueContext.Range);
 
                 // If the variable's type is constant, make sure the value's type matches.
-                else SemanticsHelper.ExpectValueType(parseInfo, InitialValue, CodeType, _initialValueContext.Range);
+                else SemanticsHelper.ExpectValueType(parseInfo, InitialValueExpression, CodeType, _initialValueContext.Range);
 
                 // Check restricted calls.
                 if (_handleRestrictedCalls)
@@ -242,6 +248,6 @@ namespace Deltin.Deltinteger.Parse
     public enum InitialValueResolve
     {
         Instant,
-        ApplyBlock
+        OnContent
     }
 }

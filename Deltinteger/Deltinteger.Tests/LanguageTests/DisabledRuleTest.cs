@@ -37,4 +37,28 @@ public class LanguageTest
             """
         ).AssertOk().EmulateTick().AssertVariable("a", 0).AssertVariable("b", 2);
     }
+
+    [TestMethod("Default parameter values (#559)")]
+    public void DefaultParameterValues()
+    {
+        Compile(
+            """
+            enum MyEnum { A, B, C }
+
+            struct MyStruct {
+                Any value;
+
+                public static MyEnum Default = MyEnum.C;
+            }
+
+            void func(MyEnum b = MyEnum.B, MyEnum c = MyStruct.Default) {}
+
+            rule: "" {
+                func();
+            }
+            """
+        ).EmulateTick()
+        .AssertVariable("b", 1)
+        .AssertVariable("c", 2);
+    }
 }

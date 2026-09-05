@@ -196,8 +196,8 @@ namespace Deltin.Deltinteger.Pathfinder
             return (Element)containParameter.GetVariable();
         }
 
-        private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), new ExpressionOrWorkshopValue(Element.Null()));
-        private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), new ExpressionOrWorkshopValue(Element.Null()));
+        private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), IVariableDefault.FromWorkshopValue(Element.Null()));
+        private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", PortableLambdaType.CreateConstantType(), IVariableDefault.FromWorkshopValue(Element.Null()));
         private CodeParameter PrintProgress => new CodeParameter(
             "printProgress",
             new MarkupBuilder().Add("An action that is invoked with the progress of the bake. The value will be between 0 and 1, and will equal 1 when completed.")
@@ -207,7 +207,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 .Indent().Add("// Create a hud text of the baking process.").NewLine()
                 .Indent().Add("CreateHudText(AllPlayers(), Header: <\"Baking: <0>\"%, p * 100>, Location: Location.Top);").NewLine()
                 .Add("});").EndCodeLine().ToString(),
-            PortableLambdaType.CreateConstantType(null, _supplier.Number()), new ExpressionOrWorkshopValue(new EmptyLambda())
+            PortableLambdaType.CreateConstantType(null, _supplier.Number()), IVariableDefault.FromWorkshopValue(new EmptyLambda())
         );
 
         SharedPathfinderInfoValues CreatePathfinderInfo(ActionSet actionSet, Element attributes, IWorkshopTree onLoop, IWorkshopTree onConnectLoop) => new SharedPathfinderInfoValues()
@@ -233,7 +233,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to move.", _supplier.Player()),
                 new CodeParameter("destination", "The destination to move the player to.", _supplier.Vector()),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), new ExpressionOrWorkshopValue(Element.Null())),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), IVariableDefault.FromWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
@@ -257,7 +257,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The array of players to move.", _supplier.PlayerArray()),
                 new CodeParameter("destination", "The destination to move the players to.", _supplier.Vector()),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), new ExpressionOrWorkshopValue(Element.Null())),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), IVariableDefault.FromWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
@@ -280,7 +280,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to pathfind.", _supplier.Player()),
                 new CodeParameter("destinations", "The array of destinations.", _supplier.VectorArray()),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), new ExpressionOrWorkshopValue(Element.Null())),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), IVariableDefault.FromWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
@@ -303,7 +303,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The initial position.", _supplier.Vector()),
                 new CodeParameter("destination", "The final destination.", _supplier.Vector()),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), new ExpressionOrWorkshopValue(Element.Null())),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", _supplier.NumberArray(), IVariableDefault.FromWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
@@ -326,7 +326,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ReturnType = _pathfinderTypes.PathResolve.Instance,
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve.", _supplier.Vector()),
-                new CodeParameter("attributes", "The attributes of the path.", _supplier.NumberArray(), new ExpressionOrWorkshopValue(Element.Null())),
+                new CodeParameter("attributes", "The attributes of the path.", _supplier.NumberArray(), IVariableDefault.FromWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
@@ -347,7 +347,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve.", _supplier.Vector()),
                 new CodeParameter("resolveTo", "Resolving will stop once this position is reached.", _supplier.Vector()),
-                new CodeParameter("attributes", "The attributes of the path.", _supplier.NumberArray(), new ExpressionOrWorkshopValue(Element.Null())),
+                new CodeParameter("attributes", "The attributes of the path.", _supplier.NumberArray(), IVariableDefault.FromWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
@@ -596,7 +596,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 .NewLine().Add("It is recommended to run ").Code("DisableInspectorRecording();").Add(" before baking since it can break the inspector."),
             ReturnType = _pathfinderTypes.Bakemap.Instance,
             Parameters = new CodeParameter[] {
-                new CodeParameter("attributes", AttributesDocumentation, _supplier.NumberArray(), EmptyArray()),
+                new CodeParameter("attributes", AttributesDocumentation, _supplier.NumberArray(), IVariableDefault.FromWorkshopValue(EmptyArray())),
                 PrintProgress,
                 OnLoopStartParameter
             },
@@ -770,7 +770,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     "speedScalar",
                     "The speed scalar of the player. `1` is the default speed of all heroes except Gengi and Tracer, which is `1.1`. Default value is `1`.",
                     _supplier.Number(),
-                    new ExpressionOrWorkshopValue(Element.Num(1))
+                    IVariableDefault.FromWorkshopValue(Element.Num(1))
                 )
             },
             ReturnType = _supplier.Boolean(),

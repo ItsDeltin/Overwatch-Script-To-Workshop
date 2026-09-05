@@ -13,17 +13,17 @@ namespace Deltin.Deltinteger.Parse
                 case CallVariableAction callVariableAction:
                     OnVariable(callVariableAction);
                     break;
-                
+
                 // Expression is a CallMethodAction, get the method's single return value.
                 case CallMethodAction callMethodAction:
                     OnMethod(callMethodAction);
                     break;
-                
+
                 // If the expression is an ExpressionTree, get the last value.
                 case ExpressionTree expressionTree:
                     ContinueIfExists(expressionTree, expressionTree.Result);
                     break;
-                
+
                 // Nothing compatible found, finish.
                 default:
                     Complete(expression);
@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
         protected virtual void OnVariable(CallVariableAction variableCall)
         {
             if (variableCall.Calling is VariableInstance var)
-                var.Var.ValueReady.OnReady(() => ContinueIfExists(variableCall, var.Var.InitialValue));
+                var.Var.ValueReady.OnReady(() => ContinueIfExists(variableCall, var.Var.InitialValueExpression));
             else
                 Complete(variableCall);
         }
@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
 
     class ParameterExpressionResolver : GenericConstantExpressionResolver
     {
-        public ParameterExpressionResolver(Action<IExpression> action) : base(action) {}
+        public ParameterExpressionResolver(Action<IExpression> action) : base(action) { }
 
         protected override void OnVariable(CallVariableAction callVariableAction)
         {

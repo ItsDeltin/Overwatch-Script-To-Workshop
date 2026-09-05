@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public Var Var { get; private set; }
         public CodeType Type { get; private set; }
-        public ExpressionOrWorkshopValue DefaultValue { get; private set; }
+        public IVariableDefault DefaultValue { get; private set; }
         public ParameterAttributes Attributes { get; private set; }
         public MarkupBuilder Description { get; private set; }
         private readonly ParameterInvokedInfo _invoked = new ParameterInvokedInfo();
@@ -76,17 +76,16 @@ namespace Deltin.Deltinteger.Parse
 
                 // Normal parameter
                 if (!subroutineParameter)
-                    newVar = (Var)new ParameterVariable(methodScope, contextHandler, parameter._invoked).GetVar();
+                    newVar = new ParameterVariable(methodScope, contextHandler, parameter._invoked).GetVar();
                 // Subroutine parameter.
                 else
-                    newVar = (Var)new SubroutineParameterVariable(methodScope, contextHandler, subroutineParameterIsGlobal).GetVar();
+                    newVar = new SubroutineParameterVariable(methodScope, contextHandler, subroutineParameterIsGlobal).GetVar();
 
                 parameter.Var = newVar;
                 parameter.Type = newVar.CodeType;
                 parameter.Attributes = new ParameterAttributes(newVar.Ref, newVar.VariableType == VariableType.ElementReference);
                 parameter.Description = documentation;
-
-                if (newVar.InitialValue != null) parameter.DefaultValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
+                parameter.DefaultValue = newVar.InitialValue;
 
                 parameters[i] = parameter;
             }

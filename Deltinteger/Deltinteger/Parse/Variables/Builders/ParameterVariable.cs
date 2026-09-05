@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.TokenType = SemanticTokenType.Parameter;
             _varInfo.BridgeInvocable = _bridgeInvocable;
             _varInfo.RequiresCapture = true;
+            _varInfo.InitialValueResolve = InitialValueResolve.OnContent;
         }
 
         protected override void TypeCheck()

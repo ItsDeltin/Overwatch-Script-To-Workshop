@@ -72,8 +72,8 @@ namespace Deltin.Deltinteger.Parse.Overload
                 var pickyParameterInfo = Match.OrderedParameters[i];
 
                 ParameterResults[i] = new OverloadParameterResult(
-                    value: pickyParameterInfo.Value,
-                    additionalData: Overload.Parameters[i].Validate(_parseInfo, pickyParameterInfo.Value, pickyParameterInfo.ExpressionRange, AdditionalData),
+                    value: pickyParameterInfo.GetValue(),
+                    additionalData: Overload.Parameters[i].Validate(_parseInfo, pickyParameterInfo.GivenExpression, pickyParameterInfo.ExpressionRange, AdditionalData),
                     refResolvedVariable: pickyParameterInfo.RefVariable,
                     parameterRange: pickyParameterInfo.ExpressionRange);
             }
@@ -114,7 +114,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
                 // Set expression and expressionRange.
                 parameter.LambdaInfo = new ExpectingLambdaInfo();
-                parameter.Value = _parseInfo.ClearContextual().SetLambdaInfo(parameter.LambdaInfo).GetExpression(_getter, context[i].Expression);
+                parameter.GivenExpression = _parseInfo.ClearContextual().SetLambdaInfo(parameter.LambdaInfo).GetExpression(_getter, context[i].Expression);
                 parameter.ExpressionRange = context[i].Expression.Range;
             }
 
@@ -159,7 +159,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
                         // If _genericsFilled is false, get context-inferred type arguments.
                         if (!_genericsProvided)
-                            ExtractInferredGenerics(match, option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo), inputParameters[i].Value.Type());
+                            ExtractInferredGenerics(match, option.Parameters[i].GetCodeType(_parseInfo.TranslateInfo), inputParameters[i].GivenExpression.Type());
 
                         // Next contextual parameter
                         if (i == inputParameters.Length - 1 && i < option.Parameters.Length - 1)
@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse.Overload
 
                             // If _genericsFilled is false, get context-inferred type arguments.
                             if (!_genericsProvided)
-                                ExtractInferredGenerics(match, option.Parameters[p].GetCodeType(_parseInfo.TranslateInfo), inputParameters[i].Value.Type());
+                                ExtractInferredGenerics(match, option.Parameters[p].GetCodeType(_parseInfo.TranslateInfo), inputParameters[i].GivenExpression.Type());
                         }
 
                     // If the named argument's name is not found, throw an error.
@@ -282,7 +282,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                 // Extract inferred generics (again)
                 for (int i = 0; i < bestOption.OrderedParameters.Length; i++)
                 {
-                    var parameterValue = bestOption.OrderedParameters[i].Value;
+                    var parameterValue = bestOption.OrderedParameters[i].GivenExpression;
 
                     if (parameterValue != null)
                         secondPass = secondPass && ExtractInferredGenerics(
@@ -434,7 +434,8 @@ namespace Deltin.Deltinteger.Parse.Overload
         /// <summary>The name of the picky parameter. This will be null if `Picky` is false.</summary>
         public string Name { get; set; }
         /// <summary>The parameter's expression. This will only be null if there is a syntax error.</summary>
-        public IExpression Value { get; set; }
+        public IExpression GivenExpression { get; set; }
+        public IVariableDefault DefaultValue { get; set; }
         /// <summary>The range of the picky parameter's name. This will be null if `Picky` is false.</summary>
         public DocRange NameRange { get; set; }
         /// <summary>The range of the expression. This will equal `FullRange` if `Picky` is false.</summary>
@@ -456,6 +457,13 @@ namespace Deltin.Deltinteger.Parse.Overload
         }
 
         public bool ParameterOrdered(CodeParameter parameter) => !Picky || parameter.Name == Name;
+
+        public IVariableDefault GetValue()
+        {
+            if (GivenExpression is not null)
+                return IVariableDefault.FromExpression(GivenExpression);
+            return DefaultValue;
+        }
     }
 
     public class OverloadMatch : IVariableResolveErrorHandler
@@ -506,7 +514,7 @@ namespace Deltin.Deltinteger.Parse.Overload
             CodeType parameterType = Option.Parameters[parameter].GetCodeType(_parseInfo.TranslateInfo).GetRealType(TypeArgLinker);
 
             // Get the value. Do nothing if there is no value.
-            IExpression value = OrderedParameters[parameter]?.Value;
+            IExpression value = OrderedParameters[parameter]?.GivenExpression;
             if (value == null) return;
 
             CodeType valueType = value.Type();
@@ -558,7 +566,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         public void GetMissingParameters(OverloadError messageHandler, List<ParameterValue> context, DocRange targetRange, DocRange signatureRange)
         {
             for (int i = 0; i < OrderedParameters.Length; i++)
-                if (OrderedParameters[i]?.Value == null)
+                if (OrderedParameters[i]?.GivenExpression == null)
                 {
                     if (OrderedParameters[i] == null) OrderedParameters[i] = new PickyParameter(true);
                     AddContextualParameter(context, signatureRange, targetRange, i);
@@ -566,7 +574,7 @@ namespace Deltin.Deltinteger.Parse.Overload
                     // Default value
                     if (Option.Parameters[i].DefaultValue != null)
                         // Set the default value.
-                        OrderedParameters[i].Value = Option.Parameters[i].DefaultValue;
+                        OrderedParameters[i].DefaultValue = Option.Parameters[i].DefaultValue;
                     else
                         // Parameter is missing.
                         Error(string.Format(messageHandler.MissingParameter, Option.Parameters[i].Name), targetRange);
@@ -576,7 +584,7 @@ namespace Deltin.Deltinteger.Parse.Overload
         private void AddContextualParameter(List<ParameterValue> context, DocRange targetRange, DocRange signatureRange, int parameter)
         {
             // No parameters set, set range for first parameter to callRange.
-            if (parameter == 0 && OrderedParameters.All(p => p?.Value == null))
+            if (parameter == 0 && OrderedParameters.All(p => p?.GivenExpression == null))
                 OrderedParameters[0].ExpressionRange = targetRange;
             // If this is the last contextual parameter and the context contains comma, set the expression range so signature help works with the last comma when there is no set expression.
             else if (LastContextualParameterIndex == parameter && parameter < context.Count && context[parameter].NextComma != null)

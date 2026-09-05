@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
             IsGlobal = getAssigner.IsGlobal,
             StoreType = Var.StoreType,
             VariableType = Var.VariableType,
-            DefaultValue = IVariableDefault.FromExpression(Var.InitialValue),
+            DefaultValue = Var.InitialValue,
             Persist = Var.Persist || getAssigner.Persist,
             TargetVariable = getAssigner.TargetVariable ?? Var.LinkTargetVanilla
         });
@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
             readonly VariableInstance _variableInstance;
             public VariableInstanceOption(VariableInstance variableInstance) => _variableInstance = variableInstance;
             public ClassType ContainingType() => (ClassType)_variableInstance._definedIn;
-            public IWorkshopTree GetValue(ActionSet actionSet) => _variableInstance.Var.InitialValue.Parse(actionSet);
+            public IWorkshopTree GetValue(ActionSet actionSet) => _variableInstance.Var.InitialValue.GetDefaultValue(actionSet);
         }
     }
 }

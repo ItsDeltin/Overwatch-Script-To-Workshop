@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse.Variables.Build
 
             _varInfo.WholeContext = true;
             _varInfo.CodeLensType = CodeLensSourceType.ClassVariable;
-            _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock;
+            _varInfo.InitialValueResolve = InitialValueResolve.OnContent;
         }
     }
 }

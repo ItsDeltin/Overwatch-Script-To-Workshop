@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; set; }
         public MarkupBuilder Documentation { get; set; }
-        public ExpressionOrWorkshopValue DefaultValue { get; set; }
+        public IVariableDefault DefaultValue { get; set; }
         public List<RestrictedCallType> RestrictedCalls { get; set; } = new List<RestrictedCallType>();
         public ParameterInvokedInfo Invoked { get; set; } = new ParameterInvokedInfo();
         public ParameterAttributes Attributes { get; set; }
@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse
             _type = type;
         }
 
-        public CodeParameter(string name, ICodeTypeSolver type, ExpressionOrWorkshopValue defaultValue)
+        public CodeParameter(string name, ICodeTypeSolver type, IVariableDefault defaultValue)
         {
             Name = name;
             _type = type;
@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = documentation;
         }
 
-        public CodeParameter(string name, MarkupBuilder documentation, ICodeTypeSolver type, ExpressionOrWorkshopValue defaultValue)
+        public CodeParameter(string name, MarkupBuilder documentation, ICodeTypeSolver type, IVariableDefault defaultValue)
         {
             Name = name;
             _type = type;
@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Parse
                 });
             return null;
         }
-        public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => expression.Parse(actionSet);
+        public virtual IWorkshopTree Parse(ActionSet actionSet, IVariableDefault expression, object additionalParameterData) => expression.GetDefaultValue(actionSet);
 
         public void AddRestrictedCall(RestrictedCall restrictedCall)
         {
@@ -139,32 +139,5 @@ namespace Deltin.Deltinteger.Parse
             if (Invoked) onInvoke.Invoke();
             else _onInvoke.Add(onInvoke);
         }
-    }
-
-    public class ExpressionOrWorkshopValue : IExpression
-    {
-        public IExpression Expression { get; }
-        public IWorkshopTree WorkshopValue { get; }
-
-        public ExpressionOrWorkshopValue(IExpression expression)
-        {
-            Expression = expression ?? throw new ArgumentNullException(nameof(expression));
-        }
-        public ExpressionOrWorkshopValue(IWorkshopTree workshopValue)
-        {
-            WorkshopValue = workshopValue ?? throw new ArgumentNullException(nameof(workshopValue));
-        }
-        public ExpressionOrWorkshopValue() { }
-
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            if (Expression != null) return Expression.Parse(actionSet);
-            return WorkshopValue;
-        }
-
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-
-        public static implicit operator ExpressionOrWorkshopValue(Element value) => new ExpressionOrWorkshopValue(value);
     }
 }

@@ -6,7 +6,7 @@ namespace Deltin.Deltinteger.Parse
 {
     class RuleLevelVariable : VarBuilder
     {
-        public RuleLevelVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler) {}
+        public RuleLevelVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler) { }
 
         protected override void CheckComponents()
         {
@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
                 !ComponentCollection.IsAttribute(AttributeType.GlobalVar) &&
                 !ComponentCollection.IsAttribute(AttributeType.PlayerVar))
                 _diagnostics.Error("Expected the globalvar/playervar attribute.", _nameRange);
-            
+
             RejectVirtualIfNotMacro();
         }
 
@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = true;
             _varInfo.AccessLevel = AccessLevel.Public; // Set the access level.
-            _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock; // Get the inital value after elements have been resolved.
+            _varInfo.InitialValueResolve = InitialValueResolve.OnContent; // Get the inital value after elements have been resolved.
             _varInfo.CodeLensType = CodeLensSourceType.RuleVariable; // Set the code lens type.
             _varInfo.HandleRestrictedCalls = true; // Handle restricted calls.
         }

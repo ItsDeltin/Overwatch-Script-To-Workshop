@@ -68,11 +68,11 @@ namespace Deltin.Deltinteger.Elements
 
                     // Get the default value.
                     IWorkshopTree defaultValueWorkshop = null;
-                    ExpressionOrWorkshopValue defaultValue = null;
+                    IVariableDefault defaultValue = null;
                     if (function.Parameters[i].HasDefaultValue)
                     {
                         defaultValueWorkshop = function.Parameters[i].GetDefaultValue();
-                        defaultValue = new ExpressionOrWorkshopValue(defaultValueWorkshop);
+                        defaultValue = IVariableDefault.FromWorkshopValue(defaultValueWorkshop);
                     }
 
                     // Set the parameter.

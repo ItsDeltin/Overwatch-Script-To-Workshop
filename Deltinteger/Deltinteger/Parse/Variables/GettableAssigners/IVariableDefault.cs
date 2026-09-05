@@ -30,7 +30,7 @@ public interface IVariableDefault
         return Create(_ => value);
     }
 
-    record VariableDefault(Func<ActionSet, IWorkshopTree> getDefaultValue) : IVariableDefault
+    sealed class VariableDefault(Func<ActionSet, IWorkshopTree> getDefaultValue) : IVariableDefault
     {
         IWorkshopTree IVariableDefault.GetDefaultValue(ActionSet actionSet) => getDefaultValue(actionSet);
     }

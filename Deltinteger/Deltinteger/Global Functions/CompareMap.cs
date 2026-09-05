@@ -7,12 +7,14 @@ namespace Deltin.Deltinteger.GlobalFunctions
 {
     partial class GlobalFunctions
     {
-        public static FuncMethod CompareMap(DeltinScript deltinScript) => new FuncMethodBuilder() {
+        public static FuncMethod CompareMap(DeltinScript deltinScript) => new FuncMethodBuilder()
+        {
             Name = "CompareMap",
             Documentation = "Compares the current map to a map value. Map variants are considered as well.",
-            ReturnType = deltinScript.Types.Boolean(), 
+            ReturnType = deltinScript.Types.Boolean(),
             Parameters = new[] { new MapParameter(deltinScript.Types) },
-            Action = (actionSet, methodCall) => {
+            Action = (actionSet, methodCall) =>
+            {
                 var enumData = (ElementEnumMember)methodCall.ParameterValues[0];
                 string map = enumData.Name;
                 MapLink mapLink = MapLink.GetMapLink(map);
@@ -28,14 +30,10 @@ namespace Deltin.Deltinteger.GlobalFunctions
         {
             public MapParameter(ITypeSupplier typeSupplier) : base("map", "The map to compare.", typeSupplier.Map()) { }
 
-            public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData)
-            {
-                return base.Parse(actionSet, expression, additionalParameterData);
-            }
-
             public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
             {
-                ConstantExpressionResolver.Resolve(value, value => {
+                ConstantExpressionResolver.Resolve(value, value =>
+                {
                     // Parameter value is map.
                     if (!(value is EnumValuePair enumValue && enumValue.Member.Enum.Name == "Map"))
                         parseInfo.Script.Diagnostics.Error("Expected a map value.", valueRange);

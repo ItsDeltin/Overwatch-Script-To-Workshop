@@ -49,31 +49,7 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
-    }
-
-    class ConstBoolParameter : CodeParameter
-    {
-
-        public ConstBoolParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Boolean()) { }
-        public ConstBoolParameter(string name, string documentation, ITypeSupplier typeSupplier, bool defaultValue)
-            : base(name, documentation, typeSupplier.Boolean(), new ExpressionOrWorkshopValue(defaultValue ? Element.True() : Element.False()))
-        {
-        }
-
-        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
-        {
-            if (value is ExpressionOrWorkshopValue expressionOrWorkshop && expressionOrWorkshop.WorkshopValue is Element asElement)
-                return asElement.Function.Name == "True";
-
-            if (value is BoolAction == false)
-            {
-                parseInfo.Script.Diagnostics.Error("Expected a boolean constant.", valueRange);
-                return null;
-            }
-
-            return ((BoolAction)value).Value;
-        }
+        public override IWorkshopTree Parse(ActionSet actionSet, IVariableDefault value, object additionalParameterData) => null;
     }
 
     class ConstNumberParameter : CodeParameter
@@ -81,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
         private double DefaultConstValue { get; }
 
         public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier) : base(name, documentation, typeSupplier.Number()) { }
-        public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier, double defaultValue) : base(name, documentation, typeSupplier.Number(), new ExpressionOrWorkshopValue(Element.Num(defaultValue)))
+        public ConstNumberParameter(string name, string documentation, ITypeSupplier typeSupplier, double defaultValue) : base(name, documentation, typeSupplier.Number(), IVariableDefault.FromWorkshopValue(Element.Num(defaultValue)))
         {
             DefaultConstValue = defaultValue;
         }
@@ -125,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
             return promise?.Value;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
+        public override IWorkshopTree Parse(ActionSet actionSet, IVariableDefault value, object additionalParameterData) => null;
     }
 
     class ConstHeroParameter : CodeParameter
@@ -153,7 +129,7 @@ namespace Deltin.Deltinteger.Parse
             return promise;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
+        public override IWorkshopTree Parse(ActionSet actionSet, IVariableDefault value, object additionalParameterData) => null;
     }
 
     class ConstStringResolver
@@ -173,7 +149,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly string _elementKindName;
 
         protected ConstArrayParameter(ICodeTypeSolver type, string elementKindName, string name, MarkupBuilder documentation, bool optional = false)
-            : base(name, documentation, type, optional ? new ExpressionOrWorkshopValue(Element.EmptyArray()) : null)
+            : base(name, documentation, type, optional ? IVariableDefault.FromWorkshopValue(Element.EmptyArray()) : null)
         {
             _elementKindName = elementKindName;
         }
@@ -271,7 +247,7 @@ namespace Deltin.Deltinteger.Parse
         {
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData)
+        public override IWorkshopTree Parse(ActionSet actionSet, IVariableDefault value, object additionalParameterData)
         {
             var expressions = (IEnumerable<IExpression>)additionalParameterData;
             return new ConstWorkshopArray(expressions.Select(e => e.Parse(actionSet)).ToArray());

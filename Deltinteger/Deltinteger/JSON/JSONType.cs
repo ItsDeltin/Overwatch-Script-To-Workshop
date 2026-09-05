@@ -233,7 +233,7 @@ namespace Deltin.Deltinteger.Json
                 containingType = type;
             }
 
-            public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
+            public override IWorkshopTree Parse(ActionSet actionSet, IVariableDefault value, object additionalParameterData) => null;
 
             public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange, object additionalData)
             {

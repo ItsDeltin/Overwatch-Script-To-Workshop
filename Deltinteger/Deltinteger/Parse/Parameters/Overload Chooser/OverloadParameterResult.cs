@@ -4,12 +4,12 @@ namespace Deltin.Deltinteger.Parse
 {
     public class OverloadParameterResult
     {
-        public IExpression Value { get; }
+        public IVariableDefault Value { get; }
         public object AdditionalData { get; }
         public VariableResolve RefResolvedVariable { get; }
         public DocRange ParameterRange { get; }
 
-        public OverloadParameterResult(IExpression value, object additionalData, VariableResolve refResolvedVariable, DocRange parameterRange)
+        public OverloadParameterResult(IVariableDefault value, object additionalData, VariableResolve refResolvedVariable, DocRange parameterRange)
         {
             Value = value;
             AdditionalData = additionalData;
@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public WorkshopParameter ToWorkshop(ActionSet actionSet) => new WorkshopParameter(
-            value: Value.Parse(actionSet),
+            value: Value.GetDefaultValue(actionSet),
             additionalData: AdditionalData,
             refVariableElements: RefResolvedVariable?.ParseElements(actionSet));
     }
