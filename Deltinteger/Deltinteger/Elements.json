@@ -4439,7 +4439,7 @@
         },
         "Position": {
           "documentation": "The effect’s position. If this value is a player, then the effect will move along with the player, otherwise, the value is interpreted as a position in the world. Can use most Player or Vector based Value Syntax.",
-          "type": "players | player | vector",
+          "type": "player[] | player | vector",
           "defaultValue": "Event Player"
         },
         "Radius": {
