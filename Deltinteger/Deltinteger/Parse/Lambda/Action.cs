@@ -276,7 +276,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             public CallInfo CallInfo => Lambda.CallInfo;
             public string TypeName => "lambda";
             public bool CanBeRecursivelyCalled() => false;
-            public bool DoesRecursivelyCall(IRecursiveCallHandler calling) => calling is LambdaRecursionHandler lambdaRecursion && Lambda == lambdaRecursion.Lambda;
+            public bool IsEqualTo(IRecursiveCallHandler calling) => calling is LambdaRecursionHandler lambdaRecursion && Lambda == lambdaRecursion.Lambda;
             public string GetLabel(DeltinScript deltinScript) => Lambda.GetLabel(deltinScript, LabelInfo.RecursionError).ToString(false);
         }
     }

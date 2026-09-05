@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
 
         public WhileAction(ParseInfo parseInfo, Scope scope, While whileContext)
         {
+            parseInfo.NotifyCreatesAction(whileContext.Range);
             Condition = parseInfo.SetIsUsedAsValue(true).GetExpression(scope, whileContext.Condition);
 
             SemanticsHelper.ExpectNonConstant(parseInfo, whileContext.Condition.Range, Condition.Type());
@@ -113,6 +114,8 @@ namespace Deltin.Deltinteger.Parse
 
         public ForAction(ParseInfo parseInfo, Scope scope, For forContext)
         {
+            parseInfo.NotifyCreatesAction(forContext.Range);
+
             Scope varScope = scope.Child();
 
             IsAutoFor = forContext.Iterator is ExpressionStatement;
@@ -342,6 +345,7 @@ namespace Deltin.Deltinteger.Parse
 
         public ForeachAction(ParseInfo parseInfo, Scope scope, Foreach foreachContext)
         {
+            parseInfo.NotifyCreatesAction(foreachContext.Range);
             Scope varScope = scope.Child();
 
             foreachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext)).GetVar();

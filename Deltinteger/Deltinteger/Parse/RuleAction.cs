@@ -46,7 +46,19 @@ namespace Deltin.Deltinteger.Parse
                         ruleContext.Conditions[i].LeftParen.Range + ruleContext.Conditions[i].RightParen.Range
                     );
 
-                var conditionExpression = parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression);
+                // Watch for expressions that create actions.
+                var conditionRestrictedCallHandler = IRestrictedCallHandler.New(restrictedCall =>
+                {
+                    if (restrictedCall.CallType == RestrictedCallType.Action)
+                        restrictedCall.AddDiagnostic(parseInfo.Script.Diagnostics);
+                    else
+                        callInfo.AddRestrictedCall(restrictedCall);
+                });
+
+                // Get the condition value.
+                var conditionExpression = parseInfo.SetCallInfo(callInfo)
+                    .SetRestrictedCallHandler(conditionRestrictedCallHandler)
+                    .GetExpression(scope, ruleContext.Conditions[i].Expression);
 
                 // Ensure the conditions is a compatible type.
                 if (!CodeTypeHelpers.IsCompatibleWithAny(conditionExpression.Type()))

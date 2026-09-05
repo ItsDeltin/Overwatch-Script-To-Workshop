@@ -38,6 +38,7 @@ namespace Deltin.Deltinteger.Parse
         public IVariableInstance Overriding { get; set; }
         public MarkupBuilder Documentation { get; set; }
         public VariableLinkExpressionCollection LinkTargetVanilla { get; set; }
+        public bool NotifyContextOfGeneratedActions { get; set; }
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)
         {

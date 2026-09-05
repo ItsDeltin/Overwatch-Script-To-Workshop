@@ -69,7 +69,11 @@ namespace Deltin.Deltinteger
         public static string Message_EventPlayerDefault(string name)
             => $"The variable '{name}' is a player variable and no player was provided in a global rule.";
         public static string Message_FunctionCallsRestricted(string functionName, RestrictedCallType type)
-            => $"The function '{functionName}' calls a restricted value of type '{StringFromCallType(type)}'.";
+        {
+            if (type is RestrictedCallType.Action)
+                return $"The function '{functionName}' cannot be used in a condition because it generates actions.";
+            return $"The function '{functionName}' calls a restricted value of type '{StringFromCallType(type)}'.";
+        }
         public static string Message_Macro(string macroName, RestrictedCallType type)
             => $"The macro '{macroName}' calls a restricted value of type '{StringFromCallType(type)}'.";
         public static string Message_LambdaInvoke(string lambdaName, RestrictedCallType type)
@@ -130,6 +134,7 @@ namespace Deltin.Deltinteger
         Attacker,
         Healer,
         Knockback,
-        Ability
+        Ability,
+        Action
     }
 }

@@ -132,6 +132,13 @@ namespace Deltin.Deltinteger.Elements
                     RestrictedCall.Message_Element((RestrictedCallType)_restricted)
                 ));
 
+            if (_function is ElementJsonAction)
+                parseInfo.RestrictedCallHandler.AddRestrictedCall(new RestrictedCall(
+                    RestrictedCallType.Action,
+                    parseInfo.GetLocation(callRange),
+                    "Workshop element creates actions"
+                ));
+
             return null;
         }
 

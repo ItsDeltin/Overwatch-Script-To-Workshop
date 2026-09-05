@@ -46,6 +46,8 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Stores the context of the initial value.</summary>
         private readonly IParseExpression _initialValueContext;
 
+        public CallInfo CallInfo { get; }
+
         /// <summary>The resulting intial value. This will be null if there is no initial value.
         /// If _initialValueResolve is Instant, this will be set when the Var object is created.
         /// If it is ApplyBlock, this will be set when SetupBlock runs.</summary>
@@ -54,6 +56,8 @@ namespace Deltin.Deltinteger.Parse
         public IExpression InitialValueExpression { get; private set; }
 
         public ValueSolveSource ValueReady { get; } = new ValueSolveSource();
+
+        public IRecursiveCallHandler RecursiveCallHandler { get; }
 
         public Var(VarInfo varInfo)
         {
@@ -84,6 +88,14 @@ namespace Deltin.Deltinteger.Parse
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.Scope;
 
+            bool doRecursiveCheck = _parseInfo.CurrentCallInfo is null && IsMacro;
+            if (doRecursiveCheck)
+            {
+                RecursiveCallHandler = new VariableRecursiveCallHandler(this);
+                CallInfo = new CallInfo(RecursiveCallHandler, _parseInfo.Script);
+                _parseInfo.TranslateInfo.GetComponent<RecursionCheckComponent>().AddCheck(CallInfo);
+            }
+
             if (_initialValueContext is not null)
                 InitialValue = IVariableDefault.Create(actionSet => InitialValueExpression.Parse(actionSet));
 
@@ -109,6 +121,9 @@ namespace Deltin.Deltinteger.Parse
             {
                 _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, varInfo.CodeLensType, DefinedAt.range));
                 _parseInfo.Script.Elements.AddDeclarationCall(this, new DeclarationCall(DefinedAt.range, true));
+
+                if (varInfo.NotifyContextOfGeneratedActions && !IsMacro)
+                    _parseInfo.NotifyCreatesAction(DefinedAt);
             }
         }
 
@@ -122,10 +137,7 @@ namespace Deltin.Deltinteger.Parse
                 // Store the initial value's restricted calls.
                 RestrictedCallList restrictedCalls = null;
                 if (_handleRestrictedCalls)
-                {
-                    restrictedCalls = new RestrictedCallList();
-                    parseInfo = parseInfo.SetRestrictedCallHandler(restrictedCalls);
-                }
+                    restrictedCalls = [];
 
                 // The parseInfo used to get the variable's value.
                 ParseInfo initialValueParseInfo = parseInfo.SetIsUsedAsValue(true);
@@ -134,11 +146,25 @@ namespace Deltin.Deltinteger.Parse
                 if (CodeType != null)
                     initialValueParseInfo = initialValueParseInfo.SetExpectType(CodeType);
 
-                if (parseInfo.CurrentCallInfo == null)
+                // Create CallInfo if it does not already exist in the current context.
+                if (parseInfo.CurrentCallInfo is null && CallInfo is not null)
+                    initialValueParseInfo = initialValueParseInfo.SetCallInfo(CallInfo);
+
+                // Create a new restricted call handler so that various systems may be notified about restricted calls in the initial value.
+                initialValueParseInfo = initialValueParseInfo.SetRestrictedCallHandler(IRestrictedCallHandler.New(restrictedCall =>
                 {
-                    CallInfo callInfo = new CallInfo(parseInfo.Script);
-                    initialValueParseInfo = initialValueParseInfo.SetCallInfo(callInfo);
-                }
+                    // This is used for top-level globalvar/playervar variables to ensure that the value is compatible
+                    // with the 'Initial Global' and 'Initial Player' generated rules.
+                    if (_handleRestrictedCalls)
+                        restrictedCalls.Add(restrictedCall);
+
+                    // Notify our CallInfo about the restricted call so that it may be propogated by the variable's callers.
+                    CallInfo?.AddRestrictedCall(restrictedCall);
+
+                    // Notify any outer entity interested in this variable's restricted calls,
+                    // i.e. parameters that need to know if a restricted call is used in the variable's initial value.
+                    parseInfo.RestrictedCallHandler?.AddRestrictedCall(restrictedCall);
+                }));
 
                 // Parse the initial value.
                 InitialValueExpression = initialValueParseInfo.GetExpression(_operationalScope, _initialValueContext);
@@ -224,6 +250,16 @@ namespace Deltin.Deltinteger.Parse
         }
         public void AddDefaultInstance(IScopeAppender scopeHandler) => scopeHandler.Add(GetDefaultInstance(scopeHandler.DefinedIn()), Static);
         public IVariableInstance GetInstance(CodeType definedIn, InstanceAnonymousTypeLinker genericsLinker) => new VariableInstance(this, genericsLinker, definedIn);
+
+        // Used to ensure we do not create infinite loops with inline variables.
+        class VariableRecursiveCallHandler(Var var) : IRecursiveCallHandler
+        {
+            public CallInfo CallInfo => var.CallInfo;
+            public string TypeName => "variable";
+            public bool CanBeRecursivelyCalled() => false;
+            public bool IsEqualTo(IRecursiveCallHandler calling) => ReferenceEquals(calling, this);
+            public string GetLabel(DeltinScript deltinScript) => var.GetLabel();
+        }
     }
 
     public enum VariableType

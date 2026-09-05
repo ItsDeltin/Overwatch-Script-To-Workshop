@@ -35,12 +35,10 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression ReturningValue { get; }
         public DocRange ErrorRange { get; }
-        private readonly Scope ReturningFromScope;
 
         public ReturnAction(ParseInfo parseInfo, Scope scope, Return returnContext)
         {
             ErrorRange = returnContext.Range;
-            ReturningFromScope = scope;
 
             // Get the expression being returned.
             if (returnContext.Expression != null)
@@ -66,6 +64,10 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Must return a value of type '" + parseInfo.ReturnType.GetName() + "'", returnContext.Token.Range);
 
             parseInfo.ReturnTracker?.Add(this);
+
+            // Notify if this return statement will generate an action in the compiled workshop output.
+            if (parseInfo.ReturnTracker?.Returns.Count is > 1)
+                parseInfo.NotifyCreatesAction(returnContext.Token.Range);
         }
 
         public void Translate(ActionSet actionSet)
@@ -89,6 +91,8 @@ namespace Deltin.Deltinteger.Parse
 
             if (!_deleteValue.Type().CanBeDeleted)
                 parseInfo.Script.Diagnostics.Error($"Type '{_deleteValue.Type().Name}' cannot be deleted", deleteContext.Deleting.Range);
+
+            parseInfo.NotifyCreatesAction(deleteContext.DeleteToken.Range);
         }
 
         public void Translate(ActionSet actionSet)

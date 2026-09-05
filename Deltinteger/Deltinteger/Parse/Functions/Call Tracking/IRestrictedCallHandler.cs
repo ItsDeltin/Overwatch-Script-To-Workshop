@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Deltin.Deltinteger.Parse
@@ -7,6 +8,12 @@ namespace Deltin.Deltinteger.Parse
     public interface IRestrictedCallHandler
     {
         void AddRestrictedCall(RestrictedCall restrictedCall);
+
+        public static RestrictedCallHandler New(Action<RestrictedCall> onRestrictedCall) => new RestrictedCallHandler(onRestrictedCall);
+        public sealed class RestrictedCallHandler(Action<RestrictedCall> onRestrictedCall) : IRestrictedCallHandler
+        {
+            public void AddRestrictedCall(RestrictedCall restrictedCall) => onRestrictedCall(restrictedCall);
+        }
     }
 
     // A simple implementation of IRestrictedCallHandler.

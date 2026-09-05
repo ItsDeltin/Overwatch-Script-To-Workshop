@@ -5,7 +5,7 @@ namespace Deltin.Deltinteger.Parse
     {
         CallInfo CallInfo { get; }
         string TypeName { get; }
-        bool DoesRecursivelyCall(IRecursiveCallHandler calling);
+        bool IsEqualTo(IRecursiveCallHandler calling);
         bool CanBeRecursivelyCalled();
         string GetLabel(DeltinScript deltinScript);
     }
@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
 
         public CallInfo CallInfo => _applyBlock.CallInfo;
         public string TypeName => _typeName;
-        public bool DoesRecursivelyCall(IRecursiveCallHandler calling) => this == calling;
+        public bool IsEqualTo(IRecursiveCallHandler calling) => this == calling;
         public bool CanBeRecursivelyCalled() => _recursionAllowed;
         public string GetLabel(DeltinScript deltinScript) => _applyBlock.GetLabel(deltinScript, LabelInfo.RecursionError).ToString(false);
     }

@@ -293,6 +293,13 @@ namespace Deltin.Deltinteger.Parse
         public DiagnosticsToken CreateDiagnosticsToken(DocRange range) => new DiagnosticsToken(Script.Diagnostics, range);
 
         public void Error(string message, DocRange range) => Script.Diagnostics.Error(message, range);
+
+        public void NotifyCreatesAction(DocRange range) => NotifyCreatesAction(GetLocation(range));
+        public void NotifyCreatesAction(Location location)
+        {
+            RestrictedCallHandler?.AddRestrictedCall(new(RestrictedCallType.Action, location, "Statement generates action"));
+        }
+
     }
 
     public class VariableApply

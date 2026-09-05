@@ -16,6 +16,7 @@ namespace Deltin.Deltinteger.Parse
 
         public SwitchAction(ParseInfo parseInfo, Scope scope, Switch switchContext)
         {
+            parseInfo.NotifyCreatesAction(switchContext.Range);
             // Get the expression.
             Expression = parseInfo.GetExpression(scope, switchContext.Expression);
 

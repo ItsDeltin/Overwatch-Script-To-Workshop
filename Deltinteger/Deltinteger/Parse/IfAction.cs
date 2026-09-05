@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Parse
 
         public IfAction(ParseInfo parseInfo, Scope scope, If ifContext)
         {
+            parseInfo.NotifyCreatesAction(ifContext.Range);
+
             // Get the if condition.
             Expression = parseInfo.SetIsUsedAsValue(true).GetExpression(scope, ifContext.Expression);
 

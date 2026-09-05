@@ -10,7 +10,8 @@ namespace Deltin.Deltinteger.Parse
         public static IEnumerable<RestrictedCallType> CollectRestrictedCalls(CallInfo callInfo)
         {
             var restrictedCalls = new HashSet<RestrictedCallType>();
-            Visit(callInfo, c => {
+            Visit(callInfo, c =>
+            {
                 foreach (var restrictedCall in c.RestrictedCalls)
                     restrictedCalls.Add(restrictedCall.CallType);
             });
@@ -27,12 +28,13 @@ namespace Deltin.Deltinteger.Parse
             // Do not visit again.
             if (!_visited.Add(callInfo))
                 return;
-            
+
             _callback(callInfo);
 
             // Check sub calls.
             foreach (var subcall in callInfo.Calls)
-                Visit(subcall.CallInfo);
+                if (subcall.CallInfo is not null)
+                    Visit(subcall.CallInfo);
         }
     }
 }

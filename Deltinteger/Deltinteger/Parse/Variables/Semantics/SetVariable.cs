@@ -48,6 +48,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 _operation.Validate(parseInfo, assignmentContext.AssignmentToken.Range, _value);
             }
+
+            parseInfo.NotifyCreatesAction(assignmentContext.Range);
         }
 
         public void Translate(ActionSet actionSet)

@@ -37,6 +37,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.WholeContext = false;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
             _varInfo.RequiresCapture = true;
+            _varInfo.NotifyContextOfGeneratedActions = true;
         }
     }
 }

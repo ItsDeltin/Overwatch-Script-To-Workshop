@@ -55,7 +55,10 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
             Context = context;
             ContainingType = containingType;
-            CallInfo = new CallInfo(new RecursiveCallHandler(this, context.Subroutine is not null || context.Attributes.Recursive), parseInfo.Script, ContentReady);
+
+            IsSubroutine = context.Subroutine?.Name is not null;
+
+            CallInfo = new CallInfo(new RecursiveCallHandler(this, recursionAllowed: IsSubroutine || context.Attributes.Recursive), parseInfo.Script, ContentReady);
 
             DocRange nameRange = context.Identifier.Range;
 
@@ -72,9 +75,8 @@ namespace Deltin.Deltinteger.Parse
             Ref = attributes.Ref;
 
             // Get subroutine info.
-            if (context.Subroutine?.Name is not null)
+            if (IsSubroutine)
             {
-                IsSubroutine = true;
                 SubroutineName = context.Subroutine.Name.Text.RemoveQuotes();
                 SubroutineDefaultGlobal = !context.PlayerVar;
 
@@ -128,6 +130,10 @@ namespace Deltin.Deltinteger.Parse
                 if (OverridingFunction == null)
                     SemanticsHelper.CouldNotOverride(parseInfo, nameRange, "method");
             }
+
+            bool aspectOfDefinitionGeneratesActions = !context.Colon && (IsSubroutine || ParameterProviders.Any(pp => !(pp.Attributes.In || pp.Attributes.Ref)));
+            if (aspectOfDefinitionGeneratesActions)
+                CallInfo.AddRestrictedCall(new(RestrictedCallType.Action, parseInfo.GetLocation(nameRange), "Function generates actions"));
 
             // Check conflicts and add to scope.
             scopeProvider.CheckConflict(parseInfo, new(Name, ParameterTypes), nameRange);
@@ -292,5 +298,7 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType GetContainingType(InstanceAnonymousTypeLinker typeLinker) => definedInType?.GetRealType(typeLinker);
         public bool HasContainingType() => definedInType is not null;
+
+        public bool RestrictedValuesAreFatal => !Provider.IsSubroutine;
     }
 }

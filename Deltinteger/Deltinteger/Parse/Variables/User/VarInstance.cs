@@ -38,6 +38,12 @@ namespace Deltin.Deltinteger.Parse
         {
             IVariableInstance.Call(this, parseInfo, callRange);
             parseInfo.Script.AddDefinitionLink(callRange, Var.DefinedAt);
+
+            if (Var.RecursiveCallHandler is not null)
+                parseInfo.CurrentCallInfo?.Call(Var.RecursiveCallHandler, callRange);
+
+            if (Var.CallInfo is not null)
+                RestrictedCall.BridgeMethodCall(parseInfo, Var.CallInfo, callRange, Name, true);
         }
 
         public IGettableAssigner GetAssigner(GetVariablesAssigner getAssigner) => CodeType.GetRealType(getAssigner.TypeLinker).GetGettableAssigner(new AssigningAttributes()
