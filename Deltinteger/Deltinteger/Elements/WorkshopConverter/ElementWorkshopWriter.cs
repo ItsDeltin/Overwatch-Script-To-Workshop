@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Deltin.WorkshopString;
 
 namespace Deltin.Deltinteger.Elements.WorkshopConverter;
 
@@ -67,7 +68,7 @@ static class ElementWorkshopWriter
         if (action != null && (action.Indentation == "outdent" || action.Indentation == "drop")) b.Outdent(2);
 
         // Add a comment and newline
-        if (element.Comment != null) b.AppendLine($"\"{element.Comment}\"");
+        if (element.Comment != null) b.AppendLine($"\"{WorkshopStringUtility.EscapedDoubleQuotes(element.Comment)}\"");
 
         // Add the disabled tag if the element is disabled.
         if (element.Function is ElementJsonAction && element.Disabled) b.AppendKeyword("disabled").Append(" ");
