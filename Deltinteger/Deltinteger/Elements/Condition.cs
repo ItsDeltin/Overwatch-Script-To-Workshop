@@ -1,4 +1,6 @@
-﻿namespace Deltin.Deltinteger.Elements
+﻿using Deltin.WorkshopString;
+
+namespace Deltin.Deltinteger.Elements
 {
     public class Condition
     {
@@ -14,7 +16,7 @@
             string result = string.Empty;
 
             // Add a comment and newline
-            if (Comment != null) builder.AppendLine($"\"{Comment}\"\n");
+            if (Comment != null) builder.AppendLine($"\"{WorkshopStringUtility.EscapedDoubleQuotes(Comment)}\"\n");
 
             if (Disabled) builder.AppendKeyword("disabled").Append(" ");
 
